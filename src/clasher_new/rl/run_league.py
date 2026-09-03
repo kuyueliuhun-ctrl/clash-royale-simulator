@@ -192,6 +192,19 @@ def _prepare_env(env, side0_pol, side1_pol):
     return env
 
 
+def _pair_seed_offset(idx, a, b):
+    """同一评估周期内不同 pair 的独立种子偏移。
+
+    历史教训：eval_round_robin 曾对每对都用 ``seed + step``，导致所有 pair 的
+    逐局种子（seed+g / seed+g+5000）完全相同——若某方弱到每局结果同构
+    （如 main 对 5 个对手 4 连败），各 pair 的 PFSP 胜率流就打出完全相同序列、
+    收敛到同一值（曾见 5 个 0.40725312499999994 = 0.5×0.95⁴）。加 pair 专属偏移，
+    让不同 pair 用不同的 RNG 流，评估采样真正互相独立。
+    """
+    import hashlib
+    return int(hashlib.sha1(f"{idx}|{a}|{b}".encode("utf-8")).hexdigest()[:7], 16)
+
+
 def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False):
     """a vs b 换边 n 局（a 先手 n/2 + b 先手 n/2），逐局更新 Elo/PFSP（P1-11/P1-14）。
 
@@ -236,10 +249,11 @@ def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False,
     if only_vs_main:
         pairs = [p for p in pairs if "main" in p]
     replays = []
-    for a, b in pairs:
+    for idx, (a, b) in enumerate(pairs):
+        pair_seed = seed + step + _pair_seed_offset(idx, a, b)
         wins_a, wins_b, draws, rs = play_pair(league, a, league.agents[a].policy,
                                               b, league.agents[b].policy,
-                                              n_games, max_steps, seed + step, record=record)
+                                              n_games, max_steps, pair_seed, record=record)
         replays.extend(rs)
         print(f"[eval@{step}] {a} vs {b}: {wins_a}W {wins_b}L {draws}D", flush=True)
     league.record_elo_history(step)
@@ -259,8 +273,9 @@ def evaluate_league(policies, kinds, n_games, seed, hidden_dim, max_steps=600, d
         pols[path] = load_checkpoint(path, hidden_dim=hidden_dim)
         pols[path].to_device(resolve_device(device))
         league.add_agent(path, kind=kind, policy=pols[path])
-    for a, b in itertools.combinations(policies, 2):
-        wa, wb, dr, _ = play_pair(league, a, pols[a], b, pols[b], n_games, max_steps, seed)
+    for idx, (a, b) in enumerate(itertools.combinations(policies, 2)):
+        wa, wb, dr, _ = play_pair(league, a, pols[a], b, pols[b], n_games, max_steps,
+                                  seed + _pair_seed_offset(idx, a, b))
         print(f"{os.path.basename(a)} vs {os.path.basename(b)}: "
               f"{wa}W {wb}L {dr}D / {n_games}", flush=True)
     league.record_elo_history(0)

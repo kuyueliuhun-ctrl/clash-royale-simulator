@@ -141,6 +141,11 @@ start_training.bat --help
   `push_flow`（推进流 60 副）/ `counter_flow`（防守反击流 120 副）/ `lockdown_flow`（自闭流 20 副）/
   `all_decks`（全 200 副）/ `random_deck`（全随机 8 卡）。有卡组的模型每局从对应集合**随机抽一副完整卡组**；
   `main`（跟随者 PPO）为训练目标，PFSP 从这 5 个对手采样。卡名经 `rl/decks.py` 映射到引擎卡，对不上的槽位用引擎卡池补位。
+- **评估逐 pair 独立采样**：`eval_round_robin` 每对卡组用独立种子流（`_pair_seed_offset`），
+  避免所有 pair 复用同一批逐局种子打出"同构局面"（曾见 main 对 5 个对手胜率全等
+  `0.40725312499999994 = 0.5×0.95⁴`：n_eval_games=4 全败 + 种子复用所致，**非写入 bug**）。
+  每个 pair 的 PFSP 胜率流由自己的比分序列独立 EMA 演进（`pfsp.update_winrate` 按
+  `(agent_a, agent_b)` 独立 key），互不污染；回归测试：`test_winrate_streams_independent`。
 - **全配对分流派联赛**（`flow_league.py`，`run_league --mode flow`）：6 个模型全部为**可训练
   PPO**（`main` / `push_flow` / `counter_flow` / `lockdown_flow` / `all_decks` /
   `random_deck`），每个 `FollowerPolicy` + 独立 `PPOTrainer`。6 个卡组池两两全配对

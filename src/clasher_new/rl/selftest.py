@@ -12,6 +12,7 @@
 - test_bundle_cap_no_crash                 → P1-18
 - test_replay_roundtrip                    → P1-21
 - test_prophet_empty_board_not_defend      → P1-4
+- test_winrate_streams_independent         → 联赛数据契约：不同 pair 的 PFSP 胜率流独立演进
 
 运行：python rl/selftest.py   （需在 src/clasher_new 下，或由 scripts/rl/selftest.py 包装）
 """
@@ -440,6 +441,78 @@ def test_league_elo_history():
     assert lg2.elo_history["main"] == lg.elo_history["main"]
     assert lg2.total_steps == 200
     print("[PASS] 联赛 Elo 历史：记录 + save/load round-trip")
+
+
+def test_winrate_streams_independent():
+    """不同 pair 的 PFSP 胜率流独立演进（防"各 pair 共享同一 EMA 流"类写入 bug 回归）。
+
+    背景：runs/aggressive 曾见 main 对 5 个对手胜率全等（0.40725312499999994）。
+    排查确认那**不是写入 bug**——每个值都可还原为独立 4 局 EMA
+    （0.40725312499999994 = 0.5×(1-0.05)⁴ = n_eval_games=4 全败；0.4547531249999999
+    = [L,L,W,L]…），只是 main 全败 + play_pair 各 pair 复用同批种子导致局面同构。
+    本测试锁定真正的正确性契约：不同 pair 各维护独立 EMA 流——
+    1) 每流数值 = 独立重算的 EMA 参考值（由自己的比分序列驱动）；
+    2) 不同比分序列必须演化出不同胜率（若实现误用共享 key/流，此断言必挂）；
+    3) record_match 双向互补：winrate(a,b) + winrate(b,a) == 1；
+    4) 记录 (a,b) 不得污染其它 pair 的流（独立性）；
+    5) save/load round-trip 后 key（a|b 序列化）不串流。
+    """
+    import tempfile
+    from rl.league import League
+
+    lg = League(seed=0)
+    for aid in ("main", "push_flow", "counter_flow", "lockdown_flow"):
+        lg.add_agent(aid, kind="main" if aid == "main" else "baseline")
+
+    alpha = 0.05
+
+    def ref_ema(seq):
+        v = 0.5
+        for s in seq:
+            v = v * (1 - alpha) + s * alpha
+        return v
+
+    # 每 pair 喂不同比分序列（长度 40，0/0.5/1 混合）
+    seq_ab = [1.0, 0.0] * 20      # main vs push_flow:    胜负交替 → ~0.5
+    seq_ac = [1.0] * 40           # main vs counter_flow: 全胜   → 高位
+    seq_ad = [0.0] * 40           # main vs lockdown_flow:全败   → 低位
+    for s in seq_ab:
+        lg.record_match("main", "push_flow", s)
+    for s in seq_ac:
+        lg.record_match("main", "counter_flow", s)
+    for s in seq_ad:
+        lg.record_match("main", "lockdown_flow", s)
+
+    wr = lg.pfsp.winrates
+    # 1) 各自等于独立重算的 EMA（流由自己的比分驱动）
+    assert abs(wr[("main", "push_flow")] - ref_ema(seq_ab)) < 1e-12
+    assert abs(wr[("main", "counter_flow")] - ref_ema(seq_ac)) < 1e-12
+    assert abs(wr[("main", "lockdown_flow")] - ref_ema(seq_ad)) < 1e-12
+    # 2) 不同比分序列 → 不同胜率（共享流 bug 会在这里暴露）
+    assert wr[("main", "push_flow")] != wr[("main", "counter_flow")]
+    assert wr[("main", "push_flow")] != wr[("main", "lockdown_flow")]
+    assert wr[("main", "counter_flow")] != wr[("main", "lockdown_flow")]
+    # 3) 双向互补
+    assert abs(wr[("main", "push_flow")] + wr[("push_flow", "main")] - 1.0) < 1e-12
+    # 4) 独立性：再打一轮 main vs push_flow，不得污染 main vs counter_flow 的流
+    v_ac_before = wr[("main", "counter_flow")]
+    v_ab_before = wr[("main", "push_flow")]
+    for s in seq_ab:
+        lg.record_match("main", "push_flow", s)
+    assert wr[("main", "counter_flow")] == v_ac_before, "其它 pair 的胜率流被污染"
+    assert wr[("main", "lockdown_flow")] == ref_ema(seq_ad), "未触及 pair 的流被污染"
+    assert wr[("main", "push_flow")] != v_ab_before, "本 pair 流应继续演化"
+    # 5) save/load round-trip：a|b key 序列化不串流
+    d = tempfile.mkdtemp()
+    p = os.path.join(d, "state.json")
+    lg.save_state(p)
+    lg2 = League(seed=0)
+    lg2.load_state(p)
+    assert lg2.pfsp.winrates == lg.pfsp.winrates
+    assert abs(lg2.pfsp.winrates[("main", "push_flow")] - ref_ema(seq_ab * 2)) < 1e-12
+    assert lg2.pfsp.winrates[("main", "counter_flow")] == v_ac_before
+    print("[PASS] 不同 pair 的 PFSP 胜率流独立演进：互不污染 / 各自 EMA 一致 / "
+          "round-trip 不串 key")
 
 
 def test_classified_decks():
@@ -1140,6 +1213,7 @@ def main():
     test_prophet_empty_board_not_defend()
     test_random_deck_model()
     test_league_elo_history()
+    test_winrate_streams_independent()
     test_classified_decks()
     test_league_training_loop()
     test_belief_follower_ppo_league()
