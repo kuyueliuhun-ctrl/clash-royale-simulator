@@ -1,12 +1,15 @@
-"""训练网页 UI：各模型 Elo-训练次数 曲线仪表盘 + 最近训练回放/播放器。
+"""训练网页 UI：各模型 Elo-训练次数 曲线仪表盘 + flow-sweep 进度/曲线 + 最近训练回放/播放器。
 
 - 读取 ``run_league --mode run`` 写出的联赛状态 JSON（含 elo_history）；
+- ``--sweep`` 指向 flow-sweep 产物（runs/<name>/ 或单个 flow_sweep_<strategy> 目录），
+  每 3 秒读取逐轮增量写的 ``summary.json``（status/run_current/eta_s）→ 进度条 +
+  main 轮内估计 ±1σ 曲线（flow_sweep_stream / flow_sweep_games5 两个策略并排显示）；
 - 扫描 ``<state 同目录>/replays/league_<step>.pkl`` 联赛录像，列出最近回放；
 - 浏览器内 Canvas 播放器回放单局（纯前端自绘，无外部 CDN 依赖，离线可用）；
-- ``/api/state`` 每 3 秒轮询刷新，``/api/replays`` 每 5 秒刷新回放列表。
+- ``/api/state`` 每 3 秒轮询刷新，``/api/sweep`` 同频刷新，``/api/replays`` 每 5 秒刷新。
 
 用法：
-    python rl/dashboard.py --state league_state.json --port 8090
+    python rl/dashboard.py --state league_state.json --sweep runs/economy --port 8090
 打开 http://127.0.0.1:8090 查看。仓库根目录另有 scripts/rl/dashboard.py 包装。
 """
 
@@ -92,6 +95,70 @@ def build_payload(path):
         "state_path": path,
         "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
     }
+
+
+# ---------------------------------------------------------------------------
+# flow-sweep 数据效率 A/B（flow_league.run_flow_sweep 逐轮增量写 summary.json）
+# ---------------------------------------------------------------------------
+
+#: 策略展示顺序（stream 先，games5 后；未知策略按字母序排后面）
+_SWEEP_PRIORITY = ["stream", "games5"]
+
+
+def scan_sweep_dirs(root):
+    """扫描 sweep 根目录 → 策略目录列表。
+
+    root 可以是：配置目录（runs/<name>/，含 flow_sweep_* 子目录），
+    或单个策略目录（自身含 summary.json）。找不到返回 []。
+    """
+    if not root or not os.path.isdir(root):
+        return []
+    if os.path.isfile(os.path.join(root, "summary.json")):
+        return [root]
+    found = []
+    for name in os.listdir(root):
+        if name.startswith("flow_sweep_") and \
+                os.path.isfile(os.path.join(root, name, "summary.json")):
+            found.append(os.path.join(root, name))
+    found.sort(key=lambda d: (_SWEEP_PRIORITY.index(os.path.basename(d).replace("flow_sweep_", ""))
+                              if os.path.basename(d).replace("flow_sweep_", "") in _SWEEP_PRIORITY
+                              else 99, os.path.basename(d)))
+    return found
+
+
+def build_sweep_payload(sweep_root):
+    """读取 flow_sweep_<strategy>/summary.json（逐轮增量写）→ 前端进度+曲线数据。"""
+    if not sweep_root:
+        return {"ok": False, "error": "未指定 --sweep 目录", "sweep_root": None}
+    dirs = scan_sweep_dirs(sweep_root)
+    if not dirs:
+        return {"ok": False,
+                "error": f"未找到 flow_sweep_* 策略目录（或 summary.json）: {sweep_root}",
+                "sweep_root": sweep_root}
+    strategies = []
+    for d in dirs:
+        s = load_state(os.path.join(d, "summary.json"))
+        if not s:
+            continue
+        rows = s.get("rows") or []
+        strategies.append({
+            "dir": d,
+            "strategy": s.get("strategy", os.path.basename(d).replace("flow_sweep_", "")),
+            "desc": s.get("desc", ""),
+            "status": s.get("status", "done"),
+            "run_current": int(s.get("run_current", len(rows))),
+            "n_runs": int(s.get("n_runs", 0)),
+            "per_run_games": int(s.get("per_run_games", 0)),
+            "total_games": int(s.get("total_games", 0)),
+            "pool_sizes": s.get("pool_sizes", {}),
+            "eval_games": int(s.get("eval_games_per_pair", 0)),
+            "elapsed_s": float(s.get("elapsed_s", 0) or 0),
+            "eta_s": float(s.get("eta_s", 0) or 0),
+            "rows": rows,
+            "trend": s.get("trend", {}),
+            "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        })
+    return {"ok": True, "sweep_root": sweep_root, "strategies": strategies}
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +360,27 @@ _HTML = r"""<!DOCTYPE html>
   .kind { font-size:11px; padding:1px 7px; border-radius:999px; background:#334155; }
   .kind.main { background:#1d4ed8; } .kind.baseline { background:#334155; }
   .kind.historical { background:#6d28d9; } .kind.exploiter { background:#991b1b; }
+  /* —— flow-sweep 进度 / 曲线 —— */
+  .strategy-card { border:1px solid #334155; border-radius:10px; padding:14px; margin-bottom:14px;
+                   background:#16213a; }
+  .strategy-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .strategy-head h3 { margin:0; font-size:14px; color:#cbd5e1; }
+  .chip { font-size:11px; padding:1px 9px; border-radius:999px; white-space:nowrap; }
+  .chip.running { background:#1d4ed8; color:#dbeafe; }
+  .chip.done { background:#065f46; color:#6ee7b7; }
+  .chip.up { background:#065f46; color:#6ee7b7; }
+  .chip.flat { background:#334155; color:#cbd5e1; }
+  .chip.down { background:#7f1d1d; color:#fca5a5; }
+  .progress { display:flex; align-items:center; gap:10px; flex:1; min-width:220px; }
+  .progress .bar { flex:1; height:10px; background:#0f172a; border:1px solid #334155;
+                   border-radius:999px; overflow:hidden; }
+  .progress .bar i { display:block; height:100%; background:#2563eb; border-radius:999px;
+                     transition:width .5s; }
+  .progress .pct { font-size:12px; color:#94a3b8; white-space:nowrap; }
+  .sweep-layout { display:grid; grid-template-columns: 1.6fr 1fr; gap:14px; }
+  @media (max-width: 900px) { .sweep-layout { grid-template-columns: 1fr; } }
+  .sweep-layout canvas { height:260px; }
+  .sweep-layout .sub { font-size:12px; }
   /* —— 回放列表 / 播放器 —— */
   .rep-list { display:flex; flex-direction:column; gap:6px; }
   .rep-row { display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -344,6 +432,13 @@ _HTML = r"""<!DOCTYPE html>
     <p id="meta" class="sub" style="margin-top:12px"></p>
   </div>
 </main>
+
+<section class="card" id="sweepCard" style="display:none">
+  <h2>flow-sweep 数据效率 A/B（main 轮内估计 ±1σ 噪声棒）
+    <span class="sub" id="sweepSub"></span>
+  </h2>
+  <div id="sweepBody"></div>
+</section>
 
 <section class="card">
   <h2>最近训练回放
@@ -418,14 +513,26 @@ function colorOf(id){
   return COLORS.fallback[h % COLORS.fallback.length];
 }
 let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:0};
+let sweep = {ok:false, strategies:[]};
 
 async function refresh(){
   try{
     // 时间戳 query 防任何中间层/浏览器缓存，保证 3s 轮询拿到最新状态
-    const r = await fetch("/api/state?_t=" + Date.now(), {cache: "no-store"});
-    payload = await r.json();
+    const [rs, sw] = await Promise.all([
+      fetch("/api/state?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
+      fetch("/api/sweep?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
+    ]);
+    payload = rs; sweep = sw;
     const src = document.getElementById("datasrc");
-    if (!payload.ok){
+    const hasSweep = sweep.ok && sweep.strategies.length;
+    if (!payload.ok && hasSweep){
+      // flow-sweep 模式（无联赛状态文件）：只显示 sweep 面板
+      const s0 = sweep.strategies[0];
+      document.getElementById("status").textContent =
+        "flow-sweep 模式 · 更新于 " + (s0 && s0.updated_at || "");
+      src.textContent = "sweep 根目录: " + (sweep.sweep_root || "");
+      src.style.color = "#22c55e";
+    } else if (!payload.ok){
       document.getElementById("status").textContent = "⚠ " + payload.error;
       src.textContent = "";
     } else {
@@ -444,6 +551,7 @@ async function refresh(){
     document.getElementById("status").textContent = "连接失败：" + e;
   }
   render();
+  renderSweep();
 }
 
 function renderLegend(){
@@ -596,6 +704,120 @@ function drawChart(){
 function render(){
   if (!payload.ok){ renderLegend(); renderTable(); return; }
   renderLegend(); renderTable(); drawChart();
+}
+
+/* ================= flow-sweep：训练进度 + main 曲线 ================= */
+
+function renderSweep(){
+  const card = document.getElementById("sweepCard");
+  const body = document.getElementById("sweepBody");
+  if (!sweep.ok || !sweep.strategies.length){
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "";
+  document.getElementById("sweepSub").textContent =
+    "根目录 " + sweep.sweep_root + " · 每 3s 刷新";
+  body.innerHTML = sweep.strategies.map(s => {
+    const done = s.status === "done";
+    const pct = done ? 100 : Math.round(100 * s.run_current / Math.max(1, s.n_runs));
+    const t = s.trend || {};
+    const tv = t.verdict || "";
+    const vCls = tv.indexOf("上涨") === 0 ? "up" : (tv.indexOf("下跌") === 0 ? "down" : "flat");
+    const rows = s.rows || [];
+    const last = rows[rows.length - 1];
+    const sname = s.strategy === "stream" ? "stream · 每对 1 局 × 20 次"
+               : (s.strategy === "games5" ? "games5 · 每对 5 局 × 4 次"
+               : (s.strategy || "?"));
+    const perModel = last ? Object.keys(last.est || {}).map(mid => {
+      const e = last.est[mid];
+      return `<span><span class="dot" style="background:${colorOf(mid)}"></span>${LABELS[mid] || mid} ${e[0].toFixed(0)}±${e[1].toFixed(0)}</span>`;
+    }).join("") : "";
+    const tableRows = rows.slice(-14).reverse().map(r =>
+      `<tr><td>#${r.run + 1}</td><td>${r.games.toLocaleString()}</td>
+       <td><b>${r.main_est[0].toFixed(0)}</b> ±${r.main_est[1].toFixed(0)}</td></tr>`).join("");
+    const cid = "sweepChart_" + (s.strategy || "s");
+    const eta = (s.status === "running" && s.eta_s > 0)
+      ? " · 预计剩余 " + (s.eta_s >= 60 ? (s.eta_s / 60).toFixed(1) + " 分钟" : s.eta_s.toFixed(0) + " 秒") : "";
+    return `<div class="strategy-card">
+      <div class="strategy-head">
+        <h3>${sname}</h3>
+        <span class="chip ${done ? "done" : "running"}">${done ? "已完成" : "训练中"}</span>
+        <span class="chip ${vCls}">${tv || "—"}</span>
+        <div class="progress">
+          <div class="bar"><i style="width:${pct}%"></i></div>
+          <span class="pct">${s.run_current}/${s.n_runs} 轮 · ${pct}%</span>
+        </div>
+        <span class="sub">${s.desc || ""}${eta}</span>
+      </div>
+      <div class="sweep-layout">
+        <div style="position:relative"><canvas id="${cid}"></canvas></div>
+        <div>
+          <p class="sub" style="margin:0 0 8px">最新一轮（#${s.run_current}）各模型轮内估计 R±SE：</p>
+          <div class="legend" style="margin:0 0 10px">${perModel || "—"}</div>
+          <p class="sub" style="margin:0 0 6px">main 逐轮估计（最近 ${Math.min(14, rows.length)} 轮，最新在上）：</p>
+          <table>
+            <thead><tr><th>轮次</th><th>对局数</th><th>main R±SE</th></tr></thead>
+            <tbody>${tableRows || '<tr><td colspan="3">等待第一轮完成…</td></tr>'}</tbody>
+          </table>
+          <p class="sub" style="margin:8px 0 0">总预算 ${(s.total_games || 0).toLocaleString()} 局 · 每轮 ${(s.per_run_games || 0).toLocaleString()} 局 · 评估 ${s.eval_games} 局/对 · 误差棒 = 评估噪声 1σ（SE≈347.5/√N）</p>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  sweep.strategies.forEach(s => drawSweepChart(s, "sweepChart_" + (s.strategy || "s")));
+}
+
+function drawSweepChart(s, canvasId){
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth || 600, H = canvas.clientHeight || 260;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+  const padL = 50, padR = 16, padT = 18, padB = 34;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const rows = s.rows || [];
+  ctx.fillStyle = "#94a3b8"; ctx.font = "12px sans-serif";
+  if (!rows.length){ ctx.fillText("等待第一轮完成…", padL, padT + 20); return; }
+  const maxRun = Math.max(1, s.n_runs - 1);
+  let lo = 1e9, hi = -1e9;
+  rows.forEach(r => { const v = r.main_est[0], se = r.main_est[1] || 0; lo = Math.min(lo, v - se); hi = Math.max(hi, v + se); });
+  let span = Math.max(60, hi - lo); lo -= span * 0.15; hi += span * 0.15;
+  const X = i => padL + (i / maxRun) * plotW;
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+  // 网格
+  ctx.strokeStyle = "#334155"; ctx.fillStyle = "#94a3b8"; ctx.font = "11px sans-serif"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i <= 4; i++){ const v = lo + (hi - lo) * i / 4, y = Y(v); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.fillText(v.toFixed(0), 4, y + 4); }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i <= 4; i++){ const r = Math.round(maxRun * i / 4), x = X(r); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.fillText(String(r + 1), x - 10, H - padB + 16); }
+  ctx.stroke();
+  // 1500 基准虚线
+  if (lo < 1500 && 1500 < hi){
+    ctx.strokeStyle = "#475569"; ctx.setLineDash([4, 4]); ctx.beginPath();
+    ctx.moveTo(padL, Y(1500)); ctx.lineTo(W - padR, Y(1500)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillText("1500", W - padR - 30, Y(1500) - 4);
+  }
+  // main 估计曲线 + 竖线误差棒（1σ 噪声）
+  const color = "#2563eb";
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+  rows.forEach((r, i) => { const x = X(r.run), y = Y(r.main_est[0]); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+  ctx.stroke();
+  rows.forEach(r => {
+    const x = X(r.run), y = Y(r.main_est[0]), se = r.main_est[1] || 0;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.moveTo(x, Y(r.main_est[0] + se)); ctx.lineTo(x, Y(r.main_est[0] - se)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 4, Y(r.main_est[0] + se)); ctx.lineTo(x + 4, Y(r.main_est[0] + se)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 4, Y(r.main_est[0] - se)); ctx.lineTo(x + 4, Y(r.main_est[0] - se)); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
+  });
+  ctx.fillStyle = "#e2e8f0"; ctx.font = "12px sans-serif";
+  ctx.fillText("main 轮内估计 R±1σ（x 轴 = 训练轮次）", padL + 6, 12);
 }
 
 /* ================= 最近回放：列表 / 对局 / 播放器 ================= */
@@ -1038,6 +1260,7 @@ setInterval(refreshReplays, 5000);
 class Handler(BaseHTTPRequestHandler):
     state_path = "league_state.json"
     replays_dir = "replays"
+    sweep_root = None   # flow-sweep 根目录（--sweep；可为 runs/<name>/ 或某策略目录）
 
     def _send(self, code, body, ctype):
         self.send_response(code)
@@ -1057,6 +1280,9 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, _HTML.encode("utf-8"), "text/html; charset=utf-8")
         elif route == "/api/state":
             self._send(200, json.dumps(build_payload(self.state_path)).encode("utf-8"),
+                       "application/json; charset=utf-8")
+        elif route == "/api/sweep":
+            self._send(200, json.dumps(build_sweep_payload(self.sweep_root)).encode("utf-8"),
                        "application/json; charset=utf-8")
         elif route == "/api/replays":
             self._send(200, json.dumps(build_replays_payload(self.replays_dir)).encode("utf-8"),
@@ -1126,29 +1352,89 @@ def make_demo_state(path, n_points=10, seed=0):
     print(f"[demo] 已生成演示状态 {path}（{len(models)} 模型，{n_points + 1} 个评估点）")
 
 
+def make_demo_sweep(root, seed=1):
+    """生成两份演示 flow-sweep summary（stream 20 轮 / games5 4 轮），便于预览 UI。"""
+    import random
+    rng = random.Random(seed)
+    os.makedirs(root, exist_ok=True)
+    specs = [
+        ("stream", 20, 1, "每对 1 局（忠实流式）× 20 次完整训练", 1488, 29760),
+        ("games5", 4, 5, "每对 5 局 × 4 次完整训练", 7440, 29760),
+    ]
+    ids = ["push_flow", "counter_flow", "lockdown_flow",
+           "all_decks", "random_deck", "main"]
+    for strategy, n_runs, gpp, desc, per_run, total in specs:
+        rows = []
+        se = 347.5 / (5 * 10) ** 0.5   # main 每轮 5 对 × 10 局评估 → 1σ≈49
+        for i in range(n_runs):
+            base = 1500 + (i / max(1, n_runs - 1)) * 55 + rng.uniform(-12, 12)
+            main_est = [round(base, 1), round(se, 1)]
+            est = {mid: [round(base + rng.uniform(-25, 25), 1), round(se, 1)]
+                   for mid in ids}
+            rows.append({"run": i, "games": per_run,
+                         "main_est": main_est, "est": est})
+        summary = {
+            "strategy": strategy, "desc": desc,
+            "pool_scale": 0.1,
+            "pool_sizes": {"push_flow": 6, "counter_flow": 12, "lockdown_flow": 2,
+                           "all_decks": 20, "random_deck": 3, "main": 20},
+            "n_runs": n_runs, "games_per_pair": gpp,
+            "per_run_games": per_run, "total_games": total,
+            "eval_games_per_pair": 10, "device": "cpu",
+            "status": "done", "run_current": n_runs,
+            "elapsed_s": 0.0, "eta_s": 0.0,
+            "rows": rows,
+            "trend": {"first_main_est": rows[0]["main_est"],
+                      "last_main_est": rows[-1]["main_est"],
+                      "delta": round(rows[-1]["main_est"][0] - rows[0]["main_est"][0], 1),
+                      "delta_se": round(2 ** 0.5 * se, 1),
+                      "z": round((rows[-1]["main_est"][0] - rows[0]["main_est"][0]) /
+                                 (2 ** 0.5 * se), 2),
+                      "verdict": "上涨（≥2σ）"},
+        }
+        d = os.path.join(root, f"flow_sweep_{strategy}")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "summary.json"), "w", encoding="utf-8") as f:
+            json.dump(summary, f, ensure_ascii=False, indent=2)
+        print(f"[demo] 已生成演示 flow-sweep -> {d}/summary.json（{n_runs} 轮）")
+
+
 def main():
-    ap = argparse.ArgumentParser(description="RL 联赛训练仪表盘（Elo 曲线 + 最近回放/播放器）")
+    ap = argparse.ArgumentParser(description="RL 联赛训练仪表盘（Elo 曲线 + flow-sweep 进度 + 最近回放/播放器）")
     ap.add_argument("--state", type=str, default="league_state.json",
                     help="run_league 写出的联赛状态 JSON")
+    ap.add_argument("--sweep", type=str, default=None,
+                    help="flow-sweep 根目录（--mode flow-sweep-* 的产物 runs/<name>/，或某个 "
+                         "flow_sweep_<strategy> 策略目录；实时显示训练进度/曲线）")
     ap.add_argument("--replays", type=str, default=None,
                     help="回放目录（缺省 = 状态文件同目录/replays）")
     ap.add_argument("--host", type=str, default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8090)
     ap.add_argument("--demo", action="store_true",
-                    help="状态文件不存在时生成演示数据（5 模型合成 Elo 曲线 + 演示回放）")
+                    help="状态文件不存在时生成演示数据（5 模型合成 Elo 曲线 + 演示回放；"
+                         "--sweep 未指定时也生成演示 flow-sweep）")
     ap.add_argument("--demo-points", type=int, default=10)
     args = ap.parse_args()
     state_abs = os.path.abspath(args.state)
     if args.demo and not os.path.exists(state_abs):
         make_demo_state(state_abs, n_points=args.demo_points)
+    sweep_abs = args.sweep and os.path.abspath(args.sweep) or None
+    if args.demo:
+        if sweep_abs is None:
+            sweep_abs = os.path.join(os.path.dirname(state_abs), "demo_sweep")
+        if not os.path.isdir(sweep_abs):
+            make_demo_sweep(sweep_abs)
     replays_abs = args.replays and os.path.abspath(args.replays) \
         or os.path.join(os.path.dirname(state_abs), "replays")
     if args.demo:
         make_demo_replays(replays_abs)
     Handler.state_path = state_abs
     Handler.replays_dir = replays_abs
+    Handler.sweep_root = sweep_abs
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path})")
+    if Handler.sweep_root:
+        print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}")
     print(f"[dashboard] 回放目录: {Handler.replays_dir}  Ctrl+C 退出")
     try:
         srv.serve_forever()

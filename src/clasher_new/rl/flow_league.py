@@ -376,6 +376,56 @@ SWEEP_STRATEGIES = {
 }
 
 
+def _sweep_trend(rows):
+    """首 vs 末（当前累计）的 main 轮内估计趋势判定：|Δ|/SE≥2σ 才算上涨/下跌。"""
+    first, last = rows[0]["main_est"], rows[-1]["main_est"]
+    delta = last[0] - first[0]
+    se_delta = math.hypot(first[1], last[1])
+    z = delta / se_delta if se_delta > 0 else None
+    verdict = ("上涨（≥2σ）" if z is not None and z >= 2
+               else ("下跌（≤-2σ）" if z is not None and z <= -2 else "持平（噪声内）"))
+    return {"first_main_est": first, "last_main_est": last,
+            "delta": round(delta, 1), "delta_se": round(se_delta, 1),
+            "z": round(z, 2) if z is not None else None, "verdict": verdict}
+
+
+def _write_sweep(out_dir, spec, strategy, pool_scale, sizes, n_runs,
+                 games_per_pair, per_run, total_budget, eval_games, device,
+                 rows, status, elapsed_s):
+    """把当前累计 rows 落盘 summary.json/csv（含进度字段；dashboard 实时轮询）。
+
+    status: running=训练进行中（逐轮增量写，dashboard 显示进度）/ done=全部完成。
+    """
+    summary = {
+        "strategy": strategy, "desc": spec["desc"],
+        "pool_scale": pool_scale, "pool_sizes": sizes,
+        "n_runs": n_runs, "games_per_pair": games_per_pair,
+        "per_run_games": per_run, "total_games": total_budget,
+        "eval_games_per_pair": eval_games, "device": device,
+        "status": status,
+        "run_current": len(rows),
+        "elapsed_s": round(elapsed_s, 1),
+        "eta_s": round(elapsed_s / max(1, len(rows)) * max(0, n_runs - len(rows)), 1)
+                 if status == "running" else 0.0,
+        "rows": rows,
+        "trend": _sweep_trend(rows),
+    }
+    with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    with open(os.path.join(out_dir, "summary.csv"), "w", encoding="utf-8") as f:
+        f.write("run,games,main_est,main_se")
+        for mid in FLOW_MODEL_IDS:
+            f.write(f",{mid}_est,{mid}_se")
+        f.write("\n")
+        for row in rows:
+            f.write(f"{row['run']},{row['games']},{row['main_est'][0]},{row['main_est'][1]}")
+            for mid in FLOW_MODEL_IDS:
+                e = row["est"].get(mid)
+                f.write(f",{e[0] if e else ''},{e[1] if e else ''}")
+            f.write("\n")
+    return summary
+
+
 def run_flow_sweep(cfg, strategy="stream", n_runs=None, games_per_pair=None,
                    pool_scale=0.1, n_random_decks=30, pools=None, eval_games=None):
     """缩小 10× 卡组池的 flow 数据效率 A/B 实验（先验证曲线确实上涨再跑 148,800）。
@@ -387,7 +437,8 @@ def run_flow_sweep(cfg, strategy="stream", n_runs=None, games_per_pair=None,
     全配对换边评估（eval_games/对），记录**轮内聚合估计**（SE≈347.5/√N 噪声地板）。
 
     产出 -> ``runs/<name>/flow_sweep_<strategy>/``：
-    - summary.json：逐轮 main 强度 + 全模型估计 + 趋势判定（首 vs 末，Δ/SE）；
+    - summary.json：**逐轮增量写**（每轮结束即更新，含 status/run_current/eta_s 进度字段，
+      dashboard 可实时显示训练进度）+ 逐轮 main 强度 + 全模型估计 + 趋势判定（首 vs 末，Δ/SE）；
     - summary.csv：曲线数据（可直接画图）；
     - final_flow_<id>.pt：最后一轮 6 个模型。
 
@@ -434,40 +485,20 @@ def run_flow_sweep(cfg, strategy="stream", n_runs=None, games_per_pair=None,
         print(f"[sweep] run {run:02d}: main 轮内估计 {r:.0f}±{se:.0f} "
               f"({rs['games'].get('main', 0)} 评估局) [{time.monotonic() - t0:.1f}s]",
               flush=True)
+        # 逐轮增量落盘（running 状态），dashboard 实时显示进度
+        elapsed = time.monotonic() - t0
+        summary = _write_sweep(out_dir, spec, strategy, pool_scale, sizes, n_runs,
+                               games_per_pair, per_run, total_budget, eval_games,
+                               device, rows,
+                               "done" if run == n_runs - 1 else "running", elapsed)
         if run == n_runs - 1:
             for mid, pol in models.items():
                 save_checkpoint(pol, os.path.join(out_dir, f"final_flow_{mid}.pt"))
 
-    first, last = rows[0]["main_est"], rows[-1]["main_est"]
-    delta = last[0] - first[0]
-    se_delta = math.hypot(first[1], last[1])
-    z = delta / se_delta if se_delta > 0 else None
-    verdict = ("上涨（≥2σ）" if z is not None and z >= 2
-               else ("下跌（≤-2σ）" if z is not None and z <= -2 else "持平（噪声内）"))
-    summary = {
-        "strategy": strategy, "desc": spec["desc"],
-        "pool_scale": pool_scale, "pool_sizes": sizes,
-        "n_runs": n_runs, "games_per_pair": games_per_pair,
-        "per_run_games": per_run, "total_games": total_budget,
-        "eval_games_per_pair": eval_games, "device": device,
-        "rows": rows,
-        "trend": {"first_main_est": first, "last_main_est": last,
-                  "delta": round(delta, 1), "delta_se": round(se_delta, 1),
-                  "z": round(z, 2) if z is not None else None, "verdict": verdict},
-    }
-    with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
-        json.dump(summary, f, ensure_ascii=False, indent=2)
-    with open(os.path.join(out_dir, "summary.csv"), "w", encoding="utf-8") as f:
-        f.write("run,games,main_est,main_se")
-        for mid in FLOW_MODEL_IDS:
-            f.write(f",{mid}_est,{mid}_se")
-        f.write("\n")
-        for row in rows:
-            f.write(f"{row['run']},{row['games']},{row['main_est'][0]},{row['main_est'][1]}")
-            for mid in FLOW_MODEL_IDS:
-                e = row["est"].get(mid)
-                f.write(f",{e[0] if e else ''},{e[1] if e else ''}")
-            f.write("\n")
+    trend = summary["trend"]
+    first, last = trend["first_main_est"], trend["last_main_est"]
+    delta, se_delta, z = trend["delta"], trend["delta_se"], trend["z"]
+    verdict = trend["verdict"]
     print(f"[sweep] 完成 {n_runs} 轮 × {per_run} 局 = {total_budget} 局，耗时 "
           f"{time.monotonic() - t0:.1f}s", flush=True)
     print(f"[sweep] 曲线判定：main {first[0]:.0f}±{first[1]:.0f} -> "
