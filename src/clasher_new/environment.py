@@ -31,12 +31,13 @@ speed_types = [0, 0.75, 1.0, 1.5]
 
 
 class CREnv(gym.Env):
-    def __init__(self, opponent_model=None, opponent_pool=None, visualize=False, speed=1.0):
+    def __init__(self, opponent_model=None, opponent_pool=None, visualize=False, speed=1.0, card_level=11):
         super().__init__()
         self.opponent = opponent_model
         self.opponent_pool = opponent_pool
         self.battle: battle.BattleState = None
         self.speed = speed
+        self.card_level = card_level  # 11-16 全等级支持：本局全部卡牌等级
         self.observation_space = gym.spaces.Dict({
             "grid": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(32, 18, 15), dtype=np.float32),
             "hand": gym.spaces.Box(low=0, high=len(entity_names) - 1, shape=(5,), dtype=np.int32),
@@ -54,7 +55,8 @@ class CREnv(gym.Env):
         if self.opponent_pool:
             self.opponent = random.choice(self.opponent_pool)
         self.battle = battle.BattleState(player.PlayerState(0, player_0_deck[:], 5.0),
-                       player.PlayerState(1, player_1_deck[:], 5.0))
+                       player.PlayerState(1, player_1_deck[:], 5.0),
+                       card_level=self.card_level)
         if self.visualize:
             self.visualizer = Visualizer(self.battle)
         # Now return initial observation

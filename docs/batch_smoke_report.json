@@ -1,0 +1,789 @@
+{
+ "total": 156,
+ "ok": [
+  "AngryBarbarians",
+  "Archer",
+  "ArcherQueen",
+  "Arrows",
+  "Assassin",
+  "AxeMan",
+  "BabyDragon",
+  "Balloon",
+  "BarbLog",
+  "Barbarian",
+  "BarbarianHut",
+  "BarbarianLauncher",
+  "Barbarians",
+  "Bats",
+  "BattleHealer",
+  "BattleRam",
+  "Berserker",
+  "BlowdartGoblin",
+  "BombTower",
+  "Bomber",
+  "BossBandit",
+  "Bowler",
+  "Cannon",
+  "ChampionGuard",
+  "Clone",
+  "DarkMagic",
+  "DarkPrince",
+  "DarkWitch",
+  "DartBarrell",
+  "Earthquake",
+  "ElectroDragon",
+  "ElectroGiant",
+  "ElectroSpirit",
+  "ElectroWizard",
+  "EliteArcher",
+  "Elixir Collector",
+  "ElixirGolem",
+  "FireSpirits",
+  "Fireball",
+  "Firecracker",
+  "FirespiritHut",
+  "Fisherman",
+  "Freeze",
+  "Ghost",
+  "Giant",
+  "GiantBuffer",
+  "GiantSkeleton",
+  "GlobalClone",
+  "GlobalLightning",
+  "GoblinBarrel",
+  "GoblinBrawler",
+  "GoblinCage",
+  "GoblinCage_EV1_GoblinBrawler",
+  "GoblinCurse",
+  "GoblinDemolisher",
+  "GoblinDrill",
+  "GoblinGang",
+  "GoblinGiant",
+  "GoblinHut",
+  "GoblinMachine",
+  "GoblinPartyHut",
+  "GoblinPartyRocket",
+  "GoblinRocketSilo",
+  "Goblins",
+  "Goblinstein",
+  "GoldenKnight",
+  "Golem",
+  "Golemite",
+  "Graveyard",
+  "Heal",
+  "HogRider",
+  "Hunter",
+  "IceGolemite",
+  "IceSpirits",
+  "IceWizard",
+  "InfernoDragon",
+  "InfernoTower",
+  "KingTower",
+  "King_CannonTowers",
+  "King_ChefTowers",
+  "King_KnifeTowers",
+  "King_PrincessTowers",
+  "Knight",
+  "LavaHound",
+  "LavaPups",
+  "Lightning",
+  "LittlePrince",
+  "Log",
+  "MegaKnight",
+  "MegaMinion",
+  "MergeMaiden",
+  "MergeMaiden_Mounted",
+  "MergeMaiden_Normal",
+  "MightyMiner",
+  "Miner",
+  "MiniPekka",
+  "MiniSparkys",
+  "MinionHorde",
+  "Minions",
+  "Mirror",
+  "Monk",
+  "Mortar",
+  "MovingCannon",
+  "Musketeer",
+  "Pekka",
+  "Phoenix",
+  "Poison",
+  "Prince",
+  "PrinceBuff",
+  "Princess",
+  "Rage",
+  "RageBarbarian",
+  "RamRider",
+  "Rascals",
+  "Rocket",
+  "RoyalDelivery",
+  "RoyalGiant",
+  "RoyalHogs",
+  "RoyalRecruits",
+  "RoyalRecruits_Chess",
+  "SkeletonArmy",
+  "SkeletonBalloon",
+  "SkeletonDragons",
+  "SkeletonKing",
+  "SkeletonKingSkeleton",
+  "SkeletonWarriors",
+  "SkeletonWarriors_SpookyChess",
+  "Skeletons",
+  "Snowball",
+  "SpearGoblins",
+  "SuperArcher",
+  "SuperEliteArcher",
+  "SuperHogRider",
+  "SuperHogRiderTerry",
+  "SuperIceGolemite",
+  "SuperKnight",
+  "SuperLavaHound",
+  "SuperMiniPekka",
+  "SuperWitch",
+  "SuspiciousBush",
+  "Tesla",
+  "ThreeMusketeers",
+  "Tombstone",
+  "Tornado",
+  "TriWizards",
+  "Valkyrie",
+  "VoodooHog",
+  "Wallbreaker_mini",
+  "Wallbreakers",
+  "WarmSpell",
+  "Witch",
+  "WitchMother",
+  "Wizard",
+  "Xbow",
+  "Zap",
+  "ZapMachine"
+ ],
+ "no_act": [],
+ "errors": {},
+ "detail": {
+  "AngryBarbarians": {
+   "spawned_extra": true,
+   "enemy_dmg": 1536
+  },
+  "Archer": {
+   "spawned_extra": true,
+   "enemy_dmg": 1762
+  },
+  "ArcherQueen": {
+   "spawned_extra": true,
+   "enemy_dmg": 1670
+  },
+  "Arrows": {
+   "spawned_extra": true,
+   "enemy_dmg": 1674
+  },
+  "Assassin": {
+   "spawned_extra": false,
+   "enemy_dmg": 1728
+  },
+  "AxeMan": {
+   "spawned_extra": true,
+   "enemy_dmg": 1679
+  },
+  "BabyDragon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1730
+  },
+  "Balloon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "BarbLog": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Barbarian": {
+   "spawned_extra": false,
+   "enemy_dmg": 1683
+  },
+  "BarbarianHut": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "BarbarianLauncher": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Barbarians": {
+   "spawned_extra": true,
+   "enemy_dmg": 1640
+  },
+  "Bats": {
+   "spawned_extra": true,
+   "enemy_dmg": 1735
+  },
+  "BattleHealer": {
+   "spawned_extra": false,
+   "enemy_dmg": 1690
+  },
+  "BattleRam": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Berserker": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "BlowdartGoblin": {
+   "spawned_extra": true,
+   "enemy_dmg": 1679
+  },
+  "BombTower": {
+   "spawned_extra": true,
+   "enemy_dmg": 1760
+  },
+  "Bomber": {
+   "spawned_extra": true,
+   "enemy_dmg": 1748
+  },
+  "BossBandit": {
+   "spawned_extra": false,
+   "enemy_dmg": 1632.0
+  },
+  "Bowler": {
+   "spawned_extra": true,
+   "enemy_dmg": 1736
+  },
+  "Cannon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1720
+  },
+  "ChampionGuard": {
+   "spawned_extra": false,
+   "enemy_dmg": 1640
+  },
+  "Clone": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "DarkMagic": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "DarkPrince": {
+   "spawned_extra": false,
+   "enemy_dmg": 1706
+  },
+  "DarkWitch": {
+   "spawned_extra": false,
+   "enemy_dmg": 1692
+  },
+  "DartBarrell": {
+   "spawned_extra": true,
+   "enemy_dmg": 1727
+  },
+  "Earthquake": {
+   "spawned_extra": true,
+   "enemy_dmg": 1680.0
+  },
+  "ElectroDragon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1666
+  },
+  "ElectroGiant": {
+   "spawned_extra": true,
+   "enemy_dmg": 436
+  },
+  "ElectroSpirit": {
+   "spawned_extra": false,
+   "enemy_dmg": 1734
+  },
+  "ElectroWizard": {
+   "spawned_extra": false,
+   "enemy_dmg": 1746
+  },
+  "EliteArcher": {
+   "spawned_extra": true,
+   "enemy_dmg": 1710
+  },
+  "Elixir Collector": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "ElixirGolem": {
+   "spawned_extra": true,
+   "enemy_dmg": 1199
+  },
+  "FireSpirits": {
+   "spawned_extra": false,
+   "enemy_dmg": 1733
+  },
+  "Fireball": {
+   "spawned_extra": false,
+   "enemy_dmg": 1669
+  },
+  "Firecracker": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "FirespiritHut": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Fisherman": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Freeze": {
+   "spawned_extra": false,
+   "enemy_dmg": 1683
+  },
+  "Ghost": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Giant": {
+   "spawned_extra": true,
+   "enemy_dmg": 436
+  },
+  "GiantBuffer": {
+   "spawned_extra": true,
+   "enemy_dmg": 1308
+  },
+  "GiantSkeleton": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "GlobalClone": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "GlobalLightning": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinBarrel": {
+   "spawned_extra": true,
+   "enemy_dmg": 1755
+  },
+  "GoblinBrawler": {
+   "spawned_extra": false,
+   "enemy_dmg": 1685
+  },
+  "GoblinCage": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinCage_EV1_GoblinBrawler": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinCurse": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinDemolisher": {
+   "spawned_extra": true,
+   "enemy_dmg": 1710
+  },
+  "GoblinDrill": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinGang": {
+   "spawned_extra": true,
+   "enemy_dmg": 1755
+  },
+  "GoblinGiant": {
+   "spawned_extra": true,
+   "enemy_dmg": 1090
+  },
+  "GoblinHut": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinMachine": {
+   "spawned_extra": false,
+   "enemy_dmg": 1720
+  },
+  "GoblinPartyHut": {
+   "spawned_extra": true,
+   "enemy_dmg": 1679
+  },
+  "GoblinPartyRocket": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "GoblinRocketSilo": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Goblins": {
+   "spawned_extra": true,
+   "enemy_dmg": 1755
+  },
+  "Goblinstein": {
+   "spawned_extra": true,
+   "enemy_dmg": 1417
+  },
+  "GoldenKnight": {
+   "spawned_extra": false,
+   "enemy_dmg": 1760
+  },
+  "Golem": {
+   "spawned_extra": true,
+   "enemy_dmg": 436
+  },
+  "Golemite": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Graveyard": {
+   "spawned_extra": true,
+   "enemy_dmg": 1685
+  },
+  "Heal": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "HogRider": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Hunter": {
+   "spawned_extra": true,
+   "enemy_dmg": 1669
+  },
+  "IceGolemite": {
+   "spawned_extra": true,
+   "enemy_dmg": 1526
+  },
+  "IceSpirits": {
+   "spawned_extra": false,
+   "enemy_dmg": 1745
+  },
+  "IceWizard": {
+   "spawned_extra": true,
+   "enemy_dmg": 1668
+  },
+  "InfernoDragon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1689.0
+  },
+  "InfernoTower": {
+   "spawned_extra": false,
+   "enemy_dmg": 997.5
+  },
+  "KingTower": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "King_CannonTowers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1761
+  },
+  "King_ChefTowers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1708
+  },
+  "King_KnifeTowers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1737
+  },
+  "King_PrincessTowers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Knight": {
+   "spawned_extra": false,
+   "enemy_dmg": 1616
+  },
+  "LavaHound": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "LavaPups": {
+   "spawned_extra": true,
+   "enemy_dmg": 1701
+  },
+  "Lightning": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "LittlePrince": {
+   "spawned_extra": true,
+   "enemy_dmg": 1682
+  },
+  "Log": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "MegaKnight": {
+   "spawned_extra": false,
+   "enemy_dmg": 1608
+  },
+  "MegaMinion": {
+   "spawned_extra": true,
+   "enemy_dmg": 1494
+  },
+  "MergeMaiden": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "MergeMaiden_Mounted": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "MergeMaiden_Normal": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "MightyMiner": {
+   "spawned_extra": false,
+   "enemy_dmg": 1640.0
+  },
+  "Miner": {
+   "spawned_extra": false,
+   "enemy_dmg": 1728
+  },
+  "MiniPekka": {
+   "spawned_extra": false,
+   "enemy_dmg": 1510
+  },
+  "MiniSparkys": {
+   "spawned_extra": true,
+   "enemy_dmg": 1698
+  },
+  "MinionHorde": {
+   "spawned_extra": true,
+   "enemy_dmg": 1724
+  },
+  "Minions": {
+   "spawned_extra": true,
+   "enemy_dmg": 1728
+  },
+  "Mirror": {
+   "spawned_extra": false,
+   "enemy_dmg": 1616
+  },
+  "Monk": {
+   "spawned_extra": false,
+   "enemy_dmg": 1680
+  },
+  "Mortar": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "MovingCannon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1708
+  },
+  "Musketeer": {
+   "spawned_extra": true,
+   "enemy_dmg": 1740
+  },
+  "Pekka": {
+   "spawned_extra": false,
+   "enemy_dmg": 1632
+  },
+  "Phoenix": {
+   "spawned_extra": true,
+   "enemy_dmg": 1632
+  },
+  "Poison": {
+   "spawned_extra": true,
+   "enemy_dmg": 1753.4
+  },
+  "Prince": {
+   "spawned_extra": false,
+   "enemy_dmg": 1568
+  },
+  "PrinceBuff": {
+   "spawned_extra": false,
+   "enemy_dmg": 1568
+  },
+  "Princess": {
+   "spawned_extra": true,
+   "enemy_dmg": 1695
+  },
+  "Rage": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "RageBarbarian": {
+   "spawned_extra": false,
+   "enemy_dmg": 1694
+  },
+  "RamRider": {
+   "spawned_extra": true,
+   "enemy_dmg": 1526
+  },
+  "Rascals": {
+   "spawned_extra": false,
+   "enemy_dmg": 1718
+  },
+  "Rocket": {
+   "spawned_extra": true,
+   "enemy_dmg": 1702
+  },
+  "RoyalDelivery": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "RoyalGiant": {
+   "spawned_extra": true,
+   "enemy_dmg": 1417
+  },
+  "RoyalHogs": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "RoyalRecruits": {
+   "spawned_extra": true,
+   "enemy_dmg": 1729
+  },
+  "RoyalRecruits_Chess": {
+   "spawned_extra": true,
+   "enemy_dmg": 1729
+  },
+  "SkeletonArmy": {
+   "spawned_extra": true,
+   "enemy_dmg": 1738
+  },
+  "SkeletonBalloon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SkeletonDragons": {
+   "spawned_extra": true,
+   "enemy_dmg": 1677
+  },
+  "SkeletonKing": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "SkeletonKingSkeleton": {
+   "spawned_extra": false,
+   "enemy_dmg": 1716
+  },
+  "SkeletonWarriors": {
+   "spawned_extra": true,
+   "enemy_dmg": 1682
+  },
+  "SkeletonWarriors_SpookyChess": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Skeletons": {
+   "spawned_extra": false,
+   "enemy_dmg": 1716
+  },
+  "Snowball": {
+   "spawned_extra": false,
+   "enemy_dmg": 1718
+  },
+  "SpearGoblins": {
+   "spawned_extra": true,
+   "enemy_dmg": 1660
+  },
+  "SuperArcher": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SuperEliteArcher": {
+   "spawned_extra": true,
+   "enemy_dmg": 1746
+  },
+  "SuperHogRider": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SuperHogRiderTerry": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SuperIceGolemite": {
+   "spawned_extra": true,
+   "enemy_dmg": 436
+  },
+  "SuperKnight": {
+   "spawned_extra": false,
+   "enemy_dmg": 1631
+  },
+  "SuperLavaHound": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SuperMiniPekka": {
+   "spawned_extra": true,
+   "enemy_dmg": 0.0
+  },
+  "SuperWitch": {
+   "spawned_extra": true,
+   "enemy_dmg": 1670
+  },
+  "SuspiciousBush": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Tesla": {
+   "spawned_extra": false,
+   "enemy_dmg": 1695
+  },
+  "ThreeMusketeers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1736
+  },
+  "Tombstone": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Tornado": {
+   "spawned_extra": false,
+   "enemy_dmg": 1694.0
+  },
+  "TriWizards": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Valkyrie": {
+   "spawned_extra": false,
+   "enemy_dmg": 1602
+  },
+  "VoodooHog": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Wallbreaker_mini": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Wallbreakers": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "WarmSpell": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Witch": {
+   "spawned_extra": true,
+   "enemy_dmg": 1754
+  },
+  "WitchMother": {
+   "spawned_extra": true,
+   "enemy_dmg": 1707
+  },
+  "Wizard": {
+   "spawned_extra": true,
+   "enemy_dmg": 1715
+  },
+  "Xbow": {
+   "spawned_extra": true,
+   "enemy_dmg": 1746
+  },
+  "Zap": {
+   "spawned_extra": false,
+   "enemy_dmg": 1718
+  },
+  "ZapMachine": {
+   "spawned_extra": true,
+   "enemy_dmg": 1331
+  }
+ }
+}

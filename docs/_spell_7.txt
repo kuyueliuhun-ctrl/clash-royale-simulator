@@ -1,0 +1,352 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 2-Elixir Cards, Legendary Cards, Spell Cards, Electro Valley Cards
+English
+The Log
+158
+SAVE
+VIEW SOURCE
+The Log
+Elixir Cost
+2 
+Rarity
+Legendary
+Type
+Spell
+Arena
+Electro Valley
+Release Date
+4 July 2016
+
+
+
+
+“A spilt bottle of Rage turned an innocent tree trunk into "The Log". Now, it seeks revenge by crushing anything in its path! Reduced damage to Crown Towers.”
+
+The “The Log” is a Legendary card that is unlocked from the Electro Valley (Arena 11). It is an area-damage, ground-targeting spell with a very long rectangular area and moderate damage that also inflicts knockback to any troop it hits. It can only be deployed on the player's own side. It appears as a long, spiked piece of wood. A "The Log" card costs 2 Elixir to deploy.
+
+Modifiers
+ Common: goL ehT gnaremooB
+“Boomerang The Log”
+
+The Log goes backwards after reaching the end.
+
+ Rare: The Loooooooog
+“Extreme range”
+
+The Log's duration is extended.
+
+ Epic: Chop! Chop!
+“Spawn lumberjack”
+
+The Log spawns a Lumberjack after expiring.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+As a cheap spell, The Log can be used to damage, push back or even defeat multiple ground troops that are approaching your side, such as Barbarians, Skeleton Army, or Goblin Gang.
+The Log deals enough damage to OHKO a Princess, Rascal Girl or Dart Goblin of the same Level. However, it is not able to defeat them if they are at a higher Level than The Log.
+Unlike most other cards with a pushback effect (with the exception of the Monk or the Little Prince's ability), The Log can affect all ground troops. If a troop is locked into a target, the pushback caused by The Log will reset their attack animation. This is in contrast with the Zap or Lightning, as it will only pause the attack instead of fully resetting it, with the exception of Sparky. There are many implications where the knockback can be useful.
+The Log's pushback can be used to force enemy troops directly in the center of the Arena to switch lanes by deploying The Log on the side of the troop opposite to where the player would like to redirect it. This can be useful to weaken the current defense or to weaken a counterattack. A scenario where this would be useful is if the opponent places down a Golem or Giant against your X-Bow. The Log's knockback will send the tank out of range, letting your X-Bow connect to the Crown Tower.
+If a unit is walking right on the edge of the river on a player's side, the player can use The Log to push the unit over the river back to the opponent's side. This is a good way to delay slow-moving units like Giant, Rune Giant, Golem, Mighty Miner, Giant Skeleton, Skeleton King, Elixir Golem, Goblin Machine, Valkyrie, and P.E.K.K.A..
+If the opponent places a Royal Giant in the extra space of the player's territory once a Tower has been destroyed, they may be able to use The Log to push him to the King's Tower lane, protecting their frailer Tower. It could also be used to cause him to retarget to another building if the player places their building late.
+If a Miner is placed on the corner of the Crown Tower closest to the King's Tower, The Log can push the Miner towards the King's Tower, activating it.
+The Log's pushback can push the Hunter further away from his target, reducing his damage potential significantly.
+The Log's pushback can be used to push troops closer to the inside of the Arena. This can be helpful in situations such as when a Bowler or Magic Archer is pushed closer to an enemy troop so that their piercing attacks can reach the King Tower and activate it.
+While a Mega Knight is charging his jump attack, pushing back the Mega Knight while he is charging does not prevent him from jumping on his target. The same holds true for the Bandit and her dash attack.
+It can be a cheaper alternative to Arrows, due to the very similar damage and area of effect.
+The main differences are that The Log costs 1 less Elixir while being unable to affect air troops. As such, it might be advisable to bring other splash damage cards to deal with the likes of Minions, Bats, and the Minion Horde.
+It can also be an alternative to Zap, as both of them have the same Elixir cost. They can both disarm the charge attacks of Prince and Dark Prince if you have low Elixir or if your small units are out of rotation. However, they have slightly different effects when used. The Log will not reset a Sparky, but a Zap will.
+Barring air troops, there are only 5 units that it cannot OHKO compared to Arrows, those being Wall Breakers, Bomber, Archers, Firecracker, and Elixir Blobs. They will still be countered with the help of the Crown Tower.
+The Log is effective on offense when combined with grounded units. Any swarms placed on top of The Log will be immediately hit, and in most cases, completely eliminated. However, the player should be aware of the slightly staggered deploy time on all cards comprised of more than one unit besides Skeletons and Skeleton Army, and deploy their The Log so that it will roll over the units once their hitbox spawns.
+Remember that, despite it being a spell, it can only be placed on the player's side, which reduces its effectiveness in certain situations. Because of this, The Log should not be used in Miner or Goblin Barrel decks as it will not be able to reach them in time to save them from enemy swarms.
+The Log can be an effective counter to Tombstones or Goblin Drills. If the building is at around half health, The Log can be used to destroy the building and the troops spawned afterward. Similarly, it can also be used on a Battle Ram to deal additional damage to the spawned Barbarians. However, this will not work against a Goblin Giant.
+The Log, combined with one Cannoneer shot, can fully counter the Magic Archer, Mother Witch, Ice Wizard, and Little Prince for a +2 and +1 Elixir trade respectively.
+The Log is a great counter to a Goblin Barrel. Although it is slightly harder to defend a Goblin Barrel with it compared to Arrows, it costs 1 less Elixir. It is also more effective in scenarios where the Goblin Barrel is accompanied with a tank, as The Log will also deal damage to the tank, and in cases where the tank is a swarm like a Skeleton Army, The Log will be able to defeat them both at once.
+Playing a Goblin Barrel 3 tiles above a Crown Tower looks very similar to one that is placed on the center of it (this is colloquially referred to as a "tricky barrel"). It may cause The Log played too far forward to miss one or more of the Goblins, allowing them to sneakily deal damage
+The Log is wider compared to the Barbarian Barrel. As such, placing the Goblin Barrel 1 tile on the side of the Tower will not work against a player with The Log, as it will be able to hit all 3 Goblins.
+The Log can only prevent all damage from a center-placed Evolved Goblin Barrel if the Dagger Duchess is in use with at least 3 daggers available. Make sure that you deploy The Log on the Goblins side, while the Dagger Duchess attacks the Decoy Goblins side.
+The Log pairs very well with other spells, like Fireball and Poison. The extra damage that The Log does is enough to finish off units that would survive those two spells like Night Witch, Hunter, Berserker, Bandit, and Witch. In the case of the Poison, it will push them into the area of the spell, staying there for longer. However, this is mostly a negative Elixir trade, so try to get additional value by hitting other units as well.
+If the player uses a Fireball next to the Crown Tower and manages to hit a troop that survives it, it is better to wait until the enemy troop reaches the bridge and use The Log there, in hopes of hitting other troops that are used as a meat shield for the injured troop. This should not be done however if the troop has already crossed the bridge, as it would be more Elixir-efficient to let the Tower finish it off.
+The Log can be combined with Spirit cards similarly to the Spirit + Zap combination. Compared to Zap, The Log does more damage, which allows it to defeat up to Elixir Blobs with any Spirit, as opposed to Zap which requires a Fire Spirit to reach the same threshold. In addition, the combination of The Log + a Spirit card is enough to defeat Guards, however, unlike the other troops, this requires The Log to hit first before the Spirit.
+The Hog Rider, Mega Knight, Ram Rider, Royal Hogs, and the Cursed Hogs can unintentionally jump over The Log as they cannot be struck by it while they use their jump abilities. However, this is rare and should not be relied on.
+When timed right, the Magic Archer paired with The Log can stop 2 of the Three Musketeers when split, while also getting chip damage towards the Crown Tower. This will leave the player with 3 spare Elixir to use on the third Musketeer in the other lane.
+Statistics
+Cost
+	Range
+	Width
+	Target
+	Type
+	Rarity
+
+2	10.1	3.9	Ground	Spell	Legendary
+
+
+
+
+
+
+
+Level
+	Area Damage
+	Crown Tower Damage
+
+9	220	33
+10	242	36
+11	266	40
+12	293	44
+13	322	48
+14	354	53
+15	389	59
+16	428	64
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Reward
+Damage Dealer
+	1	Deal a total of 77,500 Damage to enemy Troops or buildings	2 The Log cards
+100 
+2	Deal a total of 230,000 Damage to enemy Troops or buildings	8,000 
+100 
+3	Deal a total of 385,000 Damage to enemy Troops or buildings	100 
+100 
+Troop Destroyer
+	1	Destroy 640 enemy Troops	12,000 
+150 
+2	Destroy 1,800 enemy Troops	2 
+150 
+3	Destroy 3,150 enemy Troops	18,000 
+150 
+Steamroller
+	1	Push back 10 or more units with a single deploy a total of 50 times	6,000 
+200 
+2	Push back 10 or more units with a single deploy a total of 150 times	8,000 
+200 
+3	Push back 10 or more units with a single deploy a total of 300 times	10,000 
+200 
+History
+
+2016
+
+The Log card was added to the game on 4/7/2016, in the Tournaments Update.
+On 24/8/2016, a Balance Update, increased The Log's casting speed to 300 (from 180) and its projectile speed to 170 (from 140).
+On 19/9/2016, the September 2016 Update, allowed The Log to push back all ground troops. This allowed The Log to reset the charge attacks of the Prince and Dark Prince.
+On 20/10/2016, a Balance Update, increased The Log's casting speed to 360 (from 300), its projectile speed to 200 (from 170), its rolling distance to 11.6 tiles (from 9.6 tiles), and its damage by 8.5%.
+
+2017
+
+On 23/1/2017 a Balance Update, decreased The Log's damage by 4% and decreased its pushback range to 1 tile (from 1.5 tiles).
+On 13/3/2017, the March 2017 Update, decreased The Log's damage by 4% and decrease its rolling distance to 11.1 tiles (from 11.6 tiles). On the same day, a bug was discovered where the Log was not able to be deployed on top of buildings. To compensate for this, in a maintenance break, the rolling distance was restored to 11.6 tiles until the next client update.
+On 12/6/2017, the June 2017 Update, decreased The Log's rolling distance to 11.1 tiles (from 11.6 tiles). The bug that prevented the Log from being deployed on top of buildings was also fixed.
+On 12/12/2017, the Electrifying Update, decreased The Log’s Crown Tower damage to 35% of the full damage (from 40%).
+
+2018
+
+On 25/4/2018, the Clan Wars Update, allowed The Log to be placed on the river if a Crown Tower has been already destroyed.
+On 5/9/2018, the September 2018 Update, changed it so that Legendary cards start at Level 9 and end at Level 13 (from 1 to 5).
+On 1/10/2018, a Balance Update, fixed a bug where troops that were spawned after their parent troops died would be immune to spell damage.
+
+2020
+
+On 7/4/2020, a Balance Update, added a card render to The Log's card info screen.
+On 4/8/2020, a Balance Update, decreased The Log's rolling distance to 10.1 tile (from 11.1 tiles), and decreased its Crown Tower damage to 30% of the full damage (from 35%).
+On 4/12/2020, a maintenance break, changed The Log's card render, by adding holiday lights on it.
+
+2021
+
+On 11/2/2021, a maintenance break, reverted The Log's card render to their state before 4/12/2020.
+On 7/6/2021, the Summer 2021 Update, slightly changed The Log's description, adding the phrase “Reduced damage to Crown Towers.” to it.
+On 27/10/2021, the Champions Update, increased the Level cap of all cards to 14 (from 13).
+
+2022
+
+On 7/6/2022, a Balance Update, decreased The Log's Crown Tower damage to 20% of the full damage (from 30%).
+On 26/10/2022, the 2022 Quarter 3 Update, moved the Arena to unlock The Log from Builder's Workshop to Electro Valley.
+
+2023
+
+On 7/2/2023, a Balance Update, decreased The Log's pushback range to 0.7 tiles (from 1 tile).
+On 27/3/2023, the Losers Update, improved The Log's collision detection.
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+
+2025
+
+On 4/3/2025, a Balance Update, decreased The Log's Crown Tower damage to 15% of the full damage (from 20%).
+On 31/3/2025, the 2025 Quarter 1 Update, decreased The Log's damage by 0.34%.
+On 8/7/2025, a Balance Update, decreased The Log's damage by 8%.
+On 1/9/2025, a Balance Update, increased the Log's damage by 1%.
+
+2026
+
+On 1/6/2026, a Balance Update, decreased The Log's Crown Tower damage to 13% of the full damage (from 15%)
+Gallery
+Current card render.
+The Log's card render between 4/12/2020 and 11/2/2021.
+Current card preview
+The Log
+Logmas
+Trivia
+While not available as a standalone spell in Clash of Clans, The Log reappears there in a few situations.
+The Log appears to be one of the logs launched from the Siege Machine, the Log Launcher.
+The Log is used as a trap in the Clan Capital, the Log Trap.
+The Log is the cheapest Legendary card, costing 2 Elixir.
+It is 1 of 3 spells which can only be placed in the player's own territory, the others being Royal Delivery and Barbarian Barrel.
+In the Italian, Dutch, Arabic, and Portuguese language settings of the game, The Log's name translates to "The Trunk". In the Japanese, Persian, and Indonesian language settings of the game, The Log's name translates to "Rolling Wood", "Timber", and "The Wood" respectively.
+The Log bears more than a passing resemblance to Splinter from the Kirby series.
+The Log can be seen in the menu picture for Builder's Workshop in the bottom left corner. Before The Log was introduced into the game, it had no spikes on it.
+The Log can be seen on the Trophy Road as a decoration.
+In Logmas Arena, The Log can be seen in the left side of the Arena as a decoration, resembling a Clashmas Tree.
+When deployed, you can hear a voice chanting “LOG”.
+The Log is 1 of 3 spells that speak distinct words when on the field, the others being Goblin Curse and Party Rocket.
+The Log is featured in non-Clash games. More specifically:
+Although not available as a spell, The Log is featured as a character skin for Spike in Brawl Stars.
+Although not available as a spell, The Log reappears as Greg's active ability in Squad Busters.
+The Lumberjack is responsible for creating The Log, which is hinted at on several different occasions:
+The Lumberjack's description states "and hunts The Log by night".
+In The Log's card description, it states the cause of its creation was "a spilt bottle of Rage", which is a property exclusive to the Lumberjack.
+In the Clash of Clans No More Clashmas?! commercial, The Log had a flashback to its creation where the Lumberjack is seen spilling the Rage spell in a forest.
+By an Emote where the Lumberjack cowers because The Log towers over him.
+In the Clash-A-Rama episode "Twas The Night Before Clashmas", the Kings search for a Clashmas Tree. They ignore the Lumberjack's majestic one, and decides on a smaller and ugly looking tree. The agitated Lumberjack tries to destroy it, but slips and drops his Rage spell, which converts the tree into The Log.
+According to TV Royale, the number of times The Log was used in battles in 2018 was 39 billion.
+The Log is the subject of certain cosmetics in the game. More specifically:
+The Log is the subject of a few Emotes.
+The Log is the subject of a few Tower Skins.
+The Log was featured in the winning decks of multiple Clash Royale Tournaments. More specifically:
+The Log was featured in the winning deck of the King's Cup Tournament, by a player called TMD YAOYAO.
+The Log was featured in the winning deck of the King's Cup II Tournament, by a player called Surgical Goblin.
+The Log was featured in the winning deck of the Clash Royale League 2018 Tournament, by a player called Lciop.
+The Log was featured in the winning deck of the Clash Royale League 2022 Tournament, by a player called Mohamed Light.
+There used to be a glitch where if a Bomb Tower was directly in front of the King's Tower and was hit by The Log, the Bomb Tower would extend The Log's effective range, causing it to activate the King's Tower.
+If a Monk activates Pensive Protection in the corner of the Arena, then an opposing The Log will be deflected out of the Arena's bounds.
+On 27/3/2023, a Trainer was added to the game called Boss Cheddar, and used a Level 18 The Log in their deck, despite the highest Level being Level 14 at the time. This Trainer was removed on 18/4/2023.
+The Log has had balance changes that were planned for it but were not added to the game. More specifically:
+The initial balance change for The Log on the 7/6/2022 balance changes was a pushback range decrease to 0.5 tiles (from 1 tile), but it was changed to a Crown Tower Damage decrease to 20% (from 30%) last minute.
+The initial balance change for The Log on the 4/3/2025 balance changes was a Crown Tower damage decrease to 10% (from 20%), but it was raised to 15% last minute.
+The initial balance change for The Log on the 8/7/2025 balance changes was a 9% damage decrease, but it was lowered to 8% last minute.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+158 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+4 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

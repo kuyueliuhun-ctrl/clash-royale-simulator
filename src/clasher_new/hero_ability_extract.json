@@ -1,0 +1,196 @@
+{
+ "MightyMiner": {
+  "name": "MightyMinerLaneSwitch",
+  "tid": "TID_ABILITY_NAME_MIGHTY_MINER_LANE_SWITCH",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_MIGHTY_MINER",
+  "manaCost": 1,
+  "cooldown": 13000,
+  "activationSpawnDeployTime": 0,
+  "source": "character_abilities",
+  "activationSpawnCharacterData": {
+   "name": "MightyMinerBomb",
+   "rarity": "Common",
+   "deployTime": 1000,
+   "deathDamage": 130,
+   "collisionRadius": 450,
+   "tid": "TID_BUILDING_GIANT_SKELETON_BOMB",
+   "source": "buildings",
+   "tidTarget": "TID_TARGETS_AIR_AND_GROUND"
+  }
+ },
+ "SkeletonKing": {
+  "name": "SkeletonKing",
+  "tid": "TID_ABILITY_NAME_SKELETON_KING_RESURRECT",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_SKELETON_KING",
+  "manaCost": 2,
+  "cooldown": 20000,
+  "resurrectBaseCount": 6,
+  "spawnLimit": 16,
+  "source": "character_abilities",
+  "areaEffectObjectData": {
+   "name": "SkeletonKingGraveyard",
+   "rarity": "Common",
+   "lifeDuration": 10000,
+   "radius": 4000,
+   "spawnInterval": 250,
+   "spawnTime": 400,
+   "spawnClones": true,
+   "hitsGround": true,
+   "hitsAir": true,
+   "source": "area_effect_objects",
+   "spawnCharacterData": {
+    "name": "SkeletonKingSkeleton",
+    "rarity": "Common",
+    "sightRange": 5500,
+    "deployTime": 1000,
+    "speed": 90,
+    "hitpoints": 32,
+    "hitSpeed": 1000,
+    "loadTime": 500,
+    "damage": 32,
+    "range": 500,
+    "attacksGround": true,
+    "collisionRadius": 500,
+    "tid": "TID_CHARACTER_SKELETON",
+    "source": "characters",
+    "tidTarget": "TID_TARGETS_GROUND",
+    "tidSpeed": "TID_SPEED_4"
+   }
+  }
+ },
+ "ArcherQueen": {
+  "name": "ArcherQueenRapid",
+  "tid": "TID_ABILITY_NAME_ARCHER_QUEEN_INVISIBILITY_RUSH",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_ARCHER_QUEEN",
+  "manaCost": 1,
+  "cooldown": 17000,
+  "buffTime": 3500,
+  "source": "character_abilities",
+  "buffData": {
+   "name": "ArcherQueenRapid",
+   "rarity": "Common",
+   "hitSpeedMultiplier": 280,
+   "speedMultiplier": -25,
+   "source": "character_buffs"
+  }
+ },
+ "GoldenKnight": {
+  "name": "GoldenKnightChain",
+  "tid": "TID_ABILITY_NAME_GOLDEN_KNIGHT_CHAIN_ATTACK",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_GOLDEN_KNIGHT",
+  "manaCost": 1,
+  "cooldown": 8000,
+  "dashRange": 5500,
+  "source": "character_abilities"
+ },
+ "Monk": {
+  "name": "Deflect",
+  "tid": "TID_ABILITY_NAME_MONK_DEFLECT",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_MONK",
+  "manaCost": 1,
+  "cooldown": 17000,
+  "buffTime": 4000,
+  "source": "character_abilities",
+  "buffData": {
+   "name": "ShieldBoostMonk",
+   "rarity": "Common",
+   "damageReduction": 80,
+   "source": "character_buffs"
+  },
+  "areaEffectObjectData": {
+   "name": "Deflect",
+   "rarity": "Common",
+   "lifeDuration": 4000,
+   "radius": 1500,
+   "onlyEnemies": true,
+   "hitsGround": true,
+   "hitsAir": true,
+   "source": "area_effect_objects"
+  },
+  "onActivationActionData": {
+   "name": "monk_deflect_tags",
+   "source": "actions"
+  }
+ },
+ "LittlePrince": {
+  "name": "ChampGuardianAbility",
+  "tid": "TID_ABILITY_NAME_LITTLE_PRINCE_RESCUE",
+  "tidInfo": "TID_ABILITY_DESCRIPTION_LITTLE_PRINCE",
+  "manaCost": 3,
+  "cooldown": 30000,
+  "source": "character_abilities",
+  "onActivationActionData": {
+   "name": "LittlePrinceWaitGuard",
+   "source": "actions",
+   "nextAction.spawnDataData": {
+    "name": "DummySpawnLittlePrinceGuard",
+    "rarity": "Common",
+    "lifeDuration": 1000,
+    "hitSpeed": 0,
+    "source": "area_effect_objects",
+    "onStartingActionData": {
+     "pushBackStrength": 2000,
+     "pushBackDamage": 90,
+     "name": "Spawn_ChampionGuardCharge",
+     "source": "actions",
+     "spawnDataData": {
+      "name": "ChampionGuard",
+      "rarity": "Common",
+      "sightRange": 5500,
+      "deployTime": 300,
+      "speed": 60,
+      "hitpoints": 625,
+      "hitSpeed": 1200,
+      "loadTime": 700,
+      "damage": 79,
+      "range": 1200,
+      "attacksGround": true,
+      "collisionRadius": 800,
+      "dashMaxRange": 999999,
+      "jumpSpeed": 400,
+      "tid": "TID_SPELL_CHAMP_GUARD",
+      "source": "characters",
+      "tidTarget": "TID_TARGETS_GROUND",
+      "tidSpeed": "TID_SPEED_3"
+     }
+    }
+   }
+  }
+ },
+ "BossBandit": {
+  "tid": "TID_BOSS_BANDIT_ABILITY",
+  "tidInfo": "TID_BOSS_BANDIT_ABILITY_INFO",
+  "manaCost": 1,
+  "cooldown": 999999,
+  "name": "BossBandit_ability",
+  "source": "character_abilities",
+  "onActivationActionData": {
+   "name": "BossBandit_ability_warp_group",
+   "source": "actions",
+   "subActionsData": [
+    {
+     "spawnTime": 1000,
+     "name": "BossBandit_ability_spawn_buff",
+     "source": "actions",
+     "spawnDataData": {
+      "rarity": "Common",
+      "name": "BossBandit_ability_buff",
+      "source": "character_buffs"
+     }
+    },
+    {
+     "name": "BossBandit_ability_action",
+     "source": "actions"
+    },
+    {
+     "name": "BossBandit_ability_effect",
+     "source": "actions"
+    },
+    {
+     "name": "BossBandit_disable_ability_timed",
+     "source": "actions"
+    }
+   ]
+  }
+ }
+}

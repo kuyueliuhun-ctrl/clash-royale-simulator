@@ -1,0 +1,815 @@
+RoyaleAPI 天梯卡组 · 按流派分类
+数据源: https://royaleapi.com/decks/leaderboard  |  卡组数: 200
+====================================================================================================
+
+====================================================================================================
+【推进流】 共 60 套
+====================================================================================================
+#  1  Turan✨ (P8P0Q8CJ)  [YT Turan CR]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3769 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+#  2  G❄at l Luca (20PURRGR2)  [Replay Goat Luc]
+      核心: golem
+      卡组: elite-barbarians-ev1, mini-pekka-hero, zap-ev1, golem, phoenix, night-witch, bomber, arrows
+      圣水4.1 循环11 奖杯3758 | copyDeck: 26000043;26000018;28000008;26000009;26000087;26000048;26000013;28000001
+#  3  Суслик (V02VR8JVP)  [YT TouristCR]
+      核心: pekka-ev1
+      卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+      圣水3.9 循环12 奖杯3757 | copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+# 11  ❤️mohamdparsa❤️ (UGVJP9VVV)  [Iran Hplow]
+      核心: pekka-ev1
+      卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, dark-prince, electro-wizard, bomber, tornado, freeze
+      圣水4.1 循环13 奖杯3665 | copyDeck: 26000004;26000006;26000015;26000027;26000042;26000013;28000012;28000005
+# 12  ⇀スキル丨Hadi (222LJ8Y8)  [Lifetime]
+      核心: giant-hero
+      卡组: elite-barbarians-ev1, giant-hero, mega-minion-hero, prince, fireball, bomber, zap, rage
+      圣水3.6 循环9 奖杯3662 | copyDeck: 26000043;26000003;26000039;26000016;28000000;26000013;28000008;28000002
+# 17  ✨Cooper✨©️®️ (V0YQR99UJ)  [NOLITO VIP]
+      核心: pekka-ev1
+      卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, guards, zappies, tornado, freeze, barbarian-barrel
+      圣水4 循环12 奖杯3644 | copyDeck: 26000004;26000006;26000015;26000025;26000052;28000012;28000005;28000015
+# 19  TEF丨Yoru✨弥雾✨晚神 (2Q2QCYLPR)  [RISE GRAVEYARD™]
+      核心: electro-giant
+      卡组: baby-dragon-ev1, bowler-hero, golden-knight, electro-giant, lightning, goblin-hut, tornado, barbarian-barrel
+      圣水4.4 循环13 奖杯3637 | copyDeck: 26000015;26000034;26000074;26000085;28000007;27000001;28000012;28000015
+# 20  Friend✨安之 (CVR2G2LCJ)  [NoA]
+      核心: lava-hound
+      卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+      圣水3.8 循环10 奖杯3635 | copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+# 25  ꧁☬Celestia Vow☬ (VC9PYQ028)  [Lifetime]
+      核心: pekka-ev1
+      卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, royal-ghost, electro-wizard, minions, arrows
+      圣水4 循环13 奖杯3620 | copyDeck: 26000036;26000074;26000004;26000083;26000050;26000042;26000005;28000001
+# 26  babyfriend (U9J00LCYC)  [NoA]
+      核心: lava-hound
+      卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+      圣水3.8 循环10 奖杯3620 | copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+# 28  the Last (UUGPCUVPC)  [Lifetime]
+      核心: giant-hero
+      卡组: elite-barbarians-ev1, giant-hero, mega-minion-hero, prince, fireball, bomber, zap, rage
+      圣水3.6 循环9 奖杯3617 | copyDeck: 26000043;26000003;26000039;26000016;28000000;26000013;28000008;28000002
+# 31  El Turista✨ (C89L0002L)  [YT TouristCR]
+      核心: pekka-ev1
+      卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+      圣水3.9 循环12 奖杯3606 | copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+# 39  LonDex Play (JYG0G0Y9P)  [Kings eSports]
+      核心: pekka
+      卡组: knight-ev1, mega-minion-hero, little-prince, ram-rider, pekka, arrows, zap, barbarian-barrel
+      圣水3.5 循环10 奖杯3594 | copyDeck: 26000000;26000039;26000093;26000051;26000004;28000001;28000008;28000015
+# 46  Vinizada✨ (VJ2VJYRYL)  [GUERREIROS PT]
+      核心: giant-hero
+      卡组: minion-horde-ev1, giant-hero, zap-ev1, sparky, mini-pekka, skeleton-army, arrows, bats
+      圣水3.8 循环10 奖杯3566 | copyDeck: 26000022;26000003;28000008;26000033;26000018;26000012;28000001;26000049
+# 49  Sofiane (2Q9JG29RL)  [WeNeedBLΘΘD]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3566 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+# 63  Husse16 (2U0LLGPUJ)  [AZTEC WARRIORS]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, miner, fireball, skeleton-dragons
+      圣水3.8 循环11 奖杯3528 | copyDeck: 26000037;26000102;28000008;26000029;26000101;26000032;28000000;26000080
+# 67  Shine｜繁星✨ (8YG02JJVG)  [YT Turan CR]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3525 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+# 68  Gara (PP2C9LVG)  [Top Flame]
+      核心: golem
+      卡组: electro-dragon-ev1, berserker-hero, elite-barbarians-ev1, golem, skeleton-dragons, tornado, barbarian-barrel, elixir-collector
+      圣水4.5 循环11 奖杯3524 | copyDeck: 26000063;26000102;26000043;26000009;26000080;28000012;28000015;27000007
+# 69  ✨Erik✨ (VJ2UPJLPQ)  [COACHING]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, fireball, skeleton-dragons, tombstone
+      圣水3.8 循环11 奖杯3524 | copyDeck: 26000037;26000102;28000008;26000029;26000101;28000000;26000080;27000009
+# 75  ♠️Mugil♠️ (20L8V9QY9G)  [Ｖａｌｈａｌｌａ]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, monk, hunter-ev1, fisherman, fireball, skeletons, electro-spirit, barbarian-barrel
+      圣水3.3 循环7 奖杯3506 | copyDeck: 26000024;26000077;26000044;26000061;28000000;26000010;26000084;28000015
+# 77  parsa.m (UJYLRVGY)  [RISE GRAVEYARD™]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, fireball, skeleton-dragons, goblin-cage
+      圣水3.9 循环12 奖杯3505 | copyDeck: 26000037;26000102;28000008;26000029;26000101;28000000;26000080;27000012
+# 78  Pedro™️ (RJ88Y8U08)  [PedroTm CR]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, monk, hunter-ev1, fisherman, fireball, skeletons, electro-spirit, barbarian-barrel
+      圣水3.3 循环7 奖杯3505 | copyDeck: 26000024;26000077;26000044;26000061;28000000;26000010;26000084;28000015
+# 79  kamikaze✨小小罗 (228CUL992C)  [Lifetime]
+      核心: giant-hero
+      卡组: zap-ev1, giant-hero, mega-minion-hero, prince, dark-prince, lightning, bomber, rage
+      圣水3.6 循环9 奖杯3505 | copyDeck: 28000008;26000003;26000039;26000016;26000027;28000007;26000013;28000002
+# 81  Night graveyard (220JL80LUC)  [Lifetime]
+      核心: giant
+      卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, guards, zappies, arrows
+      圣水4 循环12 奖杯3503 | copyDeck: 26000007;26000034;28000017;28000010;26000003;26000025;26000052;28000001
+# 88  Marpa (PPV80V9G2)  [NowayOut]
+      核心: pekka-ev1
+      卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, lumberjack, electro-wizard, tornado, freeze, barbarian-barrel
+      圣水4.1 循环13 奖杯3470 | copyDeck: 26000004;26000006;26000015;26000035;26000042;28000012;28000005;28000015
+# 89  YT: Rafinha CR (CCP2J000R)  [Master War]
+      核心: giant
+      卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+      圣水4 循环12 奖杯3469 | copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+# 94  ZQuentino (RRLV0GQCV)  [RÉMYYYYYYYYYYYY]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3461 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+# 96  Rafinha Prime ☠ (VYGR2GUV9)  [GUERREIROS PT]
+      核心: giant
+      卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+      圣水4 循环12 奖杯3461 | copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+# 98  Star Alex (JLY0CGU9J)  [NoA]
+      核心: giant-hero
+      卡组: skeleton-army-ev1, giant-hero, bats-ev1, balloon, minions, bomber, arrows, freeze
+      圣水3.4 循环10 奖杯3457 | copyDeck: 26000012;26000003;26000049;26000006;26000005;26000013;28000001;28000005
+# 99  raad ❄️ (UJGCC9ULR)  [مقهى الحظ ☕️]
+      核心: giant
+      卡组: archers-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, barbarians, minions, arrows
+      圣水3.9 循环11 奖杯3456 | copyDeck: 26000001;26000034;28000017;28000010;26000003;26000008;26000005;28000001
+#108  ابراطور❤️✨ (JCU9J2J0U)  [replay]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, valkyrie-hero, balloon-hero, lava-hound, skeleton-dragons, vines, guards, arrows
+      圣水4.1 循环13 奖杯3441 | copyDeck: 26000037;26000011;26000006;26000029;26000080;28000026;26000025;28000001
+#115  aimloko (V28PYR282)  [No Clan]
+      核心: three-musketeers
+      卡组: elite-barbarians-ev1, monk, archers-ev1, three-musketeers, knight, heal-spirit, rage, elixir-collector
+      圣水4.4 循环9 奖杯3433 | copyDeck: 26000043;26000077;26000001;26000028;26000000;28000016;28000002;27000007
+#116  AgonyKing✨Kun (RGLQ0Q0RP)  [NOLITO VIP]
+      核心: giant
+      卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+      圣水3.6 循环9 奖杯3432 | copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+#117  ꧁✭issei✭꧂ (9RYCQGVCJ)  [Isseiの独り言]
+      核心: pekka-ev1
+      卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+      圣水3.9 循环12 奖杯3432 | copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+#120  すずか (P09Q8CYY0)  [No Clan]
+      核心: pekka
+      卡组: baby-dragon-ev1, golden-knight, giant-snowball-ev1, ram-rider, pekka, lightning, electro-wizard, barbarian-barrel
+      圣水4.3 循环12 奖杯3430 | copyDeck: 26000015;26000074;28000017;26000051;26000004;28000007;26000042;28000015
+#126  Legend (9VRP2J80V)  [no watch]
+      核心: three-musketeers
+      卡组: battle-ram-ev1, golden-knight, elite-barbarians-ev1, three-musketeers, royal-ghost, zap, heal-spirit, elixir-collector
+      圣水4.4 循环10 奖杯3425 | copyDeck: 26000036;26000074;26000043;26000028;26000050;28000008;28000016;27000007
+#128  WELCOME (2VQ9PRQ9Y)  [NoA]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, valkyrie-hero, zap-ev1, lava-hound, balloon, fireball, skeleton-dragons, tombstone
+      圣水4.1 循环13 奖杯3423 | copyDeck: 26000037;26000011;28000008;26000029;26000006;28000000;26000080;27000009
+#129  Code: Furkan (989P0PCCR)  [We Are The Best]
+      核心: electro-giant
+      卡组: baby-dragon-ev1, bowler-hero, berserker-hero, electro-giant, lightning, tornado, barbarian-barrel, cannon
+      圣水4 循环10 奖杯3422 | copyDeck: 26000015;26000034;26000102;26000085;28000007;28000012;28000015;27000000
+#132  RS✨MånuelRåy (U9PPVP0L0)  [NOLITO VIP]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3422 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+#139  AgonyKing (UGP2UCQ8Q)  [NOLITO VIP]
+      核心: giant
+      卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+      圣水3.6 循环9 奖杯3417 | copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+#142  GM⚡Polaquito18 (G8QJ2PJ0Y)  [KING OF NIGHT]
+      核心: giant
+      卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+      圣水3.6 循环9 奖杯3414 | copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+#143  Quentino❤️Remyy (202JYC8QL2)  [RÉMYYYYYYYYYYYY]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3414 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+#148  枫｜rakan❤️安之 (JQ2V2JJ8G)  [No Clan]
+      核心: lava-hound
+      卡组: baby-dragon-ev1, valkyrie-hero, inferno-dragon-ev1, lava-hound, balloon, fireball, guards, zap
+      圣水4.1 循环13 奖杯3407 | copyDeck: 26000015;26000011;26000037;26000029;26000006;28000000;26000025;28000008
+#157  Chainkiller (JLJVRV8V2)  [RISE GRAVEYARD™]
+      核心: electro-giant
+      卡组: bomber-ev1, bowler-hero, royal-recruits-ev1, electro-giant, spirit-empress, arrows, tornado, cannon
+      圣水4.5 循环11 奖杯3388 | copyDeck: 26000013;26000034;26000047;26000085;28000025;28000001;28000012;27000000
+#161  Eti Browni (208CQCQC2V)  [We Are The Best]
+      核心: golem
+      卡组: lumberjack-ev1, mini-pekka-hero, zap-ev1, golem, baby-dragon, inferno-dragon, lightning, skeleton-army
+      圣水4.4 循环13 奖杯3383 | copyDeck: 26000035;26000018;28000008;26000009;26000015;26000037;28000007;26000012
+#163  SK xopxsam (2LQ2YP98)  [Familie Rehwald]
+      核心: golem
+      卡组: lumberjack-ev1, wizard-hero, baby-dragon-ev1, golem, giant-skeleton, vines, zappies, barbarian-barrel
+      圣水4.5 循环13 奖杯3376 | copyDeck: 26000035;26000017;26000015;26000009;26000020;28000026;26000052;28000015
+#165  darko (YCUGYQ)  [⭐ALL STARS⭐]
+      核心: three-musketeers
+      卡组: elite-barbarians-ev1, golden-knight, royal-ghost-ev1, three-musketeers, ice-golem, barbarian-barrel, heal-spirit, elixir-collector
+      圣水4.1 循环8 奖杯3376 | copyDeck: 26000043;26000074;26000050;26000028;26000038;28000015;28000016;27000007
+#166  AS✨LilRay (U0YP8VUC9)  [Rising Stars✨]
+      核心: royal-giant-ev1
+      卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+      圣水3 循环7 奖杯3375 | copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+#170  اب صدام الوحش (202802QJQ9)  [SHURIKEN ✫]
+      核心: lava-hound
+      卡组: barbarians-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, miner, skeleton-dragons, arrows, zap
+      圣水4.1 循环12 奖杯3361 | copyDeck: 26000008;26000006;26000037;26000029;26000032;26000080;28000001;28000008
+#172  AmiR (2LG8QP000)  [Iran Hplow]
+      核心: electro-giant
+      卡组: baby-dragon-ev1, bowler-hero, tesla-ev1, electro-giant, lightning, guards, tornado, barbarian-barrel
+      圣水4.3 循环12 奖杯3360 | copyDeck: 26000015;26000034;27000006;26000085;28000007;26000025;28000012;28000015
+#174  Dr.HELLCAT⚡️mig (J9VJPVRL)  [MRN Esports]
+      核心: golem
+      卡组: skeleton-army-ev1, skeleton-king, inferno-dragon-ev1, golem, elixir-golem, night-witch, arrows, rage
+      圣水3.9 循环11 奖杯3354 | copyDeck: 26000012;26000069;26000037;26000009;26000067;26000048;28000001;28000002
+#175  <c2>Hisoka (U0PRVCYC2)  [RISE GRAVEYARD™]
+      核心: lava-hound
+      卡组: inferno-dragon-ev1, balloon-hero, valkyrie-ev1, lava-hound, fireball, skeleton-dragons, guards, zap
+      圣水4.1 循环13 奖杯3354 | copyDeck: 26000037;26000006;26000011;26000029;28000000;26000080;26000025;28000008
+#176  shadowking (QJGVCYR)  [GUERREIROS PT]
+      核心: elixir-golem
+      卡组: skeleton-army-ev1, skeleton-king, witch-ev1, elixir-golem, night-witch, lightning, arrows, rage
+      圣水3.8 循环11 奖杯3353 | copyDeck: 26000012;26000069;26000007;26000067;26000048;28000007;28000001;28000002
+#177  ɪʟ ᴘʀᴏғᴇssᴏʀᴇ™️ (GPJ2Q929)  [⭐ALL STARS⭐]
+      核心: three-musketeers
+      卡组: elite-barbarians-ev1, golden-knight, royal-ghost-ev1, three-musketeers, ice-golem, barbarian-barrel, heal-spirit, elixir-collector
+      圣水4.1 循环8 奖杯3353 | copyDeck: 26000043;26000074;26000050;26000028;26000038;28000015;28000016;27000007
+#181  Arkinnchi D’Lu (J8U9PL8GU)  [NOLITO VIP]
+      核心: electro-giant
+      卡组: inferno-dragon-ev1, golden-knight, goblin-cage-ev1, electro-giant, lightning, fire-spirit, tornado, barbarian-barrel
+      圣水3.9 循环10 奖杯3346 | copyDeck: 26000037;26000074;27000012;26000085;28000007;26000031;28000012;28000015
+#183  Modo Prime ☠️ (UC0QVC890)  [KIDDA OFFICIAL]
+      核心: giant
+      卡组: musketeer-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, night-witch, guards, arrows
+      圣水3.9 循环12 奖杯3343 | copyDeck: 26000014;26000034;28000017;28000010;26000003;26000048;26000025;28000001
+#190  Lrip (202RCPCL0Y)  [No Clan]
+      核心: three-musketeers
+      卡组: elite-barbarians-ev1, monk, knight-ev1, three-musketeers, bomber, heal-spirit, rage, elixir-collector
+      圣水4.3 循环8 奖杯3338 | copyDeck: 26000043;26000077;26000000;26000028;26000013;28000016;28000002;27000007
+#196  ARSENIK❤️. (2GR2QQ9P)  [Ligue 1]
+      核心: lava-hound
+      卡组: barbarians-ev1, mega-minion-hero, zap-ev1, lava-hound, balloon, fireball, skeleton-dragons, tombstone
+      圣水4.1 循环12 奖杯3333 | copyDeck: 26000008;26000039;28000008;26000029;26000006;28000000;26000080;27000009
+#197  SK Dominik (J0VU9CGP)  [No Clan]
+      核心: lava-hound
+      卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+      圣水3.8 循环10 奖杯3332 | copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+#198  AleX CH (YP92V0L8U)  [Lifetime]
+      核心: giant
+      卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+      圣水4 循环12 奖杯3331 | copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+
+====================================================================================================
+【防守反击流】 共 120 套
+====================================================================================================
+#  4  NK Tanjiro✨晚✨12 (208R8PQJP9)  [RISE GRAVEYARD™]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+      圣水3.9 循环12 奖杯3749 | copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+#  5  Light Saber (UJJ2YVLQR)  [Sunlight]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3740 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#  6  Dess❤️téø (GUPVGVQQV)  [Chloelpb]
+      核心: graveyard
+      卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+      圣水4.3 循环15 奖杯3719 | copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+#  7  vadimdmish (2PLLPVURP)  [Ｖａｌｈａｌｌａ]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3691 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#  8  YT:arian cr (UCJ8L2P88)  [Lifetime]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, mini-pekka-hero, inferno-dragon-ev1, mega-knight, mother-witch, bomber, freeze, zap
+      圣水3.9 循环12 奖杯3675 | copyDeck: 26000036;26000018;26000037;26000055;26000083;26000013;28000005;28000008
+#  9  Mohamed✨Kun (V0G2JGUUR)  [RISE GRAVEYARD™]
+      核心: hog-rider
+      卡组: firecracker-ev1, mighty-miner, tesla-ev1, hog-rider, earthquake, skeletons, electro-spirit, barbarian-barrel
+      圣水2.8 循环7 奖杯3672 | copyDeck: 26000064;26000065;27000006;26000021;28000014;26000010;26000084;28000015
+# 10  각기 (U2P99YYQJ)  [No Clan]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+      圣水3.4 循环8 奖杯3665 | copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000084;28000015
+# 13  Ijihu (20PRCUJ0LR)  [Lifetime]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, knight-hero, skeleton-army-ev1, princess, dart-goblin, ice-spirit, the-log, inferno-tower
+      圣水2.9 循环9 奖杯3662 | copyDeck: 28000004;26000000;26000012;26000026;26000040;26000030;28000011;27000003
+# 14  MADISON BEER (20YGQLGYJC)  [NOLITO VIP]
+      核心: goblin-drill
+      卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+      圣水2.8 循环6 奖杯3660 | copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+# 15  KSA✨LOUIE (UUG90U9RC)  [RISE GRAVEYARD™]
+      核心: goblin-drill
+      卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+      圣水2.8 循环6 奖杯3660 | copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+# 16  ねこかわいい^ᴗ ̫ ᴗ^ (RJ2UPC900)  [No Clan]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+      圣水3 循环7 奖杯3659 | copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+# 18  SaturnKing (UQCCLYLCU)  [Lifetime]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+      圣水3.9 循环12 奖杯3644 | copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+# 21  TEF丨Woo✨Kun✨晚神 (U2YVYGGV2)  [wowoo]
+      核心: graveyard
+      卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+      圣水3.1 循环7 奖杯3634 | copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+# 22  RAMBOOOSTED (QQUJ2Y2C)  [We Are The Best]
+      核心: hog-rider
+      卡组: elite-barbarians-ev1, boss-bandit, minion-horde-ev1, hog-rider, executioner, minions, arrows, freeze
+      圣水4.5 循环14 奖杯3623 | copyDeck: 26000043;26000103;26000022;26000021;26000045;26000005;28000001;28000005
+# 23  xCrisTop17 ✌️ (PRVL9L82C)  [Sandstorm]
+      核心: balloon-hero
+      卡组: baby-dragon-ev1, balloon-hero, knight-ev1, berserker, bomber, tornado, electro-spirit, freeze
+      圣水3 循环8 奖杯3622 | copyDeck: 26000015;26000006;26000000;26000102;26000013;28000012;26000084;28000005
+# 24  Dess (UJRR9RJUL)  [RISE GRAVEYARD™]
+      核心: graveyard
+      卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+      圣水4.3 循环15 奖杯3621 | copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+# 27  SK Morten (R09228V)  [sahnenmann]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+      圣水3.1 循环7 奖杯3619 | copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+# 29  ValkSpinOnMe (UL0JRU8JY)  [KIDDA OFFICIAL]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3613 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 30  MOONWALK (CL0R8QLR9)  [RISE GRAVEYARD™]
+      核心: goblin-drill
+      卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+      圣水2.8 循环6 奖杯3608 | copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+# 32  Hypno ❤️ Hans (L8999VJC)  [RISE GRAVEYARD™]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3605 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 33  Hypno ❤️ Barbs (UC0QJ2CU9)  [Lifetime]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3605 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 34  Hypno ❤️ Crona (VLL8YQC9G)  [APUK]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3604 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 35  DeadManWalking (222GCQ0GGJ)  [No Clan]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3604 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 36  Hypno❤️Dybala (VJU89YPRU)  [Lifetime]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3601 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 37  てち (JPPC9URJ)  [Lifetime]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, valkyrie-hero, elite-barbarians-ev1, mother-witch, bandit, zappies, arrows, heal-spirit
+      圣水3.6 循环11 奖杯3600 | copyDeck: 26000036;26000011;26000043;26000083;26000046;26000052;28000001;28000016
+# 38  ✨SV KLEIMAR ✨ (JCVJ29Q0Y)  [100%colombia]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+      圣水2.5 循环6 奖杯3598 | copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+# 40  Meeko Alehandro (20P89C2C9R)  [RISE GRAVEYARD™]
+      核心: balloon-hero
+      卡组: inferno-dragon-ev1, balloon-hero, knight-ev1, baby-dragon, bowler, guards, tornado, freeze
+      圣水3.9 循环13 奖杯3592 | copyDeck: 26000037;26000006;26000000;26000015;26000034;26000025;28000012;28000005
+# 41  むぎったん (2CLV2RP0)  [CRL2026]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3582 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+# 42  TR⚡️Sosa✞ (PP2UY0P00)  [NOLITO VIP]
+      核心: balloon
+      卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+      圣水3.8 循环12 奖杯3581 | copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+# 43  TWR Juancho✨ (229Y29RLYC)  [BUL❤eSports]
+      核心: miner
+      卡组: skeleton-army-ev1, berserker-hero, minion-horde-ev1, wall-breakers, miner, princess, the-log, inferno-tower
+      圣水3.1 循环9 奖杯3575 | copyDeck: 26000012;26000102;26000022;26000058;26000032;26000026;28000011;27000003
+# 45  Takuma (2UJ2QQJJP)  [Clan #GJLLL9QC]
+      核心: goblin-barrel
+      卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+      圣水3 循环8 奖杯3568 | copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+# 47  T8848丨梨✨瓜呱✨凑友希那 (V2UVC0RV0)  [No Clan]
+      核心: hog-rider
+      卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, royal-ghost, furnace, freeze
+      圣水4.1 循环13 奖杯3566 | copyDeck: 26000045;26000103;28000017;26000021;26000106;26000050;27000010;28000005
+# 48  TikTok MattiaCr (20GUJ0GUG8)  [FurieGun™️]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3566 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 50  Coco (2VGG29RJ2)  [practice]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3565 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 51  Fan (CVVCU2JJ8)  [Boosted Balloon]
+      核心: miner
+      卡组: musketeer-ev1, barbarian-barrel-hero, skeletons-ev1, balloon, miner, ice-golem, giant-snowball, bomb-tower
+      圣水2.9 循环7 奖杯3560 | copyDeck: 26000014;28000015;26000010;26000006;26000032;26000038;28000017;27000004
+# 52  Clown (GPPYR9JYR)  [No Clan]
+      核心: graveyard
+      卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+      圣水3.1 循环7 奖杯3560 | copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+# 53  adriel (9CPCC890)  [No Clan]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+      圣水3.4 循环8 奖杯3555 | copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000084;28000015
+# 54  Koh™️ (CRUGCURRP)  [RÉMYYYYYYYYYYYY]
+      核心: goblin-barrel
+      卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+      圣水3 循环8 奖杯3555 | copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+# 55  往日之影✨瓜呱 (UVUJJ009V)  [悲伤出殡下葬]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3552 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 56  STARR NOVA (LYYRJ82U0)  [Lifetime]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, archer-queen, elite-barbarians-ev1, royal-ghost, bandit, arrows, heal-spirit, elixir-collector
+      圣水3.9 循环10 奖杯3549 | copyDeck: 26000036;26000072;26000043;26000050;26000046;28000001;28000016;27000007
+# 57  Asaf (RUQ0JU2P)  [No Clan]
+      核心: skeleton-barrel-ev1
+      卡组: skeleton-barrel-ev1, mighty-miner, elite-barbarians-ev1, suspicious-bush, fireball, goblin-gang, dart-goblin, the-log
+      圣水3.4 循环10 奖杯3545 | copyDeck: 26000056;26000065;26000043;26000097;28000000;26000041;26000040;28000011
+# 58  Soulless (Q99RGUQRR)  [RISE GRAVEYARD™]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, golden-knight, royal-ghost-ev1, giant-skeleton, mother-witch, electro-wizard, bandit, heal-spirit
+      圣水3.6 循环11 奖杯3544 | copyDeck: 26000036;26000074;26000050;26000020;26000083;26000042;26000046;28000016
+# 59  Fantisy (VCQUY9Y8U)  [No Clan]
+      核心: miner
+      卡组: musketeer-ev1, barbarian-barrel-hero, skeletons-ev1, balloon, miner, ice-golem, giant-snowball, bomb-tower
+      圣水2.9 循环7 奖杯3543 | copyDeck: 26000014;28000015;26000010;26000006;26000032;26000038;28000017;27000004
+# 60  TR⚡️Matthew⚡️ (YP8RUU2UL)  [RISE GRAVEYARD™]
+      核心: balloon
+      卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+      圣水3.8 循环12 奖杯3541 | copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+# 64  YersonCz (GQYLLP9R0)  [RISE GRAVEYARD™]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3527 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 65  Ryley (C0V0UQ9UY)  [practice]
+      核心: hog-rider
+      卡组: princess-ev1, valkyrie-hero, tesla-ev1, hog-rider, lightning, skeletons, ice-spirit, the-log
+      圣水3.1 循环7 奖杯3526 | copyDeck: 26000026;26000011;27000006;26000021;28000007;26000010;26000030;28000011
+# 66  Ahsoka❤️Libra (UQQ2GGL89)  [GENTLE MATES]
+      核心: graveyard
+      卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+      圣水3.4 循环11 奖杯3526 | copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+# 70  Kun｜花園✨瓜呱 (VL98GUVJQ)  [RISE GRAVEYARD™]
+      核心: ram-rider
+      卡组: mega-knight-ev1, golden-knight, giant-snowball-ev1, ram-rider, inferno-dragon, poison, electro-wizard, barbarian-barrel
+      圣水4 循环12 奖杯3520 | copyDeck: 26000055;26000074;28000017;26000051;26000037;28000009;26000042;28000015
+# 71  Nico✨心系于你 (99YRC202R)  [RISE GRAVEYARD™]
+      核心: balloon
+      卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+      圣水3.8 循环12 奖杯3515 | copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+# 73  Nicoco23 (G0CYJ00J)  [CLASH COACHING]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+      圣水3.9 循环12 奖杯3507 | copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+# 74  Gunhwi (2GGR2GPQ0)  [ClanBS]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, golden-knight, elite-barbarians-ev1, mother-witch, royal-ghost, electro-wizard, bandit, arrows
+      圣水3.9 循环13 奖杯3506 | copyDeck: 26000036;26000074;26000043;26000083;26000050;26000042;26000046;28000001
+# 80  TKK.jackbest2.6 (VC0JRC2JU)  [GUERREIROS PT]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3504 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 82  Koh❤️Rémyy (VL2QUL202)  [RÉMYYYYYYYYYYYY]
+      核心: goblin-barrel
+      卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+      圣水3 循环8 奖杯3502 | copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+# 83  TEF｜花園✨艾维斯✨晚神 (VL8VY0QJU)  [RISE GRAVEYARD™]
+      核心: ram-rider
+      卡组: mega-knight-ev1, golden-knight, giant-snowball-ev1, ram-rider, inferno-dragon, poison, electro-wizard, barbarian-barrel
+      圣水4 循环12 奖杯3497 | copyDeck: 26000055;26000074;28000017;26000051;26000037;28000009;26000042;28000015
+# 84  Nooby❤️Rémyy (VP08G9PJQ)  [RÉMYYYYYYYYYYYY]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+      圣水2.5 循环6 奖杯3482 | copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+# 85  くろこ (UPRL0CQL0)  [training]
+      核心: goblin-barrel
+      卡组: princess-ev1, knight-hero, tesla-ev1, goblin-barrel, rocket, skeletons, electro-spirit, the-log
+      圣水2.9 循环7 奖杯3478 | copyDeck: 26000026;26000000;27000006;28000004;28000003;26000010;26000084;28000011
+# 86  京都サンガFC (LGJURJVGQ)  [GRAPE Alliance]
+      核心: miner
+      卡组: goblin-cage-ev1, mega-minion-hero, zap-ev1, balloon, miner, inferno-dragon, fireball, ice-golem
+      圣水3.4 循环10 奖杯3477 | copyDeck: 27000012;26000039;28000008;26000006;26000032;26000037;28000000;26000038
+# 87  ツ✨26✨おやすみ (VL9JJGRQQ)  [100%Français]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3476 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+# 90  CODE: Baby (LCULCL2JU)  [Sandstorm]
+      核心: balloon-hero
+      卡组: baby-dragon-ev1, balloon-hero, knight-ev1, lumberjack, bomber, tornado, electro-spirit, freeze
+      圣水3.3 循环9 奖杯3468 | copyDeck: 26000015;26000006;26000000;26000035;26000013;28000012;26000084;28000005
+# 92  Evo Archer Simp (208RCR2CC0)  [Lifetime]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3466 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+# 93  Silent Bob (LYVRPV22Q)  [FurieGun™️]
+      核心: wall-breakers-ev1
+      卡组: wall-breakers-ev1, archer-queen, mega-knight-ev1, prince, bandit, arrows, bats, zap
+      圣水3.6 循环9 奖杯3462 | copyDeck: 26000058;26000072;26000055;26000016;26000046;28000001;26000049;28000008
+# 97  Yoko☔️ (UGU2QLJVL)  [PekkaBS]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+      圣水3 循环7 奖杯3458 | copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+#102  SWARS (RJ0QPR09G)  [Unchained]
+      核心: miner
+      卡组: musketeer-ev1, balloon-hero, skeletons-ev1, miner, ice-golem, barbarian-barrel, giant-snowball, bomb-tower
+      圣水2.9 循环7 奖杯3452 | copyDeck: 26000014;26000006;26000010;26000032;26000038;28000015;28000017;27000004
+#104  Nooby❤️Pi2r (UQ9Y0VP0J)  [RISE GRAVEYARD™]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+      圣水2.5 循环6 奖杯3445 | copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+#105  Denyo (RQL88G09)  [PTL Germany]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, ice-spirit, barbarian-barrel
+      圣水3.4 循环8 奖杯3445 | copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000030;28000015
+#107  MH Axel (80ULUJLYY)  [prac]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3443 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#110  This is Last (208YP2822J)  [アウトフォーカス]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+      圣水2.9 循环7 奖杯3438 | copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+#111  Yamal✖️Waguri (UYUVCY298)  [RISE GRAVEYARD™]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, wizard-hero, elite-barbarians-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+      圣水4.3 循环13 奖杯3438 | copyDeck: 26000036;26000017;26000043;26000020;26000083;28000026;26000052;28000015
+#112  한 점 부끄러움이 없기를 (VRYRUY8V0)  [ㅤㅤ]
+      核心: hog-rider
+      卡组: knight-ev1, goblins-hero, ice-spirit-ev1, hog-rider, rocket, executioner, tornado, the-log
+      圣水3.3 循环8 奖杯3437 | copyDeck: 26000000;26000002;26000030;26000021;28000003;26000045;28000012;28000011
+#113  Light Work (U2LYQJQVY)  [Sunlight]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3437 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#114  Sharvit Tek ヤギ (P0LQQ0L0)  [Counter/HrdCOUN]
+      核心: skeleton-barrel-ev1
+      卡组: skeleton-barrel-ev1, mighty-miner, elite-barbarians-ev1, suspicious-bush, fireball, goblin-gang, dart-goblin, the-log
+      圣水3.4 循环10 奖杯3436 | copyDeck: 26000056;26000065;26000043;26000097;28000000;26000041;26000040;28000011
+#118  Benjamin (U0G20Y99)  [NowayOut]
+      核心: goblin-drill
+      卡组: furnace-ev1, berserker-hero, giant-snowball-ev1, goblin-drill, poison, skeletons, royal-delivery, cannon
+      圣水2.9 循环8 奖杯3432 | copyDeck: 27000010;26000102;28000017;27000013;28000009;26000010;28000018;27000000
+#119  Nooby❤️Téø (VCG2JVJ8C)  [RÉMYYYYYYYYYYYY]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+      圣水2.5 循环6 奖杯3432 | copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+#121  XD I HSN HABIB (220R9L8RJR)  [TOP KSA™️✨]
+      核心: balloon-hero
+      卡组: inferno-dragon-ev1, balloon-hero, skeleton-king, giant-skeleton, skeleton-army, arrows, bats, freeze
+      圣水3.9 循环12 奖杯3430 | copyDeck: 26000037;26000006;26000069;26000020;26000012;28000001;26000049;28000005
+#122  Judgement (PRUQJ8PQP)  [Isseiの独り言]
+      核心: hog-rider
+      卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, lightning, royal-ghost, bandit
+      圣水4.3 循环12 奖杯3429 | copyDeck: 26000045;26000103;28000017;26000021;26000106;28000007;26000050;26000046
+#123  폴라포는 좋겠다 (20YQY989CC)  [..]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+      圣水3.1 循环9 奖杯3429 | copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+#125  ramettuhh (2YVUYGQL9)  [No Clan]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3426 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#127  ぐりてゃん (2LJ0ULYCC)  [孤島の楽園]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+      圣水3 循环7 奖杯3423 | copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+#130  앙기모찌찌두개 (LCJ8JUYLY)  [리플]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+      圣水3.1 循环9 奖杯3422 | copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+#131  미친❤Hugo✨Drill (G0LP8UVQ8)  [NOLITO VIP]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, bowler-hero, firecracker, fireball, tornado, royal-delivery, inferno-tower
+      圣水3.8 循环12 奖杯3422 | copyDeck: 27000013;26000000;26000034;26000064;28000000;28000012;28000018;27000003
+#133  Brqko_x (CRYUCRVUG)  [GENTLE MATES]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+      圣水3.1 循环7 奖杯3421 | copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+#134  ishan❤️oleg (9J2LJYVQU)  [kawaii~isekai]
+      核心: hog-rider
+      卡组: firecracker-ev1, dark-prince-hero, zap-ev1, hog-rider, mega-knight, electro-wizard, bandit, guards
+      圣水3.8 循环11 奖杯3420 | copyDeck: 26000064;26000027;28000008;26000021;26000055;26000042;26000046;26000025
+#135  ✨火王Fireking✨ (V9U9LQJ02)  [昨夜烟雨一笑间［分部］]
+      核心: graveyard
+      卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+      圣水3.4 循环11 奖杯3419 | copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+#136  지헌❤️ (CUGRJ09YL)  [리플]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+      圣水3.1 循环9 奖杯3419 | copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+#137  Chri 2704 (2QCUGCPQ)  [No Clan]
+      核心: hog-rider
+      卡组: minion-horde-ev1, valkyrie-hero, barbarians-ev1, hog-rider, miner, princess, ice-wizard, freeze
+      圣水3.9 循环13 奖杯3419 | copyDeck: 26000022;26000011;26000008;26000021;26000032;26000026;26000023;28000005
+#140  Nova Lciop (C8PCCURPJ)  [No Clan]
+      核心: hog-rider
+      卡组: elite-barbarians-ev1, valkyrie-hero, executioner-ev1, hog-rider, minions, ice-golem, freeze, zap
+      圣水3.8 循环11 奖杯3417 | copyDeck: 26000043;26000011;26000045;26000021;26000005;26000038;28000005;28000008
+#141  YT PedroTm CR (290VGG28)  [No Clan]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+      圣水3.1 循环7 奖杯3416 | copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+#145  Sqrㅏ✨ㅣ™️ (QV0YLU90R)  [We Are The Best]
+      核心: royal-hogs
+      卡组: goblin-cage-ev1, golden-knight, royal-recruits-ev1, royal-hogs, flying-machine, fireball, zappies, barbarian-barrel
+      圣水4.3 循环14 奖杯3409 | copyDeck: 27000012;26000074;26000047;26000059;26000057;28000000;26000052;28000015
+#146  TEF丨にゃんにゃんまる (200GJLL208)  [アウトフォーカス]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+      圣水2.9 循环7 奖杯3409 | copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+#147  lord beerus (R9Y8GY98C)  [Noctyn]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3408 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#150  Clasher (8VPRQ9LR8)  [Ice heart]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3407 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#151  RamboOo (YUQYJV08)  [We Are The Best]
+      核心: hog-rider
+      卡组: elite-barbarians-ev1, boss-bandit, minion-horde-ev1, hog-rider, executioner, minions, guards, freeze
+      圣水4.5 循环14 奖杯3403 | copyDeck: 26000043;26000103;26000022;26000021;26000045;26000005;26000025;28000005
+#152  shiko (VJ0RQVYJP)  [Majestic lords]
+      核心: miner
+      卡组: skeleton-army-ev1, berserker-hero, minion-horde-ev1, wall-breakers, miner, princess, the-log, inferno-tower
+      圣水3.1 循环9 奖杯3403 | copyDeck: 26000012;26000102;26000022;26000058;26000032;26000026;28000011;27000003
+#153  ✖️Hunter✨LF (P8LRG9UP)  [RISE GRAVEYARD™]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+      圣水2.8 循环9 奖杯3403 | copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+#155  Mohamed Light (G9YV9GR8R)  [No Clan]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3398 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#158  Flash Light (UYL8820RJ)  [Sunlight]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, valkyrie-hero, elite-barbarians-ev1, mother-witch, bandit, zappies, arrows, heal-spirit
+      圣水3.6 循环11 奖杯3388 | copyDeck: 26000036;26000011;26000043;26000083;26000046;26000052;28000001;28000016
+#159  Rolex (8QL98Q2L)  [Iran Hplow]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, goblinstein, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+      圣水2.8 循环6 奖杯3384 | copyDeck: 27000013;26000099;28000017;28000009;26000013;26000031;26000010;27000000
+#160  Pedro❤️Gabi (C2UVLQ28J)  [Myst™️]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+      圣水2.9 循环7 奖杯3384 | copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+#162  YT Kitashiyan (2RQPVPPJJ)  [Lifetime]
+      核心: hog-rider
+      卡组: princess-ev1, valkyrie-hero, tesla-ev1, hog-rider, lightning, skeletons, ice-spirit, the-log
+      圣水3.1 循环7 奖杯3377 | copyDeck: 26000026;26000011;27000006;26000021;28000007;26000010;26000030;28000011
+#164  BRR BRR PATAGAY (2CVVLYJV)  [Kings eSports]
+      核心: graveyard
+      卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+      圣水4.3 循环15 奖杯3376 | copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+#167  Light Bulb (GU2YR209R)  [Sunlight 2]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3374 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#168  グレンブルル (V2PRPRLQP)  [Lifetime]
+      核心: boss-bandit
+      卡组: bomber-ev1, dark-prince-hero, boss-bandit, cannon-cart, lightning, arrows, skeletons, barbarian-barrel
+      圣水3.6 循环8 奖杯3372 | copyDeck: 26000013;26000027;26000103;26000054;28000007;28000001;26000010;28000015
+#169  ArtCS✨ (88299RC9Y)  [Ｖａｌｈａｌｌａ]
+      核心: hog-rider
+      卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3369 | copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+#171  CODE:KANGDONE(: (200QLJUYL)  [Fantasy]
+      核心: hog-rider
+      卡组: firecracker-ev1, hog-rider, minion-horde-ev1, giant-skeleton, barbarians, lightning, guards, the-log
+      圣水4.3 循环12 奖杯3361 | copyDeck: 26000064;26000021;26000022;26000020;26000008;28000007;26000025;28000011
+#173  SandBox (Y022GRCJQ)  [部落 #RLLUY80Y]
+      核心: battle-ram-ev1
+      卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+      圣水3.9 循环12 奖杯3358 | copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+#178  ✧Death✧ (VGRJUGQ99)  [No Clan]
+      核心: graveyard
+      卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+      圣水3.4 循环11 奖杯3352 | copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+#179  ToGRuL #1 (V2UCC0LC2)  [Live on TikTok]
+      核心: miner
+      卡组: musketeer-ev1, balloon-hero, skeletons-ev1, miner, ice-golem, barbarian-barrel, giant-snowball, bomb-tower
+      圣水2.9 循环7 奖杯3352 | copyDeck: 26000014;26000006;26000010;26000032;26000038;28000015;28000017;27000004
+#180  a7 (R9CVYGC0)  [No Clan]
+      核心: hog-rider
+      卡组: cannon-ev1, ice-golem-hero, skeletons-ev1, hog-rider, musketeer, fireball, ice-spirit, the-log
+      圣水2.6 循环6 奖杯3346 | copyDeck: 27000000;26000038;26000010;26000021;26000014;28000000;26000030;28000011
+#182  Angel ᵉᵛᵉ✨♥️ (CRLLCV8P0)  [Kings eSports]
+      核心: hog-rider
+      卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, lightning, royal-ghost, bandit
+      圣水4.3 循环12 奖杯3344 | copyDeck: 26000045;26000103;28000017;26000021;26000106;28000007;26000050;26000046
+#184  PrakashChopped (209LJVGU)  [10 Year Break]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+      圣水2.9 循环7 奖杯3342 | copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+#185  Steeef (9LVP2RCLL)  [KIDDA OFFICIAL]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3341 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#186  ElPsyCongroo (U8J0GQ02U)  [steins gates >>]
+      核心: hog-rider
+      卡组: executioner-ev1, goblins-hero, valkyrie-ev1, hog-rider, rocket, tornado, ice-spirit, the-log
+      圣水3.4 循环8 奖杯3341 | copyDeck: 26000045;26000002;26000011;26000021;28000003;28000012;26000030;28000011
+#187  SimonBarbsGod (CQCVJULU2)  [pot de miel]
+      核心: hog-rider
+      卡组: bomber-ev1, ice-golem-hero, elite-barbarians-ev1, hog-rider, minions, freeze, zap, tesla
+      圣水3.4 循环9 奖杯3340 | copyDeck: 26000013;26000038;26000043;26000021;26000005;28000005;28000008;27000006
+#188  DfuZe✨ (Y2GY98YL)  [Noctyn]
+      核心: goblin-barrel-ev1
+      卡组: goblin-barrel-ev1, mighty-miner, dart-goblin-ev1, wall-breakers, skeletons, electro-spirit, the-log, inferno-tower
+      圣水2.6 循环6 奖杯3340 | copyDeck: 28000004;26000065;26000040;26000058;26000010;26000084;28000011;27000003
+#189  Kun｜八哭の坤♿️晚✨ (CPUCG0CJ0)  [PekkaBS]
+      核心: goblin-drill-ev1
+      卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, goblin-demolisher, poison, fire-spirit, skeletons, cannon
+      圣水2.8 循环7 奖杯3339 | copyDeck: 27000013;26000000;28000017;26000095;28000009;26000031;26000010;27000000
+#191  Polaris (U8RYGC8GU)  [RISE GRAVEYARD™]
+      核心: graveyard
+      卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+      圣水3.1 循环7 奖杯3337 | copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+#192  Frontier✨白影 (UUC002QYL)  [高丸藤]
+      核心: royal-hogs-ev1
+      卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+      圣水3.4 循环7 奖杯3336 | copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+#193  Erik❤️69 (20VPULG8RY)  [APUK VII]
+      核心: graveyard
+      卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+      圣水3.4 循环11 奖杯3335 | copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+#194  ドリンクバー (CGGVG2GGC)  [わ！]
+      核心: miner
+      卡组: skeleton-barrel-ev1, goblins-hero, bats-ev1, miner, mega-knight, inferno-dragon, spear-goblins, zap
+      圣水3.1 循环8 奖杯3335 | copyDeck: 26000056;26000002;26000049;26000032;26000055;26000037;26000019;28000008
+#195  ネコ❄️한점 (2GUQVPJU9)  [No Clan]
+      核心: hog-rider
+      卡组: knight-ev1, goblins-hero, ice-spirit-ev1, hog-rider, rocket, executioner, tornado, the-log
+      圣水3.3 循环8 奖杯3334 | copyDeck: 26000000;26000002;26000030;26000021;28000003;26000045;28000012;28000011
+
+====================================================================================================
+【自闭流】 共 20 套
+====================================================================================================
+# 44  RUBIZALEZ (LPRR9P)  [Lifetime]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+      圣水3.8 循环11 奖杯3568 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+# 61  Zyn｜Dary✨️夕方 (2RPVJ088V)  [NOLITO VIP]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3541 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+# 62  ⭐️ʟᴜᴍɪɴᴀʀʏ⭐️ (9ULPU0QL)  [KIDDA OFFICIAL]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3540 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+# 72  Rainbow (VR90898)  [No Clan]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+      圣水3.8 循环11 奖杯3513 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+# 76  屠殺者 (UYQYLG)  [RISE GRAVEYARD™]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, rascals, barbarian-barrel
+      圣水4.3 循环14 奖杯3505 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000053;28000015
+# 91  very good (98GUUPJR)  [Lifetime]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+      圣水3.8 循环11 奖杯3468 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+# 95  Saint Abo (U8PYJGJ9)  [Sandstorm]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3461 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#100  Abo7assan1 (YUYR99U)  [Majestic lords]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3454 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#101  xMiduz (2VJ882GL8)  [Majestic lords]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3452 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#103  CAPGUN (GR9L9V2LU)  [RISE GRAVEYARD™]
+      核心: mortar-ev1
+      卡组: mortar-ev1, ice-golem-hero, minion-horde-ev1, miner, goblin-gang, spear-goblins, bats, zap
+      圣水2.9 循环8 奖杯3452 | copyDeck: 27000002;26000038;26000022;26000032;26000041;26000019;26000049;28000008
+#106  Kimchi77✨小小罗 (PCUP9YLVG)  [Noctyn]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, rascals, barbarian-barrel
+      圣水4.3 循环14 奖杯3444 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000053;28000015
+#109  Christmas Tree (VPGCJLUQQ)  [RISE GRAVEYARD™]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3439 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#124  Hunter (J8R89YC8)  [Fast]
+      核心: x-bow
+      卡组: knight-ev1, x-bow, tesla-ev1, rocket, ice-wizard, tornado, skeletons, the-log
+      圣水3.5 循环9 奖杯3426 | copyDeck: 26000000;27000008;27000006;28000003;26000023;28000012;26000010;28000011
+#138  khazardy✨安之 (RVCQ2CQGJ)  [khazardy’s]
+      核心: mortar
+      卡组: princess-ev1, valkyrie-hero, bats-ev1, hog-rider, mortar, lightning, skeletons, the-log
+      圣水3.3 循环8 奖杯3418 | copyDeck: 26000026;26000011;26000049;26000021;27000002;28000007;26000010;28000011
+#144  TEF丨Soudy✨Kun (290UQY8C)  [international]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3413 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#149  Arrow (20JJVUGJ80)  [Majestic lords]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3407 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+#154  Betfas (V0L800PUJ)  [No Clan]
+      核心: x-bow
+      卡组: archers-ev1, knight-hero, tesla-ev1, x-bow, fireball, skeletons, electro-spirit, the-log
+      圣水3 循环7 奖杯3399 | copyDeck: 26000001;26000000;27000006;27000008;28000000;26000010;26000084;28000011
+#156  Hubert (JJUJ0Q908)  [retnuH CR]
+      核心: x-bow
+      卡组: knight-ev1, x-bow, tesla-ev1, rocket, ice-wizard, tornado, skeletons, the-log
+      圣水3.5 循环9 奖杯3394 | copyDeck: 26000000;27000008;27000006;28000003;26000023;28000012;26000010;28000011
+#199  retire (QG9LCJ29)  [RISE GRAVEYARD™]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, lightning, skeletons, barbarian-barrel
+      圣水4 循环11 奖杯3330 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000007;26000010;28000015
+#200  加急Sinistro™ (20Y0GGGUP2)  [Live tik tok]
+      核心: mortar-ev1
+      卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+      圣水4 循环13 奖杯3329 | copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015

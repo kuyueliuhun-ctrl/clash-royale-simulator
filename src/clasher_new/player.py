@@ -8,6 +8,13 @@ class PlayerState:
         self.cycle = cycle_queue[:]
         self.elixir = elixir
         self.king_tower_hp, self.left_tower_hp, self.right_tower_hp = tower_hps
+        self.last_card = None  # M1: 镜像法术需要记录上一张使用的卡
+        self.evo_slots = set()  # M4: 卡组携带的觉醒位（≤2 张卡名）
+        self.evo_plays = {}     # M4: 觉醒周期计数（card_name → 已打出次数）
+
+    def set_evolution_slots(self, cards):
+        """M4：声明该卡组携带的觉醒卡（最多 2 个觉醒位）"""
+        self.evo_slots = set(list(cards)[:2])
     
     def regenerate_elixir(self, dt: float, base_regen_time: float = 2.8):
         elixir_per_second = 1.0 / base_regen_time
@@ -24,6 +31,7 @@ class PlayerState:
         self.elixir -= Card(card_name).elixir
         self.cycle.remove(card_name)
         self.cycle.append(card_name)
+        if card_name != 'Mirror': self.last_card = card_name
         return True
 
     def get_next_card(self):

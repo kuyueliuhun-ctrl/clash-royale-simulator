@@ -1,0 +1,192 @@
+Clasher.us
+Home
+CoC
+CR
+BS
+BB
+Sign in
+Register
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+Musketeer
+
+Musketeer card stats, levels, and decks for Clash Royale.
+
+Home
+Clash Royale
+Cards
+Musketeer
+ Back to Clash Royale
+ Cards
+Popular decks
+Top Cards
+Tools
+On this page
+Description
+Stats
+Popular Decks
+Details
+All units
+
+The Musketeer card is unlocked from the Training Camp (Tutorial). She is a single-target, medium-ranged troop with both moderate hitpoints and damage. A Musketeer card costs 4 Elixir to deploy. She has purple combed hair, a blunderbuss-styled musket and a metal helmet with a tiny crater on it.
+
+Best Decks of Musketeer
+Popular Decks
+Evo
+ 
+Evo
+ 
+Evo
+  
+Evo
+   
+Evo
+Win rate: 59.26%
+Sample games: 27
+Evo cards: 2.78
+based on 27 sampled battles
+0.7 crowns per game
+Avg elixir: 2.6
+Deck details
+ 
+Evo
+ 
+Evo
+    
+Evo
+ 
+Evo
+Win rate: 86.96%
+Sample games: 23
+Evo cards: 3
+based on 23 sampled battles
+1.65 crowns per game
+Avg elixir: 4.1
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+  
+Evo
+  
+Evo
+ 
+Evo
+Win rate: 47.06%
+Sample games: 19
+Evo cards: 3
+based on 19 sampled battles
+0.53 crowns per game
+Avg elixir: 3.1
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+   
+Win rate: 70.59%
+Sample games: 17
+Evo cards: 3
+based on 17 sampled battles
+0.94 crowns per game
+Avg elixir: 3.8
+Deck details
+Stats
+elixir cost	hit speed	first hit speed	speed	deploy time	range	projectile speed	target	count	transport	type	rarity
+4	1 sec	0.7 sec	Medium (60)	1 sec	6	1000	Air & Ground	x1	Ground	Troop	Rare
+Levels
+Level	hitpoints	damage	damage per second
+3	336	101	101
+4	370	111	111
+5	407	122	122
+6	448	135	135
+7	492	148	148
+8	542	163	163
+9	596	179	179
+10	655	197	197
+11	721	217	217
+12	793	239	239
+13	872	263	263
+14	960	289	289
+15	1056	318	318
+16	1161	349	349
+Details
+HISTORY
+The Musketeer card was released with Clash Royale's soft launch on 4/1/16.
+On 9/2/16, the Chest Rewards &amp; Card Balance Update decreased the Musketeer's damage by 25% and her Elixir cost to 4 (from 5).
+On 19/2/16, the Balance Update increased the Musketeer's damage by 11%.
+On 3/5/16, the May 2016 Update fixed the "range bug" and decreased the Musketeer's range to 6 (from 6.5) but her effective range is unchanged.
+On 4/2/19, the Balance Update increased the Musketeer's damage by 3%.
+TRIVIA
+"Boomstick" may be a reference to the movie Army of Darkness.
+The Musketeer wears a red cape in her card picture but not in battle.
+The Musketeer is the subject of a set of Emotes.
+The Musketeer Card could be a reference to the fourth Musketeer in the novel The Three Musketeers, D'Artagnan.
+STRATEGY
+The Musketeer can be used to back up higher hitpoint troops such as Giants. The Musketeer's high damage output compensates for the other troop's low damage output.
+As the Musketeer can target both air and ground troops, she is a powerful substitute to Archers, albeit at the price of a higher Elixir cost.
+A Musketeer destroys Minions of equivalent level in two shots. It is not a good idea to counter a Minion Horde with a Musketeer unless a Crown Tower assists her.
+She can counter Minions. This move is, however, a negative Elixir trade and the Musketeer will be left crippled.
+If deployed as far away as possible, she can shut down the Mega Minion by herself due to its slow movement speed and mediocre health. This is a negative Elixir trade, but the Musketeer can then be used for a counter-push.
+The Musketeer’s long range allows her to help attack from a distance without engaging the defending troops. The Musketeer's long range (6 tiles) is effective against Crown Towers, as the King's Tower will be unable to target her if she is attacking a Princess Tower.
+The Musketeer is an effective counter to the Cannon. Due to her long range, she can outrange the Cannon and destroy it unharmed. However, despite a Tesla having the same range as the Cannon, the Tesla's property of being invincible while underground forces the Musketeer to walk into range before attacking the Tesla.
+The Musketeer may take down singular air targets with ease, due to her ability to attack both air and ground.
+The Musketeer is a good counter to the Baby Dragon, as she can destroy it on her own.
+The Musketeer is extremely effective against the Balloon, as its slow movement speed enables her to land enough shots to destroy it before it reaches a Crown Tower. She must, however, be deployed before the Balloon crosses the bridge for this to work without the help of a Crown Tower.
+Due to being a single target card, cheap cards like Guards can take her out quickly if she is unaccompanied. Mini-tanks and high damage troops like the Knight or Mini P.E.K.K.A. also work well against her.
+A very powerful combo is the Hog Rider, the Musketeer, and the Valkyrie. The Musketeer is for protecting the Valkyrie and Hog Rider from air troops. The Valkyrie is for protecting the Musketeer and Hog Rider from swarms and the Hog Rider is used to tank for the Musketeer and Valkyrie. This strategy is commonly called the Trifecta for its combination of three troops, and is quite an old one. However, Minion Horde is a decent way of cleaning it up since the Musketeer is often not capable of killing Minions in one shot.
+Never ignore a Musketeer that is locked onto a Tower. Doing so will cause significant damage to the Tower.
+If the player needs to pressure the other lane with the Musketeer, but also needs to defend the Tower on the other side, place her on the middle lane furthest from the side you need to defend.
+With the help of a Crown Tower, she can deal with the Valkyrie reasonably well. Vice versa, a Valkyrie assisted by a Crown Tower can deal with the Musketeer well.
+A Fireball can kill the Musketeer in one hit if the Musketeer is one level lower than the Fireball.
+All units
+Troop
+Spell
+Building
+COMMON	Minions · Archers · Knight · Spear Goblins · Goblins · Minion Horde · Bats · Barbarians · Ice Spirit · Skeletons · Royal Recruits · Royal Giant · Skeleton Barrel · Elite Barbarians · Goblin Gang · Bomber · Fire Spirits · Rascals · Fire Spirit · Firecracker · Skeleton Dragons · Electro Spirit · Berserker
+RARE	Musketeer · Mini P.E.K.K.A · Mega Minion · Battle Ram · Valkyrie · Dart Goblin · Hog Rider · Ice Golem · Three Musketeers · Flying Machine · Giant · Wizard · Royal Hogs · Zappies · Elixir Golem · Battle Healer · Goblin Demolisher · Suspicious Bush
+EPIC	Baby Dragon · Prince · Wall Breakers · Golem · Witch · Giant Skeleton · Bowler · Dark Prince · Guards · Electro Dragon · Executioner · Skeleton Army · Hunter · P.E.K.K.A · Balloon · Goblin Giant · Cannon Cart · Electro Giant · Rune Giant
+LEGENDARY	Miner · Princess · Night Witch · Inferno Dragon · Ram Rider · Bandit · Mega Knight · Royal Ghost · Sparky · Lava Hound · Lumberjack · Magic Archer · Ice Wizard · Fisherman · Electro Wizard · Mother Witch · Phoenix · Goblin Machine · Ronin
+CHAMPION	Mighty Miner · Skeleton King · Archer Queen · Golden Knight · Monk · Little Prince · Goblinstein · Boss Bandit
+ Cards
+Explore more
+Back to Clash Royale
+CONTENT
+BUILD & PLAY
+Popular decks
+Top Cards
+Deck Builder
+Challenges
+RANKINGS
+TOOLS
+CLASHER.US
+About Us
+Contact Us
+Terms of Service
+Privacy Policy
+Cookie settings
+OUR OTHER SITES
+CoCMap.com
+Clash of Clans companion — bases, guides & rankings
+Minecrafts.us
+Minecraft companion
+minzap.com
+Whiteout Survival & Kingshot guides
+GET THE APP
+AVAILABLE ON
+Maps for Clash of Clans
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+
+© 2019–2026 Copyright: CLASHER.US Terms of Service · Privacy Policy
+
+This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy
+
+Powered by Namecheap — Vultr

@@ -1,0 +1,188 @@
+Clasher.us
+Home
+CoC
+CR
+BS
+BB
+Sign in
+Register
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+Tornado
+
+Tornado card stats, levels, and decks for Clash Royale.
+
+Home
+Clash Royale
+Cards
+Tornado
+ Back to Clash Royale
+ Cards
+Popular decks
+Top Cards
+Tools
+On this page
+Description
+Stats
+Popular Decks
+Details
+All units
+
+The Tornado card is unlocked from Spell Valley (Arena 5). It is an area damage spell with a wide radius and low damage. A Tornado card costs 3 Elixir to cast. It pulls troops towards the center of the spell, making them more vulnerable to splash damage. The card image shows a tornado with a pig (possibly the Hog Rider's) being sucked into the tornado. A Tornado slightly damages an enemy unit in its area of effect every 0.5 seconds.
+
+Best Decks of Tornado
+Popular Decks
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+  
+Win rate: 68.42%
+Sample games: 58
+Evo cards: 3
+based on 58 sampled battles
+0.95 crowns per game
+Avg elixir: 3.8
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+    
+Win rate: 62.5%
+Sample games: 40
+Evo cards: 3
+based on 40 sampled battles
+0.68 crowns per game
+Avg elixir: 3.4
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+     
+Win rate: 58.06%
+Sample games: 32
+Evo cards: 3
+based on 32 sampled battles
+0.63 crowns per game
+Avg elixir: 4.4
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+ 
+Evo
+  
+Evo
+  
+Win rate: 73.33%
+Sample games: 30
+Evo cards: 3
+based on 30 sampled battles
+1.03 crowns per game
+Avg elixir: 4.1
+Deck details
+Stats
+elixir cost	radius	duration	target	type	rarity
+3	5.5	1.05 sec	Air & Ground	Spell	Epic
+Levels
+Level	area damage	crown tower damage
+6	52	18
+7	57	20
+8	63	22
+9	69	24
+10	76	26
+11	84	29
+12	92	32
+13	102	35
+14	112	39
+15	123	42
+16	135	47
+Details
+HISTORY
+The Tornado was added to the game on 11/11/16.
+On 15/12/16, a Balance Update increased its radius by 10% and also increased its pulling power. This update also changed its description. It used to say: "Drags enemy troops to the center of the Tornado while dealing damage over time. Doesn't affect buildings."
+On 13/3/17, the March 2017 Update allowed the Tornado to be placed on buildings.
+On 12/6/17, a Balance Update decreased the Tornado's duration by 0.5sec (to 2.5sec from 3 sec), but allowed multiple Tornado spells to stack.
+On 25/4/18, the Clan Wars Update increased the Tornado‘s damage per second by 21%, but also decreased the duration by 0.5 sec (from 2.5 sec to 2 sec).
+The 20/6/18 Update moved the Arena to unlock the Tornado from Builder's Workshop (Arena 6) to Frozen Peak (Arena 8).
+On 28/1/19, the January 2019 Update moved the Arena to unlock the Tornado from Frozen Peak (Arena 8) to Spell Valley (Arena 5).
+TRIVIA
+The Tornado has the largest area of effect, with a radius of 5.5 tiles.
+The Tornado is one of the three spells that don't affect buildings, the other two are Heal and Clone.
+It appeared in the picture for the Balance Changes coming on 1/11/16 before it was officially announced that it was going to be added to the game.
+The Tornado is currently the only Clash Royale Card to inspire a Trap in Clash of Clans.
+STRATEGY
+Cast the Tornado near a large group of units, such as a Skeleton Army. The Tornado pulls units towards the center of the spell's area of effect, dealing damage to them and potentially killing them. For reference, a Tornado can almost kill equivalent level Goblins.
+The Tornado does not affect buildings with its pull effect, nor does it damage them, meaning it cannot be used to finish off low health Crown Towers or activate the opponent's King's Tower.
+Any unit that is moving in the opposite direction to where the Tornado is pulling them will resist the pull, and the unit will not be pulled as far. Because of this, the Tornado works more efficiently the slower the target troop is. For example, a Hog Rider can resist more than a Musketeer because of the speed difference. However, you should also take into account that stationary troops are heavily influenced.
+Any unit caught in the Tornado can attack as long as a target is in range. Because of this, ranged troops hardly suffer at all when being dragged away from their target, so it is better to pull them in closer to nullify their range advantage.
+The Tornado can be useful at separating units and weaken assaults. However, if placed incorrectly, it can be very punishing, as it can drag dangerous enemy troops, such as the Mini P.E.K.K.A., closer to the Crown Tower.
+It is difficult to master the Tornado, and a misplacement of this card can result in devastating damage to your Crown Towers. To reduce the chance of this, use dragging instead of tapping when deploying the Tornado as the exact area of effect will be visible.
+The Tornado can be used to drag defending units out of the way. This is particularly effective when trying to preserve glass-cannons to maximise damage output. Tornado is also great with Graveyard, as it can pull defending units like the Valkyrie out of the way. In a similar manner, ranged troops can be pulled towards highly damaging units to nullify their range advantage.
+It can also be used to drag ranged troops to your high damage dealers. This is an excellent way to play a P.E.K.K.A. Tornado deck. Executioner and Wizard also pair well in the P.E.K.K.A. Tornado deck as their splashing capabilities can be used effectively with the Tornado wiping out hordes of low to medium health units. Using similar thinking, the Tornado can also pull troops to a bomb dropped by your Giant Skeleton or Balloon to kill or, at least, heavily damage them.
+Splash troops used in conjunction with the Tornado is a devastating combination as enemy units are clumped together in the centre of the Tornado, leaving them vulnerable to splash damage. A deadly combo is Tornado + Sparky. The Tornado can clump up enemy troops and allow the Sparky to kill all or severely damage troops within her blast radius.
+You can use this spell to pull troops to your King's Tower to activate it early. This will allow for extra defence, as the King Tower is able to attack any troops that are near the Princess Towers. It is advised to pull high damage dealers to the centre of your side so both Princess Towers can engage it. This prevents the possibility that the unit may deal heavy damage to your Princess Tower. However, cheap troops like skeletons should be placed to maximise the time in the kill zone.
+For example, Balloons can be easily destroyed using this strategy because of their moderate health and slow movement speed.
+It is not recommended to pull extremely powerful troops to the King's Tower such as the Golem or P.E.K.K.A.. Extremely high-health troops will be able to survive the attacks of the three Crown Towers for very long, allowing other troops to do significant damage to the Princess Towers if unopposed. Additionally an extremely powerful troop can also do significant damage to the King's Tower, opening up the possibility that your opponent destroys your King's Tower directly.
+It would be great to use Tornado to counter Goblin Barrel, as Tornado would do a lot of damage to the goblins, and, the two princess towers wouldn’t be able to kill all three goblins, letting the remaining one hit the King Tower.
+The Tornado is a hard counter to Clone. However, it does not affect the Cannon Cart as it can only break its shield, leaving the Cannon unharmed.
+For a neutral trade, it can be used to pull a Princess within range of a Crown Tower, allowing it to destroy her.
+All units
+Troop
+Spell
+Building
+COMMON	Minions · Archers · Knight · Spear Goblins · Goblins · Minion Horde · Bats · Barbarians · Ice Spirit · Skeletons · Royal Recruits · Royal Giant · Skeleton Barrel · Elite Barbarians · Goblin Gang · Bomber · Fire Spirits · Rascals · Fire Spirit · Firecracker · Skeleton Dragons · Electro Spirit · Berserker
+RARE	Musketeer · Mini P.E.K.K.A · Mega Minion · Battle Ram · Valkyrie · Dart Goblin · Hog Rider · Ice Golem · Three Musketeers · Flying Machine · Giant · Wizard · Royal Hogs · Zappies · Elixir Golem · Battle Healer · Goblin Demolisher · Suspicious Bush
+EPIC	Baby Dragon · Prince · Wall Breakers · Golem · Witch · Giant Skeleton · Bowler · Dark Prince · Guards · Electro Dragon · Executioner · Skeleton Army · Hunter · P.E.K.K.A · Balloon · Goblin Giant · Cannon Cart · Electro Giant · Rune Giant
+LEGENDARY	Miner · Princess · Night Witch · Inferno Dragon · Ram Rider · Bandit · Mega Knight · Royal Ghost · Sparky · Lava Hound · Lumberjack · Magic Archer · Ice Wizard · Fisherman · Electro Wizard · Mother Witch · Phoenix · Goblin Machine · Ronin
+CHAMPION	Mighty Miner · Skeleton King · Archer Queen · Golden Knight · Monk · Little Prince · Goblinstein · Boss Bandit
+ Cards
+Explore more
+Back to Clash Royale
+CONTENT
+BUILD & PLAY
+Popular decks
+Top Cards
+Deck Builder
+Challenges
+RANKINGS
+TOOLS
+CLASHER.US
+About Us
+Contact Us
+Terms of Service
+Privacy Policy
+Cookie settings
+OUR OTHER SITES
+CoCMap.com
+Clash of Clans companion — bases, guides & rankings
+Minecrafts.us
+Minecraft companion
+minzap.com
+Whiteout Survival & Kingshot guides
+GET THE APP
+AVAILABLE ON
+Maps for Clash of Clans
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+
+© 2019–2026 Copyright: CLASHER.US Terms of Service · Privacy Policy
+
+This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy
+
+Powered by Namecheap — Vultr

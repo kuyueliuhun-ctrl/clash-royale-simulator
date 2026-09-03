@@ -1,0 +1,339 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 3-Elixir Cards, Champions with 3-Elixir Abilities, Champion Cards, and 2 more
+English
+Little Prince
+21
+SAVE
+EDIT
+
+
+
+
+Little Prince
+Elixir Cost
+3 
+Ability Cost
+3 
+Rarity
+Champion
+Type
+Troop
+Arena
+Silent Sanctuary
+Release Date
+6 November 2023
+
+
+
+
+“Who let their nephew into the Arena?! This mischievous Royal gains Hit Speed when firing, as long as he stands still! He may look weak, but he's always being watched over from afar...”
+
+The Little Prince is a Champion card that is unlocked from the Silent Sanctuary (Arena 18). It spawns a single-target, air-targeting, long-ranged, ground troop with moderate hitpoints and low damage. The Little Prince's ability has him call upon a tank named Guardienne. She appears as a tall, muscular woman who has cyan eyes, blonde eyebrows, and a scar on her left eye, wields a giant sword, is dressed in a gray-colored armor, chain mail, and a team-colored cape, wears a helmet with a team-colored feather, brown gloves with metal guards, sandals and a belt with a gold buckle and silver details, and dons a blonde bowl cut under her helmet. The Little Prince himself appears similarly to the King, but has green eyes, rounded eyebrows, and coiffed curly hair, wears a chestplate and brown gloves, and wields a crossbow with gold platings. A Little Prince card costs 3 Elixir to deploy, and his ability costs an additional 3 Elixir to activate.
+
+Ability: Royal Rescue
+“Guardienne charges into battle, dealing Charge Damage and pushing enemies back!”
+
+The Little Prince has a special ability, accessible from the rightmost side of the screen just above the player's card slots in battle. After a 1-second delay, the Little Prince activates his “Royal Rescue”, causing Guardienne to charge directly in front of the Little Prince and knock opposing ground troops away by 0-2 tiles (depends on how close the unit is to the sweet spot) while also doing moderate damage. After the charge is completed, Guardienne stays in the arena until she's taken out. Guardienne's stats are comparable to a Knight, having slightly less health and slightly less damage with their rest of their stats being identical. The ability goes on a 30-second cooldown after the duration ends. The Royal Rescue ability costs 3 Elixir to activate.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+For the purposes of determining Elixir trades, the Little Prince and his activated Ability count as 6 Elixir, as the player must play the 3 Elixir Little Prince and then spend a further 3 on his Ability.
+The Little Prince by himself may be situationally ignored as without Guardienne, he will get 5 shots on the Tower Princess, and 2 shots with the Cannoneer and the Dagger Duchess. However, with Guardienne, they should never be ignored as they'll take a Crown Tower when left alone.
+Like The Log and the Monk, the knockback effect caused by the Royal Rescue ability can affect all ground troops. This makes him very effective against large tanks and can prevent a lot of damage done to Crown Towers.
+A Goblin Giant’s Spear Goblins locked onto the Little Prince can be pushed out of range by the Royal Rescue knockback, causing them to retarget to the Guardienne and saving the Little Prince from certain death.
+Strangely enough, the Mega Knight's jump can be completely interrupted while mid-air, unlike other cards with knockback effects. The Guardienne will tank enough attacks from the Mega Knight afterwards, and together with the Little Prince they can stop him for a +1 Elixir trade. However, if the Mega Knight is already halfway through the trajectory to jump onto the Little Prince, the Guardienne will knock him back, and he will erratically travel forward while mid-air onto the Little Prince.
+Even though he cannot prevent all damage, if placed early enough, it can somewhat stop a lone Golem with the ability. This will leave minimal damage done to it through the Golemites, which can be easily addressed with an additional card if preferred by the user.
+Frailer tanks like the Giant, Rune Giant, and Electro Giant can be prevented from connecting to the Crown Towers entirely thanks to the knockback. The former and the middle will leave the player with a full health Little Prince and Guardienne for a counterattack while the latter is a +1 Elixir trade and also leave both troops relatively healthy for the counterattack.
+If the Giant Skeleton is already locked on the Crown Tower, the player can utilize the knockback from the ability to push him out of range. The Giant Skeleton will then retarget on the Guardienne, and along with the Little Prince, they will be able to defeat him. However, the death bomb will deal significant damage to the Little Prince afterwards, as he walks towards it. A similar tactic can work against the P.E.K.K.A and Mega Knight.
+It can also be used to reset the Mighty Miner's ramp up attack, saving a large tank from certain death, as well as sending the Mighty Miner in a less favorable position in case he wants to use his ability.
+It is also good against the Skeleton King, to push him further from the Crown Tower, causing the Skeletons to have to walk more to deal damage to the Tower. However, this should only be used if the Skeleton King has already activated his ability.
+Cards with knockback and stun effects like The Log, Zap, Fireball, and Giant Snowball can reset his attack speed ramp up, making them good last-resort assist cards.
+The Bowler is exceptionally good at stopping the Little Prince even with the ability activated, as you can align the Bowler to hit both the Little Prince and Guardienne. The knockback from the Bowler's attack resets the Little Prince's ramp-up attack as well, preventing the Bowler from dying.
+The Little Prince has moderate hitpoints, making him relatively weak to strong spells.
+A Fireball is not enough to finish him off by itself. However, any additional damage can defeat him. However, if the Fireball is at a higher level than the Little Prince or if the Little Prince is one level lower, it will be able to defeat him on its own without additional support.
+If waiting to defeat him is an option, a Poison does enough damage that it will fully defeat the Little Prince through its duration for a -1 Elixir trade.
+When compared to other single glass cannons, the Barbarian Barrel and Royal Delivery are less effective, because the Little Prince can use his ability to summon the Guardienne who would save him from the Barbarian or Royal Recruit that spawns from the spell. However, those spells still work against one that has already used his ability, as his cooldown is longer than any other Champion card.
+The Little Prince can be destroyed entirely within 3 hits from the Void, provided that he is the only troop inside it. This is enough to counter the Little Prince for a neutral Elixir trade. The player can deploy Goblins or any other card that spawns at least 4 troops. to save the Little Prince from the spell if timed right.
+Lightning and Rocket can instantly defeat the Little Prince, however at large negative Elixir trade. These spells are used optimally if they are also hitting something else, such as a Crown Tower or support troop, or in some cases, the Guardienne.
+You can bait out medium spells using the Little Prince and place other cards that would thrive due to their absence, such as Barbarians or Royal Hogs.
+While Lightning and Rocket work against the Little Prince, they're a poor choice against Guardienne. As such, they should not be used against her, unless they can gain additional value by hitting other units.
+Even if the Little Prince is very close to dying, you can activate his ability just before he crosses the bridge to have Guardienne take hits for the Little Prince. This will completely take out the Crown Tower if not addressed by the opponent.
+When timed properly, a Mini P.E.K.K.A can fully counter a Little Prince. You must play the Mini P.E.K.K.A directly at the bridge when the Little Prince is just stepping onto it. This will catch your opponent off guard and allow the Mini P.E.K.K.A to instantly take out the Little Prince before they have the chance to activate the ability.
+If the ability has already been activated, place the Mini P.E.K.K.A directly on top of the Little Prince to take him out immediately. Then, Guardienne will be lured to the Mini P.E.K.K.A, allowing him to take her out for a net +2 Elixir trade. A Knight can work similarly for 1 less Elixir, although he will take more damage compared to the Mini P.E.K.K.A. Evolved Skeletons can also counter Little Prince and Guardienne if placed on top of the Little Prince after the ability is used. They're the cheapest counter to Little Prince and Guardienne with a net +5 Elixir trade.
+The Little Prince can be used as a situation counter to the Goblin Barrel as activating his ability at the proper time and position will allow Guardienne to take out all three Goblins at once due to her charge. Although this is a large negative Elixir trade, this can transition into a threatening counterattack as both the Little Prince and Guardienne are at full health.
+Cheap swarms like Goblins, Spear Goblins, Minions, Archers, Bats, and Skeletons are great counters to a lone Little Prince without his ability. The Little Prince does not deal enough damage to 2HKO most of those troops (or 3HKO in the case of Archers and Firecracker), which leaves them enough time to deal damage to him and defeat him. However, they are weak to spells like Zap and Arrows, so use them after he uses his ability and such spells are out of rotation. Minions can also work even if he activates his ability, as they are immune to Guardienne's damage and cannot be targeted by Guardienne.
+More expensive swarms like Skeleton Army, Goblin Gang, and Barbarians aren't recommended to counter the Little Prince without its ability used beforehand. Using these swarms to counter him may cause the opponent to activate his ability, causing Guardienne to wipe out or deal moderate damage to the swarm, leaving the player in a bad position and low on Elixir.
+With the help of the Cannoneer, a properly placed Ice Golem can prevent most damage from the Little Prince and Guardienne, only allowing a few hits from the Little Prince.
+Although the Royal Rescue's range is 4 tiles, the Guardienne has an extra 0.8 tile collision radius, allowing her to reach slightly further, similar to an attack from the Executioner. This can allow her to reach certain ranged troops such as the Bowler and deal damage to them with the ability.
+If the ability is not used, the Dart Goblin can fully counter the Little Prince from the opponent’s side of the map. If ignored, this Dart Goblin will get one or two hits on the Crown Towers, dealing minor chip damage.
+The Little Prince can be placed as a defender in Boat Battles. However, much like other Champion cards, he is unable to use his ability. As such, he should not be set for Defense Towers in Clan Wars, and it is better to seek for other alternatives.
+Statistics
+Little Prince Attributes
+Cost
+	Hit Speed (Stage 1)
+	Hit Speed (Stage 2)
+	Hit Speed (Stage 3)
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Projectile Speed
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+3	1.2 sec	0.6 sec	0.4 sec	0.4 sec	Medium (60)	1 sec	5.5	800	Air & Ground	x1	Ground	Troop	Champion
+Royal Rescue Attributes
+Cost
+	Dash Range
+	Target
+	Cast Time
+	Ability Cooldown
+
+3	4	Ground	0.944 sec	30 sec
+Guardienne Attributes
+Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Target
+	Transport
+
+1.2 sec	0.5 sec	Medium (60)	0.3 sec	Melee: Medium (1.2)	Ground	Ground
+Card Statistics
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Level
+	Little Prince Hitpoints
+	Little Prince Damage
+	Little Prince Damage per Second (Stage 1)
+	Little Prince Damage per Second (Stage 2)
+	Little Prince Damage per Second (Stage 3)
+	Royal Rescue Damage
+	Guardienne Hitpoints
+	Guardienne Damage
+	Guardienne Damage per Second
+
+11	698	104	86	173	260	256	1600	217	180
+12	768	114	95	190	285	282	1760	239	199
+13	845	126	105	210	315	310	1936	263	219
+14	929	138	115	230	345	341	2130	289	240
+15	1022	152	126	253	380	375	2343	318	265
+16	1124	167	139	278	417	412	2577	349	290
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Reward
+Damage Dealer
+
+	1	Deal a total of 300,000 Damage to enemy Troops or buildings	1 Little Prince card
+150 
+2	Deal a total of 900,000 Damage to enemy Troops or buildings	10,000 
+150 
+3	Deal a total of 1,500,000 Damage to enemy Troops or buildings	100 
+150 
+Royal Rescue
+	1	Hit a total of 500 Troops or buildings with Guardian's Charge Damage	15,000 
+175 
+2	Hit a total of 1,500 Troops or buildings with Guardian's Charge Damage	100 
+175 
+3	Hit a total of 2,600 Troops or buildings with Guardian's Charge Damage	25,000 
+175 
+History
+
+2023
+
+The Little Prince was playable in the Mega Draft Challenge on 2/11/2023, before its release date, as an unintended glitch. Supercell fixed this glitch with a maintenance break.
+The Little Prince card was generally released on 6/11/2023, in the November 2023 Update.
+On 13/11/2023, a Minor Update, decreased the Royal Rescue's dash range to 4.5 tiles (from 5 tiles). It also fixed a bug where Royal Rescue could hit troops underground and made it so that Clone no longer creates two full health Guardiennes when used at the right moment that Little Prince activates Royal Rescue.
+On 17/11/2023, a maintenance break, increased the number of attacks required to change stages to 3 (from 2) and decreased the Royal Rescue's pushback to 2.5 tiles (from 3.5 tiles).
+On 14/12/2023, a maintenance break, fixed a bug where the Little Prince's hit speed would not reset after moving.
+
+2024
+
+On 3/1/2024, a Balance Update, decreased the Little Prince's damage by 9% and decreased the Guardienne's hitpoints by 11%.
+On 5/3/2024, a Balance Update, decreased the Little Prince’s range to 5.5 tiles (from 6 tiles). It also decreased the Royal Rescue’s dash range to 4 tiles (from 4.5 tiles).
+On 17/6/2024, the Goblin World Update, decreased the Little Prince's hitpoints by 0.28% and his damage by 1%, decreased the Royal Rescue damage by 48.1%, its pushback to 2 tiles (from 2.5 tiles), increased Guardienne's first attack time interval to 0.5 seconds (from 0.2 seconds), and decreased her damage by 0.5%.
+
+2025
+
+On 3/6/2025, a Balance Update, increased the Guardienne's damage by 1%. It also increased the Royal Rescue's damage by 11%.
+On 1/9/2025, a Balance Update, increased the Royal Rescue’s pushback to 2.5 tiles (from 2 tiles). It also increased the Royal Rescue’s damage by 11%.
+On 3/11/2025, a Balance Update, increased the Guardienne’s damage by 7%.
+
+2026
+
+On 12/1/2026, a Balance Update, increased the Little Prince's damage by 5%.
+On 4/8/2026, a Balance Update, made it so that the Little Prince would no longer have a cooldown timer in-between abilities. Instead, his ability will no be single use. The Little Prince will now maintain his charged-up Hit Speed for up to 0.3 seconds while moving. The Guardian Melee Damage was also increased by 7%
+Gallery
+Current card render.
+Current card preview
+Little Prince
+Guardienne
+Little Prince with his Guardian
+Little Prince red
+Trivia
+The word "Prince" comes from the Latin word "prīnceps", meaning first head.
+The Little Prince is 1 of 20 cards associated with nobility, with the others being Knight, Royal Recruits, Royal Giant, Royal Delivery, Tower Princess, Royal Hogs, Dark Prince, Prince, Raging Prince, Mega Knight, Princess, Royal Ghost, Spirit Empress, Super Knight, Dagger Duchess, Royal Chef, Golden Knight, Skeleton King, and the Archer Queen.
+The Little Prince is 1 of 10 cards associated with archery, with the others being Archers, Arrows, Tower Princess, X-Bow, Princess, Magic Archer, Super Magic Archer, Super Archers, and the Archer Queen.
+The Little Prince may be a reference to the novel, "The Little Prince".
+The Little Prince is the cheapest Champion card, costing 3 Elixir.
+He also has the most expensive ability, costing 3 Elixir.
+The Little Prince is tied with Inferno Dragon and the Mighty Miner for the highest attack speed of all troops when fully charged, with an attack speed of 0.4 seconds.
+The Little Prince was the first card to be introduced in the game through a Card Delivery event.
+When deployed, he says "Doing it for the fam", "Um, excuse me, don't you know who I am?", "Bold and bashful", "Ahaha, kneel numbskulls!", or “What up, future king over here". He may say "Sweepy swipey!" when he starts attacking, as well as "Oh, Guardienne!", "I warned you!", or "You asked for it" if Royal Rescue is activated. Similarly, the Guardienne may say "Protect the heir", "For the throne" or screaming "Hurrah!" when deployed through Royal Rescue.
+Both the Little Prince and the Guardienne are voice acted by Elizabeth Saydah.
+The Little Prince is 1 of 24 troops that speak distinct words when on the field, the others being Mini P.E.K.K.A., Mega Minion, Wizard, Hog Rider, P.E.K.K.A., Dark Prince, Bowler, Ram Rider, Electro Wizard, Princess, Ice Wizard, Magic Archer, Lumberjack, Mother Witch, Fisherman, Goblin Machine, Super Mini P.E.K.K.A., Santa Hog Rider, Super Magic Archer, Golden Knight, Boss Bandit, Archer Queen, and the Terry.
+When the Little Prince is defeated, his crown falls to the ground. Similarly, when the Guardienne is defeated, her long sword falls to the ground. The other units that drop items upon death are the Knight, Rascal Boy, Mega Minion, Dark Prince, Executioner, Mega Knight, Sparky, Fisherman, Super Knight, and the Golden Knight.
+It is 1 of 20 cards that is unavailable in Mirror mode, the others being Minions, Cannon, Mortar, Tesla, Goblin Hut, Tombstone, Bomb Tower, Inferno Tower, Barbarian Hut, Furnace, Elixir Collector, Freeze, Clone, X-Bow, Golden Knight, Skeleton King, Archer Queen, Mighty Miner, and the Monk.
+The Little Prince is the subject of 3 Emotes. His Guardienne is also the subject of 2 Emotes.
+The Little Prince Wink Emote was originally going to appear in November of 2023, but did not make it to the game until the January of 2025.
+By using Mirror on a Clone and using it on an Little Prince, it is actually possible to get a Level 16 Little Prince.
+A cloned Little Prince does not fall from the sky when deployed.
+The initial balance change for Little Prince on the balance changes in the Goblin World Update was a 75% Royal Rescue damage decrease, but it was lowered to 48% last minute.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+21 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+4 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

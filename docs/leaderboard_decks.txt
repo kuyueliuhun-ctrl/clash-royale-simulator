@@ -1,0 +1,1003 @@
+RoyaleAPI Deck Leaderboard — https://royaleapi.com/decks/leaderboard
+抓取时间: 2026-09-02T19:49:32.284Z
+卡组数: 200
+====================================================================================================
+#1  Turan✨ (P8P0Q8CJ)  [YT Turan CR / QJ2JGCL8]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3769 | 最近天梯战: 2h 1m 50s
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#2  G❄at l Luca (20PURRGR2)  [Replay Goat Luc / J0JVQVU2]
+   卡组: elite-barbarians-ev1, mini-pekka-hero, zap-ev1, golem, phoenix, night-witch, bomber, arrows
+   塔: royal-chef | 圣水: 4.1 | 最短循环: 11 | 奖杯: 3758 | 最近天梯战: 3h 6m 49s
+   copyDeck: 26000043;26000018;28000008;26000009;26000087;26000048;26000013;28000001
+
+#3  Суслик (V02VR8JVP)  [YT TouristCR / GRCUPVJV]
+   卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3757 | 最近天梯战: 6h 6m 41s
+   copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+
+#4  NK Tanjiro✨晚✨12 (208R8PQJP9)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3749 | 最近天梯战: 33m 1s
+   copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+
+#5  Light Saber (UJJ2YVLQR)  [Sunlight / QYGL80RR]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3740 | 最近天梯战: 7h 29m 31s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#6  Dess❤️téø (GUPVGVQQV)  [Chloelpb / GYGY0PGG]
+   卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 15 | 奖杯: 3719 | 最近天梯战: 4h 33m 50s
+   copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+
+#7  vadimdmish (2PLLPVURP)  [Ｖａｌｈａｌｌａ / G9QY80JR]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3691 | 最近天梯战: 4h 46m 52s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#8  YT:arian cr (UCJ8L2P88)  [Lifetime / 9V9GGVCQ]
+   卡组: battle-ram-ev1, mini-pekka-hero, inferno-dragon-ev1, mega-knight, mother-witch, bomber, freeze, zap
+   塔: dagger-duchess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3675 | 最近天梯战: 27m 38s
+   copyDeck: 26000036;26000018;26000037;26000055;26000083;26000013;28000005;28000008
+
+#9  Mohamed✨Kun (V0G2JGUUR)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: firecracker-ev1, mighty-miner, tesla-ev1, hog-rider, earthquake, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 7 | 奖杯: 3672 | 最近天梯战: 5h 4m 17s
+   copyDeck: 26000064;26000065;27000006;26000021;28000014;26000010;26000084;28000015
+
+#10  각기 (U2P99YYQJ)  [No Clan / None]
+   卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 8 | 奖杯: 3665 | 最近天梯战: 1h 8m 56s
+   copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000084;28000015
+
+#11  ❤️mohamdparsa❤️ (UGVJP9VVV)  [Iran Hplow / L28V902R]
+   卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, dark-prince, electro-wizard, bomber, tornado, freeze
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3665 | 最近天梯战: 2h 6m 28s
+   copyDeck: 26000004;26000006;26000015;26000027;26000042;26000013;28000012;28000005
+
+#12  ⇀スキル丨Hadi (222LJ8Y8)  [Lifetime / 9V9GGVCQ]
+   卡组: elite-barbarians-ev1, giant-hero, mega-minion-hero, prince, fireball, bomber, zap, rage
+   塔: dagger-duchess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3662 | 最近天梯战: 54m 25s
+   copyDeck: 26000043;26000003;26000039;26000016;28000000;26000013;28000008;28000002
+
+#13  Ijihu (20PRCUJ0LR)  [Lifetime / 9V9GGVCQ]
+   卡组: goblin-barrel-ev1, knight-hero, skeleton-army-ev1, princess, dart-goblin, ice-spirit, the-log, inferno-tower
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 9 | 奖杯: 3662 | 最近天梯战: 1d 6h 34m
+   copyDeck: 28000004;26000000;26000012;26000026;26000040;26000030;28000011;27000003
+
+#14  MADISON BEER (20YGQLGYJC)  [NOLITO VIP / GR8QU9UY]
+   卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 6 | 奖杯: 3660 | 最近天梯战: 42m 14s
+   copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+
+#15  KSA✨LOUIE (UUG90U9RC)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 6 | 奖杯: 3660 | 最近天梯战: 20h 50m 14s
+   copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+
+#16  ねこかわいい^ᴗ ̫ ᴗ^ (RJ2UPC900)  [No Clan / None]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3659 | 最近天梯战: 7h 19m 19s
+   copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+
+#17  ✨Cooper✨©️®️ (V0YQR99UJ)  [NOLITO VIP / GR8QU9UY]
+   卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, guards, zappies, tornado, freeze, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3644 | 最近天梯战: 45m 40s
+   copyDeck: 26000004;26000006;26000015;26000025;26000052;28000012;28000005;28000015
+
+#18  SaturnKing (UQCCLYLCU)  [Lifetime / 9V9GGVCQ]
+   卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3644 | 最近天梯战: 6h 28m 41s
+   copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+
+#19  TEF丨Yoru✨弥雾✨晚神 (2Q2QCYLPR)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: baby-dragon-ev1, bowler-hero, golden-knight, electro-giant, lightning, goblin-hut, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 4.4 | 最短循环: 13 | 奖杯: 3637 | 最近天梯战: 1h 41m 49s
+   copyDeck: 26000015;26000034;26000074;26000085;28000007;27000001;28000012;28000015
+
+#20  Friend✨安之 (CVR2G2LCJ)  [NoA / Q9QPPGGG]
+   卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 10 | 奖杯: 3635 | 最近天梯战: 1h 31m 40s
+   copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+
+#21  TEF丨Woo✨Kun✨晚神 (U2YVYGGV2)  [wowoo / GJQCQQYG]
+   卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3634 | 最近天梯战: 1h 45m 58s
+   copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+
+#22  RAMBOOOSTED (QQUJ2Y2C)  [We Are The Best / QUJYU8LQ]
+   卡组: elite-barbarians-ev1, boss-bandit, minion-horde-ev1, hog-rider, executioner, minions, arrows, freeze
+   塔: tower-princess | 圣水: 4.5 | 最短循环: 14 | 奖杯: 3623 | 最近天梯战: 4h 19m 24s
+   copyDeck: 26000043;26000103;26000022;26000021;26000045;26000005;28000001;28000005
+
+#23  xCrisTop17 ✌️ (PRVL9L82C)  [Sandstorm / RL0ULLGV]
+   卡组: baby-dragon-ev1, balloon-hero, knight-ev1, berserker, bomber, tornado, electro-spirit, freeze
+   塔: cannoneer | 圣水: 3 | 最短循环: 8 | 奖杯: 3622 | 最近天梯战: 16h 15m 4s
+   copyDeck: 26000015;26000006;26000000;26000102;26000013;28000012;26000084;28000005
+
+#24  Dess (UJRR9RJUL)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 15 | 奖杯: 3621 | 最近天梯战: 27m 38s
+   copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+
+#25  ꧁☬Celestia Vow☬ (VC9PYQ028)  [Lifetime / 9V9GGVCQ]
+   卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, royal-ghost, electro-wizard, minions, arrows
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3620 | 最近天梯战: 2h 22m 56s
+   copyDeck: 26000036;26000074;26000004;26000083;26000050;26000042;26000005;28000001
+
+#26  babyfriend (U9J00LCYC)  [NoA / Q9QPPGGG]
+   卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 10 | 奖杯: 3620 | 最近天梯战: 20h 4m 55s
+   copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+
+#27  SK Morten (R09228V)  [sahnenmann / G2PQYU8J]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3619 | 最近天梯战: 17h 59m 20s
+   copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+
+#28  the Last (UUGPCUVPC)  [Lifetime / 9V9GGVCQ]
+   卡组: elite-barbarians-ev1, giant-hero, mega-minion-hero, prince, fireball, bomber, zap, rage
+   塔: dagger-duchess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3617 | 最近天梯战: 6h 56m 9s
+   copyDeck: 26000043;26000003;26000039;26000016;28000000;26000013;28000008;28000002
+
+#29  ValkSpinOnMe (UL0JRU8JY)  [KIDDA OFFICIAL / RYLPP8GG]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3613 | 最近天梯战: 12h 28m
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#30  MOONWALK (CL0R8QLR9)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: giant-snowball-ev1, knight-hero, cannon-ev1, goblin-drill, rocket, bomber, fire-spirit, skeletons
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 6 | 奖杯: 3608 | 最近天梯战: 34m 49s
+   copyDeck: 28000017;26000000;27000000;27000013;28000003;26000013;26000031;26000010
+
+#31  El Turista✨ (C89L0002L)  [YT TouristCR / GRCUPVJV]
+   卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3606 | 最近天梯战: 23m 23s
+   copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+
+#32  Hypno ❤️ Hans (L8999VJC)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3605 | 最近天梯战: 16h 48s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#33  Hypno ❤️ Barbs (UC0QJ2CU9)  [Lifetime / 9V9GGVCQ]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3605 | 最近天梯战: 23h 1m 16s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#34  Hypno ❤️ Crona (VLL8YQC9G)  [APUK / L9LYU2G9]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3604 | 最近天梯战: 16h 40m 32s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#35  DeadManWalking (222GCQ0GGJ)  [No Clan / None]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3604 | 最近天梯战: 1d 19h 42m
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#36  Hypno❤️Dybala (VJU89YPRU)  [Lifetime / 9V9GGVCQ]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3601 | 最近天梯战: 12h 42m 45s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#37  てち (JPPC9URJ)  [Lifetime / 9V9GGVCQ]
+   卡组: battle-ram-ev1, valkyrie-hero, elite-barbarians-ev1, mother-witch, bandit, zappies, arrows, heal-spirit
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 11 | 奖杯: 3600 | 最近天梯战: 11h 25m 20s
+   copyDeck: 26000036;26000011;26000043;26000083;26000046;26000052;28000001;28000016
+
+#38  ✨SV KLEIMAR ✨ (JCVJ29Q0Y)  [100%colombia / G80VVYUJ]
+   卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.5 | 最短循环: 6 | 奖杯: 3598 | 最近天梯战: 26m 44s
+   copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+
+#39  LonDex Play (JYG0G0Y9P)  [Kings eSports / 28L0JQQP]
+   卡组: knight-ev1, mega-minion-hero, little-prince, ram-rider, pekka, arrows, zap, barbarian-barrel
+   塔: tower-princess | 圣水: 3.5 | 最短循环: 10 | 奖杯: 3594 | 最近天梯战: 23m 23s
+   copyDeck: 26000000;26000039;26000093;26000051;26000004;28000001;28000008;28000015
+
+#40  Meeko Alehandro (20P89C2C9R)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: inferno-dragon-ev1, balloon-hero, knight-ev1, baby-dragon, bowler, guards, tornado, freeze
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 13 | 奖杯: 3592 | 最近天梯战: 8h 49m 43s
+   copyDeck: 26000037;26000006;26000000;26000015;26000034;26000025;28000012;28000005
+
+#41  むぎったん (2CLV2RP0)  [CRL2026 / GCRJ09RC]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3582 | 最近天梯战: 2h 47m 20s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#42  TR⚡️Sosa✞ (PP2UY0P00)  [NOLITO VIP / GR8QU9UY]
+   卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 12 | 奖杯: 3581 | 最近天梯战: 21h 22m 28s
+   copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+
+#43  TWR Juancho✨ (229Y29RLYC)  [BUL❤eSports / GP9U9C8V]
+   卡组: skeleton-army-ev1, berserker-hero, minion-horde-ev1, wall-breakers, miner, princess, the-log, inferno-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 9 | 奖杯: 3575 | 最近天梯战: 10h 11m 9s
+   copyDeck: 26000012;26000102;26000022;26000058;26000032;26000026;28000011;27000003
+
+#44  RUBIZALEZ (LPRR9P)  [Lifetime / 9V9GGVCQ]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3568 | 最近天梯战: 2h 44m 43s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+
+#45  Takuma (2UJ2QQJJP)  [Clan #GJLLL9QC / GJLLL9QC]
+   卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3 | 最短循环: 8 | 奖杯: 3568 | 最近天梯战: 5h 42m 32s
+   copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+
+#46  Vinizada✨ (VJ2VJYRYL)  [GUERREIROS PT / G89QUY2P]
+   卡组: minion-horde-ev1, giant-hero, zap-ev1, sparky, mini-pekka, skeleton-army, arrows, bats
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 10 | 奖杯: 3566 | 最近天梯战: 1h 28m 18s
+   copyDeck: 26000022;26000003;28000008;26000033;26000018;26000012;28000001;26000049
+
+#47  T8848丨梨✨瓜呱✨凑友希那 (V2UVC0RV0)  [No Clan / None]
+   卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, royal-ghost, furnace, freeze
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3566 | 最近天梯战: 5h 24m 22s
+   copyDeck: 26000045;26000103;28000017;26000021;26000106;26000050;27000010;28000005
+
+#48  TikTok MattiaCr (20GUJ0GUG8)  [FurieGun™️ / J0QU0JUY]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3566 | 最近天梯战: 10h 56m 56s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#49  Sofiane (2Q9JG29RL)  [WeNeedBLΘΘD / G0L9C0V0]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3566 | 最近天梯战: 1d 5h 14m
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#50  Coco (2VGG29RJ2)  [practice / J998GY2R]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3565 | 最近天梯战: 8h 7m 18s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#51  Fan (CVVCU2JJ8)  [Boosted Balloon / GGVLU88L]
+   卡组: musketeer-ev1, barbarian-barrel-hero, skeletons-ev1, balloon, miner, ice-golem, giant-snowball, bomb-tower
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3560 | 最近天梯战: 46m 43s
+   copyDeck: 26000014;28000015;26000010;26000006;26000032;26000038;28000017;27000004
+
+#52  Clown (GPPYR9JYR)  [No Clan / None]
+   卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3560 | 最近天梯战: 16h 18m 20s
+   copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+
+#53  adriel (9CPCC890)  [No Clan / None]
+   卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 8 | 奖杯: 3555 | 最近天梯战: 23m 10s
+   copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000084;28000015
+
+#54  Koh™️ (CRUGCURRP)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3 | 最短循环: 8 | 奖杯: 3555 | 最近天梯战: 24m 37s
+   copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+
+#55  往日之影✨瓜呱 (UVUJJ009V)  [悲伤出殡下葬 / RG9JPQ9U]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3552 | 最近天梯战: 3d 2h 28m
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#56  STARR NOVA (LYYRJ82U0)  [Lifetime / 9V9GGVCQ]
+   卡组: battle-ram-ev1, archer-queen, elite-barbarians-ev1, royal-ghost, bandit, arrows, heal-spirit, elixir-collector
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 10 | 奖杯: 3549 | 最近天梯战: 24m 35s
+   copyDeck: 26000036;26000072;26000043;26000050;26000046;28000001;28000016;27000007
+
+#57  Asaf (RUQ0JU2P)  [No Clan / None]
+   卡组: skeleton-barrel-ev1, mighty-miner, elite-barbarians-ev1, suspicious-bush, fireball, goblin-gang, dart-goblin, the-log
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 10 | 奖杯: 3545 | 最近天梯战: 1h 22m 2s
+   copyDeck: 26000056;26000065;26000043;26000097;28000000;26000041;26000040;28000011
+
+#58  Soulless (Q99RGUQRR)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: battle-ram-ev1, golden-knight, royal-ghost-ev1, giant-skeleton, mother-witch, electro-wizard, bandit, heal-spirit
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 11 | 奖杯: 3544 | 最近天梯战: 23m 10s
+   copyDeck: 26000036;26000074;26000050;26000020;26000083;26000042;26000046;28000016
+
+#59  Fantisy (VCQUY9Y8U)  [No Clan / None]
+   卡组: musketeer-ev1, barbarian-barrel-hero, skeletons-ev1, balloon, miner, ice-golem, giant-snowball, bomb-tower
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3543 | 最近天梯战: 7h 57m 5s
+   copyDeck: 26000014;28000015;26000010;26000006;26000032;26000038;28000017;27000004
+
+#60  TR⚡️Matthew⚡️ (YP8RUU2UL)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 12 | 奖杯: 3541 | 最近天梯战: 8h 37m 19s
+   copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+
+#61  Zyn｜Dary✨️夕方 (2RPVJ088V)  [NOLITO VIP / GR8QU9UY]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: cannoneer | 圣水: 4 | 最短循环: 13 | 奖杯: 3541 | 最近天梯战: 10h 45m 5s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#62  ⭐️ʟᴜᴍɪɴᴀʀʏ⭐️ (9ULPU0QL)  [KIDDA OFFICIAL / RYLPP8GG]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3540 | 最近天梯战: 12h 24m 27s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#63  Husse16 (2U0LLGPUJ)  [AZTEC WARRIORS / LGCLJJPC]
+   卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, miner, fireball, skeleton-dragons
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3528 | 最近天梯战: 17h 48m 57s
+   copyDeck: 26000037;26000102;28000008;26000029;26000101;26000032;28000000;26000080
+
+#64  YersonCz (GQYLLP9R0)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3527 | 最近天梯战: 2h 24m 52s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#65  Ryley (C0V0UQ9UY)  [practice / J998GY2R]
+   卡组: princess-ev1, valkyrie-hero, tesla-ev1, hog-rider, lightning, skeletons, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3526 | 最近天梯战: 1d 2h 1m
+   copyDeck: 26000026;26000011;27000006;26000021;28000007;26000010;26000030;28000011
+
+#66  Ahsoka❤️Libra (UQQ2GGL89)  [GENTLE MATES / RYLJLRYP]
+   卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 11 | 奖杯: 3526 | 最近天梯战: 1d 9h 56m
+   copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+
+#67  Shine｜繁星✨ (8YG02JJVG)  [YT Turan CR / QJ2JGCL8]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3525 | 最近天梯战: 20h 21m 3s
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#68  Gara (PP2C9LVG)  [Top Flame / QPY22Q0L]
+   卡组: electro-dragon-ev1, berserker-hero, elite-barbarians-ev1, golem, skeleton-dragons, tornado, barbarian-barrel, elixir-collector
+   塔: tower-princess | 圣水: 4.5 | 最短循环: 11 | 奖杯: 3524 | 最近天梯战: 35m 10s
+   copyDeck: 26000063;26000102;26000043;26000009;26000080;28000012;28000015;27000007
+
+#69  ✨Erik✨ (VJ2UPJLPQ)  [COACHING / R8YCRRUY]
+   卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, fireball, skeleton-dragons, tombstone
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3524 | 最近天梯战: 2d 21h 51m
+   copyDeck: 26000037;26000102;28000008;26000029;26000101;28000000;26000080;27000009
+
+#70  Kun｜花園✨瓜呱 (VL98GUVJQ)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mega-knight-ev1, golden-knight, giant-snowball-ev1, ram-rider, inferno-dragon, poison, electro-wizard, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3520 | 最近天梯战: 36m 56s
+   copyDeck: 26000055;26000074;28000017;26000051;26000037;28000009;26000042;28000015
+
+#71  Nico✨心系于你 (99YRC202R)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: baby-dragon-ev1, knight-hero, inferno-dragon-ev1, balloon, bowler, tornado, freeze, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 12 | 奖杯: 3515 | 最近天梯战: 1h 15m 58s
+   copyDeck: 26000015;26000000;26000037;26000006;26000034;28000012;28000005;28000015
+
+#72  Rainbow (VR90898)  [No Clan / None]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3513 | 最近天梯战: 1d 20h 36m
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+
+#73  Nicoco23 (G0CYJ00J)  [CLASH COACHING / JYLVYG8C]
+   卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3507 | 最近天梯战: 24m 37s
+   copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+
+#74  Gunhwi (2GGR2GPQ0)  [ClanBS / J0RP9QJY]
+   卡组: battle-ram-ev1, golden-knight, elite-barbarians-ev1, mother-witch, royal-ghost, electro-wizard, bandit, arrows
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 13 | 奖杯: 3506 | 最近天梯战: 12h 54m 47s
+   copyDeck: 26000036;26000074;26000043;26000083;26000050;26000042;26000046;28000001
+
+#75  ♠️Mugil♠️ (20L8V9QY9G)  [Ｖａｌｈａｌｌａ / G9QY80JR]
+   卡组: royal-giant-ev1, monk, hunter-ev1, fisherman, fireball, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.3 | 最短循环: 7 | 奖杯: 3506 | 最近天梯战: 1d 5h 16m
+   copyDeck: 26000024;26000077;26000044;26000061;28000000;26000010;26000084;28000015
+
+#76  屠殺者 (UYQYLG)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, rascals, barbarian-barrel
+   塔: cannoneer | 圣水: 4.3 | 最短循环: 14 | 奖杯: 3505 | 最近天梯战: 9h 5m 56s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000053;28000015
+
+#77  parsa.m (UJYLRVGY)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: inferno-dragon-ev1, berserker-hero, zap-ev1, lava-hound, rune-giant, fireball, skeleton-dragons, goblin-cage
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3505 | 最近天梯战: 10h 10m 32s
+   copyDeck: 26000037;26000102;28000008;26000029;26000101;28000000;26000080;27000012
+
+#78  Pedro™️ (RJ88Y8U08)  [PedroTm CR / R8RRUJQY]
+   卡组: royal-giant-ev1, monk, hunter-ev1, fisherman, fireball, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.3 | 最短循环: 7 | 奖杯: 3505 | 最近天梯战: 16h 37m 27s
+   copyDeck: 26000024;26000077;26000044;26000061;28000000;26000010;26000084;28000015
+
+#79  kamikaze✨小小罗 (228CUL992C)  [Lifetime / 9V9GGVCQ]
+   卡组: zap-ev1, giant-hero, mega-minion-hero, prince, dark-prince, lightning, bomber, rage
+   塔: dagger-duchess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3505 | 最近天梯战: 19h 10m 19s
+   copyDeck: 28000008;26000003;26000039;26000016;26000027;28000007;26000013;28000002
+
+#80  TKK.jackbest2.6 (VC0JRC2JU)  [GUERREIROS PT / G89QUY2P]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3504 | 最近天梯战: 2h 21m 40s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#81  Night graveyard (220JL80LUC)  [Lifetime / 9V9GGVCQ]
+   卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, guards, zappies, arrows
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3503 | 最近天梯战: 1h 3m 47s
+   copyDeck: 26000007;26000034;28000017;28000010;26000003;26000025;26000052;28000001
+
+#82  Koh❤️Rémyy (VL2QUL202)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: princess-ev1, mighty-miner, cannon-ev1, goblin-barrel, rocket, goblins, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3 | 最短循环: 8 | 奖杯: 3502 | 最近天梯战: 1d 43m 28s
+   copyDeck: 26000026;26000065;27000000;28000004;28000003;26000002;26000030;28000011
+
+#83  TEF｜花園✨艾维斯✨晚神 (VL8VY0QJU)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mega-knight-ev1, golden-knight, giant-snowball-ev1, ram-rider, inferno-dragon, poison, electro-wizard, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3497 | 最近天梯战: 1h 22m 33s
+   copyDeck: 26000055;26000074;28000017;26000051;26000037;28000009;26000042;28000015
+
+#84  Nooby❤️Rémyy (VP08G9PJQ)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.5 | 最短循环: 6 | 奖杯: 3482 | 最近天梯战: 1d 5h 54m
+   copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+
+#85  くろこ (UPRL0CQL0)  [training / RL2YY2JC]
+   卡组: princess-ev1, knight-hero, tesla-ev1, goblin-barrel, rocket, skeletons, electro-spirit, the-log
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3478 | 最近天梯战: 3h 9m 20s
+   copyDeck: 26000026;26000000;27000006;28000004;28000003;26000010;26000084;28000011
+
+#86  京都サンガFC (LGJURJVGQ)  [GRAPE Alliance / RU80VC9L]
+   卡组: goblin-cage-ev1, mega-minion-hero, zap-ev1, balloon, miner, inferno-dragon, fireball, ice-golem
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 10 | 奖杯: 3477 | 最近天梯战: 1h 5m 28s
+   copyDeck: 27000012;26000039;28000008;26000006;26000032;26000037;28000000;26000038
+
+#87  ツ✨26✨おやすみ (VL9JJGRQQ)  [100%Français / RLGYG2YU]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3476 | 最近天梯战: 3h 5m 6s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#88  Marpa (PPV80V9G2)  [NowayOut / J928UGUP]
+   卡组: pekka-ev1, balloon-hero, baby-dragon-ev1, lumberjack, electro-wizard, tornado, freeze, barbarian-barrel
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3470 | 最近天梯战: 11h 13m 8s
+   copyDeck: 26000004;26000006;26000015;26000035;26000042;28000012;28000005;28000015
+
+#89  YT: Rafinha CR (CCP2J000R)  [Master War / QUY202GQ]
+   卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3469 | 最近天梯战: 1d 4h 44m
+   copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+
+#90  CODE: Baby (LCULCL2JU)  [Sandstorm / RL0ULLGV]
+   卡组: baby-dragon-ev1, balloon-hero, knight-ev1, lumberjack, bomber, tornado, electro-spirit, freeze
+   塔: cannoneer | 圣水: 3.3 | 最短循环: 9 | 奖杯: 3468 | 最近天梯战: 1h 15m 44s
+   copyDeck: 26000015;26000006;26000000;26000035;26000013;28000012;26000084;28000005
+
+#91  very good (98GUUPJR)  [Lifetime / 9V9GGVCQ]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, skeletons, barbarian-barrel
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3468 | 最近天梯战: 3h 26m 11s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000010;28000015
+
+#92  Evo Archer Simp (208RCR2CC0)  [Lifetime / 9V9GGVCQ]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3466 | 最近天梯战: 11h 30m 44s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#93  Silent Bob (LYVRPV22Q)  [FurieGun™️ / J0QU0JUY]
+   卡组: wall-breakers-ev1, archer-queen, mega-knight-ev1, prince, bandit, arrows, bats, zap
+   塔: dagger-duchess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3462 | 最近天梯战: 8h 42m 9s
+   copyDeck: 26000058;26000072;26000055;26000016;26000046;28000001;26000049;28000008
+
+#94  ZQuentino (RRLV0GQCV)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3461 | 最近天梯战: 24m 54s
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#95  Saint Abo (U8PYJGJ9)  [Sandstorm / RL0ULLGV]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3461 | 最近天梯战: 1h 26m 39s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#96  Rafinha Prime ☠ (VYGR2GUV9)  [GUERREIROS PT / G89QUY2P]
+   卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3461 | 最近天梯战: 1d 4h 36m
+   copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+
+#97  Yoko☔️ (UGU2QLJVL)  [PekkaBS / J990RRQV]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3458 | 最近天梯战: 6h 35m 54s
+   copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+
+#98  Star Alex (JLY0CGU9J)  [NoA / Q9QPPGGG]
+   卡组: skeleton-army-ev1, giant-hero, bats-ev1, balloon, minions, bomber, arrows, freeze
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 10 | 奖杯: 3457 | 最近天梯战: 24m 54s
+   copyDeck: 26000012;26000003;26000049;26000006;26000005;26000013;28000001;28000005
+
+#99  raad ❄️ (UJGCC9ULR)  [مقهى الحظ ☕️ / GJC2YVYV]
+   卡组: archers-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, barbarians, minions, arrows
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 11 | 奖杯: 3456 | 最近天梯战: 1d 8h 14m
+   copyDeck: 26000001;26000034;28000017;28000010;26000003;26000008;26000005;28000001
+
+#100  Abo7assan1 (YUYR99U)  [Majestic lords / RV8RUPQU]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: cannoneer | 圣水: 4 | 最短循环: 13 | 奖杯: 3454 | 最近天梯战: 1d 57m 48s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#101  xMiduz (2VJ882GL8)  [Majestic lords / RV8RUPQU]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3452 | 最近天梯战: 1h 16m 48s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#102  SWARS (RJ0QPR09G)  [Unchained / RPPRR8JG]
+   卡组: musketeer-ev1, balloon-hero, skeletons-ev1, miner, ice-golem, barbarian-barrel, giant-snowball, bomb-tower
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3452 | 最近天梯战: 14h 55m 50s
+   copyDeck: 26000014;26000006;26000010;26000032;26000038;28000015;28000017;27000004
+
+#103  CAPGUN (GR9L9V2LU)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mortar-ev1, ice-golem-hero, minion-horde-ev1, miner, goblin-gang, spear-goblins, bats, zap
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 8 | 奖杯: 3452 | 最近天梯战: 15h 59m 21s
+   copyDeck: 27000002;26000038;26000022;26000032;26000041;26000019;26000049;28000008
+
+#104  Nooby❤️Pi2r (UQ9Y0VP0J)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.5 | 最短循环: 6 | 奖杯: 3445 | 最近天梯战: 18h 4m 27s
+   copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+
+#105  Denyo (RQL88G09)  [PTL Germany / GRGYQ0JU]
+   卡组: royal-hogs-ev1, valkyrie-hero, baby-dragon-ev1, lightning, goblin-hut, skeletons, ice-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 8 | 奖杯: 3445 | 最近天梯战: 1d 6h 4m
+   copyDeck: 26000059;26000011;26000015;28000007;27000001;26000010;26000030;28000015
+
+#106  Kimchi77✨小小罗 (PCUP9YLVG)  [Noctyn / GGCPUPGJ]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, rascals, barbarian-barrel
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 14 | 奖杯: 3444 | 最近天梯战: 2d 23h 14m
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000053;28000015
+
+#107  MH Axel (80ULUJLYY)  [prac / GRVPVUCY]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3443 | 最近天梯战: 16h 23m 19s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#108  ابراطور❤️✨ (JCU9J2J0U)  [replay / GRUYRVJ2]
+   卡组: inferno-dragon-ev1, valkyrie-hero, balloon-hero, lava-hound, skeleton-dragons, vines, guards, arrows
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3441 | 最近天梯战: 1h 51m 27s
+   copyDeck: 26000037;26000011;26000006;26000029;26000080;28000026;26000025;28000001
+
+#109  Christmas Tree (VPGCJLUQQ)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3439 | 最近天梯战: 1d 2h 57m
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#110  This is Last (208YP2822J)  [アウトフォーカス / GJLP0QUU]
+   卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3438 | 最近天梯战: 1d 3h 52m
+   copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+
+#111  Yamal✖️Waguri (UYUVCY298)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: battle-ram-ev1, wizard-hero, elite-barbarians-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 13 | 奖杯: 3438 | 最近天梯战: 1d 5h 54m
+   copyDeck: 26000036;26000017;26000043;26000020;26000083;28000026;26000052;28000015
+
+#112  한 점 부끄러움이 없기를 (VRYRUY8V0)  [ㅤㅤ / J0GUC0J2]
+   卡组: knight-ev1, goblins-hero, ice-spirit-ev1, hog-rider, rocket, executioner, tornado, the-log
+   塔: tower-princess | 圣水: 3.3 | 最短循环: 8 | 奖杯: 3437 | 最近天梯战: 24m 35s
+   copyDeck: 26000000;26000002;26000030;26000021;28000003;26000045;28000012;28000011
+
+#113  Light Work (U2LYQJQVY)  [Sunlight / QYGL80RR]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3437 | 最近天梯战: 6d 3h 27m
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#114  Sharvit Tek ヤギ (P0LQQ0L0)  [Counter/HrdCOUN / R8Y8LYGG]
+   卡组: skeleton-barrel-ev1, mighty-miner, elite-barbarians-ev1, suspicious-bush, fireball, goblin-gang, dart-goblin, the-log
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 10 | 奖杯: 3436 | 最近天梯战: 6h 17m 13s
+   copyDeck: 26000056;26000065;26000043;26000097;28000000;26000041;26000040;28000011
+
+#115  aimloko (V28PYR282)  [No Clan / None]
+   卡组: elite-barbarians-ev1, monk, archers-ev1, three-musketeers, knight, heal-spirit, rage, elixir-collector
+   塔: tower-princess | 圣水: 4.4 | 最短循环: 9 | 奖杯: 3433 | 最近天梯战: 44m 59s
+   copyDeck: 26000043;26000077;26000001;26000028;26000000;28000016;28000002;27000007
+
+#116  AgonyKing✨Kun (RGLQ0Q0RP)  [NOLITO VIP / GR8QU9UY]
+   卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3432 | 最近天梯战: 10h 35m 30s
+   copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+
+#117  ꧁✭issei✭꧂ (9RYCQGVCJ)  [Isseiの独り言 / GJ90PCUL]
+   卡组: battle-ram-ev1, golden-knight, pekka-ev1, mother-witch, electro-wizard, guards, arrows, zap
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3432 | 最近天梯战: 11h 53m 34s
+   copyDeck: 26000036;26000074;26000004;26000083;26000042;26000025;28000001;28000008
+
+#118  Benjamin (U0G20Y99)  [NowayOut / J928UGUP]
+   卡组: furnace-ev1, berserker-hero, giant-snowball-ev1, goblin-drill, poison, skeletons, royal-delivery, cannon
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 8 | 奖杯: 3432 | 最近天梯战: 19h 20m 6s
+   copyDeck: 27000010;26000102;28000017;27000013;28000009;26000010;28000018;27000000
+
+#119  Nooby❤️Téø (VCG2JVJ8C)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.5 | 最短循环: 6 | 奖杯: 3432 | 最近天梯战: 3d 19h 19m
+   copyDeck: 27000013;26000000;28000017;28000009;26000013;26000031;26000010;27000000
+
+#120  すずか (P09Q8CYY0)  [No Clan / None]
+   卡组: baby-dragon-ev1, golden-knight, giant-snowball-ev1, ram-rider, pekka, lightning, electro-wizard, barbarian-barrel
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 12 | 奖杯: 3430 | 最近天梯战: 2h 42m 38s
+   copyDeck: 26000015;26000074;28000017;26000051;26000004;28000007;26000042;28000015
+
+#121  XD I HSN HABIB (220R9L8RJR)  [TOP KSA™️✨ / L9CV8Q9V]
+   卡组: inferno-dragon-ev1, balloon-hero, skeleton-king, giant-skeleton, skeleton-army, arrows, bats, freeze
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3430 | 最近天梯战: 11h 3m 4s
+   copyDeck: 26000037;26000006;26000069;26000020;26000012;28000001;26000049;28000005
+
+#122  Judgement (PRUQJ8PQP)  [Isseiの独り言 / R0Y9RGR0]
+   卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, lightning, royal-ghost, bandit
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 12 | 奖杯: 3429 | 最近天梯战: 59m 12s
+   copyDeck: 26000045;26000103;28000017;26000021;26000106;28000007;26000050;26000046
+
+#123  폴라포는 좋겠다 (20YQY989CC)  [.. / GRVP0P2R]
+   卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 9 | 奖杯: 3429 | 最近天梯战: 4h 15m 18s
+   copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+
+#124  Hunter (J8R89YC8)  [Fast / L92Q2YQU]
+   卡组: knight-ev1, x-bow, tesla-ev1, rocket, ice-wizard, tornado, skeletons, the-log
+   塔: tower-princess | 圣水: 3.5 | 最短循环: 9 | 奖杯: 3426 | 最近天梯战: 30m 28s
+   copyDeck: 26000000;27000008;27000006;28000003;26000023;28000012;26000010;28000011
+
+#125  ramettuhh (2YVUYGQL9)  [No Clan / None]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3426 | 最近天梯战: 8h 59m 34s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#126  Legend (9VRP2J80V)  [no watch / R8PVU092]
+   卡组: battle-ram-ev1, golden-knight, elite-barbarians-ev1, three-musketeers, royal-ghost, zap, heal-spirit, elixir-collector
+   塔: tower-princess | 圣水: 4.4 | 最短循环: 10 | 奖杯: 3425 | 最近天梯战: 56m 54s
+   copyDeck: 26000036;26000074;26000043;26000028;26000050;28000008;28000016;27000007
+
+#127  ぐりてゃん (2LJ0ULYCC)  [孤島の楽園 / VQ2UQCV]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, skeletons, electro-spirit, the-log, cannon
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3423 | 最近天梯战: 7h 8m 37s
+   copyDeck: 26000059;26000072;26000050;28000000;26000010;26000084;28000011;27000000
+
+#128  WELCOME (2VQ9PRQ9Y)  [NoA / Q9QPPGGG]
+   卡组: inferno-dragon-ev1, valkyrie-hero, zap-ev1, lava-hound, balloon, fireball, skeleton-dragons, tombstone
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3423 | 最近天梯战: 1d 5h 26s
+   copyDeck: 26000037;26000011;28000008;26000029;26000006;28000000;26000080;27000009
+
+#129  Code: Furkan (989P0PCCR)  [We Are The Best / QUJYU8LQ]
+   卡组: baby-dragon-ev1, bowler-hero, berserker-hero, electro-giant, lightning, tornado, barbarian-barrel, cannon
+   塔: tower-princess | 圣水: 4 | 最短循环: 10 | 奖杯: 3422 | 最近天梯战: 3h 7m 22s
+   copyDeck: 26000015;26000034;26000102;26000085;28000007;28000012;28000015;27000000
+
+#130  앙기모찌찌두개 (LCJ8JUYLY)  [리플 / GRVUU8R8]
+   卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 9 | 奖杯: 3422 | 最近天梯战: 4h 11m 29s
+   copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+
+#131  미친❤Hugo✨Drill (G0LP8UVQ8)  [NOLITO VIP / GR8QU9UY]
+   卡组: goblin-drill-ev1, knight-hero, bowler-hero, firecracker, fireball, tornado, royal-delivery, inferno-tower
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 12 | 奖杯: 3422 | 最近天梯战: 11h 44m 21s
+   copyDeck: 27000013;26000000;26000034;26000064;28000000;28000012;28000018;27000003
+
+#132  RS✨MånuelRåy (U9PPVP0L0)  [NOLITO VIP / GR8QU9UY]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3422 | 最近天梯战: 4d 1h 38m
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#133  Brqko_x (CRYUCRVUG)  [GENTLE MATES / RYLJLRYP]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3421 | 最近天梯战: 1d 17h 24m
+   copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+
+#134  ishan❤️oleg (9J2LJYVQU)  [kawaii~isekai / R2PRGQY9]
+   卡组: firecracker-ev1, dark-prince-hero, zap-ev1, hog-rider, mega-knight, electro-wizard, bandit, guards
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3420 | 最近天梯战: 8h 32m 18s
+   copyDeck: 26000064;26000027;28000008;26000021;26000055;26000042;26000046;26000025
+
+#135  ✨火王Fireking✨ (V9U9LQJ02)  [昨夜烟雨一笑间［分部］ / G0GQVJUY]
+   卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 11 | 奖杯: 3419 | 最近天梯战: 15h 39m 4s
+   copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+
+#136  지헌❤️ (CUGRJ09YL)  [리플 / JYJQJ0JP]
+   卡组: goblin-drill-ev1, knight-hero, skeletons-ev1, goblin-demolisher, magic-archer, tornado, the-log, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 9 | 奖杯: 3419 | 最近天梯战: 23h 36m 11s
+   copyDeck: 27000013;26000000;26000010;26000095;26000062;28000012;28000011;27000004
+
+#137  Chri 2704 (2QCUGCPQ)  [No Clan / None]
+   卡组: minion-horde-ev1, valkyrie-hero, barbarians-ev1, hog-rider, miner, princess, ice-wizard, freeze
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 13 | 奖杯: 3419 | 最近天梯战: 1d 4h 1m
+   copyDeck: 26000022;26000011;26000008;26000021;26000032;26000026;26000023;28000005
+
+#138  khazardy✨安之 (RVCQ2CQGJ)  [khazardy’s / JYQCL20J]
+   卡组: princess-ev1, valkyrie-hero, bats-ev1, hog-rider, mortar, lightning, skeletons, the-log
+   塔: tower-princess | 圣水: 3.3 | 最短循环: 8 | 奖杯: 3418 | 最近天梯战: 25m 49s
+   copyDeck: 26000026;26000011;26000049;26000021;27000002;28000007;26000010;28000011
+
+#139  AgonyKing (UGP2UCQ8Q)  [NOLITO VIP / GR8QU9UY]
+   卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3417 | 最近天梯战: 19h 52m 18s
+   copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+
+#140  Nova Lciop (C8PCCURPJ)  [No Clan / None]
+   卡组: elite-barbarians-ev1, valkyrie-hero, executioner-ev1, hog-rider, minions, ice-golem, freeze, zap
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3417 | 最近天梯战: 1d 4h 23m
+   copyDeck: 26000043;26000011;26000045;26000021;26000005;26000038;28000005;28000008
+
+#141  YT PedroTm CR (290VGG28)  [No Clan / None]
+   卡组: royal-hogs-ev1, archer-queen, royal-ghost-ev1, fireball, goblin-hut, skeletons, electro-spirit, barbarian-barrel
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3416 | 最近天梯战: 1d 15h 42m
+   copyDeck: 26000059;26000072;26000050;28000000;27000001;26000010;26000084;28000015
+
+#142  GM⚡Polaquito18 (G8QJ2PJ0Y)  [KING OF NIGHT / PGY8VVLV]
+   卡组: wizard-ev1, mini-pekka-hero, zap-ev1, giant, sparky, vines, tornado, heal-spirit
+   塔: dagger-duchess | 圣水: 3.6 | 最短循环: 9 | 奖杯: 3414 | 最近天梯战: 4h 4m
+   copyDeck: 26000017;26000018;28000008;26000003;26000033;28000026;28000012;28000016
+
+#143  Quentino❤️Remyy (202JYC8QL2)  [RÉMYYYYYYYYYYYY / JYPJUG29]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3414 | 最近天梯战: 4d 2h 32m
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#144  TEF丨Soudy✨Kun (290UQY8C)  [international / GRQLU9L0]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: cannoneer | 圣水: 4 | 最短循环: 13 | 奖杯: 3413 | 最近天梯战: 22h 48m 30s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#145  Sqrㅏ✨ㅣ™️ (QV0YLU90R)  [We Are The Best / QUJYU8LQ]
+   卡组: goblin-cage-ev1, golden-knight, royal-recruits-ev1, royal-hogs, flying-machine, fireball, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 14 | 奖杯: 3409 | 最近天梯战: 21h 30m 49s
+   copyDeck: 27000012;26000074;26000047;26000059;26000057;28000000;26000052;28000015
+
+#146  TEF丨にゃんにゃんまる (200GJLL208)  [アウトフォーカス / GJLP0QUU]
+   卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3409 | 最近天梯战: 1d 6h 42m
+   copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+
+#147  lord beerus (R9Y8GY98C)  [Noctyn / GGCPUPGJ]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3408 | 最近天梯战: 50m 3s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#148  枫｜rakan❤️安之 (JQ2V2JJ8G)  [No Clan / None]
+   卡组: baby-dragon-ev1, valkyrie-hero, inferno-dragon-ev1, lava-hound, balloon, fireball, guards, zap
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3407 | 最近天梯战: 23m 32s
+   copyDeck: 26000015;26000011;26000037;26000029;26000006;28000000;26000025;28000008
+
+#149  Arrow (20JJVUGJ80)  [Majestic lords / RV8RUPQU]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3407 | 最近天梯战: 40m
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015
+
+#150  Clasher (8VPRQ9LR8)  [Ice heart / QVVYJYCY]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3407 | 最近天梯战: 14h 6m 26s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#151  RamboOo (YUQYJV08)  [We Are The Best / QUJYU8LQ]
+   卡组: elite-barbarians-ev1, boss-bandit, minion-horde-ev1, hog-rider, executioner, minions, guards, freeze
+   塔: tower-princess | 圣水: 4.5 | 最短循环: 14 | 奖杯: 3403 | 最近天梯战: 3h 32m 38s
+   copyDeck: 26000043;26000103;26000022;26000021;26000045;26000005;26000025;28000005
+
+#152  shiko (VJ0RQVYJP)  [Majestic lords / RV8RUPQU]
+   卡组: skeleton-army-ev1, berserker-hero, minion-horde-ev1, wall-breakers, miner, princess, the-log, inferno-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 9 | 奖杯: 3403 | 最近天梯战: 11h 45s
+   copyDeck: 26000012;26000102;26000022;26000058;26000032;26000026;28000011;27000003
+
+#153  ✖️Hunter✨LF (P8LRG9UP)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: goblin-barrel-ev1, valkyrie-hero, skeleton-army-ev1, wall-breakers, princess, dart-goblin, ice-spirit, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 9 | 奖杯: 3403 | 最近天梯战: 1d 6h 41s
+   copyDeck: 28000004;26000011;26000012;26000058;26000026;26000040;26000030;27000000
+
+#154  Betfas (V0L800PUJ)  [No Clan / None]
+   卡组: archers-ev1, knight-hero, tesla-ev1, x-bow, fireball, skeletons, electro-spirit, the-log
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3399 | 最近天梯战: 12h 6m 45s
+   copyDeck: 26000001;26000000;27000006;27000008;28000000;26000010;26000084;28000011
+
+#155  Mohamed Light (G9YV9GR8R)  [No Clan / None]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3398 | 最近天梯战: 5h 9m 3s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#156  Hubert (JJUJ0Q908)  [retnuH CR / QVLR09P2]
+   卡组: knight-ev1, x-bow, tesla-ev1, rocket, ice-wizard, tornado, skeletons, the-log
+   塔: tower-princess | 圣水: 3.5 | 最短循环: 9 | 奖杯: 3394 | 最近天梯战: 2d 20h 42m
+   copyDeck: 26000000;27000008;27000006;28000003;26000023;28000012;26000010;28000011
+
+#157  Chainkiller (JLJVRV8V2)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: bomber-ev1, bowler-hero, royal-recruits-ev1, electro-giant, spirit-empress, arrows, tornado, cannon
+   塔: tower-princess | 圣水: 4.5 | 最短循环: 11 | 奖杯: 3388 | 最近天梯战: 25m 20s
+   copyDeck: 26000013;26000034;26000047;26000085;28000025;28000001;28000012;27000000
+
+#158  Flash Light (UYL8820RJ)  [Sunlight / QYGL80RR]
+   卡组: battle-ram-ev1, valkyrie-hero, elite-barbarians-ev1, mother-witch, bandit, zappies, arrows, heal-spirit
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 11 | 奖杯: 3388 | 最近天梯战: 6d 2h 26m
+   copyDeck: 26000036;26000011;26000043;26000083;26000046;26000052;28000001;28000016
+
+#159  Rolex (8QL98Q2L)  [Iran Hplow / L28V902R]
+   卡组: goblin-drill-ev1, goblinstein, giant-snowball-ev1, poison, bomber, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 6 | 奖杯: 3384 | 最近天梯战: 4h 29m 45s
+   copyDeck: 27000013;26000099;28000017;28000009;26000013;26000031;26000010;27000000
+
+#160  Pedro❤️Gabi (C2UVLQ28J)  [Myst™️ / PR8U2UR2]
+   卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3384 | 最近天梯战: 16h 4m 12s
+   copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+
+#161  Eti Browni (208CQCQC2V)  [We Are The Best / QUJYU8LQ]
+   卡组: lumberjack-ev1, mini-pekka-hero, zap-ev1, golem, baby-dragon, inferno-dragon, lightning, skeleton-army
+   塔: tower-princess | 圣水: 4.4 | 最短循环: 13 | 奖杯: 3383 | 最近天梯战: 14h 47m 31s
+   copyDeck: 26000035;26000018;28000008;26000009;26000015;26000037;28000007;26000012
+
+#162  YT Kitashiyan (2RQPVPPJJ)  [Lifetime / 9V9GGVCQ]
+   卡组: princess-ev1, valkyrie-hero, tesla-ev1, hog-rider, lightning, skeletons, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3377 | 最近天梯战: 3h 37m 7s
+   copyDeck: 26000026;26000011;27000006;26000021;28000007;26000010;26000030;28000011
+
+#163  SK xopxsam (2LQ2YP98)  [Familie Rehwald / G2Q02Y8G]
+   卡组: lumberjack-ev1, wizard-hero, baby-dragon-ev1, golem, giant-skeleton, vines, zappies, barbarian-barrel
+   塔: royal-chef | 圣水: 4.5 | 最短循环: 13 | 奖杯: 3376 | 最近天梯战: 25m 49s
+   copyDeck: 26000035;26000017;26000015;26000009;26000020;28000026;26000052;28000015
+
+#164  BRR BRR PATAGAY (2CVVLYJV)  [Kings eSports / 28L0JQQP]
+   卡组: executioner-ev1, golden-knight, inferno-dragon-ev1, graveyard, bowler, zappies, tornado, freeze
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 15 | 奖杯: 3376 | 最近天梯战: 1h 32m 34s
+   copyDeck: 26000045;26000074;26000037;28000010;26000034;26000052;28000012;28000005
+
+#165  darko (YCUGYQ)  [⭐ALL STARS⭐ / GJ9YYP2V]
+   卡组: elite-barbarians-ev1, golden-knight, royal-ghost-ev1, three-musketeers, ice-golem, barbarian-barrel, heal-spirit, elixir-collector
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 8 | 奖杯: 3376 | 最近天梯战: 4h 19m 23s
+   copyDeck: 26000043;26000074;26000050;26000028;26000038;28000015;28000016;27000007
+
+#166  AS✨LilRay (U0YP8VUC9)  [Rising Stars✨ / GRQG92P8]
+   卡组: royal-giant-ev1, barbarian-barrel-hero, royal-ghost-ev1, hunter, fisherman, fireball, skeletons, electro-spirit
+   塔: tower-princess | 圣水: 3 | 最短循环: 7 | 奖杯: 3375 | 最近天梯战: 4d 11h 38m
+   copyDeck: 26000024;28000015;26000050;26000044;26000061;28000000;26000010;26000084
+
+#167  Light Bulb (GU2YR209R)  [Sunlight 2 / GGJPVQL0]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3374 | 最近天梯战: 1w 1h 39m
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#168  グレンブルル (V2PRPRLQP)  [Lifetime / 9V9GGVCQ]
+   卡组: bomber-ev1, dark-prince-hero, boss-bandit, cannon-cart, lightning, arrows, skeletons, barbarian-barrel
+   塔: tower-princess | 圣水: 3.6 | 最短循环: 8 | 奖杯: 3372 | 最近天梯战: 12h 47m 48s
+   copyDeck: 26000013;26000027;26000103;26000054;28000007;28000001;26000010;28000015
+
+#169  ArtCS✨ (88299RC9Y)  [Ｖａｌｈａｌｌａ / G9QY80JR]
+   卡组: cannon-ev1, musketeer-hero, skeletons-ev1, hog-rider, fireball, ice-golem, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3369 | 最近天梯战: 13h 8m 28s
+   copyDeck: 27000000;26000014;26000010;26000021;28000000;26000038;26000030;28000011
+
+#170  اب صدام الوحش (202802QJQ9)  [SHURIKEN ✫ / 9JCLGG9G]
+   卡组: barbarians-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, miner, skeleton-dragons, arrows, zap
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 12 | 奖杯: 3361 | 最近天梯战: 2h 31m 5s
+   copyDeck: 26000008;26000006;26000037;26000029;26000032;26000080;28000001;28000008
+
+#171  CODE:KANGDONE(: (200QLJUYL)  [Fantasy / JYJ980J8]
+   卡组: firecracker-ev1, hog-rider, minion-horde-ev1, giant-skeleton, barbarians, lightning, guards, the-log
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 12 | 奖杯: 3361 | 最近天梯战: 2h 52m 23s
+   copyDeck: 26000064;26000021;26000022;26000020;26000008;28000007;26000025;28000011
+
+#172  AmiR (2LG8QP000)  [Iran Hplow / L28V902R]
+   卡组: baby-dragon-ev1, bowler-hero, tesla-ev1, electro-giant, lightning, guards, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 12 | 奖杯: 3360 | 最近天梯战: 28m 11s
+   copyDeck: 26000015;26000034;27000006;26000085;28000007;26000025;28000012;28000015
+
+#173  SandBox (Y022GRCJQ)  [部落 #RLLUY80Y / RLLUY80Y]
+   卡组: battle-ram-ev1, wizard-hero, royal-ghost-ev1, giant-skeleton, mother-witch, vines, zappies, barbarian-barrel
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3358 | 最近天梯战: 9h 51m 57s
+   copyDeck: 26000036;26000017;26000050;26000020;26000083;28000026;26000052;28000015
+
+#174  Dr.HELLCAT⚡️mig (J9VJPVRL)  [MRN Esports / RU00JRCQ]
+   卡组: skeleton-army-ev1, skeleton-king, inferno-dragon-ev1, golem, elixir-golem, night-witch, arrows, rage
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 11 | 奖杯: 3354 | 最近天梯战: 11h 11m 19s
+   copyDeck: 26000012;26000069;26000037;26000009;26000067;26000048;28000001;28000002
+
+#175  <c2>Hisoka (U0PRVCYC2)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: inferno-dragon-ev1, balloon-hero, valkyrie-ev1, lava-hound, fireball, skeleton-dragons, guards, zap
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 13 | 奖杯: 3354 | 最近天梯战: 5d 4h 49m
+   copyDeck: 26000037;26000006;26000011;26000029;28000000;26000080;26000025;28000008
+
+#176  shadowking (QJGVCYR)  [GUERREIROS PT / G89QUY2P]
+   卡组: skeleton-army-ev1, skeleton-king, witch-ev1, elixir-golem, night-witch, lightning, arrows, rage
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 11 | 奖杯: 3353 | 最近天梯战: 1h 37m 33s
+   copyDeck: 26000012;26000069;26000007;26000067;26000048;28000007;28000001;28000002
+
+#177  ɪʟ ᴘʀᴏғᴇssᴏʀᴇ™️ (GPJ2Q929)  [⭐ALL STARS⭐ / GJ9YYP2V]
+   卡组: elite-barbarians-ev1, golden-knight, royal-ghost-ev1, three-musketeers, ice-golem, barbarian-barrel, heal-spirit, elixir-collector
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 8 | 奖杯: 3353 | 最近天梯战: 4d 17h 1m
+   copyDeck: 26000043;26000074;26000050;26000028;26000038;28000015;28000016;27000007
+
+#178  ✧Death✧ (VGRJUGQ99)  [No Clan / None]
+   卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 11 | 奖杯: 3352 | 最近天梯战: 1h 59m 20s
+   copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+
+#179  ToGRuL #1 (V2UCC0LC2)  [Live on TikTok / JYPQ2RQ9]
+   卡组: musketeer-ev1, balloon-hero, skeletons-ev1, miner, ice-golem, barbarian-barrel, giant-snowball, bomb-tower
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3352 | 最近天梯战: 23h 24m 54s
+   copyDeck: 26000014;26000006;26000010;26000032;26000038;28000015;28000017;27000004
+
+#180  a7 (R9CVYGC0)  [No Clan / None]
+   卡组: cannon-ev1, ice-golem-hero, skeletons-ev1, hog-rider, musketeer, fireball, ice-spirit, the-log
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3346 | 最近天梯战: 43m 39s
+   copyDeck: 27000000;26000038;26000010;26000021;26000014;28000000;26000030;28000011
+
+#181  Arkinnchi D’Lu (J8U9PL8GU)  [NOLITO VIP / GR8QU9UY]
+   卡组: inferno-dragon-ev1, golden-knight, goblin-cage-ev1, electro-giant, lightning, fire-spirit, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 10 | 奖杯: 3346 | 最近天梯战: 19h 10m 58s
+   copyDeck: 26000037;26000074;27000012;26000085;28000007;26000031;28000012;28000015
+
+#182  Angel ᵉᵛᵉ✨♥️ (CRLLCV8P0)  [Kings eSports / 28L0JQQP]
+   卡组: executioner-ev1, boss-bandit, giant-snowball-ev1, hog-rider, ronin, lightning, royal-ghost, bandit
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 12 | 奖杯: 3344 | 最近天梯战: 1h 48m 55s
+   copyDeck: 26000045;26000103;28000017;26000021;26000106;28000007;26000050;26000046
+
+#183  Modo Prime ☠️ (UC0QVC890)  [KIDDA OFFICIAL / RYLPP8GG]
+   卡组: musketeer-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, night-witch, guards, arrows
+   塔: tower-princess | 圣水: 3.9 | 最短循环: 12 | 奖杯: 3343 | 最近天梯战: 3h 12m 11s
+   copyDeck: 26000014;26000034;28000017;28000010;26000003;26000048;26000025;28000001
+
+#184  PrakashChopped (209LJVGU)  [10 Year Break / GJUCLR9Y]
+   卡组: royal-hogs-ev1, archer-queen, cannon-ev1, earthquake, skeletons, ice-spirit, royal-delivery, the-log
+   塔: tower-princess | 圣水: 2.9 | 最短循环: 7 | 奖杯: 3342 | 最近天梯战: 6h 33m 49s
+   copyDeck: 26000059;26000072;27000000;28000014;26000010;26000030;28000018;28000011
+
+#185  Steeef (9LVP2RCLL)  [KIDDA OFFICIAL / RYLPP8GG]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3341 | 最近天梯战: 24m 55s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#186  ElPsyCongroo (U8J0GQ02U)  [steins gates >> / GLUG90R8]
+   卡组: executioner-ev1, goblins-hero, valkyrie-ev1, hog-rider, rocket, tornado, ice-spirit, the-log
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 8 | 奖杯: 3341 | 最近天梯战: 4d 22h 14m
+   copyDeck: 26000045;26000002;26000011;26000021;28000003;28000012;26000030;28000011
+
+#187  SimonBarbsGod (CQCVJULU2)  [pot de miel / GR8URJ8Q]
+   卡组: bomber-ev1, ice-golem-hero, elite-barbarians-ev1, hog-rider, minions, freeze, zap, tesla
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 9 | 奖杯: 3340 | 最近天梯战: 25m 20s
+   copyDeck: 26000013;26000038;26000043;26000021;26000005;28000005;28000008;27000006
+
+#188  DfuZe✨ (Y2GY98YL)  [Noctyn / GGCPUPGJ]
+   卡组: goblin-barrel-ev1, mighty-miner, dart-goblin-ev1, wall-breakers, skeletons, electro-spirit, the-log, inferno-tower
+   塔: tower-princess | 圣水: 2.6 | 最短循环: 6 | 奖杯: 3340 | 最近天梯战: 28m 7s
+   copyDeck: 28000004;26000065;26000040;26000058;26000010;26000084;28000011;27000003
+
+#189  Kun｜八哭の坤♿️晚✨ (CPUCG0CJ0)  [PekkaBS / J990RRQV]
+   卡组: goblin-drill-ev1, knight-hero, giant-snowball-ev1, goblin-demolisher, poison, fire-spirit, skeletons, cannon
+   塔: tower-princess | 圣水: 2.8 | 最短循环: 7 | 奖杯: 3339 | 最近天梯战: 11h 22m 12s
+   copyDeck: 27000013;26000000;28000017;26000095;28000009;26000031;26000010;27000000
+
+#190  Lrip (202RCPCL0Y)  [No Clan / None]
+   卡组: elite-barbarians-ev1, monk, knight-ev1, three-musketeers, bomber, heal-spirit, rage, elixir-collector
+   塔: tower-princess | 圣水: 4.3 | 最短循环: 8 | 奖杯: 3338 | 最近天梯战: 30m 28s
+   copyDeck: 26000043;26000077;26000000;26000028;26000013;28000016;28000002;27000007
+
+#191  Polaris (U8RYGC8GU)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: archers-ev1, goblinstein, skeletons-ev1, graveyard, poison, ice-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 7 | 奖杯: 3337 | 最近天梯战: 4h 30m 52s
+   copyDeck: 26000001;26000099;26000010;28000010;28000009;26000030;28000015;27000004
+
+#192  Frontier✨白影 (UUC002QYL)  [高丸藤 / GRCYJJ02]
+   卡组: royal-hogs-ev1, goblinstein, archers-ev1, lightning, skeletons, electro-spirit, barbarian-barrel, bomb-tower
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 7 | 奖杯: 3336 | 最近天梯战: 1h 26m 29s
+   copyDeck: 26000059;26000099;26000001;28000007;26000010;26000084;28000015;27000004
+
+#193  Erik❤️69 (20VPULG8RY)  [APUK VII / RRQJ9ULQ]
+   卡组: baby-dragon-ev1, tombstone-hero, knight-ev1, graveyard, poison, ice-wizard, tornado, barbarian-barrel
+   塔: tower-princess | 圣水: 3.4 | 最短循环: 11 | 奖杯: 3335 | 最近天梯战: 1h 51m 3s
+   copyDeck: 26000015;27000009;26000000;28000010;28000009;26000023;28000012;28000015
+
+#194  ドリンクバー (CGGVG2GGC)  [わ！ / JYQQR8LV]
+   卡组: skeleton-barrel-ev1, goblins-hero, bats-ev1, miner, mega-knight, inferno-dragon, spear-goblins, zap
+   塔: tower-princess | 圣水: 3.1 | 最短循环: 8 | 奖杯: 3335 | 最近天梯战: 18h 54m 49s
+   copyDeck: 26000056;26000002;26000049;26000032;26000055;26000037;26000019;28000008
+
+#195  ネコ❄️한점 (2GUQVPJU9)  [No Clan / None]
+   卡组: knight-ev1, goblins-hero, ice-spirit-ev1, hog-rider, rocket, executioner, tornado, the-log
+   塔: tower-princess | 圣水: 3.3 | 最短循环: 8 | 奖杯: 3334 | 最近天梯战: 15h 57m 7s
+   copyDeck: 26000000;26000002;26000030;26000021;28000003;26000045;28000012;28000011
+
+#196  ARSENIK❤️. (2GR2QQ9P)  [Ligue 1 / RY880Q8J]
+   卡组: barbarians-ev1, mega-minion-hero, zap-ev1, lava-hound, balloon, fireball, skeleton-dragons, tombstone
+   塔: tower-princess | 圣水: 4.1 | 最短循环: 12 | 奖杯: 3333 | 最近天梯战: 43m 20s
+   copyDeck: 26000008;26000039;28000008;26000029;26000006;28000000;26000080;27000009
+
+#197  SK Dominik (J0VU9CGP)  [No Clan / None]
+   卡组: skeleton-army-ev1, balloon-hero, inferno-dragon-ev1, lava-hound, fireball, minions, bomber, giant-snowball
+   塔: tower-princess | 圣水: 3.8 | 最短循环: 10 | 奖杯: 3332 | 最近天梯战: 24m 21s
+   copyDeck: 26000012;26000006;26000037;26000029;28000000;26000005;26000013;28000017
+
+#198  AleX CH (YP92V0L8U)  [Lifetime / 9V9GGVCQ]
+   卡组: witch-ev1, bowler-hero, giant-snowball-ev1, graveyard, giant, mini-pekka, minions, arrows
+   塔: tower-princess | 圣水: 4 | 最短循环: 12 | 奖杯: 3331 | 最近天梯战: 22h 23m 52s
+   copyDeck: 26000007;26000034;28000017;28000010;26000003;26000018;26000005;28000001
+
+#199  retire (QG9LCJ29)  [RISE GRAVEYARD™ / GJUJ2PU9]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, lightning, skeletons, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 11 | 奖杯: 3330 | 最近天梯战: 7h 47m 56s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000007;26000010;28000015
+
+#200  加急Sinistro™ (20Y0GGGUP2)  [Live tik tok / GJYCCYV2]
+   卡组: mortar-ev1, goblinstein, minion-horde-ev1, cannon-cart, mother-witch, fireball, goblin-gang, barbarian-barrel
+   塔: tower-princess | 圣水: 4 | 最短循环: 13 | 奖杯: 3329 | 最近天梯战: 14h 15m 48s
+   copyDeck: 27000002;26000099;26000022;26000054;26000083;28000000;26000041;28000015

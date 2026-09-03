@@ -1,6 +1,43 @@
-ideas/
-*.DS_store
-src/clahser_new/cr_logs/
+# ============ IDE / 系统 ============
 .idea/
-*.xml
 *.iml
+*.xml
+.DS_Store
+.DS_store
+Thumbs.db
+.vscode/
+
+# ============ Python 环境与缓存 ============
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pipcache/
+.tmp/
+.home/
+.jspace/
+:memory:.ses
+
+# ============ AI 训练产物（权重/回放/日志/联赛状态）============
+runs/
+cr_logs/
+src/clasher_new/cr_logs/
+*.pt
+*.pth
+*.pkl
+*.log
+*.npy
+*.bin
+
+# ============ 大二进制 / APK 逆向产物 ============
+*.apk
+apk/
+re/
+*.tar.gz
+imports.json
+libg_strings.txt
+wildcat_strings.txt
+*.gif
+
+# ============ 旧条目（保留）============
+ideas/

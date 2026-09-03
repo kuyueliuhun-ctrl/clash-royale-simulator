@@ -1,0 +1,343 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 4-Elixir Cards, Epic Cards, Spell Cards, Frozen Peak Cards
+English
+Freeze
+94
+SAVE
+EDIT
+
+Freeze
+Elixir Cost
+4 
+Rarity
+Epic
+Type
+Spell
+Arena
+Frozen Peak
+Release Date
+4 January 2016
+
+
+
+
+“Freezes and damages enemy troops and buildings, making them unable to move or attack. Everybody chill. Reduced damage to Crown Towers.”
+
+The Freeze is an Epic card that is unlocked from the Frozen Peak (Arena 8). It is an area-damage, air-targeting spell with a medium radius and low damage. When used, it can stun enemies in its radius for 4 seconds. It appears as a cyan liquid bottled inside a transparent jar. A Freeze card costs 4 Elixir to deploy.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+The Freeze is most effective when it is timed to freeze enemy units right before one or more of the player's units is defeated. If the player has not yet revealed the Freeze spell to their opponent, it can turn what may have seemed like a clean defense from the opponent into massive damage for the Freeze user.
+While the Freeze can be deadly, it comes with a high risk. Due to the one-second delay before a card is placed, it is easy to mistime and cast it after either the player's troops or the opponent's troops are already defeated, resulting in a waste of 4 Elixir. This will leave the player fairly vulnerable to a counterattack.
+The Freeze's effect is identical to Zap or Lightning; the attack animation of any affected units will be paused, and resume when the effect wears off. It is not like The Log's effect, where the attack animation of affected units will be completely restarted.
+Freeze is effective at stopping Inferno Towers, Mighty Miners, Inferno Dragons, and Little Princes since it can reset their damage or attack speed ramp-up and disable them for a few seconds. Similarly, effects like dashing (Bandit, Prince, Dark Prince, Battle Ram, Evolved Royal Recruits, Boss Bandit, and Ram Rider), the attack charge up (Sparky), jumping (Mega Knight), and grabbing (Fisherman) will be reset after the Freeze wears off.
+Always separate defending troops and buildings from each other, to prevent them from having all of them frozen. Alternatively, the player can use a weaker counter to the opposing card to bait the Freeze, so that their stronger counter can be used without having to worry about being frozen.
+Ranged troops placed on the bridge or one tile away from the bridge will be far enough from the Crown Tower that the Freeze will not be able to affect both them and the Crown Tower. Keep this in mind when defending against an attacking troop that is going to be supported with Freeze.
+The Freeze relies a lot on the surprise factor to be able to be utilized effectively. Because of this, it is more effective to switch up the cards that is used alongside, otherwise the opponent will be able to predict the spell and defend the attacking troops accordingly.
+The Freeze's damage output is low, and is only enough to fully defeat Skeletons, Bats, Suspicious Bushes, and Decoy Goblins. However, when combined with another low cost spell, like Zap, it can defeat some bulkier troops such as Goblins, Spear Goblins, Minions, Rascal Girls, Princesses, Dart Goblins, Archers, and Firecrackers.
+Unlike regular Bats, the Evolved Bats are able to survive a Freeze, even if they have not healed themselves at all. As such the spell should not be used the Freeze on Evolved Bats, as this is a -2 Elixir trade.
+If a troop or building which spawns other units after death is defeated while frozen, such as an Elixir Golem, Tombstone, Lava Hound, or a Golem, the spawned troops will remain frozen until the duration of the Freeze ends. This does not apply to troops with a staggered deployment after death, like the Spear Goblins from the Goblin Giant or the Battle Ram's Barbarians, making Freeze less effective against them.
+Any lifetimers of frozen buildings will still count down while frozen. This can be useful against the Elixir Collector and spawner buildings, though it is usually not a valuable play unless other threatening units are near the building and the player is currently attacking in the same lane as the building.
+However, an Elixir Collector that was already full will still generate its stored Elixir even if it is frozen. As such, it is not a good idea to use Freeze against an Elixir Collector on a player who is leaking Elixir.
+Unlike most other spells, the Freeze is able to affect the Tesla even if it is underground. This allows fast-moving troops such as the Battle Ram and Wall Breakers or longer-ranged troops like the Dart Goblin and Magic Archer to bypass a Tesla and head straight for the Crown Tower, as it can't be targeted while hidden underground. Alternatively, if it has not retreated, the player can use Freeze on it to allow those longer-ranged troops to attack it before it gets the chance to retreat again.
+If a frozen troop is Cloned, the clone won't be frozen. This can be used to surprise an opponent and get the drop on an undefended Crown Tower.
+The Freeze card can be effectively used in combination with the Balloon to deal immense damage to buildings and Crown Towers. The Freeze should be cast once the Balloon approaches the Crown Tower, disabling the enemy Tower and also any troops deployed to defend it. On the contrary, Freeze can also help destroy a Balloon. By deploying the Freeze with high damage output air targeting units, such as the Mega Minion, Hunter, Wizard, Executioner, Phoenix, or Musketeer, a Balloon can easily be destroyed before it reaches a Crown Tower.
+The Freeze card pairs very well with Graveyard. Where normally a Graveyard push requires a tank to be effective, a Graveyard Freeze combo functions similarly without requiring a tank. This also disables any ground splashers and swarm deployed to stop the Graveyard, giving the spawned Skeletons plenty of time to take them out, thus weakening their counter push significantly. This is especially useful against players who defend against the Graveyard by using Skeleton Army or Bats, as the Freeze is capable of defeating them without the help of the Skeletons. Keep in mind that a Poison spell will stop this combo for 4 Elixir, so the Poison should be baited out before performing this combo.
+The opponent might be able to predict the Freeze if the Graveyard is played without a tank. Try to use a tank to keep the surprise factor, while also allowing the tank to take advantage of the lack of counters.
+The Hog Rider in conjunction with the Freeze can surprise the opponent and allow the Hog Rider to deal much more damage than anticipated, especially if the opponent's go-to counter is a swarm, or swarms are their only effective counter to him. Skeletons and Bats will immediately be defeated by the spell, while Spear Goblins, Goblins, and Minions will be at low enough health to be defeated by a follow up small spell.
+Against non-swarm troops, it can deal a lot of damage during the freeze time, but this can allow the opponent to set up a massive counterpush. For this reason, players should either only go for a Hog Rider + Freeze when they have other units backing it up from a counterattack, or if the match is about to end and they need to deal as much damage as possible.
+A building placed directly at the river is far enough that will lure the Hog Rider and prevent the Freeze from affecting both the Crown Tower and the building. However, this position is easily sniped by long-ranged support troops like the Musketeer, Flying Machine, Firecracker, Dart Goblin, and Magic Archer or even shorter-ranged ones like the Electro Dragon and Baby Dragon.
+The Ram Rider can be used with the Freeze in a similar way, although that is at a higher 9 Elixir cost. Unlike the Hog Rider, there is less risk for a threatening counterattack due to Ram Rider weakening them with her snare.
+An extremely strong synergizer with the Freeze is the Inferno Dragon. Freeze helps stop enemy units from attacking, letting the Inferno Dragon safely charge up its beam. If done fast enough, it could even play around the Electro Wizard and Electro Dragon.
+Freeze can be a situational synergy with the Evolved Goblin Giant as its 4 second freeze duration allow the Spear Goblins to attack more of the opposing defenses while also giving extra time for the Goblins to spawn. Single target attackers, such as Prince, Mighty Miner, P.E.K.K.A, Monk, Mini P.E.K.K.A, Boss Bandit, and Lumberjack will be overwhelmed by the influx of Goblins if not responded to properly.
+The Freeze's radius is big enough to affect both the Crown Tower and the King's Tower at once. The player can use this to their advantage if they have already destroyed one Crown Tower. When their troops come to destroy another, they can cast the Freeze in between the two Towers, disabling both of them.
+If the player has already lost a Crown Tower, they should deploy any defending troops away from the King Tower. This is to prevent the opponent from being able to use Freeze on the second Crown Tower, the King Tower and the defending troop, and force them to choose between freezing the defending troop or the King Tower.
+Avoid playing it near the enemy King's Tower as it may damage and activate it. The Freeze will not affect the King Tower's activation animation, so it will be ready to attack immediately after it thaws.
+Freeze can temporarily mitigate the issue of an activated King Tower, as it can be used to temporarily disable the King Tower, and the Crown Tower. However, it will limit where the player can deploy their spell, thus making it easier to counter any attacking troop with it.
+Although situational, it can be used defensively to help stop incoming troops such as the P.E.K.K.A., Prince, Giant Skeleton, Golem, Mini P.E.K.K.A., Mighty Miner, Inferno Dragon, Hog Rider, or Elite Barbarians, which can be devastating if it reaches an Arena Tower. It is also good at simply stalling troops when both the player and the opponent are racing to take each other's tower in Sudden Death, granting the edge to the player.
+Certain cards can pair quite well with Freeze on defense and can quickly defend large pushes.
+Freeze + Valkyrie is a very effective combo. With the Valkyrie's moderately high splash damage, the player can use Freeze on the support troops behind a tank (Musketeer, Magic Archer, Wizard, Ice Wizard, Electro Wizard, Hunter, Witch, Princess, Archers, Firecracker, Spear Goblins, Bomber, etc.) then use the Valkyrie to wipe them out.
+Similarly, Freeze + Skeleton Army is capable of destroying many ground based splash-damaging troops, like Valkyrie, Mega Knight, Dark Prince, and Skeleton King, and for 1 less Elixir. However, it is very volatile, as the Skeleton Army is frail and vulnerable to spells. Freeze + Barbarians works in a similar way, but it costs 2 more Elixir and is still weak to stronger spells like Fireball.
+In a pinch, it can be used on an Electro Giant to freeze him. A frozen Electro Giant will not deflect back damage, which will allow your defending troops to defeat him easier, or for your attacking units to break through the defensive Electro Giant. However, for the latter, it is a heavy Elixir investment, so only do this if you are certain that the attacking troops will defeat him.
+Conversely, the Freeze should not be used with the Electro Giant, as freezing enemy troops will remove their ability to attack the Electro Giant, preventing him from hitting them with his Zap Pack. An exception can apply to cards placed out of his Zap Pack range, such as ranged troops.
+Very rarely, it can be used to keep a troop in place, so that area-damage troops can deal damage to the Tower along with the troop. This works best with troops whose attack pierces through enemies like the Magic Archer, Firecracker, Executioner, Evolved Bomber, or Bowler, However, this is riskier compared to using a Tornado for the same purpose.
+The Freeze lasts longer than the Archer Queen's ability, which makes it a great way to neutralize the ability. However, this is a heavy Elixir investment for offense and will still require the use of another card on defense.
+Depending on whether the player wants to prioritize pure damage or the stun, the player can use the Lightning instead of the Freeze in their deck. Lightning deals a lot more damage, being able to outright destroy several troops while also being able to stun anything that survives it, making it more useful against the Inferno Tower. However, it has a higher 6-Elixir cost as opposed to the 4-Elixir Freeze.
+The Freeze spell is very effective in the Rage sub-mode of the Global Spell game mode, as it can stun defending troops while your attacking troop take advantage of the Rage boost of the Arena. This works very well with non-building-targeting troops, because it may allow them to clear the way on offense, and allow themselves to connect to the Crown Tower.
+Using Freeze against the Safe in Heist is a waste because it cannot attack. This can allow the user to deploy their Freeze directly on the defending troops instead, without worrying about missing the Safe.
+Since Freeze's duration is identical at all Levels, and its damage is extremely low, upgrading it is generally wasteful if the player wishes to only stun enemy troops and buildings, At equal Levels, a Freeze spell can only OHKO Bats or Skeletons, and a Level 12 Freeze Spell can OHKO Level 15 Bats and Skeletons. Therefore, it is recommended that the player invest their Epic resources, (i.e., Wild Cards or Trade Tokens) into other Epic cards first. However, a Level 12 Freeze cannot OHKO Mirrored Level 16 Skeletons and Bats, so the player should consider levelling it to 13.
+Statistics
+Cost
+	Radius
+	Freeze Duration
+	Target
+	Type
+	Rarity
+
+4	3	4 sec	Air & Ground	Spell	Epic
+
+
+
+
+
+
+
+Level
+	Area Damage
+	Crown Tower Damage
+
+6	71	22
+7	79	24
+8	86	26
+9	95	29
+10	105	32
+11	115	35
+12	127	39
+13	139	42
+14	153	47
+15	168	51
+16	185	56
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Reward
+Greatest Hits
+	1	Hit Troops or buildings a total of 300 times	20 Freeze cards
+75 
+2	Hit Troops or buildings a total of 900 times	6,000 
+75 
+3	Hit Troops or buildings a total of 1,500 times	100 
+75 
+Breaking The Ice
+	1	Hit frozen Troops or buildings a total of 840 times	9,000 
+125 
+2	Hit frozen Troops or buildings a total of 2,400 times	20 
+125 
+3	Hit frozen Troops or buildings a total of 4,200 times	15,000 
+125 
+Gallery
+Current card render.
+Freeze
+History
+
+2016
+
+The Freeze card was added with Clash Royale's game launch on 4/1/2016.
+On 2/2/2016, the February 2016 Update decreased the Freeze's area radius to 3 tiles (from 4 tiles) and the duration would increase 0.3 seconds per level (from 0.4 seconds).
+On 3/5/2016, the May 2016 Update, changed the visual effects of the Freeze.
+On 18/5/2016, a Balance Update, decreased the Freeze's duration by 1 second.
+On 4/7/2016, the Tournaments Update, allowed the Freeze to stop the Elixir Collector's Elixir generation and reset the Inferno Tower's damage output.
+
+2018
+
+On 25/4/2018, the Clan Wars Update, allowed the Freeze to be placed on the river.
+On 20/6/2018, the Summer 2018 Update, moved the Arena to unlock the Freeze from P.E.K.K.A's Playhouse to Spell Valley.
+On 3/9/2018, a Balance Update, made it so that the Freeze can no longer reset the attack of the Zappies.
+On 5/9/2018, the September 2018 Update, changed it so that Epic cards start at Level 6 and end at Level 13 (from 1 to 8).
+On 5/12/2018, the December 2018 Update, set the Freeze's duration to 5 seconds for every Level and made the spell deal area damage. Its description was also changed slightly. Previously, its description was "Freezes troops and buildings, making them unable to move or attack. Everybody chill.".
+
+2019
+
+On 7/1/2019, a Balance Update, made it so that the Freeze would only deal 35% of its full damage to Crown Towers.
+On 28/1/2019, the January 2019 Update, moved the Arena to unlock the Freeze from Spell Valley to Frozen Peak.
+On 4/2/2019, a Balance Update, decreased the Freeze's duration to 4 seconds (from 5 seconds) and decreased its damage by 6%.
+On 26/11/2019, the End of November 2019 Update, removed the Freeze from Mega Deck Touchdown.
+
+2020
+
+On 4/8/2020, a Balance Update, decreased the Freeze's Crown Tower damage to 30% of the full damage (from 35%).
+
+2021
+
+On 7/6/2021, the Summer 2021 Update, slightly changed the Freeze's description, adding the phrase “Reduced damage to Crown Towers.” to it.
+On 27/10/2021, the Champions Update, increased the Level cap of all cards to 14 (from 13).
+
+2023
+
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+On 13/11/2023, a Minor Update, made it so that frozen troops can no longer be pushed by others.
+
+2025
+
+On 24/11/2025, the 2025 Quarter 4 Update added a card render to the Freeze's card info screen.
+On 1/12/2025, a Balance Update increased Freeze's damage by 29%.
+
+2026
+
+On 1/6/2026, a Balance Update, decreased the Freeze's Crown Tower damage to 25% of the full damage (from 30%)
+Trivia
+The Freeze resembles the real life chemical Nitrogen (N), a gas that, at a temperature of 63 Kelvin, significantly below freezing levels, is a colorless liquid that is used as a coolant, just like the Freeze.
+The Freeze is 1 of 7 spells which first existed in Clash of Clans, the others being Earthquake, Heal, Lightning, Poison, Rage, and Clone.
+Barring its damage, the Freeze has the exact same characteristics as its Clash of Clans counterpart.
+The bottle of it resembles its older version of the Freeze spell that took 2 housing spaces.
+The Freeze is 1 of 7 cards associated with ice, with the others being Ice Spirit, Giant Snowball, Ice Golem, Ice Wizard, Super Ice Golem, and Wizard Trio.
+In the German and Spanish language settings of the game, the Freeze's name translates to "Frost". In the Italian, Norwegian, Turkish, and Finnish language settings of the game, the Freeze's name translates to "Freezing". In the Persian and Indonesian language settings of the game, the Freeze's name translates to "Freezer". In the Korean and Portuguese language settings of the game, the Freeze's name translates to "Ice Magic" and"Ice" respectively.
+A Trainer in the Training Camp is called Trainer Freeze and uses 4 ice-related cards in their deck, one of them being Freeze, and the others being Ice Spirit, Giant Snowball, and Ice Golem.
+Troops frozen by the Freeze will remain frozen even if they are pushed out of the Freeze's radius.
+When the Freeze spell has been cast, a pale circle marking its radius will appear with some snow on the border. The circle line outside the radius will be team-colored.
+The Freeze is 1 of 7 spells which have team-colored rings on their radius, the others are Earthquake, Poison, Rage, Clone, Tornado, and Graveyard.
+According to Darian Vorlick, the Community Manager of Clash of Clans, the Freeze is his favorite spell, as stated in Clash of Clans Throughout the Years video.
+If the Tesla is about to retreat and the Freeze is used on it, the retreating sound effect will loop.
+The Freeze has been featured in multiple special game modes outside of the card. More specifically:
+The Freeze is 1 of 4 spells that have been featured in the Global Spell game mode, the others being Heal, Lightning, and Rage.
+In the Snowstorm sub-mode of the Global Spell game mode, the Global Freeze lasts permanently instead of 4 seconds.
+The Freeze is 1 of 5 spells that have been featured in the Spell Cauldron sub-mode of the Treasure Hunt game mode, the others being Heal, Lightning, Rage, and Clone.
+The Freeze is featured in non-Clash games. More specifically:
+The Freeze is featured as a spell in Chess, in a chess variant called Spell Chess.
+Although not available as a spell, the Freeze reappears as Ice Wizard's active ability in Squad Busters.
+It is 1 of 20 cards that is unavailable in Mirror mode, the others being Minions, Cannon, Mortar, Tesla, Goblin Hut, Tombstone, Bomb Tower, Inferno Tower, Barbarian Hut, Furnace, Elixir Collector, Clone, X-Bow, Golden Knight, Skeleton King, Archer Queen, Mighty Miner, Little Prince, and the Monk.
+The Freeze is the subject of a few Clan badges.
+The Freeze was featured in the winning deck of the Clash Royale League 2021 Tournament, by a player called Mugi.
+Before the Freeze's card release, the Freeze's duration was decreased by 1 second.
+In other languages
+In other languages
+Language	Title	Meaning
+	冰冻法术	Freeze Spell.
+	얼음 마법	Ice Magic.
+	フリーズ	Same as its English name.
+	Gel	Same as its English name.
+	Frost	Frost.
+	Hielo	Frost.
+	Congelamento	Freezing.
+	Bevriezen	Same as its English name.
+	Frysing	Freezing.
+	Gelo	Ice.
+	Dondurma	Freezing.
+	Jäädytys	Freezing.
+	Заморозка	Same as its English name.
+	冰凍法術	Freeze Spell.
+	تجميد	Same as its English name.
+	فریز	Freezer.
+	Beku	Same as its English name.
+	Pembeku	Freezer.
+	แช่แข็ง	Same as its English name.
+	Đóng băng	Same as its English name.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+94 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+4 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

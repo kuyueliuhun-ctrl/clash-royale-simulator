@@ -63,6 +63,23 @@ class EntityPathfinder:
                 # I added 0.375 to radius so that short-ranged troops like lumberjack can reach the tower instead of leering to the side
                 if distance < radius+0.375 and self.battle.pathfind_ground_walkable(cell_to_position((x, y)), self.entity.data.collision_radius):
                     self.goals.add((x, y))
+        if not self.goals:
+            # 兜底：range=0 近战对建筑时，攻击半径(碰撞半径)内无可达格
+            # （塔足迹 + mover 半径把目标周围全堵死）。退而求其次找全扫描区内
+            # 距离目标最近的可达格；全无则直接以目标格为目标（由 in_attack_range 碰撞半径判定攻击时机）。
+            best, best_d = None, float('inf')
+            for x in range(target_cell[0]-scan_radius, target_cell[0]+scan_radius):
+                for y in range(target_cell[1]-scan_radius, target_cell[1]+scan_radius):
+                    pos = cell_to_position((x, y))
+                    if not self.battle.pathfind_ground_walkable(pos, self.entity.data.collision_radius):
+                        continue
+                    d = pos.distance_to(self.target_position)
+                    if d < best_d:
+                        best, best_d = (x, y), d
+            if best is not None:
+                self.goals.add(best)
+            else:
+                self.goals.add(target_cell)
         # The second step is to filter goals, only keep the closest one.
         self.goal = min(self.goals, key=lambda c: cell_to_position(c).distance_to(self.target_position)+cell_to_position(c).distance_to(self.start_position))
 

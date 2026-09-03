@@ -1,0 +1,332 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 4-Elixir Cards, Champions with 2-Elixir Abilities, Champion Cards, and 2 more
+English
+Skeleton King
+30
+SAVE
+EDIT
+
+
+
+
+Skeleton King
+Elixir Cost
+4 
+Ability Cost
+2 
+Rarity
+Champion
+Type
+Troop
+Arena
+Executioner's Kitchen
+Release Date
+27 October 2021
+
+
+
+
+
+
+
+Merge
+
+“The King of the undead himself. He sometimes feels lonely (could be due to his non flattering features) and will summon friends to join him in the battle even after death. Tough guys have feelings too!”
+
+The Skeleton King is a Champion card that is unlocked from the Executioner's Kitchen (Arena 16). It spawns an area-damage, ground-targeting, melee, ground troop with high hitpoints and moderate damage. The Skeleton King's ability spawns Skeletons in a radius around him. While the Skeleton King is on the field, any troops which die will be turned into “souls” which are collected by him. The number of souls that the Skeleton King collects determines the number of Skeletons that the ability will spawn. The Skeleton King appears as a massive Skeleton wearing a menacingly large dark chestplate and gauntlets, a gray chain mail, a crown with team-colored jewels, a team-colored belt and cape, and brown sandals, and carries a giant club. A Skeleton King card costs 4 Elixir to deploy, and his ability costs an additional 2 Elixir to activate.
+
+Ability: Soul Summoning
+“Collect souls of the fallen and bring them back from the dead!”
+
+The Skeleton King has a special ability, accessible from the rightmost side of the screen just above the player's card slots in battle. After a 1-second delay, the Skeleton King activates his “Soul Summoning”, stopping in place momentarily before summoning a varied amount of Skeletons in a 4-tile radius around himself. The Skeletons spawn 1 at a time at random positions in the circle every 0.25 seconds. The number of Skeletons spawned is based on how many troops die (either from the player or the opponent) while he is deployed. It continues, even if the Skeleton King dies.
+
+When a troop is vanquished while the Skeleton King is in the Arena, the Skeleton King gains a “soul”, which spawns an additional Skeleton when his ability is used. With no souls, the Skeleton King will spawn 6 Skeletons, but with a maximum of 10 souls, he can summon 16 Skeletons. The amount of souls the Skeleton King has can be seen in a blue bar above his hitpoint bar. The ability goes on a 20 second cooldown after the duration ends. The Soul Summoning ability costs 2 Elixir to activate.
+
+The Skeletons he summons have a bluish tint and behave identically to cloned Skeletons, which means you can't clone them further with said card, and they only have 1 hitpoint. Cloned troops do not count as souls to him when they are defeated, and neither do the Skeletons summoned from the ability.
+
+It is also important to note that cards that make “sub-troops” (e.g., Elixir Golem, Golem, Lava Hound, and Battle Ram) do not count as a soul to it, but only the final forms of the troop, with Goblin Giant as an exception. Buildings also do not count as souls when vanquished, making Cannon Cart the only troop that cannot count as a soul. “Kamikaze cards” such as Spirits, Wall Breakers, and the Goblin Demolisher however do count as souls when they defeat themselves.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+For the purposes of determining Elixir trades, the Skeleton King and his activated Ability count as 6 Elixir, as the player must play the 4 Elixir Skeleton King and then spend a further 2 Elixir on his Ability.
+Since friendly troops will count as a soul to him, you can place a swarm such as a Skeleton Army while he is around and punish whenever the army gets countered with a small spell. This works well in swarm-heavy decks.
+To counter, simply place a small spell to defeat the Skeletons, and place a ranged or air troop to counter the Skeleton King. A decently tough splash card such as Valkyrie, Sparky, and Bowler can also be used.
+A good way of countering the Skeleton King's activated ability is by using a combination of a cheap splash and single-target unit, such as a Firecracker, Princess, Ice Wizard, or Bomber combined with a Knight, Berserker, Fisherman, Bandit, Miner, or Mega Minion. Any combination of units up to 6 Elixir or less will achieve this for a neutral or positive trade.
+He has a suspiciously large hitbox, and can bodyblock the Hog Rider more easily than other tanks.
+He also has a suspiciously high mass, and he can even push large troops such as a Giant, Electro Giant, or Golem. You can even use this to your advantage by using him with ranged win conditions like the Royal Giant to push him away from buildings.
+He and his Skeletons are weak to air troops. Beware of anti-air spells and support troops that may be paired with the Skeleton King.
+The Skeleton King is an excellent defensive card, owing to his splash damage, good HP, and ability to get stronger when opposing units fall. Place him behind other friendly units on defense (preferably a swarm), then cast Soul Summoning once those units are defeated to summon a second defensive layer out of nowhere. This is especially strong if the enemy's units lock on to the Skeleton King, as he will naturally tank for his summoned Skeletons and any other defending units the player has down.
+The Bowler or Valkyrie is an excellent counter to the Skeleton King, as their relatively high health allow them to tank the Skeleton King as his attack damage is rather low. Their large splash damage radius takes out the spawning Skeletons while damaging the Skeleton King and is a positive Elixir trade either way.
+The Mother Witch can take out his Skeletons easily, distracting him with a flow of Cursed Hogs, allowing you to gather Elixir for a better counter card. Beware, the Mother Witch will also make them a cloned Cursed Hog with 1 Hitpoint.
+The Skeleton King pairs really well with the Graveyard, as after the opponent defeats the Graveyard, you can summon another "graveyard" by activating his ability for 2 Elixir.
+The Skeleton King can tank for the Graveyard, allow the Skeletons to quickly deal massive damage to the Crown Tower.
+The Graveyard could also be tanking for the Skeleton King, the Skeletons will be eliminated faster, and the Skeleton King will summon more Skeletons and tank for them.
+On the contrary, Skeleton King is also great against the Graveyard, as he can summon a full flock of 16 Skeletons as a threatening counter push.
+The Skeleton King can fully counter a P.E.K.K.A., Prince, Elite Barbarians, Mighty Miner, Giant Skeleton, Boss Bandit, or Mini P.E.K.K.A. with the ability active, as the Skeletons will constantly distract the slow-hitting troops and be chipped down by your Crown Tower with the Skeleton King, regardless of soul amount.
+The Skeleton King can also fully counter a Mega Knight up to 1 Level higher if the Skeleton King is placed near the center so both Towers can chip the Mega Knight. The Skeleton King has high enough health to tank the jump attack from the Mega Knight, and his regular attacks.
+Do not use the ability, unless you have something tanking for the leftover Skeletons from the ability in the lane they are going to go in, otherwise it is a waste of 2 Elixir.
+The Skeleton King can be placed as a defender in Boat Battles. However, much like other Champion cards, he is unable to use his ability. As such, he should not be set for Defense Towers in Clan Wars, and it is better to seek for other alternatives.
+Statistics
+Skeleton King Attributes
+Cost
+	Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Splash Radius
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+4	1.6 sec	0.3 sec	Medium (60)	1 sec	Melee: Medium (1.2)	1.3	Ground	x1	Ground	Troop	Champion
+Soul Summoning Attributes
+Cost
+	Skeleton Count
+	Skeleton Hitpoints
+	Cast Time
+	Ability Cooldown
+
+2	6-16	1	0.933 sec	20 sec
+Skeleton Attributes
+Hit Speed
+	First Hit Speed
+	Speed
+	Range
+	Target
+	Transport
+
+1.1 sec	0.5 sec	Fast (90)	Melee: Short (0.5)	Ground	Ground
+
+
+
+
+
+
+
+
+
+
+Level
+	Skeleton King Hitpoints
+	Skeleton King Damage
+	Skeleton King Damage per second
+	Skeleton Damage
+	Skeleton Damage per second
+
+11	2298	204	127	81	73
+12	2528	224	140	89	80
+13	2781	247	154	98	89
+14	3059	272	170	108	98
+15	3365	299	186	119	108
+16	3701	329	205	130	118
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Reward
+Damage Dealer
+	1	Deal a total of 215,000 Damage to enemy Troops or buildings	1 Skeleton King card
+150 
+2	Deal a total of 650,000 Damage to enemy Troops or buildings	10,000 
+150 
+3	Deal a total of 1,080,000 Damage to enemy Troops or buildings	100 
+150 
+Spawner
+	1	Spawn a total of 1450 Troops	15,000 
+175 
+2	Spawn a total of 4,200 Troops	100 
+175 
+3	Spawn a total of 7,350 Troops	25,000 
+175 
+History
+
+2021
+
+The Skeleton King card was added to the game on 27/10/2021, in the Champions Update.
+On 4/11/2021, a maintenance break, increased his damage by 14%, area radius to 1.3 tiles (from 1 tile), and gave him knockback immunity.
+
+2022
+
+On 30/3/2022, the Miner Update, fixed an issue where cloning Skeleton King during the Soul Summoning animation would cancel it. It also fixed a stats rounding issue with the Skeleton King's summoned Skeletons.
+On 7/6/2022, a Balance Update, decreased the Skeletons spawned by Soul Summoning to 18 (from 20).
+On 2/8/2022, a Balance Update, decreased the Skeletons spawned by Soul Summoning to 16 (from 18).
+On 26/10/2022, the 2022 Quarter 3 Update, moved the Arena to unlock the Skeleton King from Training Camp to Executioner's Kitchen. This also made it so that players at any King Level could unlock the Skeleton King, as opposed to only Level 14. There was also an unannounced change to the Skeleton King, a decrease to his collision radius to 1 tile (from 1.2 tiles).
+
+2023
+
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+
+2024
+
+On 17/6/2024, the Goblin World Update, decreased the Skeleton King's hitpoints by 0.08% and his damage by 0.48%.
+
+2025
+
+On 6/10/2025, a Balance Update increased the Skeleton's attack time interval to 1.1 seconds (from 1.0 seconds).
+On 24/10/25, a maintenance break, decreased Soul Summoning’s skeleton spawn radius to 3.5 tiles (from 4 tiles).
+Gallery
+Current card render.
+Skeleton King’s card render in the Chinese version of the game.
+Skeleton King Preview.gif
+Current card preview
+Skeleton King 1
+Skeleton King 2
+Skeleton King using his ability.
+Trivia
+The word "Skeleton" comes from the Greek "σκελετός" (skeletós), meaning dried up or withered.
+In the Korean, Arabic, and Vietnamese language settings of the game, the Skeleton King's name translates to "Skull King", "King of Skeletons", and "White Bone King" respectively.
+The Skeleton King is 1 of 15 cards associated with Skeletons, with the others being Bomber, Skeleton Dragons, Skeleton Barrel, Tombstone, Bomb Tower, Guards, Skeleton Army, Witch, Balloon, Giant Skeleton, Wall Breakers, Super Witch, Graveyard, and of course, Skeletons.
+The Skeleton King is 1 of 20 cards associated with nobility, with the others being Knight, Royal Recruits, Royal Giant, Royal Delivery, Tower Princess, Royal Hogs, Dark Prince, Prince, Raging Prince, Mega Knight, Princess, Royal Ghost, Spirit Empress, Super Knight, Dagger Duchess, Royal Chef, Golden Knight, Archer Queen, and the Little Prince.
+When the Skeleton King spawns and activates his abilities, he laughs.
+The Skeleton King is one of the first Champion cards to be added to the game, alongside the Golden Knight and the Archer Queen.
+He gets more bluish the more souls he collects.
+The Skeleton King is the only Champion card not to be organic.
+In his card image, his top tooth is missing on the left side, but in his card render, his top tooth is missing on the right side. This is because the image used in his card image is flipped 180°.
+The Skeleton King has the same walking sound as the Giant Skeleton.
+He shares a name with one of Barbarian King's skins from Clash of Clans. They both summon troops for their ability, but the Skeleton King summons Skeletons instead of Barbarians, doesn't have fixed summoning amounts and additionally does not have additional effects tied to it.
+The Skeleton King is 1 of 2 troops that have been featured with an Initial Spawn buff, the other being Mother Witch.
+The Skeleton King is unavailable in multiple special game modes. More specifically:
+It is 1 of 20 cards that is unavailable in Mirror mode, the others being Minions, Cannon, Mortar, Tesla, Goblin Hut, Tombstone, Bomb Tower, Inferno Tower, Barbarian Hut, Furnace, Elixir Collector, Freeze, Clone, X-Bow, Golden Knight, Archer Queen, Mighty Miner, Little Prince, and the Monk.
+It is 1 of 12 cards that is unavailable in Chess Royale, the others being Royal Recruits, Rocket, Earthquake, Lightning, Poison, Goblin Drill, Miner, Golden Knight, Archer Queen, Mighty Miner, and the Monk.
+On 28 April 2022, according to a tweet by the Clash Royale official Twitter, the number of Skeleton King's ability activations was 134,193,784.
+The Skeleton King is the subject of certain cosmetics in the game. More specifically:
+The Skeleton King is the subject of 2 Emotes.
+The Skeleton King is the subject of a Tower Skin.
+By using Mirror on a Clone and using it on a Skeleton King, it is actually possible to get a Level 16 Skeleton King.
+A cloned Skeleton King does not fall from the sky when deployed.
+On 3/1/2024, the Skeleton King was supposed to receive an attack time interval decrease to 1.5 seconds (from 1.6 seconds), but this change was pulled back last minute.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+30 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+Related Collections
+Clash Royale
+15 items
+SIGN IN TO SAVE
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+4 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

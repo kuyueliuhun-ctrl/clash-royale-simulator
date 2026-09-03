@@ -1,0 +1,186 @@
+Clasher.us
+Home
+CoC
+CR
+BS
+BB
+Sign in
+Register
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+The Log
+
+The Log card stats, levels, and decks for Clash Royale.
+
+Home
+Clash Royale
+Cards
+The Log
+ Back to Clash Royale
+ Cards
+Popular decks
+Top Cards
+Tools
+On this page
+Description
+Stats
+Popular Decks
+Details
+All units
+
+The Log card is unlocked from the Builder's Workshop (Arena 6) or a Legendary Chest. It is an area damage spell with a wide radius and moderate damage. The Log costs 2 Elixir to cast. When cast, The Log rolls through the Arena, dealing damage and knocking back any ground troops in its path before disintegrating after rolling for 11.1 tiles.
+
+Best Decks of The Log
+Popular Decks
+Evo
+  
+Evo
+     
+Win rate: 67.5%
+Sample games: 42
+Evo cards: 3
+based on 42 sampled battles
+1.07 crowns per game
+Avg elixir: 3
+Deck details
+Evo
+  
+Evo
+ 
+Evo
+    
+Win rate: 100%
+Sample games: 32
+Evo cards: 2
+based on 32 sampled battles
+1.81 crowns per game
+Avg elixir: 2.6
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+    
+Evo
+ 
+Win rate: 58.62%
+Sample games: 30
+Evo cards: 3
+based on 30 sampled battles
+0.67 crowns per game
+Avg elixir: 3.3
+Deck details
+Evo
+ 
+Evo
+ 
+Evo
+  
+Evo
+   
+Evo
+Win rate: 59.26%
+Sample games: 27
+Evo cards: 2.78
+based on 27 sampled battles
+0.7 crowns per game
+Avg elixir: 2.6
+Deck details
+Stats
+elixir cost	range	width	target	type	rarity
+2	10.1	3.9	Ground	Spell	Legendary
+Levels
+Level	area damage	crown tower damage
+9	220	33
+10	242	36
+11	266	40
+12	293	44
+13	322	48
+14	354	53
+15	389	59
+16	428	64
+Details
+HISTORY
+The Log was added to the game on 4/7/16 with the Tournaments Update.
+On 24/8/16, a Balance Update decreased The Log's cast time by 66% and its travel speed increased by 20%.
+On 19/9/16, a Balance Update enabled The Log to knock back all ground troops.
+This also enabled the log to reset the charge attacks of the Prince, Dark Prince, and the Battle Ram, although the ram was not released at this point.
+On 20/10/16, a Balance Update increased The Log's rolling speed and distance, as well as increased its damage by 9%.
+On 23/1/17 a Balance Update decreased The Log's damage by 4% and decreased its knockback effect (to 1 tile from 1.5 tiles).
+On 13/3/17, the March 2017 Update decreased The Log's damage by 4% and decrease its rolling distance by 0.5 tiles (to 11.1 tiles from 11.6 tiles). On the same day, a bug was discovered where the Log was not able to be deployed on top of buildings. To compensate for this, the rolling distance was restored to 11.6 tiles until the next client update.
+On 12/6/17, a Balance Update decreased The Log's rolling distance by 0.5 tiles (to 11.1 tiles from 11.6 tiles).
+On 12/12/17, a Balance Update decreased The Log’s Crown Tower damage from 40% to 35% of the full damage.
+TRIVIA
+The Log and the Graveyard are the only Legendary spells in the game.
+Tournament level Log cannot kill level 13 Goblins in one shot.
+Unlike most other spells, it can only be placed in a player's own territory. However, it would not be beneficial to place it in the enemy's territory even if it could, as a part of its rolling range would simply be wasted.
+Just like every other Legendary card except the Miner and the Graveyard, it falls from the sky when deployed.
+The card's description hints at it being created by the Lumberjack, apparently due to spilled Rage.
+The Log can be seen in the menu picture for Arena 6 (Builder's Workshop) on the bottom left corner. Before The Log was introduced into the game, it had no spikes on it.
+It is the cheapest Legendary card in the game.
+The Log is subject of some Emotes.
+It is the only spell that is the subject of an emote.
+STRATEGY
+As a cheap spell, The Log can be used to damage and push back multiple ground troops that are approaching your side, such as Barbarians or Goblins.
+The pushback mechanic is similar to the Fireball, but all ground troops are pushed back.
+It can be used to counter the Goblin Barrel for a one Elixir advantage.
+It can be an alternative to Arrows, due to the very similar damage and area of effect.
+The main differences are that The Log costs one less Elixir while being unable to affect air troops. As such, it might be advisable to bring other splash damage cards to deal with the likes of Minions and the Minion Horde.
+It can also be an alternative to Zap, as both of them have the same Elixir cost. They can both disarm the charge attacks of Prince and Dark Prince if you have low Elixir or if your small units are out of rotation. However, they have slightly different effects when used. The Log will not reset a Sparky, but a Zap will.
+An important note is that a well placed The Log can eliminate a Princess up to one level higher than it for a positive Elixir trade.
+If placed two or fewer tiles away from the bridge, The Log will damage the Princess Tower.
+Remember that despite it being a spell, it can only be placed on the player's side, which reduces its effectiveness in certain situations.
+If a unit is walking right on the edge of the river on a player's side, the player can use The Log to push the unit over the river back to the opponent's side. This is a good way to counter slow moving units like Giants and P.E.K.K.A.s.
+The Log can be an effective counter to Tombstones. If a Tombstone is at around half health, The Log can be used to destroy the Tombstone and the spawned Skeletons.
+The Log and Fire Spirits combo can counter Three Musketeers if The Log is placed correctly. Ice Golem can be an alternative to The Log as it is easier to execute. The Log can stun the Three Musketeers and the Fire Spirits will do damage, while the tanks and slows the troops after it dies, so you can use both these effects to your advantage.
+If the opponent places a Royal Giant in the middle of your territory once a Tower has been destroyed, you can cast The Log to the left of the Royal Giant, pushing him to the King's Tower lane; thus causing him to start targeting your King's Tower instead.
+If a Miner is placed very close to the King's Tower you can actually use the side of The Log and push the Miner towards the King's Tower, activating it.
+Hog Riders can unintentionally jump over The Log, but only when they are jumping over the river as well. Therefore, The Log rarely fails to hit its target.
+The Mega Knight however, can also jump over The Log when he is doing his jumping attack.
+This also goes with the Royal Hogs when they are jumping over the river.
+The Log one level lower than the Princess, Dart Goblin, and the Rascal Girls can kill them in one shot, but not for two levels lower, i.e. Tournament level Log can kill a level 10 Princess, but cannot kill a level 11 Princess.
+All units
+Troop
+Spell
+Building
+COMMON	Minions · Archers · Knight · Spear Goblins · Goblins · Minion Horde · Bats · Barbarians · Ice Spirit · Skeletons · Royal Recruits · Royal Giant · Skeleton Barrel · Elite Barbarians · Goblin Gang · Bomber · Fire Spirits · Rascals · Fire Spirit · Firecracker · Skeleton Dragons · Electro Spirit · Berserker
+RARE	Musketeer · Mini P.E.K.K.A · Mega Minion · Battle Ram · Valkyrie · Dart Goblin · Hog Rider · Ice Golem · Three Musketeers · Flying Machine · Giant · Wizard · Royal Hogs · Zappies · Elixir Golem · Battle Healer · Goblin Demolisher · Suspicious Bush
+EPIC	Baby Dragon · Prince · Wall Breakers · Golem · Witch · Giant Skeleton · Bowler · Dark Prince · Guards · Electro Dragon · Executioner · Skeleton Army · Hunter · P.E.K.K.A · Balloon · Goblin Giant · Cannon Cart · Electro Giant · Rune Giant
+LEGENDARY	Miner · Princess · Night Witch · Inferno Dragon · Ram Rider · Bandit · Mega Knight · Royal Ghost · Sparky · Lava Hound · Lumberjack · Magic Archer · Ice Wizard · Fisherman · Electro Wizard · Mother Witch · Phoenix · Goblin Machine · Ronin
+CHAMPION	Mighty Miner · Skeleton King · Archer Queen · Golden Knight · Monk · Little Prince · Goblinstein · Boss Bandit
+ Cards
+Explore more
+Back to Clash Royale
+CONTENT
+BUILD & PLAY
+Popular decks
+Top Cards
+Deck Builder
+Challenges
+RANKINGS
+TOOLS
+CLASHER.US
+About Us
+Contact Us
+Terms of Service
+Privacy Policy
+Cookie settings
+OUR OTHER SITES
+CoCMap.com
+Clash of Clans companion — bases, guides & rankings
+Minecrafts.us
+Minecraft companion
+minzap.com
+Whiteout Survival & Kingshot guides
+GET THE APP
+AVAILABLE ON
+Maps for Clash of Clans
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+
+© 2019–2026 Copyright: CLASHER.US Terms of Service · Privacy Policy
+
+This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy
+
+Powered by Namecheap — Vultr

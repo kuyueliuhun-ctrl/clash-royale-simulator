@@ -1,0 +1,331 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 3-Elixir Cards, Legendary Cards, Troop Cards, Miner's Mine Cards
+English
+Fisherman
+64
+SAVE
+EDIT
+Fisherman
+Elixir Cost
+3 
+Rarity
+Legendary
+Type
+Troop
+Arena
+Miner's Mine
+Release Date
+5 August 2019
+
+
+
+
+“His Ranged Attack can pull enemies towards him, and pull himself to enemy buildings. He's also mastered the ancient art of 'Fish Slapping'.”
+
+The Fisherman is a Legendary card that is unlocked from the Miner's Mine (Arena 15) or a Legendary Chest. It spawns a single-target, ground-targeting, melee, ground troop with moderate hitpoints and moderate damage. If there are ground units between 3.5 and 7 tiles of him, he will stop moving and begin charging a hook attack which takes 1.3 seconds to execute, and either pulls enemy troops towards him, or pulls himself towards buildings, and slow their movement and attack speed by 35% for 1.5 seconds. The Fisherman takes an appearance as a man with a large nose, blue eyes, blonde eyebrows and beard, wearing a team-colored hat which covers his eyes and overalls with a team-colored patch on it and a star shell behind it, and carries a hook tied on a rope and a deep indigo fish. A Fisherman card costs 3 Elixir to deploy.
+
+Modifiers
+ Common: Tough as Scales
+“+100% hitpoints”
+
+Doubles Fisherman hitpoints.
+
+ Rare: Down to Earth
+“Hook air troops”
+
+Can hook and pull air units.
+
+ Epic: Hook Me Baby One More Time
+“Infinite hook range”
+
+Is able to hook to the nearest enemy or Crown Tower in the arena.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+The Fisherman's hook has a range of 7 tiles. Players should keep this in mind when deciding where to place him against enemy troops to pull them.
+In 1-on-1 battles, the Fisherman is mediocre against any troop with high damage at close range, so players should avoid using the Fisherman alone to reel in troops that deal high amounts of damage to close targets such as a Hunter, Mini P.E.K.K.A., Elite Barbarians, Prince, Mighty Miner, or a P.E.K.K.A. unless they desperately need to pull him away from their Crown Tower. However, pairing the card with swarm troops like Skeletons, Goblins, or Guards to distract the enemy troop can protect the Fisherman and allow him to stay on the board for a counterpush.
+On the contrary, the Fisherman can synergize well with close-range melee troops as the Fisherman can pull enemy troops closer to them, so the troop is able to hit more easily. A very powerful version of this synergy is the Fisherman + Hunter combo. The Fisherman's health pool can allow him to tank for the somewhat frail Hunter, and the Hunter will be able to land all of his shots thanks to the Fisherman hooking units towards them.
+Unlike the Bandit, the Fisherman is not immune to damage while in the process of grabbing, and can actually be defeated mid-hook. This is good to know for the case of saving your troop from any additional danger that could be caused by being pulled from the Fisherman.
+The Fisherman is best used as a defensive support card to separate a tank from support troops, primarily building-targeting units. Players should avoid cycling him in the back as opponent may take advantage of his hook and make him pull something unfavorable towards their Tower, like a Giant Skeleton, Mighty Miner, P.E.K.K.A, Golem, Monk, Sparky, Goblin Giant, Electro Giant, Mega Knight, or a Hog Rider.
+He can counter a Hog Rider completely, with or without a King Tower activation. The player should hover the Fisherman on the third tile from the river and on the second tile horizontally in the opposite lane they think the Hog Rider will be deployed in. Once the Hog Rider has been deployed, drop the Fisherman as the Hog Rider's deploy timer is halfway finished. The Hog Rider will just barely be defeated before swinging at the Crown Tower.
+If timed correctly, the Fisherman can counter a same-level lone Mega Knight by pulling him towards the King Tower and having both Crown Towers target him. If you don't feel too safe doing this, you can place a Mini P.E.K.K.A, Prince, Mighty Miner, Hunter, Inferno Dragon, Elite Barbarians, or a Mega Minion to help finish him off.
+If the Fisherman is always played close to the river to hook away troops that target buildings, the attacking player can distract his hook with cheap swarms, allowing the building chaser to get to the Tower uninterrupted.
+The Fisherman can be used against most building chasers or melee area damage troops to activate the King's Tower by placing him in front of it, slightly into the opposite lane. Most of the time, the Crown Tower will be forced to take a bit of damage before the King's Tower is activated, so the player should only do this if their Tower is still healthy.
+Against continuous ranged splashers like the Magic Archer and Evolved Bomber, placing the Fisherman on the fourth tile vertically from the King's Tower and the third tile horizontally from the Crown Tower as the troop walks in his range will force a King activation after hooking them.
+The Fisherman can be deployed slightly earlier against building chasers so that he will hook them right as they are about to attack the Crown Tower, resulting in no damage. However, missing this timing will cause the King Tower activation to fail completely.
+Note that regardless of timing, all three Crown Towers will be distracted with the troop on the King's Tower for a short amount of time. The opponent may deploy frail, high damage troops on offense to take advantage of this vulnerability. If the player knows they won't have enough Elixir to counter follow up troops, it may be better to defend the building chaser normally. Pulling powerful units like the Giant Skeleton to the King's Tower is not recommended more than twice, as the damage dealt could possibly result in a back door 3 Crown later in the match.
+Players should take advantage of his hook and pull units away from their Tower. This is especially effective against a Giant Skeleton as the bomb won't detonate on top of the Tower and deal massive damage.
+If the player knows the opponent is going to send a Miner to the back of their Crown Tower, they can deploy the Fisherman behind the King's Tower in the same lane of the Miner. If timed correctly, the Miner will retarget to the King Tower and activate it.
+Cards with a continual stun are very good counters to a Fisherman, as he will be permanently stuck charging his hook until he is defeated. The Electro Dragon and Electro Wizard are the most reliable due to the former's chain lightning and the latter's split attack making it more likely for the Fisherman to be hit in larger pushes.
+If timed correctly, the Fisherman's hook can reset the Battle Ram, Ram Rider, Prince, and the Dark Prince's charges; as well as being able to stop the Mega Knight from getting his jump off. Interestingly, the Fisherman can also stop the Bandit mid-dash with his hook and cancel it, despite the latter usually being invincible during it.
+If the Fisherman is deployed alone with no support, Goblins can counter him. The Fisherman does not deal enough damage to OHKO a Goblin.
+The Fisherman's range allows him to pull away opposing heavy hitters, which can be useful if one is played in response to a push, allowing the push to remain mostly unharmed.
+The Fisherman can counter a Wizard, Electro Wizard, Musketeer, Archer Queen, or a Hunter just barely when pulled to your side of the Arena for a positive Elixir trade. Likewise, this tactic works well against most ranged troops.
+Another positive Elixir trade is a Fisherman can counter a Valkyrie if it’s placed near the centre of your side near the King Tower; both of your Crown Towers will be engaged to the Valkyrie along with the Fisherman’s slowing affect and damage.
+The Royal Giant synergizes quite well with the Fisherman. The Fisherman will pull any high damage per second troops away from the Royal Giant, which will force the opponent to drop more Elixir. However, this can be easily predicted and your opponent may drop a distraction card to distract the Fisherman. You can prevent this by using The Log. You can also use the Fisherman to snipe buildings by placing him at the middle of the river to finish of buildings like the Inferno Tower to help your Royal Giant break through.
+The Mortar also synergizes well with the Fisherman. Any troop used to distract the Mortar, such as a Mini P.E.K.K.A. or Lumberjack, will be pulled into the Mortar’s dead zone, allowing it to connect to the Crown Tower quicker. Buildings used to distract the Mortar may be damaged by the Fisherman, weakening them for the Mortar to connect. However, this combination gives spell value to the opponent. If they so choose, a Rocket fully counter this combination for a +1 Elixir trade if the Fisherman is too close to the Mortar.
+Statistics
+Fisherman Attributes
+Cost
+	Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+3	1.3 sec	0.1 sec	Medium (60)	1 sec	Melee: Medium (1.2)	Ground	1	Ground	Troop	Legendary
+Hook Attributes
+Hook Time
+	Hook Range
+	Hook Projectile Speed
+	Target
+	Transport
+
+1.3 sec	3.5-7	800	Ground	Ground
+Card Statistics
+
+
+
+
+
+
+
+Level
+	Hitpoints
+	Damage
+	Damage per second
+
+9	719	160	123
+10	791	176	135
+11	870	194	149
+12	957	213	163
+13	1053	235	180
+14	1158	258	198
+15	1274	284	218
+16	1401	312	240
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Reward
+Damage Dealer
+	1	Deal a total of 110,000 Damage to enemy Troops or buildings	2 Fisherman cards
+100 
+2	Deal a total of 335,000 Damage to enemy Troops or buildings	8,000 
+100 
+3	Deal a total of 560,000 Damage to enemy Troops or buildings	100 
+100 
+Get Over Here!
+	1	Pull a total of 350 Troops with this card's Ranged Attack	12,000 
+150 
+2	Pull a total of 1,000 Troops with this card's Ranged Attack	2 
+150 
+3	Pull a total of 1,750 Troops with this card's Ranged Attack	18,000 
+150 
+History
+
+2019
+
+The Fisherman was once available in the Fisherman Draft Challenge, which started on 4/7/2019. In this challenge, gameplay was similar to a regular Draft Challenge, except that one of the players was able to choose who would use the Fisherman. If the player achieved at least 9 wins, they obtained the Fisherman early.
+From 28/7/2019 through 30/7/2019, the Shop had a special offer where Arena 10+ players could buy up to 2 special Fortune Chests for 500 Gems that guarantee a Fisherman.
+The Fisherman card was generally released on 5/8/2019. On the same day, a Balance Update, increased the Fisherman's hitpoints by 10% and his hook range to 7 tiles (from 6.5 tiles).
+On 2/9/2019, a Balance Update, decreased the Fisherman's cost to 3 Elixir (from 4 Elixir) and decreased his damage by 11%.
+On 5/9/2019, a maintenance break, decreased the Fisherman's hitpoints by 5%.
+On 7/10/2019, a Balance Update, decreased the Fisherman's hitpoints by 5% and his damage by 6%.
+On 4/11/2019, a Balance Update, decreased the Fisherman's hook range to 6 tiles (from 7 tiles) and increased his hook charge time to 1.1 seconds (from 1 second).
+On 26/11/2019, the End of November 2019 Update, added a card render to the Fisherman's card info screen.
+
+2020
+
+On 2/1/2020, a maintenence break, fixed an issue where the Fisherman's Star Level used the sound effects of the Musketeer.
+On 7/1/2020, a Balance Update, increased the Fisherman's hook range to 7 tiles (from 6 tiles) and increased his hook charge time to 1.5 seconds (from 1.1 seconds).
+On 7/7/2020, a Balance Update, decreased the Fisherman's hook charge time to 1.3 seconds (from 1.5 seconds), decreased his attack time interval to 1.3 seconds (from 1.5 seconds), and decreased his first attack time interval to 0.1 seconds (from 0.3 seconds).
+On 9/12/2020, a Balance Update, decreased the Fisherman's hitpoints by 10%.
+
+2021
+
+On 7/6/2021, the Summer 2021 Update, moved the Arena to unlock the Fisherman from Hog Mountain to Legendary Arena. It also fixed some issues with the Fisherman.
+On 27/10/2021, the Champions Update, increased the Level cap of all cards to 14 (from 13).
+
+2022
+
+On 30/3/2022, the Miner Update, fixed an issue where Fisherman would become stuck after his target dies during battle.
+On 26/10/2022, the 2022 Quarter 3 Update, moved the Arena to unlock the Fisherman from Legendary Arena to Miner's Mine. It also fixed a bug where Sparky was not reset when hit by Electro Spirit at the same time she was being hooked by Fisherman.
+
+2023
+
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+
+2025
+
+On 8/1/2025, a Balance Update, decreased the Fisherman's slow duration to 1.5 seconds (from 2.5 seconds).
+On 31/3/2024, the 2025 Quarter 1 Update, decreased the Fisherman's hitpoints by 0.11% and increased his damage by 0.51%.
+On 6/10/2025, a Balance Update decreased the slowdown effect to -30% (from -35%).
+
+2026
+
+On 6/4/2026, a Balance Update, removed the FIsherman's slowdown effect entirely
+Gallery
+Current card render.
+Current card preview
+Fisherman 1
+Fisherman 2
+Fisherman 3
+Trivia
+Archaeological evidence suggests that fishing was invented in East Asia 40,000 years ago, shown from isotopic analysis of the skeletal remains of Tianyuan man that he regularly consumed freshwater fish. Initially, it was done with spearfishing with harpoons, but later at around 8,000 years ago, newer methods were developed which are still used to this day.
+In the Korean language setting of the game, the Fisherman's name translates to "Angler".
+In the French language setting of the game, the species of the fish the Fisherman holds is revealed to be a Dicentrarchus labrax (European bass).
+The Fisherman is tied with Valkyrie for the highest first attack speed of all troops, with a first attack speed of 0.1 seconds.
+The Fisherman is one of the first troop cards to receive a card render, alongside the Archers, Knight, Goblins, Bomber, Skeletons, Barbarians, Bats, Royal Recruits, Skeleton Barrel, Rascals, Musketeer, Giant, Valkyrie, Wizard, Flying Machine, Hog Rider, Royal Hogs, Dart Goblin, Zappies, Elixir Golem, Baby Dragon, Skeleton Army, Witch, P.E.K.K.A, Prince, Balloon, Giant Skeleton, Goblin Giant, Hunter, Electro Dragon, Wall Breakers, Bowler, Cannon Cart, Mega Knight, Ram Rider, Miner, Royal Ghost, Ice Wizard, Magic Archer, Bandit, Lava Hound, and Night Witch.
+The Fisherman have been featured in multiple special game modes outside of the card. More specifically:
+The Fisherman is 1 of 3 troops that has been featured in the Capture the Troop sub-mode of the Treasure Hunt game mode, the others being Sparky and the Archer Queen.
+The Fisherman is 1 of 2 troops that has been featured in the Obstacle Course game mode, the other being Barbarians.
+The Fisherman is 1 of 23 cards that has had its Elixir cost changed, the others being Bomber, Fire Spirit, Royal Recruits, Cannon, Mortar, Musketeer, Three Musketeers, Heal, Goblin Hut, Bomb Tower, Barbarian Hut, Furnace, Elixir Collector, Skeleton Army, P.E.K.K.A., Wall Breakers, Electro Giant, Bowler, Goblin Barrel, Barbarian Barrel, Rage, and the Monk.
+The Fisherman's name is Maurice as said by his fish in The Flood trailer; however, in the Japanese language setting of the game, his name is Triton.
+According to The Flood trailer, the Fisherman has a Scottish accent.
+The Fisherman's "Fish Slap" is likely a reference to The Fish-Slapping Dance, a short comedy sketch performed on Monty Python's Flying Circus in 1972.
+Occasionally when attacking, the Fisherman exclaims "Fish Slap".
+The Fisherman’s fish is voiced by Allen Enlow.
+The Fisherman is 1 of 24 troops that speak distinct words when on the field, the others being Mini P.E.K.K.A., Mega Minion, Wizard, Hog Rider, P.E.K.K.A., Dark Prince, Bowler, Ram Rider, Electro Wizard, Princess, Ice Wizard, Magic Archer, Lumberjack, Mother Witch, Goblin Machine, Super Mini P.E.K.K.A., Santa Hog Rider, Super Magic Archer, Golden Knight, Boss Bandit, Archer Queen, Little Prince, and the Terry.
+The Card Mastery task "Get Over Here!" is a reference to a quote mentioned by Scorpion in Mortal Kombat.
+When a Fisherman is defeated, he drops his fish which flops on the ground for a while before it disappears. The other units that drop items upon death are the Knight, Rascal Boy, Mega Minion, Dark Prince, Executioner, Mega Knight, Sparky, Super Knight, Golden Knight, and the Little Prince.
+The Fisherman, Ram Rider, Phoenix, and the Lumberjack are the only normal spawning Legendary troops that do not fall from the sky when deployed.
+The Fisherman is the subject of certain cosmetics in the game. More specifically:
+The Fisherman is the subject of 3 Emotes. His fish is also the subject of 3 Emotes.
+The Fisherman is the subject of a Tower Skin.
+The Fisherman is the subject of a few Battle Banner items.
+When 2 Fishermen face each other, only 1 of the 2 Fishermen will be able to hook the other one, slowing him down afterwards. This results in 1 of the 2 winning the duel instead of both being defeated at the same time.
+The Fisherman was originally going to appear in late 2017, with a hook and trap mechanic. However, the hook and trap mechanic were dropped, which lead to the creation of the Hunter. Ultimately, the Fisherman was added in one of Clash Royale's updates.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+64 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+4 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

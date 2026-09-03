@@ -1,0 +1,4216 @@
+{
+ "policy": {
+  "special_mechanics_baseline": "nulls-royale-snapshot (gamedata.json, meta.fingerprint)",
+  "numbers_baseline": "official (meta: 仓库 cards.json + cr-api-data 补充(11); per-level: {'characters': 'repo(120)', 'building': 'repo(89)', 'spell': 'repo(71)', 'projectile': 'repo(92)'})",
+  "uncertainty_policy": "flag-for-human-review, no silent guessing",
+  "official_data_upgrade": "curl cr-api-data -> src/clasher_new/data_official/（命令见脚本头）"
+ },
+ "cards": [
+  {
+   "internal_name": "Knight",
+   "english_name": "Knight",
+   "cr_id": 26000000,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Knight",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1766,
+    "damage_lv11": 202,
+    "stats_source": "characters"
+   },
+   "special_fields": [],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Archer",
+   "english_name": "Archers",
+   "cr_id": 26000001,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Archer",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 304,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Goblins",
+   "english_name": "Goblins",
+   "cr_id": 26000002,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "Goblin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 202,
+    "damage_lv11": 120,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Giant",
+   "english_name": "Giant",
+   "cr_id": 26000003,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Giant",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3968,
+    "damage_lv11": 253,
+    "stats_source": "characters"
+   },
+   "special_fields": [],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Pekka",
+   "english_name": "P.E.K.K.A",
+   "cr_id": 26000004,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": true,
+   "summon_character": "Pekka",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3760,
+    "damage_lv11": 816,
+    "stats_source": "characters"
+   },
+   "special_fields": [],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Minions",
+   "english_name": "Minions",
+   "cr_id": 26000005,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Minion",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 230,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Balloon",
+   "english_name": "Balloon",
+   "cr_id": 26000006,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Balloon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1680,
+    "damage_lv11": 640,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Witch",
+   "english_name": "Witch",
+   "cr_id": 26000007,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Witch",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 838,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Barbarians",
+   "english_name": "Barbarians",
+   "cr_id": 26000008,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Barbarian",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 670,
+    "damage_lv11": 192,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Golem",
+   "english_name": "Golem",
+   "cr_id": 26000009,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 8,
+   "elixir_official": 8,
+   "elixir_canonical": 8,
+   "implemented": true,
+   "summon_character": "Golem",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 5120,
+    "damage_lv11": 312,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathDamage",
+    "deathSpawnCharacterData",
+    "deathSpawnCount"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Skeletons",
+   "english_name": "Skeletons",
+   "cr_id": 26000010,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 1,
+   "elixir_official": 1,
+   "elixir_canonical": 1,
+   "implemented": true,
+   "summon_character": "Skeleton",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 81,
+    "damage_lv11": 81,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Valkyrie",
+   "english_name": "Valkyrie",
+   "cr_id": 26000011,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Valkyrie",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1908,
+    "damage_lv11": 267,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonArmy",
+   "english_name": "Skeleton Army",
+   "cr_id": 26000012,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Skeleton",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 51,
+    "damage_lv11": 51,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonCharacterLevelIndex",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Bomber",
+   "english_name": "Bomber",
+   "cr_id": 26000013,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "Bomber",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 332,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Musketeer",
+   "english_name": "Musketeer",
+   "cr_id": 26000014,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Musketeer",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 721,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BabyDragon",
+   "english_name": "Baby Dragon",
+   "cr_id": 26000015,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "BabyDragon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1152,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Prince",
+   "english_name": "Prince",
+   "cr_id": 26000016,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Prince",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1920,
+    "damage_lv11": 392,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "chargeRange",
+    "damageSpecial",
+    "jumpHeight",
+    "jumpSpeed"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Wizard",
+   "english_name": "Wizard",
+   "cr_id": 26000017,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Wizard",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 720,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MiniPekka",
+   "english_name": "Mini P.E.K.K.A",
+   "cr_id": 26000018,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "MiniPekka",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1390,
+    "damage_lv11": 755,
+    "stats_source": "characters"
+   },
+   "special_fields": [],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SpearGoblins",
+   "english_name": "Spear Goblins",
+   "cr_id": 26000019,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "SpearGoblin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 133,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GiantSkeleton",
+   "english_name": "Giant Skeleton",
+   "cr_id": 26000020,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "GiantSkeleton",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3424,
+    "damage_lv11": 267,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "HogRider",
+   "english_name": "Hog Rider",
+   "cr_id": 26000021,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "HogRider",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1696,
+    "damage_lv11": 318,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "jumpHeight",
+    "jumpSpeed",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MinionHorde",
+   "english_name": "Minion Horde",
+   "cr_id": 26000022,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Minion",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 230,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "IceWizard",
+   "english_name": "Ice Wizard",
+   "cr_id": 26000023,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "IceWizard",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 688,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "radius",
+    "spawnAreaObjectData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RoyalGiant",
+   "english_name": "Royal Giant",
+   "cr_id": 26000024,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "RoyalGiant",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3072,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonWarriors",
+   "english_name": "Guards",
+   "cr_id": 26000025,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "SkeletonWarrior",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 81,
+    "damage_lv11": 121,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "shieldHitpoints",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Princess",
+   "english_name": "Princess",
+   "cr_id": 26000026,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Princess",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 261,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "customProjectileData",
+    "multipleProjectiles",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "DarkPrince",
+   "english_name": "Dark Prince",
+   "cr_id": 26000027,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "DarkPrince",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1200,
+    "damage_lv11": 248,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "chargeRange",
+    "damageSpecial",
+    "jumpHeight",
+    "jumpSpeed",
+    "shieldHitpoints"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ThreeMusketeers",
+   "english_name": "Three Musketeers",
+   "cr_id": 26000028,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 9,
+   "elixir_official": 9,
+   "elixir_canonical": 9,
+   "implemented": true,
+   "summon_character": "ThreeMusketeer",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 720,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "LavaHound",
+   "english_name": "Lava Hound",
+   "cr_id": 26000029,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": true,
+   "summon_character": "LavaHound",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3811,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "IceSpirits",
+   "english_name": "Ice Spirit",
+   "cr_id": 26000030,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 1,
+   "elixir_official": 1,
+   "elixir_canonical": 1,
+   "implemented": true,
+   "summon_character": "IceSpirits",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 230,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "kamikaze",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "FireSpirits",
+   "english_name": "Fire Spirit",
+   "cr_id": 26000031,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 1,
+   "elixir_official": 1,
+   "elixir_canonical": 1,
+   "implemented": true,
+   "summon_character": "FireSpirits",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 230,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "kamikaze",
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Miner",
+   "english_name": "Miner",
+   "cr_id": 26000032,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Miner",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1210,
+    "damage_lv11": 193,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "crownTowerDamagePercent"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ZapMachine",
+   "english_name": "Sparky",
+   "cr_id": 26000033,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "ZapMachine",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1452,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Bowler",
+   "english_name": "Bowler",
+   "cr_id": 26000034,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Bowler",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2080,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RageBarbarian",
+   "english_name": "Lumberjack",
+   "cr_id": 26000035,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "RageBarbarian",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1282,
+    "damage_lv11": 242,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathAreaEffectData",
+    "deathSpawnCharacterData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BattleRam",
+   "english_name": "Battle Ram",
+   "cr_id": 26000036,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "BattleRam",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 966,
+    "damage_lv11": 286,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "chargeRange",
+    "damageSpecial",
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "kamikaze",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "InfernoDragon",
+   "english_name": "Inferno Dragon",
+   "cr_id": 26000037,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "InfernoDragon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1294,
+    "damage_lv11": 36,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonNumber",
+    "variableDamage2",
+    "variableDamage3"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "IceGolemite",
+   "english_name": "Ice Golem",
+   "cr_id": 26000038,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "IceGolemite",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1197,
+    "damage_lv11": 84,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathAreaEffectData",
+    "deathDamage",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MegaMinion",
+   "english_name": "Mega Minion",
+   "cr_id": 26000039,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "MegaMinion",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 837,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BlowdartGoblin",
+   "english_name": "Dart Goblin",
+   "cr_id": 26000040,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "BlowdartGoblin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 260,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinGang",
+   "english_name": "Goblin Gang",
+   "cr_id": 26000041,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Goblin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 202,
+    "damage_lv11": 120,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonCharacterSecondCount",
+    "summonCharacterSecondData",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ElectroWizard",
+   "english_name": "Electro Wizard",
+   "cr_id": 26000042,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "ElectroWizard",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 713,
+    "damage_lv11": 110,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaEffectObjectData",
+    "buffOnDamageData",
+    "buffOnDamageTime",
+    "multipleTargets",
+    "radius",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "AngryBarbarians",
+   "english_name": "Elite Barbarians",
+   "cr_id": 26000043,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "AngryBarbarian",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1341,
+    "damage_lv11": 384,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [
+    "USER_CONFIRMED_REAL: 觉醒野蛮人精锐（Elite Barbarians Evolution（觉醒野蛮人精锐），Season 86）已经用户核实",
+    "EVOLUTION_CONFIRMED_2026: Rage Spears：近战接敌前投掷狂暴长矛——命中造成伤害，落点留下狂暴轨迹（提升经过友军的移速与攻速）；基础数值与基础卡完全一致｜Evolution Cycle=1｜基础数值不变；evolvedSpellsData 待 L2｜SOURCE: https://www.gamer.org/clash-royale-evo-elite-barbarians-guide/ + deckmelon.com"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Hunter",
+   "english_name": "Hunter",
+   "cr_id": 26000044,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Hunter",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 838,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "customFirstProjectileData",
+    "multipleProjectiles",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "AxeMan",
+   "english_name": "Executioner",
+   "cr_id": 26000045,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "AxeMan",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1280,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Assassin",
+   "english_name": "Bandit",
+   "cr_id": 26000046,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Assassin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 907,
+    "damage_lv11": 193,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "dashDamage",
+    "dashMaxRange",
+    "dashMinRange",
+    "jumpSpeed",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RoyalRecruits",
+   "english_name": "Royal Recruits",
+   "cr_id": 26000047,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": true,
+   "summon_character": "Recruit",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 532,
+    "damage_lv11": 133,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "shieldHitpoints",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "DarkWitch",
+   "english_name": "Night Witch",
+   "cr_id": 26000048,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "DarkWitch",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 907,
+    "damage_lv11": 314,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Bats",
+   "english_name": "Bats",
+   "cr_id": 26000049,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "Bat",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 81,
+    "damage_lv11": 81,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Ghost",
+   "english_name": "Royal Ghost",
+   "cr_id": 26000050,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Ghost",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1210,
+    "damage_lv11": 261,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "buffWhenNotAttackingData",
+    "buffWhenNotAttackingTime",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RamRider",
+   "english_name": "Ram Rider",
+   "cr_id": 26000051,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Ram",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1767,
+    "damage_lv11": 266,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "chargeRange",
+    "damageSpecial",
+    "jumpHeight",
+    "jumpSpeed",
+    "spawnCharacterData",
+    "spawnNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MiniSparkys",
+   "english_name": "Zappies",
+   "cr_id": 26000052,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "MiniZapMachine",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 530,
+    "damage_lv11": 116,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "buffOnDamageData",
+    "buffOnDamageTime",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Rascals",
+   "english_name": "Rascals",
+   "cr_id": 26000053,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "RascalBoy",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1940,
+    "damage_lv11": 133,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "summonCharacterSecondCount",
+    "summonCharacterSecondData",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MovingCannon",
+   "english_name": "Cannon Cart",
+   "cr_id": 26000054,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "MovingCannon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 892,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "onStartingActionData",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MegaKnight",
+   "english_name": "Mega Knight",
+   "cr_id": 26000055,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": true,
+   "summon_character": "MegaKnight",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3993,
+    "damage_lv11": 268,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "dashDamage",
+    "dashMaxRange",
+    "dashMinRange",
+    "jumpHeight",
+    "jumpSpeed",
+    "projectileData",
+    "spawnInterval",
+    "spawnNumber",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonBalloon",
+   "english_name": "Skeleton Barrel",
+   "cr_id": 26000056,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "SkeletonBalloon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 532,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "kamikaze",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "DartBarrell",
+   "english_name": "Flying Machine",
+   "cr_id": 26000057,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "DartBarrell",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 614,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Wallbreakers",
+   "english_name": "Wall Breakers",
+   "cr_id": 26000058,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "Wallbreaker",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 331,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaDamageRadius",
+    "kamikaze",
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RoyalHogs",
+   "english_name": "Royal Hogs",
+   "cr_id": 26000059,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "RoyalHog",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 837,
+    "damage_lv11": 74,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "jumpHeight",
+    "jumpSpeed",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinGiant",
+   "english_name": "Goblin Giant",
+   "cr_id": 26000060,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "GoblinGiant",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3336,
+    "damage_lv11": 176,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "spawnCharacterData",
+    "spawnNumber",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Fisherman",
+   "english_name": "Fisherman",
+   "cr_id": 26000061,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Fisherman",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 871,
+    "damage_lv11": 193,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileSpecialData",
+    "specialLoadTime",
+    "specialMinRange",
+    "specialRange",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "EliteArcher",
+   "english_name": "Magic Archer",
+   "cr_id": 26000062,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "EliteArcher",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 532,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ElectroDragon",
+   "english_name": "Electro Dragon",
+   "cr_id": 26000063,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "ElectroDragon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 950,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Firecracker",
+   "english_name": "Firecracker",
+   "cr_id": 26000064,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Firecracker",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 304,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MightyMiner",
+   "english_name": "Mighty Miner",
+   "cr_id": 26000065,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "MightyMiner",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2250,
+    "damage_lv11": 40,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "variableDamage2",
+    "variableDamage3"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperWitch",
+   "english_name": "Super Witch",
+   "cr_id": 26000066,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": false,
+   "summon_character": "SuperWitch",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1064,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "notVisible",
+    "projectileData",
+    "spawnCharacter2Data",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ElixirGolem",
+   "english_name": "Elixir Golem",
+   "cr_id": 26000067,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "ElixirGolem1",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1568,
+    "damage_lv11": 254,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BattleHealer",
+   "english_name": "Battle Healer",
+   "cr_id": 26000068,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "BattleHealer",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1717,
+    "damage_lv11": 148,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "areaEffectOnHitData",
+    "buffWhenNotAttackingTime",
+    "radius",
+    "spawnAreaObjectData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonKing",
+   "english_name": "Skeleton King",
+   "cr_id": 26000069,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "SkeletonKing",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2300,
+    "damage_lv11": 205,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "areaDamageRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperLavaHound",
+   "english_name": "Super Lava Hound",
+   "cr_id": 26000070,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 8,
+   "elixir_official": 8,
+   "elixir_canonical": 8,
+   "implemented": false,
+   "summon_character": "SuperLavaHound",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3388,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "deathSpawnProjectileData",
+    "notVisible",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperEliteArcher",
+   "english_name": "Super Magic Archer",
+   "cr_id": 26000071,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "SuperEliteArcher",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 701,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "notVisible",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ArcherQueen",
+   "english_name": "Archer Queen",
+   "cr_id": 26000072,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "ArcherQueen",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1000,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperHogRider",
+   "english_name": "Santa Hog Rider",
+   "cr_id": 26000073,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "SuperHogRider",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1694,
+    "damage_lv11": 320,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "jumpHeight",
+    "jumpSpeed",
+    "notVisible",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoldenKnight",
+   "english_name": "Golden Knight",
+   "cr_id": 26000074,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "GoldenKnight",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1800,
+    "damage_lv11": 160,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "dashCount",
+    "dashDamage",
+    "dashSecondaryRange",
+    "jumpSpeed"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperIceGolemite",
+   "english_name": "Super Ice Golem",
+   "cr_id": 26000075,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "SuperIceGolemite",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3630,
+    "damage_lv11": 121,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathAreaEffectData",
+    "deathDamage",
+    "notVisible",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Monk",
+   "english_name": "Monk",
+   "cr_id": 26000077,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Monk",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2000,
+    "damage_lv11": 140,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "isMeleePushbackAll3",
+    "variableDamage2",
+    "variableDamage3"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperArcher",
+   "english_name": "Super Archers",
+   "cr_id": 26000078,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": "SuperArcher",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 701,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "notVisible",
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RoyalRecruits_Chess",
+   "english_name": "Royal Recruits",
+   "cr_id": 26000079,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": false,
+   "summon_character": "Recruit_Chess",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 532,
+    "damage_lv11": 133,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "notVisible",
+    "shieldHitpoints",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonDragons",
+   "english_name": "Skeleton Dragons",
+   "cr_id": 26000080,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "SkeletonDragon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 563,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "projectileData",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperHogRiderTerry",
+   "english_name": "Terry",
+   "cr_id": 26000081,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "Champion",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "SuperHogRider_Terry",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2300,
+    "damage_lv11": 350,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "dashDamage",
+    "jumpHeight",
+    "jumpSpeed",
+    "notVisible",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperMiniPekka",
+   "english_name": "Super Mini P.E.K.K.A",
+   "cr_id": 26000082,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "SuperMiniPekka",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1573,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "notVisible",
+    "projectileData",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "WitchMother",
+   "english_name": "Mother Witch",
+   "cr_id": 26000083,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "WitchMother",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 532,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "buffOnDamageData",
+    "buffOnDamageTime",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ElectroSpirit",
+   "english_name": "Electro Spirit",
+   "cr_id": 26000084,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 1,
+   "elixir_official": 1,
+   "elixir_canonical": 1,
+   "implemented": true,
+   "summon_character": "ElectroSpirit",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 230,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "kamikaze",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "ElectroGiant",
+   "english_name": "Electro Giant",
+   "cr_id": 26000085,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": true,
+   "summon_character": "ElectroGiant",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 3856,
+    "damage_lv11": 163,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "reflectAttackCrownTowerDamage",
+    "reflectedAttackBuffData",
+    "reflectedAttackBuffDuration",
+    "reflectedAttackDamage",
+    "reflectedAttackRadius",
+    "reflectedAttackTargetedEffectSources",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "PrinceBuff",
+   "english_name": "Raging Prince",
+   "cr_id": 26000086,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "Epic",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "PrinceBuff",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2304,
+    "damage_lv11": 392,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "chargeRange",
+    "damageSpecial",
+    "jumpHeight",
+    "jumpSpeed",
+    "notVisible"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "USER_CONFIRMED_LIMITED: 人工确认为限时卡，不影响现行游戏，排除"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Phoenix",
+   "english_name": "Phoenix",
+   "cr_id": 26000087,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Phoenix",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1052,
+    "damage_lv11": 217,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "deathSpawnProjectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "LittlePrince",
+   "english_name": "Little Prince",
+   "cr_id": 26000093,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": "LittlePrince",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "abilityData",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter LittlePrince 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "TriWizards",
+   "english_name": "Wizard Trio",
+   "cr_id": 26000094,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": 7,
+   "elixir_official": null,
+   "elixir_canonical": 7,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "notVisible",
+    "radius",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "USER_CONFIRMED_LIMITED: 人工确认为限时卡，不影响现行游戏，排除"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinDemolisher",
+   "english_name": "Goblin Demolisher",
+   "cr_id": 26000095,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "GoblinDemolisher",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "deathSpawnProjectileData",
+    "onStartingActionData",
+    "projectileData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter GoblinDemolisher 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinMachine",
+   "english_name": "Goblin Machine",
+   "cr_id": 26000096,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "GoblinMachine",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "onStartingActionData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter GoblinMachine 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuspiciousBush",
+   "english_name": "Suspicious Bush",
+   "cr_id": 26000097,
+   "category": "character",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": false,
+   "summon_character": "SuspiciousBush",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "buffWhenNotAttackingData",
+    "deathAreaEffectData",
+    "kamikaze",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter SuspiciousBush 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SuperKnight",
+   "english_name": "Super Knight",
+   "cr_id": 26000098,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": 4,
+   "elixir_official": null,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "SuperKnight",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "buffWhenNotAttackingData",
+    "buffWhenNotAttackingTime",
+    "notVisible",
+    "radius",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Goblinstein",
+   "english_name": "Goblinstein",
+   "cr_id": 26000099,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "Goblinstein",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "summonCharacterSecondCount",
+    "summonCharacterSecondData",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter Goblinstein 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "SkeletonWarriors_SpookyChess",
+   "english_name": "Royal Recruits",
+   "cr_id": 26000100,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 7,
+   "elixir_official": 7,
+   "elixir_canonical": 7,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "notVisible",
+    "summonCharacter",
+    "summonDeployDelay",
+    "summonNumber",
+    "summonRadius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GiantBuffer",
+   "english_name": "Rune Giant",
+   "cr_id": 26000101,
+   "category": "character",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "GiantBuffer",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "abilityData",
+    "onStartingActionData"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter GiantBuffer 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Berserker",
+   "english_name": "Berserker",
+   "cr_id": 26000102,
+   "category": "character",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": false,
+   "summon_character": "Berserker",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "attackSequenceList",
+    "onStartingAction",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter Berserker 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BossBandit",
+   "english_name": "Boss Bandit",
+   "cr_id": 26000103,
+   "category": "character",
+   "rarity_snapshot": "Champion",
+   "rarity_official": "champion",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": false,
+   "summon_character": "BossBandit",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "abilityData",
+    "dashDamage",
+    "dashMaxRange",
+    "dashMinRange",
+    "jumpSpeed",
+    "onStartingActionData",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter BossBandit 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MergeMaiden_Normal",
+   "english_name": "Spirit Empress (Ground)",
+   "cr_id": 26000104,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": 3,
+   "elixir_official": null,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "notVisible",
+    "summonCharacter",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MergeMaiden_Mounted",
+   "english_name": "Spirit Empress",
+   "cr_id": 26000105,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "notVisible",
+    "summonCharacter",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "variant",
+   "flags": [
+    "TEMPORARY_VARIANT: 活动变体/形态条目，排除出可部署池（基础形态保留）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Cannon",
+   "english_name": "Cannon",
+   "cr_id": 27000000,
+   "category": "building",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Cannon",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 824,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinHut",
+   "english_name": "Goblin Hut",
+   "cr_id": 27000001,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "GoblinHut_Rework",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime",
+    "spawnInterval",
+    "spawnNumber",
+    "spawnPauseTime"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: summonCharacter GoblinHut_Rework 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Mortar",
+   "english_name": "Mortar",
+   "cr_id": 27000002,
+   "category": "building",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Mortar",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1369,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "InfernoTower",
+   "english_name": "Inferno Tower",
+   "cr_id": 27000003,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "InfernoTower",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1749,
+    "damage_lv11": 42,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "variableDamage2",
+    "variableDamage3"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BombTower",
+   "english_name": "Bomb Tower",
+   "cr_id": 27000004,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "BombTower",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1356,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BarbarianHut",
+   "english_name": "Barbarian Hut",
+   "cr_id": 27000005,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "BarbarianHut",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1166,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime",
+    "spawnCharacterData",
+    "spawnInterval",
+    "spawnNumber",
+    "spawnPauseTime"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Tesla",
+   "english_name": "Tesla",
+   "cr_id": 27000006,
+   "category": "building",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "Tesla",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1152,
+    "damage_lv11": 230,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Elixir Collector",
+   "english_name": "Elixir Collector",
+   "cr_id": 27000007,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "ElixirCollector",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1070,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "manaCollectAmount",
+    "manaGenerateTimeMs",
+    "manaOnDeath"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Xbow",
+   "english_name": "X-Bow",
+   "cr_id": 27000008,
+   "category": "building",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": "Xbow",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1600,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Tombstone",
+   "english_name": "Tombstone",
+   "cr_id": 27000009,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": "Tombstone",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 530,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime",
+    "spawnCharacterData",
+    "spawnInterval",
+    "spawnNumber",
+    "spawnPauseTime"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "FirespiritHut",
+   "english_name": "Furnace",
+   "cr_id": 27000010,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "FirespiritHut",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 848,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime",
+    "spawnCharacterData",
+    "spawnNumber",
+    "spawnPauseTime"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BarbarianLauncher",
+   "english_name": "Barbarian Launcher",
+   "cr_id": 27000011,
+   "category": "building",
+   "rarity_snapshot": "Common",
+   "rarity_official": null,
+   "elixir_snapshot": 5,
+   "elixir_official": null,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "BarbarianLauncher",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1472,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "lifeTime",
+    "notVisible",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "USER_CONFIRMED_LIMITED: 人工确认为限时卡，不影响现行游戏，排除"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinCage",
+   "english_name": "Goblin Cage",
+   "cr_id": 27000012,
+   "category": "building",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "GoblinCage",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 742,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "lifeTime"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinDrill",
+   "english_name": "Goblin Drill",
+   "cr_id": 27000013,
+   "category": "building",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": "GoblinDrillDig",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1600,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "spawnPathfindMorphData",
+    "spellAsDeploy"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinPartyHut",
+   "english_name": "Party Hut",
+   "cr_id": 27000014,
+   "category": "building",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": "GoblinPartyHut",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 851,
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathSpawnCharacter2Data",
+    "deathSpawnCharacterData",
+    "deathSpawnCount",
+    "deathSpawnCount2",
+    "deathSpawnProjectileData",
+    "lifeTime",
+    "notVisible",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinRocketSilo",
+   "english_name": "Rocket Silo",
+   "cr_id": 27000017,
+   "category": "building",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": 7,
+   "elixir_official": null,
+   "elixir_canonical": 7,
+   "implemented": false,
+   "summon_character": "GoblinRocketSilo",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "notVisible"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "USER_CONFIRMED_LIMITED: 人工确认为限时卡，不影响现行游戏，排除"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Fireball",
+   "english_name": "Fireball",
+   "cr_id": 28000000,
+   "category": "spell",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Arrows",
+   "english_name": "Arrows",
+   "cr_id": 28000001,
+   "category": "spell",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "multipleProjectiles",
+    "projectileData",
+    "projectileWaveInterval",
+    "projectileWaves",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Rage",
+   "english_name": "Rage",
+   "cr_id": 28000002,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": "RageBottle",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "stats_source": "building"
+   },
+   "special_fields": [
+    "deathAreaEffectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Rocket",
+   "english_name": "Rocket",
+   "cr_id": 28000003,
+   "category": "spell",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinBarrel",
+   "english_name": "Goblin Barrel",
+   "cr_id": 28000004,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Freeze",
+   "english_name": "Freeze",
+   "cr_id": 28000005,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Mirror",
+   "english_name": "Mirror",
+   "cr_id": 28000006,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 1,
+   "elixir_official": null,
+   "elixir_canonical": 1,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: spell Mirror 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Lightning",
+   "english_name": "Lightning",
+   "cr_id": 28000007,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Zap",
+   "english_name": "Zap",
+   "cr_id": 28000008,
+   "category": "spell",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Poison",
+   "english_name": "Poison",
+   "cr_id": 28000009,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 4,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Graveyard",
+   "english_name": "Graveyard",
+   "cr_id": 28000010,
+   "category": "spell",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Log",
+   "english_name": "The Log",
+   "cr_id": 28000011,
+   "category": "spell",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Tornado",
+   "english_name": "Tornado",
+   "cr_id": 28000012,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Clone",
+   "english_name": "Clone",
+   "cr_id": 28000013,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Earthquake",
+   "english_name": "Earthquake",
+   "cr_id": 28000014,
+   "category": "spell",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "BarbLog",
+   "english_name": "Barbarian Barrel",
+   "cr_id": 28000015,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Heal",
+   "english_name": "Heal Spirit",
+   "cr_id": 28000016,
+   "category": "spell",
+   "rarity_snapshot": "Rare",
+   "rarity_official": "rare",
+   "elixir_snapshot": 1,
+   "elixir_official": 1,
+   "elixir_canonical": 1,
+   "implemented": true,
+   "summon_character": "HealSpirit",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 231,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "kamikaze",
+    "projectileData",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Snowball",
+   "english_name": "Giant Snowball",
+   "cr_id": 28000017,
+   "category": "spell",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "projectileData"
+   ],
+   "has_evolution": true,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "RoyalDelivery",
+   "english_name": "Royal Delivery",
+   "cr_id": 28000018,
+   "category": "spell",
+   "rarity_snapshot": "Common",
+   "rarity_official": "common",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius",
+    "spellAsDeploy"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: spell RoyalDelivery 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GlobalClone",
+   "english_name": "Clone",
+   "cr_id": 28000019,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "notVisible",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinPartyRocket",
+   "english_name": "Party Rocket",
+   "cr_id": 28000020,
+   "category": "spell",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "Legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "notVisible",
+    "projectileData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "TEMPORARY_EVENT: 活动/超级临时卡，默认排除（如需启用请人工确认）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "WarmSpell",
+   "english_name": "Warmth",
+   "cr_id": 28000021,
+   "category": "spell",
+   "rarity_snapshot": "Common",
+   "rarity_official": null,
+   "elixir_snapshot": 1,
+   "elixir_official": null,
+   "elixir_canonical": 1,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "notVisible",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "temporary_event",
+   "flags": [
+    "USER_CONFIRMED_LIMITED: 人工确认为限时卡，不影响现行游戏，排除"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GlobalLightning",
+   "english_name": "Lightning",
+   "cr_id": 28000022,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 1,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "notVisible"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "ELIXIR_MISMATCH: 官方=6 vs 快照=1（数值按官方）",
+    "STATS_UNRESOLVED: spell GlobalLightning 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "DarkMagic",
+   "english_name": "Void",
+   "cr_id": 28000023,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: spell DarkMagic 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "GoblinCurse",
+   "english_name": "Goblin Curse",
+   "cr_id": 28000024,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 2,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "radius"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: spell GoblinCurse 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "MergeMaiden",
+   "english_name": "Spirit Empress",
+   "cr_id": 28000025,
+   "category": "spell",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 6,
+   "elixir_official": 6,
+   "elixir_canonical": 6,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "needs_review",
+   "flags": [
+    "STATS_UNRESOLVED: spell MergeMaiden 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+   ],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "King_PrincessTowers",
+   "english_name": "Tower Princess",
+   "cr_id": 159000000,
+   "category": "tower",
+   "rarity_snapshot": "Common",
+   "rarity_official": null,
+   "elixir_snapshot": null,
+   "elixir_official": null,
+   "elixir_canonical": null,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "statCharacterData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "tower",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "King_CannonTowers",
+   "english_name": "Cannoneer",
+   "cr_id": 159000001,
+   "category": "tower",
+   "rarity_snapshot": "Epic",
+   "rarity_official": null,
+   "elixir_snapshot": null,
+   "elixir_official": null,
+   "elixir_canonical": null,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "statCharacterData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "tower",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "King_KnifeTowers",
+   "english_name": "Dagger Duchess",
+   "cr_id": 159000002,
+   "category": "tower",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": null,
+   "elixir_official": null,
+   "elixir_canonical": null,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "statCharacterData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "tower",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "King_ChefTowers",
+   "english_name": "Royal Chef",
+   "cr_id": 159000004,
+   "category": "tower",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": null,
+   "elixir_snapshot": null,
+   "elixir_official": null,
+   "elixir_canonical": null,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "statCharacterData"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "tower",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": null,
+   "english_name": "Hero Berserker",
+   "cr_id": null,
+   "category": "character",
+   "rarity_snapshot": null,
+   "rarity_official": "Common",
+   "elixir_snapshot": null,
+   "elixir_official": 2,
+   "elixir_canonical": 2,
+   "implemented": false,
+   "summon_character": "Berserker",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "hero_ability: Berserk Mode：激活后唤出灵兽化身，提高攻速，且保护窗口内血量不会降至 1 以下"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "confirmed_live",
+   "flags": [
+    "USER_CONFIRMED_REAL: 用户已在 RoyaleAPI 核实（2026 Hero 类别）",
+    "BASIC_INFO_COMPLETE: 费用/稀有度/技能描述已从公开源录入",
+    "UNDERLYING_CARD: 属性继承基础卡 Berserker（快照已有）",
+    "MECHANICS_PENDING_L2: 技能参数（窗口时长/倍率）待 L2 新快照 abilityData",
+    "SOURCE: https://royalezone.com/cards/hero-berserker"
+   ],
+   "smoke_verified": false
+  },
+  {
+   "internal_name": null,
+   "english_name": "Hero Valkyrie",
+   "cr_id": null,
+   "category": "character",
+   "rarity_snapshot": null,
+   "rarity_official": "Rare",
+   "elixir_snapshot": null,
+   "elixir_official": 4,
+   "elixir_canonical": 4,
+   "implemented": false,
+   "summon_character": "Valkyrie",
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "hero_ability: 旋转机动：激活后旋转向前、在近身敌军之间移动并造成范围伤害；技能期间仍可被击杀"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "confirmed_live",
+   "flags": [
+    "USER_CONFIRMED_REAL: 用户已在 RoyaleAPI 核实（2026 Hero 类别）",
+    "BASIC_INFO_COMPLETE: 费用/稀有度/技能描述已从公开源录入",
+    "UNDERLYING_CARD: 属性继承基础卡 Valkyrie（快照已有）",
+    "MECHANICS_PENDING_L2: 技能参数（窗口时长/倍率）待 L2 新快照 abilityData",
+    "SOURCE: https://royalezone.com/cards/hero-valkyrie"
+   ],
+   "smoke_verified": false
+  },
+  {
+   "internal_name": null,
+   "english_name": "Ronin",
+   "cr_id": 26000106,
+   "category": "unknown",
+   "rarity_snapshot": null,
+   "rarity_official": "legendary",
+   "elixir_snapshot": null,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "missing_from_snapshot",
+   "flags": [
+    "MISSING_FROM_SNAPSHOT: Null服快照无此卡（官方新卡），机制字段需 L2 提取；数值可先按官方录入"
+   ],
+   "smoke_verified": false
+  },
+  {
+   "internal_name": null,
+   "english_name": "Vines",
+   "cr_id": 28000026,
+   "category": "unknown",
+   "rarity_snapshot": null,
+   "rarity_official": "epic",
+   "elixir_snapshot": null,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": false,
+   "summon_character": null,
+   "stats_resolved": false,
+   "basic_stats_lv11": {},
+   "special_fields": [],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "missing_from_snapshot",
+   "flags": [
+    "MISSING_FROM_SNAPSHOT: Null服快照无此卡（官方新卡），机制字段需 L2 提取；数值可先按官方录入"
+   ],
+   "smoke_verified": false
+  }
+ ]
+}

@@ -1,0 +1,151 @@
+Clasher.us
+Home
+CoC
+CR
+BS
+BB
+Sign in
+Register
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+X-Bow
+
+X-Bow card stats, levels, and decks for Clash Royale.
+
+Home
+Clash Royale
+Cards
+X-Bow
+ Back to Clash Royale
+ Cards
+Popular decks
+Top Cards
+Tools
+On this page
+Description
+Stats
+Popular Decks
+Details
+All units
+
+The X-Bow card is unlocked from the Builder's Workshop (Arena 6). It is a single-target, long-ranged offensive and defensive building with both moderate hitpoints and damage output. An X-Bow card costs 6 Elixir to deploy. It appears to be a crossbow with wooden, stone, and metallic features along with a shining steel bolt for ammunition.
+
+Best Decks of X-Bow
+Popular Decks
+Evo
+  
+Evo
+ 
+Evo
+    
+Win rate: 80%
+Sample games: 5
+Evo cards: 3
+based on 5 sampled battles
+1 crowns per game
+Avg elixir: 2.8
+Deck details
+Stats
+elixir cost	hit speed	first hit speed	deploy time	lifetime	range	target	type	rarity
+6	0.3 sec	0.3 sec	3.5 sec	30 sec	11.5	Ground	Building	Epic
+Levels
+Level	hitpoints	hitpoints lost per second	damage	damage per second
+6	993	33.1	27	90
+7	1093	36.4	29	96
+8	1202	40.1	32	106
+9	1322	44.1	36	120
+10	1455	48.5	39	130
+11	1600	53.3	43	143
+12	1760	58.7	47	156
+13	1936	64.5	52	173
+14	2130	71	57	190
+15	2343	78.1	63	210
+16	2577	85.9	69	230
+Details
+HISTORY
+The X-Bow was released with Clash Royale's soft launch on 4/1/16.
+On 2/2/16, the February 2016 Update decreased the X-Bow's hitpoints by 15% and now only targets ground (from air &amp; ground).
+On 9/2/16, the Chest Rewards &amp; Card Balance Update increased the X-Bow's deployment time to 5 sec (from 3 sec).
+On 23/3/16, a Balance Update decreased the X-Bow's range to 12 (from 13).
+On 3/5/16, the May 2016 Update fixed the "range bug" and decreased the X-Bow's range to 11.5 (from 12) but its effective range is unchanged.
+On 21/6/16, a Balance Update decreased the X-Bow's deploy time to 4 sec (from 5 sec) and increased its hitpoints by 18%.
+On 11/8/17, a Balance Update decreased the X-Bow's deploy time to 3.5 sec (from 4 sec).
+The 20/6/18 Update moved the Arena to unlock the X-Bow from Barbarian Bowl (Arena 3) to Builder's Workshop (Arena 6).
+On 4/3/19, a Balance Update increased the X-Bow's health by 4%.
+TRIVIA
+The X-Bow is the only Epic building in the game and has the highest rarity out of all the buildings in the game.
+At tournament levels, a Rocket almost completely destroys an X-Bow. If the Rocket is two levels higher than the X-Bow, it will one-shot the X-Bow.
+The X-Bow has the longest range of any card in the game.
+The X-Bow is the fastest retargeting card in the game.
+The X-Bow and the Mortar have the longest deployment time of all cards in the game, clocking in at 3.5 seconds.
+The X-Bow, Mortar, and Princess are the only cards that can target Arena Towers without getting targeted by it.
+The X-Bow has the fastest hit speed of all cards in the game, at 0.25 seconds. Because of this, the X-Bow deals the least amount of damage per hit of any card in the entire game, taking multiple shots to kill even Skeletons.
+In Clash Royale, the X-Bow can only target ground units, while in Clash of Clans it can be set to ground mode or ground &amp; air mode.
+However, the X-Bow was originally able to target air in Clash Royale.
+It also shoots Elixir bolts in Clash of Clans, while in Clash Royale it shoots crossbow bolts.
+The X-Bow in Clash of Clans also has a faster attack speed and more health.
+It can shoot 160 bolts in its lifetime, dealing a total of 6080 hitpoints in damage at level 13, which is enough to fully destroy a level 13 King's Tower.
+The X-Bow's description is a reference to an old meme known as "It would be a shame if something happened to it."
+STRATEGY
+An X-Bow can single-handedly destroy a Crown Tower if it's ignored by the opposing player. Therefore, it should never be ignored.
+An X-Bow is a powerful defensive building due to its extremely long range and ability to take out large numbers of weak troops such as Goblins, Spear Goblins, and Skeletons. When defending, you can place the X-Bow behind or between your Crown Towers as it will be well protected but still able to engage attacking enemy troops from afar.
+It can also be used offensively due to its range, being able to out-range the Crown Towers (11.5 vs. 7.5 tile range). Note that the Mortar can also outrange Crown Towers, but it deals significantly lower damage per second, has a slower fire rate, has a slightly shorter range (11 tiles), and does area damage instead.
+The Rocket is the most reliable and effective counter to the X-Bow due to the fact that the Rocket almost obliterates it immediately, letting the X-Bow only take a few shots. The Rocket can also destroy or cripple common X-Bow defences like the Archers, Knight, Minions, Bowler and Goblin Gang.
+Building targeting troops like the Giant and Hog Rider are not distracted by X-Bow defences and can pummel the X-Bow to its destruction while air troops like Minions, Mega Minion and Baby Dragon can attack the X-Bow without retaliation from it as the X-Bow cannot target air. Balloon is a powerful mix and paired with its high damage is probably the most reliable troop to counter X-Bow.
+An X-Bow takes 3.5 seconds to deploy, giving you ample time to place cards to distract the X-Bow and prevent it from locking onto your Crown Towers, as well as deal with supporting troops. With sufficient cards, this can then be turned into a punishing counterpush.
+An X-Bow backed up with some support troops or buildings, such as Archers or a Tesla can destroy a Crown Tower. Place the X-Bow behind or near such cards so that it will be protected while it destroys the opposing Crown Tower. It is advised to tank for the X-Bow so it does not take the brunt of an attack so it can carry on chipping away at the tower.
+If you just miss your timing for a distraction and the X-Bow is locked on to your Crown Tower then any card that stuns the X-Bow (such as Zap) will force the X-Bow to re-target to the nearest entity, which is hopefully a tank so your damage dealers can safely destroy the X-Bow.
+When dealing with an offensively placed X-Bow, it's quite effective to deploy a Musketeer behind the river/chasm while the X-Bow is deploying, taking out a large portion of its hitpoints before it's ready to fire.
+However, be aware of opposing defensive buildings/troops next to the X-Bow, as they will take down the Musketeer quickly if she is in a bad position.
+To protect the Musketeer, it is advised to place a tank such as an Ice Golem in front of the Musketeer to absorb any incoming fire from enemy troops, buildings, or the X-Bow itself.
+Casting a Rage on an X-Bow will increase its hit speed, rapidly inflicting damage to the targeted unit or Crown Tower, and will also boost the player's troops supporting the X-Bow. However, the Rage spell will also reduce the X-Bow's lifetime. Note that this costs 8 Elixir, which is very risky to play. It can be easily countered by a tank for a positive Elixir trade.
+It's wise to deploy it alongside a card with a good amount of hitpoints (the Knight) or a swarm card (Skeleton Army), as they can slow down enemy troops sent to destroy the X-Bow.
+The Bowler is a great counter to X-Bow since it will hit the X-Bow and any defending units (while being able to take lots of damage from the X-Bow itself), resulting in a positive Elixir trade.
+A strategy for the X-Bow is to deploy an Inferno Tower next to it, which can defend the X-Bow from tanks like the Giant that would destroy it or otherwise distract it for a long time.
+If the opponent puts down swarm units (ex. Goblin Gang or Minion Horde), then get ready to deploy splash units, such as the Wizard, or spells, such as Arrows or The Log.
+The combo is expensive and risky; it costs 11 Elixir to place, and can be easily nullified using certain cards such as Lightning.
+When facing an X-Bow, always try to go for the first crown and then the 2-1 victory. If you take down a tower, it will be very difficult for your opponent to take down the tower facing your enemy's destroyed tower (provided your tower is still healthy), because with the extra terrain you gain from taking down an enemy tower, you will be able to place troops directly on top of the X-Bow attacking your tower, allowing for defending troops to immediately start doing damage to the X-Bow without having to walk, deal with tanks, and have a bad position in general. This works particularly well with splash damage troops, such as the Valkyrie, as if it is placed on top of the X-Bow, no matter what your opponent places down, your Valkyrie will start damaging the X-Bow and at the same time tanking. With appropriate anti-air/splash support, the X-Bow will be finished.
+All units
+Troop
+Spell
+Building
+COMMON	Minions · Archers · Knight · Spear Goblins · Goblins · Minion Horde · Bats · Barbarians · Ice Spirit · Skeletons · Royal Recruits · Royal Giant · Skeleton Barrel · Elite Barbarians · Goblin Gang · Bomber · Fire Spirits · Rascals · Fire Spirit · Firecracker · Skeleton Dragons · Electro Spirit · Berserker
+RARE	Musketeer · Mini P.E.K.K.A · Mega Minion · Battle Ram · Valkyrie · Dart Goblin · Hog Rider · Ice Golem · Three Musketeers · Flying Machine · Giant · Wizard · Royal Hogs · Zappies · Elixir Golem · Battle Healer · Goblin Demolisher · Suspicious Bush
+EPIC	Baby Dragon · Prince · Wall Breakers · Golem · Witch · Giant Skeleton · Bowler · Dark Prince · Guards · Electro Dragon · Executioner · Skeleton Army · Hunter · P.E.K.K.A · Balloon · Goblin Giant · Cannon Cart · Electro Giant · Rune Giant
+LEGENDARY	Miner · Princess · Night Witch · Inferno Dragon · Ram Rider · Bandit · Mega Knight · Royal Ghost · Sparky · Lava Hound · Lumberjack · Magic Archer · Ice Wizard · Fisherman · Electro Wizard · Mother Witch · Phoenix · Goblin Machine · Ronin
+CHAMPION	Mighty Miner · Skeleton King · Archer Queen · Golden Knight · Monk · Little Prince · Goblinstein · Boss Bandit
+ Cards
+Explore more
+Back to Clash Royale
+CONTENT
+BUILD & PLAY
+Popular decks
+Top Cards
+Deck Builder
+Challenges
+RANKINGS
+TOOLS
+CLASHER.US
+About Us
+Contact Us
+Terms of Service
+Privacy Policy
+Cookie settings
+OUR OTHER SITES
+CoCMap.com
+Clash of Clans companion — bases, guides & rankings
+Minecrafts.us
+Minecraft companion
+minzap.com
+Whiteout Survival & Kingshot guides
+GET THE APP
+AVAILABLE ON
+Maps for Clash of Clans
+AVAILABLE ON
+Clash Royale Decks, Brawl Stars Stats
+
+© 2019–2026 Copyright: CLASHER.US Terms of Service · Privacy Policy
+
+This content is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy
+
+Powered by Namecheap — Vultr
