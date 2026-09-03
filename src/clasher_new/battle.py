@@ -801,7 +801,7 @@ class Projectile(Entity):
                 self.is_alive = False
                 return
             # now deal area damage
-            for each in self.battle_state.entities.values():
+            for each in list(self.battle_state.entities.values()):
                 if type(each).__name__ in {'Projectile', 'SpawnProjectile', 'RollingProjectile', 'AreaEffect',
                                               'TimedExplosive'}: continue  # exclude spells or stealth entities
                 if each in self.damage_dealt or each.data.is_air_unit: continue
@@ -837,7 +837,7 @@ class Projectile(Entity):
     def _deal_splash_damage(self) -> None:
         """Deal damage to entities in splash radius using hitbox overlap detection"""
         # —— M3 族6：法术类溅射命中 Monk 禅定 → 整个法术反弹至最近敌方公主塔（官方规则）——
-        for entity in self.battle_state.entities.values():
+        for entity in list(self.battle_state.entities.values()):
             if (entity.is_alive and getattr(entity, 'deflect_active', False)
                     and entity.player != self.player
                     and entity.position.distance_to(self.target_position) <= self.proj.radius + entity.data.collision_radius):
@@ -1131,7 +1131,7 @@ class TimedExplosive(Entity):
         if self.deploy_delay_remaining > 0:
             self.deploy_delay_remaining = max(0.0, self.deploy_delay_remaining - dt)
             return
-        for entity in self.battle_state.entities.values():
+        for entity in list(self.battle_state.entities.values()):
             if not entity.is_alive or entity.player == self.player: continue
             if entity.position.distance_to(self.position) - entity.data.collision_radius < self.dsd.range:
                 if entity.name in ('King_PrincessTowers', 'KingTower'):
@@ -1491,7 +1491,7 @@ class BattleState:
     def on_death(self, entity):
         if entity.name == 'King_PrincessTowers':
             player = entity.player
-            for each in self.entities.values():
+            for each in list(self.entities.values()):
                 if each.name == 'KingTower' and each.player == player:
                     each.tower_active = True
                     break
@@ -1504,7 +1504,7 @@ class BattleState:
     # —— M3 族6：Monk 法术反弹兜底（来源已死/法术来源 → 反弹至最近敌方公主塔）——
     def reflect_to_tower(self, monk_entity, damage):
         best, best_d = None, float('inf')
-        for e in self.entities.values():
+        for e in list(self.entities.values()):
             if not e.is_alive or e.player == monk_entity.player: continue
             if 'PrincessTower' not in e.name: continue
             d = e.position.distance_to(monk_entity.position)
@@ -1554,7 +1554,7 @@ class BattleState:
         return False
 
     def deal_area_damage(self, from_player, position, range, amount, attack_air, attack_ground, crown_tower_damage_percent=1.0):
-        for entity in self.entities.values():
+        for entity in list(self.entities.values()):
             if not entity.is_alive or entity.player == from_player: continue
             if entity.invincible: continue
             amount_dealt = amount if "King" not in entity.name else amount*crown_tower_damage_percent

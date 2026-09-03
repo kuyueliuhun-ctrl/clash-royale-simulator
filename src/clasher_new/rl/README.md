@@ -103,6 +103,8 @@ python rl/dashboard.py --state runs/aggressive/league_state.json --replays runs/
 # 7d) 全配对分流派联赛（6 个可训练 PPO，卡组池两两全配对；默认一次训练 148,800 局）
 #    注意：flow 模式按模型奖惩（MODEL_REWARD_OVERRIDES 覆盖费差：main/all/random=0.5、
 #    推进=0.7、防反=0.3、自闭=0.05），--config 只决定共享超参与基线权重。
+#    引擎稳定性修复（battle.py/card_mechanics.py）：所有迭代 self.entities 的循环改为
+#    list() 快照，消除"击杀 on_death 生成新实体 → 迭代中字典被改"的 RuntimeError 崩溃。
 python rl/run_league.py --mode flow --config economy --device cuda
 python rl/run_league.py --mode flow --n-random-decks 30 --out-dir runs   # 随机卡组套数（默认 30）
 #   产物：runs/<name>/flow_<id>.pt（6 个模型各一个 checkpoint）；--max-ep-steps 控制单局决策步

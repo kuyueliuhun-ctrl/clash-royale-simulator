@@ -109,7 +109,7 @@ class GiantSkeleton(BasicCharacter):
 class IceWizard(BasicCharacter):
     def on_spawn(self):
         spawn_data = self.entity.data.spawn_data
-        for entity in self.entity.battle_state.entities.values():
+        for entity in list(self.entity.battle_state.entities.values()):
             if not entity.is_alive or entity.player == self.entity.player: continue
             if not entity.position.distance_to(self.entity.position) < spawn_data['radius']/1000 + entity.data.collision_radius:
                 continue
@@ -164,7 +164,7 @@ class Rage(BasicCharacter):
         else:
             self.lifetime -= dt
         if self.attack_cooldown <= 0:
-            for entity in self.entity.battle_state.entities.values():
+            for entity in list(self.entity.battle_state.entities.values()):
                 if not entity.is_alive or entity.player != self.entity.player: continue
                 if entity.position.distance_to(self.entity.position) > self.radius + entity.data.collision_radius: continue
                 if isinstance(entity, Troop) or isinstance(entity, Building):
