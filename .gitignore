@@ -28,6 +28,9 @@ src/clasher_new/cr_logs/
 *.log
 *.npy
 *.bin
+# 联赛状态（真实训练状态在 runs/<name>/ 下；根目录/工作目录下的是 --demo 生成的合成数据，勿提交）
+league_state.json
+league_state_*.json
 
 # ============ 大二进制 / APK 逆向产物 ============
 *.apk
