@@ -14,6 +14,8 @@
 - test_prophet_empty_board_not_defend      → P1-4
 - test_winrate_streams_independent         → 联赛数据契约：不同 pair 的 PFSP 胜率流独立演进
 - test_elo_eval_granularity                → 评估粒度：噪声地板(SE=347.5/√N) / 轮内聚合估计 / 误差棒链路
+- test_ablation_recorded                   → belief/plan 消融：4 变体对比 + z 判定 + JSON/CSV 落盘
+- test_flow_sweep_smoke                    → flow 数据效率 A/B：缩小池 sweep 通路 + summary 落盘
 
 运行：python rl/selftest.py   （需在 src/clasher_new 下，或由 scripts/rl/selftest.py 包装）
 """
@@ -1271,6 +1273,82 @@ def test_flow_league_smoke():
     print("[PASS] flow 联赛：mini 池 15 对（50局）双侧轨迹 + 每对即训 + 6 模型落盘")
 
 
+def test_ablation_recorded():
+    """belief/plan 输入消融（P-flow 前置验证）：4 变体对比 + delta/z 判定 + JSON/CSV 落盘。
+
+    背景：prophet/belief_planner 是启发式，注入价值需消融证明；token 置零是保守
+    消融（RNN hidden 仍含历史信息），但至少要有可追溯的产出记录而非仅 stdout。
+    """
+    import tempfile, json as _json
+    from rl.env_wrapper import RLEnv
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy, save_checkpoint
+    from rl.plan_space import PLAN_DIM
+    from rl.evaluate import run_ablation
+
+    d = tempfile.mkdtemp()
+    env = RLEnv(opponent=None, seed=0)
+    belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=8,
+                                     seed=0).encode(None, None))
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=belief_dim)
+    ckpt = os.path.join(d, "pol.pt")
+    save_checkpoint(pol, ckpt)
+    out = os.path.join(d, "ablation.json")
+    res = run_ablation(ckpt, n_games=1, opponent="random", seed=0, hidden_dim=32,
+                       max_steps=20, out_path=out)
+    assert set(res["variants"]) == {"full", "plan-off", "belief-off", "both-off"}
+    assert set(res["deltas_vs_full"]) == {"plan-off", "belief-off", "both-off"}
+    for v in res["variants"].values():
+        assert 0.0 <= v["winrate"] <= 1.0 and v["n_games"] == 1
+    for dd in res["deltas_vs_full"].values():
+        assert "delta" in dd and "verdict" in dd and "z" in dd
+    assert os.path.exists(out), "消融 JSON 未落盘"
+    assert os.path.exists(os.path.splitext(out)[0] + ".csv"), "消融 CSV 未落盘"
+    loaded = _json.load(open(out, encoding="utf-8"))
+    assert loaded["policy"] and loaded["note"]
+    print("[PASS] belief/plan 消融：4 变体对比 + delta/z 判定 + JSON/CSV 落盘")
+
+
+def test_flow_sweep_smoke():
+    """flow 数据效率 A/B：缩小池 sweep 通路（mini 池 + 1 轮）→ summary.json/csv 落盘。"""
+    import tempfile, json as _json
+    from rl import flow_league as fl
+    from rl.config import TrainConfig
+
+    def mk_decks(n, arch):
+        return [{"archetype": arch, "cards": [
+            "Knight", "MiniPekka", "Arrows", "Minions", "Musketeer",
+            "Fireball", "Giant", "Archer"], "missing": 0} for _ in range(n)]
+
+    pools = fl.OrderedDict([
+        ("push_flow", ("推进流", mk_decks(2, "推进流"))),
+        ("counter_flow", ("防守反击流", mk_decks(2, "防守反击流"))),
+        ("lockdown_flow", ("自闭流", mk_decks(1, "自闭流"))),
+        ("all_decks", ("全量卡组", mk_decks(2, "全量卡组"))),
+        ("random_deck", ("完全随机", mk_decks(2, "完全随机"))),
+        ("main", ("全量卡组(main)", mk_decks(2, "全量卡组"))),
+    ])
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_sweep", total_steps=1000, steps_per_eval=0,
+                      update_interval=16, batch_size=8, hidden_dim=32, seed=0,
+                      n_eval_games=1, max_ep_steps=2, eval_at_start=False, out_dir=d)
+    rows, summary = fl.run_flow_sweep(cfg, strategy="stream", pools=pools,
+                                      n_runs=1, games_per_pair=1, eval_games=1,
+                                      pool_scale=1.0)
+    assert len(rows) == 1
+    r, se = rows[0]["main_est"]
+    assert se > 0, "main 应有噪声地板 SE"
+    assert summary["total_games"] == 50, summary["total_games"]
+    out_dir = os.path.join(d, "selftest_sweep", "flow_sweep_stream")
+    assert os.path.exists(os.path.join(out_dir, "summary.json"))
+    assert os.path.exists(os.path.join(out_dir, "summary.csv"))
+    assert os.path.exists(os.path.join(out_dir, "final_flow_main.pt"))
+    s = _json.load(open(os.path.join(out_dir, "summary.json"), encoding="utf-8"))
+    assert s["strategy"] == "stream" and len(s["rows"]) == 1
+    assert s["trend"]["first_main_est"] == s["trend"]["last_main_est"]
+    print("[PASS] flow-sweep：mini 池 1 轮通路 + main 轮内估计(±SE) + summary.json/csv 落盘")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -1309,6 +1387,8 @@ def main():
     test_parallel_training_loop()
     test_mp_training_loop()
     test_flow_league_smoke()
+    test_ablation_recorded()
+    test_flow_sweep_smoke()
     print("\nALL SELFTESTS PASSED")
 
 

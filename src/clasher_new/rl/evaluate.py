@@ -10,6 +10,8 @@
 
 import os
 import sys
+import json
+import math
 import random
 import argparse
 
@@ -83,9 +85,9 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
             stats["plan_intents"][plan.macro_intent] = stats["plan_intents"].get(plan.macro_intent, 0) + 1
             plan_vec = plan.to_vector()
             tok = belief.encode(obs, None)
-            if ablation == "plan":
+            if ablation in ("plan", "both"):
                 plan_vec = np.zeros_like(plan_vec)
-            if ablation == "belief":
+            if ablation in ("belief", "both"):
                 tok = np.zeros_like(tok)
             bundle, _, _, hidden, _ = policy.act(obs, tok, plan_vec,
                                                  env.get_action_mask, hidden=hidden, deterministic=True)
@@ -165,7 +167,94 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
         print(f"Mean Crown Diff: {np.mean(stats['crown_diff']):.3f}  "
               f"Mean Tower HP Diff: {np.mean(stats['tower_diff']):.1f}")
     return {"winrate": stats["wins"] / max(1, n_games),
-            "mean_reward": stats["rew"] / max(1, n_games)}
+            "mean_reward": stats["rew"] / max(1, n_games),
+            "wins": stats["wins"], "losses": stats["losses"], "draws": stats["draws"],
+            "n_games": n_games,
+            # 二项 SE：sqrt(p(1-p)/N)，用于消融 delta 的显著性判断
+            "winrate_se": math.sqrt(
+                (stats["wins"] / max(1, n_games)) * (1 - stats["wins"] / max(1, n_games))
+                / max(1, n_games))}
+
+
+# ---------------------------------------------------------------------------
+# belief / plan 输入消融（P-flow 前置验证）
+# ---------------------------------------------------------------------------
+
+ABLATION_VARIANTS = [
+    ("full", None, "基线（belief + plan 都注入）"),
+    ("plan-off", "plan", "plan token 置零（belief 保留）"),
+    ("belief-off", "belief", "belief token 置零（plan 保留）"),
+    ("both-off", "both", "两者都置零"),
+]
+
+
+def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim=None,
+                 max_steps=300, opponent_policy=None, out_path=None):
+    """跑 belief/plan 输入消融并**落盘记录**（JSON + CSV）。
+
+    变体：full / plan-off / belief-off / both-off。输出：
+    - 各变体 winrate ± SE（二项 SE=√(p(1-p)/N)）；
+    - 相对 full 的 delta、delta SE（√(SE₁²+SE₂²)）、z=delta/SE；
+    - 判定：|z|≥2 视为「该输入对胜率有真实贡献（或真实损害）」。
+    注意：token 置零是保守消融——FollowerPolicy 的 RNN hidden 仍携带历史
+    belief/plan 信息，可能低估这两个输入的价值；结论应结合 z 与样本量。
+    """
+    results = {}
+    print(f"=== 消融评测（belief/plan 注入价值）===")
+    print(f"策略: {policy_path}  对手: {opponent}  N={n_games}/变体  max_steps={max_steps}")
+    for name, ab, desc in ABLATION_VARIANTS:
+        r = run_eval(policy_path, n_games=n_games, opponent=opponent, seed=seed,
+                     hidden_dim=hidden_dim, max_steps=max_steps,
+                     opponent_policy=opponent_policy, ablation=ab)
+        results[name] = r
+        print(f"  [{name:10s}] {desc}  WinRate={r['winrate']:.3f}±{r['winrate_se']:.3f} "
+              f"({r['wins']}W/{r['losses']}L/{r['draws']}D)  reward={r['mean_reward']:.3f}",
+              flush=True)
+
+    def delta_vs(name):
+        full, ab = results["full"], results[name]
+        d = full["winrate"] - ab["winrate"]
+        se = math.hypot(full["winrate_se"], ab["winrate_se"])
+        z = d / se if se > 0 else None
+        return {"full_winrate": round(full["winrate"], 4),
+                "abl_winrate": round(ab["winrate"], 4),
+                "delta": round(d, 4), "delta_se": round(se, 4),
+                "z": round(z, 2) if z is not None else None,
+                "verdict": ("贡献/损害显著" if z is not None and abs(z) >= 2
+                            else "无显著差异（噪声内）")}
+
+    deltas = {k: delta_vs(k) for k in ("plan-off", "belief-off", "both-off")}
+    print("=== 相对 full 的 delta（ΔWinRate，正=该输入有贡献）===")
+    for k, d in deltas.items():
+        zs = f"{d['z']}σ" if d["z"] is not None else "—"
+        print(f"  {k:11s}: Δ={d['delta']:+.4f} ± {d['delta_se']:.4f}  z={zs}  -> {d['verdict']}")
+
+    out = {
+        "policy": os.path.abspath(policy_path),
+        "opponent": opponent, "n_games": n_games, "seed": seed, "max_steps": max_steps,
+        "variants": {k: {"winrate": v["winrate"], "winrate_se": v["winrate_se"],
+                         "mean_reward": v["mean_reward"], "wins": v["wins"],
+                         "losses": v["losses"], "draws": v["draws"], "n_games": v["n_games"]}
+                     for k, v in results.items()},
+        "deltas_vs_full": deltas,
+        "note": "token 置零消融；RNN hidden 仍含历史信息，可能低估输入价值",
+    }
+    if out_path:
+        out_path = os.path.abspath(out_path)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=2)
+        csv_path = os.path.splitext(out_path)[0] + ".csv"
+        with open(csv_path, "w", encoding="utf-8") as f:
+            f.write("variant,winrate,winrate_se,wins,losses,draws,mean_reward\n")
+            for k, v in results.items():
+                f.write(f"{k},{v['winrate']:.6f},{v['winrate_se']:.6f},"
+                        f"{v['wins']},{v['losses']},{v['draws']},{v['mean_reward']:.6f}\n")
+            f.write("\n# delta vs full: variant,delta,delta_se,z,verdict\n")
+            for k, d in deltas.items():
+                f.write(f"# {k},{d['delta']},{d['delta_se']},{d['z']},{d['verdict']}\n")
+        print(f"[ablation] 结果已落盘 -> {out_path}")
+        print(f"[ablation] 明细 CSV   -> {csv_path}")
+    return out
 
 
 def load_policy(path, hidden_dim=None):
@@ -232,12 +321,23 @@ if __name__ == "__main__":
     ap.add_argument("--hidden-dim", type=int, default=None)
     ap.add_argument("--max-steps", type=int, default=300)
     ap.add_argument("--belief-only", action="store_true", help="只跑信念协议")
-    ap.add_argument("--ablation", type=str, default=None, choices=["plan", "belief"],
-                    help="消融：plan=禁用 plan token，belief=禁用 belief token")
+    ap.add_argument("--ablation", type=str, default=None,
+                    choices=["plan", "belief", "both", "all"],
+                    help="消融：plan=禁用 plan token，belief=禁用 belief token，"
+                         "both=两者都禁用，all=跑完整对比(full/plan/belief/both)并落盘")
+    ap.add_argument("--ablation-out", type=str, default=None,
+                    help="--ablation all 的结果落盘路径（缺省 ablation_result.json）")
     args = ap.parse_args()
     if args.belief_only:
         evaluate_belief(args.policy, n_games=args.n_games, seed=args.seed,
                         hidden_dim=args.hidden_dim, max_steps=args.max_steps)
+    elif args.ablation == "all":
+        out = args.ablation_out or os.path.join(
+            os.path.dirname(os.path.abspath(args.policy)) or ".", "ablation_result.json")
+        run_ablation(args.policy, n_games=args.n_games, opponent=args.opponent,
+                     seed=args.seed, hidden_dim=args.hidden_dim,
+                     max_steps=args.max_steps, opponent_policy=args.opponent_policy,
+                     out_path=out)
     else:
         run_eval(args.policy, n_games=args.n_games, opponent=args.opponent, seed=args.seed,
                  hidden_dim=args.hidden_dim, max_steps=args.max_steps,

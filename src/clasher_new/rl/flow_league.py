@@ -21,6 +21,8 @@
 
 import os
 import sys
+import json
+import math
 import time
 import random
 from collections import OrderedDict
@@ -43,7 +45,8 @@ from rl.prophet import ProphetPlanner
 from rl.opponents import build_card_pool, sample_deck
 from rl.decks import load_classified_decks, decks_by_archetype
 from rl.config import reward_to_env
-from rl.run_league import _bundle_cards, resolve_device
+from rl.run_league import _bundle_cards, resolve_device, eval_round_robin
+from rl.league import League
 
 #: 6 个可训练模型 id（顺序决定对局矩阵的排列）
 FLOW_MODEL_IDS = ["push_flow", "counter_flow", "lockdown_flow",
@@ -88,6 +91,26 @@ def flow_pair_games(pools):
         for j in range(i + 1, len(ids)):
             total += len(pools[ids[i]][1]) * len(pools[ids[j]][1])
     return total
+
+
+def scale_pools(pools, factor):
+    """把每个卡组池按 factor 缩小（每池截断到 max(1, round(len×factor))）。
+
+    用于"降低一个数量级"的数据效率验证（factor=0.1：60→6 / 120→12 / 20→2 /
+    200→20 / 30→3 / 200→20 → 一次训练 1,488 局，为真实 148,800 的 1/100）。
+    抽样用固定种子，保证可复现。
+    """
+    rng = random.Random(20240903)
+    out = OrderedDict()
+    for aid, (label, decks) in pools.items():
+        n = max(1, int(round(len(decks) * factor)))
+        if n < len(decks):
+            idx = sorted(rng.sample(range(len(decks)), n))
+            sel = [decks[i] for i in idx]
+        else:
+            sel = list(decks)
+        out[aid] = (label, sel)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -250,69 +273,193 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
 # 主循环
 # ---------------------------------------------------------------------------
 
-def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None):
+def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
+             games_per_deck_pair=1, save=True, seed=None, quiet=False):
     """全配对分流派联赛主循环。
 
     参数：
     - pools: 显式注入卡组池（selftest 用 mini 池）；缺省 build_flow_pools()。
     - max_pairs: 只跑前 N 对（试跑用）；缺省全部 15 对。
+    - games_per_deck_pair: 每副 deckA×deckB 打的局数（>1 = 数据效率实验"对局翻倍"）。
+    - save: 是否每对/结束时落盘 checkpoint（sweep 多轮训练时关掉省 IO）。
+    - seed: 覆盖 cfg.seed 的本轮种子（sweep 每轮换种子，避免 20 轮全同）。
+    - quiet: 抑制逐对进度打印。
     返回 (total_games, models, trainers)。
     """
     device = resolve_device(cfg.device)
     cfg.ensure_dirs()
     cfg.save()
+    seed = cfg.seed if seed is None else seed
     print(f"[flow] 全配对分流派联赛 配置 '{cfg.name}' -> {cfg.folder()} "
-          f"(device={device})", flush=True)
-    torch.manual_seed(cfg.seed)
-    random.seed(cfg.seed)
-    np.random.seed(cfg.seed)
+          f"(device={device}, seed={seed}, 每对局数={games_per_deck_pair})", flush=True)
+    torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
 
     pools = pools or build_flow_pools(cfg, n_random_decks=n_random_decks)
     ids = list(pools.keys())
-    env = RLEnv(opponent=None, seed=cfg.seed, reward_weights=reward_to_env(cfg),
+    env = RLEnv(opponent=None, seed=seed, reward_weights=reward_to_env(cfg),
                 card_level=cfg.card_level)
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
     models, trainers = build_flow_models(cfg, device, belief_dim)
     bp = BeliefPlanner()
     prophet = ProphetPlanner()
-    rng = random.Random(cfg.seed)
+    rng = random.Random(seed)
     max_steps = int(cfg.max_ep_steps)
     total_games = 0
     t0 = time.monotonic()
 
     pair_ix = 0
+    game_ix = 0
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             if max_pairs is not None and pair_ix >= max_pairs:
                 break
             id_a, (label_a, pool_a) = ids[i], pools[ids[i]]
             id_b, (label_b, pool_b) = ids[j], pools[ids[j]]
-            n_pair = len(pool_a) * len(pool_b)
-            print(f"[flow] 对 {label_a}({len(pool_a)}) × {label_b}({len(pool_b)}) "
-                  f"= {n_pair} 局 ...", flush=True)
+            n_pair = len(pool_a) * len(pool_b) * int(games_per_deck_pair)
+            if not quiet:
+                print(f"[flow] 对 {label_a}({len(pool_a)}) × {label_b}({len(pool_b)}) "
+                      f"= {n_pair} 局 ...", flush=True)
             buf_a, buf_b = [], []
-            g = 0
             for deckA in pool_a:
                 for deckB in pool_b:
-                    _play_one(env, models[id_a], models[id_b], deckA, deckB,
-                              cfg, cfg.seed + g, max_steps,
-                              buf_a, buf_b, bp, prophet, rng)
-                    g += 1
-                    if len(buf_a) >= cfg.update_interval:
-                        _drain(buf_a, trainers[id_a], cfg.batch_size)
-                    if len(buf_b) >= cfg.update_interval:
-                        _drain(buf_b, trainers[id_b], cfg.batch_size)
+                    for _k in range(int(games_per_deck_pair)):
+                        _play_one(env, models[id_a], models[id_b], deckA, deckB,
+                                  cfg, seed + game_ix, max_steps,
+                                  buf_a, buf_b, bp, prophet, rng)
+                        game_ix += 1
+                        if len(buf_a) >= cfg.update_interval:
+                            _drain(buf_a, trainers[id_a], cfg.batch_size)
+                        if len(buf_b) >= cfg.update_interval:
+                            _drain(buf_b, trainers[id_b], cfg.batch_size)
             _drain(buf_a, trainers[id_a], cfg.batch_size)
             _drain(buf_b, trainers[id_b], cfg.batch_size)
             total_games += n_pair
             pair_ix += 1
-            print(f"[flow] {label_a} × {label_b} 完成 {n_pair} 局（累计 {total_games}），"
-                  f"耗时 {time.monotonic() - t0:.1f}s", flush=True)
-            save_flow_models(cfg, models)
-    save_flow_models(cfg, models)
+            if not quiet:
+                print(f"[flow] {label_a} × {label_b} 完成 {n_pair} 局（累计 {total_games}），"
+                      f"耗时 {time.monotonic() - t0:.1f}s", flush=True)
+            if save:
+                save_flow_models(cfg, models)
+    if save:
+        save_flow_models(cfg, models)
     print(f"[done] flow 联赛完成 {total_games} 局，6 模型已保存 -> {cfg.folder()}", flush=True)
     return total_games, models, trainers
+
+
+# ---------------------------------------------------------------------------
+# 数据效率 A/B（缩小 10× 池，验证曲线上涨再上全规模）
+# ---------------------------------------------------------------------------
+
+SWEEP_STRATEGIES = {
+    "stream": {"n_runs": 20, "games_per_pair": 1,
+               "desc": "每对 1 局（忠实流式）× 20 次完整训练"},
+    "games5": {"n_runs": 4, "games_per_pair": 5,
+               "desc": "每对 5 局 × 4 次完整训练"},
+}
+
+
+def run_flow_sweep(cfg, strategy="stream", n_runs=None, games_per_pair=None,
+                   pool_scale=0.1, n_random_decks=30, pools=None, eval_games=None):
+    """缩小 10× 卡组池的 flow 数据效率 A/B 实验（先验证曲线确实上涨再跑 148,800）。
+
+    - ``stream``（--mode flow-sweep-stream）：每对 1 局、对内流式，**跑 20 次完整训练**；
+    - ``games5``（--mode flow-sweep-games5）：每对 5 局（对局次数翻 5 倍），**跑 4 次**。
+    两者总对局预算相同（20×1,488 = 4×7,440 ≈ 29,760 局），对比"多轮流式小步快跑"
+    vs "单轮更多数据"哪种数据效率策略让曲线上涨。每次训练后对 6 个模型做一轮
+    全配对换边评估（eval_games/对），记录**轮内聚合估计**（SE≈347.5/√N 噪声地板）。
+
+    产出 -> ``runs/<name>/flow_sweep_<strategy>/``：
+    - summary.json：逐轮 main 强度 + 全模型估计 + 趋势判定（首 vs 末，Δ/SE）；
+    - summary.csv：曲线数据（可直接画图）；
+    - final_flow_<id>.pt：最后一轮 6 个模型。
+
+    pools 可注入 mini 池（selftest 用）；返回 (rows, summary)。
+    """
+    if strategy not in SWEEP_STRATEGIES:
+        raise ValueError(f"未知 sweep 策略 {strategy}，可用 {list(SWEEP_STRATEGIES)}")
+    spec = SWEEP_STRATEGIES[strategy]
+    n_runs = int(n_runs if n_runs is not None else spec["n_runs"])
+    games_per_pair = int(games_per_pair if games_per_pair is not None else spec["games_per_pair"])
+    eval_games = int(eval_games or 10)
+    device = resolve_device(cfg.device)
+    cfg.ensure_dirs()
+    cfg.save()
+    raw = pools if pools is not None else build_flow_pools(cfg, n_random_decks=n_random_decks)
+    scaled = scale_pools(raw, pool_scale)
+    per_run = flow_pair_games(scaled) * games_per_pair
+    total_budget = per_run * n_runs
+    out_dir = os.path.join(cfg.folder(), f"flow_sweep_{strategy}")
+    os.makedirs(out_dir, exist_ok=True)
+    sizes = {k: len(v[1]) for k, v in scaled.items()}
+    print(f"[sweep] 策略={strategy}（{spec['desc']}） 池缩小×{pool_scale} -> {sizes} "
+          f"每轮 {per_run} 局 × {n_runs} 轮 = {total_budget} 局", flush=True)
+
+    rows = []
+    t0 = time.monotonic()
+    for run in range(n_runs):
+        run_seed = cfg.seed + run * 10000
+        total, models, _tr = run_flow(cfg, pools=scaled,
+                                      games_per_deck_pair=games_per_pair,
+                                      save=False, seed=run_seed, quiet=True)
+        lg = League(seed=run_seed + 7)
+        for mid in FLOW_MODEL_IDS:
+            lg.add_agent(mid, kind="main" if mid == "main" else "baseline",
+                         policy=models[mid])
+        eval_round_robin(lg, eval_games, int(cfg.max_ep_steps), run_seed + 77, run,
+                         only_vs_main=False, record=False)
+        rs = lg.round_stats[-1]
+        row = {"run": int(run), "games": int(total),
+               "main_est": [float(x) for x in rs["est"]["main"]],
+               "est": {k: [float(a), float(b)] for k, (a, b) in rs["est"].items()}}
+        rows.append(row)
+        r, se = row["main_est"]
+        print(f"[sweep] run {run:02d}: main 轮内估计 {r:.0f}±{se:.0f} "
+              f"({rs['games'].get('main', 0)} 评估局) [{time.monotonic() - t0:.1f}s]",
+              flush=True)
+        if run == n_runs - 1:
+            for mid, pol in models.items():
+                save_checkpoint(pol, os.path.join(out_dir, f"final_flow_{mid}.pt"))
+
+    first, last = rows[0]["main_est"], rows[-1]["main_est"]
+    delta = last[0] - first[0]
+    se_delta = math.hypot(first[1], last[1])
+    z = delta / se_delta if se_delta > 0 else None
+    verdict = ("上涨（≥2σ）" if z is not None and z >= 2
+               else ("下跌（≤-2σ）" if z is not None and z <= -2 else "持平（噪声内）"))
+    summary = {
+        "strategy": strategy, "desc": spec["desc"],
+        "pool_scale": pool_scale, "pool_sizes": sizes,
+        "n_runs": n_runs, "games_per_pair": games_per_pair,
+        "per_run_games": per_run, "total_games": total_budget,
+        "eval_games_per_pair": eval_games, "device": device,
+        "rows": rows,
+        "trend": {"first_main_est": first, "last_main_est": last,
+                  "delta": round(delta, 1), "delta_se": round(se_delta, 1),
+                  "z": round(z, 2) if z is not None else None, "verdict": verdict},
+    }
+    with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    with open(os.path.join(out_dir, "summary.csv"), "w", encoding="utf-8") as f:
+        f.write("run,games,main_est,main_se")
+        for mid in FLOW_MODEL_IDS:
+            f.write(f",{mid}_est,{mid}_se")
+        f.write("\n")
+        for row in rows:
+            f.write(f"{row['run']},{row['games']},{row['main_est'][0]},{row['main_est'][1]}")
+            for mid in FLOW_MODEL_IDS:
+                e = row["est"].get(mid)
+                f.write(f",{e[0] if e else ''},{e[1] if e else ''}")
+            f.write("\n")
+    print(f"[sweep] 完成 {n_runs} 轮 × {per_run} 局 = {total_budget} 局，耗时 "
+          f"{time.monotonic() - t0:.1f}s", flush=True)
+    print(f"[sweep] 曲线判定：main {first[0]:.0f}±{first[1]:.0f} -> "
+          f"{last[0]:.0f}±{last[1]:.0f}  Δ={delta:+.0f}±{se_delta:.0f}  z={z}σ  "
+          f"=> {verdict}", flush=True)
+    print(f"[sweep] 结果 -> {out_dir}/summary.json / summary.csv", flush=True)
+    return rows, summary
 
 
 if __name__ == "__main__":

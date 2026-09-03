@@ -885,7 +885,9 @@ def run_league(cfg: TrainConfig, resume=False, record_replays=True):
 
 def main():
     ap = argparse.ArgumentParser(description="联赛主循环：命名配置 + 奖惩机制 + 断点续训 + CUDA")
-    ap.add_argument("--mode", choices=["eval", "run", "flow"], default="run")
+    ap.add_argument("--mode", choices=["eval", "run", "flow",
+                                       "flow-sweep-stream", "flow-sweep-games5"],
+                    default="run")
     # eval 模式
     ap.add_argument("--policies", nargs="+", default=None)
     ap.add_argument("--kinds", nargs="+", default=None)
@@ -936,6 +938,13 @@ def main():
     # flow 模式（全配对分流派联赛）
     ap.add_argument("--n-random-decks", type=int, default=30,
                     help="flow 模式：完全随机卡组每次训练生成套数（默认 30）")
+    # flow-sweep 模式（缩小 10× 池的数据效率 A/B）
+    ap.add_argument("--sweep-runs", type=int, default=None,
+                    help="flow-sweep：训练轮数覆盖（stream 默认 20 / games5 默认 4）")
+    ap.add_argument("--sweep-scale", type=float, default=0.1,
+                    help="flow-sweep：卡组池缩小比例（默认 0.1 = 降低一个数量级）")
+    ap.add_argument("--sweep-eval-games", type=int, default=None,
+                    help="flow-sweep：每对评估局数（默认 10）")
     args = ap.parse_args()
 
     if args.mode == "eval":
@@ -973,6 +982,15 @@ def main():
     if args.mode == "flow":
         from rl.flow_league import run_flow
         run_flow(cfg, resume=args.resume, n_random_decks=args.n_random_decks)
+        return
+
+    if args.mode in ("flow-sweep-stream", "flow-sweep-games5"):
+        # 缩小 10× 池的数据效率 A/B：先验证 flow 曲线上涨再上 148,800 全规模
+        from rl.flow_league import run_flow_sweep
+        strategy = "stream" if args.mode == "flow-sweep-stream" else "games5"
+        run_flow_sweep(cfg, strategy=strategy, n_runs=args.sweep_runs,
+                       pool_scale=args.sweep_scale,
+                       eval_games=args.sweep_eval_games)
         return
 
     run_league(cfg, resume=args.resume, record_replays=not args.no_replays)

@@ -102,9 +102,18 @@ python rl/run_league.py --mode flow --n-random-decks 30 --out-dir runs   # 随�
 #   产物：runs/<name>/flow_<id>.pt（6 个模型各一个 checkpoint）；--max-ep-steps 控制单局决策步
 #   注意：规模大，建议先小池试跑（详见关键语义「全配对分流派联赛」）
 
+# 7e) flow 数据效率 A/B（缩小 10× 池，验证曲线上涨再上 148,800）
+python rl/run_league.py --mode flow-sweep-stream --config economy --device cuda   # 每对 1 局 × 20 次训练
+python rl/run_league.py --mode flow-sweep-games5 --config economy --device cuda   # 每对 5 局 × 4 次训练
+#   两策略总对局预算相同（20×1,488 = 4×7,440 ≈ 29,760）；产物 flow_sweep_<strategy>/
+#   summary.json(csv)：逐轮 main 轮内估计 ±SE + 首/末趋势判定（Δ/SE≥2σ 才算上涨）
+#   可选 --sweep-runs / --sweep-scale / --sweep-eval-games 覆盖
+
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50
-python rl/evaluate.py --policy follower.pt --n-games 50 --ablation plan
+python rl/evaluate.py --policy follower.pt --n-games 200 --ablation all --ablation-out ablation_result.json
+#   消融 all：full/plan-off/belief-off/both-off 四变体 + Δ±SE + z 判定，落盘 JSON+CSV
+#   （验证 belief/plan 注入是加分还是纯噪声；注意 RNN hidden 仍含历史信息，属保守消融）
 python rl/evaluate.py --policy follower.pt --n-games 500 --belief-only
 
 # 9) 导出 replay（供 train_belief --replays-path 消费）
@@ -154,6 +163,19 @@ start_training.bat --help
   `n_eval_games=4` → main(5对,20局) SE≈78，纯噪声下 |Δ|≥100 概率≈36%（**±100 移动
   不可区分信号**）；`n_eval_games=40`（默认）→ main(200局) SE≈25，该概率<1%
   （±100 移动≈2.9σ，可区分学习信号）。回归测试：`test_elo_eval_granularity`。
+- **belief/plan 注入消融**（上全规模前的设计验证，`evaluate.py --ablation all`）：
+  prophet / belief_planner 是启发式，天花板受限于手写规则质量——`--ablation all` 跑
+  full / plan-off / belief-off / both-off 四变体，输出各变体 WinRate±SE（二项 SE=
+  √(p(1-p)/N)）与相对 full 的 Δ±SE、z=Δ/SE（|z|≥2 视为有真实贡献），**落盘
+  JSON+CSV**。注意 token 置零是保守消融（RNN hidden 仍含历史 belief/plan 信息），
+  结论应结合 z 与样本量。回归测试：`test_ablation_recorded`。
+- **flow 数据效率 A/B**（`run_flow_sweep`，`--mode flow-sweep-stream / -games5`）：
+  把卡组池缩小一个数量级（`scale_pools(×0.1)` → 6/12/2/20/3/20，一次训练 1,488 局），
+  对比两种数据效率策略：**stream**＝每对 1 局忠实流式×20 次完整训练；**games5**＝每对
+  5 局×4 次。总对局预算相同（≈29,760）。每轮训练后对 6 模型做全配对换边评估，记录
+  main 的**轮内聚合估计**±SE，输出 summary.json/csv + 首/末趋势判定（Δ/SE≥2σ 才算
+  "曲线确实上涨"）——先验证设计有效再投入 148,800 局全规模。回归测试：
+  `test_flow_sweep_smoke`。
 - **全配对分流派联赛**（`flow_league.py`，`run_league --mode flow`）：6 个模型全部为**可训练
   PPO**（`main` / `push_flow` / `counter_flow` / `lockdown_flow` / `all_decks` /
   `random_deck`），每个 `FollowerPolicy` + 独立 `PPOTrainer`。6 个卡组池两两全配对
