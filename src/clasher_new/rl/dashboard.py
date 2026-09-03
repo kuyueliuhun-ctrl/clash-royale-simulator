@@ -86,6 +86,7 @@ def build_payload(path):
         "ok": True,
         "agents": agents,
         "elo_history": elo_history,
+        "round_stats": st.get("round_stats", []),   # [{step, est:{aid:[R,SE]}, games:{aid:n}}]
         "total_steps": int(st.get("total_steps", 0)),
         "demo": bool(st.get("demo", False)),   # --demo 生成的合成数据标记
         "state_path": path,
@@ -337,7 +338,7 @@ _HTML = r"""<!DOCTYPE html>
   <div class="card">
     <h2>当前排名</h2>
     <table>
-      <thead><tr><th>模型</th><th>类型</th><th>Elo</th><th>Δ上轮</th><th>checkpoint</th></tr></thead>
+      <thead><tr><th>模型</th><th>类型</th><th>Elo</th><th>Δ上轮</th><th>σ 信号/噪声</th><th>checkpoint</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <p id="meta" class="sub" style="margin-top:12px"></p>
@@ -416,7 +417,7 @@ function colorOf(id){
   let h=0; for (const c of id) h=(h*31+c.charCodeAt(0))>>>0;
   return COLORS.fallback[h % COLORS.fallback.length];
 }
-let payload = {ok:false, agents:[], elo_history:{}, total_steps:0};
+let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:0};
 
 async function refresh(){
   try{
@@ -431,11 +432,13 @@ async function refresh(){
       document.getElementById("status").textContent =
         "更新于 " + payload.updated_at;
       const hasHist = Object.values(payload.elo_history || {}).some(h => h.length);
+      const rsN = (payload.round_stats || []).length;
       src.textContent = (payload.demo ? "⚠ DEMO 合成数据（非真实训练） · " : "")
         + "状态文件: " + (payload.state_path || "");
       if (payload.demo) src.style.color = "#f59e0b";
       else src.style.color = "#22c55e";
       if (!hasHist) src.textContent += " · 暂无评估数据（等待首次评估…）";
+      else if (rsN) src.textContent += " · 竖线误差棒 = 评估噪声 1σ（轮内聚合 SE≈347.5/√N）";
     }
   }catch(e){
     document.getElementById("status").textContent = "连接失败：" + e;
@@ -452,12 +455,22 @@ function renderLegend(){
 
 function renderTable(){
   const tbody = document.getElementById("tbody");
+  const rs = payload.round_stats || [];
+  const rPrev = rs.length >= 2 ? rs[rs.length-2] : null;
+  const rCur = rs.length >= 1 ? rs[rs.length-1] : null;
+  const seOf = (rt, aid) => rt && rt.est && rt.est[aid] ? rt.est[aid][1] : null;
   const rows = payload.agents.map(a => {
     const hist = (payload.elo_history[a.id] || []);
-    let delta = "—";
+    let delta = "—", sigma = "—";
     if (hist.length >= 2) {
       const d = hist[hist.length-1][1] - hist[hist.length-2][1];
       delta = (d >= 0 ? "+" : "") + d.toFixed(1);
+      const se0 = seOf(rPrev, a.id), se1 = seOf(rCur, a.id);
+      if (se0 && se1){
+        const comb = Math.hypot(se0, se1);
+        const z = Math.abs(d) / comb;
+        sigma = `<span style="color:${z >= 2 ? "#22c55e" : (z >= 1 ? "#f59e0b" : "#ef4444")}">${z.toFixed(1)}σ${z < 2 ? " 噪声" : ""}</span>`;
+      }
     }
     const kindCls = a.kind === "main" ? "main" : (a.kind === "historical" ? "historical"
                    : (a.kind === "exploiter" ? "exploiter" : "baseline"));
@@ -466,12 +479,14 @@ function renderTable(){
       <td><span class="kind ${kindCls}">${a.kind}</span></td>
       <td><b>${a.elo.toFixed(1)}</b></td>
       <td>${delta}</td>
+      <td>${sigma}</td>
       <td style="color:#94a3b8;font-size:11px">${a.path ? a.path.split(/[\\/]/).pop() : "—"}</td>
     </tr>`;
   }).join("");
-  tbody.innerHTML = rows || `<tr><td colspan="5">暂无模型（等待训练写入状态文件…）</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="6">暂无模型（等待训练写入状态文件…）</td></tr>`;
   document.getElementById("meta").textContent =
-    `总训练步数：${payload.total_steps} · 模型数：${payload.agents.length}`;
+    `总训练步数：${payload.total_steps} · 模型数：${payload.agents.length}` +
+    (rCur ? ` · 最近评估 ${rCur.step} 步` : "");
 }
 
 function drawChart(){
@@ -541,6 +556,20 @@ function drawChart(){
       // 只有一个当前值：画在 maxStep
       ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(X(maxStep), Y(s.cur), 3.5, 0, 7); ctx.fill();
     }
+    // 轮内聚合估计：竖线误差棒 = 评估噪声 1σ（SE≈347.5/√N，随局数收窄）
+    (payload.round_stats || []).forEach(rt => {
+      const est = rt.est && rt.est[s.id];
+      if (!est) return;
+      const x = X(rt.step), y = Y(est[0]), se = est[1];
+      if (!(se > 0)) return;
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = s.color; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x, Y(est[0]+se)); ctx.lineTo(x, Y(est[0]-se)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x-4, Y(est[0]+se)); ctx.lineTo(x+4, Y(est[0]+se)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x-4, Y(est[0]-se)); ctx.lineTo(x+4, Y(est[0]-se)); ctx.stroke();
+      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
   });
 
   // 悬停 tooltip
@@ -1061,6 +1090,7 @@ def make_demo_state(path, n_points=10, seed=0):
     agents = []
     ratings = {}
     elo_history = {}
+    round_stats = []
     total = n_points * 2000
     for aid, kind, init, trend in models:
         agents.append({"agent_id": aid, "kind": kind,
@@ -1073,6 +1103,12 @@ def make_demo_state(path, n_points=10, seed=0):
             hist.append([step, round(elo, 1)])
         ratings[aid] = round(hist[-1][1], 1)
         elo_history[aid] = hist
+        # 演示误差棒：每轮聚合 SE≈347.5/√(5×40)≈25（50% 胜率最坏情形）
+        for i in range(n_points + 1):
+            if len(round_stats) <= i:
+                round_stats.append({"step": i * (total // n_points), "est": {}, "games": {}})
+            round_stats[i]["est"][aid] = [hist[i][1], 25.0]
+            round_stats[i]["games"][aid] = 200
     state = {
         "ratings": ratings,
         "winrates": {},
@@ -1081,6 +1117,7 @@ def make_demo_state(path, n_points=10, seed=0):
         "exploiter_counter": 1,
         "ckpt_counter": {},
         "elo_history": elo_history,
+        "round_stats": round_stats,
         "total_steps": total,
         "demo": True,
     }

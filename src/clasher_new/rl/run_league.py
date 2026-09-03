@@ -239,6 +239,34 @@ def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record
     return wins_a, wins_b, draws, replays
 
 
+def _round_estimates(pair_results):
+    """轮内聚合 Elo 估计（BT-lite + Laplace 平滑）→ 曲线可信度上限。
+
+    逐局 K=32 运行 Elo 是**有限记忆跟踪器**：单轮噪声 1σ≈±40 即饱和（N≥20 不再下降），
+    所以"加评估局数"不会收紧运行 Elo 曲线。要真正降噪必须做**轮内聚合**：
+      D̂_ab = 400·log10((w+0.5)/(n−w+0.5))，n=该对局数，w=胜+0.5·平（Laplace 防 ±∞）
+      est[a] = 1500 + mean_pairs(D̂)，SE[a] ≈ 347.5/√(games_a)（p=0.5 最坏情形，已 MC 验证）
+    返回 (est, games)：est: {aid:[R, SE]}，games: {aid: 本轮总对局数}。
+    """
+    import math
+    acc, games = {}, {}
+    for a, b, wa, wb, dr in pair_results:
+        n = int(wa) + int(wb) + int(dr)
+        if n <= 0:
+            continue
+        w = float(wa) + 0.5 * float(dr)
+        d = 400.0 * math.log10((w + 0.5) / (n - w + 0.5))
+        acc.setdefault(a, []).append(d)
+        acc.setdefault(b, []).append(-d)
+        games[a] = games.get(a, 0) + n
+        games[b] = games.get(b, 0) + n
+    est = {}
+    for aid, ds in acc.items():
+        est[aid] = [round(1500.0 + sum(ds) / len(ds), 1),
+                    round(347.5 / math.sqrt(games[aid]), 1)]
+    return est, games
+
+
 def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False, record=False):
     """全轮转评估：所有有策略的 agent 两两换边对战，逐局 Elo，并记录历史曲线。
 
@@ -249,13 +277,22 @@ def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False,
     if only_vs_main:
         pairs = [p for p in pairs if "main" in p]
     replays = []
+    pair_results = []
     for idx, (a, b) in enumerate(pairs):
         pair_seed = seed + step + _pair_seed_offset(idx, a, b)
         wins_a, wins_b, draws, rs = play_pair(league, a, league.agents[a].policy,
                                               b, league.agents[b].policy,
                                               n_games, max_steps, pair_seed, record=record)
         replays.extend(rs)
+        pair_results.append((a, b, wins_a, wins_b, draws))
         print(f"[eval@{step}] {a} vs {b}: {wins_a}W {wins_b}L {draws}D", flush=True)
+    # 轮内聚合估计 + 噪声地板（曲线可信度上限；SE≈347.5/√N 随局数下降）
+    est, games = _round_estimates(pair_results)
+    league.record_round_stats(step, {"est": est, "games": games})
+    for aid in sorted(est):
+        r, se = est[aid]
+        print(f"[eval@{step}] {aid}: 轮内估计 {r:.0f}±{se:.0f}（本轮 {games[aid]} 局，"
+              f"1σ 噪声地板）", flush=True)
     league.record_elo_history(step)
     return replays
 
@@ -273,11 +310,15 @@ def evaluate_league(policies, kinds, n_games, seed, hidden_dim, max_steps=600, d
         pols[path] = load_checkpoint(path, hidden_dim=hidden_dim)
         pols[path].to_device(resolve_device(device))
         league.add_agent(path, kind=kind, policy=pols[path])
+    pair_results = []
     for idx, (a, b) in enumerate(itertools.combinations(policies, 2)):
         wa, wb, dr, _ = play_pair(league, a, pols[a], b, pols[b], n_games, max_steps,
                                   seed + _pair_seed_offset(idx, a, b))
+        pair_results.append((a, b, wa, wb, dr))
         print(f"{os.path.basename(a)} vs {os.path.basename(b)}: "
               f"{wa}W {wb}L {dr}D / {n_games}", flush=True)
+    est, games = _round_estimates(pair_results)
+    league.record_round_stats(0, {"est": est, "games": games})
     league.record_elo_history(0)
     print("=== League Elo ===")
     for aid, r in league.elo_table().items():

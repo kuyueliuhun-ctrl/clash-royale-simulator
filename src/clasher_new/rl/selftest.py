@@ -13,6 +13,7 @@
 - test_replay_roundtrip                    → P1-21
 - test_prophet_empty_board_not_defend      → P1-4
 - test_winrate_streams_independent         → 联赛数据契约：不同 pair 的 PFSP 胜率流独立演进
+- test_elo_eval_granularity                → 评估粒度：噪声地板(SE=347.5/√N) / 轮内聚合估计 / 误差棒链路
 
 运行：python rl/selftest.py   （需在 src/clasher_new 下，或由 scripts/rl/selftest.py 包装）
 """
@@ -513,6 +514,80 @@ def test_winrate_streams_independent():
     assert lg2.pfsp.winrates[("main", "counter_flow")] == v_ac_before
     print("[PASS] 不同 pair 的 PFSP 胜率流独立演进：互不污染 / 各自 EMA 一致 / "
           "round-trip 不串 key")
+
+
+def test_elo_eval_granularity():
+    """评估粒度统计契约：噪声地板 / 轮内聚合估计 / 误差棒数据全链路。
+
+    背景：K=32 逐局 Elo 是**有限记忆跟踪器**（MC 验证单轮噪声 1σ≈±40 即饱和，
+    加局数不收窄运行 Elo 曲线）；曲线可信度上限取决于**轮内聚合估计**
+    （BT-lite，SE≈347.5/√N，N=该 agent 本轮总对局数，随局数真正收窄）：
+    - N=4/对 → main(5对,20局) SE≈78，纯噪声下 |ΔElo|≥100 的概率 ≈36% →
+      ±100 的 2000 步移动无法区分学习信号与评估噪声；
+    - N=40/对 → main(5对,200局) SE≈25，纯噪声下 |ΔElo|≥100 概率 <1% → 可区分。
+    """
+    import math, tempfile, random, statistics
+    from rl.league import League
+    from rl.run_league import _round_estimates
+    from rl.config import TrainConfig
+    from rl import run_league as rl_mod
+    from rl.dashboard import build_payload
+
+    def noise_prob(se_per_round, delta=100.0):
+        """纯噪声（真差=0）下两次独立轮差 |Δ|≥delta 的概率，正态近似。"""
+        sd = math.sqrt(2.0) * se_per_round
+        z = delta / (sd * math.sqrt(2.0))
+        return 2.0 * (1.0 - 0.5 * (1.0 + math.erf(z)))
+
+    # 1) 闭式 SE = 347.5/√N（p=0.5 最坏情形，MC 已验证）
+    assert abs(347.5 / math.sqrt(4) - 173.8) < 0.1
+    assert abs(347.5 / math.sqrt(40) - 54.9) < 0.1
+    # main 每轮总对局 = 5 对 × N
+    assert abs(347.5 / math.sqrt(5 * 4) - 77.7) < 0.5
+    assert abs(347.5 / math.sqrt(5 * 40) - 24.6) < 0.5
+    # 2) 纯噪声下 ≥100 Elo 移动的概率：N=4 高（不可区分）→ N=40 低（强信号）
+    p4 = noise_prob(347.5 / math.sqrt(5 * 4))
+    p40 = noise_prob(347.5 / math.sqrt(5 * 40))
+    assert p4 > 0.30, f"N=4 时 ±100 应是常见噪声，实际 {p4:.2f}"
+    assert p40 < 0.01, f"N=40 时 ±100 应是强信号，实际 {p40:.4f}"
+    # 3) 轮内聚合估计：无偏 + SD≈347.5/√N（MC，N=40）
+    rng = random.Random(7)
+    trials, N = 800, 40
+    ds = []
+    for _ in range(trials):
+        w = sum(1 for _ in range(N) if rng.random() < 0.5)
+        ds.append(400.0 * math.log10((w + 0.5) / (N - w + 0.5)))
+    sd = statistics.pstdev(ds)
+    mu = statistics.mean(ds)
+    assert abs(mu) < 15, f"聚合估计应无偏，mean={mu:.1f}"
+    assert 40 < sd < 70, f"SD≈347.5/√N=54.9，实测 {sd:.1f}"
+    # 4) _round_estimates 聚合逻辑：多对结果 → est/games
+    est, games = _round_estimates([
+        ("a", "b", 4, 0, 0),   # a 4:0 b → D̂_ab=400·log10(4.5/0.5)
+        ("a", "c", 2, 2, 0),   # a 2:2 c → D̂_ac=0
+    ])
+    assert games == {"a": 8, "b": 4, "c": 4}
+    d_ab = 400.0 * math.log10(4.5 / 0.5)
+    assert abs(est["a"][0] - (1500.0 + (d_ab + 0.0) / 2.0)) < 0.1
+    assert est["a"][1] == round(347.5 / math.sqrt(8), 1)
+    # 5) 全链路：eval_round_robin 记录 round_stats → state → dashboard payload（误差棒数据）
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_gran", total_steps=6, steps_per_eval=0,
+                      update_interval=1000, batch_size=16, hidden_dim=32, seed=0,
+                      n_eval_games=1, max_ep_steps=2, only_vs_main=True,
+                      eval_at_start=True, out_dir=d)
+    rl_mod.run_league(cfg, resume=False, record_replays=False)
+    lg = League()
+    lg.load_state(cfg.state_path())
+    assert len(lg.round_stats) >= 1, "应记录至少一轮评估统计"
+    rs0 = lg.round_stats[0]
+    assert rs0["games"].get("main") == 5, "only_vs_main：main 本轮应打 5 局"
+    assert "main" in rs0["est"] and rs0["est"]["main"][1] > 0
+    pl = build_payload(cfg.state_path())
+    assert pl["ok"] and len(pl["round_stats"]) >= 1
+    assert pl["round_stats"][0]["est"]["main"][1] > 0
+    print("[PASS] 评估粒度统计契约：噪声地板(SE=347.5/√N) / 轮内聚合估计 / "
+          "round_stats 全链路（N=4 → ±100≈噪声，N=40 → ±100≈信号）")
 
 
 def test_classified_decks():
@@ -1214,6 +1289,7 @@ def main():
     test_random_deck_model()
     test_league_elo_history()
     test_winrate_streams_independent()
+    test_elo_eval_granularity()
     test_classified_decks()
     test_league_training_loop()
     test_belief_follower_ppo_league()

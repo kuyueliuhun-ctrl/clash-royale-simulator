@@ -38,6 +38,7 @@ class League:
         self._exploiter_counter = 0
         self._ckpt_counter = {}
         self.elo_history = {}     # agent_id -> [(step, elo), ...]（供训练网页 UI 画曲线）
+        self.round_stats = []     # 每评估轮统计：{step, est:{aid:[R,SE]}, games:{aid:n}}
         self.total_steps = 0
 
     def add_agent(self, agent_id, kind="main", policy=None, path=None, replace=False):
@@ -103,6 +104,20 @@ class League:
         for aid, rating in self.elo.ratings.items():
             self.elo_history.setdefault(aid, []).append((self.total_steps, float(rating)))
 
+    def record_round_stats(self, step, stats):
+        """记录一轮评估的聚合测量（供曲线画噪声误差棒）。
+
+        stats = {"est": {aid: [round_est, se]}, "games": {aid: n}}。
+        round_est 是**轮内聚合估计**（BT-lite，SE≈347.5/√n，n 为本轮该 agent 总对局数），
+        与运行中逐局 Elo（有限记忆，噪声 1σ≈±40 饱和）区分开——曲线可信度上限由
+        前者决定，加评估局数才真正收窄噪声。
+        """
+        self.round_stats.append({
+            "step": int(step),
+            "est": {str(k): [float(v[0]), float(v[1])] for k, v in stats.get("est", {}).items()},
+            "games": {str(k): int(v) for k, v in stats.get("games", {}).items()},
+        })
+
     def add_exploiter(self, policy, path=None):
         aid = f"exploiter_{self._exploiter_counter}"
         self._exploiter_counter += 1
@@ -134,6 +149,7 @@ class League:
             "exploiter_counter": self._exploiter_counter,
             "ckpt_counter": dict(self._ckpt_counter),
             "elo_history": {k: [list(p) for p in v] for k, v in self.elo_history.items()},
+            "round_stats": self.round_stats,
             "total_steps": int(self.total_steps),
         }
         with open(path, "w", encoding="utf-8") as f:
@@ -151,6 +167,7 @@ class League:
         self._exploiter_counter = int(state.get("exploiter_counter", 0))
         self._ckpt_counter = {k: int(v) for k, v in state.get("ckpt_counter", {}).items()}
         self.elo_history = {k: [tuple(p) for p in v] for k, v in state.get("elo_history", {}).items()}
+        self.round_stats = list(state.get("round_stats", []))
         self.total_steps = int(state.get("total_steps", 0))
         policies = policies or {}
         for a in state["agents"]:

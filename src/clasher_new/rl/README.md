@@ -146,6 +146,14 @@ start_training.bat --help
   `0.40725312499999994 = 0.5×0.95⁴`：n_eval_games=4 全败 + 种子复用所致，**非写入 bug**）。
   每个 pair 的 PFSP 胜率流由自己的比分序列独立 EMA 演进（`pfsp.update_winrate` 按
   `(agent_a, agent_b)` 独立 key），互不污染；回归测试：`test_winrate_streams_independent`。
+- **评估粒度 / 噪声地板**（曲线可信度上限）：K=32 逐局 Elo 是**有限记忆跟踪器**
+  （MC：单轮噪声 1σ≈±40 即饱和，加局数不收窄运行 Elo）。因此每轮评估额外计算
+  **轮内聚合估计** `D̂=400·log₁₀((w+0.5)/(N−w+0.5))`，`SE≈347.5/√N`（N=该 agent 本轮
+  总对局数，p=0.5 最坏情形；无偏且 SD 已 MC 验证）。`round_stats` 随 state 持久化，
+  dashboard 曲线画 ±1σ 竖线误差棒、表格给"Δ上轮 / σ 信号/噪声"（≥2σ 才可信）：
+  `n_eval_games=4` → main(5对,20局) SE≈78，纯噪声下 |Δ|≥100 概率≈36%（**±100 移动
+  不可区分信号**）；`n_eval_games=40`（默认）→ main(200局) SE≈25，该概率<1%
+  （±100 移动≈2.9σ，可区分学习信号）。回归测试：`test_elo_eval_granularity`。
 - **全配对分流派联赛**（`flow_league.py`，`run_league --mode flow`）：6 个模型全部为**可训练
   PPO**（`main` / `push_flow` / `counter_flow` / `lockdown_flow` / `all_decks` /
   `random_deck`），每个 `FollowerPolicy` + 独立 `PPOTrainer`。6 个卡组池两两全配对

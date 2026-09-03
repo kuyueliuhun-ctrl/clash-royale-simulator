@@ -49,7 +49,8 @@ class TrainConfig:
     lr: float = 3e-4
     hidden_dim: int = 128
     seed: int = 0
-    n_eval_games: int = 4
+    n_eval_games: int = 40    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
+                              # N=4→SE≈78（±100 移动≈0.9σ，纯噪声）；N=40→SE≈25（≈2.9σ，可区分学习信号）
     max_ep_steps: int = 600
     n_envs: int = 1               # 并行多环境（>1 用批量推理；默认 1 与旧行为一致）
     parallel: str = "mp"          # n_envs>1 时：mp=跨进程 worker（多核真并行）/ proc=单进程批量化
