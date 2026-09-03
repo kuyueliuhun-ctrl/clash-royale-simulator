@@ -895,7 +895,8 @@ def main():
     ap.add_argument("--max-steps", type=int, default=600)
     # run 模式：配置
     ap.add_argument("--config", type=str, default="standard",
-                    help="命名配置预设（standard/aggressive/defensive/elixir/fast，或 --load-config 的 JSON）")
+                    help="命名配置预设（standard/aggressive/defensive/lockdown/elixir/economy/fast，"
+                         "或 --load-config 的 JSON）")
     ap.add_argument("--config-name", type=str, default=None,
                     help="覆盖配置名（输出文件夹名），默认用预设名")
     ap.add_argument("--load-config", type=str, default=None,
@@ -920,7 +921,7 @@ def main():
                     help="n_envs>1 时并行方式：mp=跨进程 worker（多核真并行，默认）/ "
                          "proc=单进程批量化")
     ap.add_argument("--card-level", type=int, default=None,
-                    help="本局全部卡牌等级 11-16（默认 11；economy 奖励跨等级一致）")
+                    help="本局全部卡牌等级 11-16（默认 11；费差机制跨等级一致）")
     ap.add_argument("--main-init", type=str, default=None)
     ap.add_argument("--decks-path", type=str, default=None,
                     help="三分类卡组 JSON 路径（缺省自动探测 docs/leaderboard_decks_classified.json）")

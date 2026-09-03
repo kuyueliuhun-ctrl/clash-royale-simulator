@@ -12,7 +12,10 @@
   即更新该对双方模型再丢弃（"每对打完即训"落地为对内流式更新，语义一致）；
 - player-1 侧轨迹由 FollowerOpponent.take_last_step() 收集；player-1 的 reward 用
   compute_reward 交换 blue/red 视角镜像计算（invalid_count 视为 0，FollowerPolicy
-  从掩码采样一般合法）。
+  从掩码采样一般合法）；
+- **按模型奖惩**：每个模型用自己的 reward_weights（config.MODEL_REWARD_OVERRIDES
+  在所选预设之上按模型覆盖：推进加码费差 / 防反减码 / 自闭压到≈0；main/all/random
+  同一基线），同一对局内 A 用 rw_a 算 reward0、B 用 rw_b 镜像算 reward1。
 
 数据归属（on-policy，每模型只用自己作为对局一方时的轨迹）：
 - 推进 34,200 局 / 防反 61,200 / 自闭 12,200 / 全量 86,000 / 随机 18,000 /
@@ -44,7 +47,7 @@ from rl.ppo import PPOTrainer
 from rl.prophet import ProphetPlanner
 from rl.opponents import build_card_pool, sample_deck
 from rl.decks import load_classified_decks, decks_by_archetype
-from rl.config import reward_to_env
+from rl.config import reward_to_env, model_reward_weights
 from rl.run_league import _bundle_cards, resolve_device, eval_round_robin
 from rl.league import League
 
@@ -183,11 +186,12 @@ def _drain(buf, trainer, batch_size):
 
 
 def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
-              buf_a, buf_b, bp, prophet, rng):
+              buf_a, buf_b, bp, prophet, rng, rw_a, rw_b):
     """deckA→pol_a(player-0)，deckB→pol_b(player-1)，打 1 局不换边。
 
     双侧都采探索轨迹：player-0 侧外部循环收集，player-1 侧由
     FollowerOpponent.take_last_step() 收集（reward 用 compute_reward 交换视角镜像）。
+    rw_a/rw_b：A/B 各自的 reward_weights（按模型奖惩）；reward0 用 rw_a、reward1 用 rw_b。
     返回 winner（0/1/None）。
     """
     env.deck0 = list(deckA["cards"]) if isinstance(deckA, dict) else list(deckA)
@@ -222,14 +226,15 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
         a_played = _bundle_cards(bundle, obs)
         old0 = _hp_state(env.battle.players[0])
         old1 = _hp_state(env.battle.players[1])
+        env.reward_weights = rw_a          # 按模型奖惩：reward0 用 A 的权重
         obs2, reward0, term, trunc, info = env.step(bundle)
         tr1 = opp.take_last_step()
         new0 = _hp_state(env.battle.players[0])
         new1 = _hp_state(env.battle.players[1])
         winner = env.battle.winner if env.battle.game_over else None
-        # player-1 视角 reward：交换 blue/red、winner 翻转（invalid 视为 0）
+        # player-1 视角 reward：交换 blue/red、winner 翻转（invalid 视为 0），用 B 的权重
         reward1 = compute_reward(
-            env.reward_weights,
+            rw_b,
             blue_hps_old=old1[0], red_hps_old=old0[0],
             blue_hps_new=new1[0], red_hps_new=new0[0],
             blue_left_old=old1[1], red_left_old=old0[1],
@@ -300,6 +305,15 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
     ids = list(pools.keys())
     env = RLEnv(opponent=None, seed=seed, reward_weights=reward_to_env(cfg),
                 card_level=cfg.card_level)
+    model_rewards = {mid: model_reward_weights(mid, cfg) for mid in FLOW_MODEL_IDS}
+    _rw = model_rewards
+    print(f"[flow] 按模型奖惩（覆盖预设 '{cfg.name}'）："
+          f"main/all/random 费差{_rw['main']['elixir_diff_weight']} "
+          f"推进{_rw['push_flow']['elixir_diff_weight']} "
+          f"防反{_rw['counter_flow']['elixir_diff_weight']} "
+          f"自闭{_rw['lockdown_flow']['elixir_diff_weight']} "
+          f"（1圣水≈{0.001 / _rw['main']['elixir_diff_weight']:.0f}血 @lv11, 塔血统一 "
+          f"{_rw['main']['tower_dmg_opp']}/{_rw['main']['tower_dmg_self']}）", flush=True)
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
     models, trainers = build_flow_models(cfg, device, belief_dim)
@@ -328,7 +342,8 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
                     for _k in range(int(games_per_deck_pair)):
                         _play_one(env, models[id_a], models[id_b], deckA, deckB,
                                   cfg, seed + game_ix, max_steps,
-                                  buf_a, buf_b, bp, prophet, rng)
+                                  buf_a, buf_b, bp, prophet, rng,
+                                  model_rewards[id_a], model_rewards[id_b])
                         game_ix += 1
                         if len(buf_a) >= cfg.update_interval:
                             _drain(buf_a, trainers[id_a], cfg.batch_size)

@@ -33,16 +33,17 @@ DEFAULT_DECK = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireba
 DEFAULT_DECK_1 = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant", "Fireball", "Arrows", "Knight"]
 
 #: 默认奖励权重（与 rl/config.DEFAULT_REWARD 保持一致；勿单独改一处）
+#: 2025-06 改版：塔血统一 0.001/0.001；费差默认打开（normalize + elixir_diff=0.5）。
 _DEFAULT_REWARD = {
     "crown_weight": 5.0,
     "tower_dmg_opp": 0.001,
-    "tower_dmg_self": 0.0012,
+    "tower_dmg_self": 0.001,
     "win_bonus": 10.0,
     "lose_penalty": 10.0,
     "invalid_penalty": 0.05,
     "elixir_bonus": 0.0,
-    "normalize_tower_dmg": False,   # 塔损按塔血%归一化（economy 机制；默认关=旧公式）
-    "elixir_diff_weight": 0.0,      # 每步 Δ费差（我方−对方圣水）shaping 权重（economy 机制）
+    "normalize_tower_dmg": True,   # 塔损按塔血%归一化（默认打开=跨等级一致）
+    "elixir_diff_weight": 0.5,     # 每步 Δ费差（我方−对方圣水）shaping 权重（默认打开）
 }
 
 #: 塔血参考（真实游戏，lv11）：**国王塔对所有人恒定 4824**；四种公主塔血量各不相同。

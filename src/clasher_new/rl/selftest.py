@@ -635,7 +635,7 @@ def test_league_training_loop():
 
 
 def test_config_reward_weights():
-    """命名配置：预设解析互不影响、奖励权重可注入 RLEnv 并改变回报。"""
+    """命名配置：预设解析互不影响、塔血统一、奖励权重可注入 RLEnv 并改变回报。"""
     import tempfile
     from rl.config import TrainConfig, reward_to_env
     from rl.env_wrapper import RLEnv
@@ -645,7 +645,11 @@ def test_config_reward_weights():
     agg = TrainConfig.resolve("aggressive")
     assert std.reward["crown_weight"] == 5.0
     assert agg.reward["crown_weight"] == 8.0
-    assert agg.reward["tower_dmg_opp"] > std.reward["tower_dmg_opp"]
+    # 2025-06 改版：塔血统一（打击=损失同价）；预设差异体现在皇冠/费差
+    for name in ("standard", "aggressive", "defensive", "lockdown", "elixir", "economy", "fast"):
+        rw = TrainConfig.resolve(name).reward
+        assert rw["tower_dmg_self"] == rw["tower_dmg_opp"], f"{name} 塔血应统一"
+    assert agg.reward["elixir_diff_weight"] > std.reward["elixir_diff_weight"]
     # 二次解析不污染预设（共享实例回归）
     assert TrainConfig.resolve("standard").reward["crown_weight"] == 5.0
     assert TrainConfig.resolve("aggressive").reward["crown_weight"] == 8.0
@@ -667,22 +671,56 @@ def test_config_reward_weights():
     agg.save(p)
     back = TrainConfig.load(p)
     assert back.name == "aggressive" and back.reward["crown_weight"] == 8.0
-    print("[PASS] 命名配置：预设/加载/奖励权重注入 RLEnv 正常")
+    print("[PASS] 命名配置：预设/加载/奖励权重注入 RLEnv 正常、塔血统一")
+
+
+def test_model_reward_overrides():
+    """按流派奖惩：main/all/random 同一基线；推进加码费差、防反减码、自闭压到≈0。"""
+    from rl.config import TrainConfig, model_reward_weights
+
+    std = TrainConfig.resolve("standard")
+    base = model_reward_weights("main", std)
+    assert model_reward_weights("all_decks", std) == base, "all_decks 应与 main 同参数"
+    assert model_reward_weights("random_deck", std) == base, "random_deck 应与 main 同参数"
+    assert base["tower_dmg_self"] == base["tower_dmg_opp"] == 0.001, "塔血应统一 0.001/0.001"
+    assert base["normalize_tower_dmg"] is True, "费差机制默认打开"
+    assert base["elixir_diff_weight"] == 0.5, "基线费差 = 0.5（1圣水≈500血）"
+    # 流派覆盖：推进 > 基线 > 防反 > 自闭
+    push = model_reward_weights("push_flow", std)
+    counter = model_reward_weights("counter_flow", std)
+    lock = model_reward_weights("lockdown_flow", std)
+    assert push["elixir_diff_weight"] == 0.7 > base["elixir_diff_weight"], "推进应加码费差"
+    assert counter["elixir_diff_weight"] == 0.3 < base["elixir_diff_weight"], "防反应减码费差"
+    assert lock["elixir_diff_weight"] == 0.05 < counter["elixir_diff_weight"], "自闭应压到≈0"
+    # 塔血在所有流派也统一
+    for mid in ("push_flow", "counter_flow", "lockdown_flow"):
+        rw = model_reward_weights(mid, std)
+        assert rw["tower_dmg_self"] == rw["tower_dmg_opp"] == 0.001, mid
+    # 未知模型回退到所选预设（不改基线行为）
+    assert model_reward_weights("unknown_model", std) == base
+    print("[PASS] 按流派奖惩：main/all/random 同基线 0.5、推进 0.7 / 防反 0.3 / 自闭 0.05、"
+          "塔血统一 0.001/0.001、未知模型回退基线")
 
 
 def test_reward_economy_preset():
-    """economy 预设存在且生效；standard 保持旧公式（normalize 关、费差 0）。"""
+    """费差默认打开：standard/economy 都带 normalize+费差；按流派覆盖生效。"""
     import tempfile
     import os
-    from rl.config import TrainConfig, reward_to_env
+    from rl.config import TrainConfig, reward_to_env, model_reward_weights
     from rl.env_wrapper import RLEnv
 
     eco = TrainConfig.resolve("economy")
     std = TrainConfig.resolve("standard")
+    # 2025-06 改版：费差默认打开（standard 不再是"旧公式"）
     assert eco.reward["normalize_tower_dmg"] is True
     assert eco.reward["elixir_diff_weight"] > 0
-    assert std.reward["normalize_tower_dmg"] is False
-    assert std.reward["elixir_diff_weight"] == 0.0
+    assert std.reward["normalize_tower_dmg"] is True
+    assert std.reward["elixir_diff_weight"] == eco.reward["elixir_diff_weight"] == 0.5
+    # 按流派覆盖：main 基线 0.5 / 推进 0.7 / 防反 0.3 / 自闭 0.05
+    assert model_reward_weights("main", std)["elixir_diff_weight"] == 0.5
+    assert model_reward_weights("push_flow", std)["elixir_diff_weight"] == 0.7
+    assert model_reward_weights("counter_flow", std)["elixir_diff_weight"] == 0.3
+    assert model_reward_weights("lockdown_flow", std)["elixir_diff_weight"] == 0.05
     # reward_to_env 注入 RLEnv 后生效
     env = RLEnv(opponent=None, seed=0, reward_weights=reward_to_env(eco))
     assert env.reward_weights["normalize_tower_dmg"] is True
@@ -694,16 +732,19 @@ def test_reward_economy_preset():
     back = TrainConfig.load(p)
     assert back.reward["normalize_tower_dmg"] is True
     assert back.reward["elixir_diff_weight"] == eco.reward["elixir_diff_weight"]
-    print("[PASS] economy 预设：normalize+费差生效、standard 保持旧公式、JSON 往返正常")
+    print("[PASS] 费差默认打开：standard/economy normalize+费差=0.5、按流派 0.7/0.3/0.05、JSON 往返正常")
 
 
 def test_reward_economy_level_invariance():
-    """economy 奖励：塔损按塔血%归一化 → 同一事件跨等级奖励一致；lv11 与旧公式逐位一致。"""
+    """费差机制：塔损按塔血%归一化 → 同一事件跨等级奖励一致；旧公式仍漂移（回归）。"""
     from rl.env_wrapper import compute_reward, _TOWER_HP_ANCHOR
     from rl.config import TrainConfig, reward_to_env
 
     eco = reward_to_env(TrainConfig.resolve("economy"))
-    std = reward_to_env(TrainConfig.resolve("standard"))
+    # 旧公式（2025-06 前的默认：normalize 关、费差 0、挨打 0.0012）——仅作回归对照
+    legacy = {"crown_weight": 5.0, "tower_dmg_opp": 0.001, "tower_dmg_self": 0.0012,
+              "win_bonus": 10.0, "lose_penalty": 10.0, "invalid_penalty": 0.05,
+              "elixir_bonus": 0.0, "normalize_tower_dmg": False, "elixir_diff_weight": 0.0}
     # 锚 = 引擎真实 lv11 总塔血（2×3052 + 4824）
     assert _TOWER_HP_ANCHOR == 10928.0, "lv11 总塔血锚 = 2×3052 + 4824 = 10928"
 
@@ -723,59 +764,63 @@ def test_reward_economy_level_invariance():
     lv11_max = 10928.0   # 引擎默认 lv11：2×3052 + 4824
     lv16_max = 21268.0   # 2×5726 + 9816
     eco11, eco16 = r(eco, lv11_max), r(eco, lv16_max)
-    old11, old16 = r(std, lv11_max), r(std, lv16_max)
-    # economy：同一"塔血百分比事件"跨等级奖励一致
-    assert abs(eco11 - eco16) < 1e-9, f"economy 应跨等级不变: {eco11} vs {eco16}"
-    # economy 在 lv11 与旧公式逐位一致（行为不变）
-    assert abs(eco11 - old11) < 1e-12, f"economy@lv11 应等于旧公式: {eco11} vs {old11}"
+    old11, old16 = r(legacy, lv11_max), r(legacy, lv16_max)
+    # 费差机制：同一"塔血百分比事件"跨等级奖励一致
+    assert abs(eco11 - eco16) < 1e-9, f"费差机制应跨等级不变: {eco11} vs {eco16}"
     # 旧公式确实随等级漂移（这正是要修的问题，回归验证）
     assert abs(old11 - old16) > 0.01, "旧公式应随等级漂移（回归验证）"
-    print(f"[PASS] economy 奖励：跨等级不变({eco11:.4f})、lv11 与旧公式一致、"
-          f"旧公式漂移({old11:.3f}->{old16:.3f})")
+    print(f"[PASS] 费差机制：跨等级不变({eco11:.4f})、旧公式漂移({old11:.3f}->{old16:.3f})")
 
 
 def test_reward_economy_elixir_diff():
-    """economy 费差项：显式给圣水定价；potential-style（闭环累计归零）。"""
+    """费差项：显式给圣水定价（1圣水≈500血@lv11）；potential-style（闭环累计归零）。"""
     from rl.env_wrapper import compute_reward
     from rl.config import TrainConfig, reward_to_env
 
-    eco = reward_to_env(TrainConfig.resolve("economy"))
-    std = reward_to_env(TrainConfig.resolve("standard"))
+    std = reward_to_env(TrainConfig.resolve("standard"))   # 费差=0.5
+    # 旧公式（无费差项）作回归对照
+    legacy = {"crown_weight": 5.0, "tower_dmg_opp": 0.001, "tower_dmg_self": 0.001,
+              "win_bonus": 10.0, "lose_penalty": 10.0, "invalid_penalty": 0.05,
+              "elixir_bonus": 0.0, "normalize_tower_dmg": True, "elixir_diff_weight": 0.0}
     base = dict(blue_hps_old=10928.0, red_hps_old=10928.0,
                 blue_hps_new=10928.0, red_hps_new=10928.0,
                 blue_left_old=3, red_left_old=3, blue_left_new=3, red_left_new=3,
                 winner=None, invalid_count=0,
                 blue_hps_max=10928.0, red_hps_max=10928.0)
 
-    # 我方花 4 费（费差 -4）→ economy 显式 -0.4；旧公式 0（无圣水定价）
-    r_eco = compute_reward(eco, my_elixir_before=5.0, opp_elixir_before=5.0,
-                           my_elixir_after=1.0, opp_elixir_after=5.0, **base)
+    # 我方花 4 费（费差 -4）→ 默认机制显式 -2.0（=4×0.5）；旧公式 0（无圣水定价）
     r_std = compute_reward(std, my_elixir_before=5.0, opp_elixir_before=5.0,
                            my_elixir_after=1.0, opp_elixir_after=5.0, **base)
-    assert abs(r_eco - (-0.4)) < 1e-9, f"花4费应-0.4: {r_eco}"
-    assert abs(r_std - 0.0) < 1e-12, f"旧公式花费无显式惩罚: {r_std}"
-    # 对方花 4 费（我方费差 +4）→ economy 显式 +0.4
-    r_eco2 = compute_reward(eco, my_elixir_before=5.0, opp_elixir_before=5.0,
+    r_legacy = compute_reward(legacy, my_elixir_before=5.0, opp_elixir_before=5.0,
+                              my_elixir_after=1.0, opp_elixir_after=5.0, **base)
+    assert abs(r_std - (-2.0)) < 1e-9, f"花4费应-2.0: {r_std}"
+    assert abs(r_legacy - 0.0) < 1e-12, f"旧公式花费无显式惩罚: {r_legacy}"
+    # 对方花 4 费（我方费差 +4）→ 默认机制显式 +2.0
+    r_std2 = compute_reward(std, my_elixir_before=5.0, opp_elixir_before=5.0,
                             my_elixir_after=5.0, opp_elixir_after=1.0, **base)
-    assert abs(r_eco2 - 0.4) < 1e-9, f"对方花4费应+0.4: {r_eco2}"
+    assert abs(r_std2 - 2.0) < 1e-9, f"对方花4费应+2.0: {r_std2}"
     # potential-style：闭环（花4→对方花4→我方回5→对方回5）费差项累计归零
     steps = [(5.0, 5.0, 1.0, 5.0), (1.0, 5.0, 1.0, 1.0),
              (1.0, 1.0, 5.0, 1.0), (5.0, 1.0, 5.0, 5.0)]
-    total = sum(compute_reward(eco, my_elixir_before=a, opp_elixir_before=b,
+    total = sum(compute_reward(std, my_elixir_before=a, opp_elixir_before=b,
                                my_elixir_after=c, opp_elixir_after=d, **base)
                 for a, b, c, d in steps)
     assert abs(total) < 1e-9, f"费差项应闭环归零: {total}"
-    print(f"[PASS] economy 费差项：花4费=-0.4/对方花4费=+0.4/闭环累计归零（{total:.2e}）")
+    print(f"[PASS] 费差项：花4费=-2.0/对方花4费=+2.0/闭环累计归零（{total:.2e}）；"
+          f"旧公式无定价（{r_legacy:.2f}）")
 
 
 def test_reward_economy_trade_pricing():
-    """费差 vs 塔血的真实 trade：economy 权重下给出符合直觉的定价（旧公式学不出）。"""
+    """费差 vs 塔血的真实 trade：1圣水≈500血@lv11（花1费换≥500塔血才划算）。"""
     from rl.env_wrapper import compute_reward
     from rl.config import TrainConfig, reward_to_env
 
-    eco = reward_to_env(TrainConfig.resolve("economy"))
-    std = reward_to_env(TrainConfig.resolve("standard"))
+    std = reward_to_env(TrainConfig.resolve("standard"))   # 费差=0.5
+    legacy = {"crown_weight": 5.0, "tower_dmg_opp": 0.001, "tower_dmg_self": 0.001,
+              "win_bonus": 10.0, "lose_penalty": 10.0, "invalid_penalty": 0.05,
+              "elixir_bonus": 0.0, "normalize_tower_dmg": True, "elixir_diff_weight": 0.0}
     base = dict(blue_hps_old=10928.0, red_hps_old=10928.0,
+                blue_hps_new=10928.0, red_hps_new=10928.0,
                 blue_left_old=3, red_left_old=3, blue_left_new=3, red_left_new=3,
                 winner=None, invalid_count=0,
                 blue_hps_max=10928.0, red_hps_max=10928.0)
@@ -783,28 +828,38 @@ def test_reward_economy_trade_pricing():
     def r(weights, **kw):
         return compute_reward(weights, **dict(base, **kw))
 
-    # ① 花 4 费磨掉对方 4.3% 总塔血（≈火球直击塔）：应为正（高效换血）
-    trade = r(eco, blue_hps_new=10928.0, red_hps_new=10928.0 - 0.043 * 10928,
+    # ① 校准：花 1 费换 500 塔血 ≈ 中性（1圣水≈500血）；换 600 血 → 正
+    neutral = r(std, red_hps_new=10928.0 - 500.0,
+                my_elixir_before=5.0, opp_elixir_before=5.0,
+                my_elixir_after=4.0, opp_elixir_after=5.0)
+    assert abs(neutral) < 1e-9, f"1费换500血应中性: {neutral}"
+    good = r(std, red_hps_new=10928.0 - 600.0,
+             my_elixir_before=5.0, opp_elixir_before=5.0,
+             my_elixir_after=4.0, opp_elixir_after=5.0)
+    assert good > 0, f"1费换600血应划算: {good}"
+    # ② 花 4 费磨 4.3% 总塔血（≈470血=117血/圣水 < 500）：新校准下不划算（负）
+    trade = r(std, red_hps_new=10928.0 - 0.043 * 10928,
               my_elixir_before=5.0, opp_elixir_before=5.0,
               my_elixir_after=1.0, opp_elixir_after=5.0)
-    assert trade > 0, f"火球直击塔应划算: {trade}"
-    # ② 花 4 费但 0 塔损（浪费）：应为负
-    waste = r(eco, blue_hps_new=10928.0, red_hps_new=10928.0,
+    assert trade < 0, f"4费只磨4.3%塔血应不划算: {trade}"
+    # ③ 花 4 费但 0 塔损（浪费）：应为负
+    waste = r(std, red_hps_new=10928.0,
               my_elixir_before=5.0, opp_elixir_before=5.0,
               my_elixir_after=1.0, opp_elixir_after=5.0)
     assert waste < 0, f"白花 4 费应为负: {waste}"
-    # ③ 让塔挨 1% 总塔血、换 2 费差（对方花 2 费而我不防）：应为正（trade 划算）
-    trade2 = r(eco, blue_hps_new=10928.0 - 0.01 * 10928, red_hps_new=10928.0,
+    # ④ 让塔挨 1% 总塔血、换 2 费差（对方花 2 费而我不防）：应为正（trade 划算）
+    trade2 = r(std, blue_hps_new=10928.0 - 0.01 * 10928, red_hps_new=10928.0,
                my_elixir_before=5.0, opp_elixir_before=5.0,
                my_elixir_after=5.0, opp_elixir_after=3.0)
     assert trade2 > 0, f"挨 1% 塔血换 2 费差应划算: {trade2}"
-    # ④ 同一事件在旧公式（无费差项）：为负 → 模型学不出这个 trade（缺陷回归）
-    old = r(std, blue_hps_new=10928.0 - 0.01 * 10928, red_hps_new=10928.0,
+    # ⑤ 同一事件在旧公式（无费差项）：为负 → 旧公式学不出这个 trade（缺陷回归）
+    old = r(legacy, blue_hps_new=10928.0 - 0.01 * 10928, red_hps_new=10928.0,
             my_elixir_before=5.0, opp_elixir_before=5.0,
             my_elixir_after=5.0, opp_elixir_after=3.0)
     assert old < 0, f"旧公式挨打换费差应为负（缺陷）: {old}"
-    print(f"[PASS] economy trade 定价：火球直击塔={trade:.3f}>0 / 浪费={waste:.3f}<0 / "
-          f"挨1%换2费差={trade2:.3f}>0（旧公式={old:.3f}<0）")
+    print(f"[PASS] 费差 trade 定价：1费换500血={neutral:.3f}≈0 / 600血={good:.3f}>0 / "
+          f"4费4.3%塔血={trade:.3f}<0 / 浪费={waste:.3f}<0 / 挨1%换2费差={trade2:.3f}>0 "
+          f"（旧公式={old:.3f}<0）")
 
 
 def test_rlenv_card_level():
@@ -1372,6 +1427,7 @@ def main():
     test_league_training_loop()
     test_belief_follower_ppo_league()
     test_config_reward_weights()
+    test_model_reward_overrides()
     test_reward_economy_preset()
     test_reward_economy_level_invariance()
     test_reward_economy_elixir_diff()

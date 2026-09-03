@@ -8,13 +8,17 @@
 - ``--save-config <path>`` 把当前解析结果导出为 JSON，可编辑后 ``--load-config`` 复用。
 
 预设：
-- ``standard``   默认机制（与旧公式逐位一致，行为不变）；
-- ``aggressive`` 鼓励推进：破塔/皇冠/胜利奖励更高，挨打惩罚降低；
-- ``defensive``  鼓励防守：我方塔损惩罚更高、非法动作惩罚更重；
-- ``elixir``     鼓励圣水效率：每步按我方剩余圣水给正向 shaping；
-- ``economy``    费差经济：塔损按塔血%归一化（跨等级不变）+ 显式 Δ费差 shaping，
-                 让模型学会"让塔挨打换圣水/费差"的真实游戏 trade；
+- ``standard``   默认机制：塔血统一（打击=损失同价 0.001/0.001）+ 费差默认打开
+                 （normalize_tower_dmg=True，elixir_diff_weight=0.5，1 圣水≈500 塔血 @lv11）；
+- ``aggressive`` 推进：破塔/皇冠/胜利奖励更高，费差加码（1 圣水≈700 血，塔血换费差）；
+- ``defensive``  防守反击：非法动作惩罚更重，费差减码（1 圣水≈300 血）；
+- ``lockdown``   自闭：费差压到≈0（1 圣水≈50 血，鼓励费差换塔血，浪费仍小惩罚）；
+- ``elixir``     鼓励圣水效率：每步按我方剩余圣水给正向 shaping（叠加默认费差机制）；
+- ``economy``    费差经济（默认机制别名）：塔损按塔血%归一化 + 显式 Δ费差 shaping；
 - ``fast``       小步快跑：步数/评估频率/单局上限都调小，用于冒烟/设备验证。
+
+按流派区分奖惩（flow 联赛 6 模型）：``MODEL_REWARD_OVERRIDES`` 在所选预设之上按
+模型 id 覆盖，main/all_decks/random_deck 用基线，推进加码费差、防反减码、自闭压到≈0。
 
 任何超参都可用命令行覆盖（如 ``--config aggressive --lr 1e-3``）。
 """
@@ -23,17 +27,34 @@ import os
 import json
 from dataclasses import dataclass, field, asdict
 
-#: 默认奖励权重（与 RLEnv 旧公式逐位一致：crown 5 / 塔损 0.001/0.0012 / 胜负 ±10 / 非法 -0.05）
+#: 默认奖励权重（与 RLEnv 的 _DEFAULT_REWARD 保持一致；勿单独改一处）。
+#: 2025-06 奖惩机制改版：
+#: - 塔血统一：打击/损失同价 0.001/0.001（不再"挨打比打人贵 20%"）；
+#: - 费差默认打开：normalize_tower_dmg=True + elixir_diff_weight=0.5，
+#:   lv11 下 1 圣水 ≈ 0.5/0.001 = 500 塔血（真实游戏里 1 圣水约 300-700 血的中位）。
 DEFAULT_REWARD = {
     "crown_weight": 5.0,        # 皇冠差系数（每差 1 皇冠 ±5）
-    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励
-    "tower_dmg_self": 0.0012,   # 我方塔损 → 负奖励
+    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（与 self 统一）
+    "tower_dmg_self": 0.001,    # 我方塔损 → 负奖励（与 opp 统一）
     "win_bonus": 10.0,          # 获胜加成
     "lose_penalty": 10.0,       # 失败惩罚
     "invalid_penalty": 0.05,    # 每次非法动作惩罚
     "elixir_bonus": 0.0,        # 每步按我方剩余圣水的正向 shaping（圣水效率机制）
-    "normalize_tower_dmg": False,  # 塔损按塔血%归一化到 lv11 锚（economy 机制；默认关=旧公式）
-    "elixir_diff_weight": 0.0,     # 每步 Δ费差（我方−对方圣水）shaping 权重（economy 机制）
+    "normalize_tower_dmg": True,   # 塔损按塔血%归一化到 lv11 锚（默认打开，跨等级一致）
+    "elixir_diff_weight": 0.5,     # 每步 Δ费差（我方−对方圣水）shaping 权重（默认打开：
+                                   # lv11 下 1 圣水 ≈ 500 塔血，见 test_reward_economy_trade_pricing）
+}
+
+#: 按流派模型的奖惩覆盖（在所选预设之上按模型 id 覆盖；flow 联赛 6 模型用）。
+#: main / all_decks / random_deck = 基线（同一参数）；推进加码费差（塔血换费差）、
+#: 防守反击减码、自闭压到≈0（鼓励费差换塔血，浪费仍小惩罚——见 config 模块注释）。
+MODEL_REWARD_OVERRIDES = {
+    "main": {},                 # 基线
+    "all_decks": {},            # 基线（与 main/random_deck 同一参数）
+    "random_deck": {},          # 基线
+    "push_flow": {"elixir_diff_weight": 0.7},     # 推进：增加"塔血换费差"奖励（1圣水≈700血）
+    "counter_flow": {"elixir_diff_weight": 0.3},  # 防守反击：降低该奖励（1圣水≈300血）
+    "lockdown_flow": {"elixir_diff_weight": 0.05},# 自闭：压到≈0，鼓励"费差换塔血"（1圣水≈50血）
 }
 
 
@@ -130,38 +151,38 @@ class TrainConfig:
     @classmethod
     def presets(cls):
         return {
-            "standard": cls(name="standard", description="默认奖惩机制（与旧公式一致）"),
+            "standard": cls(name="standard", description="默认奖惩机制：塔血统一 0.001/0.001、费差打开（1圣水≈500血）"),
             "aggressive": cls(
                 name="aggressive",
-                description="鼓励推进：破塔/皇冠/胜利奖励更高，挨打惩罚降低",
-                reward={"crown_weight": 8.0, "tower_dmg_opp": 0.002,
-                        "tower_dmg_self": 0.001, "win_bonus": 15.0,
+                description="推进：破塔/皇冠/胜利奖励更高，费差加码（塔血换费差，1圣水≈700血）",
+                reward={"crown_weight": 8.0, "win_bonus": 15.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
-                        "elixir_bonus": 0.0}),
+                        "elixir_bonus": 0.0, "elixir_diff_weight": 0.7}),
             "defensive": cls(
                 name="defensive",
-                description="鼓励防守：我方塔损惩罚更高、非法动作惩罚更重",
-                reward={"crown_weight": 3.0, "tower_dmg_opp": 0.001,
-                        "tower_dmg_self": 0.0025, "win_bonus": 10.0,
+                description="防守反击：非法动作惩罚更重，费差减码（1圣水≈300血）",
+                reward={"crown_weight": 3.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.1,
-                        "elixir_bonus": 0.0}),
+                        "elixir_bonus": 0.0, "elixir_diff_weight": 0.3}),
+            "lockdown": cls(
+                name="lockdown",
+                description="自闭：费差压到≈0（1圣水≈50血，鼓励费差换塔血，浪费仍小惩罚）",
+                reward={"crown_weight": 5.0, "win_bonus": 10.0,
+                        "lose_penalty": 10.0, "invalid_penalty": 0.05,
+                        "elixir_bonus": 0.0, "elixir_diff_weight": 0.05}),
             "elixir": cls(
                 name="elixir",
-                description="鼓励圣水效率：每步按剩余圣水给正向 shaping",
-                reward={"crown_weight": 5.0, "tower_dmg_opp": 0.001,
-                        "tower_dmg_self": 0.0012, "win_bonus": 10.0,
+                description="鼓励圣水效率：默认机制基础上叠加每步按剩余圣水 shaping",
+                reward={"crown_weight": 5.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
-                        "elixir_bonus": 0.01}),
+                        "elixir_bonus": 0.01, "elixir_diff_weight": 0.5}),
             "economy": cls(
                 name="economy",
-                description="费差经济：塔损按塔血%归一化（跨等级不变）+ 显式 Δ费差 shaping，"
-                            "让模型学会用塔血换圣水（1 圣水≈0.9% 总塔血，lv11 锚 10928）",
-                reward={"crown_weight": 5.0, "tower_dmg_opp": 0.001,
-                        "tower_dmg_self": 0.0012, "win_bonus": 10.0,
+                description="费差经济（默认机制别名）：塔损按塔血%归一化 + Δ费差 shaping（1圣水≈500血）",
+                reward={"crown_weight": 5.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
-                        "elixir_bonus": 0.0,
-                        "normalize_tower_dmg": True,
-                        "elixir_diff_weight": 0.1}),
+                        "elixir_bonus": 0.0, "normalize_tower_dmg": True,
+                        "elixir_diff_weight": 0.5}),
             "fast": cls(
                 name="fast", description="小步快跑（冒烟/设备验证用）",
                 total_steps=2000, steps_per_eval=500,
@@ -199,3 +220,14 @@ class TrainConfig:
 def reward_to_env(cfg: TrainConfig) -> dict:
     """把配置的奖励权重转成 RLEnv 接受的 reward_weights 字典。"""
     return dict(DEFAULT_REWARD, **cfg.reward)
+
+
+def model_reward_weights(model_id: str, cfg: TrainConfig) -> dict:
+    """按流派模型的奖励权重 = 所选预设之上叠加 MODEL_REWARD_OVERRIDES。
+
+    flow 联赛 6 模型用（推进/防反/自闭差异化，main/all/random 用基线同一参数）。
+    未知 model_id 直接回退到所选预设（不改基线行为）。
+    """
+    rw = dict(DEFAULT_REWARD, **cfg.reward)
+    rw.update(MODEL_REWARD_OVERRIDES.get(model_id) or {})
+    return rw

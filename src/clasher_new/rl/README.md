@@ -23,7 +23,7 @@
 | `follower.py` | 跟随者策略：CNN+GRU + autoregressive bundle head；`evaluate` 返回真实熵；`save/load_checkpoint` 带元数据 |
 | `ppo.py` | 轻量 PPO（GAE + clip）：hidden 重放一致、真实熵正则、截断 bootstrap |
 | `league.py` / `pfsp.py` / `elo.py` | 联赛（快照隔离/持久化）/ PFSP（乐观先验）/ Elo（按局数缩放 K） |
-| `config.py` | **命名训练配置**：一组超参 + **奖惩机制奖励权重** → 命名 → 独立输出文件夹；预设 standard/aggressive/defensive/elixir/**economy**/fast，支持导出/载入 JSON |
+| `config.py` | **命名训练配置**：一组超参 + **奖惩机制奖励权重** → 命名 → 独立输出文件夹；预设 standard/aggressive/defensive/**lockdown**/elixir/**economy**/fast + 按流派覆盖 `MODEL_REWARD_OVERRIDES`，支持导出/载入 JSON |
 | `workers.py` | **跨进程训练 worker**：独立进程跑 env+信念+规划（绕开 GIL 吃满多核），与主进程以 (obs, belief_tok, plan_vec) 同步协议交互 |
 | `replay.py` | 对局 replay（schema v2 统一容器，含特权标签）+ **紧凑联赛录像**（每 2000 步保存，供回放） |
 | `train_belief.py` | 信念监督训练：**整局序列** GRU 训练 + 验证集/温度缩放/ECE |
@@ -73,8 +73,9 @@ python rl/run_league.py --mode run --total-steps 20000 --save-state league_state
     --decks-path docs/leaderboard_decks_classified.json   # 缺省自动探测
 
 # 7a) 命名配置 + 奖惩机制（每个配置一个文件夹，产物全在 out_dir/<name>/ 下）
-python rl/run_league.py --mode run --config aggressive --out-dir runs      # 预置奖励方案
-python rl/run_league.py --mode run --config economy --out-dir runs         # 费差经济（塔血%归一化+显式费差）
+python rl/run_league.py --mode run --config aggressive --out-dir runs      # 预置奖励方案（推进：费差 0.7）
+python rl/run_league.py --mode run --config lockdown --out-dir runs        # 自闭：费差≈0（鼓励费差换塔血）
+python rl/run_league.py --mode run --config economy --out-dir runs         # 费差机制别名（默认：塔血%归一化+费差 0.5）
 python rl/run_league.py --mode run --config economy --card-level 16        # 跨等级训练（奖励语义不变）
 python rl/run_league.py --mode run --config defensive --config-name my-run # 自定义文件夹名
 python rl/run_league.py --mode run --config standard --save-config my.json # 导出参数
@@ -97,6 +98,8 @@ python rl/dashboard.py --demo --port 8090                       # 无状态时�
 python rl/dashboard.py --state runs/aggressive/league_state.json --replays runs/aggressive/replays   # 手动指定回放目录
 
 # 7d) 全配对分流派联赛（6 个可训练 PPO，卡组池两两全配对；默认一次训练 148,800 局）
+#    注意：flow 模式按模型奖惩（MODEL_REWARD_OVERRIDES 覆盖费差：main/all/random=0.5、
+#    推进=0.7、防反=0.3、自闭=0.05），--config 只决定共享超参与基线权重。
 python rl/run_league.py --mode flow --config economy --device cuda
 python rl/run_league.py --mode flow --n-random-decks 30 --out-dir runs   # 随机卡组套数（默认 30）
 #   产物：runs/<name>/flow_<id>.pt（6 个模型各一个 checkpoint）；--max-ep-steps 控制单局决策步
@@ -207,21 +210,30 @@ start_training.bat --help
   （破塔/皇冠/胜负/非法/圣水效率系数），`--config` 选预设、`--load-config` 载入自定义 JSON、
   `--save-config` 导出；所有训练产物按 `out_dir/<name>/` 分文件夹（`config.json` /
   `league_state.json` / `main_ckpt_*` / `main_opt_*` / `run_state.json` / `replays/`）。
-- **economy 奖惩机制（费差经济，新增预设）**：解决「费差 vs 塔血」的等级缩放失真。
-  背景：卡牌伤害与塔血都随等级等比放大（游戏本体等级不变），但旧奖励的塔损项用
-  **绝对 HP**（`0.001/HP`），皇冠/胜负却是常数 → 等级越高，磨血/挨打相对目标越"值钱"，
-  且圣水没有任何显式价值（`elixir_bonus=0`）+ 挨打惩罚比打人重 20%，模型学不出
-  "让塔挨打换圣水"这类真实游戏 trade。`--config economy` 开启两项修复：
+- **奖惩机制（2025-06 改版：费差默认打开 + 按流派区分）**：`rl/config.py` 的
+  `DEFAULT_REWARD` 现在是**塔血统一 + 费差机制**（不再有"旧公式"）：
+  - **塔血统一**（`reward.tower_dmg_opp == reward.tower_dmg_self == 0.001`）：打击与损失
+    同价，删掉旧"挨打比打人贵 20%"的不对称。
   - **塔血归一化**（`reward.normalize_tower_dmg=True`）：塔损按 `本局初始总塔血` 归一化到
     lv11 锚（`_TOWER_HP_ANCHOR=10928`，引擎真实 lv11 总塔血 = 2×3052+4824）→ 同一
-    "塔血百分比事件"在任何等级给同一奖励；lv11 下与旧公式**逐位一致**（行为不变）。
-  - **显式费差项**（`reward.elixir_diff_weight=0.1`）：每步 Δ(我方圣水−对方圣水)，
-    potential-style shaping（整局闭环累计归零，只重排不改变总回报），给圣水显式定价
-    （1 圣水≈0.9% 总塔血），让模型能直接权衡"让塔掉 X% 换 Y 费差"。
+    "塔血百分比事件"在任何等级给同一奖励。
+  - **显式费差项**（`reward.elixir_diff_weight=0.5`）：每步 Δ(我方圣水−对方圣水)，
+    potential-style shaping（整局闭环累计归零，只重排不改变总回报），给圣水显式定价：
+    **lv11 下 1 圣水 ≈ 500 塔血**（`0.5 / 0.001`；用户校准 300-700 血带中位）——模型只在
+    "花 1 费能换 ≥500 塔血"时才愿意花，浪费（花圣水无塔伤）仍是惩罚。
+  - **按流派奖惩**（`config.MODEL_REWARD_OVERRIDES`，flow 联赛 6 模型）：在所选预设之上
+    按模型覆盖费差权重——`main`/`all_decks`/`random_deck` 用**同一基线**（0.5，1圣水≈500血）；
+    `push_flow`（推进）**加码**到 0.7（1圣水≈700血，增加"塔血换费差"）；
+    `counter_flow`（防守反击）**减码**到 0.3（1圣水≈300血）；`lockdown_flow`（自闭）
+    **压到 ≈0**（0.05，1圣水≈50血，鼓励"费差换塔血"——花圣水换塔伤；浪费仍小惩罚）。
+    同一对局内 A/B 各用各的权重算 reward（`flow_league._play_one`）。
+  - 命名预设同步更新：`standard` = 新默认（费差 0.5）；`aggressive`=推进（皇冠 8/胜 15 +
+    费差 0.7）；`defensive`=防反（非法 0.1 + 费差 0.3）；`lockdown`=自闭（费差 0.05）；
+    `elixir`/`economy` 保留为圣水效率 / 费差经济别名。
   配套修复：`RLEnv.reset` 现在会 `battle.update_player_hp()` 同步 PlayerState 塔血到真实
   实体 HP（消除等级>11 时每局第一步"塔血暴涨"的假奖励；lv11 下与旧行为逐位一致）。
   另支持 `--card-level 11-16`（`TrainConfig.card_level`，跨进程 worker 一并贯通）——
-  配合 economy 即可跨等级训练/评估而奖励语义不变。
+  配合费差机制即可跨等级训练/评估而奖励语义不变。
   **塔型感知**：真实游戏里国王塔恒定（lv11=4824），四种公主塔血量各异
   （lv11：PrincessTower 3052 / DaggerDuchess 2768 / RoyalChef 2703 / Cannoneer 2616，
   见 `rl/env_wrapper.TOWER_TROOP_HP_LV11`）。归一化分母取**本局真实总塔血**
@@ -229,8 +241,9 @@ start_training.bat --help
   奖励（回归测试 `test_tower_troop_hp_reference`）；更弱塔受同等绝对伤害时奖励更高
   （更大的塔血百分比 = 更接近皇冠）。注：引擎目前只模拟标准 Tower Princess（3052/4824），
   其余塔型仅作参考表，待引擎支持后自动生效。
-  回归测试：`test_reward_economy_*` + `test_tower_troop_hp_reference`
-  （预设/等级不变/lv11 一致/费差定价/trade 直觉/卡牌等级/塔型不变）。
+  回归测试：`test_config_reward_weights` / `test_model_reward_overrides` /
+  `test_reward_economy_*` + `test_tower_troop_hp_reference`
+  （预设/塔血统一/按流派覆盖/等级不变/费差定价/trade 直觉/卡牌等级/塔型不变）。
 - **断点续训**：每个评估周期把 `step`、main 权重、Adam 优化器状态写入 `run_state.json`；
   `--resume` 从上次 step 继续（`--total-steps` 可调大续到更远）。
 - **CUDA 支持**：`--device cpu|cuda|auto`（默认 auto=可用则 cuda）；跟随者/PPO 全程按
