@@ -18,7 +18,7 @@
 | `belief.py` | 信念推断：规则队列锁定（第 4 张起 0/1）+ 早期/异常粒子滤波 + 统计倾向 + 神经 GRU 编码；`opp_played` 结构化多卡契约 |
 | `bayes_filter.py` | 对手 8 卡循环队列信念：O(1) 队列锁定（手牌=卡组−最近4张）+ 前 3 张/异常粒子相；无 40320 全量重建 |
 | `belief_planner.py` | 基于 `b_t` 的可部署规划器（过滤静态塔、region 由 intent 推导） |
-| `prophet.py` | 特权完整状态启发式先知（训练期教师；消费对手手牌/圣水） |
+| `prophet.py` | 特权完整状态启发式先知（训练期教师 30% 帧；消费对手手牌/圣水）；Phase 2 v1 pp 组：punish/anti_spell/save_ace 特权精确版 + king_activate/protect_backline（bp 尚未实现的意图先示范）+ 与 bp 同链标签一致 |
 | `plan_space.py` | `PlanToken` 计划空间与向量化（`PLAN_DIM` 唯一常量源） |
 | `follower.py` | 跟随者策略：CNN+GRU + autoregressive bundle head；`evaluate` 返回真实熵；`save/load_checkpoint` 带元数据 |
 | `ppo.py` | 轻量 PPO（GAE + clip）：hidden 重放一致、真实熵正则、截断 bootstrap |
@@ -36,7 +36,7 @@
 | `decks.py` | **三分类卡组加载器**：读取 `docs/leaderboard_decks_classified.json`（200 副天梯卡组，推进流 60 / 防守反击流 120 / 自闭流 20），RoyaleAPI 卡名 → 引擎卡名映射 + 兜底补位 |
 | `opponents.py` | 脚本策略 `ScriptedPolicy`：random / heuristic / **卡组完全随机**（每局从 139 张引擎卡池重采样 8 张）/ **deck_pool 随机抽整副卡组**（三分类/全 200 模型用） |
 | `dashboard.py` | **训练网页 UI**：Elo-训练次数 曲线仪表盘 + **最近训练回放列表 / Canvas 播放器**（纯 Canvas 自绘、离线可用、3s 轮询 `/api/state`、5s 轮询 `/api/replays`） |
-| `evaluate.py` | 评测：Win/Lose/Draw、Bundle 合法率、Next-Card Acc/Brier/ECE、消融、`--belief-only` 协议 |
+| `evaluate.py` | 评测：Win/Lose/Draw、Bundle 合法率、Next-Card Acc/Brier/ECE、消融、`--belief-only` 协议；消融含 **逐意图采纳探针**（region 吻合率 + save_ace hold 服从率，full vs plan-off Δ） |
 | `selftest.py` | 全链路自检 + 评审回归测试（P0-1..P0-6、P1-4/5/9/18/21） |
 
 ## 训练入口
@@ -226,7 +226,10 @@ start_training.bat --help
   full / plan-off / belief-off / both-off 四变体，输出各变体 WinRate±SE（二项 SE=
   √(p(1-p)/N)）与相对 full 的 Δ±SE、z=Δ/SE（|z|≥2 视为有真实贡献），**落盘
   JSON+CSV**。注意 token 置零是保守消融（RNN hidden 仍含历史 belief/plan 信息），
-  结论应结合 z 与样本量。回归测试：`test_ablation_recorded`。
+  结论应结合 z 与样本量。Phase 2 追加**逐意图采纳探针**：每帧记录 bp plan 意图标签
+  下模型首个部署格与 focus_region 的几何吻合率（region_rate）与 save_ace 的
+  hold_mask 服从率（hold_rate），比较 full vs plan-off → Δ>0 = plan 注入被该意图采纳。
+  回归测试：`test_ablation_recorded`。
 - **flow 数据效率 A/B**（`run_flow_sweep`，`--mode flow-sweep-stream / -games5`）：
   把卡组池缩小一个数量级（`scale_pools(×0.1)` → 6/12/2/20/3/20，一次训练 1,488 局），
   对比两种数据效率策略：**stream**＝每对 1 局忠实流式×20 次完整训练；**games5**＝每对

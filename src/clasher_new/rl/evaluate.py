@@ -43,6 +43,83 @@ def _ece(conf, acc, n_bins=10):
     return float(ece)
 
 
+def _plan_region_hit(region: str, x: float, y: float):
+    """plan.focus_region 与模型首个部署格 (x, y)（player0 本地坐标）的粗粒度吻合。
+
+    - own_*：y < 15.5（己方半场）；enemy_*：y > 16.5；bridge_*：桥带 13..19；
+    - left/right 以 LANE=9 分边；center 类只查半场。
+    仅用于逐意图采纳率统计（Phase 2 消融探针），不参与训练/判分。
+    """
+    x = float(x); y = float(y)
+    side_ok = None
+    if region in ("own_left", "enemy_left", "bridge_left"):
+        side_ok = x < 9.0
+    elif region in ("own_right", "enemy_right", "bridge_right"):
+        side_ok = x >= 9.0
+    half_ok = None
+    if region.startswith("own"):
+        half_ok = y < 15.5
+    elif region.startswith("enemy"):
+        half_ok = y > 16.5
+    elif region.startswith("bridge"):
+        half_ok = 13.0 <= y <= 19.0
+    if side_ok is None and half_ok is None:
+        return None
+    ok = True
+    if side_ok is not None:
+        ok = ok and side_ok
+    if half_ok is not None:
+        ok = ok and half_ok
+    return bool(ok)
+
+
+def _adoption_seed():
+    return {"frames": 0, "deploys": 0, "reg_frames": 0, "reg_hit": 0,
+            "hold_frames": 0, "hold_ok": 0}
+
+
+def _adoption_summary(adoption):
+    """原始计数 → 可落盘摘要（rate 为空样本返回 None）。"""
+    out = {}
+    for intent, a in adoption.items():
+        out[intent] = {
+            "frames": a["frames"], "deploys": a["deploys"],
+            "region_frames": a["reg_frames"],
+            "region_rate": (round(a["reg_hit"] / a["reg_frames"], 4)
+                            if a["reg_frames"] else None),
+            "hold_frames": a["hold_frames"],
+            "hold_rate": (round(a["hold_ok"] / a["hold_frames"], 4)
+                          if a["hold_frames"] else None),
+        }
+    return out
+
+
+def _record_adoption(stats, plan, bundle):
+    """逐意图采纳探针：plan 意图标签（与注入是否置零无关）下模型本帧动作的吻合度。
+
+    - region_rate：首个部署格与 plan.focus_region 几何吻合（有部署的帧里）；
+    - hold_rate（仅 save_ace）：有部署帧里没有打出 hold_mask 指名的槽。
+    比较 full vs plan-off 变体 → Δ 即「plan 注入对该意图行为的因果采纳」。
+    """
+    a = stats["adoption"].setdefault(plan.macro_intent, _adoption_seed())
+    a["frames"] += 1
+    dep = [(sa.slot, sa.x, sa.y) for sa in bundle.sub_actions
+           if sa.kind == "deploy" and 1 <= sa.slot <= K_MAX]
+    if not dep:
+        return
+    a["deploys"] += 1
+    hit = _plan_region_hit(plan.focus_region, dep[0][1], dep[0][2])
+    if hit is not None:
+        a["reg_frames"] += 1
+        a["reg_hit"] += int(hit)
+    if plan.macro_intent == "save_ace":
+        held = set(plan.hold_slots())
+        if held:
+            a["hold_frames"] += 1
+            if not any(slot in held for slot, _, _ in dep):
+                a["hold_ok"] += 1
+
+
 def _make_opponent(env, opponent, opponent_policy=None, rng=None):
     if opponent == "heuristic":
         return heuristic_opponent(env, rng)
@@ -69,6 +146,7 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
              "next_hits": 0, "next_total": 0, "next_brier": 0.0,
              "hand_hits": 0, "hand_total": 0,
              "elixir_spent": 0.0, "plan_intents": {},
+             "adoption": {},   # Phase 2：逐意图采纳率探针（region 吻合 / save_ace hold 服从）
              "crown_diff": [], "tower_diff": [],
              "belief_conf": [], "belief_correct": [],
              }
@@ -93,6 +171,8 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
                                                  env.get_action_mask, hidden=hidden, deterministic=True)
             stats["bundle_sizes"].append(bundle.size)
             stats["bundle_total"] += 1
+            # —— Phase 2 采纳率探针：plan 意图（注入前/置零前同标签）vs 模型本帧动作 ——
+            _record_adoption(stats, plan, bundle)
             # 圣水效率：bundle 内出牌费用（决策时刻手牌）
             for sa in bundle.sub_actions:
                 if sa.kind == "deploy" and 1 <= sa.slot <= K_MAX:
@@ -166,10 +246,12 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
     if stats["crown_diff"]:
         print(f"Mean Crown Diff: {np.mean(stats['crown_diff']):.3f}  "
               f"Mean Tower HP Diff: {np.mean(stats['tower_diff']):.1f}")
+    adoption = _adoption_summary(stats["adoption"])
     return {"winrate": stats["wins"] / max(1, n_games),
             "mean_reward": stats["rew"] / max(1, n_games),
             "wins": stats["wins"], "losses": stats["losses"], "draws": stats["draws"],
             "n_games": n_games,
+            "adoption": adoption,
             # 二项 SE：sqrt(p(1-p)/N)，用于消融 delta 的显著性判断
             "winrate_se": math.sqrt(
                 (stats["wins"] / max(1, n_games)) * (1 - stats["wins"] / max(1, n_games))
@@ -229,15 +311,45 @@ def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim
         zs = f"{d['z']}σ" if d["z"] is not None else "—"
         print(f"  {k:11s}: Δ={d['delta']:+.4f} ± {d['delta_se']:.4f}  z={zs}  -> {d['verdict']}")
 
+    # —— Phase 2：逐意图采纳率探针（full vs plan-off = plan 注入的因果采纳）——
+    adoption_vs_off = {}
+    full_a = results["full"].get("adoption", {})
+    off_a = results["plan-off"].get("adoption", {})
+    print("=== 逐意图采纳（region 吻合率；Δ=full − plan-off >0 → plan 注入被采纳）===")
+    print(f"  {'intent':<16}{'full帧':>6}{'off帧':>6}{'reg_full':>9}{'reg_off':>9}"
+          f"{'Δreg':>8}{'hold_full':>10}{'hold_off':>10}{'Δhold':>8}")
+    for intent in sorted(set(full_a) | set(off_a), key=lambda s: -full_a.get(s, {}).get("frames", 0)):
+        fa, oa = full_a.get(intent, {}), off_a.get(intent, {})
+        rf = fa.get("region_rate"); ro = oa.get("region_rate")
+        hf = fa.get("hold_rate"); ho = oa.get("hold_rate")
+        dr = (rf - ro) if (rf is not None and ro is not None) else None
+        dh = (hf - ho) if (hf is not None and ho is not None) else None
+        adoption_vs_off[intent] = {
+            "full_frames": fa.get("frames", 0), "off_frames": oa.get("frames", 0),
+            "region_rate_full": rf, "region_rate_off": ro,
+            "region_delta": round(dr, 4) if dr is not None else None,
+            "hold_rate_full": hf, "hold_rate_off": ho,
+            "hold_delta": round(dh, 4) if dh is not None else None,
+        }
+        print(f"  {intent:<16}{fa.get('frames', 0):>6}{oa.get('frames', 0):>6}"
+              f"{'' if rf is None else f'{rf:.3f}':>9}{'' if ro is None else f'{ro:.3f}':>9}"
+              f"{'' if dr is None else f'{dr:+.3f}':>8}"
+              f"{'' if hf is None else f'{hf:.3f}':>10}"
+              f"{'' if ho is None else f'{ho:.3f}':>10}"
+              f"{'' if dh is None else f'{dh:+.3f}':>8}")
+
     out = {
         "policy": os.path.abspath(policy_path),
         "opponent": opponent, "n_games": n_games, "seed": seed, "max_steps": max_steps,
         "variants": {k: {"winrate": v["winrate"], "winrate_se": v["winrate_se"],
                          "mean_reward": v["mean_reward"], "wins": v["wins"],
-                         "losses": v["losses"], "draws": v["draws"], "n_games": v["n_games"]}
+                         "losses": v["losses"], "draws": v["draws"], "n_games": v["n_games"],
+                         "adoption": v.get("adoption", {})}
                      for k, v in results.items()},
         "deltas_vs_full": deltas,
-        "note": "token 置零消融；RNN hidden 仍含历史信息，可能低估输入价值",
+        "adoption_vs_plan_off": adoption_vs_off,
+        "note": "token 置零消融；RNN hidden 仍含历史信息，可能低估输入价值；"
+                "adoption 探针：region=首部署格与 plan 半场/分边吻合率，hold=save_ace 未打出 hold 槽率",
     }
     if out_path:
         out_path = os.path.abspath(out_path)
@@ -252,6 +364,20 @@ def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim
             f.write("\n# delta vs full: variant,delta,delta_se,z,verdict\n")
             for k, d in deltas.items():
                 f.write(f"# {k},{d['delta']},{d['delta_se']},{d['z']},{d['verdict']}\n")
+            f.write("\n# adoption by intent: variant,intent,frames,deploys,"
+                    "region_frames,region_rate,hold_frames,hold_rate\n")
+            for variant in ("full", "plan-off"):
+                for intent, a in sorted(results[variant].get("adoption", {}).items()):
+                    rr = a["region_rate"] if a["region_rate"] is not None else ""
+                    hr = a["hold_rate"] if a["hold_rate"] is not None else ""
+                    f.write(f"{variant},{intent},{a['frames']},{a['deploys']},"
+                            f"{a['region_frames']},{rr},{a['hold_frames']},{hr}\n")
+            f.write("\n# adoption delta (full - plan-off): intent,region_rate_full,"
+                    "region_rate_off,region_delta,hold_rate_full,hold_rate_off,hold_delta\n")
+            for intent, a in sorted(adoption_vs_off.items()):
+                f.write(f"# {intent},{a['region_rate_full']},{a['region_rate_off']},"
+                        f"{a['region_delta']},{a['hold_rate_full']},{a['hold_rate_off']},"
+                        f"{a['hold_delta']}\n")
         print(f"[ablation] 结果已落盘 -> {out_path}")
         print(f"[ablation] 明细 CSV   -> {csv_path}")
     return out

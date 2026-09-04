@@ -1,6 +1,9 @@
 # PlanToken 战术意图扩展设计 v1
 
-> 状态：设计草案，逐点讨论中（用户修正与补充已并入 2026-xx）。
+> 状态：设计定稿，实现进度——结构先行(57 维)✅ / bp 组 10 意图 ✅ / **pp 组 ✅（punish、
+> spell_finish、anti_spell、save_ace 特权精确版 + king_activate、protect_backline 先行
+> 示范 + 与 bp 同链标签一致）/ 消融 ✅（plan 注入 vs 置零 + 逐意图采纳探针 region/hold）**；
+> bait 留 backlog；pp 精确层价值经消融探针验证。
 > 目标分支：main。前置：reward v2 Phase 1+3 已落地（0c0fbb1），本设计是 Phase 2。
 > Plan 定位（复习）：plan = 教师每帧输出的**战术意图提示**，作为输入条件进 actor+critic；
 > 模型可学会忽略坏 plan → 扩展价值上限 = planner 规则质量。

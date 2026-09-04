@@ -1904,6 +1904,141 @@ def test_bp_new_intent_rules():
           "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace")
 
 
+def test_pp_new_intent_rules():
+    """ProphetPlanner Phase2 v1 特权意图组：punish(精确圣水)/spell_finish/anti_spell
+    (直读手牌)/save_ace(藏+解除时机)/king_activate/protect_backline(反应+预判)
+    + 与 bp 同链标签一致（soft/spell_trade/pull/push_commit/setup/cycle_small）。"""
+    import battle
+    import player
+    from core import Position
+    from rl.prophet import ProphetPlanner
+
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+
+    def new_battle():
+        return battle.BattleState(player.PlayerState(0, list(DECK), 10.0),
+                                  player.PlayerState(1, list(DECK), 10.0))
+
+    def place(bs, pid, card, x, y):
+        pl = bs.players[pid]
+        pl.cycle = [card] + [c for c in pl.cycle if c != card][:3]
+        pl.elixir = 10.0
+        dep_y = 20.0 if pid == 1 else 6.0
+        assert bs.deploy_card(pid, card, Position(x, dep_y)), (pid, card)
+        e = [e for e in bs.entities.values() if e.player == pid and e.id > 6][-1]
+        e.position.x, e.position.y = x, y
+        return e
+
+    def set_hand(bs, cards, pid=0):
+        bs.players[pid].cycle = list(cards)
+        bs.players[pid].elixir = 10.0
+
+    def pstate(bs):
+        """与 env_wrapper.get_prophet_state() 同构的特权摘要。"""
+        p0, p1 = bs.players
+        return {
+            "time": bs.time,
+            "my_cycle": list(p0.cycle), "opp_cycle": list(p1.cycle),
+            "my_elixir": p0.elixir, "opp_elixir": p1.elixir,
+            "my_towers": [p0.king_tower_hp, p0.left_tower_hp, p0.right_tower_hp],
+            "opp_towers": [p1.king_tower_hp, p1.left_tower_hp, p1.right_tower_hp],
+            "my_crown": p0.get_crown_count(), "opp_crown": p1.get_crown_count(),
+            "entities": [
+                {"name": e.name, "player": e.player,
+                 "pos": (e.position.x, e.position.y), "hp": e.hp}
+                for e in bs.entities.values() if e.is_alive
+            ],
+        }
+
+    pp = ProphetPlanner()
+    # S1 punish（精确圣水）：对手 elixir 1.5 → 另一路进攻
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
+    bs.players[1].elixir = 1.5
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "punish" and t.target_kind == "tower", t.macro_intent
+    # S2 spell_finish：t≥120 残血左公主塔 + Fireball
+    bs = new_battle(); bs.time = 150.0
+    bs.players[1].left_tower_hp = 500.0
+    set_hand(bs, ['Fireball', 'Knight', 'Arrows', 'Musketeer'])
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "spell_finish" and t.focus_region == "enemy_left"
+    # S3 anti_spell（直读对手手牌）：对面 hand 有 Fireball + 我方要下后排
+    bs = new_battle(); set_hand(bs, ['Musketeer', 'Knight', 'Skeletons', 'Fireball'])
+    bs.players[1].cycle = ['Fireball'] + list(bs.players[1].cycle)[:3]
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "anti_spell" and t.opp_spell_threat == "fireball"
+    # S4 save_ace（藏）：手牌 Lightning + 对手圣水足 + 对手手牌无反制 → hold slot1
+    bs = new_battle(); set_hand(bs, ['Lightning', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[1].elixir = 8.0
+    bs.players[1].cycle = ['Knight', 'Musketeer', 'Giant', 'Minions',
+                           'MiniPekka', 'Skeletons', 'Arrows', 'Fireball']
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "save_ace" and (t.hold_mask & 1) == 1, (t.macro_intent, t.hold_mask)
+    # S5 save_ace 解除：坦克进场 + 对手低圣水 + 手牌无反制 → 不藏（转 push_commit 跟牌）。
+    # 坦克从默认 8 卡 cycle 打出后回队尾不在手 → punish 无进攻牌，链落到 push_commit
+    bs = new_battle()
+    place(bs, 0, 'Giant', 9, 12)
+    bs.players[0].cycle = ['Lightning', 'Knight', 'Arrows', 'Musketeer',
+                           'Minions', 'MiniPekka', 'Skeletons', 'Giant']
+    bs.players[0].elixir = 10.0
+    bs.players[1].elixir = 1.0
+    bs.players[1].cycle = ['Knight', 'Musketeer', 'Giant', 'Minions',
+                           'MiniPekka', 'Skeletons', 'Arrows', 'Fireball']
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "push_commit" and t.hold_mask == 0, t.macro_intent
+    # S6 king_activate：左公主塔残血 + Golem 深入中轴 + 手牌低费
+    bs = new_battle(); set_hand(bs, ['Skeletons', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].left_tower_hp = 300.0
+    place(bs, 1, 'Golem', 9, 10)
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "king_activate" and t.placement_hint == "king_front", \
+        t.macro_intent
+    # S7 protect_backline（反应）：敌方 MiniPekka 贴近我方 Musketeer → 前置保护
+    bs = new_battle(); set_hand(bs, ['Knight', 'MiniPekka', 'Skeletons', 'Musketeer'])
+    place(bs, 0, 'Musketeer', 6, 12)
+    place(bs, 1, 'MiniPekka', 8, 14)
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "protect_backline" and t.target_kind == "my_backline", \
+        t.macro_intent
+    # S8 protect_backline（pp 预判）：对手手牌有切后排单位 + 我方后排暴露
+    bs = new_battle(); set_hand(bs, ['Knight', 'Musketeer', 'Arrows', 'Fireball'])
+    place(bs, 0, 'Archer', 6, 11)
+    bs.players[1].cycle = ['MiniPekka'] + [c for c in bs.players[1].cycle
+                                           if c != 'MiniPekka'][:3]
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "protect_backline", t.macro_intent
+
+    # —— 与 bp 同链标签一致（30% prophet 帧不稀释 bp 示范）——
+    # S9 pull：血牛逼近 + 低费拉扯卡
+    bs = new_battle(); set_hand(bs, ['Skeletons', 'Knight', 'Arrows', 'Fireball'])
+    place(bs, 1, 'Golem', 9, 14)
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "pull" and t.placement_hint == "pull_aggro", t.macro_intent
+    # S10 cycle_small：空场 + 1 费小牌 + 圣水足（对手手牌无法术，避免 anti 抢链）
+    bs = new_battle(); set_hand(bs, ['Skeletons', 'Knight', 'Arrows', 'Fireball'])
+    bs.players[1].cycle = ['Knight', 'Musketeer', 'Giant', 'Minions',
+                           'MiniPekka', 'Skeletons', 'Arrows', 'Fireball']
+    assert pp.plan(pstate(bs)).macro_intent == "cycle_small"
+    # S11 setup_wait：空场 + 手牌坦克
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
+    bs.players[1].cycle = ['Knight', 'Musketeer', 'Giant', 'Minions',
+                           'MiniPekka', 'Skeletons', 'Arrows', 'Fireball']
+    assert pp.plan(pstate(bs)).macro_intent == "setup_wait"
+    # S12 push_commit：己方 Giant 推进中 + 后排
+    bs = new_battle(); set_hand(bs, ['Musketeer', 'Arrows', 'Fireball', 'Knight'])
+    place(bs, 0, 'Giant', 9, 10)
+    t = pp.plan(pstate(bs))
+    assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone"
+    # S13 旧回退：空场无小费无坦克无 ace → cycle_and_wait
+    bs = new_battle(); set_hand(bs, ['Knight', 'Musketeer', 'MiniPekka', 'Fireball'])
+    bs.players[1].cycle = ['Knight', 'Musketeer', 'Giant', 'Minions',
+                           'MiniPekka', 'Skeletons', 'Arrows', 'Fireball']
+    assert pp.plan(pstate(bs)).macro_intent == "cycle_and_wait"
+    print("[PASS] ProphetPlanner v1 特权意图：punish/spell_finish/anti_spell/save_ace(藏+解除)/"
+          "king_activate/protect_backline(反应+预判) + bp 同链标签一致")
+
+
 def test_bayes_queue_lock():
     """CycleBayesFilter v2 O(1) 队列锁定定理：
     8 张内容已知 + 出牌按序全观测 → 第 4 张起手牌 = 卡组 − 最近 4 张、下一张 =
@@ -2054,6 +2189,7 @@ def main():
     test_reward_v2_ledger()
     test_plan_v1_layout()
     test_bp_new_intent_rules()
+    test_pp_new_intent_rules()
     test_rlenv_card_level()
     test_tower_troop_hp_reference()
     test_league_resume()

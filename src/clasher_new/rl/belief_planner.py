@@ -53,6 +53,13 @@ TANK_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
 #: 血牛（pull 的目标：只锁塔 / 大体积推进）
 PULL_TARGET_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
                      "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton")
+#: 后排（远程/高价值支援单位：protect_backline 保护对象；pp 预判版共用）
+BACKLINE_CARDS = ("Musketeer", "Archer", "Wizard", "IceWizard", "ElectroWizard",
+                  "MagicArcher", "Princess", "DartGoblin", "Bomber", "Firecracker",
+                  "Executioner", "ThreeMusketeers", "MotherWitch", "Zappies")
+#: 切后排的威胁单位（近战突进；pp 预判版查对手手牌用）
+BACKLINE_HARASSER_CARDS = ("MiniPekka", "Knight", "Valkyrie", "Bandit", "Prince",
+                           "DarkPrince", "RoyalGhost", "Guards")
 
 #: 卡名 → opp_spell_threat 枚举（anti_spell 用；大范围/斩杀法术保守归 big_unknown）
 _SPELL_THREAT_KIND = {
