@@ -32,7 +32,7 @@ if _PARENT not in sys.path:
 
 import numpy as np
 
-from card_utils import Card
+from card_utils import Card, card_data
 from rl.plan_space import PlanToken
 from rl.belief_planner import (
     PRESSURE_THRESHOLD, KING_ACTIVATE_PRINCESS_HP,
@@ -61,9 +61,13 @@ def _region_from_intent(intent: str) -> str:
 
 
 def _units(fs, player_id: int):
-    """特权状态里的非塔部署实体（塔 id/名称除外，行为与 bp 压力统计一致）。"""
+    """特权状态里的非塔部署实体（塔 id/名称除外，行为与 bp 压力统计一致）。
+
+    额外按卡表过滤：ArcherArrow 等弹道实体不在 card_data，不能当单位/威胁。
+    """
     return [e for e in fs["entities"]
-            if e["player"] == player_id and not _is_tower(e["name"])]
+            if e["player"] == player_id and not _is_tower(e["name"])
+            and e["name"] in card_data]
 
 
 def _mean_x(units) -> float:
@@ -182,7 +186,10 @@ class ProphetPlanner:
             return None
         if tu["name"] in PULL_TARGET_CARDS:
             return None  # 血牛解法术亏 → 交给 _pull/单位
-        cost = float(Card(tu["name"]).elixir)
+        try:
+            cost = float(Card(tu["name"]).elixir)
+        except KeyError:
+            return None  # 防御：非卡名实体（弹道等）不做法术交易
         if cost < 3.0:
             return None
         for card in TRADE_SPELL_CARDS:

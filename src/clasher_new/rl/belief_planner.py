@@ -28,7 +28,7 @@ from typing import Optional
 
 import numpy as np
 
-from card_utils import Card
+from card_utils import Card, card_data
 from rl.belief import BeliefState, BeliefInference
 from rl.plan_space import (PlanToken, MACRO_INTENTS, FOCUS_REGIONS, ACE_CARDS,
                            OPP_SPELL_THREATS)
@@ -80,7 +80,11 @@ def _is_tower(name: str) -> bool:
 
 def _deployable_entity(e) -> bool:
     """可部署单位/建筑（排除塔、法术弹道/区域效果等临时实体）。"""
-    if not e.is_alive or _is_tower(getattr(e, "name", "")):
+    name = getattr(e, "name", "")
+    if not e.is_alive or _is_tower(name):
+        return False
+    if name not in card_data:
+        # 箭矢（ArcherArrow）等弹道实体不在卡表 → 不是可部署威胁/目标
         return False
     return getattr(getattr(e, "data", None), "type", "") in ("character", "building")
 
@@ -243,7 +247,10 @@ class BeliefPlanner:
             return None
         if threat_unit.name in PULL_TARGET_CARDS:
             return None  # 血牛解法术亏（Fireball 解不动 Golem）→ 交给 _pull/单位
-        cost = float(Card(threat_unit.name).elixir)
+        try:
+            cost = float(Card(threat_unit.name).elixir)
+        except KeyError:
+            return None  # 防御：非卡名实体（弹道等）不做法术交易
         if cost < 3.0:
             return None
         for card in TRADE_SPELL_CARDS:
