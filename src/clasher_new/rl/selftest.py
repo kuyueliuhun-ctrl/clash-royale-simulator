@@ -1848,19 +1848,37 @@ def test_bp_new_intent_rules():
     bs = new_battle(); place(bs, 1, 'MiniPekka', 6, 9)
     set_hand(bs, ['Freeze', 'Knight', 'Arrows', 'Fireball'])
     assert bp.plan(bs, None).macro_intent == "soft_control"
-    # S4 拉扯：敌方 Golem 逼近（法术解不动 → 放行给 pull）
+    # S4 拉扯（7g）：敌方近战血牛（Prince）逼近 → 用法术之外的便宜身板拦路
+    bs = new_battle(); place(bs, 1, 'Prince', 8, 14)
+    set_hand(bs, ['Knight', 'Arrows', 'Fireball', 'Musketeer'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "pull" and t.placement_hint == "pull_aggro", t.macro_intent
+    # S4b 攻城单位无建筑：只打塔的 Golem 单位拦不住 → 不判 pull（回退防守）
     bs = new_battle(); place(bs, 1, 'Golem', 9, 14)
     set_hand(bs, ['Knight', 'Arrows', 'Fireball', 'Musketeer'])
     t = bp.plan(bs, None)
-    assert t.macro_intent == "pull" and t.placement_hint == "pull_aggro"
+    assert t.macro_intent != "pull", t.macro_intent
     # S5 推进跟牌：己方 Giant 推进中 + 手牌后排
     bs = new_battle(); place(bs, 0, 'Giant', 9, 10)
     set_hand(bs, ['Musketeer', 'Arrows', 'Fireball', 'Knight'])
     t = bp.plan(bs, None)
     assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone"
-    # S6 蓄力：空场 + 手牌坦克
+    # S5b 推进跟牌（7g）：己方 Knight 高血近战身板推进中 → 也承认前排并跟输出
+    bs = new_battle(); place(bs, 0, 'Knight', 8, 10)
+    set_hand(bs, ['Musketeer', 'Arrows', 'Fireball', 'MiniPekka'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone", \
+        t.macro_intent
+    # S6 蓄力：空场 + 手牌沉底血牛 + 费够（坦克费+储备）→ 沉底
     bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
     assert bp.plan(bs, None).macro_intent == "setup_wait"
+    # S6b 主动攒费：手牌 Giant 但费没攒够（<费+2 储备）→ 先等费不裸沉
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
+    bs.players[0].elixir = 6.0
+    assert bp.plan(bs, None).macro_intent == "cycle_and_wait"
+    # S6c HogRider 桥头快攻不沉底：费满也轮不到 setup
+    bs = new_battle(); set_hand(bs, ['HogRider', 'Knight', 'Arrows', 'Fireball'])
+    assert bp.plan(bs, None).macro_intent != "setup_wait"
     # S7 旧回退：空场无小费无坦克 → cycle_and_wait
     bs = new_battle(); set_hand(bs, ['Knight', 'Musketeer', 'MiniPekka', 'Fireball'])
     assert bp.plan(bs, None).macro_intent == "cycle_and_wait"
@@ -1922,6 +1940,9 @@ def test_bp_new_intent_rules():
     print("[PASS] BeliefPlanner v1 规则：cycle_small/spell_trade/soft_control/pull/push_commit/"
           "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace"
           " + protect_backline(反应+信念预判)/king_activate（12 意图，与 pp 同链同序）")
+    print("[PASS] BeliefPlanner 7g：拉扯按高血/近战/建筑目标口径（攻城单位需建筑拉），"
+          "spell_trade 只留远程脆皮，setup 主动攒费(费+2储备)才沉底，"
+          "push_commit 认 Knight/Valkyrie/Prince 前排跟输出")
 
 
 def test_pp_new_intent_rules():

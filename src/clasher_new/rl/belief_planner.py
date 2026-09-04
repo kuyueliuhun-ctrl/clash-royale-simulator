@@ -5,7 +5,8 @@
 Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
 - **bp 组 12 个新意图**（70% 帧即可示范）：soft_control → spell_trade → protect_backline →
   pull → punish → push_commit → spell_finish → setup_wait → king_activate → anti_spell →
-  save_ace → cycle_small（与 ProphetPlanner 同链同序 → 30/70 帧标签一致）；
+  save_ace → cycle_small（与 ProphetPlanner **同链同序** → 30/70 帧标签一致；
+  7g 起部分谓词 BP 侧重启发式口径，与 PP 特权直读不同，但链序不变）；
 - 圣水/手牌按"记忆即明牌"处理：punish 读 belief.elixir_mean，anti_spell/save_ace 读
   belief.hand_probs（粒子后验/后期确定性；信息不足时用概率阈值保守化），
   protect_backline 预判版读 belief.hand_probs 里切后排突进卡；
@@ -14,7 +15,13 @@ Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
 
 修复：
 - P1-4：实体压力统计过滤静态塔，空场开局不再恒为 defend_*；
-- P1-15：focus_region 由 intent 推导（defend_left → own_left、push_right → enemy_right）。
+- P1-15：focus_region 由 intent 推导（defend_left → own_left、push_right → enemy_right）；
+- 7g（BP 侧；PP 暂未同步）：血牛按“高血量”口径（lv11 hp≥1600）理解，不再死名单——
+  spell_trade 只解远程脆皮；只打建筑的攻城单位/高血血牛/一切近战都交给拉扯；
+  只打建筑的只能由建筑拉扯，其余可用便宜单位拦在行进路线（身板优先于输出：
+  修正“骑士放弓箭手后面”→ 近战身板前置吸仇恨）；setup_wait 改为主动攒费
+  （费≥坦克费+储备）才沉底血牛，push_commit 承认 Knight/Valkyrie/Prince 等
+  高血近战为前排并跟输出。
 """
 
 import os
@@ -49,12 +56,30 @@ TRADE_SPELL_CARDS = ("Fireball", "Arrows", "Rocket", "Lightning", "Poison",
                      "Earthquake", "Void", "TheLog", "Snowball", "Zap", "Tornado")
 #: 后期磨塔法术（spell_finish：能稳定打到塔）
 FINISH_SPELL_CARDS = ("Fireball", "Rocket", "Lightning", "Poison", "Earthquake", "Arrows")
-#: 推进坦克（血牛 / 推进主角）
+#: 推进坦克（血牛 / 推进主角；角色启发式用：punish/save_ace/king_activate 等）
 TANK_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
               "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton", "HogRider")
-#: 血牛（pull 的目标：只锁塔 / 大体积推进）
+#: 血牛（只锁塔的大体积推进：pull 的目标；注：7g 后 BP 的拉扯判定不再依赖此名单，
+#: 改按高血量/近战/建筑目标口径；此名单保留给 ProphetPlanner 与旧角色启发式共用）
 PULL_TARGET_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
                      "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton")
+
+#: —— 7g 血牛/拉扯新口径 ——
+#: 高血量判定（lv11 基准，同一等级可比）：hp≥1600 视为“血牛”。
+#: 实测 lv11：Knight 1766 / Valkyrie 1908 / Prince 1920 / HogRider 1696 均≥1600；
+#: MiniPekka 1390 / DarkPrince 1200 / Archer 304 等输出/脆皮不算。
+TANKY_HP = 1600.0
+#: 近战判定：攻击距离 ≤2.0（近战无论血多或少都可以用拉扯/拦路解决）
+MELEE_RANGE = 2.0
+#: 拉扯/拦路所用便宜单位费用上界
+PULL_CHEAP_COST = 3.0
+#: 沉底出手需要圣水 = 坦克费用 + 输出储备（沉底后能留费跟输出/防守）
+SETUP_RESERVE = 2.0
+#: 沉底名单（推进型血牛；HogRider 属桥头快攻，不沉底）
+SINK_TANK_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
+                   "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton")
+#: 前排主体（push_commit 的“坦克”判定：推进型血牛 + 高血近战身板如 Knight/Valkyrie/Prince）
+FRONT_TANK_CARDS = SINK_TANK_CARDS + ("HogRider", "Knight", "Valkyrie", "Prince")
 #: 后排（远程/高价值支援单位：protect_backline 保护对象；pp 预判版共用）
 BACKLINE_CARDS = ("Musketeer", "Archer", "Wizard", "IceWizard", "ElectroWizard",
                   "MagicArcher", "Princess", "DartGoblin", "Bomber", "Firecracker",
@@ -87,6 +112,32 @@ def _deployable_entity(e) -> bool:
         # 箭矢（ArcherArrow）等弹道实体不在卡表 → 不是可部署威胁/目标
         return False
     return getattr(getattr(e, "data", None), "type", "") in ("character", "building")
+
+
+def _unit_card(name):
+    """取卡名对应 Card（lv11 统一口径）；非卡名实体/数据缺失 → None。"""
+    try:
+        return Card(name)
+    except KeyError:
+        return None
+
+
+def _tanky_or_melee(c) -> bool:
+    """拉扯对象口径（7g）：只打建筑的攻城单位 / 高血量血牛 / 近战，全部可拉扯。
+
+    - 只打建筑的血牛 → 只能由建筑拉扯（单位拦不住攻城单位）；
+    - 只是血多/近战 → 任意单位都能拦（近战身板放最前面）。
+    """
+    return c is not None and (c.target_only_buildings or c.hp >= TANKY_HP
+                              or c.range <= MELEE_RANGE)
+
+
+def _is_front_tank_name(name) -> bool:
+    """前排主体判定（push_commit 跟输出用）：沉底名单/桥头快攻/高血近战身板。"""
+    c = _unit_card(name)
+    if c is None:
+        return False
+    return name in FRONT_TANK_CARDS or (c.type == "character" and c.hp >= TANKY_HP)
 
 
 def _enemy_pressure(battle):
@@ -241,16 +292,21 @@ class BeliefPlanner:
         return None
 
     def _spell_trade(self, battle, p, threat, belief):
-        """解牌：敌方高价值单位已进入我方半场 → 手牌有伤害法术直接解（赚费差/保塔）。"""
+        """解牌：敌方远程脆皮已进入我方半场 → 手牌有伤害法术直接解（赚费差/保塔）。
+
+        7g：法术只留给远程脆皮（远程小单位法术收益最高）；只打建筑的攻城单位、
+        高血量血牛、以及一切近战都放行给 _protect_backline/_pull——近战无论血多
+        血少都能用拉扯/拦路解决（“骑士放弓箭手后面”的反例：近战身板要前置）。
+        """
         threat_unit = _closest_threat(battle)
         if threat_unit is None or float(threat_unit.position.y) > OWN_HALF_EDGE + 1.5:
             return None
-        if threat_unit.name in PULL_TARGET_CARDS:
-            return None  # 血牛解法术亏（Fireball 解不动 Golem）→ 交给 _pull/单位
-        try:
-            cost = float(Card(threat_unit.name).elixir)
-        except KeyError:
+        cu = _unit_card(threat_unit.name)
+        if cu is None:
             return None  # 防御：非卡名实体（弹道等）不做法术交易
+        if cu.target_only_buildings or cu.hp >= TANKY_HP or cu.range <= MELEE_RANGE:
+            return None  # 血牛/攻城/近战 → 交给拉扯（_pull）；解不动或不该用法术
+        cost = float(cu.elixir)
         if cost < 3.0:
             return None
         for card in TRADE_SPELL_CARDS:
@@ -277,9 +333,9 @@ class BeliefPlanner:
             for e in battle.entities.values():
                 if e.player != 1 or not _deployable_entity(e):
                     continue
-                if e.name in PULL_TARGET_CARDS:
-                    continue  # 血牛交给 _pull
-                if float(e.position.y) > BRIDGE_Y + 1.5:
+                cu = _unit_card(e.name)
+                if cu is None or cu.target_only_buildings:
+                    continue  # 只锁塔的攻城单位拦不住 → 交给 _pull（建筑拉扯）                if float(e.position.y) > BRIDGE_Y + 1.5:
                     continue
                 dx = float(e.position.x) - bx
                 dy = float(e.position.y) - by
@@ -309,37 +365,71 @@ class BeliefPlanner:
                     macro_intent="protect_backline",
                     focus_region=_own_region(float(target.position.x)),
                     suggested_card=i + 1, target_kind="my_backline",
-                    placement_hint="none", elixir_budget=0.4, risk_profile=0.5,
+                    # 7g：吸仇恨单位放在后排/塔前方（pull_aggro），不是放在输出之后
+                    placement_hint="pull_aggro", elixir_budget=0.4, risk_profile=0.5,
                     value_estimate=0.3 if predictive else 0.5)
         return None
 
     def _pull(self, battle, p, threat, belief):
-        """拉扯：敌方血牛已到桥头/过桥 → 放低费单位/建筑改变其路径（距离制胜）。"""
+        """拉扯/拦路（7g 口径，不再死等 PULL_TARGET_CARDS 名单）：
+        - 目标：进入本方桥头带（y∈[11,18]）的敌方单位中——只打建筑的攻城单位、
+          高血量血牛（hp≥TANKY_HP）、以及一切近战（近战血多血少都可拉扯）；
+        - 打法：只打建筑的只能用建筑拉扯（单位拦不住攻城单位）；血牛/近战用便宜
+          单位拦在其行进路线上——近战身板放最前面吸仇恨，输出留在身板后面。
+        """
         target = None
         for e in battle.entities.values():
             if e.player != 1 or not _deployable_entity(e):
                 continue
-            if e.name not in PULL_TARGET_CARDS:
-                continue
             y = float(e.position.y)
-            if OWN_HALF_EDGE - 4.0 <= y <= BRIDGE_Y + 2.0:
-                target = e
-                break
+            if not (OWN_HALF_EDGE - 4.0 <= y <= BRIDGE_Y + 2.0):
+                continue
+            cu = _unit_card(e.name)
+            if cu is None or not _tanky_or_melee(cu):
+                continue
+            target = (e, cu)
+            break
         if target is None:
             return None
+        e, cu = target
+        # 卡选择：攻城目标必须建筑；普通目标优先近战身板（挡在输出前），
+        # 其次任意便宜角色；空中目标要求我方单位能对空。
+        pick = None
         for i, card in enumerate(p.cycle[:4]):
+            if card == "Mirror":
+                continue
             c = Card(card)
-            if c.type in ("character", "building") and 1.0 <= c.elixir <= 3.0 \
-                    and p.elixir >= c.elixir and card != "Mirror":
-                near_edge = target.position.x < LANE_SPLIT_X - 4.0 \
-                    or target.position.x > LANE_SPLIT_X + 4.0
-                return PlanToken(
-                    macro_intent="pull",
-                    focus_region="own_center", suggested_card=i + 1,
-                    target_kind="unit",
-                    placement_hint="pull_across" if near_edge else "pull_aggro",
-                    elixir_budget=0.3, risk_profile=0.5, value_estimate=-1.0)
-        return None
+            if p.elixir < c.elixir or c.elixir > PULL_CHEAP_COST:
+                continue
+            if cu.target_only_buildings:
+                if c.type == "building":
+                    pick = i + 1
+                    break
+            elif c.type == "character":
+                if cu.is_air_unit and not c.attack_air:
+                    continue
+                if c.range <= MELEE_RANGE:
+                    pick = i + 1   # 近战身板最优
+                    break
+                if pick is None:
+                    pick = i + 1   # 兜底：便宜角色也行（拦截射程内）
+        if pick is None:
+            return None
+        near_edge = float(e.position.x) < LANE_SPLIT_X - 4.0 \
+            or float(e.position.x) > LANE_SPLIT_X + 4.0
+        if cu.target_only_buildings:
+            # 攻城单位：拉到中路/塔前（建筑拉仇恨换路）
+            focus, hint, val = "own_center", \
+                ("pull_across" if near_edge else "pull_aggro"), -1.0
+        else:
+            # 血牛/近战：拦在它正走的那条自家半场路上（身板前置）
+            focus, hint, val = _own_region(e.position.x), "pull_aggro", 0.4
+        return PlanToken(
+            macro_intent="pull",
+            focus_region=focus, suggested_card=pick,
+            target_kind="unit",
+            placement_hint=hint, elixir_budget=0.3, risk_profile=0.5,
+            value_estimate=val)
 
     def _punish(self, battle, p, threat, belief):
         """趁虚另一路：对手低圣水（记忆追踪，圣水=明牌）→ 压与敌方重心相反的路。"""
@@ -366,13 +456,14 @@ class BeliefPlanner:
         return None
 
     def _push_commit(self, battle, p, threat, belief):
-        """推进跟进：己方坦克在地图上推进中（y ≥ 己方半场中前段）→ 在能走到坦克
-        后方的区域跟后排（不必紧贴正后方，不等过桥）。"""
+        """推进跟进：己方前排主体（坦克/高血近战身板，7g 起含 Knight/Valkyrie/Prince）
+        在地图上推进中（y ∈ 己方中前段 8-22）→ 在能走到前排后方的区域跟输出
+        （先血牛/身板沉底或前置，输出跟在其后——修正“输出在前、身板在后”）。"""
         tank = None
         for e in battle.entities.values():
             if e.player != 0 or not _deployable_entity(e):
                 continue
-            if e.name not in TANK_CARDS:
+            if not _is_front_tank_name(e.name):
                 continue
             y = float(e.position.y)
             if 8.0 <= y <= 22.0:
@@ -419,24 +510,36 @@ class BeliefPlanner:
         return None
 
     def _setup_wait(self, battle, p, threat, belief):
-        """蓄力：低压力 + 手牌有坦克且圣水够沉底 + 场上无己方坦克 → 沉底开局/憋组合。"""
+        """主动攒费沉底（7g）：低压力 + 手牌有推进血牛（沉底名单）+ 圣水 ≥ 坦克费
+        + 输出储备(SETUP_RESERVE) → 沉底塔后；血牛走过中前段后由 _push_commit 跟输出。
+        费没攒够就返回 None（落到 cycle_and_wait 等费），不裸下血牛。
+        注：HogRider 属桥头快攻不沉底；Knight 等高血近战由 push_commit 承认当前排。"""
         if threat >= PRESSURE_THRESHOLD:
             return None
         tu = _closest_threat(battle)
         if tu is not None and _threat_unit_is_pressing(tu):
             return None  # 敌方单位已压境（哪怕单单位数值低）→ 防守优先
         for e in battle.entities.values():
-            if e.player == 0 and _deployable_entity(e) and e.name in TANK_CARDS:
-                return None  # 已有坦克在场上 → 轮不到 setup
-        for card in TANK_CARDS:
-            slot = _hand_slot(p, card)
-            if slot is not None and p.elixir >= Card(card).elixir - 0.5:
-                return PlanToken(
-                    macro_intent="setup_wait",
-                    focus_region="own_center", suggested_card=slot,
-                    target_kind="none", placement_hint="none",
-                    elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
-        return None
+            if e.player == 0 and _deployable_entity(e) and e.name in SINK_TANK_CARDS:
+                return None  # 已有沉底血牛在场上 → 轮不到 setup
+        best_slot, best_cost = None, -1.0
+        for i, card in enumerate(p.cycle[:4]):
+            if card == "Mirror" or card not in SINK_TANK_CARDS:
+                continue
+            c = Card(card)
+            if c.type != "character":
+                continue
+            if p.elixir < c.elixir + SETUP_RESERVE:
+                continue  # 还在攒费：不急着裸沉
+            if c.elixir > best_cost:
+                best_slot, best_cost = i + 1, float(c.elixir)
+        if best_slot is None:
+            return None
+        return PlanToken(
+            macro_intent="setup_wait",
+            focus_region="own_center", suggested_card=best_slot,
+            target_kind="none", placement_hint="none",
+            elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
 
     def _king_activate(self, battle, p, threat, belief):
         """激活国王塔（bp 版）：公主塔残血/被破 + 敌方血牛/大单位接近国王塔中轴
