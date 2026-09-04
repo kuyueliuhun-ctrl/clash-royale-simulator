@@ -15,8 +15,8 @@
 | `action_mask.py` | 动态动作掩码 + 整包原子校验（含 Mirror 引擎语义、技能耗蓝模拟、`at_cap` 强制 STOP） |
 | `observation.py` | 玩家视角观测 + 特权隐藏状态标签 |
 | `env_wrapper.py` | `RLEnv`：整包校验 → 同 tick 批量 `deploy_card` → 统一推进决策帧；掩码指纹含 `player_id`/手牌 |
-| `belief.py` | 信念推断：规则粒子滤波 + 统计倾向 + 神经 GRU 编码；`opp_played` 结构化多卡契约 |
-| `bayes_filter.py` | 对手 8 卡循环牌序的贝叶斯粒子滤波 |
+| `belief.py` | 信念推断：规则队列锁定（第 4 张起 0/1）+ 早期/异常粒子滤波 + 统计倾向 + 神经 GRU 编码；`opp_played` 结构化多卡契约 |
+| `bayes_filter.py` | 对手 8 卡循环队列信念：O(1) 队列锁定（手牌=卡组−最近4张）+ 前 3 张/异常粒子相；无 40320 全量重建 |
 | `belief_planner.py` | 基于 `b_t` 的可部署规划器（过滤静态塔、region 由 intent 推导） |
 | `prophet.py` | 特权完整状态启发式先知（训练期教师；消费对手手牌/圣水） |
 | `plan_space.py` | `PlanToken` 计划空间与向量化（`PLAN_DIM` 唯一常量源） |
@@ -149,7 +149,7 @@ python rl/run_league.py --mode run --main-init follower_human.pt --config econom
 
 # 7h) 训练提速：评估加速（训练慢的主因 = 评估开销爆炸，不是训练本身）
 #   评估是全配对 C(6,2)=15 对 × n_eval_games 局，每局最多 max_ep_steps 步的完整 CPU 模拟
-#   + belief(128 particles) 推理；n_eval_games 4→40 时评估量是训练步数的 ~180 倍上限。
+#   + belief（前 3 张 128 粒子，第 4 张后 O(1) 队列锁定）推理；n_eval_games 4→40 时评估量是训练步数的 ~180 倍上限。
 #   三招压评估开销：
 #     1) 配置（config.py 默认）：n_eval_games 40→16（轮内 SE≈39，仍可区分学习信号）、
 #        steps_per_eval 2000→4000（评估频率减半、每 ckpt 训练量翻倍）、
@@ -257,7 +257,7 @@ start_training.bat --help
 - **整包原子校验**：提交前校验整个 bundle（含决策时刻手牌解析、Mirror 引擎语义、圣水扣减推演、技能就绪校验）；任一非法即拒绝整包并惩罚；引擎级拒绝会 `RuntimeWarning` 暴露掩码缺口。
 - **坐标契约**：`SubAction(x, y)` 一律是玩家本地坐标，掩码层与提交层共用 `sub_position`，杜绝镜像分裂。
 - **英雄技能**：`SubAction(kind="ability")` 触发 `battle.use_ability`；跟随者 bundle head 决策空间为「出牌槽位 + ABILITY + STOP」，`at_cap` 时强制 STOP。
-- **信念**：`b_t = P(z_t | o_1:t, a_1:t-1)`；`info["opp_played"]` 为结构化列表 `[{"card","x","y"},...]`，技能哨兵由信念入口过滤；统计层记录落点/风格；圣水有独立计数器估计。
+- **信念**：`b_t = P(z_t | o_1:t, a_1:t-1)`；`info["opp_played"]` 为结构化列表 `[{"card","x","y"},...]`，技能哨兵由信念入口过滤；统计层记录落点/风格；圣水有独立计数器估计。规则层（`bayes_filter.py`）用 O(1) 队列锁定：8 卡内容已知 + 出牌按序全观测时，**第 4 张起手牌集合 = 卡组 − 最近 4 张、下一张 = 第 k−3 张打出牌（精确 0/1，与开局洗牌无关）**；仅前 3 张与异常观测走粒子近似。
 - **PPO 正确性**：重放使用 rollout 记录的掩码序列与 `init_hidden`；熵项为真实分布熵；截断 episode 用 `last_value` bootstrap。
 - **维度契约**：`PLAN_DIM = len(PlanToken().to_vector())`，belief 维度由 `belief_token_dim(deck)` 计算；checkpoint 一律带元数据，加载时校验。
 - **不泄漏特权**：跟随者只接收 `belief_token`（推断结果）与 plan token，绝不直接接收 `z_t`。

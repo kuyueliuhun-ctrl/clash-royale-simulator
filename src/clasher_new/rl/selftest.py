@@ -1904,44 +1904,84 @@ def test_bp_new_intent_rules():
           "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace")
 
 
-def test_bayes_hard_lock():
-    """CycleBayesFilter 硬收敛机制：确定性锁定后精确推进且无伪锁；
-    信息不足（对手行为盲区）时保持粒子后验、不锁（数学上不可辨识不是 bug）。"""
+def test_bayes_queue_lock():
+    """CycleBayesFilter v2 O(1) 队列锁定定理：
+    8 张内容已知 + 出牌按序全观测 → 第 4 张起手牌 = 卡组 − 最近 4 张、下一张 =
+    第 k−3 张打出牌（精确 0/1，与开局排列无关）；异常观测退回粒子相后，
+    连续 4 张合法出牌自动重锁且必须与真实队列同步（无伪锁）。"""
     import random
     from rl.bayes_filter import CycleBayesFilter
 
     deck = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
-    # ① 确定性锁定后：精确推进、熵=0、hand_probs 0/1、与真实队列同步
-    rng = random.Random(5)
-    truth = list(deck); rng.shuffle(truth)
-    bf = CycleBayesFilter(deck, n_particles=128, seed=1)
-    bf._exact = list(truth)
-    real = list(truth)
-    for _ in range(30):
-        i = rng.randrange(4); c = real[i]
-        real = [x for x in real if x != c] + [c]
-        bf.update(c)
-        assert bf._exact is not None and bf.entropy() == 0.0
-        assert set(bf._exact[:4]) == set(real[:4]), "精确模式必须与真实手牌同步"
-    assert set(np.unique(bf.hand_probs())) <= {0.0, 1.0}, "精确模式 hand_probs 应 0/1"
-
-    # ② 无伪锁：均匀随机对手（盲区策略）跑 300 步 —— 允许不锁，
-    #    但一旦锁定必须与真实手牌一致（核心正确性，绝不锁错）
-    for trial in range(3):
-        rng = random.Random(50 + trial)
+    # ① 随机策略 300 步 × 多局：第 4 张（step==3）起必须锁定，
+    #    且全程手牌/下一张与真实队列逐位一致（锁定永不锁错、不脱锁）
+    for trial in range(5):
+        rng = random.Random(100 + trial)
         truth = list(deck); rng.shuffle(truth)
-        bf2 = CycleBayesFilter(deck, n_particles=64, seed=trial)
+        bf = CycleBayesFilter(deck, n_particles=128, seed=trial)
         real = list(truth)
         for step in range(300):
             i = rng.randrange(4); c = real[i]
             real = [x for x in real if x != c] + [c]
-            bf2.update(c)
-            if bf2._exact is not None:
-                assert set(bf2._exact[:4]) == set(real[:4]), f"伪锁 trial={trial} step={step}"
-                break
-        # 粒子后验自洽：真实手牌里的卡应始终在候选中有正概率（未被误淘汰殆尽即允许）
-    print("[PASS] 信念硬收敛：精确推进/熵0/0-1概率；盲区策略无伪锁（保持后验）")
+            bf.update(c)
+            if step < 3:
+                assert not bf.locked, f"第4张前不得锁定 trial={trial} step={step}"
+                i_c = deck.index(c)
+                assert bf.hand_probs()[i_c] == 0.0, "打出的卡应排除出手牌"
+            else:
+                assert bf.locked and bf.entropy() == 0.0, \
+                    f"内容已知+全观测第4张起应精确锁定 trial={trial} step={step}"
+                assert set(np.unique(bf.hand_probs())) <= {0.0, 1.0}
+                hand = {deck[i] for i in range(len(deck)) if bf.hand_probs()[i] > 0.5}
+                assert hand == set(real[:4]), f"手牌不同步 trial={trial} step={step}"
+                nxt = deck[int(np.argmax(bf.next_probs()))]
+                assert nxt == real[4], f"下一张不同步 trial={trial} step={step}"
+    print("[1/3] 定理：第4张起 O(1) 锁定，300 步×5 局手牌/下一张全程与真实同步")
+
+    # ② 异常观测（手牌外）：退回粒子相；随后 4 张真实合法出牌自动重锁且同步
+    rng = random.Random(7)
+    truth = list(deck); rng.shuffle(truth)
+    bf = CycleBayesFilter(deck, n_particles=64, seed=3)
+    real = list(truth)
+    for _ in range(5):                       # 前 5 张合法 → 已锁定
+        i = rng.randrange(4); c = real[i]
+        real = [x for x in real if x != c] + [c]
+        bf.update(c)
+    assert bf.locked
+    fake = real[4]                           # 真实队列的下一张 = 此刻不在手牌
+    assert fake not in real[:4]
+    bf.update(fake)                          # 手牌外出牌 → 不推进真实队列
+    assert not bf.locked, "手牌外出牌应退回粒子相"
+    for _ in range(8):                       # 连续真实合法出牌 → 4 张后重锁
+        i = rng.randrange(4); c = real[i]
+        real = [x for x in real if x != c] + [c]
+        bf.update(c)
+    assert bf.locked and bf.entropy() == 0.0
+    hand = {deck[i] for i in range(len(deck)) if bf.hand_probs()[i] > 0.5}
+    assert hand == set(real[:4]), "异常后重锁必须与真实手牌同步"
+    nxt = deck[int(np.argmax(bf.next_probs()))]
+    assert nxt == real[4], "异常后重锁必须与真实下一张同步"
+    print("[2/3] 异常：手牌外退回粒子相，4 张合法出牌后自动重锁且无伪锁")
+
+    # ③ 同 seed 确定性：粒子相（前 3 张）轨迹逐位一致，锁定 cycle 相同
+    rng = random.Random(11)
+    truth = list(deck); rng.shuffle(truth)
+    seq = []
+    real = list(truth)
+    for _ in range(6):
+        i = rng.randrange(4); c = real[i]
+        real = [x for x in real if x != c] + [c]
+        seq.append(c)
+    outs = []
+    for seed in (42, 42):
+        b = CycleBayesFilter(deck, n_particles=128, seed=seed)
+        for c in seq:
+            b.update(c)
+        outs.append((b.hand_probs().tolist(), b.next_probs().tolist(), list(b._cycle)))
+    assert outs[0] == outs[1], "同 seed 信念路径必须逐位一致"
+    print("[3/3] 确定性：同 seed 粒子相轨迹与锁定 cycle 逐位一致")
+    print("[PASS] 信念 O(1) 队列锁定：精确推进/熵0/0-1概率；异常重锁无伪锁；跨进程确定性")
 
 
 def test_eval_solo_parallel():
@@ -1985,7 +2025,7 @@ def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
     test_bayes_filter()
-    test_bayes_hard_lock()
+    test_bayes_queue_lock()
     test_hidden_replay_consistency()
     test_entropy_positive_and_sign()
     test_mask_validate_invariant_both_sides()
