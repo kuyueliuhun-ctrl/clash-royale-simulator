@@ -446,7 +446,7 @@ def _make_env(cfg, seed):
 def _make_trainer(main, cfg):
     return PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                       clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
-                      max_grad_norm=cfg.max_grad_norm)
+                      max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm)
 
 
 def _load_run_state(cfg):
@@ -608,7 +608,12 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
             if env.battle.winner is None and not env.battle.game_over and ep_rew:
                 rw = reward_to_env(cfg)
                 ep_rew[-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
-            last_val = main.value(obs, belief_tok, plan_vec, hidden) if truncated else 0.0
+            # P1-7 修复：env 恒返回 trunc=False，须显式标记截断末步 bootstrap 才生效
+            if truncated:
+                ep_trunc[-1] = True
+                last_val = main.value(obs, belief_tok, plan_vec, hidden)
+            else:
+                last_val = 0.0
             adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma, cfg.gae_lambda,
                                               truncated=ep_trunc, last_value=last_val)
             for i in range(len(ep_rew)):
@@ -727,8 +732,12 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
                 if envs[i].battle.winner is None and not envs[i].battle.game_over and b["rew"]:
                     rw = reward_to_env(cfg)
                     b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
-                last_val = (main.value(obs2, belief_toks[i], plans[i], hidden_list[i])
-                            if truncated else 0.0)
+                # P1-7 修复：截断末步须显式标记，last_value bootstrap 才生效
+                if truncated:
+                    b["trunc"][-1] = True
+                    last_val = main.value(obs2, belief_toks[i], plans[i], hidden_list[i])
+                else:
+                    last_val = 0.0
                 adv, ret = PPOTrainer.compute_gae(b["rew"], b["val"], b["term"],
                                                   cfg.gamma, cfg.gae_lambda,
                                                   truncated=b["trunc"], last_value=last_val)
@@ -901,8 +910,13 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
                 if truncated and b["winner"] and b["winner"][-1] is None and b["rew"]:
                     rw = reward_to_env(cfg)
                     b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
-                last_val = (main.value(post_obs_list[i], b["belief"][-1], b["plan"][-1],
-                                       hidden_list[i]) if truncated else 0.0)
+                # P1-7 修复：截断末步须显式标记，last_value bootstrap 才生效
+                if truncated:
+                    b["trunc"][-1] = True
+                    last_val = main.value(post_obs_list[i], b["belief"][-1], b["plan"][-1],
+                                          hidden_list[i])
+                else:
+                    last_val = 0.0
                 adv, ret = PPOTrainer.compute_gae(b["rew"], b["val"], b["term"],
                                                   cfg.gamma, cfg.gae_lambda,
                                                   truncated=b["trunc"], last_value=last_val)
@@ -1033,6 +1047,15 @@ def main():
     ap.add_argument("--eval-workers", type=int, default=None,
                     help="评估并行进程数（>1 时 spawn N 进程并行打评估局，绕开 GIL；"
                          "默认 0=串行。战斗模拟是纯 Python，跨进程才真正吃满多核）")
+    # 纯 RL 冷启动修复的 A/B 开关（覆盖配置预设）
+    ap.add_argument("--gae-lambda", type=float, default=None,
+                    help="GAE λ（economy 预设已默认 0.99；0.95=旧视野）")
+    ap.add_argument("--ent-coef", type=float, default=None,
+                    help="熵系数覆盖（默认 0.01；冷启动试探可临时调高）")
+    ap.add_argument("--adv-norm", type=str, choices=["batch", "scale", "none"], default=None,
+                    help="advantage 归一化：batch=整批中心化(旧) / scale=只除std / none=原始")
+    ap.add_argument("--no-train-stall-stop", action="store_true",
+                    help="solo：关闭训练环僵局早停（默认开；关=旧行为拖满 max_ep_steps）")
     args = ap.parse_args()
 
     if args.mode == "eval":
@@ -1048,7 +1071,8 @@ def main():
     for k in ("total_steps", "steps_per_eval", "n_envs", "parallel", "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
-              "solo_copy_every", "eval_workers"):
+              "solo_copy_every", "eval_workers",
+              "gae_lambda", "ent_coef", "adv_norm"):
         v = getattr(args, k)
         if v is not None:
             overrides[k] = v
@@ -1056,6 +1080,8 @@ def main():
         overrides["keep_snapshot"] = True
     if args.only_vs_main:
         overrides["only_vs_main"] = True
+    if args.no_train_stall_stop:
+        overrides["train_stall_stop"] = False
     if args.out_dir is not None:
         overrides["out_dir"] = args.out_dir
     if args.config_name:

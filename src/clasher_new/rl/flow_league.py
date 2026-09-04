@@ -135,7 +135,8 @@ def build_flow_models(cfg, device, belief_dim):
         trainers[mid] = PPOTrainer(pol, lr=cfg.lr, gamma=cfg.gamma,
                                    gae_lambda=cfg.gae_lambda, clip=cfg.clip,
                                    vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
-                                   max_grad_norm=cfg.max_grad_norm)
+                                   max_grad_norm=cfg.max_grad_norm,
+                                   adv_norm=cfg.adv_norm)
     return models, trainers
 
 
@@ -183,7 +184,7 @@ def _load_flow_resume(cfg, device):
     for mid, pol in loaded.items():
         t = PPOTrainer(pol, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                        clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
-                       max_grad_norm=cfg.max_grad_norm)
+                       max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm)
         op = os.path.join(cfg.folder(), f"flow_opt_{mid}.pt")
         if os.path.exists(op):
             try:
@@ -213,7 +214,12 @@ def new_ep_buf():
 def _flush_episode(buf, ep, policy, last_obs, last_belief, last_plan, last_hidden,
                    truncated, cfg):
     """整局 GAE 后把 transition 追加进 buf（与 run_league 主训练一致）。"""
-    last_val = policy.value(last_obs, last_belief, last_plan, last_hidden) if truncated else 0.0
+    # P1-7 修复：env 恒返回 trunc=False，截断末步须显式标记 bootstrap 才生效
+    if truncated and ep["trunc"]:
+        ep["trunc"][-1] = True
+        last_val = policy.value(last_obs, last_belief, last_plan, last_hidden)
+    else:
+        last_val = 0.0
     adv, ret = PPOTrainer.compute_gae(ep["rew"], ep["val"], ep["term"],
                                       cfg.gamma, cfg.gae_lambda,
                                       truncated=ep["trunc"], last_value=last_val)

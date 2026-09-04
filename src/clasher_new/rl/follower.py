@@ -85,7 +85,14 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
 
 
 class FollowerPolicy(nn.Module):
-    def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY):
+    def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY,
+                 stop_logit_bias=-1.0):
+        """stop_logit_bias：新初始化时给 STOP logit 的偏置（负数=初始更愿意出牌）。
+
+        纯 RL 冷启动修复：随机初始化下模型天然容易吸附 STOP（手牌合法项少时
+        STOP 几乎恒合法）；把 STOP logit 压低让初始 P(出牌)≈0.7-0.8，
+        打破“开局双双 STOP → 对局无事件 → 无梯度”的自锁。加载旧 ckpt 会覆盖该偏置。
+        """
         if plan_dim is None or belief_dim is None:
             raise ValueError("FollowerPolicy 需要显式 plan_dim/belief_dim（禁止魔法默认值，P0-5）")
         super().__init__()
@@ -118,6 +125,11 @@ class FollowerPolicy(nn.Module):
         self.cell_head = nn.Linear(hidden, GRID_H * GRID_W)
         self.value_head = nn.Linear(hidden, 1)
         self.sub_emb = nn.Linear(NUM_SLOT_OPTIONS + 2, hidden)   # option onehot + (x/18, y/32)
+
+        # 纯 RL 冷启动：初始压低 STOP logit（新随机初始化生效；load_checkpoint 会覆盖）
+        if stop_logit_bias:
+            with torch.no_grad():
+                self.slot_head.bias[STOP_IDX] += stop_logit_bias
 
         self.device = "cpu"
 

@@ -23,7 +23,7 @@ import torch.nn.functional as F
 
 class PPOTrainer:
     def __init__(self, policy, lr=3e-4, gamma=0.99, gae_lambda=0.95, clip=0.2,
-                 vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5):
+                 vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5, adv_norm="batch"):
         self.policy = policy
         self.opt = torch.optim.Adam(policy.parameters(), lr=lr)
         self.gamma = gamma
@@ -32,6 +32,7 @@ class PPOTrainer:
         self.vf_coef = vf_coef
         self.ent_coef = ent_coef
         self.max_grad_norm = max_grad_norm
+        self.adv_norm = adv_norm    # batch=整批中心化(旧) / scale=只除std / none=原始
         self.updates = 0            # 累计 update 次数（flow 联赛 / 测试校验用）
 
     @staticmethod
@@ -61,20 +62,39 @@ class PPOTrainer:
         returns = adv + np.asarray(values, dtype=np.float32)
         return adv, returns
 
-    def update(self, transitions):
+    def update(self, transitions, ent_coef=None, adv_norm=None):
         """transitions: list of dicts {obs, belief, plan, bundle, old_logprob,
         adv, returns, masks, init_hidden(可选)}。
 
         并行版：用 evaluate_batch 一次前向+反向算完所有 transition（CNN 编码只做一次，
         每个 decoder 步按存活子集批量），梯度与逐条累加完全等价（loss 用 sum 保留量纲）。
+
+        ent_coef / adv_norm：单次更新覆盖（None = 用构造参数）。
+        adv_norm: batch=整批中心化（旧默认）/ scale=只除以批 std（不中心化，
+        避免“躺平零优势帧”被批均值抬成伪正优势）/ none=不归一化。
+        返回 stats 附带 ratio/clip/raw-adv/梯度范数诊断。
         """
         self.policy.train()
         if not transitions:
-            return {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0}
+            return {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0,
+                    "ratio_mean": 1.0, "clip_frac": 0.0,
+                    "adv_mean": 0.0, "adv_std": 0.0, "grad_norm": 0.0, "n": 0}
         self.updates += 1
-        advs = np.array([t["adv"] for t in transitions], dtype=np.float32)
-        if advs.std() > 1e-6:
-            advs = (advs - advs.mean()) / (advs.std() + 1e-8)
+        adv_raw = np.array([t["adv"] for t in transitions], dtype=np.float32)
+        advs = adv_raw.copy()
+        mode = self.adv_norm if adv_norm is None else adv_norm
+        std = float(advs.std())
+        if mode == "scale":
+            if std > 1e-6:
+                advs = advs / (std + 1e-8)
+        elif mode == "none":
+            pass
+        elif mode == "batch":
+            if std > 1e-6:
+                advs = (advs - advs.mean()) / (std + 1e-8)
+        else:
+            raise ValueError(f"未知 adv_norm='{mode}'（batch/scale/none）")
+        coef = self.ent_coef if ent_coef is None else ent_coef
 
         dev = self.policy.device
         lp_new, value, ent = self.policy.evaluate_batch(
@@ -94,13 +114,24 @@ class PPOTrainer:
         rets = torch.tensor([t["returns"] for t in transitions],
                             dtype=torch.float32, device=dev)
         v_loss = F.mse_loss(value.squeeze(-1), rets, reduction="sum")
-        loss = p_loss + self.vf_coef * v_loss - self.ent_coef * ent.sum()
+        loss = p_loss + self.vf_coef * v_loss - coef * ent.sum()
 
         self.opt.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+        grad_norm = float(torch.nn.utils.clip_grad_norm_(
+            self.policy.parameters(), self.max_grad_norm))
         self.opt.step()
         n = len(transitions)
+        with torch.no_grad():
+            clip_frac = float((((ratio < 1 - self.clip) | (ratio > 1 + self.clip))
+                               .float().mean().item()))
+            ratio_mean = float(ratio.mean().item())
         return {"policy_loss": float(p_loss.item()) / n,
                 "value_loss": float(v_loss.item()) / n,
-                "entropy": float(ent.mean().item())}
+                "entropy": float(ent.mean().item()),
+                "ratio_mean": ratio_mean,
+                "clip_frac": clip_frac,
+                "adv_mean": float(adv_raw.mean()),
+                "adv_std": float(adv_raw.std()),
+                "grad_norm": grad_norm,
+                "n": n}

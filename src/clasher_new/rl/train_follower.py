@@ -201,7 +201,8 @@ def run_training(total_steps, n_envs=1, batch_size=128, update_interval=128,
             truncated = (not term) and (len(ep_rew) >= max_ep_steps)
             last_val = 0.0
             if truncated:
-                # 截断时用截断后状态的 value bootstrap（P1-7）
+                # P1-7 修复：显式标记截断末步（env 恒返回 trunc=False），bootstrap 才生效
+                ep_trunc[-1] = True
                 last_val = policy.value(obs, belief_tok, plan_vec, hidden)
             adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, gamma, gae_lambda,
                                               truncated=ep_trunc, last_value=last_val)

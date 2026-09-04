@@ -90,6 +90,14 @@ class TrainConfig:
     vf_coef: float = 0.5
     clip: float = 0.2
     max_grad_norm: float = 0.5
+    # —— 纯 RL 冷启动修复（2026）——
+    # advantage 归一化：batch=整批中心化（旧默认）/ scale=只除以批 std /
+    # none=原始。躺平局批内大量零优势帧被中心化抬成伪正优势（推高 STOP），
+    # scale 保留原始符号只缩放幅度。
+    adv_norm: str = "batch"
+    # solo 训练环僵局早停判平（与 eval 同语义：连续 100 步双方塔血零变化 → 判平）。
+    # 否则躺平要拖满 max_ep_steps 才在 360 帧末罚一次 −10，(γλ)^k 视野内完全不可见。
+    train_stall_stop: bool = True
     # —— 数据 / 运行时 ——
     decks_path: str = None      # 三分类卡组 JSON（缺省自动探测）
     main_init: str = None       # BC 预训练 / 旧检查点
@@ -209,6 +217,8 @@ class TrainConfig:
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
                         "elixir_bonus": 0.0, "normalize_tower_dmg": True,
                         "elixir_diff_weight": 0.5},
+                gae_lambda=0.99,     # 纯RL冷启动：γλ=0.947→0.987，优势半衰期 13→53 帧
+                                     # （终端±10 与 60-150 帧的出牌因果进入 GAE 视野）
                 only_vs_main=True),   # 联赛模式评估只测 main（15 对→5 对，评估量再 ÷3）；solo 不受影响
             "fast": cls(
                 name="fast", description="小步快跑（冒烟/设备验证用）",

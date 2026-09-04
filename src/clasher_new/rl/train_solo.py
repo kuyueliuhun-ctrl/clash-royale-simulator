@@ -386,7 +386,7 @@ def run_solo(cfg, resume=False, record_replays=True):
     frozen_step = start_step       # 冻结副本当前所在训练步（录像 meta.steps 用）
     ppo = PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                      clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
-                     max_grad_norm=cfg.max_grad_norm)
+                     max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm)
     if rs and rs.get("solo_opt") and os.path.exists(rs["solo_opt"]):
         try:
             ppo.opt.load_state_dict(torch.load(rs["solo_opt"], map_location=device))
@@ -451,9 +451,36 @@ def run_solo(cfg, resume=False, record_replays=True):
     ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
     ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
     transitions = []
+    stall_count = 0                 # 训练环僵局探针（与 eval 同语义）
+    last_hp = None
     _t0 = time.monotonic()
 
     for step in range(start_step + 1, cfg.total_steps + 1):
+        # —— 训练环僵局早停（纯 RL 修复）：连续 100 步双方塔血零变化 → 判平结束本局。
+        # 否则躺平要拖满 max_ep_steps 才在 360 帧末罚一次 −10，(γλ)^k 视野内不可见，
+        # “平局=失败”只修了终局、没修信用视野。与 eval 用同一个探针/判罚语义。
+        if cfg.train_stall_stop and len(ep_rew) and len(ep_rew) % STALL_WINDOW == 0:
+            early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
+            if early:
+                if env.battle.winner is None and not env.battle.game_over and ep_rew:
+                    ep_rew[-1] -= _draw_penalty(cfg)
+                adv, ret = PPOTrainer.compute_gae(
+                    ep_rew, ep_val, ep_term, cfg.gamma, cfg.gae_lambda,
+                    truncated=ep_trunc, last_value=0.0)
+                for i in range(len(ep_rew)):
+                    transitions.append({"obs": ep_obs[i], "belief": ep_belief[i],
+                                        "plan": ep_plan[i], "bundle": ep_bundle[i],
+                                        "old_logprob": ep_lp[i], "adv": float(adv[i]),
+                                        "returns": float(ret[i]), "masks": ep_masks[i],
+                                        "init_hidden": ep_init[i]})
+                obs, _ = env.reset()
+                belief.reset(env.deck1)
+                opp_side.reset()
+                hidden = None
+                ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
+                ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
+                stall_count, last_hp = 0, None
+                continue
         use_prophet = rng.random() < _SOLO_PROPHET_PROB
         plan = prophet.plan(env.get_prophet_state()) if use_prophet \
             else bp.plan(env.battle, belief.state(), obs)
@@ -477,7 +504,14 @@ def run_solo(cfg, resume=False, record_replays=True):
             # 否则 PPO 学不到"平局不可取"，躺平仍是局部最优
             if env.battle.winner is None and not env.battle.game_over and ep_rew:
                 ep_rew[-1] -= _draw_penalty(cfg)
-            last_val = main.value(obs, belief_tok, plan_vec, hidden) if truncated else 0.0
+            # P1-7 修复：env 恒返回 trunc=False，若不显式标记，截断局会被 compute_gae
+            # 当成普通终止（next_val=0），last_value bootstrap 从未生效——躺平拖满 360
+            # 帧时最后一步 δ 巨大而前面 ~300 帧毫无信号。达步数上限且非终局 → 标记末步。
+            if truncated:
+                ep_trunc[-1] = True
+                last_val = main.value(obs, belief_tok, plan_vec, hidden)
+            else:
+                last_val = 0.0
             adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma,
                                               cfg.gae_lambda, truncated=ep_trunc,
                                               last_value=last_val)
@@ -493,14 +527,22 @@ def run_solo(cfg, resume=False, record_replays=True):
             hidden = None
             ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
             ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
+            stall_count, last_hp = 0, None
 
         if len(transitions) >= cfg.update_interval:
-            stats = ppo.update(transitions[:cfg.batch_size] if len(transitions) > cfg.batch_size
-                               else transitions)
+            batch = (transitions[:cfg.batch_size] if len(transitions) > cfg.batch_size
+                     else transitions)
+            n_play = sum(1 for t in batch
+                         if any(sa.kind == "deploy" for sa in t["bundle"].sub_actions))
+            avg_size = sum(len(t["bundle"].sub_actions) for t in batch) / max(1, len(batch))
+            stats = ppo.update(batch)
             transitions = transitions[cfg.batch_size:] if len(transitions) > cfg.batch_size else []
             print(f"[solo step {step}] policy={stats['policy_loss']:.4f} "
-                  f"value={stats['value_loss']:.4f} entropy={stats['entropy']:.4f}",
-                  flush=True)
+                  f"value={stats['value_loss']:.4f} entropy={stats['entropy']:.4f} "
+                  f"| deploy={100.0 * n_play / len(batch):.1f}% bundle={avg_size:.2f} "
+                  f"ratio={stats['ratio_mean']:.3f} clip={100.0 * stats['clip_frac']:.1f}% "
+                  f"adv={stats['adv_mean']:+.3f}±{stats['adv_std']:.3f} "
+                  f"gnorm={stats['grad_norm']:.2f} n={len(batch)}", flush=True)
 
         # 周期同步冻结副本（原版 WeightsCopyingCallback 思路）
         if cfg.solo_copy_every and step % cfg.solo_copy_every == 0:

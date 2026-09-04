@@ -134,6 +134,26 @@ python rl/run_league.py --mode solo --config economy --solo-copy-every 2000   # 
 #   replays/league_<step>.pkl（评估回放，复用回放面板）
 #   dashboard：python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090
 
+# 7f-2) 纯 RL 冷启动修复（防"开局双双 STOP → 全平"自锁；economy 预设默认开启）
+#   病根：出牌收益在 60-150 帧后，(γλ)^k=0.947^k 的 GAE 视野(~13帧半衰)看不见；
+#   而躺平局唯一的 −10 平局惩罚在 360 帧末，同样不可见 → STOP 是局部固定点。
+#   修法（全部在 RL 侧，非规则/非人类示范）：
+#     1) 训练环僵局早停判平（train_solo，与 eval 同一 _stall_probe）：连续 100 步双方
+#        塔血零变化 → 判平扣 draw_penalty 并结束本局（--no-train-stall-stop 关闭回旧行为）；
+#     2) 截断 bootstrap 修复：env 恒返回 trunc=False，旧代码从不为 max_ep_steps 截断
+#        标记末步 → compute_gae 的 last_value 从未生效，截断局被当普通终止（P1-7 实际是死的）；
+#        现在达步数上限且非终局会显式标记并 bootstrap（train_solo/run_league/flow/train_follower 已统一）；
+#     3) economy 预设 gae_lambda 0.95→0.99：γλ=0.987，优势半衰期 13→53 帧
+#        （--gae-lambda 覆盖；--ent-coef 可临时调高熵）；
+#     4) FollowerPolicy 新随机初始化 STOP logit −1.0 偏置：初始 P(出牌)≈0.7-0.8
+#        （加载旧 ckpt 自动覆盖该偏置，resume/--main-init 行为不变）；
+#     5) adv 归一化可选：--adv-norm batch(旧=整批中心化)/scale(只除std，防躺平零优势帧
+#        被批均值抬成伪正)/none；update 日志新增 deploy%/bundle/ratio/clip/adv±/gnorm 诊断。
+python rl/run_league.py --mode solo --config economy --device cuda                 # 默认已带 1-4
+python rl/run_league.py --mode solo --config economy --gae-lambda 0.95             # A/B：旧视野
+python rl/run_league.py --mode solo --config economy --adv-norm scale              # A/B：归一化
+python rl/run_league.py --mode solo --config economy --no-train-stall-stop         # A/B：关僵局早停
+
 # 7g) 人机对战 + 人类数据采集（人在浏览器打训练模型，对局转训练数据）
 #     人 = player-0（蓝），对手 = FollowerPolicy（player-1，deterministic）；
 #     固定 8 卡镜像。每步记录两类数据并落盘 --play-out：
