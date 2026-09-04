@@ -293,7 +293,8 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
             winner=(1 if winner == 1 else (0 if winner == 0 else None)),
             invalid_count=0,
             blue_hps_max=getattr(env, "_red_hps_max", None),
-            red_hps_max=getattr(env, "_blue_hps_max", None))
+            red_hps_max=getattr(env, "_blue_hps_max", None),
+            game_over=env.battle.game_over)
         # player-0 侧 transition
         ep_a["obs"].append(obs); ep_a["belief"].append(belief_tok)
         ep_a["plan"].append(plan_tok); ep_a["bundle"].append(bundle)

@@ -76,7 +76,8 @@ _TOWER_HP_ANCHOR = tower_total_hp(TOWER_TROOP_HP_LV11["PrincessTower"], KING_TOW
 def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
                    blue_left_old, red_left_old, blue_left_new, red_left_new,
                    my_elixir_before, opp_elixir_before, my_elixir_after, opp_elixir_after,
-                   winner, invalid_count, blue_hps_max=None, red_hps_max=None):
+                   winner, invalid_count, blue_hps_max=None, red_hps_max=None,
+                   game_over=False, draw_penalty=None):
     """逐决策帧奖励（RLEnv.step 与 selftest 共用）。
 
     全部新开关关闭（normalize_tower_dmg=False、elixir_diff_weight=0）时与旧公式逐位一致。
@@ -84,9 +85,13 @@ def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
       修复"等级越高磨血/挨打越值钱、皇冠/胜负不变"的漂移（费差↔塔血校准）；
     - ``elixir_diff_weight``：potential-style shaping，Δ(我方圣水−对方圣水) 即"费差"，
       显式给圣水定价，让模型学会"让塔挨打换圣水/费差"这类真实游戏 trade。
-    winner: None=未终局；0=我方胜；其它=负。invalid_count: 非法动作次数。
+    winner: None=未终局/平局；0=我方胜；其它=负。invalid_count: 非法动作次数。
+    game_over: 对局是否已结束（平局判负需要它，避免把进行中的普通步当失败罚）。
+    draw_penalty: 平局惩罚（缺省取 rw["draw_penalty"]，再缺省与 lose_penalty 相同）。
     """
     rw = dict(_DEFAULT_REWARD, **(rw or {}))
+    if draw_penalty is None:
+        draw_penalty = rw.get("draw_penalty", rw["lose_penalty"])
     blue_dmg = blue_hps_old - blue_hps_new
     red_dmg = red_hps_old - red_hps_new
     if rw.get("normalize_tower_dmg"):
@@ -105,8 +110,13 @@ def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
     if edw:
         reward += edw * ((my_elixir_after - opp_elixir_after)
                          - (my_elixir_before - opp_elixir_before))
-    if winner is not None:
-        reward += rw["win_bonus"] if winner == 0 else -rw["lose_penalty"]
+    if winner == 0:
+        reward += rw["win_bonus"]
+    elif winner is not None:
+        reward -= rw["lose_penalty"]
+    elif game_over:
+        # 对局结束且无胜者 = 平局 → 按失败惩罚（平局不再免费，"躺平即最优"被消除）
+        reward -= float(draw_penalty)
     if invalid_count:
         reward -= rw["invalid_penalty"] * invalid_count
     return reward
@@ -434,6 +444,7 @@ class RLEnv(gym.Env):
             invalid_count=invalid_count,
             blue_hps_max=getattr(self, "_blue_hps_max", None),
             red_hps_max=getattr(self, "_red_hps_max", None),
+            game_over=self.battle.game_over,
         )
 
         terminated = self.battle.game_over

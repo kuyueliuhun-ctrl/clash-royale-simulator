@@ -1608,6 +1608,69 @@ def test_eval_stall_early_stop():
     print(f"[PASS] 僵局早停：{dt:.1f}s 判平（对照打满 600 步 ~23s）")
 
 
+def test_draw_penalty_as_loss():
+    """平局=失败：引擎终局平局（game_over=True, winner=None）与僵局/截断平局都按失败惩罚。"""
+    from rl.env_wrapper import compute_reward
+    from rl.config import TrainConfig, reward_to_env
+
+    std = reward_to_env(TrainConfig.resolve("economy"))
+    base = dict(blue_hps_old=10928.0, red_hps_old=10928.0,
+                blue_hps_new=10928.0, red_hps_new=10928.0,
+                blue_left_old=3, red_left_old=3, blue_left_new=3, red_left_new=3,
+                my_elixir_before=5.0, opp_elixir_before=5.0,
+                my_elixir_after=5.0, opp_elixir_after=5.0,
+                invalid_count=0, blue_hps_max=10928.0, red_hps_max=10928.0)
+
+    # ① 未终局（winner=None, game_over=False）→ 平局惩罚不触发（避免误伤普通步）
+    r_ongoing = compute_reward(std, winner=None, game_over=False, **base)
+    assert r_ongoing == 0.0, f"进行中的普通步不应被平局罚: {r_ongoing}"
+
+    # ② 引擎终局平局（game_over=True, winner=None）→ 与失败同罚
+    r_draw = compute_reward(std, winner=None, game_over=True, **base)
+    assert r_draw == -float(std["lose_penalty"]), \
+        f"平局应=失败罚(-{std['lose_penalty']}): {r_draw}"
+    assert std.get("draw_penalty", std["lose_penalty"]) == std["lose_penalty"], \
+        "默认 draw_penalty 应与 lose_penalty 相同"
+
+    # ③ 训练循环截断平局：win 分支不受影响
+    r_win = compute_reward(std, winner=0, game_over=True, **base)
+    assert r_win == float(std["win_bonus"]), f"胜仍应+win_bonus: {r_win}"
+    r_lose = compute_reward(std, winner=1, game_over=True, **base)
+    assert r_lose == -float(std["lose_penalty"]), f"负仍应-lose_penalty: {r_lose}"
+
+    # ④ eval_solo 僵局平局 → mean_reward 已扣 draw_penalty（策略学得到"平局不可取"）
+    from rl import train_solo
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+    from rl.action_bundle import ActionBundle
+
+    class Noop(FollowerPolicy):
+        """act 恒返回 noop：双方都不部署 → 僵局早停必判平，mean_reward 确定性可断言。"""
+        def act(self, obs, belief_token, plan_token, get_mask,
+                hidden=None, deterministic=False):
+            return ActionBundle.noop(), 0.0, 0.0, hidden, {}
+
+    cfg = TrainConfig(name="selftest_draw_penalty", hidden_dim=32, n_eval_games=2,
+                      max_ep_steps=600, seed=5, out_dir="runs/_tmp_drawtest")
+    env = train_solo.solo_env(cfg, 5)
+    bd = len(BeliefInference(opp_deck=list(train_solo.DEFAULT_SOLO_DECK),
+                             n_particles=128, seed=0).encode(None, None))
+    main = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+    opp = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+    main.to_device("cpu")
+    opp.to_device("cpu")
+    train_solo._sync_frozen_copy(main, opp)
+    stats, _ = train_solo.eval_solo(env, main, opp, 2, 600, 5, cfg, record_replays=False)
+    assert stats["draws"] == 2, f"双方 noop 应全平局: {stats}"
+    assert stats["mean_reward"] == -float(std["lose_penalty"]), \
+        f"僵局平局 mean_reward 应含失败罚: {stats['mean_reward']}"
+    print("[PASS] 平局=失败：引擎终局平局/僵局平局均按 lose_penalty 惩罚，普通步不误伤")
+
+    import shutil
+    shutil.rmtree("runs/_tmp_drawtest", ignore_errors=True)
+
+
 def test_eval_solo_parallel():
     """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
     import time
@@ -1673,6 +1736,7 @@ def main():
     test_reward_economy_level_invariance()
     test_reward_economy_elixir_diff()
     test_reward_economy_trade_pricing()
+    test_draw_penalty_as_loss()
     test_rlenv_card_level()
     test_tower_troop_hp_reference()
     test_league_resume()

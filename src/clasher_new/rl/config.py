@@ -38,6 +38,7 @@ DEFAULT_REWARD = {
     "tower_dmg_self": 0.001,    # 我方塔损 → 负奖励（与 opp 统一）
     "win_bonus": 10.0,          # 获胜加成
     "lose_penalty": 10.0,       # 失败惩罚
+    "draw_penalty": 10.0,       # 平局惩罚（= 失败：平局归类为败，逼策略主动求胜；0=旧行为免费平局）
     "invalid_penalty": 0.05,    # 每次非法动作惩罚
     "elixir_bonus": 0.0,        # 每步按我方剩余圣水的正向 shaping（圣水效率机制）
     "normalize_tower_dmg": True,   # 塔损按塔血%归一化到 lv11 锚（默认打开，跨等级一致）

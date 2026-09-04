@@ -54,6 +54,12 @@ def solo_env(cfg, seed):
                  deck0=DEFAULT_SOLO_DECK, deck1=DEFAULT_SOLO_DECK)
 
 
+def _draw_penalty(cfg) -> float:
+    """平局惩罚（= 失败：平局不再免费）。缺省与 lose_penalty 相同。"""
+    rw = reward_to_env(cfg)
+    return float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
+
+
 def _sync_frozen_copy(main, opp):
     """把 main 当前权重同步给冻结副本（周期执行）。"""
     opp.load_state_dict(main.state_dict())
@@ -126,6 +132,9 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
             done = term or trunc
             steps += 1
         w = env.battle.winner
+        if w is None and not env.battle.game_over:
+            # 僵局早停/超时截断判平：与失败同罚（平局不再免费）
+            ep_rew -= _draw_penalty(cfg)
         if w == 0:
             wins += 1
         elif w == 1:
@@ -235,6 +244,10 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
                 done = term or trunc
                 steps += 1
             w = env.battle.winner
+            if w is None and not env.battle.game_over:
+                # 与串行 eval_solo 一致：僵局早停/截断判平 → 平局=失败惩罚
+                rw = env_kwargs.get("reward_weights") or {}
+                ep_rew -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
             results.append((g, w, ep_rew, rec.done(w) if rec is not None else None))
         out_q.put(("result", results))
     except Exception as e:
@@ -450,6 +463,10 @@ def run_solo(cfg, resume=False, record_replays=True):
 
         if done or len(ep_rew) >= cfg.max_ep_steps:
             truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
+            # 平局=失败：对局以无胜者结束（僵局/截断）→ 最后一步加失败惩罚，
+            # 否则 PPO 学不到"平局不可取"，躺平仍是局部最优
+            if env.battle.winner is None and not env.battle.game_over and ep_rew:
+                ep_rew[-1] -= _draw_penalty(cfg)
             last_val = main.value(obs, belief_tok, plan_vec, hidden) if truncated else 0.0
             adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma,
                                               cfg.gae_lambda, truncated=ep_trunc,

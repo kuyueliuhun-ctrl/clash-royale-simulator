@@ -600,6 +600,10 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
 
         if done or len(ep_rew) >= cfg.max_ep_steps:
             truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
+            # 平局=失败：僵局/截断无胜者结束 → 最后一步加失败罚（与 solo 一致）
+            if env.battle.winner is None and not env.battle.game_over and ep_rew:
+                rw = reward_to_env(cfg)
+                ep_rew[-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
             last_val = main.value(obs, belief_tok, plan_vec, hidden) if truncated else 0.0
             adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma, cfg.gae_lambda,
                                               truncated=ep_trunc, last_value=last_val)
@@ -715,6 +719,10 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
 
             if done or len(b["rew"]) >= cfg.max_ep_steps:
                 truncated = (not term) and (len(b["rew"]) >= cfg.max_ep_steps)
+                # 平局=失败：截断无胜者 → 最后一步加失败罚
+                if envs[i].battle.winner is None and not envs[i].battle.game_over and b["rew"]:
+                    rw = reward_to_env(cfg)
+                    b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
                 last_val = (main.value(obs2, belief_toks[i], plans[i], hidden_list[i])
                             if truncated else 0.0)
                 adv, ret = PPOTrainer.compute_gae(b["rew"], b["val"], b["term"],
@@ -834,7 +842,7 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
 
     def new_buf():
         return {"obs": [], "belief": [], "plan": [], "bundle": [], "lp": [], "val": [],
-                "rew": [], "term": [], "trunc": [], "masks": [], "init": []}
+                "rew": [], "term": [], "trunc": [], "masks": [], "init": [], "winner": []}
 
     try:
         for i in range(n):
@@ -876,6 +884,7 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
                 b["lp"].append(lps[i]); b["val"].append(vals[i])
                 b["init"].append(inits[i]); b["masks"].append(masks_list[i])
                 b["rew"].append(reward); b["term"].append(term); b["trunc"].append(trunc)
+                b["winner"].append(winner)
                 if term or trunc or len(b["rew"]) >= cfg.max_ep_steps:
                     done_flags.append(i)
             _t2 = time.monotonic()
@@ -884,6 +893,10 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
             for i in done_flags:
                 b = ep_bufs[i]
                 truncated = (not b["term"][-1]) and (len(b["rew"]) >= cfg.max_ep_steps)
+                # 平局=失败：截断且无胜者 → 最后一步加失败罚
+                if truncated and b["winner"] and b["winner"][-1] is None and b["rew"]:
+                    rw = reward_to_env(cfg)
+                    b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
                 last_val = (main.value(post_obs_list[i], b["belief"][-1], b["plan"][-1],
                                        hidden_list[i]) if truncated else 0.0)
                 adv, ret = PPOTrainer.compute_gae(b["rew"], b["val"], b["term"],
