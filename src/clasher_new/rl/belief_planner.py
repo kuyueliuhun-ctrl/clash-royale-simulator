@@ -19,9 +19,12 @@ Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
 - 7g（BP 侧；PP 暂未同步）：血牛按“高血量”口径（lv11 hp≥1600）理解，不再死名单——
   spell_trade 只解远程脆皮；只打建筑的攻城单位/高血血牛/一切近战都交给拉扯；
   只打建筑的只能由建筑拉扯，其余可用便宜单位拦在行进路线（身板优先于输出：
-  修正“骑士放弓箭手后面”→ 近战身板前置吸仇恨）；setup_wait 改为主动攒费
-  （费≥坦克费+储备）才沉底血牛，push_commit 承认 Knight/Valkyrie/Prince 等
-  高血近战为前排并跟输出。
+  修正“骑士放弓箭手后面”→ 近战身板前置吸仇恨）；push_commit 承认
+  Knight/Valkyrie/Prince 等高血近战为前排并跟输出。
+- 7h（攒费窗口，用户口径）：我方圣水不落后对手≥2 + 对手无过河单位 + 手牌
+  有前排(沉底名单血牛)与后排时 → 进入攒费窗口：圣水未满的帧输出
+  setup_wait + hold_mask=1111（禁止乱花手牌，等费），圣水攒满(≈10)才沉底血牛，
+  血牛过中场后由 push_commit 跟后排；HogRider 属桥头快攻不沉底。
 """
 
 import os
@@ -73,14 +76,20 @@ TANKY_HP = 1600.0
 MELEE_RANGE = 2.0
 #: 拉扯/拦路所用便宜单位费用上界
 PULL_CHEAP_COST = 3.0
-#: 沉底出手需要圣水 = 坦克费用 + 输出储备（沉底后能留费跟输出/防守）
-SETUP_RESERVE = 2.0
+#: —— 7h 主动攒费沉底窗口（用户口径）——
+#: 我方估计圣水落后对手 ≥2 费 → 不进入攒费窗口（先防守/等机会）
+SAVE_BEHIND_ELIXIR = 2.0
+#: 攒满判据：圣水 ≈10（cap）才沉底（攒满后跟后排，不等半途裸沉）
+SAVE_FULL_ELIXIR = 9.95
+#: 攒费窗口 hold_mask：等费帧禁止出任何手牌槽（软约束由 follower 消费）
+SAVE_HOLD_ALL = 0b1111
 #: 沉底名单（推进型血牛；HogRider 属桥头快攻，不沉底）
 SINK_TANK_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
                    "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton")
 #: 前排主体（push_commit 的“坦克”判定：推进型血牛 + 高血近战身板如 Knight/Valkyrie/Prince）
 FRONT_TANK_CARDS = SINK_TANK_CARDS + ("HogRider", "Knight", "Valkyrie", "Prince")
-#: 后排（远程/高价值支援单位：protect_backline 保护对象；pp 预判版共用）
+#: 后排（远程/高价值支援单位：protect_backline 保护对象；pp 预判版共用；也用于攒费
+#: “手牌有后排”判据）
 BACKLINE_CARDS = ("Musketeer", "Archer", "Wizard", "IceWizard", "ElectroWizard",
                   "MagicArcher", "Princess", "DartGoblin", "Bomber", "Firecracker",
                   "Executioner", "ThreeMusketeers", "MotherWitch", "Zappies")
@@ -510,36 +519,55 @@ class BeliefPlanner:
         return None
 
     def _setup_wait(self, battle, p, threat, belief):
-        """主动攒费沉底（7g）：低压力 + 手牌有推进血牛（沉底名单）+ 圣水 ≥ 坦克费
-        + 输出储备(SETUP_RESERVE) → 沉底塔后；血牛走过中前段后由 _push_commit 跟输出。
-        费没攒够就返回 None（落到 cycle_and_wait 等费），不裸下血牛。
-        注：HogRider 属桥头快攻不沉底；Knight 等高血近战由 push_commit 承认当前排。"""
+        """主动攒费沉底（7h 用户口径）：
+        攒费窗口 = 我方圣水不落后对手≥2（总圣水差<2 的安全边界）+ 对手无过河单位
+        + 手牌结构较好（有前排=沉底名单血牛、有后排=BACKLINE_CARDS）；
+        窗口内圣水未满 → 输出 setup_wait + hold_mask=1111（攒费帧：禁止乱花手牌），
+        圣水攒满(≈10) → 沉底血牛（suggested=血牛槽，随后由 push_commit 跟后排）。
+        满费时即使手牌暂无后排也直接沉底（不空等）；HogRider 属桥头快攻不沉底。"""
         if threat >= PRESSURE_THRESHOLD:
             return None
         tu = _closest_threat(battle)
         if tu is not None and _threat_unit_is_pressing(tu):
-            return None  # 敌方单位已压境（哪怕单单位数值低）→ 防守优先
+            return None  # 敌方单位已压境（含过河单位）→ 防守优先，不进入攒费窗口
+        # 我方圣水落后对手估计 ≥2 → 不出手沉底（先防守/等机会）
+        if belief is not None and belief.elixir_mean is not None \
+                and not np.isnan(float(belief.elixir_mean)) \
+                and float(belief.elixir_mean) > float(p.elixir) + SAVE_BEHIND_ELIXIR:
+            return None
         for e in battle.entities.values():
             if e.player == 0 and _deployable_entity(e) and e.name in SINK_TANK_CARDS:
                 return None  # 已有沉底血牛在场上 → 轮不到 setup
-        best_slot, best_cost = None, -1.0
+        # 手牌：血牛槽（优先最贵/最值得沉底的）+ 是否含后排
+        tank_slots = []
         for i, card in enumerate(p.cycle[:4]):
             if card == "Mirror" or card not in SINK_TANK_CARDS:
                 continue
             c = Card(card)
-            if c.type != "character":
-                continue
-            if p.elixir < c.elixir + SETUP_RESERVE:
-                continue  # 还在攒费：不急着裸沉
-            if c.elixir > best_cost:
-                best_slot, best_cost = i + 1, float(c.elixir)
-        if best_slot is None:
+            if c.type == "character":
+                tank_slots.append((i + 1, float(c.elixir)))
+        if not tank_slots:
             return None
-        return PlanToken(
-            macro_intent="setup_wait",
-            focus_region="own_center", suggested_card=best_slot,
-            target_kind="none", placement_hint="none",
-            elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
+        tank_slots.sort(key=lambda kv: -kv[1])
+        best_slot = tank_slots[0][0]
+        has_backline = any(card in BACKLINE_CARDS for card in p.cycle[:4])
+        near_full = p.elixir >= SAVE_FULL_ELIXIR - 1e-6
+        if near_full:
+            # 攒满 → 沉底血牛（后续帧由 push_commit 跟后排）
+            return PlanToken(
+                macro_intent="setup_wait",
+                focus_region="own_center", suggested_card=best_slot,
+                target_kind="none", placement_hint="none",
+                elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
+        if has_backline:
+            # 攒费窗口帧：手牌结构较好（前排+后排齐）但费未满 → 全槽 hold，等 10 费
+            return PlanToken(
+                macro_intent="setup_wait",
+                focus_region="own_center", suggested_card=None,
+                target_kind="none", placement_hint="none",
+                elixir_budget=0.2, risk_profile=0.2, value_estimate=0.3,
+                hold_mask=SAVE_HOLD_ALL)
+        return None  # 费未满且暂无后排 → 交回其它意图/旧回退
 
     def _king_activate(self, battle, p, threat, belief):
         """激活国王塔（bp 版）：公主塔残血/被破 + 敌方血牛/大单位接近国王塔中轴

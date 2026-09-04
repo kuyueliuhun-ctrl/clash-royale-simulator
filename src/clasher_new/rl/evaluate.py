@@ -75,7 +75,9 @@ def _plan_region_hit(region: str, x: float, y: float):
 
 def _adoption_seed():
     return {"frames": 0, "deploys": 0, "reg_frames": 0, "reg_hit": 0,
-            "hold_frames": 0, "hold_ok": 0}
+            "hold_frames": 0, "hold_ok": 0,
+            "card_frames": 0, "card_hit": 0,          # 7h：首部署槽 == plan.suggested_card
+            "budget_frames": 0, "budget_ok": 0}       # 7h：bundle 花费 ≤ plan.elixir_budget×圣水
 
 
 def _adoption_summary(adoption):
@@ -90,15 +92,23 @@ def _adoption_summary(adoption):
             "hold_frames": a["hold_frames"],
             "hold_rate": (round(a["hold_ok"] / a["hold_frames"], 4)
                           if a["hold_frames"] else None),
+            "card_frames": a["card_frames"],
+            "card_rate": (round(a["card_hit"] / a["card_frames"], 4)
+                          if a["card_frames"] else None),
+            "budget_frames": a["budget_frames"],
+            "budget_ok_rate": (round(a["budget_ok"] / a["budget_frames"], 4)
+                               if a["budget_frames"] else None),
         }
     return out
 
 
-def _record_adoption(stats, plan, bundle):
+def _record_adoption(stats, plan, bundle, obs=None):
     """逐意图采纳探针：plan 意图标签（与注入是否置零无关）下模型本帧动作的吻合度。
 
     - region_rate：首个部署格与 plan.focus_region 几何吻合（有部署的帧里）；
-    - hold_rate（仅 save_ace）：有部署帧里没有打出 hold_mask 指名的槽。
+    - hold_rate（仅 save_ace）：有部署帧里没有打出 hold_mask 指名的槽；
+    - card_rate（7h）：有部署帧里首个部署槽 == plan.suggested_card；
+    - budget_ok_rate（7h）：bundle 总花费 ≤ plan.elixir_budget × 当帧圣水。
     比较 full vs plan-off 变体 → Δ 即「plan 注入对该意图行为的因果采纳」。
     """
     a = stats["adoption"].setdefault(plan.macro_intent, _adoption_seed())
@@ -112,6 +122,23 @@ def _record_adoption(stats, plan, bundle):
     if hit is not None:
         a["reg_frames"] += 1
         a["reg_hit"] += int(hit)
+    # 7h：对牌采纳（首部署槽 vs BP 建议卡）
+    if plan.suggested_card is not None and 1 <= plan.suggested_card <= K_MAX:
+        a["card_frames"] += 1
+        if dep[0][0] == plan.suggested_card:
+            a["card_hit"] += 1
+    # 7h：预算服从（bundle 实际花费 vs plan.elixir_budget × 当帧圣水）
+    if plan.elixir_budget < 1.0 - 1e-6 and obs is not None \
+            and "hand" in obs and "elixir" in obs:
+        allowed = float(obs["elixir"]) * float(plan.elixir_budget)
+        spent = 0.0
+        for slot, _, _ in dep:
+            cid = int(obs["hand"][slot - 1])
+            if 0 <= cid < len(ENTITY_NAMES):
+                spent += Card(ENTITY_NAMES[cid]).elixir
+        a["budget_frames"] += 1
+        if spent <= allowed + 0.01:
+            a["budget_ok"] += 1
     if plan.macro_intent == "save_ace":
         held = set(plan.hold_slots())
         if held:
@@ -172,7 +199,7 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
             stats["bundle_sizes"].append(bundle.size)
             stats["bundle_total"] += 1
             # —— Phase 2 采纳率探针：plan 意图（注入前/置零前同标签）vs 模型本帧动作 ——
-            _record_adoption(stats, plan, bundle)
+            _record_adoption(stats, plan, bundle, obs)
             # 圣水效率：bundle 内出牌费用（决策时刻手牌）
             for sa in bundle.sub_actions:
                 if sa.kind == "deploy" and 1 <= sa.slot <= K_MAX:
@@ -326,26 +353,59 @@ def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim
     off_a = results["plan-off"].get("adoption", {})
     print("=== 逐意图采纳（region 吻合率；Δ=full − plan-off >0 → plan 注入被采纳）===")
     print(f"  {'intent':<16}{'full帧':>6}{'off帧':>6}{'reg_full':>9}{'reg_off':>9}"
-          f"{'Δreg':>8}{'hold_full':>10}{'hold_off':>10}{'Δhold':>8}")
+          f"{'Δreg':>8}{'card_full':>10}{'card_off':>10}{'Δcard':>8}"
+          f"{'hold_full':>10}{'hold_off':>10}{'Δhold':>8}")
     for intent in sorted(set(full_a) | set(off_a), key=lambda s: -full_a.get(s, {}).get("frames", 0)):
         fa, oa = full_a.get(intent, {}), off_a.get(intent, {})
         rf = fa.get("region_rate"); ro = oa.get("region_rate")
+        cf = fa.get("card_rate"); co = oa.get("card_rate")
         hf = fa.get("hold_rate"); ho = oa.get("hold_rate")
         dr = (rf - ro) if (rf is not None and ro is not None) else None
+        dc = (cf - co) if (cf is not None and co is not None) else None
         dh = (hf - ho) if (hf is not None and ho is not None) else None
         adoption_vs_off[intent] = {
             "full_frames": fa.get("frames", 0), "off_frames": oa.get("frames", 0),
             "region_rate_full": rf, "region_rate_off": ro,
             "region_delta": round(dr, 4) if dr is not None else None,
+            "card_rate_full": cf, "card_rate_off": co,
+            "card_delta": round(dc, 4) if dc is not None else None,
             "hold_rate_full": hf, "hold_rate_off": ho,
             "hold_delta": round(dh, 4) if dh is not None else None,
         }
         print(f"  {intent:<16}{fa.get('frames', 0):>6}{oa.get('frames', 0):>6}"
               f"{'' if rf is None else f'{rf:.3f}':>9}{'' if ro is None else f'{ro:.3f}':>9}"
               f"{'' if dr is None else f'{dr:+.3f}':>8}"
+              f"{'' if cf is None else f'{cf:.3f}':>10}"
+              f"{'' if co is None else f'{co:.3f}':>10}"
+              f"{'' if dc is None else f'{dc:+.3f}':>8}"
               f"{'' if hf is None else f'{hf:.3f}':>10}"
               f"{'' if ho is None else f'{ho:.3f}':>10}"
               f"{'' if dh is None else f'{dh:+.3f}':>8}")
+
+    # —— 7h：跨意图合计的对牌采纳率 / 预算（攒费）服从率 ——
+    def _adopt_agg(a):
+        cf = sum(v.get("card_frames", 0) for v in a.values())
+        ch = sum(v.get("card_hit", 0) for v in a.values())
+        bf = sum(v.get("budget_frames", 0) for v in a.values())
+        bok = sum(v.get("budget_ok", 0) for v in a.values())
+        return {"card_frames": cf,
+                "card_rate": (ch / cf) if cf else None,
+                "budget_frames": bf,
+                "budget_ok_rate": (bok / bf) if bf else None}
+
+    agg_full, agg_off = _adopt_agg(full_a), _adopt_agg(off_a)
+    print("=== 7h 对牌采纳 / 预算服从（合计；Δ=full − plan-off >0 → plan 注入生效）===")
+    for tag, agg in (("full", agg_full), ("plan-off", agg_off)):
+        cr = f"{agg['card_rate']:.3f}" if agg["card_rate"] is not None else "—"
+        br = f"{agg['budget_ok_rate']:.3f}" if agg["budget_ok_rate"] is not None else "—"
+        print(f"  {tag:9s}: card_rate={cr} ({agg['card_frames']}帧)  "
+              f"budget_ok_rate={br} ({agg['budget_frames']}帧)")
+    dc_agg = (agg_full["card_rate"] - agg_off["card_rate"]) \
+        if (agg_full["card_rate"] is not None and agg_off["card_rate"] is not None) else None
+    db_agg = (agg_full["budget_ok_rate"] - agg_off["budget_ok_rate"]) \
+        if (agg_full["budget_ok_rate"] is not None and agg_off["budget_ok_rate"] is not None) else None
+    print(f"  Δcard={'' if dc_agg is None else f'{dc_agg:+.3f}'}  "
+          f"Δbudget={'' if db_agg is None else f'{db_agg:+.3f}'}")
 
     out = {
         "policy": os.path.abspath(policy_path),
@@ -357,8 +417,13 @@ def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim
                      for k, v in results.items()},
         "deltas_vs_full": deltas,
         "adoption_vs_plan_off": adoption_vs_off,
+        "adoption_aggregate": {"full": agg_full, "plan-off": agg_off,
+                               "card_delta": round(dc_agg, 4) if dc_agg is not None else None,
+                               "budget_delta": round(db_agg, 4) if db_agg is not None else None},
         "note": "token 置零消融；RNN hidden 仍含历史信息，可能低估输入价值；"
-                "adoption 探针：region=首部署格与 plan 半场/分边吻合率，hold=save_ace 未打出 hold 槽率",
+                "adoption 探针：region=首部署格与 plan 半场/分边吻合率，"
+                "card=首部署槽==suggested_card（7h），hold=save_ace 未打出 hold 槽率，"
+                "budget=bundle 花费≤elixir_budget×圣水（7h）",
     }
     if out_path:
         out_path = os.path.abspath(out_path)
@@ -374,18 +439,24 @@ def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim
             for k, d in deltas.items():
                 f.write(f"# {k},{d['delta']},{d['delta_se']},{d['z']},{d['verdict']}\n")
             f.write("\n# adoption by intent: variant,intent,frames,deploys,"
-                    "region_frames,region_rate,hold_frames,hold_rate\n")
+                    "region_frames,region_rate,card_frames,card_rate,"
+                    "hold_frames,hold_rate,budget_frames,budget_ok_rate\n")
             for variant in ("full", "plan-off"):
                 for intent, a in sorted(results[variant].get("adoption", {}).items()):
                     rr = a["region_rate"] if a["region_rate"] is not None else ""
+                    cr = a["card_rate"] if a["card_rate"] is not None else ""
                     hr = a["hold_rate"] if a["hold_rate"] is not None else ""
+                    br = a["budget_ok_rate"] if a["budget_ok_rate"] is not None else ""
                     f.write(f"{variant},{intent},{a['frames']},{a['deploys']},"
-                            f"{a['region_frames']},{rr},{a['hold_frames']},{hr}\n")
+                            f"{a['region_frames']},{rr},{a['card_frames']},{cr},"
+                            f"{a['hold_frames']},{hr},{a['budget_frames']},{br}\n")
             f.write("\n# adoption delta (full - plan-off): intent,region_rate_full,"
-                    "region_rate_off,region_delta,hold_rate_full,hold_rate_off,hold_delta\n")
+                    "region_rate_off,region_delta,card_rate_full,card_rate_off,card_delta,"
+                    "hold_rate_full,hold_rate_off,hold_delta\n")
             for intent, a in sorted(adoption_vs_off.items()):
                 f.write(f"# {intent},{a['region_rate_full']},{a['region_rate_off']},"
-                        f"{a['region_delta']},{a['hold_rate_full']},{a['hold_rate_off']},"
+                        f"{a['region_delta']},{a['card_rate_full']},{a['card_rate_off']},"
+                        f"{a['card_delta']},{a['hold_rate_full']},{a['hold_rate_off']},"
                         f"{a['hold_delta']}\n")
         print(f"[ablation] 结果已落盘 -> {out_path}")
         print(f"[ablation] 明细 CSV   -> {csv_path}")

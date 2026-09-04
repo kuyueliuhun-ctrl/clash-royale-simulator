@@ -68,48 +68,78 @@ def slot_mask(player, elixir_override: float = None, used_slots=None) -> np.ndar
     return mask
 
 
+#: 已毁敌方塔“本体格”屏蔽半径（本地网格≈1 格=1 单位；邻格中心距 ≥1.0 → 只挡本体格，
+#: 不误伤“打塔旁敌军”的合法溅射法术）
+DEAD_TOWER_BODY_R = 0.9
+
+
+def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
+    """法术落点是否贴着已毁敌方塔本体（塔实体 id≤6 且 is_alive=False 永留场）。"""
+    opp = 1 - player_id
+    for e in battle.entities.values():
+        if e.player != opp or e.is_alive:
+            continue
+        name = getattr(e, "name", "") or ""
+        eid = getattr(e, "id", None)
+        if "Tower" not in name and not (eid is not None and eid <= 6):
+            continue  # 非塔的死亡实体会被 step 清理；防御式双保险
+        if pos.distance_to(e.position) <= DEAD_TOWER_BODY_R:
+            return True
+    return False
+
+
 def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bool:
-    """复刻 battle.deploy_card 中的部署区域合法性（非法术）。"""
+    """复刻 battle.deploy_card 中的部署区域合法性（法术额外挡已毁塔本体）。
+
+    7h：法术可打任意格，但不得砸在**已毁敌方塔本体**上——引擎里法术是打坐标，
+    已毁塔 is_alive=False 会被溅射跳过，落在那里=纯空砸（也不会转伤国王塔）。
+    """
     card_info = Card(card_name)
-    if card_info.type != "spell":
-        if battle.is_position_occupied_by_building(pos, 0.0):
+    if card_info.type == "spell":
+        return not _hits_dead_enemy_tower(battle, player_id, pos)
+    if battle.is_position_occupied_by_building(pos, 0.0):
+        return False
+    if player_id == 0:
+        if pos.y <= 1.0 and (pos.x <= 6.0 or pos.x > 12.0):
             return False
-        if player_id == 0:
-            if pos.y <= 1.0 and (pos.x <= 6.0 or pos.x > 12.0):
-                return False
-            if pos.y >= 21.0:
-                return False
-            if pos.y >= 15.0:
-                if pos.x <= 9:
-                    if battle.players[1].left_tower_hp > 0:
-                        return False
-                else:
-                    if battle.players[1].right_tower_hp > 0:
-                        return False
-        else:
-            if pos.y > 31.0 and (pos.x <= 6.0 or pos.x > 12.0):
-                return False
-            if pos.y <= 10:
-                return False
-            if pos.y <= 17.0:
-                if pos.x <= 9:
-                    if battle.players[0].left_tower_hp > 0:
-                        return False
-                else:
-                    if battle.players[0].right_tower_hp > 0:
-                        return False
+        if pos.y >= 21.0:
+            return False
+        if pos.y >= 15.0:
+            if pos.x <= 9:
+                if battle.players[1].left_tower_hp > 0:
+                    return False
+            else:
+                if battle.players[1].right_tower_hp > 0:
+                    return False
+    else:
+        if pos.y > 31.0 and (pos.x <= 6.0 or pos.x > 12.0):
+            return False
+        if pos.y <= 10:
+            return False
+        if pos.y <= 17.0:
+            if pos.x <= 9:
+                if battle.players[0].left_tower_hp > 0:
+                    return False
+            else:
+                if battle.players[0].right_tower_hp > 0:
+                    return False
     return True
 
 
 def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
     """返回 (32,18) bool：该卡在玩家本地网格中可以部署的格子。
 
-    法术任意位置；其余按规则——本地格子 (x, y) 经 sub_position 换算为世界坐标后
+    法术任意位置但**排除已毁敌方塔本体格**（7h：砸已炸掉的塔=纯空砸）；
+    其余按规则——本地格子 (x, y) 经 sub_position 换算为世界坐标后
     由 _position_legal 校验（与提交路径完全同源，P0-4）。
     """
     cells = np.ones((GRID_H, GRID_W), dtype=bool)
     eff = _effective_card(battle.players[player_id], card_name)
     if Card(eff).type == "spell":
+        for y in range(GRID_H):
+            for x in range(GRID_W):
+                if _hits_dead_enemy_tower(battle, player_id, sub_position(player_id, x, y)):
+                    cells[y, x] = False
         return cells
     for y in range(GRID_H):
         for x in range(GRID_W):

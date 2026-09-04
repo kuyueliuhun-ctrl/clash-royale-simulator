@@ -1869,10 +1869,10 @@ def test_bp_new_intent_rules():
     t = bp.plan(bs, None)
     assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone", \
         t.macro_intent
-    # S6 蓄力：空场 + 手牌沉底血牛 + 费够（坦克费+储备）→ 沉底
+    # S6 沉底：空场 + 手牌沉底血牛 + 圣水攒满(≈10) → 沉底
     bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
     assert bp.plan(bs, None).macro_intent == "setup_wait"
-    # S6b 主动攒费：手牌 Giant 但费没攒够（<费+2 储备）→ 先等费不裸沉
+    # S6b 费未满且手牌无后排（窗口条件不满足）→ 不裸沉，落到 cycle_and_wait
     bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
     bs.players[0].elixir = 6.0
     assert bp.plan(bs, None).macro_intent == "cycle_and_wait"
@@ -1899,6 +1899,31 @@ def test_bp_new_intent_rules():
         return BeliefState(deck=list(DECK), hand_probs=arr,
                            next_probs=np.full(len(DECK), 0.125, dtype=np.float32),
                            elixir_mean=elixir, uncertainty=0.6)
+
+    # —— 7h 主动攒费窗口（总圣水差不落后≥2 + 无过河单位 + 前排后排齐 → 满10才沉底）——
+    # S6d 攒费窗口帧：Giant+后排 Musketeer 在手、费未满、无压境 → setup_wait+hold 全禁手牌
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].elixir = 8.0
+    t = bp.plan(bs, belief(6.0))
+    assert t.macro_intent == "setup_wait" and t.hold_mask == 0b1111 \
+        and t.suggested_card is None, (t.macro_intent, t.hold_mask, t.suggested_card)
+    # S6e 攒满 10 → 沉底 Giant（suggested 指向 Giant 槽）
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].elixir = 10.0
+    t = bp.plan(bs, belief(6.0))
+    assert t.macro_intent == "setup_wait" and t.suggested_card == 1, \
+        (t.macro_intent, t.suggested_card)
+    # S6f 我方估计落后对手 ≥2 费 → 不进入攒费/沉底
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].elixir = 3.0
+    t = bp.plan(bs, belief(6.0))
+    assert t.macro_intent != "setup_wait", t.macro_intent
+    # S6g 对手过河单位压境（MiniPekka 深入我方半场）→ 攒费窗口关闭
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].elixir = 10.0
+    place(bs, 1, 'MiniPekka', 8, 12)
+    t = bp.plan(bs, belief(6.0))
+    assert t.macro_intent != "setup_wait", t.macro_intent
 
     # S9 punish：对手低圣水（belief.elixir_mean 记忆）→ 另一路进攻
     bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
@@ -1943,6 +1968,8 @@ def test_bp_new_intent_rules():
     print("[PASS] BeliefPlanner 7g：拉扯按高血/近战/建筑目标口径（攻城单位需建筑拉），"
           "spell_trade 只留远程脆皮，setup 主动攒费(费+2储备)才沉底，"
           "push_commit 认 Knight/Valkyrie/Prince 前排跟输出")
+    print("[PASS] BeliefPlanner 7h：攒费窗口=不落后≥2费+无过河单位+前排后排齐，"
+          "未满帧 hold_mask=1111 等费，攒满 10 才沉底血牛")
 
 
 def test_pp_new_intent_rules():

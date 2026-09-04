@@ -23,7 +23,7 @@ import torch.nn.functional as F
 
 from rl.action_bundle import ActionBundle, SubAction, K_MAX
 from rl.observation import GRID_H, GRID_W, GRID_C, ENTITY_NAMES
-from rl.plan_space import PLAN_DIM
+from rl.plan_space import PLAN_DIM, FOCUS_REGIONS
 from rl.belief import belief_token_dim
 
 NUM_ENTITY = len(ENTITY_NAMES)
@@ -37,6 +37,19 @@ BELIEF_DIM = belief_token_dim(DEFAULT_OPP_DECK)
 ABILITY_IDX = K_MAX
 STOP_IDX = K_MAX + 1
 NUM_SLOT_OPTIONS = K_MAX + 2
+
+#: —— 7h plan 结构软偏置（软生效：只加 logit bias，不硬禁，防 BP 判断错误锁死探索）——
+PLAN_CARD_BIAS = 0.8      # plan.suggested_card 槽位 logit 加成
+PLAN_HOLD_BIAS = 2.5      # plan.hold_mask 命中槽位 logit 扣减（攒费/藏 ace 用）
+PLAN_REGION_BIAS = 0.8    # plan.focus_region 中心附近落点 logit 加成
+PLAN_REGION_R = 2         # region 加成半径（本地网格曼哈顿距离）
+
+#: focus_region → 本地网格中心（与 train_bc.REGION_CENTERS 同口径）
+_REGION_CENTERS = {
+    "own_left": (4, 20), "own_center": (9, 20), "own_right": (14, 20),
+    "bridge_left": (4, 16), "bridge_right": (14, 16),
+    "enemy_left": (4, 12), "enemy_center": (9, 12), "enemy_right": (14, 12),
+}
 
 
 def save_checkpoint(policy, path):
@@ -181,6 +194,49 @@ class FollowerPolicy(nn.Module):
             sm[STOP_IDX] = 1.0
         return sm
 
+    def _plan_biases(self, plan_token):
+        """从 plan 向量解析软偏置：(slot_bias(NUM_SLOT_OPTIONS,), cell_bias(H,W))。
+
+        7h：BP 建议只作为 logit 软偏置——建议卡槽 +bias、hold_mask 命中槽 -bias、
+        focus_region 中心附近落点 +bias。rollout 与 PPO 重放共用本函数，保证
+        采样与 logprob 同分布（不改 env action_mask，不污染 BC/mask 契约）。
+        """
+        slot_bias = torch.zeros(NUM_SLOT_OPTIONS, device=self.device)
+        cell_bias = torch.zeros((GRID_H, GRID_W), device=self.device)
+        if plan_token is None:
+            return slot_bias, cell_bias
+        if torch.is_tensor(plan_token):
+            arr = plan_token.detach().cpu().numpy()
+        else:
+            arr = np.asarray(plan_token)
+        v = np.asarray(arr, dtype=np.float64).reshape(-1)
+        if v.shape[0] < 21:
+            return slot_bias, cell_bias
+        if float(np.abs(v).sum()) < 1e-9:
+            # 全零 = plan 置零（消融 plan-off / plan_dropout）→ 不给任何偏置
+            return slot_bias, cell_bias
+        # —— 槽位软偏置 ——
+        sug = int(round(float(v[16]) * 4.0)) if v[16] > 0.0 else None
+        if sug is not None and 1 <= sug <= K_MAX:
+            slot_bias[sug - 1] += PLAN_CARD_BIAS
+        if v.shape[0] >= PLAN_DIM:
+            for i in range(min(4, K_MAX)):
+                if v[PLAN_DIM - 4 + i] > 0.5:
+                    slot_bias[i] -= PLAN_HOLD_BIAS
+        # —— 落点软偏置（focus_region 中心附近）——
+        rseg = v[8:16]
+        ridx = int(np.argmax(rseg)) if rseg.size and float(rseg.max()) > 0 else \
+            FOCUS_REGIONS.index("own_center")
+        if 0 <= ridx < len(FOCUS_REGIONS):
+            cx, cy = _REGION_CENTERS.get(FOCUS_REGIONS[ridx], (9, 20))
+            yy = np.arange(GRID_H, dtype=np.int64)
+            xx = np.arange(GRID_W, dtype=np.int64)
+            dist = np.abs(yy[:, None] - cy) + np.abs(xx[None, :] - cx)
+            cell_bias += torch.as_tensor(
+                (dist <= PLAN_REGION_R).astype(np.float32) * PLAN_REGION_BIAS,
+                device=self.device)
+        return slot_bias, cell_bias
+
     @staticmethod
     def _mask_or_fallback(masks, j):
         """取第 j 个掩码；缺省用全合法回退（与 evaluate 单条路径一致）。"""
@@ -249,11 +305,13 @@ class FollowerPolicy(nn.Module):
             bundle = ActionBundle()
             logprob = 0.0
             masks = []
+            slot_bias, cell_bias = self._plan_biases(plan_token)   # 7h：BP 软结构偏置
             for step in range(K_MAX + 2):
                 mask = get_mask(bundle)
                 masks.append(mask)
                 slot_mask = self._slot_mask_tensor(mask)
-                slot_logits = self.slot_head(h).masked_fill(slot_mask == 0, -1e9)
+                slot_logits = self.slot_head(h) + slot_bias
+                slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
                 slot_dist = torch.distributions.Categorical(
                     logits=F.log_softmax(slot_logits, dim=-1))
                 if deterministic:
@@ -270,7 +328,8 @@ class FollowerPolicy(nn.Module):
                     continue
 
                 cells = torch.as_tensor(mask["cells"][option], dtype=torch.float32, device=self.device)
-                cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W).masked_fill(cells == 0, -1e9)
+                cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W) + cell_bias
+                cell_logits = cell_logits.masked_fill(cells == 0, -1e9)
                 flat = cell_logits.reshape(1, -1)
                 cell_dist = torch.distributions.Categorical(logits=F.log_softmax(flat, dim=-1))
                 if deterministic:
@@ -330,6 +389,8 @@ class FollowerPolicy(nn.Module):
             partials = [ActionBundle() for _ in range(N)]
             logprobs = [0.0] * N
             masks_list = [[] for _ in range(N)]
+            # 7h：每个 env 的 plan 软偏置（本帧内不变）
+            bias_pairs = [self._plan_biases(plan_list[i]) for i in range(N)]
             for step in range(K_MAX + 2):
                 if get_masks_batch is not None:
                     masks_step = get_masks_batch(partials)
@@ -341,7 +402,9 @@ class FollowerPolicy(nn.Module):
                 slot_masks = torch.stack(
                     [self._slot_mask_tensor(self._mask_or_fallback(masks_list[i], step))
                      for i in range(N)])
-                slot_logits = self.slot_head(h).masked_fill(slot_masks == 0, -1e9)
+                slot_logits = self.slot_head(h) + torch.stack(
+                    [bias_pairs[i][0] for i in range(N)])
+                slot_logits = slot_logits.masked_fill(slot_masks == 0, -1e9)
                 slot_dist = torch.distributions.Categorical(
                     logits=F.log_softmax(slot_logits, dim=-1))
                 if deterministic:
@@ -367,7 +430,8 @@ class FollowerPolicy(nn.Module):
                         for i in dep_envs])
                     hdep = h[dep_envs]
                     cell_logits = self.cell_head(hdep).view(len(dep_envs), GRID_H, GRID_W) \
-                        .masked_fill(cell_masks == 0, -1e9)
+                        + torch.stack([bias_pairs[i][1] for i in dep_envs])
+                    cell_logits = cell_logits.masked_fill(cell_masks == 0, -1e9)
                     flat = cell_logits.reshape(len(dep_envs), -1)
                     cell_dist = torch.distributions.Categorical(
                         logits=F.log_softmax(flat, dim=-1))
@@ -423,6 +487,8 @@ class FollowerPolicy(nn.Module):
         max_len = max(lengths) if lengths else 0
         logprob = [torch.zeros((), device=self.device) for _ in range(B)]
         entropy = [torch.zeros((), device=self.device) for _ in range(B)]
+        # 7h：plan 软偏置与 rollout（act/act_parallel）完全一致
+        bias_pairs = [self._plan_biases(plan_list[i]) for i in range(B)]
 
         for j in range(max_len + 1):
             idx = [i for i in range(B) if lengths[i] >= j]
@@ -432,7 +498,9 @@ class FollowerPolicy(nn.Module):
             slot_masks = torch.stack(
                 [self._slot_mask_tensor(self._mask_or_fallback(masks_list[i], j))
                  for i in idx])
-            slot_logits = self.slot_head(hh).masked_fill(slot_masks == 0, -1e9)
+            slot_logits = self.slot_head(hh) + torch.stack(
+                [bias_pairs[i][0] for i in idx])
+            slot_logits = slot_logits.masked_fill(slot_masks == 0, -1e9)
             slot_dist = torch.distributions.Categorical(
                 logits=F.log_softmax(slot_logits, dim=-1))
             ent = slot_dist.entropy()                       # (|idx|,)
@@ -460,7 +528,8 @@ class FollowerPolicy(nn.Module):
                                     dtype=torch.float32, device=self.device)
                     for i in ids])
                 cell_logits = self.cell_head(hdep).view(len(dep), GRID_H, GRID_W) \
-                    .masked_fill(cell_masks == 0, -1e9)
+                    + torch.stack([bias_pairs[i][1] for i in ids])
+                cell_logits = cell_logits.masked_fill(cell_masks == 0, -1e9)
                 flat = cell_logits.reshape(len(dep), -1)
                 cell_dist = torch.distributions.Categorical(
                     logits=F.log_softmax(flat, dim=-1))
@@ -514,10 +583,12 @@ class FollowerPolicy(nn.Module):
 
         logprob = 0.0
         entropy = 0.0
+        slot_bias, cell_bias = self._plan_biases(plan_token)   # 7h：与 act() 同偏置
         for i, sa in enumerate(bundle.sub_actions):
             mask = masks[i]
             slot_mask = self._slot_mask_tensor(mask)
-            slot_logits = self.slot_head(h).masked_fill(slot_mask == 0, -1e9)
+            slot_logits = self.slot_head(h) + slot_bias
+            slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
             slot_dist = torch.distributions.Categorical(logits=F.log_softmax(slot_logits, dim=-1))
             entropy = entropy + slot_dist.entropy()
 
@@ -530,7 +601,8 @@ class FollowerPolicy(nn.Module):
             option = sa.slot - 1
             logprob = logprob + slot_dist.log_prob(torch.tensor([option], device=self.device))
             cells = torch.as_tensor(mask["cells"][option], dtype=torch.float32, device=self.device)
-            cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W).masked_fill(cells == 0, -1e9)
+            cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W) + cell_bias
+            cell_logits = cell_logits.masked_fill(cells == 0, -1e9)
             flat = cell_logits.reshape(1, -1)
             cell_dist = torch.distributions.Categorical(logits=F.log_softmax(flat, dim=-1))
             entropy = entropy + cell_dist.entropy()
@@ -544,7 +616,8 @@ class FollowerPolicy(nn.Module):
             "ability_legal": False,
         }
         slot_mask = self._slot_mask_tensor(mask)
-        slot_logits = self.slot_head(h).masked_fill(slot_mask == 0, -1e9)
+        slot_logits = self.slot_head(h) + slot_bias
+        slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
         slot_dist = torch.distributions.Categorical(logits=F.log_softmax(slot_logits, dim=-1))
         entropy = entropy + slot_dist.entropy()
         logprob = logprob + slot_dist.log_prob(torch.tensor([STOP_IDX], device=self.device))
