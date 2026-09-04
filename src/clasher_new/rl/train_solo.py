@@ -37,7 +37,8 @@ from rl.ppo import PPOTrainer
 from rl.config import reward_to_env
 from rl.train_follower import FollowerOpponent
 from rl.run_league import (resolve_device, _bundle_cards, LeagueGameRecorder,
-                           _stall_probe, STALL_WINDOW, _load_run_state, timeout_winner)
+                           _stall_probe, STALL_WINDOW, _load_run_state,
+                           timeout_winner, overtime_open)
 from rl.replay import save_league_replays
 
 #: 固定卡组（原版默认 8 卡）：双方镜像使用同一副。
@@ -116,7 +117,7 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
         ep_rew = 0.0
         stall_count = 0
         last_hp = None
-        while not done and steps < max_steps:
+        while not done and (steps < max_steps or overtime_open(env.battle)):
             if steps % STALL_WINDOW == 0:
                 early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
                 if early:
@@ -137,7 +138,7 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
             steps += 1
         w = env.battle.winner
         if w is None and not env.battle.game_over:
-            # 僵局早停/截断早于引擎结算 → 皇冠差/塔血差已定胜负；真平才判平=失败
+            # 僵局早停/截断早于引擎结算 → 皇冠差已定胜负；皇冠相同（加时未破塔）→ 平局=失败
             virt = timeout_winner(env.battle)
             if virt is None:
                 ep_rew -= _draw_penalty(cfg)
@@ -236,7 +237,7 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
             ep_rew = 0.0
             stall_count = 0
             last_hp = None
-            while not done and steps < max_steps:
+            while not done and (steps < max_steps or overtime_open(env.battle)):
                 if steps % STALL_WINDOW == 0:
                     early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
                     if early:
@@ -257,7 +258,7 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
                 steps += 1
             w = env.battle.winner
             if w is None and not env.battle.game_over:
-                # 与串行 eval_solo 一致：早停/截断补结算（皇冠差/塔血差→胜负，真平→平局=失败）
+                # 与串行 eval_solo 一致：早停/截断补结算（皇冠差→胜负，皇冠相同=加时未破塔→平局=失败）
                 virt = timeout_winner(env.battle)
                 rw = env_kwargs.get("reward_weights") or {}
                 if virt is None:
@@ -475,7 +476,7 @@ def run_solo(cfg, resume=False, record_replays=True):
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
                 if env.battle.winner is None and not env.battle.game_over and ep_rew:
-                    # 早停补结算：皇冠差/塔血差已分胜负 → 终端胜负；真平才判平=失败
+                    # 早停补结算：皇冠差已分胜负 → 终端胜负；皇冠相同（加时未破塔）→ 平局=失败
                     virt = timeout_winner(env.battle)
                     rw = reward_to_env(cfg)
                     if virt == 0:
@@ -518,9 +519,10 @@ def run_solo(cfg, resume=False, record_replays=True):
         belief.update(obs2, info.get("opp_played"))
         obs = obs2
 
-        if done or len(ep_rew) >= cfg.max_ep_steps:
-            truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
-            # 平局=失败：对局以无胜者结束（僵局/截断）→ 先补到期结算（皇冠差/塔血差
+        if done or (len(ep_rew) >= cfg.max_ep_steps and not overtime_open(env.battle)):
+            truncated = ((not term) and (len(ep_rew) >= cfg.max_ep_steps
+                                         and not overtime_open(env.battle)))
+            # 平局=失败：对局以无胜者结束（僵局/截断）→ 先补到期结算（皇冠差
             # 已分胜负就给终端胜负奖励），真平才按平局=失败惩罚
             virt = None
             if env.battle.winner is None and not env.battle.game_over and ep_rew:

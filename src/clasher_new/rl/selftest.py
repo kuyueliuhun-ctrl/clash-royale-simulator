@@ -2237,6 +2237,47 @@ def test_eval_solo_parallel():
           f"{stats_p['draws']}D（串行 {t_serial:.1f}s / 并行2进程 {t_par:.1f}s）")
 
 
+def test_overtime_window():
+    """180s 皇冠平 → 进入加时窗口而不是按塔血提前终局（overtime_open / timeout_winner）。
+
+    规则（用户确认，2026-09）：
+      - battle.time ∈ [180, 300) 且双方被拆塔数相同、未终局 → overtime_open=True
+        （RL 循环继续打，引擎 [180,300) 内谁先被再破一塔谁输）；
+      - 恰达 300s 仍平 → overtime_open=False，收手后由 timeout_winner 记平局；
+      - 皇冠不同 → 直接按皇冠结算（常规时间末领先者胜）。
+    """
+    from rl.run_league import overtime_open, timeout_winner
+
+    class _P:
+        def __init__(self, crowns):
+            self._c = int(crowns)
+
+        def get_crown_count(self):
+            return self._c
+
+    class _B:
+        def __init__(self, t, c0, c1, over=False):
+            self.time = float(t)
+            self.players = [_P(c0), _P(c1)]
+            self.game_over = bool(over)
+
+    # 加时窗口开启：180s ≤ t < 300s、皇冠平、未终局
+    assert overtime_open(_B(180.0, 1, 1)) is True
+    assert overtime_open(_B(299.5, 0, 0)) is True
+    # 常规时间未到 / 已到硬顶 / 已终局 → 不延长
+    assert overtime_open(_B(179.5, 0, 0)) is False
+    assert overtime_open(_B(300.0, 1, 1)) is False
+    assert overtime_open(_B(200.0, 1, 1, over=True)) is False
+    # 皇冠不同 → 不进入加时（按领先者直接结算）
+    assert overtime_open(_B(200.0, 2, 1)) is False
+    # timeout_winner：皇冠多者胜；皇冠相同 → None（平局，不再按塔血提前判胜）
+    assert timeout_winner(_B(200.0, 1, 2)) == 0
+    assert timeout_winner(_B(200.0, 2, 1)) == 1
+    assert timeout_winner(_B(300.0, 1, 1)) is None
+    assert timeout_winner(_B(180.0, 0, 0)) is None
+    print("[PASS] 加时窗口：180s 皇冠平进入 [180,300) 突然死亡；到顶仍平=平局；皇冠差直接判胜")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -2292,6 +2333,7 @@ def main():
     test_play_pair_env_reuse()
     test_eval_stall_early_stop()
     test_eval_solo_parallel()
+    test_overtime_window()
     print("\nALL SELFTESTS PASSED")
 
 

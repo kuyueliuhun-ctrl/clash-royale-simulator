@@ -48,7 +48,8 @@ from rl.prophet import ProphetPlanner
 from rl.opponents import build_card_pool, sample_deck
 from rl.decks import load_classified_decks, decks_by_archetype
 from rl.config import reward_to_env, model_reward_weights
-from rl.run_league import _bundle_cards, resolve_device, eval_round_robin
+from rl.run_league import (_bundle_cards, resolve_device, eval_round_robin,
+                           overtime_open)
 from rl.league import League
 
 #: 6 个可训练模型 id（顺序决定对局矩阵的排列）
@@ -269,7 +270,7 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
     last_plan_tok = None
     done = False
     steps = 0
-    while not done and steps < max_steps:
+    while not done and (steps < max_steps or overtime_open(env.battle)):
         use_prophet = rng.random() < _PROPHET_PROB
         plan = (prophet.plan(env.get_prophet_state()) if use_prophet
                 else bp.plan(env.battle, belief_a.state(), obs))

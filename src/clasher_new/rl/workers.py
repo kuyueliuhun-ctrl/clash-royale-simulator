@@ -7,7 +7,7 @@
 协议（严格同步，每个 worker 一次处理一条消息）：
 - parent -> worker ``("mask", partial_bundle)``  → worker -> parent ``("mask", mask)``
 - parent -> worker ``("step", bundle)``         → worker -> parent
-  ``("step", payload, reward, term, trunc, opp_played, winner)``
+  ``("step", payload, reward, term, trunc, opp_played, winner, overtime_open)``
 - parent -> worker ``("reset", spec)``          → worker -> parent ``("ready", payload)``
 - parent -> worker ``None``                      → worker -> parent ``("closed", None)``
 
@@ -39,6 +39,7 @@ from rl.belief import BeliefInference
 from rl.belief_planner import BeliefPlanner
 from rl.prophet import ProphetPlanner
 from rl.opponents import ScriptedPolicy
+from rl.overtime import overtime_open
 
 
 def _payload(env, belief, bp, prophet, obs, rng):
@@ -92,7 +93,8 @@ def worker_main(worker_id, seed, reward_weights, in_q, out_q, card_level=None):
                 belief.update(obs, info.get("opp_played"))
                 out_q.put(("step", _payload(env, belief, bp, prophet, obs, rng),
                            float(reward), bool(term), bool(trunc),
-                           info.get("opp_played"), env.battle.winner))
+                           info.get("opp_played"), env.battle.winner,
+                           bool(overtime_open(env.battle))))
             else:
                 raise ValueError(f"未知消息: {msg[0]}")
     except Exception as e:

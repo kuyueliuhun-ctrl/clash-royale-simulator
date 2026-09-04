@@ -62,6 +62,7 @@ from rl.observation import ENTITY_NAMES
 from rl.opponents import ScriptedPolicy, build_card_pool
 from rl.decks import load_classified_decks, decks_by_archetype, classify_stats
 from rl.config import TrainConfig, reward_to_env
+from rl.overtime import NORMAL_TIME_S, OVERTIME_END_S, overtime_open
 from rl.replay import battle_snapshot, save_league_replays
 
 
@@ -142,14 +143,18 @@ def towers_hp(env):
 def timeout_winner(battle, hp_tiebreak=None):
     """截断/早停时的到期结算兜底（不动引擎，只在 episode 提前结束时补判）。
 
-    规则：
+    规则（加时窗口化后，2026-09 定稿）：
       1) 皇冠多者胜：皇冠 = 对方被拆塔数（players[X].get_crown_count()
          是 X 侧被拆塔数 = 对方得分）；
-      2) 皇冠相同 → 按塔血判断：剩余总塔血多者胜（"最终结束按塔血量分胜负"）；
-      3) 完全相同 → None（真平）。
+      2) 皇冠相同 → None（真平/平局）：180s 皇冠平**不再按塔血提前判胜负**，
+         由 overtime_open() 让对局进入 [180,300) 加时继续打——加时内谁先被再破
+         一塔谁输（引擎皇冠差立即终局）；到 300s 仍无塔被破 → 记平局。
 
-    hp_tiebreak: None=自动——battle.time 已到常规时间（≥180s）才启用塔血判
-    （僵局早停常发生在 180s 前，皇冠平且未到常规末 → 仍记平局）。
+    hp_tiebreak: 兼容旧签名保留，不再参与判胜（塔血累计不决定胜负——
+    加时只认“谁的塔先破谁输”）。
+
+    说明：ebca3a9 曾用“≥180s 塔血判”避免领先/占优被记平局；现在皇冠领先仍按
+    规则 1 判胜，皇冠相同则整场进入加时，不再需要塔血兜底，因此删除该分支。
     """
     if battle is None:
         return None
@@ -159,15 +164,6 @@ def timeout_winner(battle, hp_tiebreak=None):
     if lost1 > lost0:
         return 0
     if lost0 > lost1:
-        return 1
-    use_hp = hp_tiebreak if hp_tiebreak is not None else (float(battle.time) >= 180.0 - 1e-9)
-    if not use_hp:
-        return None
-    hp0 = p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
-    hp1 = p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp
-    if hp0 > hp1:
-        return 0
-    if hp1 > hp0:
         return 1
     return None
 
@@ -206,7 +202,7 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
     stall_count = 0
     last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
-    while not done and steps < max_steps:
+    while not done and (steps < max_steps or overtime_open(env.battle)):
         if steps % STALL_WINDOW == 0:
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
@@ -238,7 +234,7 @@ def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=No
     stall_count = 0
     last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
-    while not done and steps < max_steps:
+    while not done and (steps < max_steps or overtime_open(env.battle)):
         if steps % STALL_WINDOW == 0:
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
@@ -644,10 +640,11 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
         belief.update(obs2, info.get("opp_played"))
         obs = obs2
 
-        if done or len(ep_rew) >= cfg.max_ep_steps:
-            truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
-            # 早停/截断补结算（与 solo 一致）：皇冠差/塔血差已分胜负 → 给终端胜负奖励；
-            # 只有真平（皇冠与塔血都相同）才按平局=失败罚——避免“领先/塔血占优被记平局”
+        if done or (len(ep_rew) >= cfg.max_ep_steps and not overtime_open(env.battle)):
+            truncated = ((not term) and (len(ep_rew) >= cfg.max_ep_steps
+                                         and not overtime_open(env.battle)))
+            # 早停/截断补结算（与 solo 一致）：皇冠差已分胜负 → 给终端胜负奖励；
+            # 皇冠相同 = 加时窗口内无人再破塔 → 按平局=失败罚（不再用塔血提前判胜）
             if env.battle.winner is None and not env.battle.game_over and ep_rew:
                 virt = timeout_winner(env.battle)
                 rw = reward_to_env(cfg)
@@ -775,9 +772,10 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
             beliefs[i].update(obs2, info.get("opp_played"))
             obs_list[i] = obs2
 
-            if done or len(b["rew"]) >= cfg.max_ep_steps:
-                truncated = (not term) and (len(b["rew"]) >= cfg.max_ep_steps)
-                # 早停/截断补结算：皇冠差/塔血差已分胜负 → 终端胜负；真平才判平=失败
+            if done or (len(b["rew"]) >= cfg.max_ep_steps and not overtime_open(envs[i].battle)):
+                truncated = ((not term) and (len(b["rew"]) >= cfg.max_ep_steps
+                                             and not overtime_open(envs[i].battle)))
+                # 早停/截断补结算：皇冠差已分胜负 → 终端胜负；皇冠相同=加时未破塔 → 平局=失败
                 if envs[i].battle.winner is None and not envs[i].battle.game_over and b["rew"]:
                     virt = timeout_winner(envs[i].battle)
                     rw = reward_to_env(cfg)
@@ -943,7 +941,7 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
             done_flags = []
             for i in range(n):
                 msg = recv(i, "step")
-                _, payload, reward, term, trunc, opp_played, winner = msg
+                _, payload, reward, term, trunc, opp_played, winner, overtime_now = msg
                 post_obs_list[i] = payload[0]
                 payloads[i] = payload
                 b = ep_bufs[i]
@@ -953,7 +951,7 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
                 b["init"].append(inits[i]); b["masks"].append(masks_list[i])
                 b["rew"].append(reward); b["term"].append(term); b["trunc"].append(trunc)
                 b["winner"].append(winner)
-                if term or trunc or len(b["rew"]) >= cfg.max_ep_steps:
+                if term or trunc or (len(b["rew"]) >= cfg.max_ep_steps and not overtime_now):
                     done_flags.append(i)
             _t2 = time.monotonic()
 

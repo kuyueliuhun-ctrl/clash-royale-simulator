@@ -187,6 +187,16 @@ python rl/run_league.py --mode run --main-init follower_human.pt --config econom
 #   用法：
 #     python rl/run_league.py --mode solo --config economy --eval-workers 16
 
+# 8i) 180s 皇冠平 → 进入加时（突然死亡）窗口，不再按塔血提前终局
+#   引擎本就带 [180,300) 加时规则：常规时间末双方被拆塔数相同 → 加时内谁先被再破一塔谁输。
+#   旧 RL 循环在 max_ep_steps=360 步 = battle.time≈180s 处截断 → 皇冠平直接塔血/平局结算，
+#   加时从未进入。现统一由 rl/overtime.overtime_open()（run_league 再导出）判定：
+#   皇冠平且 t∈[180,300) 时所有
+#   RL 循环（solo/run/vec/mp/flow/eval_solo/league 评估回放）自动续打到引擎终局；
+#   到 300s 仍无人破塔 → timeout_winner 记平局（=失败罚），不再用累计塔血判胜。
+#   （覆盖：run_league._run_single/_run_vec/_run_mp/_run_side0、train_solo、flow_league、
+#    evaluate.run_eval、workers.py step 协议带回 overtime_open 标志）
+
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50
 python rl/evaluate.py --policy follower.pt --n-games 200 --ablation all --ablation-out ablation_result.json

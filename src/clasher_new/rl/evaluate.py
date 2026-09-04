@@ -32,6 +32,12 @@ from rl.action_bundle import K_MAX
 from card_utils import Card
 
 
+def _overtime_open(battle):
+    """加时窗口判定（惰性 import，避免 evaluate ↔ run_league 循环 import）。"""
+    from rl.run_league import overtime_open
+    return overtime_open(battle)
+
+
 def _ece(conf, acc, n_bins=10):
     ece = 0.0
     edges = np.linspace(0.0, 1.0, n_bins + 1)
@@ -185,7 +191,7 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
         hidden = None
         done = False
         steps = 0
-        while not done and steps < max_steps:
+        while not done and (steps < max_steps or _overtime_open(env.battle)):
             plan = bp.plan(env.battle, belief.state(), obs)
             stats["plan_intents"][plan.macro_intent] = stats["plan_intents"].get(plan.macro_intent, 0) + 1
             plan_vec = plan.to_vector()
@@ -237,7 +243,7 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
             steps += 1
         w = env.battle.winner
         if w is None and not env.battle.game_over:
-            # 步数截断早于引擎结算 → 皇冠差/塔血差补判（真平保持 None=draw）
+            # 步数截断早于引擎结算 → 皇冠差补判；皇冠相同（含加时到 300s 未破塔）= None=draw
             from rl.run_league import timeout_winner
             w = timeout_winner(env.battle)
             rw = env.reward_weights or {}
