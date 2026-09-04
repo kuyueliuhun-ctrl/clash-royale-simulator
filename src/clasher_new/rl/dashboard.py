@@ -1654,6 +1654,10 @@ class Handler(BaseHTTPRequestHandler):
             payload = load_replay_payload(self.replays_dir, file, gi)
             self._send(200, json.dumps(payload).encode("utf-8"),
                        "application/json; charset=utf-8")
+        elif route == "/favicon.ico":
+            # 空 204：页面全内联无外部资源，消除浏览器自动请求 favicon 的 404
+            # （DevTools 会报 "No resource with given URL found"，纯噪音非白屏）
+            self._send(204, b"", "image/x-icon")
         else:
             self._send(404, b"not found", "text/plain; charset=utf-8")
 
