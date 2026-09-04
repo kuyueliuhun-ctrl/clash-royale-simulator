@@ -77,8 +77,9 @@ OPP_SPELL_THREATS = [
     "none", "fireball", "poison", "lightning", "freeze", "big_unknown",
 ]
 
-#: save_ace 固定 ace 名单（设计定稿：固定，不按卡组动态）
-ACE_CARDS = ["Lightning", "Vines", "Freeze", "Rocket", "Poison", "Fireball", "Earthquake"]
+#: save_ace 固定 ace 名单（设计定稿：固定，不按卡组动态；只列"可能一波终结"的法术，
+#: 常规解牌/磨塔法术如 Fireball/Poison/Earthquake 不算 ace——它们该正常用）
+ACE_CARDS = ["Lightning", "Vines", "Freeze", "Rocket"]
 
 #: 常量（bundle 组合）语义：0 无 / 1 坦克+后排 / 2 法术+单位 / 3 双路（沿用旧）
 COMBO_NONE, COMBO_TANK_SUPPORT, COMBO_SPELL_UNIT, COMBO_SPLIT_PUSH = 0, 1, 2, 3

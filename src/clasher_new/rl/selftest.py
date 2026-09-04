@@ -1869,8 +1869,39 @@ def test_bp_new_intent_rules():
     bs.players[0].cycle = ['Knight', 'MiniPekka', 'Giant', 'Musketeer']
     bs.players[0].elixir = 10.0
     assert bp.plan(bs, None).macro_intent.startswith("defend")
+
+    # —— belief 驱动四意图（圣水/手牌=记忆可追踪）——
+    from rl.belief import BeliefState
+
+    def belief(elixir=5.0, probs=None):
+        arr = np.full(len(DECK), 0.2, dtype=np.float32)
+        if probs:
+            for card, pp in probs.items():
+                arr[DECK.index(card)] = pp
+        return BeliefState(deck=list(DECK), hand_probs=arr,
+                           next_probs=np.full(len(DECK), 0.125, dtype=np.float32),
+                           elixir_mean=elixir, uncertainty=0.6)
+
+    # S9 punish：对手低圣水（belief.elixir_mean 记忆）→ 另一路进攻
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
+    t = bp.plan(bs, belief(1.5))
+    assert t.macro_intent == "punish", t.macro_intent
+    # S10 spell_finish：t≥120 残血公主塔 → 法术磨塔
+    bs = new_battle(); bs.time = 150.0
+    bs.players[1].left_tower_hp = 500.0
+    set_hand(bs, ['Fireball', 'Knight', 'Arrows', 'Musketeer'])
+    t = bp.plan(bs, belief(5.0))
+    assert t.macro_intent == "spell_finish" and t.focus_region == "enemy_left"
+    # S11 anti_spell：belief 显示对面手牌高概率 Fireball + 我方要下后排
+    bs = new_battle(); set_hand(bs, ['Musketeer', 'Knight', 'Skeletons', 'Fireball'])
+    t = bp.plan(bs, belief(6.0, {'Fireball': 0.9}))
+    assert t.macro_intent == "anti_spell" and t.opp_spell_threat == "fireball"
+    # S12 save_ace：手牌 Lightning（ace）非关键帧 → hold_mask 指名别出
+    bs = new_battle(); set_hand(bs, ['Lightning', 'Knight', 'Arrows', 'Musketeer'])
+    t = bp.plan(bs, belief(8.0))
+    assert t.macro_intent == "save_ace" and (t.hold_mask & 1) == 1, (t.macro_intent, t.hold_mask)
     print("[PASS] BeliefPlanner v1 规则：cycle_small/spell_trade/soft_control/pull/push_commit/"
-          "setup_wait + 血牛放行 + 压境守卫 + 旧回退")
+          "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace")
 
 
 def test_bayes_hard_lock():

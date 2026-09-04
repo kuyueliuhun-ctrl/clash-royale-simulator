@@ -3,10 +3,10 @@
 只用可见观测 + b_t 出可部署计划；规则版 + 后验采样版。
 
 Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
-- 意图库补 6 个 bp 可产出新意图（70% 帧即可示范，样本量大）：
-  ``soft_control``（对威胁单位放冰冻/藤蔓）→ ``spell_trade``（法术解过桥/威胁单位）→
-  ``pull``（拉扯血牛改道/横穿）→ ``push_commit``（坦克推进中身后跟后排）→
-  ``setup_wait``（低压力憋组合沉底）→ ``cycle_small``（无压力小费过牌保手牌质量）；
+- **bp 组 10 个新意图**（70% 帧即可示范）：soft_control → spell_trade → pull →
+  punish → push_commit → spell_finish → setup_wait → save_ace → anti_spell → cycle_small；
+- 圣水/手牌按"记忆即明牌"处理：punish 读 belief.elixir_mean，anti_spell/save_ace 读
+  belief.hand_probs（粒子后验/后期确定性；信息不足时用概率阈值保守化）；
 - 一帧只输出一个 macro_intent：新意图按紧急度优先，未命中回退旧 8 意图逻辑；
 - 位置类意图只给**策略位 hint**（placement_hint）不给坐标——模型从 grid 自学精确格。
 
@@ -22,13 +22,14 @@ _PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PARENT not in sys.path:
     sys.path.insert(0, _PARENT)
 
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
 from card_utils import Card
 from rl.belief import BeliefState, BeliefInference
-from rl.plan_space import PlanToken, MACRO_INTENTS, FOCUS_REGIONS
+from rl.plan_space import (PlanToken, MACRO_INTENTS, FOCUS_REGIONS, ACE_CARDS,
+                           OPP_SPELL_THREATS)
 
 #: 推进压力阈值（与单位数量/HP×费用匹配）
 PRESSURE_THRESHOLD = 2.0
@@ -37,18 +38,29 @@ PRESSURE_THRESHOLD = 2.0
 BRIDGE_Y = 16.0        # 河中心（约 16）
 OWN_HALF_EDGE = 15.0   # 己方半场边界（y < 15 为纯己方半场）
 LANE_SPLIT_X = 9.0     # 左/右路分界
+LATE_S = 120.0         # 双倍圣水（后期磨塔/塔血贵）起点
 
 #: 软控法术（对威胁单位打断/拖延）
 SOFT_CONTROL_CARDS = ("Freeze", "Vines", "Tornado")
 #: 伤害/解牌法术（spell_trade 用）
 TRADE_SPELL_CARDS = ("Fireball", "Arrows", "Rocket", "Lightning", "Poison",
                      "Earthquake", "Void", "TheLog", "Snowball", "Zap", "Tornado")
+#: 后期磨塔法术（spell_finish：能稳定打到塔）
+FINISH_SPELL_CARDS = ("Fireball", "Rocket", "Lightning", "Poison", "Earthquake", "Arrows")
 #: 推进坦克（血牛 / 推进主角）
 TANK_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
               "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton", "HogRider")
 #: 血牛（pull 的目标：只锁塔 / 大体积推进）
 PULL_TARGET_CARDS = ("Giant", "Golem", "ElixirGolem", "RoyalGiant", "GoblinGiant",
                      "ElectroGiant", "MegaKnight", "Pekka", "GiantSkeleton")
+
+#: 卡名 → opp_spell_threat 枚举（anti_spell 用；大范围/斩杀法术保守归 big_unknown）
+_SPELL_THREAT_KIND = {
+    "Fireball": "fireball", "Poison": "poison", "Lightning": "lightning",
+    "Freeze": "freeze", "Vines": "freeze", "Tornado": "freeze",
+    "Rocket": "big_unknown", "Earthquake": "big_unknown", "Void": "big_unknown",
+}
+_HAND_PROB_THRESHOLD = 0.55   # anti_spell：手牌概率高于此视为"对面有这张法术"
 
 
 def _is_tower(name: str) -> bool:
@@ -85,6 +97,12 @@ def _enemy_main_x(battle):
     return (float(np.mean(xs)) if xs else 9.0)
 
 
+def _my_main_x(battle):
+    xs = [e.position.x for e in battle.entities.values()
+          if e.is_alive and e.player == 0 and not _is_tower(e.name)]
+    return (float(np.mean(xs)) if xs else 9.0)
+
+
 def _region_from_intent(intent: str) -> str:
     mapping = {
         "defend_left": "own_left",
@@ -111,6 +129,11 @@ def _own_region(x: float) -> str:
 def _enemy_region(x: float) -> str:
     s = _side(x)
     return "enemy_left" if s == "left" else "enemy_right"
+
+
+def _opposite_enemy_region(x: float) -> str:
+    """敌方重心在 x → 建议进攻的另一路 region。"""
+    return "enemy_right" if x < LANE_SPLIT_X else "enemy_left"
 
 
 def _pick_suggested_card(battle, player_id, belief: Optional[BeliefState], intent: str):
@@ -145,14 +168,6 @@ def _hand_slot(p, card_name):
     return p.cycle.index(card_name) + 1 if card_name in p.cycle[:4] else None
 
 
-def _hand_card_matching(p, predicate):
-    """手牌（前 4）中第一个满足 predicate 的卡名。"""
-    for card in p.cycle[:4]:
-        if card != "Mirror" and predicate(card):
-            return card
-    return None
-
-
 def _closest_threat(battle):
     """最接近我方塔的敌方部署单位（None=无）。"""
     best, best_w = None, -1.0
@@ -170,6 +185,21 @@ def _threat_unit_is_pressing(e) -> bool:
     return float(e.position.y) <= BRIDGE_Y + 1.0
 
 
+def _opp_spell_threat_of(belief: Optional[BeliefState]):
+    """从信念手牌后验估计对手的强法术威胁 → OPP_SPELL_THREATS 值（None=无）。
+
+    后期粒子收敛/确定性锁定时 hand_probs 近 0/1 → 判断精确；前期概率 > 阈值才报。
+    """
+    if belief is None or belief.hand_probs is None or len(belief.hand_probs) == 0:
+        return None
+    best, best_p = None, _HAND_PROB_THRESHOLD
+    for card, p in zip(belief.deck, belief.hand_probs):
+        kind = _SPELL_THREAT_KIND.get(card)
+        if kind is not None and float(p) > best_p:
+            best_p, best = float(p), kind
+    return best
+
+
 class BeliefPlanner:
     """基于信念状态的规划器。"""
 
@@ -177,9 +207,9 @@ class BeliefPlanner:
         self.use_posterior_sampling = use_posterior_sampling
         self.n_samples = n_samples
 
-    # ---- Phase 2 v1 新意图检测（每帧最多命中一个，返回 None 表示回退旧逻辑）----
+    # ---- Phase 2 v1 新意图检测（每帧最多命中一个；belief 驱动型读 b_t）----
 
-    def _soft_control(self, battle, p, threat):
+    def _soft_control(self, battle, p, threat, belief):
         """最紧急：威胁单位正在我方半场输出 → 手牌有软控（冰冻/藤蔓/龙卷）。"""
         threat_unit = _closest_threat(battle)
         if threat_unit is None or not _threat_unit_is_pressing(threat_unit):
@@ -195,7 +225,7 @@ class BeliefPlanner:
                     value_estimate=-2.0)
         return None
 
-    def _spell_trade(self, battle, p, threat):
+    def _spell_trade(self, battle, p, threat, belief):
         """解牌：敌方高价值单位已进入我方半场 → 手牌有伤害法术直接解（赚费差/保塔）。"""
         threat_unit = _closest_threat(battle)
         if threat_unit is None or float(threat_unit.position.y) > OWN_HALF_EDGE + 1.5:
@@ -203,7 +233,6 @@ class BeliefPlanner:
         if threat_unit.name in PULL_TARGET_CARDS:
             return None  # 血牛解法术亏（Fireball 解不动 Golem）→ 交给 _pull/单位
         cost = float(Card(threat_unit.name).elixir)
-        # 只解"值得交法术"的目标：≥3 费部署单位（1-2 费杂鱼留给塔/单位）
         if cost < 3.0:
             return None
         for card in TRADE_SPELL_CARDS:
@@ -217,7 +246,7 @@ class BeliefPlanner:
                     value_estimate=float(min(cost, 6.0)) * 0.5)
         return None
 
-    def _pull(self, battle, p, threat):
+    def _pull(self, battle, p, threat, belief):
         """拉扯：敌方血牛已到桥头/过桥 → 放低费单位/建筑改变其路径（距离制胜）。"""
         target = None
         for e in battle.entities.values():
@@ -225,12 +254,12 @@ class BeliefPlanner:
                 continue
             if e.name not in PULL_TARGET_CARDS:
                 continue
-            if float(e.position.y) <= BRIDGE_Y + 2.0 and float(e.position.y) >= OWN_HALF_EDGE - 4.0:
+            y = float(e.position.y)
+            if OWN_HALF_EDGE - 4.0 <= y <= BRIDGE_Y + 2.0:
                 target = e
                 break
         if target is None:
             return None
-        # 拉饵：≤3 费可部署单位/建筑（血牛会锁定它并改道）
         for i, card in enumerate(p.cycle[:4]):
             c = Card(card)
             if c.type in ("character", "building") and 1.0 <= c.elixir <= 3.0 \
@@ -239,14 +268,37 @@ class BeliefPlanner:
                     or target.position.x > LANE_SPLIT_X + 4.0
                 return PlanToken(
                     macro_intent="pull",
-                    focus_region="own_center",
-                    suggested_card=i + 1, target_kind="unit",
+                    focus_region="own_center", suggested_card=i + 1,
+                    target_kind="unit",
                     placement_hint="pull_across" if near_edge else "pull_aggro",
-                    elixir_budget=0.3, risk_profile=0.5,
-                    value_estimate=-1.0)
+                    elixir_budget=0.3, risk_profile=0.5, value_estimate=-1.0)
         return None
 
-    def _push_commit(self, battle, p, threat):
+    def _punish(self, battle, p, threat, belief):
+        """趁虚另一路：对手低圣水（记忆追踪，圣水=明牌）→ 压与敌方重心相反的路。"""
+        if belief is None or belief.elixir_mean > 2.5:
+            return None  # 对手圣水充足 → 不算"趁虚"
+        if _closest_threat(battle) is not None and \
+                _threat_unit_is_pressing(_closest_threat(battle)):
+            return None  # 压境先防
+        # 另一路：敌方单位重心反侧；无敌方单位时取我方压力反侧
+        enemy_x = _enemy_main_x(battle)
+        region = _opposite_enemy_region(enemy_x) if enemy_x != 9.0 or \
+            any(e.player == 1 and _deployable_entity(e) for e in battle.entities.values()) \
+            else ("enemy_left" if _my_main_x(battle) >= 9.0 else "enemy_right")
+        # 推进主力：坦克或 ≥5 费角色
+        for i, card in enumerate(p.cycle[:4]):
+            c = Card(card)
+            if (card in TANK_CARDS or (c.type == "character" and c.elixir >= 5.0)) \
+                    and p.elixir >= c.elixir:
+                return PlanToken(
+                    macro_intent="punish", focus_region=region,
+                    suggested_card=i + 1, target_kind="tower",
+                    placement_hint="none", elixir_budget=0.7, risk_profile=0.8,
+                    value_estimate=2.0)
+        return None
+
+    def _push_commit(self, battle, p, threat, belief):
         """推进跟进：己方坦克在地图上推进中（y ≥ 己方半场中前段）→ 在能走到坦克
         后方的区域跟后排（不必紧贴正后方，不等过桥）。"""
         tank = None
@@ -256,13 +308,11 @@ class BeliefPlanner:
             if e.name not in TANK_CARDS:
                 continue
             y = float(e.position.y)
-            # 坦克已沉底并走过己方半场中段（约 y≥8）即视为推进中；过桥后依然有效
             if 8.0 <= y <= 22.0:
                 tank = e
                 break
         if tank is None:
             return None
-        # 后排支持：非坦克角色 3-6 费（Musketeer/Wizard/Archer/Minions...）
         for i, card in enumerate(p.cycle[:4]):
             c = Card(card)
             if c.type == "character" and 3.0 <= c.elixir <= 6.0 \
@@ -275,7 +325,33 @@ class BeliefPlanner:
                     risk_profile=0.7, value_estimate=1.5)
         return None
 
-    def _setup_wait(self, battle, p, threat):
+    def _spell_finish(self, battle, p, threat, belief):
+        """后期磨塔（t≥120 双倍期塔血贵）：敌方公主塔血量偏低 → 持续法术压血线。"""
+        if battle.time < LATE_S:
+            return None
+        p1 = battle.players[1]
+        # 选血量最低的存活公主塔（国王塔只在 2 塔全破后）
+        candidates = []
+        if p1.left_tower_hp > 0:
+            candidates.append(("enemy_left", p1.left_tower_hp))
+        if p1.right_tower_hp > 0:
+            candidates.append(("enemy_right", p1.right_tower_hp))
+        if not candidates:
+            return None
+        region, hp = min(candidates, key=lambda kv: kv[1])
+        if hp > 1200.0:
+            return None  # 血还多 → 交给 push 打，法术磨只对低血线有意义
+        for card in FINISH_SPELL_CARDS:
+            slot = _hand_slot(p, card)
+            if slot is not None and p.elixir >= Card(card).elixir:
+                return PlanToken(
+                    macro_intent="spell_finish", focus_region=region,
+                    suggested_card=slot, target_kind="tower",
+                    placement_hint="none", elixir_budget=0.45, risk_profile=0.6,
+                    value_estimate=1.2)
+        return None
+
+    def _setup_wait(self, battle, p, threat, belief):
         """蓄力：低压力 + 手牌有坦克且圣水够沉底 + 场上无己方坦克 → 沉底开局/憋组合。"""
         if threat >= PRESSURE_THRESHOLD:
             return None
@@ -295,13 +371,68 @@ class BeliefPlanner:
                     elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
         return None
 
-    def _cycle_small(self, battle, p, threat):
+    def _save_ace(self, battle, p, threat, belief):
+        """藏终结卡：手牌有 ace（大闪/藤蔓/冰冻/火箭）且不是最强一波帧 →
+        hold_mask 指名别出 + 留费（suggested 指向普通牌）。"""
+        ace_slots = []
+        for card in ACE_CARDS:
+            slot = _hand_slot(p, card)
+            if slot is not None:
+                ace_slots.append(slot)
+        if not ace_slots:
+            return None
+        tu = _closest_threat(battle)
+        if tu is not None and _threat_unit_is_pressing(tu):
+            return None  # 防守中 ace 可能当解牌用，不硬藏
+        # 己方坦克推进中 = 最强一波窗口期 → 不藏（让 ace 出场）
+        for e in battle.entities.values():
+            if e.player == 0 and _deployable_entity(e) and e.name in TANK_CARDS:
+                y = float(e.position.y)
+                if y >= 10.0:
+                    return None
+        hold = 0
+        for slot in ace_slots:
+            hold |= 1 << (slot - 1)
+        # 建议一张普通可部署卡（非 ace）
+        suggested = None
+        for i, card in enumerate(p.cycle[:4]):
+            c = Card(card)
+            if (i + 1) not in ace_slots and c.elixir <= p.elixir \
+                    and c.type != "spell" and card != "Mirror":
+                suggested = i + 1
+                break
+        return PlanToken(
+            macro_intent="save_ace", focus_region="own_center",
+            suggested_card=suggested, target_kind="none",
+            placement_hint="none", elixir_budget=0.4, risk_profile=0.4,
+            hold_mask=hold, value_estimate=-0.3)
+
+    def _anti_spell(self, battle, p, threat, belief):
+        """防法术：对手手牌高概率有强法术（belief）且我方要下后排 → 提示防溅射站位。"""
+        kind = _opp_spell_threat_of(belief)
+        if kind is None:
+            return None
+        if _closest_threat(battle) is not None and \
+                _threat_unit_is_pressing(_closest_threat(battle)):
+            return None
+        for i, card in enumerate(p.cycle[:4]):
+            c = Card(card)
+            if c.type == "character" and 3.0 <= c.elixir <= 6.0 \
+                    and p.elixir >= c.elixir and card not in TANK_CARDS:
+                return PlanToken(
+                    macro_intent="anti_spell", focus_region="own_center",
+                    suggested_card=i + 1, target_kind="none",
+                    placement_hint="anti_spell_zone", opp_spell_threat=kind,
+                    elixir_budget=0.5, risk_profile=0.4, value_estimate=0.0)
+        return None
+
+    def _cycle_small(self, battle, p, threat, belief):
         """过牌：无压力 + 手牌含 1-2 费小牌 + 圣水充足 → 下小费轮转手牌质量。"""
         if threat >= PRESSURE_THRESHOLD:
             return None
         tu = _closest_threat(battle)
         if tu is not None and _threat_unit_is_pressing(tu):
-            return None  # 同上：压境时不过牌
+            return None
         for i, card in enumerate(p.cycle[:4]):
             c = Card(card)
             if c.elixir <= 2.0 and p.elixir >= c.elixir + 3.0 and card != "Mirror":
@@ -318,10 +449,13 @@ class BeliefPlanner:
         threat, my_pressure = _enemy_pressure(battle)
         p = battle.players[0]
 
-        # —— Phase 2 v1 优先链（紧急度降序）：软控→解牌→拉扯→推进跟牌→蓄力→过牌 ——
+        # —— Phase 2 v1 优先链（紧急度降序）：软控→解牌→拉扯→趁虚→推进跟牌→磨塔→
+        #    蓄力→藏ace→防法术→过牌 ——
         for detector in (self._soft_control, self._spell_trade, self._pull,
-                         self._push_commit, self._setup_wait, self._cycle_small):
-            tok = detector(battle, p, threat)
+                         self._punish, self._push_commit, self._spell_finish,
+                         self._setup_wait, self._save_ace, self._anti_spell,
+                         self._cycle_small):
+            tok = detector(battle, p, threat, belief)
             if tok is not None:
                 return tok
 
