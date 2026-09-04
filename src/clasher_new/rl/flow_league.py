@@ -145,6 +145,55 @@ def save_flow_models(cfg, models):
         save_checkpoint(pol, os.path.join(cfg.folder(), f"flow_{mid}.pt"))
 
 
+def _flow_progress_path(cfg):
+    return os.path.join(cfg.folder(), "flow_run_state.json")
+
+
+def _save_flow_progress(cfg, pair_ix, game_ix, total_games, trainers):
+    """落盘 flow 断点：对进度（pair_ix/game_ix）+ 6 个优化器状态（flow_opt_<id>.pt）。"""
+    with open(_flow_progress_path(cfg), "w", encoding="utf-8") as f:
+        json.dump({"pair_ix": int(pair_ix), "game_ix": int(game_ix),
+                   "total_games": int(total_games)}, f, ensure_ascii=False, indent=2)
+    for mid, tr in trainers.items():
+        torch.save(tr.opt.state_dict(), os.path.join(cfg.folder(), f"flow_opt_{mid}.pt"))
+
+
+def _load_flow_resume(cfg, device):
+    """resume 时从磁盘恢复 (models, trainers, pair_start, game_ix_start)；失败返回 None。"""
+    pp = _flow_progress_path(cfg)
+    if not os.path.exists(pp):
+        return None
+    try:
+        with open(pp, "r", encoding="utf-8") as f:
+            prog = json.load(f)
+        pair_start = int(prog.get("pair_ix", 0))
+        game_ix_start = int(prog.get("game_ix", 0))
+    except (OSError, ValueError):
+        return None
+    loaded = {}
+    for mid in FLOW_MODEL_IDS:
+        p = os.path.join(cfg.folder(), f"flow_{mid}.pt")
+        if os.path.exists(p):
+            pol = load_checkpoint(p, hidden_dim=cfg.hidden_dim)
+            pol.to_device(device)
+            loaded[mid] = pol
+    if len(loaded) != len(FLOW_MODEL_IDS):
+        return None
+    trainers = {}
+    for mid, pol in loaded.items():
+        t = PPOTrainer(pol, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
+                       clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
+                       max_grad_norm=cfg.max_grad_norm)
+        op = os.path.join(cfg.folder(), f"flow_opt_{mid}.pt")
+        if os.path.exists(op):
+            try:
+                t.opt.load_state_dict(torch.load(op, map_location=device))
+            except Exception:
+                pass   # 优化器不匹配则 Adam 从头，模型仍续训
+        trainers[mid] = t
+    return loaded, trainers, pair_start, game_ix_start
+
+
 # ---------------------------------------------------------------------------
 # 对局 / 轨迹收集
 # ---------------------------------------------------------------------------
@@ -316,7 +365,17 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
           f"{_rw['main']['tower_dmg_opp']}/{_rw['main']['tower_dmg_self']}）", flush=True)
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
-    models, trainers = build_flow_models(cfg, device, belief_dim)
+    models = trainers = None
+    pair_start = game_ix_start = 0
+    if resume:
+        _r = _load_flow_resume(cfg, device)
+        if _r is not None:
+            models, trainers, pair_start, game_ix_start = _r
+            print(f"[flow] resume 从第 {pair_start} 对继续（6 模型+优化器已加载）", flush=True)
+        else:
+            print("[flow] resume 检查点缺失/不完整，从头开始", flush=True)
+    if models is None:
+        models, trainers = build_flow_models(cfg, device, belief_dim)
     bp = BeliefPlanner()
     prophet = ProphetPlanner()
     rng = random.Random(seed)
@@ -324,8 +383,8 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
     total_games = 0
     t0 = time.monotonic()
 
-    pair_ix = 0
-    game_ix = 0
+    pair_ix = pair_start
+    game_ix = game_ix_start
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             if max_pairs is not None and pair_ix >= max_pairs:
@@ -333,6 +392,11 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
             id_a, (label_a, pool_a) = ids[i], pools[ids[i]]
             id_b, (label_b, pool_b) = ids[j], pools[ids[j]]
             n_pair = len(pool_a) * len(pool_b) * int(games_per_deck_pair)
+            if pair_ix < pair_start:
+                # 断点前已完成的对：只累计局数，不重打
+                total_games += n_pair
+                pair_ix += 1
+                continue
             if not quiet:
                 print(f"[flow] 对 {label_a}({len(pool_a)}) × {label_b}({len(pool_b)}) "
                       f"= {n_pair} 局 ...", flush=True)
@@ -358,6 +422,7 @@ def run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None,
                       f"耗时 {time.monotonic() - t0:.1f}s", flush=True)
             if save:
                 save_flow_models(cfg, models)
+                _save_flow_progress(cfg, pair_ix, game_ix, total_games, trainers)
     if save:
         save_flow_models(cfg, models)
     print(f"[done] flow 联赛完成 {total_games} 局，6 模型已保存 -> {cfg.folder()}", flush=True)

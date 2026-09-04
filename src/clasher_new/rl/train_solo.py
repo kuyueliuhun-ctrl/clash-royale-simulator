@@ -36,7 +36,7 @@ from rl.follower import FollowerPolicy, save_checkpoint, load_checkpoint
 from rl.ppo import PPOTrainer
 from rl.config import reward_to_env
 from rl.train_follower import FollowerOpponent
-from rl.run_league import resolve_device, _bundle_cards, LeagueGameRecorder, _stall_probe, STALL_WINDOW
+from rl.run_league import resolve_device, _bundle_cards, LeagueGameRecorder, _stall_probe, STALL_WINDOW, _load_run_state
 from rl.replay import save_league_replays
 
 #: 固定卡组（原版默认 8 卡）：双方镜像使用同一副。
@@ -166,18 +166,46 @@ def run_solo(cfg, resume=False, record_replays=True):
     env = solo_env(cfg, cfg.seed)
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
-    if cfg.main_init:
+    # —— 断点续练（--resume）：恢复 step / main 权重 / 优化器 / 历史曲线 ——
+    start_step = 0
+    history = []
+    rs = None
+    if resume:
+        rs = _load_run_state(cfg)
+        if rs and rs.get("solo_ckpt") and os.path.exists(rs["solo_ckpt"]):
+            start_step = int(rs.get("step", 0))
+            if os.path.exists(cfg.solo_state_path()):
+                try:
+                    with open(cfg.solo_state_path(), "r", encoding="utf-8") as f:
+                        history = (json.load(f) or {}).get("history", [])
+                except (OSError, ValueError):
+                    history = []
+        else:
+            print("[solo] resume 检查点缺失，从头开始", flush=True)
+
+    if cfg.main_init and not (rs and rs.get("solo_ckpt")
+                              and os.path.exists(rs["solo_ckpt"])):
         main = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim)
     else:
         main = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                               belief_dim=belief_dim)
     main.to_device(device)
+    if rs and rs.get("solo_ckpt") and os.path.exists(rs["solo_ckpt"]):
+        # resume：断点权重为准（覆盖 main_init）
+        main = load_checkpoint(rs["solo_ckpt"], hidden_dim=cfg.hidden_dim)
+        main.to_device(device)
+        print(f"[solo] resume 从 step {start_step} 续训（继续到 {cfg.total_steps}）", flush=True)
     opp = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM, belief_dim=belief_dim)
     opp.to_device(device)
-    _sync_frozen_copy(main, opp)   # 开局副本 = main 初始权重
+    _sync_frozen_copy(main, opp)   # 开局副本 = main（resume 后即断点权重）
     ppo = PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                      clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
                      max_grad_norm=cfg.max_grad_norm)
+    if rs and rs.get("solo_opt") and os.path.exists(rs["solo_opt"]):
+        try:
+            ppo.opt.load_state_dict(torch.load(rs["solo_opt"], map_location=device))
+        except Exception:
+            print("[solo] resume 优化器状态不匹配，Adam 从头（模型仍续训）", flush=True)
     bp = BeliefPlanner()
     prophet = ProphetPlanner()
     rng = random.Random(cfg.seed)
@@ -188,8 +216,6 @@ def run_solo(cfg, resume=False, record_replays=True):
                                 deterministic=True)
     env.opponent = opp_side
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
-
-    history = []
 
     def eval_and_write(step):
         stats, _ = eval_solo(env, main, opp, int(cfg.n_eval_games),
@@ -204,21 +230,26 @@ def run_solo(cfg, resume=False, record_replays=True):
               f"{stats['games']}局) mean_reward={stats['mean_reward']:.3f}", flush=True)
         save_checkpoint(main, cfg.solo_main_path())
         save_checkpoint(main, cfg.solo_ckpt_path(step))   # 历史版本保留（solo_main_<step>.pt）
+        torch.save(ppo.opt.state_dict(), cfg.solo_opt_path())   # 断点续练恢复 Adam
+        with open(cfg.run_state_path(), "w", encoding="utf-8") as f:
+            json.dump({"step": int(step), "solo_ckpt": cfg.solo_main_path(),
+                       "solo_opt": cfg.solo_opt_path(),
+                       "config": cfg.name, "device": device}, f)
 
-    # 训练开始先跑一次评估（WebUI 立即有真实数据）
-    if cfg.eval_at_start:
+    # 训练开始先跑一次评估（WebUI 立即有真实数据）；resume 时不重跑起始评估
+    if cfg.eval_at_start and start_step == 0:
         eval_and_write(0)
 
     obs, _ = env.reset()
     belief.reset(env.deck1)
     hidden = None
-    last_eval_step = None
+    last_eval_step = start_step
     ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
     ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
     transitions = []
     _t0 = time.monotonic()
 
-    for step in range(1, cfg.total_steps + 1):
+    for step in range(start_step + 1, cfg.total_steps + 1):
         use_prophet = rng.random() < _SOLO_PROPHET_PROB
         plan = prophet.plan(env.get_prophet_state()) if use_prophet \
             else bp.plan(env.battle, belief.state(), obs)

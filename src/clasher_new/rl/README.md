@@ -110,6 +110,8 @@ python rl/dashboard.py --state runs/aggressive/league_state.json --replays runs/
 python rl/run_league.py --mode flow --config economy --device cuda
 python rl/run_league.py --mode flow --n-random-decks 30 --out-dir runs   # 随机卡组套数（默认 30）
 #   产物：runs/<name>/flow_<id>.pt（6 个模型各一个 checkpoint）；--max-ep-steps 控制单局决策步
+#   断点续练：--mode flow --resume —— 从 flow_run_state.json 恢复对进度（pair/game）+ 6 模型
+#   与优化器（flow_opt_<id>.pt），跳过已完成对继续（每对结束落盘）
 #   注意：规模大，建议先小池试跑（详见关键语义「全配对分流派联赛」）
 
 # 7e) flow 数据效率 A/B（缩小 10× 池，验证曲线上涨再上 148,800）
@@ -125,6 +127,8 @@ python rl/run_league.py --mode flow-sweep-games5 --config economy --device cuda 
 #     即原版 WeightsCopyingCallback）；不写 Elo/PFSP/league_state。
 python rl/run_league.py --mode solo --config economy --device cuda
 python rl/run_league.py --mode solo --config economy --solo-copy-every 2000   # 冻结副本同步间隔（步）
+#   断点续练：--mode solo --resume —— 从 run_state.json 恢复 step + solo_main.pt + 优化器
+#   (solo_opt.pt) + 历史曲线（solo_state.json），不重跑起始评估、曲线不断裂
 #   产物：runs/<name>/solo_state.json（胜率±SE/mean_reward/进度，dashboard --solo 实时读）、
 #   solo_main.pt（最新指针）+ solo_main_<step>.pt（每次评估的历史检查点，回溯用）、
 #   replays/league_<step>.pkl（评估回放，复用回放面板）

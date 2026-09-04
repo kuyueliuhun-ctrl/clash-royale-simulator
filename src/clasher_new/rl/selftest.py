@@ -1404,6 +1404,42 @@ def test_flow_sweep_smoke():
     print("[PASS] flow-sweep：mini 池 1 轮通路 + main 轮内估计(±SE) + summary.json/csv 落盘")
 
 
+def test_flow_resume():
+    """flow 断点续练：前 N 对 + resume 全跑，总局数=全量、不重打已完成对。"""
+    import tempfile
+    from rl import flow_league as fl
+    from rl.config import TrainConfig
+
+    def mk_decks(n, arch):
+        return [{"archetype": arch, "cards": [
+            "Knight", "MiniPekka", "Arrows", "Minions", "Musketeer",
+            "Fireball", "Giant", "Archer"], "missing": 0} for _ in range(n)]
+
+    pools = fl.OrderedDict([
+        ("push_flow", ("推进流", mk_decks(2, "推进流"))),
+        ("counter_flow", ("防守反击流", mk_decks(2, "防守反击流"))),
+        ("lockdown_flow", ("自闭流", mk_decks(1, "自闭流"))),
+        ("all_decks", ("全量卡组", mk_decks(2, "全量卡组"))),
+        ("random_deck", ("完全随机", mk_decks(2, "完全随机"))),
+        ("main", ("全量卡组(main)", mk_decks(2, "全量卡组"))),
+    ])
+    expected = fl.flow_pair_games(pools)
+    assert expected == 50, f"mini 池应 50 局，实际 {expected}"
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_flow_resume", total_steps=1000, steps_per_eval=0,
+                      update_interval=16, batch_size=8, hidden_dim=32, seed=0,
+                      n_eval_games=1, max_ep_steps=2, eval_at_start=False, out_dir=d)
+    # 第一段：只跑前 2 对（push×counter=4 + push×lockdown=2 = 6 局）
+    total1, _, _ = fl.run_flow(cfg, pools=pools, n_random_decks=2, max_pairs=2)
+    assert total1 == 6, f"前 2 对应 6 局，实际 {total1}"
+    assert os.path.exists(fl._flow_progress_path(cfg)), "flow_run_state.json 应已落盘"
+    # 断点续练全跑：跳过已完成对，总局数 = 全量
+    total2, models2, _ = fl.run_flow(cfg, pools=pools, n_random_decks=2, resume=True)
+    assert total2 == expected, f"resume 后总局数应=全量 {expected}，实际 {total2}"
+    assert set(models2) == set(fl.FLOW_MODEL_IDS), "resume 后 6 模型都在"
+    print(f"[PASS] flow 断点续练：前 2 对({total1}局) + resume 全跑({total2}局) 不重打已完成对")
+
+
 def test_solo_mode_smoke():
     """solo 自对弈：固定卡组镜像 + 周期冻结副本 + solo_state.json/checkpoint 落盘（无联赛）。"""
     import tempfile
@@ -1459,6 +1495,34 @@ def test_human_play_session():
     ds = ep.to_belief_dataset()
     assert ds, "EpisodeReplay → 信念监督样本非空（含 hidden 特权标签）"
     print("[PASS] 人机对战：随机驱动 + EpisodeReplay/BC 落盘 + 导出（信念/BC 均可训练）")
+
+
+def test_solo_resume():
+    """solo 断点续练：恢复 step/权重/优化器/历史曲线，续训不重复评估。"""
+    import tempfile
+    import json as _json
+    from rl.config import TrainConfig
+    from rl import train_solo
+
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_solo_resume", total_steps=8, steps_per_eval=4,
+                      update_interval=4, batch_size=4, hidden_dim=32, seed=0,
+                      n_eval_games=2, max_ep_steps=4, solo_copy_every=4, out_dir=d)
+    train_solo.run_solo(cfg, record_replays=False)
+    assert os.path.exists(cfg.solo_opt_path()), "solo_opt.pt 应已落盘（断点续练用）"
+    st = _json.load(open(cfg.solo_state_path(), "r", encoding="utf-8"))
+    assert [h["step"] for h in st["history"]] == [0, 4, 8], st["history"]
+    rs = _json.load(open(cfg.run_state_path(), "r", encoding="utf-8"))
+    assert rs["step"] == 8
+    # 续训到 12 步：不重跑 0/4/8，曲线延续到 12
+    cfg2 = TrainConfig(name="selftest_solo_resume", total_steps=12, steps_per_eval=4,
+                       update_interval=4, batch_size=4, hidden_dim=32, seed=1,
+                       n_eval_games=2, max_ep_steps=4, solo_copy_every=4, out_dir=d)
+    train_solo.run_solo(cfg2, resume=True, record_replays=False)
+    st2 = _json.load(open(cfg.solo_state_path(), "r", encoding="utf-8"))
+    steps2 = [h["step"] for h in st2["history"]]
+    assert steps2 == [0, 4, 8, 12], steps2
+    print("[PASS] solo 断点续练：恢复 step/权重/优化器/历史曲线，续训不重复评估")
 
 
 def test_stall_probe():
@@ -1585,7 +1649,9 @@ def main():
     test_flow_league_smoke()
     test_ablation_recorded()
     test_flow_sweep_smoke()
+    test_flow_resume()
     test_solo_mode_smoke()
+    test_solo_resume()
     test_human_play_session()
     test_stall_probe()
     test_play_pair_env_reuse()

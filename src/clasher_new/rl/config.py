@@ -113,6 +113,10 @@ class TrainConfig:
         """solo 历史检查点：solo_main_<step>.pt（每次评估保留一份，回溯用）。"""
         return os.path.join(self.folder(), f"solo_main_{step}.pt")
 
+    def solo_opt_path(self):
+        """solo 优化器状态（断点续练恢复 Adam 用）。"""
+        return os.path.join(self.folder(), "solo_opt.pt")
+
     def run_state_path(self):
         return os.path.join(self.folder(), "run_state.json")
 
