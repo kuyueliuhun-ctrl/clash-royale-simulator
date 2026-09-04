@@ -72,6 +72,9 @@ def load_state(path):
 
 
 def build_payload(path):
+    if path is None:
+        return {"ok": False, "error": "未指定 --state（联赛面板关闭；可看 --solo/--sweep/--play 面板）",
+                "state_path": None}
     st = load_state(path)
     if st is None:
         return {"ok": False, "error": f"状态文件不存在: {path}", "state_path": path}
@@ -617,19 +620,25 @@ async function refresh(){
       fetch("/api/solo?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
     ]);
     payload = rs; sweep = sw; solo = so;
+    await refreshPlay();   // 先拿到 play 状态再决定状态栏显示
     const src = document.getElementById("datasrc");
     const hasSweep = sweep.ok && sweep.strategies.length;
     const hasSolo = solo.ok;
-    if (!payload.ok && (hasSweep || hasSolo)){
-      // 非联赛模式（flow-sweep / solo 自对弈）：不显示联赛错误，只显示对应面板
+    const hasPlay = play.ok;
+    if (!payload.ok && (hasSweep || hasSolo || hasPlay)){
+      // 非联赛模式（flow-sweep / solo / 人机对战）：不显示联赛错误，只显示对应面板
       const s0 = hasSweep ? sweep.strategies[0] : null;
       const up = (hasSweep && s0 && s0.updated_at) || (hasSolo && solo.updated_at) || "";
-      document.getElementById("status").textContent =
-        (hasSweep ? "flow-sweep" : "") + (hasSweep && hasSolo ? " + " : "") +
-        (hasSolo ? "solo 自对弈" : "") + " 模式 · 更新于 " + up;
+      const modes = [];
+      if (hasSweep) modes.push("flow-sweep");
+      if (hasSolo) modes.push("solo 自对弈");
+      if (hasPlay) modes.push("人机对战");
+      document.getElementById("status").textContent = modes.join(" + ") + " 模式 · 更新于 " + up;
       src.textContent = (hasSweep ? "sweep 根目录: " + (sweep.sweep_root || "") : "") +
-        (hasSweep && hasSolo ? " · " : "") +
-        (hasSolo ? "solo 状态: " + (solo.solo_path || "") : "");
+        (hasSweep && (hasSolo || hasPlay) ? " · " : "") +
+        (hasSolo ? "solo 状态: " + (solo.solo_path || "") : "") +
+        ((hasSolo && hasPlay) ? " · " : "") +
+        (hasPlay ? "人机对战已就绪" : "");
       src.style.color = "#22c55e";
     } else if (!payload.ok){
       document.getElementById("status").textContent = "⚠ " + payload.error;
@@ -1794,8 +1803,8 @@ def make_demo_solo(path, n_points=10, seed=3):
 
 def main():
     ap = argparse.ArgumentParser(description="RL 训练仪表盘（Elo / flow-sweep / solo 自对弈 + 回放）")
-    ap.add_argument("--state", type=str, default="league_state.json",
-                    help="run_league 写出的联赛状态 JSON")
+    ap.add_argument("--state", type=str, default=None,
+                    help="run_league 写出的联赛状态 JSON（不传则联赛面板关闭；只显示 --solo/--sweep/--play 面板）")
     ap.add_argument("--sweep", type=str, default=None,
                     help="flow-sweep 根目录（--mode flow-sweep-* 的产物 runs/<name>/，或某个 "
                          "flow_sweep_<strategy> 策略目录；实时显示训练进度/曲线）")
@@ -1818,8 +1827,9 @@ def main():
                     help="状态文件不存在时生成演示数据（Elo + flow-sweep + solo + 回放）")
     ap.add_argument("--demo-points", type=int, default=10)
     args = ap.parse_args()
-    state_abs = os.path.abspath(args.state)
-    if args.demo and not os.path.exists(state_abs):
+    state_abs = os.path.abspath(args.state) if args.state else None
+    if args.demo and not (state_abs and os.path.exists(state_abs)):
+        state_abs = state_abs or os.path.join(os.path.abspath("."), "league_state.json")
         make_demo_state(state_abs, n_points=args.demo_points)
     sweep_abs = args.sweep and os.path.abspath(args.sweep) or None
     if args.demo:
@@ -1837,7 +1847,8 @@ def main():
         if not os.path.exists(solo_abs):
             make_demo_solo(solo_abs, n_points=args.demo_points)
     replays_abs = args.replays and os.path.abspath(args.replays) \
-        or os.path.join(os.path.dirname(state_abs), "replays")
+        or (os.path.join(os.path.dirname(state_abs), "replays") if state_abs
+            else os.path.join(os.path.abspath("."), "replays"))
     if args.demo:
         make_demo_replays(replays_abs)
     Handler.state_path = state_abs
@@ -1859,15 +1870,16 @@ def main():
             from rl.config import TrainConfig
             Handler.play_cfg = TrainConfig.resolve(args.play_config)
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
-    print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path})")
+    print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path or '未指定，联赛面板关闭'})",
+          flush=True)
     if Handler.sweep_root:
-        print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}")
+        print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}", flush=True)
     if Handler.solo_path:
-        print(f"[dashboard] solo 状态: {Handler.solo_path}")
+        print(f"[dashboard] solo 状态: {Handler.solo_path}", flush=True)
     if Handler.play_policy_path:
         print(f"[dashboard] 人机对战策略: {Handler.play_policy_path}"
-              f"（数据 -> {Handler.play_out_dir}）")
-    print(f"[dashboard] 回放目录: {Handler.replays_dir}  Ctrl+C 退出")
+              f"（数据 -> {Handler.play_out_dir}）", flush=True)
+    print(f"[dashboard] 回放目录: {Handler.replays_dir}  Ctrl+C 退出", flush=True)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
