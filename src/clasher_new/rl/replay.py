@@ -86,7 +86,20 @@ def battle_snapshot(battle, bundle, reward, info):
     """把一个决策步压缩成轻量帧（不含 32×18 观测网格，体积可控）。
 
     每帧含：时间、动作 bundle、奖励、对手出牌、双方塔血/圣水/皇冠、存活实体列表。
+    实体条目 [name, x, y, hp, player, kind, max_hp, shield, shield_max, radius]：
+    kind ∈ troop/building/projectile/effect（供前端按 pygame 风格渲染）。
     """
+    from battle import Building, Projectile, SpawnProjectile, AreaEffect, TimedExplosive
+
+    def _kind(e):
+        if isinstance(e, Building):
+            return "building"
+        if isinstance(e, (SpawnProjectile, AreaEffect, TimedExplosive)):
+            return "effect"
+        if isinstance(e, Projectile):
+            return "projectile"
+        return "troop"
+
     p0, p1 = battle.players
     return {
         "t": round(float(battle.time), 2),
@@ -101,7 +114,12 @@ def battle_snapshot(battle, bundle, reward, info):
         "crown1": int(p1.get_crown_count()),
         "entities": [
             [e.name, round(float(e.position.x), 1), round(float(e.position.y), 1),
-             round(float(e.hp), 1), int(e.player)]
+             round(float(e.hp), 1), int(e.player),
+             _kind(e),
+             float(getattr(e.data, "hp", e.hp) or e.hp),
+             float(getattr(e, "shield_health", 0.0) or 0.0),
+             float(getattr(e.data, "shield_health", 0.0) or 0.0),
+             float(getattr(e.data, "collision_radius", 0.5) or 0.5)]
             for e in battle.entities.values() if e.is_alive
         ],
     }

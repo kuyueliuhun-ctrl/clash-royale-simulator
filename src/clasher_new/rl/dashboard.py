@@ -1350,6 +1350,7 @@ function interpEntities(fromEnts, toEnts, p){
   toEnts = toEnts || [];
   const used = new Set();
   const out = [];
+  const pick = t => ({kind: t[5], max_hp: t[6], shield: t[7], shield_max: t[8], radius: t[9]});
   for (const t of toEnts){
     let best = -1, bestD = 1e9;
     for (let i = 0; i < fromEnts.length; i++){
@@ -1364,15 +1365,18 @@ function interpEntities(fromEnts, toEnts, p){
       used.add(best);
       const f = fromEnts[best];
       out.push({name: t[0], x: f[1] + (t[1] - f[1]) * p, y: f[2] + (t[2] - f[2]) * p,
-                hp: f[3] + (t[3] - f[3]) * p, player: t[4], alpha: 1, scale: 1});
+                hp: f[3] + (t[3] - f[3]) * p, player: t[4], alpha: 1, scale: 1,
+                ...pick(t)});
     } else {
-      out.push({name: t[0], x: t[1], y: t[2], hp: t[3], player: t[4], alpha: p, scale: p});
+      out.push({name: t[0], x: t[1], y: t[2], hp: t[3], player: t[4], alpha: p, scale: p,
+                ...pick(t)});
     }
   }
   for (let i = 0; i < fromEnts.length; i++){
     if (!used.has(i)){
       const f = fromEnts[i];
-      out.push({name: f[0], x: f[1], y: f[2], hp: f[3], player: f[4], alpha: 1 - p, scale: 1 - p});
+      out.push({name: f[0], x: f[1], y: f[2], hp: f[3], player: f[4], alpha: 1 - p, scale: 1 - p,
+                ...pick(f)});
     }
   }
   return out;
@@ -1405,6 +1409,16 @@ function drawInterpOn(canvas, from, to, p){
   ctx.fillRect(X(0), Y(14), 18 * scale, 4 * scale);
   ctx.fillStyle = "rgba(56,189,248,0.28)";
   ctx.fillRect(X(0), Y(15.5), 18 * scale, 1 * scale);
+  // 桥（pygame：x∈[2,5] 与 [13,16] 跨河道 2 格）
+  ctx.fillStyle = "rgba(148,163,184,0.30)";
+  ctx.fillRect(X(2), Y(15), 3 * scale, 2 * scale);
+  ctx.fillRect(X(13), Y(15), 3 * scale, 2 * scale);
+  // 四角部署区（6×1，pygame 布局：上下两端左右角）
+  ctx.fillStyle = "rgba(100,116,139,0.22)";
+  ctx.fillRect(X(0), Y(0), 6 * scale, 1 * scale);
+  ctx.fillRect(X(12), Y(0), 6 * scale, 1 * scale);
+  ctx.fillRect(X(0), Y(31), 6 * scale, 1 * scale);
+  ctx.fillRect(X(12), Y(31), 6 * scale, 1 * scale);
 
   if (!to) return;
 
@@ -1456,29 +1470,40 @@ function drawInterpOn(canvas, from, to, p){
     }
   });
 
-  // 实体（插值位置/血量，新兵淡入、阵亡淡出；塔由上方独立绘制，跳过塔实体）
+  // 实体（pygame 风格：部队实心圆+名字+血条 / Building 中央 HP / Projectile 空心 / 效果淡出）
   const ents = interpEntities(from && from.entities, to.entities, p)
     .filter(e => e.name !== "KingTower" && e.name !== "King_PrincessTowers");
   ents.forEach(e => {
-    const r = Math.max(3.5, 0.34 * scale);
+    const rad = e.radius ? e.radius * scale : 0.34 * scale;
+    const r = Math.max(3.5, rad);
     const col = e.player === 0 ? "#60a5fa" : "#f87171";
     ctx.globalAlpha = Math.max(0, Math.min(1, e.alpha || 1));
     ctx.beginPath();
     ctx.arc(X(e.x), Y(e.y), r * (e.scale || 1), 0, 7);
-    ctx.fillStyle = col;
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.7)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    const bw = r * 2, bh = 2.5;
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(X(e.x) - bw / 2, Y(e.y) - r - 6, bw, bh);
-    ctx.fillStyle = "#22c55e";
-    ctx.fillRect(X(e.x) - bw / 2, Y(e.y) - r - 6, bw * Math.max(0, Math.min(1, e.hp / 1000)), bh);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "9px sans-serif";
-    ctx.textAlign = "center";
+    if (e.kind === "projectile"){
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();   // 空心
+    } else {
+      ctx.fillStyle = col; ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 1; ctx.stroke();
+    }
+    // HP 条（shield 优先）；Building 中央显示 HP 数字
+    const mh = (e.max_hp && e.max_hp > 0) ? e.max_hp : 1000;
+    const frac = (e.shield > 0 && e.shield_max > 0)
+      ? Math.max(0, Math.min(1, e.shield / e.shield_max))
+      : Math.max(0, Math.min(1, e.hp / mh));
+    if (e.kind !== "projectile"){
+      const bw = Math.max(r * 2, 16), bh = 3;
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(X(e.x) - bw / 2, Y(e.y) - r - 8, bw, bh + 1);
+      ctx.fillStyle = e.shield > 0 ? "#a78bfa" : "#22c55e";
+      ctx.fillRect(X(e.x) - bw / 2, Y(e.y) - r - 7, bw * frac, bh);
+    }
+    ctx.fillStyle = "#e2e8f0"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
     ctx.fillText(e.name, X(e.x), Y(e.y) - r - 9);
+    if (e.kind === "building"){
+      ctx.fillStyle = "#fff";
+      ctx.fillText(Math.round(e.hp), X(e.x), Y(e.y) + 3);
+    }
     ctx.globalAlpha = 1;
   });
 
