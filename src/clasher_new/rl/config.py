@@ -28,22 +28,27 @@ import json
 from dataclasses import dataclass, field, asdict
 
 #: 默认奖励权重（与 RLEnv 的 _DEFAULT_REWARD 保持一致；勿单独改一处）。
-#: 2025-06 奖惩机制改版：
-#: - 塔血统一：打击/损失同价 0.001/0.001（不再"挨打比打人贵 20%"）；
-#: - 费差默认打开：normalize_tower_dmg=True + elixir_diff_weight=0.5，
-#:   lv11 下 1 圣水 ≈ 0.5/0.001 = 500 塔血（真实游戏里 1 圣水约 300-700 血的中位）。
+#: reward v2（2026 重构，替代旧"手牌圣水差逐帧费差"）：
+#: - 资源账：费差项 = Δ(手牌圣水 + 场上部署份额)差（部署帧 E−c/V+c 抵消 → 下牌不罚；
+#:   死亡注销、法术击杀返还 → 送死/空砸有代价、解牌赚费差）；
+#: - 价格两段离散（120s 切双倍圣水，不线性）：tower_dmg_late=0.002 塔血贵 /
+#:   elixir_diff_late=0.1 费贱 → 双倍期亏费换塔血、法术砸塔自动变正 EV；
+#: - unit_dmg_k：单位受伤 shaping（客观伤害事件，非估值：敌方单位每掉 1 血 → 我方 +k）。
 DEFAULT_REWARD = {
     "crown_weight": 8.0,        # 皇冠差系数（每差 1 皇冠 ±8：破塔里程碑，胜利太稀疏需中间大奖励）
-    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（与 self 统一）
+    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（前段 t<120，与 self 统一）
     "tower_dmg_self": 0.001,    # 我方塔损 → 负奖励（与 opp 统一）
+    "tower_dmg_late": 0.002,    # v2 双倍期塔血系数（t≥120：斩杀/法术砸塔自动变正 EV）
     "win_bonus": 10.0,          # 获胜加成
     "lose_penalty": 10.0,       # 失败惩罚
     "draw_penalty": 10.0,       # 平局惩罚（= 失败：平局归类为败，逼策略主动求胜；0=旧行为免费平局）
     "invalid_penalty": 0.05,    # 每次非法动作惩罚
     "elixir_bonus": 0.0,        # 每步按我方剩余圣水的正向 shaping（圣水效率机制）
     "normalize_tower_dmg": True,   # 塔损按塔血%归一化到 lv11 锚（默认打开，跨等级一致）
-    "elixir_diff_weight": 0.5,     # 每步 Δ费差（我方−对方圣水）shaping 权重（默认打开：
-                                   # lv11 下 1 圣水 ≈ 500 塔血，见 test_reward_economy_trade_pricing）
+    "elixir_diff_weight": 0.5,     # v2 资源账 edw 前段（t<120：费贵，教珍惜圣水；
+                                   # lv11 下 1 圣水 ≈ 0.5/0.001 = 500 塔血的前段锚）
+    "elixir_diff_late": 0.1,       # v2 双倍期 edw（t≥120：费贱，亏费换塔血可接受）
+    "unit_dmg_k": 0.0005,          # v2 单位受伤 shaping（敌方单位每掉 1 血 → 我方 +k）
 }
 
 #: 按流派模型的奖惩覆盖（在所选预设之上按模型 id 覆盖；flow 联赛 6 模型用）。

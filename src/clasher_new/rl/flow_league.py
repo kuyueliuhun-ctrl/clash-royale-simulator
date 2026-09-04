@@ -37,7 +37,7 @@ if _PARENT not in sys.path:
 import numpy as np
 import torch
 
-from rl.env_wrapper import RLEnv, compute_reward
+from rl.env_wrapper import RLEnv, compute_reward, _phase_weights
 from rl.belief import BeliefInference
 from rl.belief_planner import BeliefPlanner
 from rl.follower import FollowerPolicy, load_checkpoint, save_checkpoint
@@ -275,6 +275,7 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
         a_played = _bundle_cards(bundle, obs)
         old0 = _hp_state(env.battle.players[0])
         old1 = _hp_state(env.battle.players[1])
+        v_before = [float(env._active_v[0]), float(env._active_v[1])]
         env.reward_weights = rw_a          # 按模型奖惩：reward0 用 A 的权重
         obs2, reward0, term, trunc, info = env.step(bundle)
         tr1 = opp.take_last_step()
@@ -282,14 +283,23 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
         new1 = _hp_state(env.battle.players[1])
         winner = env.battle.winner if env.battle.game_over else None
         # player-1 视角 reward：交换 blue/red、winner 翻转（invalid 视为 0），用 B 的权重
+        # v2：与 RLEnv.step 同口径——两段价格 + 资源账 V（份额在 env 内维护）
+        v_after = info.get("field_v") or [env._active_v[0], env._active_v[1]]
+        tower_b, edw_b = _phase_weights(rw_b, env.battle.time)
+        rw_b2 = dict(rw_b)
+        rw_b2["tower_dmg_opp"] = tower_b
+        rw_b2["tower_dmg_self"] = tower_b
+        rw_b2["elixir_diff_weight"] = edw_b
         reward1 = compute_reward(
-            rw_b,
+            rw_b2,
             blue_hps_old=old1[0], red_hps_old=old0[0],
             blue_hps_new=new1[0], red_hps_new=new0[0],
             blue_left_old=old1[1], red_left_old=old0[1],
             blue_left_new=new1[1], red_left_new=new0[1],
             my_elixir_before=old1[2], opp_elixir_before=old0[2],
             my_elixir_after=new1[2], opp_elixir_after=new0[2],
+            my_v_before=v_before[1], opp_v_before=v_before[0],
+            my_v_after=v_after[1], opp_v_after=v_after[0],
             winner=(1 if winner == 1 else (0 if winner == 0 else None)),
             invalid_count=0,
             blue_hps_max=getattr(env, "_red_hps_max", None),

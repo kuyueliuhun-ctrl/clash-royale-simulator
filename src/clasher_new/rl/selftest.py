@@ -1671,6 +1671,70 @@ def test_draw_penalty_as_loss():
     shutil.rmtree("runs/_tmp_drawtest", ignore_errors=True)
 
 
+def test_reward_v2_ledger():
+    """reward v2 资源账（economy）：部署不罚（E−c 与 V+c 同帧抵消）、份额入账/死亡注销、
+    空砸=花费型惩罚、双倍期（t≥120）edw 换档为 elixir_diff_late、单位受伤 shaping 生效。"""
+    import numpy as np
+    from rl.env_wrapper import RLEnv, DEFAULT_DECK
+    from rl.action_bundle import ActionBundle
+    from rl.config import TrainConfig, reward_to_env
+
+    cfg = TrainConfig.resolve("economy")
+    env = RLEnv(opponent=lambda obs: ActionBundle.noop(), seed=3,
+                reward_weights=reward_to_env(cfg),
+                deck0=DEFAULT_DECK, deck1=DEFAULT_DECK)
+    env.reset(seed=3)
+    p = env.battle.players
+    # 控制手牌：slot 布局随 shuffle 变，这里直接钉死前 4 张
+    p[0].cycle = ["Knight", "Arrows", "Fireball", "MiniPekka"] + p[0].cycle[4:]
+    env._seen_max_id = max(env.battle.entities)
+
+    def first_cell(slot):
+        cells = env.get_action_mask_for(0)["cells"][slot - 1]
+        ys, xs = np.nonzero(cells)
+        return int(xs[0]), int(ys[0])
+
+    # ① 部署 Knight（3 费）：资源账帧 ≈0（不再有旧式 −1.5 下牌惩罚），V 入账 3
+    _, r_deploy, _, _, info = env.step(ActionBundle.from_single(1, 9, 13))
+    assert abs(r_deploy) < 0.05, f"部署不应即时受罚: {r_deploy}"
+    assert abs(info["field_v"][0] - 3.0) < 1e-6, f"Knight 3费应入账: {info['field_v']}"
+
+    # ② 单位死亡注销：Knight 移到敌方塔旁 1hp → 步进击杀 → V 归零
+    knight = [e for e in env.battle.entities.values()
+              if getattr(e, "name", "") == "Knight" and e.player == 0 and e.is_alive]
+    assert knight, "应存在部署的 Knight"
+    k = knight[0]
+    k.hp = 1.0
+    k.position.x, k.position.y = 14.5, 25.5   # P1 右公主塔坐标
+    for _ in range(4):
+        env.step(ActionBundle.noop())
+    assert abs(env._active_v[0]) < 1e-6, f"死亡后份额应注销: {env._active_v}"
+
+    # ③ 空砸 Arrows（前段 t<120，edw=0.5）：花费型 → ≈ −3×0.5 = −1.5
+    p[0].elixir = 5.0
+    p[0].cycle.remove("Arrows"); p[0].cycle.insert(0, "Arrows")   # 轮转回手（手牌区 = 前 4）
+    slot_arrows = p[0].cycle.index("Arrows") + 1
+    x, y = first_cell(slot_arrows)
+    _, r_blank, _, _, info = env.step(ActionBundle.from_single(slot_arrows, x, y))
+    assert r_blank < -1.2, f"空砸前段应≈−1.5: {r_blank}"
+
+    # ④ 双倍期（t≥120）edw 换档 0.5→0.1：同空砸 ≈ −3×0.1 = −0.3
+    env.battle.time = 121.0
+    p[0].elixir = 5.0
+    p[0].cycle.remove("Arrows"); p[0].cycle.insert(0, "Arrows")
+    slot_arrows = p[0].cycle.index("Arrows") + 1
+    x, y = first_cell(slot_arrows)
+    _, r_late, _, _, info = env.step(ActionBundle.from_single(slot_arrows, x, y))
+    assert -0.6 < r_late < -0.15, f"双倍期空砸应≈−0.3(late edw): {r_late}"
+
+    # ⑤ 配置契约：standard/economy 都带 v2 键且 late < early、tower late > early
+    std = TrainConfig.resolve("standard").reward
+    assert std["elixir_diff_late"] < std["elixir_diff_weight"], "双倍期费应更贱"
+    assert std["tower_dmg_late"] > std["tower_dmg_opp"], "双倍期塔血应更贵"
+    assert std["unit_dmg_k"] > 0.0, "单位受伤 shaping 默认打开"
+    print("[PASS] reward v2 记账：部署不罚/份额入账注销/空砸罚/双倍期换档/单位受伤 shaping 生效")
+
+
 def test_eval_solo_parallel():
     """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
     import time
@@ -1737,6 +1801,7 @@ def main():
     test_reward_economy_elixir_diff()
     test_reward_economy_trade_pricing()
     test_draw_penalty_as_loss()
+    test_reward_v2_ledger()
     test_rlenv_card_level()
     test_tower_troop_hp_reference()
     test_league_resume()
