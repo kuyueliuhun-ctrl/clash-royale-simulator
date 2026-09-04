@@ -1807,6 +1807,72 @@ def test_plan_v1_layout():
     print("[PASS] PlanToken v1 布局：旧21维兼容/新意图组/字段落位/旧ckpt补零加载")
 
 
+def test_bp_new_intent_rules():
+    """BeliefPlanner Phase2 v1 规则：6 个新意图 + 守卫 + 旧回退（每场景独立 battle）。"""
+    import battle
+    import player
+    from core import Position
+    from rl.belief_planner import BeliefPlanner
+
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+
+    def new_battle():
+        return battle.BattleState(player.PlayerState(0, list(DECK), 10.0),
+                                  player.PlayerState(1, list(DECK), 10.0))
+
+    def place(bs, pid, card, x, y):
+        pl = bs.players[pid]
+        pl.cycle = [card] + [c for c in pl.cycle if c != card][:3]
+        pl.elixir = 10.0
+        dep_y = 20.0 if pid == 1 else 6.0
+        assert bs.deploy_card(pid, card, Position(x, dep_y)), (pid, card)
+        e = [e for e in bs.entities.values() if e.player == pid and e.id > 6][-1]
+        e.position.x, e.position.y = x, y
+        return e
+
+    def set_hand(bs, cards):
+        bs.players[0].cycle = list(cards)
+        bs.players[0].elixir = 10.0
+
+    bp = BeliefPlanner()
+    # S1 过牌：无压力 + 手牌 1 费小牌 + 圣水足
+    bs = new_battle(); set_hand(bs, ['Skeletons', 'Knight', 'Arrows', 'Fireball'])
+    assert bp.plan(bs, None).macro_intent == "cycle_small"
+    # S2 解牌：敌方 Musketeer 过桥 y=10 + 手牌 Fireball（血牛不抢）
+    bs = new_battle(); place(bs, 1, 'Musketeer', 6, 10)
+    set_hand(bs, ['Fireball', 'Knight', 'Arrows', 'Minions'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "spell_trade" and t.focus_region == "own_left"
+    # S3 软控：敌方 MiniPekka 压境 + 手牌 Freeze
+    bs = new_battle(); place(bs, 1, 'MiniPekka', 6, 9)
+    set_hand(bs, ['Freeze', 'Knight', 'Arrows', 'Fireball'])
+    assert bp.plan(bs, None).macro_intent == "soft_control"
+    # S4 拉扯：敌方 Golem 逼近（法术解不动 → 放行给 pull）
+    bs = new_battle(); place(bs, 1, 'Golem', 9, 14)
+    set_hand(bs, ['Knight', 'Arrows', 'Fireball', 'Musketeer'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "pull" and t.placement_hint == "pull_aggro"
+    # S5 推进跟牌：己方 Giant 推进中 + 手牌后排
+    bs = new_battle(); place(bs, 0, 'Giant', 9, 10)
+    set_hand(bs, ['Musketeer', 'Arrows', 'Fireball', 'Knight'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone"
+    # S6 蓄力：空场 + 手牌坦克
+    bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
+    assert bp.plan(bs, None).macro_intent == "setup_wait"
+    # S7 旧回退：空场无小费无坦克 → cycle_and_wait
+    bs = new_battle(); set_hand(bs, ['Knight', 'Musketeer', 'MiniPekka', 'Fireball'])
+    assert bp.plan(bs, None).macro_intent == "cycle_and_wait"
+    # S8 守卫：压境时 setup/cycle 不抢防守（无法术软控 → 回退 defend）
+    bs = new_battle(); place(bs, 1, 'Musketeer', 12, 8)
+    bs.players[0].cycle = ['Knight', 'MiniPekka', 'Giant', 'Musketeer']
+    bs.players[0].elixir = 10.0
+    assert bp.plan(bs, None).macro_intent.startswith("defend")
+    print("[PASS] BeliefPlanner v1 规则：cycle_small/spell_trade/soft_control/pull/push_commit/"
+          "setup_wait + 血牛放行 + 压境守卫 + 旧回退")
+
+
 def test_eval_solo_parallel():
     """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
     import time
@@ -1875,6 +1941,7 @@ def main():
     test_draw_penalty_as_loss()
     test_reward_v2_ledger()
     test_plan_v1_layout()
+    test_bp_new_intent_rules()
     test_rlenv_card_level()
     test_tower_troop_hp_reference()
     test_league_resume()
