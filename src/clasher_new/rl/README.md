@@ -94,8 +94,9 @@ python rl/run_league.py --mode run --no-eval-start   # 关掉"启动先评估一
 
 # 8) 训练网页 UI：各模型 Elo-训练次数 曲线 + 最近回放/播放器（指向命名配置的联赛状态）
 python rl/dashboard.py --state runs/aggressive/league_state.json --port 8090
-python rl/dashboard.py --state runs/economy/league_state.json --sweep runs/economy --port 8090  # 同时显示 flow-sweep 进度/曲线
-python rl/dashboard.py --demo --port 8090                       # 无状态时生成演示数据（含演示回放）直接看 UI
+python rl/dashboard.py --state runs/aggressive/league_state.json --sweep runs/economy --port 8090  # 同时显示 flow-sweep 进度/曲线
+python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090   # solo 自对弈：胜率曲线±SE + 训练进度（无联赛）
+python rl/dashboard.py --demo --port 8090                       # 无状态时生成演示数据（Elo+sweep+solo+回放）直接看 UI
 python rl/dashboard.py --state runs/aggressive/league_state.json --replays runs/aggressive/replays   # 手动指定回放目录
 #   --sweep 指向 runs/<name>/（自动扫 flow_sweep_stream / flow_sweep_games5）或单个策略目录；
 #   训练进行中 dashboard 每 3s 读取逐轮增量写的 summary.json → 进度条（run x/N + ETA）+ main 曲线 ±1σ 误差棒
@@ -116,6 +117,16 @@ python rl/run_league.py --mode flow-sweep-games5 --config economy --device cuda 
 #   两策略总对局预算相同（20×1,488 = 4×7,440 ≈ 29,760）；产物 flow_sweep_<strategy>/
 #   summary.json(csv)：逐轮 main 轮内估计 ±SE + 首/末趋势判定（Δ/SE≥2σ 才算上涨）
 #   可选 --sweep-runs / --sweep-scale / --sweep-eval-games 覆盖
+
+# 7f) solo 自对弈（原版 train.py 思路的现代版；固定卡组镜像，无联赛机制）
+#     单模型 main，双方同一副固定 8 卡（Knight/MiniPekka/Arrows/Minions/Musketeer/
+#     Fireball/Giant/Archer），对手 = main 的周期冻结副本（每 solo_copy_every 步同步，
+#     即原版 WeightsCopyingCallback）；不写 Elo/PFSP/league_state。
+python rl/run_league.py --mode solo --config economy --device cuda
+python rl/run_league.py --mode solo --config economy --solo-copy-every 2000   # 冻结副本同步间隔（步）
+#   产物：runs/<name>/solo_state.json（胜率±SE/mean_reward/进度，dashboard --solo 实时读）、
+#   solo_main.pt、replays/league_<step>.pkl（评估回放，复用回放面板）
+#   dashboard：python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090
 
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50

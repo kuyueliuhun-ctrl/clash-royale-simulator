@@ -1404,6 +1404,28 @@ def test_flow_sweep_smoke():
     print("[PASS] flow-sweep：mini 池 1 轮通路 + main 轮内估计(±SE) + summary.json/csv 落盘")
 
 
+def test_solo_mode_smoke():
+    """solo 自对弈：固定卡组镜像 + 周期冻结副本 + solo_state.json/checkpoint 落盘（无联赛）。"""
+    import tempfile
+    import json as _json
+    from rl import train_solo
+    from rl.config import TrainConfig
+
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_solo", total_steps=8, steps_per_eval=4,
+                      update_interval=4, batch_size=4, hidden_dim=32, seed=0,
+                      n_eval_games=2, max_ep_steps=4, solo_copy_every=2, out_dir=d)
+    train_solo.run_solo(cfg, record_replays=False)
+    assert os.path.exists(cfg.solo_state_path()), "solo_state.json 应已落盘"
+    st = _json.load(open(cfg.solo_state_path(), "r", encoding="utf-8"))
+    assert st["mode"] == "solo" and st["opponent"] == "self-play-frozen-copy"
+    assert len(st["history"]) >= 2, "应有起始+最终评估"
+    assert st["deck"] == train_solo.DEFAULT_SOLO_DECK, "固定卡组镜像"
+    assert os.path.exists(cfg.solo_main_path()), "solo_main.pt 应已落盘"
+    assert not os.path.exists(cfg.state_path()), "solo 不应写 league_state.json（无联赛）"
+    print("[PASS] solo 自对弈：固定卡组镜像 + 冻结副本 + solo_state.json/solo_main.pt 落盘、无联赛状态")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -1445,6 +1467,7 @@ def main():
     test_flow_league_smoke()
     test_ablation_recorded()
     test_flow_sweep_smoke()
+    test_solo_mode_smoke()
     print("\nALL SELFTESTS PASSED")
 
 

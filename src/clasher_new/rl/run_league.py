@@ -6,6 +6,11 @@
   PFSP 采对手 → 周期全轮转评估（含新模型 random_deck）→ 逐局 Elo → 快照刷新 →
   Elo 历史曲线 → 状态持久化（供训练网页 UI 读取）。
 
+其它模式：
+- ``--mode flow`` / ``flow-sweep-*``：全配对分流派联赛 / 数据效率 A/B（rl/flow_league.py）；
+- ``--mode solo``：**单人自对弈**（原版 train.py 思路，固定卡组镜像 + 周期冻结副本，
+  无联赛机制，写 solo_state.json 供 dashboard --solo；rl/train_solo.py）。
+
 新增能力（对应需求）：
 - ``rl/config.py`` 命名配置：每组参数（超参 + **奖惩机制奖励权重**）命名后
   独立输出到 ``out_dir/<name>/``（断点 / 检查点 / 联赛录像 / Elo 状态 / config.json）；
@@ -885,7 +890,7 @@ def run_league(cfg: TrainConfig, resume=False, record_replays=True):
 
 def main():
     ap = argparse.ArgumentParser(description="联赛主循环：命名配置 + 奖惩机制 + 断点续训 + CUDA")
-    ap.add_argument("--mode", choices=["eval", "run", "flow",
+    ap.add_argument("--mode", choices=["eval", "run", "flow", "solo",
                                        "flow-sweep-stream", "flow-sweep-games5"],
                     default="run")
     # eval 模式
@@ -946,6 +951,9 @@ def main():
                     help="flow-sweep：卡组池缩小比例（默认 0.1 = 降低一个数量级）")
     ap.add_argument("--sweep-eval-games", type=int, default=None,
                     help="flow-sweep：每对评估局数（默认 10）")
+    # solo 模式（单人自对弈，无联赛）
+    ap.add_argument("--solo-copy-every", type=int, default=None,
+                    help="solo：冻结副本同步间隔（步，默认 2000）")
     args = ap.parse_args()
 
     if args.mode == "eval":
@@ -960,7 +968,8 @@ def main():
     overrides = {}
     for k in ("total_steps", "steps_per_eval", "n_envs", "parallel", "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
-              "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path"):
+              "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
+              "solo_copy_every"):
         v = getattr(args, k)
         if v is not None:
             overrides[k] = v
@@ -992,6 +1001,12 @@ def main():
         run_flow_sweep(cfg, strategy=strategy, n_runs=args.sweep_runs,
                        pool_scale=args.sweep_scale,
                        eval_games=args.sweep_eval_games)
+        return
+
+    if args.mode == "solo":
+        # 单人自对弈：固定卡组镜像 + 周期冻结副本，无联赛机制（原版 train.py 思路）
+        from rl.train_solo import run_solo
+        run_solo(cfg, resume=args.resume, record_replays=not args.no_replays)
         return
 
     run_league(cfg, resume=args.resume, record_replays=not args.no_replays)

@@ -162,6 +162,34 @@ def build_sweep_payload(sweep_root):
 
 
 # ---------------------------------------------------------------------------
+# solo 自对弈（train_solo.run_solo 增量写 solo_state.json；无联赛机制）
+# ---------------------------------------------------------------------------
+
+def build_solo_payload(path):
+    """读取 --mode solo 写出的 solo_state.json → 胜率曲线/进度/卡组信息。"""
+    if not path:
+        return {"ok": False, "error": "未指定 --solo 状态文件", "solo_path": None}
+    st = load_state(path)
+    if st is None:
+        return {"ok": False, "error": f"solo 状态文件不存在: {path}", "solo_path": path}
+    history = st.get("history") or []
+    return {
+        "ok": True,
+        "agents": [{"id": "main", "label": "main（自对弈）", "kind": "main"}],
+        "history": history,   # [{step,wins,losses,draws,games,winrate,winrate_se,mean_reward}]
+        "total_steps": int(st.get("total_steps", 0)),
+        "target_steps": int(st.get("target_steps", 0) or 0),
+        "deck": st.get("deck", []),
+        "opponent": st.get("opponent", "self-play-frozen-copy"),
+        "copy_every": int(st.get("copy_every", 0) or 0),
+        "status": st.get("status", "done"),
+        "demo": bool(st.get("demo", False)),
+        "solo_path": path,
+        "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+# ---------------------------------------------------------------------------
 # 回放：扫描 / 列表 / 加载（联赛录像 league_<step>.pkl，见 rl/replay.py schema 3）
 # ---------------------------------------------------------------------------
 
@@ -381,6 +409,13 @@ _HTML = r"""<!DOCTYPE html>
   @media (max-width: 900px) { .sweep-layout { grid-template-columns: 1fr; } }
   .sweep-layout canvas { height:260px; }
   .sweep-layout .sub { font-size:12px; }
+  /* —— solo 自对弈（无联赛）—— */
+  .solo-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .solo-layout { display:grid; grid-template-columns: 1.6fr 1fr; gap:14px; }
+  @media (max-width: 900px) { .solo-layout { grid-template-columns: 1fr; } }
+  .solo-layout canvas { height:300px; }
+  .solo-layout .sub { font-size:12px; }
+  #soloDeck { font-family:ui-monospace,Consolas,monospace; color:#cbd5e1; }
   /* —— 回放列表 / 播放器 —— */
   .rep-list { display:flex; flex-direction:column; gap:6px; }
   .rep-row { display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -438,6 +473,29 @@ _HTML = r"""<!DOCTYPE html>
     <span class="sub" id="sweepSub"></span>
   </h2>
   <div id="sweepBody"></div>
+</section>
+
+<section class="card" id="soloCard" style="display:none">
+  <h2>solo 自对弈（固定卡组镜像 · 无联赛）
+    <span class="sub" id="soloSub"></span>
+  </h2>
+  <div class="solo-head">
+    <span class="chip" id="soloStatus"></span>
+    <div class="progress" id="soloProgress"></div>
+    <span class="sub" id="soloMeta"></span>
+  </div>
+  <div class="solo-layout">
+    <div style="position:relative"><canvas id="soloChart"></canvas></div>
+    <div>
+      <p class="sub" style="margin:0 0 6px">卡组（双方同一副）：</p>
+      <p id="soloDeck" class="sub"></p>
+      <p class="sub" style="margin:10px 0 6px">评估（最新在上）：</p>
+      <table>
+        <thead><tr><th>步数</th><th>胜/负/平</th><th>胜率 ±SE</th><th>mean_reward</th></tr></thead>
+        <tbody id="soloTable"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 <section class="card">
@@ -514,23 +572,30 @@ function colorOf(id){
 }
 let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:0};
 let sweep = {ok:false, strategies:[]};
+let solo = {ok:false, history:[]};
 
 async function refresh(){
   try{
     // 时间戳 query 防任何中间层/浏览器缓存，保证 3s 轮询拿到最新状态
-    const [rs, sw] = await Promise.all([
+    const [rs, sw, so] = await Promise.all([
       fetch("/api/state?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
-      fetch("/api/sweep?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
+      fetch("/api/sweep?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
+      fetch("/api/solo?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
     ]);
-    payload = rs; sweep = sw;
+    payload = rs; sweep = sw; solo = so;
     const src = document.getElementById("datasrc");
     const hasSweep = sweep.ok && sweep.strategies.length;
-    if (!payload.ok && hasSweep){
-      // flow-sweep 模式（无联赛状态文件）：只显示 sweep 面板
-      const s0 = sweep.strategies[0];
+    const hasSolo = solo.ok;
+    if (!payload.ok && (hasSweep || hasSolo)){
+      // 非联赛模式（flow-sweep / solo 自对弈）：不显示联赛错误，只显示对应面板
+      const s0 = hasSweep ? sweep.strategies[0] : null;
+      const up = (hasSweep && s0 && s0.updated_at) || (hasSolo && solo.updated_at) || "";
       document.getElementById("status").textContent =
-        "flow-sweep 模式 · 更新于 " + (s0 && s0.updated_at || "");
-      src.textContent = "sweep 根目录: " + (sweep.sweep_root || "");
+        (hasSweep ? "flow-sweep" : "") + (hasSweep && hasSolo ? " + " : "") +
+        (hasSolo ? "solo 自对弈" : "") + " 模式 · 更新于 " + up;
+      src.textContent = (hasSweep ? "sweep 根目录: " + (sweep.sweep_root || "") : "") +
+        (hasSweep && hasSolo ? " · " : "") +
+        (hasSolo ? "solo 状态: " + (solo.solo_path || "") : "");
       src.style.color = "#22c55e";
     } else if (!payload.ok){
       document.getElementById("status").textContent = "⚠ " + payload.error;
@@ -552,6 +617,7 @@ async function refresh(){
   }
   render();
   renderSweep();
+  renderSolo();
 }
 
 function renderLegend(){
@@ -818,6 +884,90 @@ function drawSweepChart(s, canvasId){
   });
   ctx.fillStyle = "#e2e8f0"; ctx.font = "12px sans-serif";
   ctx.fillText("main 轮内估计 R±1σ（x 轴 = 训练轮次）", padL + 6, 12);
+}
+
+/* ================= solo 自对弈：胜率曲线 + 训练进度 ================= */
+
+function renderSolo(){
+  const card = document.getElementById("soloCard");
+  if (!solo.ok){
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "";
+  const done = solo.status === "done";
+  document.getElementById("soloSub").textContent =
+    "状态 " + solo.solo_path + " · 每 3s 刷新";
+  document.getElementById("soloStatus").textContent = done ? "已完成" : "训练中";
+  document.getElementById("soloStatus").className = "chip " + (done ? "done" : "running");
+  const pct = solo.target_steps > 0 ? Math.round(100 * solo.total_steps / solo.target_steps) : 0;
+  document.getElementById("soloProgress").innerHTML =
+    `<div class="bar"><i style="width:${pct}%"></i></div>` +
+    `<span class="pct">${solo.total_steps.toLocaleString()} / ${solo.target_steps.toLocaleString()} 步 · ${pct}%</span>`;
+  document.getElementById("soloMeta").textContent =
+    "对手=冻结副本（每 " + solo.copy_every + " 步同步）· " + solo.opponent + " · 评估 " +
+    (solo.history.length ? solo.history[solo.history.length - 1].games : "?") + " 局/次";
+  document.getElementById("soloDeck").textContent = (solo.deck || []).join(" · ");
+  const rows = (solo.history || []).slice(-14).reverse();
+  document.getElementById("soloTable").innerHTML = rows.map(h =>
+    `<tr><td>${h.step.toLocaleString()}</td><td>${h.wins}W / ${h.losses}L / ${h.draws}D</td>` +
+    `<td><b>${(h.winrate * 100).toFixed(1)}%</b> ±${(h.winrate_se * 100).toFixed(1)}</td>` +
+    `<td>${h.mean_reward.toFixed(3)}</td></tr>`).join("") ||
+    '<tr><td colspan="4">等待首次评估…</td></tr>';
+  drawSoloChart();
+}
+
+function drawSoloChart(){
+  const canvas = document.getElementById("soloChart");
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth || 600, H = canvas.clientHeight || 300;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+  const padL = 50, padR = 16, padT = 18, padB = 34;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const rows = solo.history || [];
+  ctx.fillStyle = "#94a3b8"; ctx.font = "12px sans-serif";
+  if (!rows.length){ ctx.fillText("等待首次评估…", padL, padT + 20); return; }
+  const maxStep = Math.max(1, solo.target_steps || rows[rows.length - 1].step);
+  let lo = 0.0, hi = 1.0;
+  rows.forEach(h => { lo = Math.min(lo, h.winrate - h.winrate_se); hi = Math.max(hi, h.winrate + h.winrate_se); });
+  const span = Math.max(0.2, hi - lo); lo = Math.max(0, lo - span * 0.15); hi = Math.min(1, hi + span * 0.15);
+  if (hi - lo < 0.15){ const mid = (lo + hi) / 2; lo = Math.max(0, mid - 0.075); hi = Math.min(1, mid + 0.075); }
+  const X = s => padL + (s / maxStep) * plotW;
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+  // 网格
+  ctx.strokeStyle = "#334155"; ctx.fillStyle = "#94a3b8"; ctx.font = "11px sans-serif"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i <= 4; i++){ const v = lo + (hi - lo) * i / 4, y = Y(v); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.fillText((v * 100).toFixed(0) + "%", 4, y + 4); }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i <= 4; i++){ const s = Math.round(maxStep * i / 4), x = X(s); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.fillText(s.toLocaleString(), x - 12, H - padB + 16); }
+  ctx.stroke();
+  // 50% 基准虚线
+  if (lo < 0.5 && 0.5 < hi){
+    ctx.strokeStyle = "#475569"; ctx.setLineDash([4, 4]); ctx.beginPath();
+    ctx.moveTo(padL, Y(0.5)); ctx.lineTo(W - padR, Y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillText("50%", W - padR - 34, Y(0.5) - 4);
+  }
+  // 胜率曲线 + 竖线误差棒（二项 SE）
+  const color = "#2563eb";
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+  rows.forEach((h, i) => { const x = X(h.step), y = Y(h.winrate); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+  ctx.stroke();
+  rows.forEach(h => {
+    const x = X(h.step), y = Y(h.winrate), se = h.winrate_se || 0;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.moveTo(x, Y(h.winrate + se)); ctx.lineTo(x, Y(h.winrate - se)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 4, Y(h.winrate + se)); ctx.lineTo(x + 4, Y(h.winrate + se)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 4, Y(h.winrate - se)); ctx.lineTo(x + 4, Y(h.winrate - se)); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
+  });
+  ctx.fillStyle = "#e2e8f0"; ctx.font = "12px sans-serif";
+  ctx.fillText("main vs 冻结副本 胜率 ±1σ（固定卡组镜像，无联赛）", padL + 6, 12);
 }
 
 /* ================= 最近回放：列表 / 对局 / 播放器 ================= */
@@ -1261,6 +1411,7 @@ class Handler(BaseHTTPRequestHandler):
     state_path = "league_state.json"
     replays_dir = "replays"
     sweep_root = None   # flow-sweep 根目录（--sweep；可为 runs/<name>/ 或某策略目录）
+    solo_path = None    # solo 状态文件（--solo；单人自对弈，无联赛）
 
     def _send(self, code, body, ctype):
         self.send_response(code)
@@ -1283,6 +1434,9 @@ class Handler(BaseHTTPRequestHandler):
                        "application/json; charset=utf-8")
         elif route == "/api/sweep":
             self._send(200, json.dumps(build_sweep_payload(self.sweep_root)).encode("utf-8"),
+                       "application/json; charset=utf-8")
+        elif route == "/api/solo":
+            self._send(200, json.dumps(build_solo_payload(self.solo_path)).encode("utf-8"),
                        "application/json; charset=utf-8")
         elif route == "/api/replays":
             self._send(200, json.dumps(build_replays_payload(self.replays_dir)).encode("utf-8"),
@@ -1399,20 +1553,53 @@ def make_demo_sweep(root, seed=1):
         print(f"[demo] 已生成演示 flow-sweep -> {d}/summary.json（{n_runs} 轮）")
 
 
+def make_demo_solo(path, n_points=10, seed=3):
+    """生成一份演示 solo_state.json（自对弈胜率上升曲线），便于预览 UI。"""
+    import random
+    rng = random.Random(seed)
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions",
+            "Musketeer", "Fireball", "Giant", "Archer"]
+    history = []
+    total = n_points * 2000
+    wr = 0.42
+    for i in range(n_points + 1):
+        step = i * (total // n_points)
+        wr = min(0.72, wr + 0.018 + rng.uniform(-0.02, 0.02))
+        n = 40
+        wins = int(round(wr * n))
+        se = (wr * (1 - wr) / n) ** 0.5
+        history.append({"step": step, "wins": wins, "losses": n - wins, "draws": 0,
+                        "games": n, "winrate": round(wr, 4), "winrate_se": round(se, 4),
+                        "mean_reward": round(0.2 + i * 0.03 + rng.uniform(-0.05, 0.05), 3)})
+    state = {
+        "mode": "solo",
+        "agents": [{"agent_id": "main", "kind": "main", "path": None}],
+        "history": history, "total_steps": total, "target_steps": total,
+        "deck": deck, "opponent": "self-play-frozen-copy", "copy_every": 2000,
+        "status": "done", "demo": True,
+    }
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+    print(f"[demo] 已生成演示 solo 状态 -> {path}（{len(history)} 个评估点）")
+
+
 def main():
-    ap = argparse.ArgumentParser(description="RL 联赛训练仪表盘（Elo 曲线 + flow-sweep 进度 + 最近回放/播放器）")
+    ap = argparse.ArgumentParser(description="RL 训练仪表盘（Elo / flow-sweep / solo 自对弈 + 回放）")
     ap.add_argument("--state", type=str, default="league_state.json",
                     help="run_league 写出的联赛状态 JSON")
     ap.add_argument("--sweep", type=str, default=None,
                     help="flow-sweep 根目录（--mode flow-sweep-* 的产物 runs/<name>/，或某个 "
                          "flow_sweep_<strategy> 策略目录；实时显示训练进度/曲线）")
+    ap.add_argument("--solo", type=str, default=None,
+                    help="solo 自对弈状态文件（--mode solo 写出的 solo_state.json，或含它的目录；"
+                         "无联赛机制，显示胜率曲线/进度）")
     ap.add_argument("--replays", type=str, default=None,
                     help="回放目录（缺省 = 状态文件同目录/replays）")
     ap.add_argument("--host", type=str, default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8090)
     ap.add_argument("--demo", action="store_true",
-                    help="状态文件不存在时生成演示数据（5 模型合成 Elo 曲线 + 演示回放；"
-                         "--sweep 未指定时也生成演示 flow-sweep）")
+                    help="状态文件不存在时生成演示数据（Elo + flow-sweep + solo + 回放）")
     ap.add_argument("--demo-points", type=int, default=10)
     args = ap.parse_args()
     state_abs = os.path.abspath(args.state)
@@ -1424,6 +1611,15 @@ def main():
             sweep_abs = os.path.join(os.path.dirname(state_abs), "demo_sweep")
         if not os.path.isdir(sweep_abs):
             make_demo_sweep(sweep_abs)
+    solo_abs = None
+    if args.solo:
+        solo_abs = os.path.abspath(args.solo)
+        if os.path.isdir(solo_abs):
+            solo_abs = os.path.join(solo_abs, "solo_state.json")
+    elif args.demo:
+        solo_abs = os.path.join(os.path.dirname(state_abs), "solo_state.json")
+        if not os.path.exists(solo_abs):
+            make_demo_solo(solo_abs, n_points=args.demo_points)
     replays_abs = args.replays and os.path.abspath(args.replays) \
         or os.path.join(os.path.dirname(state_abs), "replays")
     if args.demo:
@@ -1431,10 +1627,13 @@ def main():
     Handler.state_path = state_abs
     Handler.replays_dir = replays_abs
     Handler.sweep_root = sweep_abs
+    Handler.solo_path = solo_abs
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path})")
     if Handler.sweep_root:
         print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}")
+    if Handler.solo_path:
+        print(f"[dashboard] solo 状态: {Handler.solo_path}")
     print(f"[dashboard] 回放目录: {Handler.replays_dir}  Ctrl+C 退出")
     try:
         srv.serve_forever()

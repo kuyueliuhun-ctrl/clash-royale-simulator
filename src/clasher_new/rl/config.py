@@ -90,6 +90,8 @@ class TrainConfig:
     only_vs_main: bool = False
     keep_snapshot: bool = False
     out_dir: str = "runs"
+    # —— solo 自对弈（--mode solo，无联赛；原版 train.py 思路）——
+    solo_copy_every: int = 2000   # 冻结副本同步间隔（步）：每 N 步把 main 权重拷给对手
     # —— 奖惩机制（每配置一套，见 DEFAULT_REWARD 注释）——
     reward: dict = field(default_factory=lambda: dict(DEFAULT_REWARD))
 
@@ -99,6 +101,12 @@ class TrainConfig:
 
     def state_path(self):
         return os.path.join(self.folder(), "league_state.json")
+
+    def solo_state_path(self):
+        return os.path.join(self.folder(), "solo_state.json")
+
+    def solo_main_path(self):
+        return os.path.join(self.folder(), "solo_main.pt")
 
     def run_state_path(self):
         return os.path.join(self.folder(), "run_state.json")
