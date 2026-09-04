@@ -36,7 +36,8 @@ from rl.follower import FollowerPolicy, save_checkpoint, load_checkpoint
 from rl.ppo import PPOTrainer
 from rl.config import reward_to_env
 from rl.train_follower import FollowerOpponent
-from rl.run_league import resolve_device, _bundle_cards, LeagueGameRecorder, _stall_probe, STALL_WINDOW, _load_run_state
+from rl.run_league import (resolve_device, _bundle_cards, LeagueGameRecorder,
+                           _stall_probe, STALL_WINDOW, _load_run_state, timeout_winner)
 from rl.replay import save_league_replays
 
 #: 固定卡组（原版默认 8 卡）：双方镜像使用同一副。
@@ -136,8 +137,14 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
             steps += 1
         w = env.battle.winner
         if w is None and not env.battle.game_over:
-            # 僵局早停/超时截断判平：与失败同罚（平局不再免费）
-            ep_rew -= _draw_penalty(cfg)
+            # 僵局早停/截断早于引擎结算 → 皇冠差/塔血差已定胜负；真平才判平=失败
+            virt = timeout_winner(env.battle)
+            if virt is None:
+                ep_rew -= _draw_penalty(cfg)
+            else:
+                w = virt
+                rw = reward_to_env(cfg)
+                ep_rew += float(rw["win_bonus"] if w == 0 else -rw["lose_penalty"])
         if w == 0:
             wins += 1
         elif w == 1:
@@ -250,9 +257,14 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
                 steps += 1
             w = env.battle.winner
             if w is None and not env.battle.game_over:
-                # 与串行 eval_solo 一致：僵局早停/截断判平 → 平局=失败惩罚
+                # 与串行 eval_solo 一致：早停/截断补结算（皇冠差/塔血差→胜负，真平→平局=失败）
+                virt = timeout_winner(env.battle)
                 rw = env_kwargs.get("reward_weights") or {}
-                ep_rew -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
+                if virt is None:
+                    ep_rew -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
+                else:
+                    w = virt
+                    ep_rew += float(rw["win_bonus"] if w == 0 else -rw["lose_penalty"])
             results.append((g, w, ep_rew, rec.done(w) if rec is not None else None))
         out_q.put(("result", results))
     except Exception as e:
@@ -463,7 +475,15 @@ def run_solo(cfg, resume=False, record_replays=True):
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
                 if env.battle.winner is None and not env.battle.game_over and ep_rew:
-                    ep_rew[-1] -= _draw_penalty(cfg)
+                    # 早停补结算：皇冠差/塔血差已分胜负 → 终端胜负；真平才判平=失败
+                    virt = timeout_winner(env.battle)
+                    rw = reward_to_env(cfg)
+                    if virt == 0:
+                        ep_rew[-1] += float(rw["win_bonus"])
+                    elif virt == 1:
+                        ep_rew[-1] -= float(rw["lose_penalty"])
+                    else:
+                        ep_rew[-1] -= _draw_penalty(cfg)
                 adv, ret = PPOTrainer.compute_gae(
                     ep_rew, ep_val, ep_term, cfg.gamma, cfg.gae_lambda,
                     truncated=ep_trunc, last_value=0.0)
@@ -500,14 +520,23 @@ def run_solo(cfg, resume=False, record_replays=True):
 
         if done or len(ep_rew) >= cfg.max_ep_steps:
             truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
-            # 平局=失败：对局以无胜者结束（僵局/截断）→ 最后一步加失败惩罚，
-            # 否则 PPO 学不到"平局不可取"，躺平仍是局部最优
+            # 平局=失败：对局以无胜者结束（僵局/截断）→ 先补到期结算（皇冠差/塔血差
+            # 已分胜负就给终端胜负奖励），真平才按平局=失败惩罚
+            virt = None
             if env.battle.winner is None and not env.battle.game_over and ep_rew:
-                ep_rew[-1] -= _draw_penalty(cfg)
+                virt = timeout_winner(env.battle)
+                rw = reward_to_env(cfg)
+                if virt == 0:
+                    ep_rew[-1] += float(rw["win_bonus"])
+                elif virt == 1:
+                    ep_rew[-1] -= float(rw["lose_penalty"])
+                else:
+                    ep_rew[-1] -= _draw_penalty(cfg)
             # P1-7 修复：env 恒返回 trunc=False，若不显式标记，截断局会被 compute_gae
             # 当成普通终止（next_val=0），last_value bootstrap 从未生效——躺平拖满 360
-            # 帧时最后一步 δ 巨大而前面 ~300 帧毫无信号。达步数上限且非终局 → 标记末步。
-            if truncated:
+            # 帧时最后一步 δ 巨大而前面 ~300 帧毫无信号。达步数上限、非终局且未虚拟
+            # 判出胜负（真平需继续）→ 标记末步用 last_value bootstrap。
+            if truncated and virt is None:
                 ep_trunc[-1] = True
                 last_val = main.value(obs, belief_tok, plan_vec, hidden)
             else:

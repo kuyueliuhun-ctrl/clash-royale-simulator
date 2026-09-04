@@ -209,6 +209,15 @@ def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None
             stats["rew"] += r
             steps += 1
         w = env.battle.winner
+        if w is None and not env.battle.game_over:
+            # 步数截断早于引擎结算 → 皇冠差/塔血差补判（真平保持 None=draw）
+            from rl.run_league import timeout_winner
+            w = timeout_winner(env.battle)
+            rw = env.reward_weights or {}
+            if w == 0:
+                stats["rew"] += float(rw.get("win_bonus", 0.0))
+            elif w == 1:
+                stats["rew"] -= float(rw.get("lose_penalty", 0.0))
         if w == 0:
             stats["wins"] += 1
         elif w == 1:

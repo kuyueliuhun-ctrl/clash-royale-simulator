@@ -138,6 +138,39 @@ def towers_hp(env):
             + p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp)
 
 
+def timeout_winner(battle, hp_tiebreak=None):
+    """截断/早停时的到期结算兜底（不动引擎，只在 episode 提前结束时补判）。
+
+    规则：
+      1) 皇冠多者胜：皇冠 = 对方被拆塔数（players[X].get_crown_count()
+         是 X 侧被拆塔数 = 对方得分）；
+      2) 皇冠相同 → 按塔血判断：剩余总塔血多者胜（"最终结束按塔血量分胜负"）；
+      3) 完全相同 → None（真平）。
+
+    hp_tiebreak: None=自动——battle.time 已到常规时间（≥180s）才启用塔血判
+    （僵局早停常发生在 180s 前，皇冠平且未到常规末 → 仍记平局）。
+    """
+    if battle is None:
+        return None
+    p0, p1 = battle.players
+    lost0 = int(p0.get_crown_count())
+    lost1 = int(p1.get_crown_count())
+    if lost1 > lost0:
+        return 0
+    if lost0 > lost1:
+        return 1
+    use_hp = hp_tiebreak if hp_tiebreak is not None else (float(battle.time) >= 180.0 - 1e-9)
+    if not use_hp:
+        return None
+    hp0 = p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
+    hp1 = p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp
+    if hp0 > hp1:
+        return 0
+    if hp1 > hp0:
+        return 1
+    return None
+
+
 def _stall_probe(env, last_hp, stall_count):
     """僵局探针：每 STALL_WINDOW 步调用一次。
 
@@ -190,7 +223,11 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
         belief.update(obs, info.get("opp_played"))
         done = term or trunc
         steps += 1
-    return env.battle.winner
+    w = env.battle.winner
+    if w is None and not env.battle.game_over:
+        # 僵局早停/步数截断早于引擎结算：皇冠差已定胜负，平才记平局
+        w = timeout_winner(env.battle)
+    return w
 
 
 def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None):
@@ -214,7 +251,11 @@ def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=No
             opp_side.observe_opponent_played(agent_played)
         done = term or trunc
         steps += 1
-    return env.battle.winner
+    w = env.battle.winner
+    if w is None and not env.battle.game_over:
+        # 僵局早停/步数截断早于引擎结算：皇冠差已定胜负，平才记平局
+        w = timeout_winner(env.battle)
+    return w
 
 
 def _bundle_cards(bundle, obs):
@@ -604,10 +645,17 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
 
         if done or len(ep_rew) >= cfg.max_ep_steps:
             truncated = (not term) and (len(ep_rew) >= cfg.max_ep_steps)
-            # 平局=失败：僵局/截断无胜者结束 → 最后一步加失败罚（与 solo 一致）
+            # 早停/截断补结算（与 solo 一致）：皇冠差/塔血差已分胜负 → 给终端胜负奖励；
+            # 只有真平（皇冠与塔血都相同）才按平局=失败罚——避免“领先/塔血占优被记平局”
             if env.battle.winner is None and not env.battle.game_over and ep_rew:
+                virt = timeout_winner(env.battle)
                 rw = reward_to_env(cfg)
-                ep_rew[-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
+                if virt == 0:
+                    ep_rew[-1] += float(rw["win_bonus"])
+                elif virt == 1:
+                    ep_rew[-1] -= float(rw["lose_penalty"])
+                else:
+                    ep_rew[-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
             # P1-7 修复：env 恒返回 trunc=False，须显式标记截断末步 bootstrap 才生效
             if truncated:
                 ep_trunc[-1] = True
@@ -728,10 +776,16 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
 
             if done or len(b["rew"]) >= cfg.max_ep_steps:
                 truncated = (not term) and (len(b["rew"]) >= cfg.max_ep_steps)
-                # 平局=失败：截断无胜者 → 最后一步加失败罚
+                # 早停/截断补结算：皇冠差/塔血差已分胜负 → 终端胜负；真平才判平=失败
                 if envs[i].battle.winner is None and not envs[i].battle.game_over and b["rew"]:
+                    virt = timeout_winner(envs[i].battle)
                     rw = reward_to_env(cfg)
-                    b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
+                    if virt == 0:
+                        b["rew"][-1] += float(rw["win_bonus"])
+                    elif virt == 1:
+                        b["rew"][-1] -= float(rw["lose_penalty"])
+                    else:
+                        b["rew"][-1] -= float(rw.get("draw_penalty", rw.get("lose_penalty", 10.0)))
                 # P1-7 修复：截断末步须显式标记，last_value bootstrap 才生效
                 if truncated:
                     b["trunc"][-1] = True
