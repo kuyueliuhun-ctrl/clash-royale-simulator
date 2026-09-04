@@ -18,7 +18,7 @@ CARDS = [
 
 english_names = [card_data[each]['englishName'] for each in CARDS]
 resolved = dict(zip(english_names, CARDS))
-with open("cards.json") as f:
+with open("cards.json", encoding="utf-8") as f:
     cards = json.load(f)["items"]
 
 names = {each['name']: each["iconUrls"]["medium"] for each in cards}

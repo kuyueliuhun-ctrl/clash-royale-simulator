@@ -60,7 +60,7 @@ def swipe(slot, y, x):
 def w2s(x, y):
     return int(AX + x * TILE), int(AY + y * TILE)
 
-with open('cards.json') as f:
+with open('cards.json', encoding='utf-8') as f:
     card_data = json.loads(f.read())
 cards = {each['id']: each['name'] for each in card_data['items']}
 

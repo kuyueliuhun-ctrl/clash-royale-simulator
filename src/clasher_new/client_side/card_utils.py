@@ -1,20 +1,20 @@
 import json
 from fastcore.all import nested_idx
 
-with open('gamedata.json') as f:
+with open('gamedata.json', encoding='utf-8') as f:
     data = json.load(f)
 
-with open('cards_stats_characters.json') as f:
+with open('cards_stats_characters.json', encoding='utf-8') as f:
     characters_data = json.load(f)
     air_units = [each['name'] for each in characters_data if each['flying_height'] != 0]
     characters = {each['name']:each for each in characters_data}
-with open('cards_stats_spell.json') as f:
+with open('cards_stats_spell.json', encoding='utf-8') as f:
     spells_data = json.load(f)
     spells = {each['name']:each for each in spells_data}
-with open('cards_stats_building.json') as f:
+with open('cards_stats_building.json', encoding='utf-8') as f:
     buildings_data = json.load(f)
     buildings = {each['name']:each for each in buildings_data}
-with open('cards_stats_projectile.json') as f:
+with open('cards_stats_projectile.json', encoding='utf-8') as f:
     projectiles = {each['name']:each for each in json.load(f)}
 
 data = data['items']['spells']

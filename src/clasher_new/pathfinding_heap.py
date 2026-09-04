@@ -4,7 +4,7 @@ from core import Position
 import heapq
 
 grid_path = Path(__file__).with_name('tilemap_lane_grid.txt')
-with grid_path.open('r') as f:
+with grid_path.open('r', encoding='utf-8') as f:
     contents = [list(each) for each in f.read().splitlines()]
 
 cell_cache = {}
