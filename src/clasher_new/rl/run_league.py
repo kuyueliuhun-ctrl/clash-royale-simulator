@@ -14,7 +14,8 @@
 新增能力（对应需求）：
 - ``rl/config.py`` 命名配置：每组参数（超参 + **奖惩机制奖励权重**）命名后
   独立输出到 ``out_dir/<name>/``（断点 / 检查点 / 联赛录像 / Elo 状态 / config.json）；
-- ``--resume`` 断点续训：从 run_state.json 恢复 step、main 权重与 Adam 状态；
+- ``--resume`` 断点续训：从 run_state.json 恢复 step、main 权重与 Adam 状态
+  （8a8dbbc+ 起**默认自动续训**：不加参数 = 有断点就接着训；显式 ``--fresh`` 才从头）；
 - ``--device cpu|cuda|auto``：CUDA（cu130）训练支持；
 - ``--n-envs N`` 并行多环境 + batch 推理/更新（N>1 用 FollowerPolicy.act_parallel /
   evaluate_batch，单进程内批量化 GPU；注意战斗模拟为纯 Python（GIL），真正的多核
@@ -1054,7 +1055,12 @@ def main():
                     help="把解析后的配置导出为 JSON（可编辑后 --load-config 复用）")
     ap.add_argument("--out-dir", type=str, default=None,
                     help="输出根目录（缺省 rl/config.py 里 out_dir=runs）")
-    ap.add_argument("--resume", action="store_true", help="从 run_state.json 断点续训")
+    # 续训默认开：存在 run_state.json/solo_state.json/flow_state 就自动接着训；
+    # 显式 --fresh 才从头（旧实验/想重跑时用）。
+    ap.add_argument("--fresh", action="store_true",
+                    help="忽略断点强制从头训练（默认：有断点就自动续训）")
+    ap.add_argument("--resume", action="store_true",
+                    help=argparse.SUPPRESS)  # 兼容旧脚本；现在默认已自动续训
     ap.add_argument("--no-replays", action="store_true",
                     help="不保存每评估周期的联赛录像（默认保存）")
     ap.add_argument("--no-eval-start", action="store_true",
@@ -1111,6 +1117,8 @@ def main():
     ap.add_argument("--no-train-stall-stop", action="store_true",
                     help="solo：关闭训练环僵局早停（默认开；关=旧行为拖满 max_ep_steps）")
     args = ap.parse_args()
+    # 自动续训为默认：无 --fresh 时 resume=True（断点缺失/不存在时各入口会自行从头并提示）
+    resume = not args.fresh
 
     if args.mode == "eval":
         if not args.policies:
@@ -1150,7 +1158,7 @@ def main():
 
     if args.mode == "flow":
         from rl.flow_league import run_flow
-        run_flow(cfg, resume=args.resume, n_random_decks=args.n_random_decks)
+        run_flow(cfg, resume=resume, n_random_decks=args.n_random_decks)
         return
 
     if args.mode in ("flow-sweep-stream", "flow-sweep-games5"):
@@ -1165,10 +1173,10 @@ def main():
     if args.mode == "solo":
         # 单人自对弈：固定卡组镜像 + 周期冻结副本，无联赛机制（原版 train.py 思路）
         from rl.train_solo import run_solo
-        run_solo(cfg, resume=args.resume, record_replays=not args.no_replays)
+        run_solo(cfg, resume=resume, record_replays=not args.no_replays)
         return
 
-    run_league(cfg, resume=args.resume, record_replays=not args.no_replays)
+    run_league(cfg, resume=resume, record_replays=not args.no_replays)
 
 
 if __name__ == "__main__":
