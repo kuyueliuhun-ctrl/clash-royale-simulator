@@ -7,10 +7,11 @@ rem    run   : league (5 deck models + main PPO)
 rem    flow  : full pairwise archetype league (6 models)
 rem
 rem  Usage:
-rem    start_rl.bat                                  -> solo economy, parallel eval 16
-rem    start_rl.bat --mode run --config aggressive   -> league training
-rem    start_rl.bat --mode flow                      -> flow pairwise league
-rem    start_rl.bat --mode solo --resume             -> resume solo from checkpoint
+rem    start_rl.bat                                  -> interactive setup wizard
+rem    start_rl.bat --menu                           -> force interactive wizard
+rem    start_rl.bat --mode run --config aggressive   -> league training (fast path)
+rem    start_rl.bat --mode solo --config economy     -> solo economy (fast path)
+rem    start_rl.bat --mode solo --fresh              -> solo from scratch (default is auto-resume)
 rem    start_rl.bat --eval-workers 0                 -> serial eval (parallel off)
 rem    start_rl.bat --no-dashboard                   -> train only, no web UI
 rem    start_rl.bat --setup / --setup-cuda           -> create/install .venv deps
@@ -49,6 +50,9 @@ set "WITH_DASHBOARD=1"
 set "ONLY_VS_MAIN=0"
 set "KEEP_SNAPSHOT=0"
 set "RESUME=0"
+set "FRESH=0"
+set "DO_MENU=0"
+set "HAS_ARGS=0"
 set "NO_REPLAYS=0"
 set "DO_SETUP=0"
 set "DO_SETUP_CUDA=0"
@@ -60,7 +64,10 @@ set "TORCH_INDEX=https://download.pytorch.org/whl/cpu"
 rem ---- parse args (block-free, most robust form) ----
 :parse
 if "%~1"=="" goto parse_done
+set "HAS_ARGS=1"
 if /i "%~1"=="--help"           set "SHOW_HELP=1"
+if /i "%~1"=="--menu"           set "DO_MENU=1"
+if /i "%~1"=="--fresh"          set "FRESH=1"
 if /i "%~1"=="--mode"           set "MODE=%~2"
 if /i "%~1"=="--mode"           shift
 if /i "%~1"=="--config"         set "CONFIG=%~2"
@@ -214,6 +221,25 @@ exit /b 1
 
 :selftest_done
 
+rem ---- interactive wizard: no args (double click) or explicit --menu ----
+if "%DO_MENU%"=="1" goto wizard
+if "%HAS_ARGS%"=="0" if "%DO_SELFTEST%"=="0" goto wizard
+goto build_args
+
+:wizard
+echo.
+echo ============================================================
+echo   CR-RL Interactive Launcher (multi-level setup wizard)
+echo   Level 1: training type   Level 2: config preset
+echo   Level 3: parameters (Enter = preset default)
+echo   q = quit wizard at any time
+echo ============================================================
+"%PY%" "%ROOT%src\clasher_new\rl\launcher_menu.py"
+echo [wizard] wizard closed.
+pause
+exit /b 0
+
+:build_args
 rem ---- build common training args (--opt=value form, avoids nested quotes) ----
 set "TRAIN_ARGS=--mode=%MODE% --config=%CONFIG% --out-dir=%OUT_DIR% --device=%DEVICE% --n-envs=%N_ENVS% --total-steps=%TOTAL_STEPS% --steps-per-eval=%STEPS_PER_EVAL% --n-eval-games=%N_EVAL_GAMES% --max-ep-steps=%MAX_EP_STEPS%"
 if not "%CONFIG_NAME%"=="" set "TRAIN_ARGS=%TRAIN_ARGS% --config-name=%CONFIG_NAME%"
@@ -221,6 +247,7 @@ if not "%DECKS_PATH%"=="" set "TRAIN_ARGS=%TRAIN_ARGS% --decks-path=%DECKS_PATH%
 if "%ONLY_VS_MAIN%"=="1" set "TRAIN_ARGS=%TRAIN_ARGS% --only-vs-main"
 if "%KEEP_SNAPSHOT%"=="1" set "TRAIN_ARGS=%TRAIN_ARGS% --keep-snapshot"
 if "%RESUME%"=="1" set "TRAIN_ARGS=%TRAIN_ARGS% --resume"
+if "%FRESH%"=="1" set "TRAIN_ARGS=%TRAIN_ARGS% --fresh"
 if "%NO_REPLAYS%"=="1" set "TRAIN_ARGS=%TRAIN_ARGS% --no-replays"
 
 rem ---- mode-specific args ----
