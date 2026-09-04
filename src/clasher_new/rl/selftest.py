@@ -1735,6 +1735,78 @@ def test_reward_v2_ledger():
     print("[PASS] reward v2 记账：部署不罚/份额入账注销/空砸罚/双倍期换档/单位受伤 shaping 生效")
 
 
+def test_plan_v1_layout():
+    """PlanToken v1 尾部扩展：旧 21 维布局逐位兼容、新意图进尾部新组、
+    target/hint/threat/budget/hold_mask 落位正确、load_checkpoint 旧维补零扩展。"""
+    import numpy as np
+    from rl.plan_space import (PLAN_DIM, PlanToken, MACRO_INTENTS, _OLD_INTENT_COUNT,
+                               FOCUS_REGIONS, TARGET_KINDS, PLACEMENT_HINTS,
+                               OPP_SPELL_THREATS)
+    assert PLAN_DIM == 57, f"PLAN_DIM 应为 57（旧21+新36）: {PLAN_DIM}"
+
+    # ① 旧意图帧：前 21 维 == 旧布局（intent8 + region8 + 旧标量5）
+    v = PlanToken().to_vector()
+    assert int(np.argmax(v[:8])) == MACRO_INTENTS.index("cycle_and_wait")
+    assert int(np.argmax(v[8:16])) == FOCUS_REGIONS.index("own_center")
+    assert np.allclose(v[16:21], [0.0, 1.0, 0.0, 0.5, 0.0]), v[16:21]
+    # v1 尾段默认值：新意图组全 0；target/hint/threat = none(各自 one-hot 首位)；
+    # elixir_budget = 1.0（不限制投入）；hold 4 位 = 0
+    n_new = len(MACRO_INTENTS) - _OLD_INTENT_COUNT
+    seg_new = v[21:21 + n_new]
+    assert np.all(seg_new == 0.0), "默认帧不应携带新意图"
+    off = 21 + n_new
+    assert int(np.argmax(v[off:off + len(TARGET_KINDS)])) == TARGET_KINDS.index("none")
+    off += len(TARGET_KINDS)
+    assert int(np.argmax(v[off:off + len(PLACEMENT_HINTS)])) == PLACEMENT_HINTS.index("none")
+    off += len(PLACEMENT_HINTS)
+    assert int(np.argmax(v[off:off + len(OPP_SPELL_THREATS)])) == OPP_SPELL_THREATS.index("none")
+    off += len(OPP_SPELL_THREATS)
+    assert abs(v[off] - 1.0) < 1e-6, "默认 elixir_budget 应为 1.0（不限制）"
+    assert np.all(v[off + 1:off + 5] == 0.0), "默认 hold_mask 应为 0"
+
+    # ② 新意图帧：旧组全 0（不占用旧 intent 位），新组 one-hot 于 (21..21+13)
+    for name in MACRO_INTENTS[_OLD_INTENT_COUNT:]:
+        vn = PlanToken.intent(name).to_vector()
+        assert np.all(vn[:8] == 0.0), f"新意图 {name} 不应占用旧 intent 位"
+        seg = vn[21:21 + n_new]
+        assert int(np.argmax(seg)) == MACRO_INTENTS.index(name) - _OLD_INTENT_COUNT, name
+
+    # ③ v1 字段落位（顺序：intent_new → target_kind → placement_hint → threat → budget → hold）
+    v = PlanToken.intent("soft_control", "enemy_center", target_kind="unit",
+                         placement_hint="pull_across", opp_spell_threat="lightning",
+                         elixir_budget=0.4, hold_mask=0b1010).to_vector()
+    off = 21 + n_new
+    assert int(np.argmax(v[off:off + len(TARGET_KINDS)])) == TARGET_KINDS.index("unit")
+    off += len(TARGET_KINDS)
+    assert int(np.argmax(v[off:off + len(PLACEMENT_HINTS)])) == PLACEMENT_HINTS.index("pull_across")
+    off += len(PLACEMENT_HINTS)
+    assert int(np.argmax(v[off:off + len(OPP_SPELL_THREATS)])) == OPP_SPELL_THREATS.index("lightning")
+    off += len(OPP_SPELL_THREATS)
+    assert abs(float(v[off]) - 0.4) < 1e-6
+    assert v[off + 1:off + 5].tolist() == [0.0, 1.0, 0.0, 1.0]
+    assert PlanToken(hold_mask=0b1010).hold_slots() == [2, 4]
+
+    # ④ load_checkpoint：旧 21 维 ckpt → 57 维网络补零加载（前 21 列权重原样保留）
+    import tempfile
+    import shutil
+    import torch
+    from rl.follower import FollowerPolicy, load_checkpoint
+    old = FollowerPolicy(hidden=32, plan_dim=21, belief_dim=8)
+    d = tempfile.mkdtemp()
+    p = os.path.join(d, "old.pt")
+    torch.save({"state_dict": old.state_dict(), "plan_dim": 21,
+                "belief_dim": 8, "hidden_dim": 32}, p)
+    new = load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=8)
+    assert new.plan_dim == 57
+    sd_old = old.state_dict()
+    sd_new = new.state_dict()
+    assert torch.allclose(sd_new["plan_mlp.0.weight"][:, :21],
+                          sd_old["plan_mlp.0.weight"]), "旧 21 列权重应原样保留"
+    assert torch.all(sd_new["plan_mlp.0.weight"][:, 21:] == 0.0), "尾部应补零"
+    shutil.rmtree(d, ignore_errors=True)
+    print("[PASS] PlanToken v1 布局：旧21维兼容/新意图组/字段落位/旧ckpt补零加载")
+
+
 def test_eval_solo_parallel():
     """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
     import time
@@ -1802,6 +1874,7 @@ def main():
     test_reward_economy_trade_pricing()
     test_draw_penalty_as_loss()
     test_reward_v2_ledger()
+    test_plan_v1_layout()
     test_rlenv_card_level()
     test_tower_troop_hp_reference()
     test_league_resume()

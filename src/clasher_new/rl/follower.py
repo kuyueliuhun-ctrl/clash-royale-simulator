@@ -50,17 +50,36 @@ def save_checkpoint(policy, path):
 
 
 def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
-    """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。"""
+    """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。
+
+    v1 兼容扩展（Phase 2 结构先行）：旧 checkpoint 的 plan_dim（如 21）< 请求维度（如 57）时，
+    plan_mlp 首层权重**前 pd_old 列**拷贝、尾部补零 —— 旧权重对前 21 维语义不变，
+    尾部新字段从零开始学（与 PlanToken 尾部追加布局一致）。
+    """
     data = torch.load(path, map_location="cpu")
     if isinstance(data, dict) and "state_dict" in data:
         md = data
     else:
         md = {"state_dict": data, "plan_dim": None, "belief_dim": None, "hidden_dim": None}
+    sd_src = md["state_dict"]
     pd = int(plan_dim or md.get("plan_dim") or PLAN_DIM)
     bd = int(belief_dim or md.get("belief_dim") or BELIEF_DIM)
     hd = int(hidden_dim or md.get("hidden_dim") or 128)
     policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd)
-    policy.load_state_dict(md["state_dict"])
+    target = policy.state_dict()
+    for k, v in sd_src.items():
+        if k not in target:
+            continue
+        tv = target[k]
+        if tv.shape == v.shape:
+            tv.copy_(v)
+        elif k == "plan_mlp.0.weight" and v.dim() == 2 and v.shape[1] <= tv.shape[1]:
+            # 尾部追加兼容：前 ckpt_pd 列原样拷贝，其余列保持 0（新字段从零学）
+            tv[:, :v.shape[1]].copy_(v)
+        elif k == "plan_mlp.0.bias":
+            tv.copy_(v)
+        # 其余形状不匹配（结构大改）→ 保持新初始化，不静默崩
+    policy.load_state_dict(target)
     policy.eval()
     return policy
 
