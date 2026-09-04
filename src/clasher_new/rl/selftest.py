@@ -1459,6 +1459,89 @@ def test_human_play_session():
     print("[PASS] 人机对战：随机驱动 + EpisodeReplay/BC 落盘 + 导出（信念/BC 均可训练）")
 
 
+def test_stall_probe():
+    """僵局早停探针：连续 STALL_LIMIT 次零塔血变化 → early_stop；塔损重置计数。"""
+    from rl.run_league import _stall_probe, STALL_LIMIT
+
+    def make_fake(hps):
+        class _P:
+            def __init__(self, k, l, r):
+                self.king_tower_hp = k
+                self.left_tower_hp = l
+                self.right_tower_hp = r
+        class _B:
+            players = [_P(hps[0], hps[1], hps[2]), _P(hps[3], hps[4], hps[5])]
+        class _E:
+            battle = _B()
+        return _E()
+
+    env = make_fake([1000] * 6)
+    last, cnt, early = None, 0, False
+    for _ in range(STALL_LIMIT + 1):   # 首次调用只建立基线，之后 STALL_LIMIT 次连续零变化
+        early, last, cnt = _stall_probe(env, last, cnt)
+    assert early, "连续零塔损应触发早停"
+
+    env2 = make_fake([1000] * 6)
+    last2, cnt2 = None, 0
+    _, last2, cnt2 = _stall_probe(env2, last2, cnt2)
+    env2.battle.players[0].king_tower_hp = 999  # 塔损
+    early2, last2, cnt2 = _stall_probe(env2, last2, cnt2)
+    assert not early2 and cnt2 == 0, "塔损应重置僵局计数"
+    print("[PASS] 僵局探针：连续零塔损早停 + 塔损重置计数")
+
+
+def test_play_pair_env_reuse():
+    """评估加速：play_pair 复用单个 env（每局 reset(seed=...)），换边 n 局跑通 + Elo/PFSP 更新。"""
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.league import League
+    from rl.plan_space import PLAN_DIM
+    from rl.run_league import play_pair
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer",
+            "Fireball", "Giant", "Archer"]
+    belief_dim = len(BeliefInference(opp_deck=deck, n_particles=32, seed=0).encode(None, None))
+    pa = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=belief_dim)
+    pb = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=belief_dim)
+    pa.to_device("cpu")
+    pb.to_device("cpu")
+    lg = League(seed=0)
+    lg.add_agent("a", kind="main", policy=pa)
+    lg.add_agent("b", kind="all_decks", policy=pb)
+    wa, wb, dr, rs = play_pair(lg, "a", pa, "b", pb, 4, 30, seed=7)
+    assert wa + wb + dr == 4, f"局数 4，实际 {wa}+{wb}+{dr}"
+    assert 0 <= wa <= 4 and 0 <= wb <= 4
+    tbl = lg.elo_table()
+    assert "a" in tbl and "b" in tbl, "Elo/PFSP 应已更新"
+    print(f"[PASS] play_pair env 复用：换边 4 局跑通（{wa}W {wb}L {dr}D）+ Elo/PFSP 更新")
+
+
+def test_eval_stall_early_stop():
+    """僵局早停集成：双方都不部署 → 连续零塔损判平，远早于打满 max_steps。"""
+    import time
+    from rl.env_wrapper import RLEnv
+    from rl.action_bundle import ActionBundle
+    from rl.opponents import ScriptedPolicy
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.run_league import _run_side0, _prepare_env
+
+    class Idle(ScriptedPolicy):
+        def play(self, env, player_id):
+            return ActionBundle.noop()
+
+    idle = Idle()
+    env = RLEnv(opponent=None, seed=3)
+    _prepare_env(env, idle, idle)
+    t0 = time.monotonic()
+    w = _run_side0(env, idle, BeliefInference(opp_deck=env.deck1, n_particles=16, seed=3),
+                   BeliefPlanner(), max_steps=600, reset_seed=3)
+    dt = time.monotonic() - t0
+    assert w is None, "僵局应判平"
+    assert dt < 12.0, f"僵局应提前结束（实际 {dt:.1f}s），否则早停未触发"
+    print(f"[PASS] 僵局早停：{dt:.1f}s 判平（对照打满 600 步 ~23s）")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -1502,6 +1585,9 @@ def main():
     test_flow_sweep_smoke()
     test_solo_mode_smoke()
     test_human_play_session()
+    test_stall_probe()
+    test_play_pair_env_reuse()
+    test_eval_stall_early_stop()
     print("\nALL SELFTESTS PASSED")
 
 

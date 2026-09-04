@@ -64,14 +64,15 @@ class TrainConfig:
     description: str = ""
     # —— 训练/评估超参 ——
     total_steps: int = 20000
-    steps_per_eval: int = 2000
+    steps_per_eval: int = 4000   # 评估频率：每 N 步训满再评（2000→4000：每 ckpt 训练量翻倍、评估频率减半）
     batch_size: int = 128
     update_interval: int = 128
     lr: float = 3e-4
     hidden_dim: int = 128
     seed: int = 0
-    n_eval_games: int = 40    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
-                              # N=4→SE≈78（±100 移动≈0.9σ，纯噪声）；N=40→SE≈25（≈2.9σ，可区分学习信号）
+    n_eval_games: int = 16    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
+                              # N=16→SE≈39（±80 移动≈2σ，可区分学习信号）；评估开销与 N 成正比，
+                              # 40→16 是降噪地板与训练速度的折中（评估量 ÷2.5）
     max_ep_steps: int = 600
     n_envs: int = 1               # 并行多环境（>1 用批量推理；默认 1 与旧行为一致）
     parallel: str = "mp"          # n_envs>1 时：mp=跨进程 worker（多核真并行）/ proc=单进程批量化
@@ -190,7 +191,8 @@ class TrainConfig:
                 reward={"crown_weight": 5.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
                         "elixir_bonus": 0.0, "normalize_tower_dmg": True,
-                        "elixir_diff_weight": 0.5}),
+                        "elixir_diff_weight": 0.5},
+                only_vs_main=True),   # 联赛模式评估只测 main（15 对→5 对，评估量再 ÷3）；solo 不受影响
             "fast": cls(
                 name="fast", description="小步快跑（冒烟/设备验证用）",
                 total_steps=2000, steps_per_eval=500,

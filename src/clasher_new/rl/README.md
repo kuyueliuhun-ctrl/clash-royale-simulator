@@ -142,6 +142,20 @@ python rl/human_play.py --bc-train --data-dir runs/solo/human_data --out followe
 python rl/run_league.py --mode run --main-init follower_human.pt --config economy    # 用人类 BC 初始化后 PPO
 #   无 UI 冒烟：python rl/human_play.py --policy runs/solo/solo_main.pt --drive-games 3
 
+# 7h) 训练提速：评估加速（训练慢的主因 = 评估开销爆炸，不是训练本身）
+#   评估是全配对 C(6,2)=15 对 × n_eval_games 局，每局最多 max_ep_steps 步的完整 CPU 模拟
+#   + belief(128 particles) 推理；n_eval_games 4→40 时评估量是训练步数的 ~180 倍上限。
+#   三招压评估开销：
+#     1) 配置（config.py 默认）：n_eval_games 40→16（轮内 SE≈39，仍可区分学习信号）、
+#        steps_per_eval 2000→4000（评估频率减半、每 ckpt 训练量翻倍）、
+#        economy 预设 only_vs_main=True（league 评估 15 对→5 对；solo 不受影响）。
+#     2) play_pair 复用单个 env：每局 reset(seed=...) 换对局，不再逐局重建 RLEnv/BattleState。
+#     3) 僵局早停（run_league._stall_probe）：连续 100 步双方塔血合计零变化 → 判平提前结束。
+#        CR 无塔治疗，塔血只降不升，"长时间零塔损"是可靠僵局信号；只影响本来就会平局的局，
+#        胜负判定不变，只是更快得出"平局"。
+#   实测（aggressive ckpt，CPU）：600 步僵局局 22.9→4.05s/局（÷5.7）；solo 评估
+#   40 局≈15 分钟/2000 步 → 16 局≈1 分钟/4000 步（约 1/30）。
+
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50
 python rl/evaluate.py --policy follower.pt --n-games 200 --ablation all --ablation-out ablation_result.json

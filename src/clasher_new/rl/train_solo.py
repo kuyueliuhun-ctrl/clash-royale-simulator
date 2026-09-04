@@ -36,7 +36,7 @@ from rl.follower import FollowerPolicy, save_checkpoint, load_checkpoint
 from rl.ppo import PPOTrainer
 from rl.config import reward_to_env
 from rl.train_follower import FollowerOpponent
-from rl.run_league import resolve_device, _bundle_cards, LeagueGameRecorder
+from rl.run_league import resolve_device, _bundle_cards, LeagueGameRecorder, _stall_probe, STALL_WINDOW
 from rl.replay import save_league_replays
 
 #: 固定卡组（原版默认 8 卡）：双方镜像使用同一副。
@@ -104,7 +104,13 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
         done = False
         steps = 0
         ep_rew = 0.0
+        stall_count = 0
+        last_hp = None
         while not done and steps < max_steps:
+            if steps % STALL_WINDOW == 0:
+                early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
+                if early:
+                    break   # 僵局判平，提前结束
             plan = bp.plan(env.battle, belief.state(), obs)
             tok = belief.encode(obs, None)
             bundle, _, _, hidden, _ = main.act(

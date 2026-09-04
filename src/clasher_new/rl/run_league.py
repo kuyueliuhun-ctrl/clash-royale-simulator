@@ -118,21 +118,61 @@ class LeagueGameRecorder:
         return {"meta": self.meta, "winner": winner, "frames": self.frames}
 
 
-def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None):
+#: 评估早停：连续 STALL_LIMIT 次检查（每 STALL_WINDOW 步一次）双方塔血合计零变化
+#: → 判僵局为平局、提前结束对局，省掉拖满 max_ep_steps 的无效模拟（费差 shaping 下
+#: 双方都龟缩的对局占比不小，单局可从 ~23s 降到 ~4s）。CR 无塔治疗，塔血只降不升，
+#: 长时间零塔损是可靠僵局信号。
+STALL_WINDOW = 10
+STALL_LIMIT = 10   # 10×10=100 步无塔损判平
+
+
+def towers_hp(env):
+    """双方三塔血量合计（僵局检测用；塔血只降不升）。"""
+    p0 = env.battle.players[0]
+    p1 = env.battle.players[1]
+    return (p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
+            + p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp)
+
+
+def _stall_probe(env, last_hp, stall_count):
+    """僵局探针：每 STALL_WINDOW 步调用一次。
+
+    返回 (early_stop, last_hp, stall_count)。连续 STALL_LIMIT 次零塔血变化 → early_stop。
+    """
+    hp = towers_hp(env)
+    if last_hp is None:
+        return False, hp, 0
+    if abs(hp - last_hp) < 1e-9:
+        stall_count += 1
+        if stall_count >= STALL_LIMIT:
+            return True, hp, stall_count
+        return False, hp, stall_count
+    return False, hp, 0
+
+
+def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed=None):
     """policy 以 player-0 身份打完整对局；返回 winner（0/1/None=平）。
 
     支持 FollowerPolicy（完整信念/plan 链路）与 ScriptedPolicy（随机合法出牌）。
     recorder: LeagueGameRecorder 可选，逐帧记录联赛录像。
+    reset_seed: 传入时 env.reset(seed=reset_seed)（play_pair 复用 env 时保持逐局种子）。
+    僵局早停：连续 100 步双方塔血零变化 → 判平（STALL_WINDOW/STALL_LIMIT）。
     """
     if isinstance(policy, ScriptedPolicy):
-        return _run_side0_scripted(env, policy, max_steps, recorder)
-    obs, _ = env.reset()
+        return _run_side0_scripted(env, policy, max_steps, recorder, reset_seed=reset_seed)
+    obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
     belief.reset(env.deck1)
     hidden = None
     done = False
     steps = 0
+    stall_count = 0
+    last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
     while not done and steps < max_steps:
+        if steps % STALL_WINDOW == 0:
+            early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
+            if early:
+                break   # 僵局判平，提前结束
         plan = bp.plan(env.battle, belief.state(), obs)
         tok = belief.encode(obs, None)
         bundle, _, _, hidden, _ = policy.act(obs, tok, plan.to_vector(),
@@ -149,12 +189,18 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None):
     return env.battle.winner
 
 
-def _run_side0_scripted(env, policy, max_steps=300, recorder=None):
-    obs, _ = env.reset()
+def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None):
+    obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
     done = False
     steps = 0
+    stall_count = 0
+    last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
     while not done and steps < max_steps:
+        if steps % STALL_WINDOW == 0:
+            early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
+            if early:
+                break   # 僵局判平，提前结束
         bundle = policy.play(env, 0)
         agent_played = _bundle_cards(bundle, obs)
         obs, reward, term, trunc, info = env.step(bundle)
@@ -189,11 +235,16 @@ def _make_opp(policy, env, deck):
                             belief=BeliefInference(opp_deck=list(deck), n_particles=128, seed=0))
 
 
-def _prepare_env(env, side0_pol, side1_pol):
-    """按双方策略类型装配 env（随机卡组工厂 + 对手），在 reset 前调用。"""
+def _prepare_env(env, side0_pol, side1_pol, deck0_prior=None):
+    """按双方策略类型装配 env（随机卡组工厂 + 对手），在 reset 前调用。
+
+    deck0_prior: FollowerOpponent 信念先验卡组（缺省 env.deck0；play_pair 复用 env 时
+    传构造时的初始卡组快照，与旧"每局新建 env"语义一致）。
+    """
     if isinstance(side0_pol, ScriptedPolicy):
         env.deck0_factory = side0_pol.deck if side0_pol.pool else None
-    env.opponent = _make_opp(side1_pol, env, env.deck0)
+    env.opponent = _make_opp(side1_pol, env,
+                             deck0_prior if deck0_prior is not None else env.deck0)
     return env
 
 
@@ -217,20 +268,28 @@ def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record
     """
     wins_a = wins_b = draws = 0
     replays = []
+    # 复用同一个 env：每局 reset(seed=...) 换对局，省去逐局 RLEnv/BattleState 重建
+    # （评估每轮数百局，重建固定成本累加起来可观）。信念先验固定用构造时的初始卡组
+    # 快照，与旧"每局新建 env（reset 前 deck 仍为默认卡组）"语义一致。
+    env = RLEnv(opponent=None, seed=seed)
+    deck0_prior = list(env.deck0)
+    belief_prior = list(env.deck1)
     for g in range(n_games):
         if g % 2 == 0:
-            env = _prepare_env(RLEnv(opponent=None, seed=seed + g), a_pol, b_pol)
-            belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=seed + g)
+            _prepare_env(env, a_pol, b_pol, deck0_prior)
+            belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g)
             rec = LeagueGameRecorder(a_id, b_id, a_id, max_steps) if record else None
-            w = _run_side0(env, a_pol, belief, BeliefPlanner(), max_steps, rec)
+            w = _run_side0(env, a_pol, belief, BeliefPlanner(), max_steps, rec,
+                           reset_seed=seed + g)
             if rec is not None:
                 replays.append(rec.done(w))
             score_a = 1.0 if w == 0 else (0.5 if w is None else 0.0)
         else:
-            env = _prepare_env(RLEnv(opponent=None, seed=seed + g + 5000), b_pol, a_pol)
-            belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=seed + g + 5000)
+            _prepare_env(env, b_pol, a_pol, deck0_prior)
+            belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g + 5000)
             rec = LeagueGameRecorder(a_id, b_id, b_id, max_steps) if record else None
-            w = _run_side0(env, b_pol, belief, BeliefPlanner(), max_steps, rec)
+            w = _run_side0(env, b_pol, belief, BeliefPlanner(), max_steps, rec,
+                           reset_seed=seed + g + 5000)
             if rec is not None:
                 replays.append(rec.done(w))
             score_a = 0.0 if w == 0 else (0.5 if w is None else 1.0)
