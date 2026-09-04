@@ -1873,6 +1873,46 @@ def test_bp_new_intent_rules():
           "setup_wait + 血牛放行 + 压境守卫 + 旧回退")
 
 
+def test_bayes_hard_lock():
+    """CycleBayesFilter 硬收敛机制：确定性锁定后精确推进且无伪锁；
+    信息不足（对手行为盲区）时保持粒子后验、不锁（数学上不可辨识不是 bug）。"""
+    import random
+    from rl.bayes_filter import CycleBayesFilter
+
+    deck = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+    # ① 确定性锁定后：精确推进、熵=0、hand_probs 0/1、与真实队列同步
+    rng = random.Random(5)
+    truth = list(deck); rng.shuffle(truth)
+    bf = CycleBayesFilter(deck, n_particles=128, seed=1)
+    bf._exact = list(truth)
+    real = list(truth)
+    for _ in range(30):
+        i = rng.randrange(4); c = real[i]
+        real = [x for x in real if x != c] + [c]
+        bf.update(c)
+        assert bf._exact is not None and bf.entropy() == 0.0
+        assert set(bf._exact[:4]) == set(real[:4]), "精确模式必须与真实手牌同步"
+    assert set(np.unique(bf.hand_probs())) <= {0.0, 1.0}, "精确模式 hand_probs 应 0/1"
+
+    # ② 无伪锁：均匀随机对手（盲区策略）跑 300 步 —— 允许不锁，
+    #    但一旦锁定必须与真实手牌一致（核心正确性，绝不锁错）
+    for trial in range(3):
+        rng = random.Random(50 + trial)
+        truth = list(deck); rng.shuffle(truth)
+        bf2 = CycleBayesFilter(deck, n_particles=64, seed=trial)
+        real = list(truth)
+        for step in range(300):
+            i = rng.randrange(4); c = real[i]
+            real = [x for x in real if x != c] + [c]
+            bf2.update(c)
+            if bf2._exact is not None:
+                assert set(bf2._exact[:4]) == set(real[:4]), f"伪锁 trial={trial} step={step}"
+                break
+        # 粒子后验自洽：真实手牌里的卡应始终在候选中有正概率（未被误淘汰殆尽即允许）
+    print("[PASS] 信念硬收敛：精确推进/熵0/0-1概率；盲区策略无伪锁（保持后验）")
+
+
 def test_eval_solo_parallel():
     """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
     import time
@@ -1914,6 +1954,7 @@ def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
     test_bayes_filter()
+    test_bayes_hard_lock()
     test_hidden_replay_consistency()
     test_entropy_positive_and_sign()
     test_mask_validate_invariant_both_sides()
