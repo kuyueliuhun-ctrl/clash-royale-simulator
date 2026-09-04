@@ -1013,6 +1013,9 @@ def main():
     # solo 模式（单人自对弈，无联赛）
     ap.add_argument("--solo-copy-every", type=int, default=None,
                     help="solo：冻结副本同步间隔（步，默认 2000）")
+    ap.add_argument("--eval-workers", type=int, default=None,
+                    help="评估并行进程数（>1 时 spawn N 进程并行打评估局，绕开 GIL；"
+                         "默认 0=串行。战斗模拟是纯 Python，跨进程才真正吃满多核）")
     args = ap.parse_args()
 
     if args.mode == "eval":
@@ -1028,7 +1031,7 @@ def main():
     for k in ("total_steps", "steps_per_eval", "n_envs", "parallel", "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
-              "solo_copy_every"):
+              "solo_copy_every", "eval_workers"):
         v = getattr(args, k)
         if v is not None:
             overrides[k] = v

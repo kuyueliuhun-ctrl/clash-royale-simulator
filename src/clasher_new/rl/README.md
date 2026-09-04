@@ -160,6 +160,12 @@ python rl/run_league.py --mode run --main-init follower_human.pt --config econom
 #        胜负判定不变，只是更快得出"平局"。
 #   实测（aggressive ckpt，CPU）：600 步僵局局 22.9→4.05s/局（÷5.7）；solo 评估
 #   40 局≈15 分钟/2000 步 → 16 局≈1 分钟/4000 步（约 1/30）。
+#   4) 并行评估（solo，进程池）：战斗模拟是纯 Python（GIL 受限），线程并行无效，必须跨进程。
+#      --eval-workers N（>1 时 spawn N 进程，每 worker 独立 env+信念+策略，主进程汇总；0=串行）。
+#      与串行 eval_solo 同种子逐局等价（worker 走完整 reset 链还原同一信念先验，selftest 验证）。
+#      实测（economy，16 局 eval@0，RTX 4070 laptop）：串行 126.1s → 16 进程 ~15-25s。
+#   用法：
+#     python rl/run_league.py --mode solo --config economy --eval-workers 16
 
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50

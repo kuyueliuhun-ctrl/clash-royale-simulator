@@ -147,23 +147,188 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
     return stats, replays
 
 
+def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
+                      seed_base, max_steps, n_particles, record, out_q):
+    """并行评估 worker：独立进程打 games（全局游戏索引列表）里每局。
+
+    战斗模拟是纯 Python（GIL），跨进程才能真正吃满多核。每 worker 自建 env+信念+策略
+    （从主进程收 state_dict），逐局回传 (game_idx, winner, ep_rew, replay_or_None)。
+    与串行 eval_solo 同种子等价：串行复用单个 env，reset() 会基于上一局牌序继续
+    shuffle（belief 先验 = 上一局结束后的牌序），所以 worker 必须把 0..n_games-1 的
+    reset 链全部走一遍（reset 本身极便宜），只打分配到的局，才能还原同一信念先验。
+    """
+    try:
+        from rl.env_wrapper import RLEnv
+        from rl.belief import BeliefInference
+        from rl.belief_planner import BeliefPlanner
+        from rl.follower import FollowerPolicy
+        from rl.plan_space import PLAN_DIM
+        from rl.train_follower import FollowerOpponent
+        from rl.run_league import LeagueGameRecorder, _stall_probe, STALL_WINDOW, _bundle_cards
+
+        # 16 进程 × 默认 16 线程 = 256 线程在 16 核上互相争抢（过订阅），
+        # 战斗模拟是纯 Python 单线程、推理 batch 极小 → 每 worker 1 线程即可
+        import torch as _torch
+        _torch.set_num_threads(1)
+        try:
+            import numpy as _np
+            _np.set_num_threads(1)
+        except Exception:
+            pass
+
+        env = RLEnv(opponent=None, seed=worker_id + 777,
+                    reward_weights=dict(env_kwargs.get("reward_weights") or {}),
+                    card_level=env_kwargs.get("card_level"),
+                    deck0=list(env_kwargs["deck0"]), deck1=list(env_kwargs["deck1"]))
+        belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=n_particles,
+                                         seed=0).encode(None, None))
+        main = FollowerPolicy(hidden=env_kwargs["hidden_dim"], plan_dim=PLAN_DIM,
+                              belief_dim=belief_dim)
+        opp = FollowerPolicy(hidden=env_kwargs["hidden_dim"], plan_dim=PLAN_DIM,
+                             belief_dim=belief_dim)
+        main.load_state_dict(main_sd)
+        opp.load_state_dict(opp_sd)
+        main.to_device("cpu")
+        opp.to_device("cpu")
+        bp = BeliefPlanner()
+        n_total = int(env_kwargs["n_total"])
+        do = set(int(g) for g in games)
+        results = []
+        for g in range(n_total):
+            # 与串行 eval_solo 同序：先按当前 env.deck1（上一局牌序）构造信念，再 reset 换牌序
+            opp_side = FollowerOpponent(
+                opp, env,
+                belief=BeliefInference(opp_deck=env.deck1, n_particles=n_particles,
+                                       seed=seed_base + g),
+                deterministic=True)
+            belief = BeliefInference(opp_deck=env.deck1, n_particles=n_particles,
+                                     seed=seed_base + 1000 + g)
+            obs, _ = env.reset(seed=seed_base + 2000 + g)
+            belief.reset(env.deck1)
+            if g not in do:
+                continue
+            env.opponent = opp_side
+            hidden = None
+            rec = LeagueGameRecorder("main", "frozen_copy", "main", max_steps) if record else None
+            done = False
+            steps = 0
+            ep_rew = 0.0
+            stall_count = 0
+            last_hp = None
+            while not done and steps < max_steps:
+                if steps % STALL_WINDOW == 0:
+                    early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
+                    if early:
+                        break
+                plan = bp.plan(env.battle, belief.state(), obs)
+                tok = belief.encode(obs, None)
+                bundle, _, _, hidden, _ = main.act(
+                    obs, tok, plan.to_vector(), env.get_action_mask,
+                    hidden=hidden, deterministic=True)
+                played = _bundle_cards(bundle, obs)
+                obs, reward, term, trunc, info = env.step(bundle)
+                ep_rew += float(reward)
+                if rec is not None:
+                    rec.record(env, bundle, reward, info)
+                opp_side.observe_opponent_played(played)
+                belief.update(obs, info.get("opp_played"))
+                done = term or trunc
+                steps += 1
+            w = env.battle.winner
+            results.append((g, w, ep_rew, rec.done(w) if rec is not None else None))
+        out_q.put(("result", results))
+    except Exception as e:
+        import traceback
+        try:
+            out_q.put(("error", "%r\n%s" % (e, traceback.format_exc())))
+        except Exception:
+            pass
+
+
+def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
+                       n_workers=8, record_replays=False, replays_dir=None, step=None):
+    """eval_solo 的进程池并行版：n_games 局均分到 n_workers 个 spawn 进程打。
+
+    串行 16 局≈126s（主进程单核跑纯 Python 模拟）；16 进程理论 ≈ 126/16 + spawn/import
+    开销 ≈ 15-25s。统计与串行同公式（wins/losses/draws + mean_reward + SE）。
+    """
+    import multiprocessing as mp
+    n_workers = max(1, min(int(n_workers), int(n_games)))
+    ctx = mp.get_context("spawn")
+    out_q = ctx.Queue()
+    main_sd = {k: v.detach().cpu() for k, v in main.state_dict().items()}
+    opp_sd = {k: v.detach().cpu() for k, v in opp.state_dict().items()}
+    games = list(range(int(n_games)))
+    chunks = [games[i::n_workers] for i in range(n_workers)]
+    env_kwargs = {"reward_weights": reward_to_env(cfg), "card_level": cfg.card_level,
+                  "deck0": list(env.deck0), "deck1": list(env.deck1),
+                  "hidden_dim": int(cfg.hidden_dim), "n_total": int(n_games)}
+    procs = []
+    for wid, chunk in enumerate(chunks):
+        if not chunk:
+            continue
+        p = ctx.Process(target=_eval_worker_main,
+                        args=(wid, main_sd, opp_sd, chunk, env_kwargs,
+                              int(seed), int(max_steps), 128, bool(record_replays), out_q))
+        p.start()
+        procs.append(p)
+    results = []
+    for _ in procs:
+        msg = out_q.get()
+        if msg[0] == "error":
+            for p in procs:
+                p.terminate()
+            raise RuntimeError(f"并行评估 worker 失败: {msg[1]}")
+        results.extend(msg[1])
+    for p in procs:
+        p.join(timeout=10)
+    results.sort(key=lambda r: r[0])   # 按游戏索引还原顺序
+    wins = losses = draws = 0
+    rew_sum = 0.0
+    replays = []
+    for _g, w, ep_rew, rec in results:
+        if w == 0:
+            wins += 1
+        elif w == 1:
+            losses += 1
+        else:
+            draws += 1
+        rew_sum += ep_rew
+        if rec is not None:
+            replays.append(rec)
+    n = max(1, int(n_games))
+    winrate = (wins + 0.5 * draws) / n
+    se = math.sqrt(max(0.0, winrate * (1.0 - winrate)) / n) if n > 1 else 0.5
+    stats = {"step": step, "wins": wins, "losses": losses, "draws": draws,
+             "games": n, "winrate": round(winrate, 4),
+             "winrate_se": round(se, 4), "mean_reward": round(rew_sum / n, 4)}
+    if replays and replays_dir and step is not None:
+        os.makedirs(replays_dir, exist_ok=True)
+        save_league_replays(replays, os.path.join(replays_dir, f"league_{step}.pkl"))
+    return stats, replays
+
+
 def run_solo(cfg, resume=False, record_replays=True):
     """单人自对弈主循环（无联赛；写 solo_state.json + solo_main.pt）。
 
     流程：镜像固定卡组 → main 训练 vs 冻结副本（每 solo_copy_every 步同步）→
     每 steps_per_eval 评估并写 solo_state.json（dashboard 实时显示）。
     """
-    device = resolve_device(cfg.device)
+    _t_start = time.monotonic()
+    device = resolve_device(cfg.device)   # 首次调用即触发 torch CUDA 上下文初始化
+    _t_cuda = time.monotonic()
     cfg.ensure_dirs()
     cfg.save()
     print(f"[solo] 单人自对弈 配置 '{cfg.name}' -> {cfg.folder()} "
           f"(device={device}, seed={cfg.seed}, 固定卡组 {len(DEFAULT_SOLO_DECK)} 卡镜像, "
           f"冻结副本同步间隔={cfg.solo_copy_every})", flush=True)
+    _t_cfg = time.monotonic()
     torch.manual_seed(cfg.seed)
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)
 
     env = solo_env(cfg, cfg.seed)
+    _t_env = time.monotonic()
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
     # —— 断点续练（--resume）：恢复 step / main 权重 / 优化器 / 历史曲线 ——
@@ -216,12 +381,20 @@ def run_solo(cfg, resume=False, record_replays=True):
                                 deterministic=True)
     env.opponent = opp_side
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
+    _t_policy = time.monotonic()
 
     def eval_and_write(step):
-        stats, _ = eval_solo(env, main, opp, int(cfg.n_eval_games),
-                             int(cfg.max_ep_steps), cfg.seed + step, cfg,
-                             record_replays=record_replays,
-                             replays_dir=cfg.replays_dir(), step=step)
+        if int(cfg.eval_workers) > 1:
+            stats, _ = eval_solo_parallel(env, main, opp, int(cfg.n_eval_games),
+                                          int(cfg.max_ep_steps), cfg.seed + step, cfg,
+                                          n_workers=int(cfg.eval_workers),
+                                          record_replays=record_replays,
+                                          replays_dir=cfg.replays_dir(), step=step)
+        else:
+            stats, _ = eval_solo(env, main, opp, int(cfg.n_eval_games),
+                                 int(cfg.max_ep_steps), cfg.seed + step, cfg,
+                                 record_replays=record_replays,
+                                 replays_dir=cfg.replays_dir(), step=step)
         history.append(stats)
         write_solo_state(cfg.solo_state_path(), cfg, history, step,
                          status="done" if step >= cfg.total_steps else "running")
@@ -238,7 +411,15 @@ def run_solo(cfg, resume=False, record_replays=True):
 
     # 训练开始先跑一次评估（WebUI 立即有真实数据）；resume 时不重跑起始评估
     if cfg.eval_at_start and start_step == 0:
+        _t_eval0 = time.monotonic()
         eval_and_write(0)
+        _t_eval1 = time.monotonic()
+        print(f"[solo] 启动耗时分解: torch+CUDA init={_t_cuda-_t_start:.1f}s | "
+              f"cfg/dirs={_t_cfg-_t_cuda:.1f}s | 环境+卡牌(BattleState/arena/卡池)="
+              f"{_t_env-_t_cfg:.1f}s | 策略/信念/PPO={_t_policy-_t_env:.1f}s | "
+              f"eval@0 {cfg.n_eval_games}局={_t_eval1-_t_eval0:.1f}s "
+              f"(并行worker={cfg.eval_workers}) | "
+              f"合计(A→B)={_t_eval1-_t_cfg:.1f}s", flush=True)
 
     obs, _ = env.reset()
     belief.reset(env.deck1)

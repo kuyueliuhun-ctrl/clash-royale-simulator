@@ -1608,6 +1608,43 @@ def test_eval_stall_early_stop():
     print(f"[PASS] 僵局早停：{dt:.1f}s 判平（对照打满 600 步 ~23s）")
 
 
+def test_eval_solo_parallel():
+    """并行评估：eval_solo_parallel 与串行 eval_solo 同种子结果完全一致（进程池正确性）。"""
+    import time
+    from rl import train_solo
+    from rl.config import TrainConfig
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+
+    cfg = TrainConfig(name="selftest_eval_par", hidden_dim=32, n_eval_games=4,
+                      max_ep_steps=40, seed=7)
+    bd = len(BeliefInference(opp_deck=list(train_solo.DEFAULT_SOLO_DECK),
+                             n_particles=128, seed=0).encode(None, None))
+    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+    opp = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+    train_solo._sync_frozen_copy(main, opp)
+    main.to_device("cpu")
+    opp.to_device("cpu")
+
+    # 串行/并行各用一份全新 env（eval 会原地 shuffle deck 并覆盖 env.deck1，串行在前会污染并行快照）
+    env_s = train_solo.solo_env(cfg, cfg.seed)
+    t0 = time.monotonic()
+    stats_s, _ = train_solo.eval_solo(env_s, main, opp, 4, 40, 7, cfg, record_replays=False)
+    t_serial = time.monotonic() - t0
+
+    env_p = train_solo.solo_env(cfg, cfg.seed)
+    t0 = time.monotonic()
+    stats_p, _ = train_solo.eval_solo_parallel(env_p, main, opp, 4, 40, 7, cfg,
+                                               n_workers=2, record_replays=False)
+    t_par = time.monotonic() - t0
+
+    assert stats_s == stats_p, f"并行/串行统计不一致: {stats_s} vs {stats_p}"
+    assert stats_p["games"] == 4
+    print(f"[PASS] 并行评估：与串行同种子结果一致 {stats_p['wins']}W/{stats_p['losses']}L/"
+          f"{stats_p['draws']}D（串行 {t_serial:.1f}s / 并行2进程 {t_par:.1f}s）")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -1656,6 +1693,7 @@ def main():
     test_stall_probe()
     test_play_pair_env_reuse()
     test_eval_stall_early_stop()
+    test_eval_solo_parallel()
     print("\nALL SELFTESTS PASSED")
 
 

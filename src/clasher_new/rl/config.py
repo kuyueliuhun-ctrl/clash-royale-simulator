@@ -93,6 +93,9 @@ class TrainConfig:
     out_dir: str = "runs"
     # —— solo 自对弈（--mode solo，无联赛；原版 train.py 思路）——
     solo_copy_every: int = 2000   # 冻结副本同步间隔（步）：每 N 步把 main 权重拷给对手
+    # —— 评估并行（eval_solo/play_pair 用进程池绕开 GIL；0 = 串行旧行为）——
+    eval_workers: int = 0         # >1 时评估 spawn N 个进程并行打局（每 worker 独立 env+信念，
+                                  # 主进程汇总；战斗模拟是纯 Python，跨进程才真正吃满多核）
     # —— 奖惩机制（每配置一套，见 DEFAULT_REWARD 注释）——
     reward: dict = field(default_factory=lambda: dict(DEFAULT_REWARD))
 
