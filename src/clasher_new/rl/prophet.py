@@ -35,16 +35,12 @@ import numpy as np
 from card_utils import Card
 from rl.plan_space import PlanToken
 from rl.belief_planner import (
-    PRESSURE_THRESHOLD,
+    PRESSURE_THRESHOLD, KING_ACTIVATE_PRINCESS_HP,
     LANE_SPLIT_X, BRIDGE_Y, OWN_HALF_EDGE, LATE_S,
     SOFT_CONTROL_CARDS, TRADE_SPELL_CARDS, FINISH_SPELL_CARDS, TANK_CARDS,
     PULL_TARGET_CARDS, BACKLINE_CARDS, BACKLINE_HARASSER_CARDS, ACE_CARDS,
     _SPELL_THREAT_KIND,
 )
-
-#: 国王塔激活：公主塔残血判定（lv11 3052 的 ~26%）
-KING_ACTIVATE_PRINCESS_HP = 800.0
-
 
 def _is_tower(name: str) -> bool:
     return "Tower" in name

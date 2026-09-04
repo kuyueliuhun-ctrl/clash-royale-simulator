@@ -17,7 +17,7 @@
 | `env_wrapper.py` | `RLEnv`：整包校验 → 同 tick 批量 `deploy_card` → 统一推进决策帧；掩码指纹含 `player_id`/手牌 |
 | `belief.py` | 信念推断：规则队列锁定（第 4 张起 0/1）+ 早期/异常粒子滤波 + 统计倾向 + 神经 GRU 编码；`opp_played` 结构化多卡契约 |
 | `bayes_filter.py` | 对手 8 卡循环队列信念：O(1) 队列锁定（手牌=卡组−最近4张）+ 前 3 张/异常粒子相；无 40320 全量重建 |
-| `belief_planner.py` | 基于 `b_t` 的可部署规划器（过滤静态塔、region 由 intent 推导） |
+| `belief_planner.py` | 基于 `b_t` 的可部署规划器（过滤静态塔、region 由 intent 推导）；Phase 2 v1 **bp 组 12 意图**（含 protect_backline 反应+信念预判、king_activate），与 ProphetPlanner 同链同序 |
 | `prophet.py` | 特权完整状态启发式先知（训练期教师 30% 帧；消费对手手牌/圣水）；Phase 2 v1 pp 组：punish/anti_spell/save_ace 特权精确版 + king_activate/protect_backline（bp 尚未实现的意图先示范）+ 与 bp 同链标签一致 |
 | `plan_space.py` | `PlanToken` 计划空间与向量化（`PLAN_DIM` 唯一常量源） |
 | `follower.py` | 跟随者策略：CNN+GRU + autoregressive bundle head；`evaluate` 返回真实熵；`save/load_checkpoint` 带元数据 |

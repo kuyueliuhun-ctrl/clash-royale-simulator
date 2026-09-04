@@ -1900,8 +1900,28 @@ def test_bp_new_intent_rules():
     bs = new_battle(); set_hand(bs, ['Lightning', 'Knight', 'Arrows', 'Musketeer'])
     t = bp.plan(bs, belief(8.0))
     assert t.macro_intent == "save_ace" and (t.hold_mask & 1) == 1, (t.macro_intent, t.hold_mask)
+    # S13 protect_backline（反应）：敌方 MiniPekka 贴近我方 Musketeer → 前置保护
+    bs = new_battle(); set_hand(bs, ['Knight', 'MiniPekka', 'Skeletons', 'Musketeer'])
+    place(bs, 0, 'Musketeer', 6, 12)
+    place(bs, 1, 'MiniPekka', 8, 14)
+    t = bp.plan(bs, belief(5.0))
+    assert t.macro_intent == "protect_backline" and t.target_kind == "my_backline", \
+        t.macro_intent
+    # S14 protect_backline（信念预判）：belief 显示对手手牌高概率 MiniPekka + 后排暴露
+    bs = new_battle(); set_hand(bs, ['Knight', 'Musketeer', 'Arrows', 'Fireball'])
+    place(bs, 0, 'Archer', 6, 11)
+    t = bp.plan(bs, belief(5.0, {'MiniPekka': 0.9}))
+    assert t.macro_intent == "protect_backline", t.macro_intent
+    # S15 king_activate：公主塔残血 + Golem 深入中轴 + 手牌低费
+    bs = new_battle(); set_hand(bs, ['Skeletons', 'Knight', 'Arrows', 'Musketeer'])
+    bs.players[0].left_tower_hp = 300.0
+    place(bs, 1, 'Golem', 9, 10)
+    t = bp.plan(bs, belief(5.0))
+    assert t.macro_intent == "king_activate" and t.placement_hint == "king_front", \
+        t.macro_intent
     print("[PASS] BeliefPlanner v1 规则：cycle_small/spell_trade/soft_control/pull/push_commit/"
-          "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace")
+          "setup_wait + 血牛放行 + 压境守卫 + 旧回退 + punish/spell_finish/anti_spell/save_ace"
+          " + protect_backline(反应+信念预判)/king_activate（12 意图，与 pp 同链同序）")
 
 
 def test_pp_new_intent_rules():

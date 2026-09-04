@@ -1,6 +1,7 @@
 # PlanToken 战术意图扩展设计 v1
 
-> 状态：设计定稿，实现进度——结构先行(57 维)✅ / bp 组 10 意图 ✅ / **pp 组 ✅（punish、
+> 状态：设计定稿，实现进度——结构先行(57 维)✅ / **bp 组 12 意图 ✅（10 + protect_backline
+> 反应+信念预判、king_activate，70% 帧示范，与 pp 同链同序）** / **pp 组 ✅（punish、
 > spell_finish、anti_spell、save_ace 特权精确版 + king_activate、protect_backline 先行
 > 示范 + 与 bp 同链标签一致）/ 消融 ✅（plan 注入 vs 置零 + 逐意图采纳探针 region/hold）**；
 > bait 留 backlog；pp 精确层价值经消融探针验证。

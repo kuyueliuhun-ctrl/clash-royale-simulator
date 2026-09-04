@@ -3,10 +3,12 @@
 只用可见观测 + b_t 出可部署计划；规则版 + 后验采样版。
 
 Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
-- **bp 组 10 个新意图**（70% 帧即可示范）：soft_control → spell_trade → pull →
-  punish → push_commit → spell_finish → setup_wait → save_ace → anti_spell → cycle_small；
+- **bp 组 12 个新意图**（70% 帧即可示范）：soft_control → spell_trade → protect_backline →
+  pull → punish → push_commit → spell_finish → setup_wait → king_activate → anti_spell →
+  save_ace → cycle_small（与 ProphetPlanner 同链同序 → 30/70 帧标签一致）；
 - 圣水/手牌按"记忆即明牌"处理：punish 读 belief.elixir_mean，anti_spell/save_ace 读
-  belief.hand_probs（粒子后验/后期确定性；信息不足时用概率阈值保守化）；
+  belief.hand_probs（粒子后验/后期确定性；信息不足时用概率阈值保守化），
+  protect_backline 预判版读 belief.hand_probs 里切后排突进卡；
 - 一帧只输出一个 macro_intent：新意图按紧急度优先，未命中回退旧 8 意图逻辑；
 - 位置类意图只给**策略位 hint**（placement_hint）不给坐标——模型从 grid 自学精确格。
 
@@ -60,6 +62,8 @@ BACKLINE_CARDS = ("Musketeer", "Archer", "Wizard", "IceWizard", "ElectroWizard",
 #: 切后排的威胁单位（近战突进；pp 预判版查对手手牌用）
 BACKLINE_HARASSER_CARDS = ("MiniPekka", "Knight", "Valkyrie", "Bandit", "Prince",
                            "DarkPrince", "RoyalGhost", "Guards")
+#: 国王塔激活：公主塔残血判定（lv11 3052 的 ~26%）
+KING_ACTIVATE_PRINCESS_HP = 800.0
 
 #: 卡名 → opp_spell_threat 枚举（anti_spell 用；大范围/斩杀法术保守归 big_unknown）
 _SPELL_THREAT_KIND = {
@@ -253,6 +257,55 @@ class BeliefPlanner:
                     value_estimate=float(min(cost, 6.0)) * 0.5)
         return None
 
+    def _protect_backline(self, battle, p, threat, belief):
+        """保后排（bp 版）：a) 反应——敌方近战已贴近/正接近我方后排 → 前置单位吸仇恨；
+        b) 信念预判——belief 显示对手手牌高概率有切后排突进（>0.55）且后排暴露。"""
+        backlines = [e for e in battle.entities.values()
+                     if e.player == 0 and _deployable_entity(e)
+                     and e.name in BACKLINE_CARDS
+                     and float(e.position.y) <= OWN_HALF_EDGE + 0.5]
+        target, predictive = None, False
+        for bl in backlines:
+            bx, by = float(bl.position.x), float(bl.position.y)
+            for e in battle.entities.values():
+                if e.player != 1 or not _deployable_entity(e):
+                    continue
+                if e.name in PULL_TARGET_CARDS:
+                    continue  # 血牛交给 _pull
+                if float(e.position.y) > BRIDGE_Y + 1.5:
+                    continue
+                dx = float(e.position.x) - bx
+                dy = float(e.position.y) - by
+                if dx * dx + dy * dy <= 36.0:   # 距离 ≤ 6
+                    target = bl
+                    break
+            if target is not None:
+                break
+        if target is None and backlines and belief is not None \
+                and belief.hand_probs is not None:
+            tu = _closest_threat(battle)
+            if tu is None or not _threat_unit_is_pressing(tu):
+                probs = {c: float(q) for c, q in zip(belief.deck, belief.hand_probs)}
+                if any(probs.get(c, 0.0) > _HAND_PROB_THRESHOLD
+                       for c in BACKLINE_HARASSER_CARDS):
+                    exposed = [e for e in backlines if float(e.position.y) >= 9.0]
+                    if exposed:
+                        target = exposed[0]
+                        predictive = True
+        if target is None:
+            return None
+        for i, card in enumerate(p.cycle[:4]):
+            c = Card(card)
+            if c.type in ("character", "building") and 1.0 <= c.elixir <= 4.0 \
+                    and p.elixir >= c.elixir and card != "Mirror":
+                return PlanToken(
+                    macro_intent="protect_backline",
+                    focus_region=_own_region(float(target.position.x)),
+                    suggested_card=i + 1, target_kind="my_backline",
+                    placement_hint="none", elixir_budget=0.4, risk_profile=0.5,
+                    value_estimate=0.3 if predictive else 0.5)
+        return None
+
     def _pull(self, battle, p, threat, belief):
         """拉扯：敌方血牛已到桥头/过桥 → 放低费单位/建筑改变其路径（距离制胜）。"""
         target = None
@@ -378,6 +431,36 @@ class BeliefPlanner:
                     elixir_budget=0.6, risk_profile=0.4, value_estimate=0.5)
         return None
 
+    def _king_activate(self, battle, p, threat, belief):
+        """激活国王塔（bp 版）：公主塔残血/被破 + 敌方血牛/大单位接近国王塔中轴
+        → 放低费单位拉仇恨位让国王塔参战。"""
+        if min(p.left_tower_hp, p.right_tower_hp) > KING_ACTIVATE_PRINCESS_HP:
+            return None
+        heavy = None
+        for e in battle.entities.values():
+            if e.player != 1 or not _deployable_entity(e):
+                continue
+            c = Card(e.name)
+            if e.name not in TANK_CARDS and not (c.type == "character"
+                                                 and c.elixir >= 5.0):
+                continue
+            x, y = float(e.position.x), float(e.position.y)
+            if 3.5 <= x <= 14.5 and y <= BRIDGE_Y + 2.5:
+                heavy = e
+                break
+        if heavy is None:
+            return None
+        for i, card in enumerate(p.cycle[:4]):
+            c = Card(card)
+            if c.type in ("character", "building") and 1.0 <= c.elixir <= 3.0 \
+                    and p.elixir >= c.elixir and card != "Mirror":
+                return PlanToken(
+                    macro_intent="king_activate",
+                    focus_region="own_center", suggested_card=i + 1,
+                    target_kind="unit", placement_hint="king_front",
+                    elixir_budget=0.35, risk_profile=0.5, value_estimate=0.8)
+        return None
+
     def _save_ace(self, battle, p, threat, belief):
         """藏终结卡：手牌有 ace（大闪/藤蔓/冰冻/火箭）且不是最强一波帧 →
         hold_mask 指名别出 + 留费（suggested 指向普通牌）。"""
@@ -456,11 +539,11 @@ class BeliefPlanner:
         threat, my_pressure = _enemy_pressure(battle)
         p = battle.players[0]
 
-        # —— Phase 2 v1 优先链（紧急度降序）：软控→解牌→拉扯→趁虚→推进跟牌→磨塔→
-        #    蓄力→藏ace→防法术→过牌 ——
-        for detector in (self._soft_control, self._spell_trade, self._pull,
-                         self._punish, self._push_commit, self._spell_finish,
-                         self._setup_wait, self._save_ace, self._anti_spell,
+        # —— Phase 2 v1 优先链（与 ProphetPlanner 同链同序：紧急度降序，30/70 帧标签一致）——
+        for detector in (self._soft_control, self._spell_trade,
+                         self._protect_backline, self._pull, self._punish,
+                         self._push_commit, self._spell_finish, self._setup_wait,
+                         self._king_activate, self._anti_spell, self._save_ace,
                          self._cycle_small):
             tok = detector(battle, p, threat, belief)
             if tok is not None:
