@@ -1426,6 +1426,39 @@ def test_solo_mode_smoke():
     print("[PASS] solo 自对弈：固定卡组镜像 + 冻结副本 + solo_state.json/solo_main.pt 落盘、无联赛状态")
 
 
+def test_human_play_session():
+    """人机对战：随机动作驱动 + EpisodeReplay/BC 样本落盘 + 导出可喂信念/BC 训练。"""
+    import tempfile
+    import pickle
+    from rl import human_play
+    from rl.config import TrainConfig
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    from rl.replay import EpisodeReplay
+
+    d = tempfile.mkdtemp()
+    cfg = TrainConfig(name="selftest_human", hidden_dim=32, max_ep_steps=30, out_dir=d)
+    deck = human_play.DEFAULT_PLAY_DECK
+    belief_dim = len(BeliefInference(opp_deck=deck, n_particles=128, seed=0).encode(None, None))
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=belief_dim)
+    meta = human_play.drive_games(pol, 1, seed=0, max_steps=12, out_dir=d, cfg=cfg)
+    assert meta[0]["steps"] > 0 and meta[0]["bc"] > 0, "人机对战应产生步数与 BC 样本"
+    files = os.listdir(d)
+    assert any(f.startswith("episode_") for f in files), "应落盘 EpisodeReplay"
+    assert any(f.startswith("bc_") for f in files), "应落盘 BC 样本"
+    bel, bc = human_play.export_data(d, os.path.join(d, "belief.pkl"), os.path.join(d, "bc.pkl"))
+    replays = pickle.load(open(bel, "rb"))
+    assert len(replays) == 1 and "steps" in replays[0], "信念回放可导出"
+    samples = pickle.load(open(bc, "rb"))
+    assert len(samples) == meta[0]["bc"], "BC 样本合并数一致"
+    ep = EpisodeReplay()
+    ep.steps = replays[0]["steps"]
+    ds = ep.to_belief_dataset()
+    assert ds, "EpisodeReplay → 信念监督样本非空（含 hidden 特权标签）"
+    print("[PASS] 人机对战：随机驱动 + EpisodeReplay/BC 落盘 + 导出（信念/BC 均可训练）")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -1468,6 +1501,7 @@ def main():
     test_ablation_recorded()
     test_flow_sweep_smoke()
     test_solo_mode_smoke()
+    test_human_play_session()
     print("\nALL SELFTESTS PASSED")
 
 

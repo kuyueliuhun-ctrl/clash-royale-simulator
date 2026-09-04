@@ -96,6 +96,7 @@ python rl/run_league.py --mode run --no-eval-start   # 关掉"启动先评估一
 python rl/dashboard.py --state runs/aggressive/league_state.json --port 8090
 python rl/dashboard.py --state runs/aggressive/league_state.json --sweep runs/economy --port 8090  # 同时显示 flow-sweep 进度/曲线
 python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090   # solo 自对弈：胜率曲线±SE + 训练进度（无联赛）
+python rl/dashboard.py --play runs/solo --port 8090       # 人机对战：浏览器里打训练模型，对局数据实时落盘（EpisodeReplay + BC）
 python rl/dashboard.py --demo --port 8090                       # 无状态时生成演示数据（Elo+sweep+solo+回放）直接看 UI
 python rl/dashboard.py --state runs/aggressive/league_state.json --replays runs/aggressive/replays   # 手动指定回放目录
 #   --sweep 指向 runs/<name>/（自动扫 flow_sweep_stream / flow_sweep_games5）或单个策略目录；
@@ -127,6 +128,19 @@ python rl/run_league.py --mode solo --config economy --solo-copy-every 2000   # 
 #   产物：runs/<name>/solo_state.json（胜率±SE/mean_reward/进度，dashboard --solo 实时读）、
 #   solo_main.pt、replays/league_<step>.pkl（评估回放，复用回放面板）
 #   dashboard：python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090
+
+# 7g) 人机对战 + 人类数据采集（人在浏览器打训练模型，对局转训练数据）
+#     人 = player-0（蓝），对手 = FollowerPolicy（player-1，deterministic）；
+#     固定 8 卡镜像。每步记录两类数据并落盘 --play-out：
+#       episode_<ts>.pkl  → EpisodeReplay（含 hidden 特权标签）→ train_belief
+#       bc_<ts>.pkl       → (obs,bundle,belief,plan,masks) → 模仿学习/行为克隆
+python rl/dashboard.py --play runs/solo --play-out runs/solo/human_data --port 8090   # 浏览器对战+采集
+#   导出与训练：
+python rl/human_play.py --export --data-dir runs/solo/human_data --out-belief belief.pkl --out-bc bc.pkl
+python rl/train_belief.py --replays-path belief.pkl --out belief_human.pt            # 信念监督（人类数据）
+python rl/human_play.py --bc-train --data-dir runs/solo/human_data --out follower_human.pt  # 模仿学习预训练
+python rl/run_league.py --mode run --main-init follower_human.pt --config economy    # 用人类 BC 初始化后 PPO
+#   无 UI 冒烟：python rl/human_play.py --policy runs/solo/solo_main.pt --drive-games 3
 
 # 9) 评测（含消融 / 信念协议）
 python rl/evaluate.py --policy follower.pt --n-games 50

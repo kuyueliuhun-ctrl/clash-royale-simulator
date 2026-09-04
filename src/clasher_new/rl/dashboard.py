@@ -1,15 +1,20 @@
-"""训练网页 UI：各模型 Elo-训练次数 曲线仪表盘 + flow-sweep 进度/曲线 + 最近训练回放/播放器。
+"""训练网页 UI：各模型 Elo-训练次数 曲线仪表盘 + flow-sweep 进度/曲线 + solo 自对弈 + 人机对战 + 回放。
 
 - 读取 ``run_league --mode run`` 写出的联赛状态 JSON（含 elo_history）；
 - ``--sweep`` 指向 flow-sweep 产物（runs/<name>/ 或单个 flow_sweep_<strategy> 目录），
   每 3 秒读取逐轮增量写的 ``summary.json``（status/run_current/eta_s）→ 进度条 +
   main 轮内估计 ±1σ 曲线（flow_sweep_stream / flow_sweep_games5 两个策略并排显示）；
+- ``--solo`` 指向 solo 自对弈状态（solo_state.json）→ 胜率曲线 ±SE + 训练进度；
+- ``--play`` 指向 FollowerPolicy checkpoint 或 runs/<name> 目录 → **人机对战页面**：
+  人在浏览器点手牌 + 点格子出牌（player-0），对手 = 训练模型（player-1）；每步记录
+  EpisodeReplay（含 hidden）与 BC 样本，落盘 ``--play-out`` 供 train_belief / BC 训练；
 - 扫描 ``<state 同目录>/replays/league_<step>.pkl`` 联赛录像，列出最近回放；
 - 浏览器内 Canvas 播放器回放单局（纯前端自绘，无外部 CDN 依赖，离线可用）；
-- ``/api/state`` 每 3 秒轮询刷新，``/api/sweep`` 同频刷新，``/api/replays`` 每 5 秒刷新。
+- ``/api/state`` 每 3 秒轮询刷新，``/api/sweep`` / ``/api/solo`` 同频，``/api/replays`` 每 5 秒。
 
 用法：
     python rl/dashboard.py --state league_state.json --sweep runs/economy --port 8090
+    python rl/dashboard.py --play runs/solo --port 8090      # 人机对战 + 数据采集
 打开 http://127.0.0.1:8090 查看。仓库根目录另有 scripts/rl/dashboard.py 包装。
 """
 
@@ -416,6 +421,14 @@ _HTML = r"""<!DOCTYPE html>
   .solo-layout canvas { height:300px; }
   .solo-layout .sub { font-size:12px; }
   #soloDeck { font-family:ui-monospace,Consolas,monospace; color:#cbd5e1; }
+  /* —— 人机对战 —— */
+  .hand-row { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
+  .hand-card { padding:10px 14px; background:#0f172a; border:1px solid #334155;
+               border-radius:8px; cursor:pointer; font-size:12px; color:#e2e8f0;
+               user-select:none; }
+  .hand-card:hover { border-color:#64748b; }
+  .hand-card.sel { border-color:#60a5fa; background:#1e3a8a; }
+  #playArena { cursor:crosshair; }
   /* —— 回放列表 / 播放器 —— */
   .rep-list { display:flex; flex-direction:column; gap:6px; }
   .rep-row { display:flex; justify-content:space-between; align-items:center; gap:12px;
@@ -494,6 +507,27 @@ _HTML = r"""<!DOCTYPE html>
         <thead><tr><th>步数</th><th>胜/负/平</th><th>胜率 ±SE</th><th>mean_reward</th></tr></thead>
         <tbody id="soloTable"></tbody>
       </table>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="playCard" style="display:none">
+  <h2>人机对战（你 = 蓝方 p0，对手 = 训练模型）
+    <span class="sub" id="playSub"></span>
+  </h2>
+  <div class="player-grid">
+    <div class="arena-wrap">
+      <canvas id="playArena" width="450" height="800"></canvas>
+    </div>
+    <div>
+      <div id="playInfo" class="info"></div>
+      <div id="playHand" class="hand-row"></div>
+      <div id="playLegal" class="sub" style="margin:4px 0 10px"></div>
+      <div class="controls">
+        <button class="btn" id="btnPlayNew">⏹ 结束本局并保存</button>
+        <span id="playCounter" class="sub"></span>
+      </div>
+      <p class="sub" style="margin-top:14px">每出一个动作推进 0.5s 战斗时间；对局数据（含 hidden 特权标签）实时落盘为 EpisodeReplay + BC 样本，可喂 train_belief / train_bc_from_human。</p>
     </div>
   </div>
 </section>
@@ -618,6 +652,7 @@ async function refresh(){
   render();
   renderSweep();
   renderSolo();
+  refreshPlay();
 }
 
 function renderLegend(){
@@ -970,6 +1005,89 @@ function drawSoloChart(){
   ctx.fillText("main vs 冻结副本 胜率 ±1σ（固定卡组镜像，无联赛）", padL + 6, 12);
 }
 
+/* ================= 人机对战：实时对局 + 数据采集 ================= */
+
+let play = {ok:false, frame:null, hand:[], legal:{}, game_over:false, winner:null,
+            reward_total:0, steps:0, max_steps:600, elixir:0};
+let playSlot = null;
+let playBusy = false;
+
+async function refreshPlay(){
+  try{
+    const r = await fetch("/api/play/state?_t=" + Date.now(), {cache:"no-store"});
+    const d = await r.json();
+    if (d.ok){ play = d; renderPlay(); }
+    else {
+      play.ok = false;
+      document.getElementById("playCard").style.display = "none";
+    }
+  }catch(e){ play.ok = false; }
+}
+
+function renderPlay(){
+  const card = document.getElementById("playCard");
+  if (!play.ok){ card.style.display = "none"; return; }
+  card.style.display = "";
+  drawInterpOn(document.getElementById("playArena"), play.frame, play.frame, 1);
+  const w = play.game_over
+    ? (play.winner === 0 ? "你赢了 🎉" : play.winner === 1 ? "你输了 😔" : "平局")
+    : "对局中…";
+  document.getElementById("playInfo").innerHTML =
+    `<div><b>${w}</b> · 步数 ${play.steps}/${play.max_steps} · 累计奖励 ` +
+    `<b style="color:${play.reward_total >= 0 ? "#22c55e" : "#ef4444"}">` +
+    `${play.reward_total >= 0 ? "+" : ""}${play.reward_total}</b></div>` +
+    `<div class="kv"><span>我方圣水</span><b>${Number(play.elixir).toFixed(1)}</b></div>` +
+    `<div class="kv"><span>规则</span><b>先点手牌选卡，再点场地格子出牌；每步推进 0.5s 战斗</b></div>`;
+  document.getElementById("playHand").innerHTML = play.hand.map((c, i) => {
+    const legal = play.legal[i + 1];
+    const disabled = !legal || play.game_over;
+    return `<div class="hand-card ${playSlot === i + 1 ? "sel" : ""}" ` +
+      `style="${disabled ? "opacity:.4;cursor:default" : ""}" ` +
+      `onclick="${disabled ? "" : "selectPlaySlot(" + (i + 1) + ")"}">${c}</div>`;
+  }).join("") || '<span class="sub">（无手牌）</span>';
+  document.getElementById("playLegal").textContent = play.game_over
+    ? "本局结束，点「结束本局并保存」后开新局"
+    : (playSlot ? "已选 " + (play.hand[playSlot - 1] || "") + " · 点场地格子出牌"
+                : "点击手牌选择要出的卡");
+  document.getElementById("playSub").textContent = "实时采集（EpisodeReplay + BC 样本）";
+}
+
+function selectPlaySlot(s){
+  if (play.game_over) return;
+  playSlot = (playSlot === s) ? null : s;
+  renderPlay();
+}
+
+document.getElementById("playArena").addEventListener("click", async (e) => {
+  if (!play.ok || play.game_over || playBusy || !playSlot) return;
+  const cv = e.currentTarget;
+  const rect = cv.getBoundingClientRect();
+  const scale = Math.min(cv.width / 18, cv.height / 32);
+  const ox = (cv.width - 18 * scale) / 2, oy = (cv.height - 32 * scale) / 2;
+  const mx = (e.clientX - rect.left) * (cv.width / rect.width);
+  const my = (e.clientY - rect.top) * (cv.height / rect.height);
+  const x = Math.floor((mx - ox) / scale), y = Math.floor((my - oy) / scale);
+  if (x < 0 || x >= 18 || y < 0 || y >= 32) return;
+  playBusy = true;
+  try{
+    const r = await fetch("/api/play/action?_t=" + Date.now(), {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({slot: playSlot, x: x, y: y})
+    });
+    const d = await r.json();
+    if (!d.ok){ alert(d.error || "非法动作"); }
+    else { play = d; playSlot = null; renderPlay(); }
+  }catch(err){ alert("提交失败：" + err); }
+  playBusy = false;
+});
+
+document.getElementById("btnPlayNew").onclick = async () => {
+  const r = await fetch("/api/play/new?_t=" + Date.now(), {method: "POST"});
+  const d = await r.json();
+  if (d.ok){ play = d; playSlot = null; renderPlay(); }
+  else alert(d.error || "开新局失败");
+};
+
 /* ================= 最近回放：列表 / 对局 / 播放器 ================= */
 
 let replays = [];
@@ -1250,7 +1368,11 @@ function interpEntities(fromEnts, toEnts, p){
 }
 
 function drawInterp(from, to, p){
-  const canvas = document.getElementById("arena");
+  drawInterpOn(document.getElementById("arena"), from, to, p);
+}
+
+function drawInterpOn(canvas, from, to, p){
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -1412,6 +1534,43 @@ class Handler(BaseHTTPRequestHandler):
     replays_dir = "replays"
     sweep_root = None   # flow-sweep 根目录（--sweep；可为 runs/<name>/ 或某策略目录）
     solo_path = None    # solo 状态文件（--solo；单人自对弈，无联赛）
+    play_policy_path = None   # 人机对战：FollowerPolicy checkpoint（--play）
+    play_out_dir = None       # 人对局数据落盘目录（--play-out）
+    play_cfg = None
+    play_seed = 0
+    play_games_saved = 0
+    play_session = None
+    play_error = None
+
+    def _ensure_play(self):
+        """懒加载人机对战 session（首次 /api/play/* 时初始化）。"""
+        if Handler.play_error:
+            return None
+        if Handler.play_session is None and Handler.play_policy_path:
+            try:
+                from rl.human_play import HumanPlaySession, load_policy, DEFAULT_PLAY_DECK
+                from rl.config import TrainConfig
+                cfg = Handler.play_cfg or TrainConfig.resolve("standard")
+                pol = load_policy(Handler.play_policy_path, hidden_dim=cfg.hidden_dim)
+                Handler.play_session = HumanPlaySession(
+                    pol, cfg=cfg, deck=DEFAULT_PLAY_DECK, seed=Handler.play_seed,
+                    max_steps=600, out_dir=Handler.play_out_dir)
+            except Exception as e:   # noqa: BLE001 —— 初始化失败给出可见错误
+                Handler.play_error = f"{type(e).__name__}: {e}"
+                return None
+        return Handler.play_session
+
+    def _read_body(self):
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if length <= 0:
+            return {}
+        try:
+            return json.loads(self.rfile.read(length).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return {}
 
     def _send(self, code, body, ctype):
         self.send_response(code)
@@ -1438,6 +1597,17 @@ class Handler(BaseHTTPRequestHandler):
         elif route == "/api/solo":
             self._send(200, json.dumps(build_solo_payload(self.solo_path)).encode("utf-8"),
                        "application/json; charset=utf-8")
+        elif route == "/api/play/state":
+            sess = self._ensure_play()
+            if Handler.play_error:
+                self._send(200, json.dumps({"ok": False, "error": Handler.play_error}).encode("utf-8"),
+                           "application/json; charset=utf-8")
+            elif sess is None:
+                self._send(200, json.dumps({"ok": False, "error": "未指定 --play 策略"}).encode("utf-8"),
+                           "application/json; charset=utf-8")
+            else:
+                self._send(200, json.dumps(sess.state()).encode("utf-8"),
+                           "application/json; charset=utf-8")
         elif route == "/api/replays":
             self._send(200, json.dumps(build_replays_payload(self.replays_dir)).encode("utf-8"),
                        "application/json; charset=utf-8")
@@ -1453,6 +1623,44 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         sys.stderr.write("[dashboard] %s\n" % (fmt % args))
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        route = parsed.path
+        if route == "/api/play/action":
+            sess = self._ensure_play()
+            if Handler.play_error:
+                self._send(200, json.dumps({"ok": False, "error": Handler.play_error}).encode("utf-8"),
+                           "application/json; charset=utf-8")
+                return
+            if sess is None:
+                self._send(200, json.dumps({"ok": False, "error": "未指定 --play 策略"}).encode("utf-8"),
+                           "application/json; charset=utf-8")
+                return
+            body = self._read_body()
+            try:
+                st = sess.act(int(body.get("slot")), int(body.get("x")), int(body.get("y")))
+            except (TypeError, ValueError):
+                st = {"ok": False, "error": "参数需为 slot,x,y 整数"}
+            self._send(200, json.dumps(st).encode("utf-8"), "application/json; charset=utf-8")
+        elif route == "/api/play/new":
+            sess = self._ensure_play()
+            if sess is None:
+                self._send(200, json.dumps({"ok": False, "error": "未指定 --play 策略"}).encode("utf-8"),
+                           "application/json; charset=utf-8")
+                return
+            from rl.human_play import HumanPlaySession
+            sess.save(out_dir=Handler.play_out_dir)   # 结束并保存上一局数据
+            Handler.play_games_saved += 1
+            Handler.play_seed += 1
+            Handler.play_session = HumanPlaySession(
+                sess.policy, cfg=Handler.play_cfg, deck=sess.deck,
+                seed=Handler.play_seed, max_steps=sess.max_steps,
+                out_dir=Handler.play_out_dir)
+            self._send(200, json.dumps(Handler.play_session.state()).encode("utf-8"),
+                       "application/json; charset=utf-8")
+        else:
+            self._send(404, b"not found", "text/plain; charset=utf-8")
 
 
 def make_demo_state(path, n_points=10, seed=0):
@@ -1594,6 +1802,14 @@ def main():
     ap.add_argument("--solo", type=str, default=None,
                     help="solo 自对弈状态文件（--mode solo 写出的 solo_state.json，或含它的目录；"
                          "无联赛机制，显示胜率曲线/进度）")
+    ap.add_argument("--play", type=str, default=None,
+                    help="人机对战：FollowerPolicy checkpoint（.pt）或 runs/<name> 目录"
+                         "（自动找 solo_main.pt / main_final.pt / flow_main.pt）；人在浏览器打模型，"
+                         "对局数据落盘 --play-out（EpisodeReplay + BC 样本）")
+    ap.add_argument("--play-out", type=str, default=None,
+                    help="人机对战数据落盘目录（缺省 = 策略所在目录/human_data）")
+    ap.add_argument("--play-config", type=str, default=None,
+                    help="人机对战奖励配置（缺省 standard）")
     ap.add_argument("--replays", type=str, default=None,
                     help="回放目录（缺省 = 状态文件同目录/replays）")
     ap.add_argument("--host", type=str, default="127.0.0.1")
@@ -1628,12 +1844,29 @@ def main():
     Handler.replays_dir = replays_abs
     Handler.sweep_root = sweep_abs
     Handler.solo_path = solo_abs
+    # 人机对战：--play 指向 checkpoint 或 runs/<name> 目录（自动挑主模型）
+    if args.play:
+        p = os.path.abspath(args.play)
+        if os.path.isdir(p):
+            for cand in ("solo_main.pt", "main_final.pt", "flow_main.pt"):
+                if os.path.isfile(os.path.join(p, cand)):
+                    p = os.path.join(p, cand)
+                    break
+        Handler.play_policy_path = p
+        Handler.play_out_dir = args.play_out and os.path.abspath(args.play_out) \
+            or os.path.join(os.path.dirname(p) or ".", "human_data")
+        if args.play_config:
+            from rl.config import TrainConfig
+            Handler.play_cfg = TrainConfig.resolve(args.play_config)
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path})")
     if Handler.sweep_root:
         print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}")
     if Handler.solo_path:
         print(f"[dashboard] solo 状态: {Handler.solo_path}")
+    if Handler.play_policy_path:
+        print(f"[dashboard] 人机对战策略: {Handler.play_policy_path}"
+              f"（数据 -> {Handler.play_out_dir}）")
     print(f"[dashboard] 回放目录: {Handler.replays_dir}  Ctrl+C 退出")
     try:
         srv.serve_forever()
