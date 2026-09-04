@@ -72,12 +72,14 @@ def load_state(path):
 
 
 def build_payload(path):
+    # 错误时也返回完整结构（空 agents/elo_history 等），前端渲染链不依赖 ok 分支
+    empty = {"agents": [], "elo_history": {}, "round_stats": [], "total_steps": 0}
     if path is None:
         return {"ok": False, "error": "未指定 --state（联赛面板关闭；可看 --solo/--sweep/--play 面板）",
-                "state_path": None}
+                "state_path": None, **empty}
     st = load_state(path)
     if st is None:
-        return {"ok": False, "error": f"状态文件不存在: {path}", "state_path": path}
+        return {"ok": False, "error": f"状态文件不存在: {path}", "state_path": path, **empty}
     agents = []
     for a in st.get("agents", []):
         aid = a["agent_id"]
@@ -666,7 +668,7 @@ async function refresh(){
 
 function renderLegend(){
   const el = document.getElementById("legend");
-  el.innerHTML = payload.agents.map(a =>
+  el.innerHTML = (payload.agents || []).map(a =>
     `<span><span class="dot" style="background:${colorOf(a.id)}"></span>${a.label}</span>`
   ).join("");
 }
@@ -677,7 +679,7 @@ function renderTable(){
   const rPrev = rs.length >= 2 ? rs[rs.length-2] : null;
   const rCur = rs.length >= 1 ? rs[rs.length-1] : null;
   const seOf = (rt, aid) => rt && rt.est && rt.est[aid] ? rt.est[aid][1] : null;
-  const rows = payload.agents.map(a => {
+  const rows = (payload.agents || []).map(a => {
     const hist = (payload.elo_history[a.id] || []);
     let delta = "—", sigma = "—";
     if (hist.length >= 2) {
@@ -821,7 +823,7 @@ function render(){
 function renderSweep(){
   const card = document.getElementById("sweepCard");
   const body = document.getElementById("sweepBody");
-  if (!sweep.ok || !sweep.strategies.length){
+  if (!sweep.ok || !(sweep.strategies || []).length){
     card.style.display = "none";
     return;
   }
