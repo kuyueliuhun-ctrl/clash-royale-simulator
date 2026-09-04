@@ -26,6 +26,9 @@ rem ---- paths ----
 set "ROOT=%~dp0"
 set "SRC=%ROOT%src\clasher_new"
 set "VENV=%ROOT%.venv"
+rem  Anchor cwd to the repo root regardless of where the bat is launched
+rem  (double-click / shortcut / from another folder).
+cd /d "%ROOT%"
 
 rem ---- defaults ----
 set "MODE=solo"
@@ -131,6 +134,8 @@ echo   --setup                create .venv and install CPU deps
 echo   --setup-cuda           create .venv and install CUDA 13 (cu130) torch
 echo   --selftest             run selftest first
 echo   --dry-run              print commands only, do not start anything
+echo Env:
+echo   CR_RL_PYTHON           force a specific python.exe (skips .venv auto-pick)
 exit /b 0
 
 :help_done
@@ -145,9 +150,10 @@ if /i not "%MODE%"=="solo" if /i not "%MODE%"=="run" if /i not "%MODE%"=="flow" 
   exit /b 1
 )
 
-rem ---- locate python ----
+rem ---- locate python: CR_RL_PYTHON env > root .venv > PATH python ----
 set "PY="
-if exist "%VENV%\Scripts\python.exe" set "PY=%VENV%\Scripts\python.exe"
+if defined CR_RL_PYTHON set "PY=%CR_RL_PYTHON%"
+if not defined PY if exist "%VENV%\Scripts\python.exe" set "PY=%VENV%\Scripts\python.exe"
 if not defined PY if exist "%VENV%\bin\python.exe" set "PY=%VENV%\bin\python.exe"
 if not defined PY set "PY=python"
 
@@ -181,6 +187,10 @@ echo [info] Python : %PY%
 echo [info] Mode   : %MODE%
 echo [info] Config : %CONFIG%  (folder: %OUT_DIR%\%CONFIG%)
 
+rem ---- probe critical packages; fall back to PATH python if venv is incomplete ----
+call :probe_python
+if errorlevel 1 goto probe_failed
+
 rem ---- optional: selftest ----
 if "%DO_SELFTEST%"=="1" goto run_selftest
 goto selftest_done
@@ -193,6 +203,12 @@ goto selftest_done
 
 :selftest_failed
 echo [selftest] FAILED. Training not started.
+pause
+exit /b 1
+
+:probe_failed
+echo [error] No usable Python found. Run "start_rl.bat --setup",
+echo         or set CR_RL_PYTHON to your working interpreter.
 pause
 exit /b 1
 
@@ -230,7 +246,7 @@ rem ---- dry-run: print commands only, never start ----
 if "%DRY_RUN%"=="1" goto dry_run
 
 rem ---- training window ----
-start "CR-RL Training [%MODE%]" cmd /k ""%PY%" "%ROOT%scripts\rl\run_league.py" %TRAIN_ARGS%"
+start "CR-RL Training [%MODE%]" /d "%ROOT%" cmd /k ""%PY%" "%ROOT%scripts\rl\run_league.py" %TRAIN_ARGS%"
 
 rem ---- dashboard window (optional) ----
 if "%WITH_DASHBOARD%"=="1" goto start_dashboard
@@ -238,7 +254,7 @@ goto started
 
 :start_dashboard
 echo [info] Dashboard: http://127.0.0.1:%PORT%/
-start "CR-RL Dashboard [%MODE%]" cmd /k ""%PY%" "%ROOT%scripts\rl\dashboard.py" %DASH_ARGS% --port %PORT%"
+start "CR-RL Dashboard [%MODE%]" /d "%ROOT%" cmd /k ""%PY%" "%ROOT%scripts\rl\dashboard.py" %DASH_ARGS% --port %PORT%"
 timeout /t 2 /nobreak >nul
 start "" "http://127.0.0.1:%PORT%/"
 goto started
@@ -254,6 +270,23 @@ if "%WITH_DASHBOARD%"=="1" (
 echo [dry-run] nothing started.
 pause
 exit /b 0
+
+:probe_python
+"%PY%" -c "import sys; import torch, numpy, gymnasium" >nul 2>nul
+if not errorlevel 1 exit /b 0
+if defined PY_FALLBACK (
+  echo [error] Both %PY% and PATH python are missing critical packages.
+  exit /b 1
+)
+echo [info] %PY% is missing critical packages - trying PATH python ...
+set "PY_FALLBACK=1"
+set "PY_SAVED=%PY%"
+set "PY=python"
+"%PY%" -c "import sys; import torch, numpy, gymnasium" >nul 2>nul
+if not errorlevel 1 exit /b 0
+set "PY=%PY_SAVED%"
+echo [error] PATH python is also missing critical packages (torch/numpy/gymnasium).
+exit /b 1
 
 :started
 echo [info] Training started in a new window. Close that window to stop.
