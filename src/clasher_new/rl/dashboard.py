@@ -289,6 +289,7 @@ def load_replay_payload(replays_dir, filename, game_idx=None):
             out.append({
                 "index": gi,
                 "pair": list((g.get("meta") or {}).get("pair", [])),
+                "steps": list((g.get("meta") or {}).get("steps", [])),
                 "side0": (g.get("meta") or {}).get("side0"),
                 "winner": g.get("winner"),
                 "n_frames": len(frames),
@@ -1120,6 +1121,41 @@ function fmtSize(n){
   return n + " B";
 }
 
+/* —— 对阵标签：明确写出双方模型各自的训练步数 ——
+   冻结副本 = main 的早期权重快照，因此统一显示为 main@步数：
+   - 新录像：meta.steps 由评估端写入精确步数（main 当前步 / 副本同步步）；
+   - 旧录像回退：main 用录像文件步数；frozen_copy 用 solo.copy_every 的最近同步边界近似。
+*/
+function replayStepVal(v){
+  return (v === null || v === undefined || v === "") ? null : Number(v);
+}
+function replayModelName(id){
+  return id === "frozen_copy" ? "main" : id;
+}
+function replayFileStep(file){
+  const m = /league_(\d+)\.pkl$/.exec(file || "");
+  return m ? parseInt(m[1], 10) : null;
+}
+function replayOldFrozenStep(fileStep){
+  const C = (solo && solo.ok && solo.copy_every) ? Number(solo.copy_every) : 0;
+  if (!C || fileStep === null) return null;
+  return fileStep - (fileStep % C);   // 最近一次冻结副本同步边界（含当前边界）
+}
+function matchupText(pair, steps, file){
+  const ids = Array.isArray(pair) ? pair : [];
+  if (!ids.length) return "?";
+  const st = Array.isArray(steps) ? steps : [];
+  const fileStep = replayFileStep(file);
+  const parts = ids.map((id, i) => {
+    const name = replayModelName(id);
+    let v = replayStepVal(st[i]);
+    if (v === null && id === "frozen_copy") v = replayOldFrozenStep(fileStep);
+    if (v === null && id === "main" && fileStep !== null) v = fileStep;
+    return v === null ? name : name + "@" + v.toLocaleString();
+  });
+  return parts.join(" vs ");
+}
+
 async function refreshReplays(){
   try{
     const r = await fetch("/api/replays?_t=" + Date.now(), {cache:"no-store"});
@@ -1170,7 +1206,7 @@ function renderGamesPanel(){
     `${curReplay.games.length} 局 · 单击“播放”回放`;
   const body = document.getElementById("gamesBody");
   body.innerHTML = curReplay.games.map(g => {
-    const pair = (g.pair || []).join(" vs ") || "?";
+    const pair = matchupText(g.pair, g.steps, curReplay.file);
     const w = g.winner === 0 ? '<span class="badge w0">先手胜</span>'
             : g.winner === 1 ? '<span class="badge w1">后手胜</span>'
             : '<span class="badge wd">平局</span>';
@@ -1311,7 +1347,7 @@ function renderPlayerInfo(){
   const fr = frameAt(curFrame);
   const n = curGame.frames.length;
   const meta = curGame.meta || {};
-  const pair = (meta.pair || []).join(" vs ") || "?";
+  const pair = matchupText(meta.pair, meta.steps, curGame.file);
   const winner = curGame.winner;
   const w = winner === 0 ? "先手胜" : winner === 1 ? "后手胜" : "平局";
   const bundle = (fr.bundle || []).map(b => {

@@ -87,10 +87,12 @@ def write_solo_state(path, cfg, history, step, status="running",
 
 
 def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
-              record_replays=False, replays_dir=None, step=None):
+              record_replays=False, replays_dir=None, step=None, frozen_step=None):
     """main（deterministic）vs 冻结副本（deterministic）打 n_games。
 
     返回 (stats, replays)。replays 非空时以 league_<step>.pkl 落盘（复用 dashboard 回放）。
+    step: main 当前训练步（录像文件步数）；frozen_step: 冻结副本最后同步时的训练步，
+    两者一并写入每局 meta.steps，dashboard 对阵列显示 "main@<step> vs main@<frozen_step>"。
     """
     bp = BeliefPlanner()
     wins = losses = draws = 0
@@ -106,7 +108,8 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
         obs, _ = env.reset(seed=seed + 2000 + g)
         belief.reset(env.deck1)
         hidden = None
-        rec = LeagueGameRecorder("main", "frozen_copy", "main", max_steps) if record_replays else None
+        rec = LeagueGameRecorder("main", "frozen_copy", "main", max_steps,
+                                 steps=(step, frozen_step)) if record_replays else None
         done = False
         steps = 0
         ep_rew = 0.0
@@ -218,7 +221,9 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
                 continue
             env.opponent = opp_side
             hidden = None
-            rec = LeagueGameRecorder("main", "frozen_copy", "main", max_steps) if record else None
+            rec = LeagueGameRecorder("main", "frozen_copy", "main", max_steps,
+                                     steps=(env_kwargs.get("eval_step"),
+                                            env_kwargs.get("frozen_step"))) if record else None
             done = False
             steps = 0
             ep_rew = 0.0
@@ -259,7 +264,8 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
 
 
 def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
-                       n_workers=8, record_replays=False, replays_dir=None, step=None):
+                       n_workers=8, record_replays=False, replays_dir=None, step=None,
+                       frozen_step=None):
     """eval_solo 的进程池并行版：n_games 局均分到 n_workers 个 spawn 进程打。
 
     串行 16 局≈126s（主进程单核跑纯 Python 模拟）；16 进程理论 ≈ 126/16 + spawn/import
@@ -275,7 +281,8 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
     chunks = [games[i::n_workers] for i in range(n_workers)]
     env_kwargs = {"reward_weights": reward_to_env(cfg), "card_level": cfg.card_level,
                   "deck0": list(env.deck0), "deck1": list(env.deck1),
-                  "hidden_dim": int(cfg.hidden_dim), "n_total": int(n_games)}
+                  "hidden_dim": int(cfg.hidden_dim), "n_total": int(n_games),
+                  "eval_step": step, "frozen_step": frozen_step}
     procs = []
     for wid, chunk in enumerate(chunks):
         if not chunk:
@@ -376,6 +383,7 @@ def run_solo(cfg, resume=False, record_replays=True):
     opp = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM, belief_dim=belief_dim)
     opp.to_device(device)
     _sync_frozen_copy(main, opp)   # 开局副本 = main（resume 后即断点权重）
+    frozen_step = start_step       # 冻结副本当前所在训练步（录像 meta.steps 用）
     ppo = PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                      clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
                      max_grad_norm=cfg.max_grad_norm)
@@ -402,12 +410,14 @@ def run_solo(cfg, resume=False, record_replays=True):
                                           int(cfg.max_ep_steps), cfg.seed + step, cfg,
                                           n_workers=int(cfg.eval_workers),
                                           record_replays=record_replays,
-                                          replays_dir=cfg.replays_dir(), step=step)
+                                          replays_dir=cfg.replays_dir(), step=step,
+                                          frozen_step=frozen_step)
         else:
             stats, _ = eval_solo(env, main, opp, int(cfg.n_eval_games),
                                  int(cfg.max_ep_steps), cfg.seed + step, cfg,
                                  record_replays=record_replays,
-                                 replays_dir=cfg.replays_dir(), step=step)
+                                 replays_dir=cfg.replays_dir(), step=step,
+                                 frozen_step=frozen_step)
         history.append(stats)
         write_solo_state(cfg.solo_state_path(), cfg, history, step,
                          status="done" if step >= cfg.total_steps else "running")
@@ -495,6 +505,7 @@ def run_solo(cfg, resume=False, record_replays=True):
         # 周期同步冻结副本（原版 WeightsCopyingCallback 思路）
         if cfg.solo_copy_every and step % cfg.solo_copy_every == 0:
             _sync_frozen_copy(main, opp)
+            frozen_step = step
             print(f"[solo] 冻结副本已同步 @step {step}", flush=True)
 
         if cfg.steps_per_eval and step % cfg.steps_per_eval == 0:

@@ -105,8 +105,12 @@ def resolve_device(device: str) -> str:
 class LeagueGameRecorder:
     """逐局录像采集器：把每个决策步压缩成轻量帧，供每 2000 步联赛录像。"""
 
-    def __init__(self, a_id, b_id, side0, max_steps):
+    def __init__(self, a_id, b_id, side0, max_steps, steps=None):
         self.meta = {"pair": [a_id, b_id], "side0": side0, "max_steps": max_steps}
+        # steps = [a_step, b_step]：双方模型各自所在训练步（None = 无步数概念，
+        # 如脚本对手）。dashboard 对局列表据此显示 "main@2000 vs main@0" 这类对阵。
+        if steps is not None:
+            self.meta["steps"] = [int(s) if s is not None else None for s in steps]
         self.frames = []
         self.winner = None
 
