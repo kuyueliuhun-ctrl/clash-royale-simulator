@@ -1873,8 +1873,17 @@ def main():
         solo_abs = os.path.join(os.path.dirname(state_abs), "solo_state.json")
         if not os.path.exists(solo_abs):
             make_demo_solo(solo_abs, n_points=args.demo_points)
+    # 回放目录：显式 --replays 优先；否则从状态文件所在 runs 目录派生。
+    # 旧版只从 --state（联赛）派生——--solo 启动时落到 cwd/replays，扫不到录像。
+    _replays_root = None
+    if state_abs:
+        _replays_root = os.path.dirname(state_abs)
+    elif solo_abs:
+        _replays_root = os.path.dirname(solo_abs)
+    elif sweep_abs:
+        _replays_root = sweep_abs if os.path.isdir(sweep_abs) else os.path.dirname(sweep_abs)
     replays_abs = args.replays and os.path.abspath(args.replays) \
-        or (os.path.join(os.path.dirname(state_abs), "replays") if state_abs
+        or (os.path.join(_replays_root, "replays") if _replays_root
             else os.path.join(os.path.abspath("."), "replays"))
     if args.demo:
         make_demo_replays(replays_abs)
