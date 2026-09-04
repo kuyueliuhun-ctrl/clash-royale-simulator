@@ -37,7 +37,7 @@ set "N_ENVS=1"
 set "TOTAL_STEPS=20000"
 set "STEPS_PER_EVAL=2000"
 set "N_EVAL_GAMES=16"
-set "MAX_EP_STEPS=600"
+set "MAX_EP_STEPS=360"
 set "EVAL_WORKERS=16"
 set "SOLO_COPY_EVERY=2000"
 set "DECKS_PATH="
@@ -116,7 +116,7 @@ echo Training:
 echo   --total-steps N        total training steps      (default 20000)
 echo   --steps-per-eval N     evaluate every N steps    (default 2000; saves replays)
 echo   --n-eval-games N       games per eval            (default 16)
-echo   --max-ep-steps N       max decision steps/game   (default 600)
+echo   --max-ep-steps N       max decision steps/game   (default 360)
 echo   --eval-workers N       parallel eval processes   (default 16; 0 = serial)
 echo   --solo-copy-every N    solo: frozen copy sync    (default 2000)
 echo   --resume               resume from run_state.json checkpoint

@@ -33,7 +33,7 @@ from dataclasses import dataclass, field, asdict
 #: - 费差默认打开：normalize_tower_dmg=True + elixir_diff_weight=0.5，
 #:   lv11 下 1 圣水 ≈ 0.5/0.001 = 500 塔血（真实游戏里 1 圣水约 300-700 血的中位）。
 DEFAULT_REWARD = {
-    "crown_weight": 5.0,        # 皇冠差系数（每差 1 皇冠 ±5）
+    "crown_weight": 8.0,        # 皇冠差系数（每差 1 皇冠 ±8：破塔里程碑，胜利太稀疏需中间大奖励）
     "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（与 self 统一）
     "tower_dmg_self": 0.001,    # 我方塔损 → 负奖励（与 opp 统一）
     "win_bonus": 10.0,          # 获胜加成
@@ -74,12 +74,12 @@ class TrainConfig:
     n_eval_games: int = 16    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
                               # N=16→SE≈39（±80 移动≈2σ，可区分学习信号）；评估开销与 N 成正比，
                               # 40→16 是降噪地板与训练速度的折中（评估量 ÷2.5）
-    max_ep_steps: int = 600
+    max_ep_steps: int = 360       # 对齐正常局 180s+加时（300s→600 步把终端奖励 discount 到 ≈0，躺平免费）
     n_envs: int = 1               # 并行多环境（>1 用批量推理；默认 1 与旧行为一致）
     parallel: str = "mp"          # n_envs>1 时：mp=跨进程 worker（多核真并行）/ proc=单进程批量化
     card_level: int = 11          # 本局全部卡牌等级（11-16；配合 economy 的塔血归一化跨等级一致）
     eval_at_start: bool = True    # 训练开始先跑一次评估/快照，WebUI 立即有真实数据
-    gamma: float = 0.99
+    gamma: float = 0.997          # 终端现值修复：0.997^360≈0.34（原 0.99^600≈0.0024，胜负/平局惩罚几乎不可学）
     gae_lambda: float = 0.95
     ent_coef: float = 0.01
     vf_coef: float = 0.5
@@ -188,19 +188,19 @@ class TrainConfig:
             "lockdown": cls(
                 name="lockdown",
                 description="自闭：费差压到≈0（1圣水≈50血，鼓励费差换塔血，浪费仍小惩罚）",
-                reward={"crown_weight": 5.0, "win_bonus": 10.0,
+                reward={"crown_weight": 8.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
                         "elixir_bonus": 0.0, "elixir_diff_weight": 0.05}),
             "elixir": cls(
                 name="elixir",
                 description="鼓励圣水效率：默认机制基础上叠加每步按剩余圣水 shaping",
-                reward={"crown_weight": 5.0, "win_bonus": 10.0,
+                reward={"crown_weight": 8.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
                         "elixir_bonus": 0.01, "elixir_diff_weight": 0.5}),
             "economy": cls(
                 name="economy",
                 description="费差经济（默认机制别名）：塔损按塔血%归一化 + Δ费差 shaping（1圣水≈500血）",
-                reward={"crown_weight": 5.0, "win_bonus": 10.0,
+                reward={"crown_weight": 8.0, "win_bonus": 10.0,
                         "lose_penalty": 10.0, "invalid_penalty": 0.05,
                         "elixir_bonus": 0.0, "normalize_tower_dmg": True,
                         "elixir_diff_weight": 0.5},

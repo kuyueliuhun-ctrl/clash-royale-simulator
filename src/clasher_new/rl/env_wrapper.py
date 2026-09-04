@@ -35,7 +35,7 @@ DEFAULT_DECK_1 = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant", "Fireb
 #: 默认奖励权重（与 rl/config.DEFAULT_REWARD 保持一致；勿单独改一处）
 #: 2025-06 改版：塔血统一 0.001/0.001；费差默认打开（normalize + elixir_diff=0.5）。
 _DEFAULT_REWARD = {
-    "crown_weight": 5.0,
+    "crown_weight": 8.0,
     "tower_dmg_opp": 0.001,
     "tower_dmg_self": 0.001,
     "win_bonus": 10.0,

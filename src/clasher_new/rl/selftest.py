@@ -643,7 +643,7 @@ def test_config_reward_weights():
 
     std = TrainConfig.resolve("standard")
     agg = TrainConfig.resolve("aggressive")
-    assert std.reward["crown_weight"] == 5.0
+    assert std.reward["crown_weight"] == 8.0
     assert agg.reward["crown_weight"] == 8.0
     # 2025-06 改版：塔血统一（打击=损失同价）；预设差异体现在皇冠/费差
     for name in ("standard", "aggressive", "defensive", "lockdown", "elixir", "economy", "fast"):
@@ -651,7 +651,7 @@ def test_config_reward_weights():
         assert rw["tower_dmg_self"] == rw["tower_dmg_opp"], f"{name} 塔血应统一"
     assert agg.reward["elixir_diff_weight"] > std.reward["elixir_diff_weight"]
     # 二次解析不污染预设（共享实例回归）
-    assert TrainConfig.resolve("standard").reward["crown_weight"] == 5.0
+    assert TrainConfig.resolve("standard").reward["crown_weight"] == 8.0
     assert TrainConfig.resolve("aggressive").reward["crown_weight"] == 8.0
 
     env = RLEnv(opponent=None, seed=0, reward_weights=reward_to_env(std))
@@ -661,7 +661,7 @@ def test_config_reward_weights():
     env2.reset()
     _, r1, _, _, _ = env2.step(ActionBundle.noop())
     # 配置项确实注入 env 并生效（不同配置 → 不同权重结构）
-    assert env.reward_weights["crown_weight"] == 5.0
+    assert env.reward_weights["crown_weight"] == 8.0
     assert env2.reward_weights["crown_weight"] == 8.0
     assert isinstance(r0, float) and isinstance(r1, float)
 
