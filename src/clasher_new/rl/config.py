@@ -109,6 +109,10 @@ class TrainConfig:
     def solo_main_path(self):
         return os.path.join(self.folder(), "solo_main.pt")
 
+    def solo_ckpt_path(self, step):
+        """solo 历史检查点：solo_main_<step>.pt（每次评估保留一份，回溯用）。"""
+        return os.path.join(self.folder(), f"solo_main_{step}.pt")
+
     def run_state_path(self):
         return os.path.join(self.folder(), "run_state.json")
 

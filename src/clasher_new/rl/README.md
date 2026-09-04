@@ -126,7 +126,8 @@ python rl/run_league.py --mode flow-sweep-games5 --config economy --device cuda 
 python rl/run_league.py --mode solo --config economy --device cuda
 python rl/run_league.py --mode solo --config economy --solo-copy-every 2000   # 冻结副本同步间隔（步）
 #   产物：runs/<name>/solo_state.json（胜率±SE/mean_reward/进度，dashboard --solo 实时读）、
-#   solo_main.pt、replays/league_<step>.pkl（评估回放，复用回放面板）
+#   solo_main.pt（最新指针）+ solo_main_<step>.pt（每次评估的历史检查点，回溯用）、
+#   replays/league_<step>.pkl（评估回放，复用回放面板）
 #   dashboard：python rl/dashboard.py --solo runs/economy/solo_state.json --port 8090
 
 # 7g) 人机对战 + 人类数据采集（人在浏览器打训练模型，对局转训练数据）

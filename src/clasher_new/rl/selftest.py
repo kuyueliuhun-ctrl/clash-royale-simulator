@@ -1422,6 +1422,8 @@ def test_solo_mode_smoke():
     assert len(st["history"]) >= 2, "应有起始+最终评估"
     assert st["deck"] == train_solo.DEFAULT_SOLO_DECK, "固定卡组镜像"
     assert os.path.exists(cfg.solo_main_path()), "solo_main.pt 应已落盘"
+    for s in (0, 4, 8):   # eval_at_start + steps_per_eval=4 + 结束步
+        assert os.path.exists(cfg.solo_ckpt_path(s)), f"solo_main_{s}.pt 历史检查点应已落盘"
     assert not os.path.exists(cfg.state_path()), "solo 不应写 league_state.json（无联赛）"
     print("[PASS] solo 自对弈：固定卡组镜像 + 冻结副本 + solo_state.json/solo_main.pt 落盘、无联赛状态")
 

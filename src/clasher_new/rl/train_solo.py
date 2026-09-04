@@ -203,6 +203,7 @@ def run_solo(cfg, resume=False, record_replays=True):
               f"({stats['wins']}W/{stats['losses']}L/{stats['draws']}D, "
               f"{stats['games']}局) mean_reward={stats['mean_reward']:.3f}", flush=True)
         save_checkpoint(main, cfg.solo_main_path())
+        save_checkpoint(main, cfg.solo_ckpt_path(step))   # 历史版本保留（solo_main_<step>.pt）
 
     # 训练开始先跑一次评估（WebUI 立即有真实数据）
     if cfg.eval_at_start:
