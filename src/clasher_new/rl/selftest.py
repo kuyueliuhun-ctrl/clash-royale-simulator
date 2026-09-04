@@ -1869,6 +1869,18 @@ def test_bp_new_intent_rules():
     t = bp.plan(bs, None)
     assert t.macro_intent == "push_commit" and t.placement_hint == "support_zone", \
         t.macro_intent
+    # S5c 推进跟牌（7h2）：Giant 推进中手牌同时有 Knight/Musketeer → 优先真后排 Musketeer
+    bs = new_battle(); place(bs, 0, 'Giant', 9, 10)
+    set_hand(bs, ['Knight', 'Musketeer', 'Arrows', 'Fireball'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "push_commit" and t.suggested_card == 2, \
+        (t.macro_intent, t.suggested_card)
+    # S5d 推进跟牌（7h2）：无后排时允许近战身板（Knight）兜底
+    bs = new_battle(); place(bs, 0, 'Giant', 9, 10)
+    set_hand(bs, ['Knight', 'MiniPekka', 'Arrows', 'Fireball'])
+    t = bp.plan(bs, None)
+    assert t.macro_intent == "push_commit" and t.suggested_card == 1, \
+        (t.macro_intent, t.suggested_card)
     # S6 沉底：空场 + 手牌沉底血牛 + 圣水攒满(≈10) → 沉底
     bs = new_battle(); set_hand(bs, ['Giant', 'Knight', 'Arrows', 'Fireball'])
     assert bp.plan(bs, None).macro_intent == "setup_wait"
@@ -1969,7 +1981,8 @@ def test_bp_new_intent_rules():
           "spell_trade 只留远程脆皮，setup 主动攒费(费+2储备)才沉底，"
           "push_commit 认 Knight/Valkyrie/Prince 前排跟输出")
     print("[PASS] BeliefPlanner 7h：攒费窗口=不落后≥2费+无过河单位+前排后排齐，"
-          "未满帧 hold_mask=1111 等费，攒满 10 才沉底血牛")
+          "未满帧 hold_mask=1111 等费，攒满 10 才沉底血牛；"
+          "7h2：push_commit 跟牌优先真后排(Musketeer)，无后排才近战兜底")
 
 
 def test_pp_new_intent_rules():

@@ -57,13 +57,17 @@ class FollowerOpponent:
     - hidden 在 reset()/episode 结束时清空。
     """
 
-    def __init__(self, policy, env, belief=None, planner=None, deterministic=True):
+    def __init__(self, policy, env, belief=None, planner=None, deterministic=True,
+                 use_plan_biases=False):
         self.policy = policy
         self.env = env
         self.belief = belief or BeliefInference(opp_deck=env.deck0, n_particles=128, seed=0)
         self.planner = planner or BeliefPlanner()
         self.hidden = None
         self.deterministic = deterministic
+        # 7h2：player1 时 BeliefPlanner 仍是 player0 视角 → 默认关闭 plan 软偏置，
+        # 避免红方被 p0 攒费 hold_mask / 建议卡 / 区域偏置错位干扰（红方冻结根因）。
+        self.policy.plan_biases_enabled = bool(use_plan_biases)
         #: 最近一步的完整轨迹（flow 联赛双侧收集用）；每步 __call__ 刷新。
         self._last_step = None
 

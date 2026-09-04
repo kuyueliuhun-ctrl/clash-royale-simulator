@@ -25,6 +25,10 @@ Phase 2 v1 扩展（docs/rl_plan_design_v1.md）：
   有前排(沉底名单血牛)与后排时 → 进入攒费窗口：圣水未满的帧输出
   setup_wait + hold_mask=1111（禁止乱花手牌，等费），圣水攒满(≈10)才沉底血牛，
   血牛过中场后由 push_commit 跟后排；HogRider 属桥头快攻不沉底。
+- 7h2：push_commit 跟牌优先真后排（BACKLINE_CARDS 远程），无后排才允许近战身板
+  兜底——减少“巨人单走/巨人后面只跟骑士”；FollowerOpponent(player1) 侧
+  BeliefPlanner 仍是 player0 视角，已由 follower/train_follower 关闭 plan 软偏置，
+  避免红方被错位 hold_mask/建议卡/区域锁死。
 """
 
 import os
@@ -466,8 +470,12 @@ class BeliefPlanner:
 
     def _push_commit(self, battle, p, threat, belief):
         """推进跟进：己方前排主体（坦克/高血近战身板，7g 起含 Knight/Valkyrie/Prince）
-        在地图上推进中（y ∈ 己方中前段 8-22）→ 在能走到前排后方的区域跟输出
-        （先血牛/身板沉底或前置，输出跟在其后——修正“输出在前、身板在后”）。"""
+        在地图上推进中（y ∈ 己方中前段 8-22）→ 跟输出。
+
+        7h2 跟牌口径：优先跟**真后排**（BACKLINE_CARDS 远程，3-6 费），避免
+        “巨人单走”或“巨人后面只跟骑士/近战身板”；手牌确实没有后排时才允许
+        近战角色兜底（骑士顶前排），仍输出 support_zone 位置提示。
+        """
         tank = None
         for e in battle.entities.values():
             if e.player != 0 or not _deployable_entity(e):
@@ -480,10 +488,26 @@ class BeliefPlanner:
                 break
         if tank is None:
             return None
-        for i, card in enumerate(p.cycle[:4]):
+
+        def _ok(card):
+            if card == "Mirror":
+                return False
             c = Card(card)
-            if c.type == "character" and 3.0 <= c.elixir <= 6.0 \
-                    and card not in TANK_CARDS and p.elixir >= c.elixir:
+            return c.type == "character" and 3.0 <= c.elixir <= 6.0 \
+                and card not in TANK_CARDS and p.elixir >= c.elixir
+
+        # 第一遍：真后排（远程支援，BACKLINE_CARDS）优先
+        for i, card in enumerate(p.cycle[:4]):
+            if _ok(card) and card in BACKLINE_CARDS:
+                return PlanToken(
+                    macro_intent="push_commit",
+                    focus_region=_own_region(tank.position.x),
+                    suggested_card=i + 1, target_kind="unit",
+                    placement_hint="support_zone", elixir_budget=0.6,
+                    risk_profile=0.7, value_estimate=1.5)
+        # 第二遍：任意 3-6 费非坦克角色兜底（如手牌只有 Knight）
+        for i, card in enumerate(p.cycle[:4]):
+            if _ok(card):
                 return PlanToken(
                     macro_intent="push_commit",
                     focus_region=_own_region(tank.position.x),

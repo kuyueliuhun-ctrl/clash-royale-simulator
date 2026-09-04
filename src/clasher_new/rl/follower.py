@@ -145,6 +145,10 @@ class FollowerPolicy(nn.Module):
                 self.slot_head.bias[STOP_IDX] += stop_logit_bias
 
         self.device = "cpu"
+        #: 7h2：plan 软偏置总开关。默认开（player0 侧主流程）。
+        #: FollowerOpponent 打 player1 时 BP 仍是 player0 视角 → 置 False，避免
+        #: hold_mask/建议卡/区域偏置对 p1 错位（红方冻结根因之一）。
+        self.plan_biases_enabled = True
 
     def to_device(self, device):
         self.device = device
@@ -203,6 +207,9 @@ class FollowerPolicy(nn.Module):
         """
         slot_bias = torch.zeros(NUM_SLOT_OPTIONS, device=self.device)
         cell_bias = torch.zeros((GRID_H, GRID_W), device=self.device)
+        if not getattr(self, "plan_biases_enabled", True):
+            # 7h2：player1（FollowerOpponent）不消费 player0 视角 plan 的软偏置
+            return slot_bias, cell_bias
         if plan_token is None:
             return slot_bias, cell_bias
         if torch.is_tensor(plan_token):
