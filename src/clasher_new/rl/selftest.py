@@ -1870,6 +1870,90 @@ def test_no_solo_commit_without_lead():
     print("[PASS] 8h 不裸下：无费差单卡高承诺单位 mask+validate 双拒；领先/对手无费/压境/多卡协同放行")
 
 
+def test_tank_backline_geometry():
+    """8h 坦克后屯兵：Giant/Knight 推进时，Musketeer/Archer/Minions/MiniPekka 只能放
+    在坦克后面且纵向间距 ≥ 攻击距离（快单位更靠后）；坦克前/贴身位非法，
+    坦克消失恢复；落点附近有敌军（防守响应）放行；P0/P1 镜像一致。"""
+    import battle as battle_mod
+    import player as player_mod
+    from battle import Troop
+    from core import Position
+    from rl.action_bundle import ActionBundle, sub_position
+    from rl.action_mask import legal_cells, validate_bundle
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer",
+            "Fireball", "Giant", "Archer"]
+
+    def mk_battle():
+        return battle_mod.BattleState(
+            player_mod.PlayerState(0, list(deck), 10.0),
+            player_mod.PlayerState(1, list(deck), 10.0))
+
+    def spawn(bs, pid, name, x, y, hp):
+        t = Troop(bs.next_entity_id, Position(x, y), pid, name, bs)
+        t.hp = hp
+        bs._spawn_entity(t)
+        return t
+
+    def cell_near(bs, pid, wx, wy, tol=0.9):
+        best, bd = None, 1e18
+        for yy in range(32):
+            for xx in range(18):
+                wp = sub_position(pid, xx, yy)
+                d = (wp.x - wx) ** 2 + (wp.y - wy) ** 2
+                if d < bd:
+                    bd, best = d, (xx, yy)
+        assert bd ** 0.5 < tol, f"无网格格点接近 ({wx},{wy})"
+        return best
+
+    # —— P0：Giant 左路推进，Musketeer 间距须 ≥ ~6.6 ——
+    bs = mk_battle()
+    giant = spawn(bs, 0, "Giant", 5.0, 12.0, 4000.0)
+    cells = legal_cells(bs, 0, "Musketeer")
+    xb, yb = cell_near(bs, 0, 5.0, 5.0)     # 身后 7 单位 → 合法
+    assert bool(cells[yb, xb]), "坦克身后留足间距应合法"
+    xc, yc = cell_near(bs, 0, 5.0, 11.0)    # 贴身（身后 1.5）→ 非法
+    assert not bool(cells[yc, xc]), "贴身坦克位应非法"
+    xa, ya = cell_near(bs, 0, 5.0, 14.0)    # 坦克前 → 非法
+    assert not bool(cells[ya, xa]), "坦克前位应非法（会超车/抢仇恨）"
+    # validate 同源：身后合法格通过、坦克前位整包拒绝
+    p0 = bs.players[0]
+    p0.cycle = ["Musketeer"] + [c for c in p0.cycle if c != "Musketeer"]
+    ok_b, reason_b, _ = validate_bundle(bs, 0, ActionBundle.from_single(1, xb, yb))
+    assert ok_b, f"身后位应通过 validate: {reason_b}"
+    ok_a, reason_a, _ = validate_bundle(bs, 0, ActionBundle.from_single(1, xa, ya))
+    assert not ok_a and "非法" in reason_a, f"坦克前位应被 validate 拒绝: {reason_a}"
+    # 坦克消失 → 恢复
+    del bs.entities[giant.id]
+    cells2 = legal_cells(bs, 0, "Musketeer")
+    assert bool(cells2[ya, xa]), "坦克消失后该格应恢复合法"
+    # 落点附近有敌军 → 防守放行
+    giant2 = spawn(bs, 0, "Giant", 5.0, 12.0, 4000.0)
+    spawn(bs, 1, "MiniPekka", 5.0, 13.5, 300.0)
+    cells3 = legal_cells(bs, 0, "Musketeer")
+    assert bool(cells3[ya, xa]), "落点附近有敌军=防守响应，几何门应放行"
+
+    # —— P1 镜像：Knight 右路推进，Archer 必须在其后 ——
+    bs2 = mk_battle()
+    spawn(bs2, 1, "Knight", 14.5, 20.0, 2000.0)
+    cells4 = legal_cells(bs2, 1, "Archer")
+    xb2, yb2 = cell_near(bs2, 1, 14.5, 26.0)   # Knight 身后（y 更大）→ 合法
+    assert bool(cells4[yb2, xb2]), "P1 Knight 身后位应合法"
+    xa2, ya2 = cell_near(bs2, 1, 14.5, 18.0)   # Knight 前方 → 非法
+    assert not bool(cells4[ya2, xa2]), "P1 Knight 前方位应非法"
+
+    # —— MiniPekka 按后排保护（Giant 后），坦克前方位同样非法 ——
+    bs3 = mk_battle()
+    spawn(bs3, 0, "Giant", 5.0, 12.0, 4000.0)
+    cells5 = legal_cells(bs3, 0, "MiniPekka")
+    xb3, yb3 = cell_near(bs3, 0, 5.0, 9.0)     # 身后 3 单位 ≥ 2.6 → 合法
+    assert bool(cells5[yb3, xb3]), "MiniPekka 坦克身后应合法"
+    xa3, ya3 = cell_near(bs3, 0, 5.0, 13.5)
+    assert not bool(cells5[ya3, xa3]), "MiniPekka 坦克前位应非法"
+    print("[PASS] 8h 坦克后屯兵：后排只能跟坦克身后留攻击距离间距（快单位更远）；"
+          "坦克前/贴身位非法、防守响应放行、P0/P1 镜像一致")
+
+
 def test_plan_v1_layout():
     """PlanToken v1 尾部扩展：旧 21 维布局逐位兼容、新意图进尾部新组、
     target/hint/threat/budget/hold_mask 落位正确、load_checkpoint 旧维补零扩展。"""
@@ -2446,6 +2530,7 @@ def main():
     test_reward_v2_ledger()
     test_spell_empty_value_gate()
     test_no_solo_commit_without_lead()
+    test_tank_backline_geometry()
     test_plan_v1_layout()
     test_bp_new_intent_rules()
     test_pp_new_intent_rules()

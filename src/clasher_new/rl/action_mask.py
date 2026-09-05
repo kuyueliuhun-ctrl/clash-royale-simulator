@@ -165,6 +165,77 @@ def solo_commit_blocked(battle, player_id: int, card_name: str,
     return True
 
 
+#: —— 8h 坦克后屯兵（用户口径）：远程/普通飞行/高输出后排要放在高血量单位
+#: （Giant/Knight）**后面**，间距 ≥ 后排攻击距离；移速比坦克快的还要更靠后，
+#: 防止后排超车裸奔/抢仇恨。Giant/Knight 是前排，MiniPekka 高输出按后排保护。
+TANK_CARDS = frozenset({"Giant", "Knight"})
+BACKLINE_CARDS = frozenset({"Musketeer", "Archer", "Minions", "MiniPekka"})
+TANK_LANE_HALF_W = 5.0      # 同路判宽（世界单位）：只约束同一路推进的支援
+BACKLINE_SPEED_SCALE = 2.0   # 移速差 → 额外后置距离（世界单位 / 速度差）
+TANK_DEFENSE_R = 4.0        # 落点附近有敌军=防守响应 → 几何门放行（防误伤防守）
+#: 坦克进入“推进段”才启用几何门（避免在国王塔旁的早期铺场被过度限制）：
+#: 推进方向 = 朝河（P0 y 增 / P1 y 减），带内 = 离国王塔已走出的行程。
+_TANK_ACTIVE_BAND = {0: (8.0, 25.0), 1: (7.0, 24.0)}
+
+
+def _active_push_tanks(battle, player_id: int):
+    """本方可作推进前排的存活坦克（Giant/Knight），且已离开国王塔进入推进段。"""
+    lo, hi = _TANK_ACTIVE_BAND.get(player_id, (0.0, 99.0))
+    out = []
+    for e in battle.entities.values():
+        if not getattr(e, "is_alive", True):
+            continue
+        if getattr(e, "player", None) != player_id:
+            continue
+        name = getattr(e, "name", "") or ""
+        if name not in TANK_CARDS:
+            continue
+        y = e.position.y
+        if lo <= y <= hi:
+            out.append(e)
+    return out
+
+
+def _backline_min_gap_m(back_card: str, tank_card: str) -> float:
+    """后排与坦克的最小纵向间距（世界单位）：
+    基础 = 后排攻击距离；后排比坦克快 → 每 1 速度差再多后置 2 单位。"""
+    b = Card(back_card)
+    t = Card(tank_card)
+    base = float(getattr(b, "range", 0.0) or 0.0)
+    dv = max(0.0, float(getattr(b, "speed", 0.0) or 0.0)
+             - float(getattr(t, "speed", 0.0) or 0.0))
+    return base + dv * BACKLINE_SPEED_SCALE
+
+
+def _backline_placement_illegal(battle, player_id: int, card_name: str,
+                                pos: Position) -> bool:
+    """后排落点几何闸门：同路有推进坦克时，落点必须位于某坦克之后且留足
+    最小间距（否则会抢仇恨/超车裸奔）。异路防守部署不受影响。"""
+    if card_name not in BACKLINE_CARDS:
+        return False
+    # 防守响应放行：落点附近有敌军（解牌/拦截），几何门不拦
+    for e in battle.entities.values():
+        if not getattr(e, "is_alive", True):
+            continue
+        if getattr(e, "player", None) != 1 - player_id:
+            continue
+        if pos.distance_to(e.position) <= TANK_DEFENSE_R:
+            return False
+    tanks = [e for e in _active_push_tanks(battle, player_id)
+             if abs(e.position.x - pos.x) <= TANK_LANE_HALF_W]
+    if not tanks:
+        return False
+    for tk in tanks:
+        if player_id == 0:
+            gap_along = tk.position.y - pos.y
+        else:
+            gap_along = pos.y - tk.position.y
+        need = _backline_min_gap_m(card_name, tk.name)
+        if gap_along >= need - 0.5:
+            return False  # 能跟在至少一个推进坦克后面 → 合法
+    return True
+
+
 def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
     """法术落点是否贴着已毁敌方塔本体（塔实体 id≤6 且 is_alive=False 永留场）。"""
     opp = 1 - player_id
@@ -222,6 +293,9 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bo
             else:
                 if battle.players[0].right_tower_hp > 0:
                     return False
+    # 8h 坦克后屯兵：后排落点必须待在推进坦克后面并留出攻击距离间距
+    if _backline_placement_illegal(battle, player_id, card_name, pos):
+        return False
     return True
 
 
