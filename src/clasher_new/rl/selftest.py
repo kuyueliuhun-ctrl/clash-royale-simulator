@@ -1799,6 +1799,77 @@ def test_spell_empty_value_gate():
     print("[PASS] 8h 空砸闸门：伤害法术空场格 mask+validate 双拒；目标进入溅射半径后恢复合法（P0/P1 对称）")
 
 
+def test_no_solo_commit_without_lead():
+    """8h 不裸下：对手能出手且无 +3 费差时，MiniPekka/Giant 单卡（空 bundle 首卡）
+    mask 整槽禁掉、validate 单卡整包拒绝；有费差/对手无法出手/压境防守时放行；
+    同刻多卡协同不受限。"""
+    import numpy as np
+    import battle as battle_mod
+    from battle import Troop
+    from core import Position
+    from rl.env_wrapper import RLEnv, DEFAULT_DECK
+    from rl.action_bundle import ActionBundle
+    from rl.action_mask import legal_cells, validate_bundle
+
+    env = RLEnv(opponent=lambda obs: ActionBundle.noop(), seed=11,
+                deck0=DEFAULT_DECK, deck1=DEFAULT_DECK)
+    env.reset(seed=11)
+    p = env.battle.players
+    # 固定 P0 手牌：MiniPekka 槽1、Knight 槽2（P1 保持同卡组，手里有 Knight=3费可出手）
+    p[0].cycle = ["MiniPekka", "Knight"] + [c for c in p[0].cycle if c not in ("MiniPekka", "Knight")]
+    p[0].elixir = 5.0
+    p[1].elixir = 5.0
+
+    def mini_mask_slot():
+        m = env.get_action_mask_for(0)
+        idx = p[0].cycle.index("MiniPekka")
+        return bool(m["slots"][idx]), m
+
+    blocked, m = mini_mask_slot()
+    assert not blocked, "对手能出手+无费差 → MiniPekka 裸下首卡应被 mask 禁掉"
+    # 找一个 MiniPekka 的合法落点（闸门仅禁槽位；位置合法集不变）
+    cells = legal_cells(env.battle, 0, "MiniPekka")
+    ys, xs = np.nonzero(cells)
+    cx, cy = int(xs[0]), int(ys[0])
+    ok, reason, _ = validate_bundle(env.battle, 0, ActionBundle.from_single(1, cx, cy))
+    assert not ok and "不裸下" in reason, f"单卡 MiniPekka 应被 validate 拒绝: {reason}"
+
+    # 有费差（己方 10 vs 对方 5，+5≥3）→ 放行
+    p[0].elixir = 10.0
+    allowed, m2 = mini_mask_slot()
+    assert allowed, "己方圣水领先≥3 → MiniPekka 单卡应放行"
+    ok2, reason2, _ = validate_bundle(env.battle, 0, ActionBundle.from_single(1, cx, cy))
+    assert ok2, f"有费差单卡应通过 validate: {reason2}"
+
+    # 对手无法出手（对方圣水 < 手牌最低费）→ 放行
+    p[0].elixir = 5.0
+    p[1].elixir = 2.0
+    allowed3, _ = mini_mask_slot()
+    assert allowed3, "对手出不了手 → 裸下应放行"
+
+    # 压境防守（对方单位进入我半场）→ 放行
+    p[1].elixir = 5.0
+    t = Troop(env.battle.next_entity_id, Position(9.0, 10.0), 1, "MiniPekka", env.battle)
+    env.battle._spawn_entity(t)
+    allowed4, _ = mini_mask_slot()
+    assert allowed4, "对方压境 → 防守单卡应放行"
+
+    # 同刻多卡协同：Knight+MiniPekka 不受“不裸下”限制
+    p[0].elixir = 10.0
+    p[1].elixir = 5.0
+    del env.battle.entities[t.id]  # 清掉压境单位，回到无防守状态
+    cells_k = legal_cells(env.battle, 0, "Knight")
+    ys_k, xs_k = np.nonzero(cells_k)
+    b = ActionBundle()
+    b.add(2, int(xs_k[0]), int(ys_k[0]))      # Knight 槽2
+    cells_m = legal_cells(env.battle, 0, "MiniPekka")
+    ys_m, xs_m = np.nonzero(cells_m)
+    b.add(1, int(xs_m[0]), int(ys_m[0]))      # MiniPekka 槽1
+    ok5, reason5, _ = validate_bundle(env.battle, 0, b)
+    assert ok5, f"同刻两卡协同应放行: {reason5}"
+    print("[PASS] 8h 不裸下：无费差单卡高承诺单位 mask+validate 双拒；领先/对手无费/压境/多卡协同放行")
+
+
 def test_plan_v1_layout():
     """PlanToken v1 尾部扩展：旧 21 维布局逐位兼容、新意图进尾部新组、
     target/hint/threat/budget/hold_mask 落位正确、load_checkpoint 旧维补零扩展。"""
@@ -2374,6 +2445,7 @@ def main():
     test_draw_penalty_as_loss()
     test_reward_v2_ledger()
     test_spell_empty_value_gate()
+    test_no_solo_commit_without_lead()
     test_plan_v1_layout()
     test_bp_new_intent_rules()
     test_pp_new_intent_rules()

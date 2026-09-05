@@ -27,7 +27,8 @@ import battle
 import player
 from card_utils import Card
 from rl.action_bundle import ActionBundle, SubAction, K_MAX, sub_position
-from rl.action_mask import validate_bundle, slot_mask, legal_cells, ability_legal, ability_mana
+from rl.action_mask import (validate_bundle, slot_mask, legal_cells, ability_legal,
+                            ability_mana, solo_commit_blocked)
 from rl.observation import observe, hidden_labels, GRID_H, GRID_W, GRID_C, ENTITY_NAMES
 
 DEFAULT_DECK = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
@@ -355,6 +356,14 @@ class RLEnv(gym.Env):
         slots = slot_mask(p, elixir_override=elixir, used_slots=used)
         for i in used:
             cells[i] = False
+        # 8h 不裸下（mask 层）：bundle 还没放牌（首卡决策）时，若禁裸条件成立则整槽禁掉
+        # 高承诺单位 → 模型只能 STOP 攒费或先放别的卡凑同刻多卡协同。
+        # 防守压境/对手无法出手/己方圣水领先≥3 时会由 solo_commit_blocked 放行。
+        if len(partial_bundle.sub_actions) == 0:
+            for i in range(K_MAX):
+                if slots[i] and solo_commit_blocked(self.battle, player_id, p.cycle[i], elixir):
+                    slots[i] = False
+                    cells[i] = False
         return {
             "slots": slots,
             "cells": cells,

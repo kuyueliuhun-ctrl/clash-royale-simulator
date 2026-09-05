@@ -108,6 +108,63 @@ def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float
     return False
 
 
+#: —— 8h 不裸下：圣水无优势时禁止“单独放高承诺进攻单位”（用户口径）——
+#: 例：单独下 MiniPekka，对方手里有 Archers 可解；只有我方多 3~4 费、能用
+#: 法术破防时这波进攻才有意义。不满足 → 模型必须攒费或同刻多卡协同进攻。
+#: 例外：对方已压境（防守紧急）或对方出不了手（费不够最低手牌费）时不拦。
+SOLO_LEAD_ELIXIR = 3.0
+#: 裸下受限的高承诺单位（用户例子 + 坦克裸下送费）；其余便宜卡/后排可单放。
+SOLO_COMMIT_CARDS = frozenset({"MiniPekka", "Giant"})
+
+
+def _opp_min_hand_cost(battle, player_id: int) -> Optional[float]:
+    """对手手牌最低可出费用；手牌为空/国王已倒 → None（=对手出不了手）。"""
+    opp = battle.players[1 - player_id]
+    if opp.king_tower_hp <= 0:
+        return None
+    costs = [_card_cost(opp, c) for c in opp.cycle[:4]]
+    costs = [c for c in costs if c is not None]
+    return min(costs) if costs else None
+
+
+def _enemy_in_my_half(battle, player_id: int) -> bool:
+    """对方是否有单位已进入我半场（压境 → 防守优先，裸下闸门放行）。"""
+    opp = 1 - player_id
+    for e in battle.entities.values():
+        if not getattr(e, "is_alive", True):
+            continue
+        if getattr(e, "player", None) != opp:
+            continue
+        y = e.position.y
+        if (player_id == 0 and y <= 16.0) or (player_id == 1 and y >= 16.0):
+            return True
+    return False
+
+
+def solo_commit_blocked(battle, player_id: int, card_name: str,
+                        own_elixir: float) -> bool:
+    """高承诺单卡裸下是否被禁止：
+    - 卡不在受限名单 → 放行；
+    - 对方无法出手（国王倒/费不够手牌最低费）→ 放行；
+    - 对方压境（防守响应）→ 放行；
+    - 己方圣水 - 对方圣水 ≥ 3 → 放行（有费差可用法术/多卡破防）；
+    - 否则禁止（需攒费或多卡协同）。
+    """
+    if card_name not in SOLO_COMMIT_CARDS:
+        return False
+    min_opp = _opp_min_hand_cost(battle, player_id)
+    if min_opp is None:
+        return False
+    opp = battle.players[1 - player_id]
+    if opp.elixir < min_opp - 1e-9:
+        return False
+    if _enemy_in_my_half(battle, player_id):
+        return False
+    if own_elixir - opp.elixir >= SOLO_LEAD_ELIXIR - 1e-9:
+        return False
+    return True
+
+
 def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
     """法术落点是否贴着已毁敌方塔本体（塔实体 id≤6 且 is_alive=False 永留场）。"""
     opp = 1 - player_id
@@ -284,4 +341,9 @@ def validate_bundle(battle, player_id: int, bundle: ActionBundle):
         elixir -= _card_cost(p, card) or 0.0
         used.add(sa.slot)
         resolved.append((card, sa))
+    # 8h 不裸下兜底（mask 只管“空 bundle 首卡”，BC/旧回放里的单卡裸下在这里拒绝）：
+    # 整包只放 1 张高承诺单位且无圣水优势 → 拒绝
+    deploys = [c for c, _ in resolved if c != "__ability__"]
+    if len(deploys) == 1 and solo_commit_blocked(battle, player_id, deploys[0], p.elixir):
+        return False, "不裸下: 无圣水优势时禁止单独放高承诺卡", resolved
     return True, "ok", resolved
