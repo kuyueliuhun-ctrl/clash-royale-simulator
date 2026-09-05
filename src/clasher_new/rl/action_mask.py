@@ -72,6 +72,41 @@ def slot_mask(player, elixir_override: float = None, used_slots=None) -> np.ndar
 #: 不误伤“打塔旁敌军”的合法溅射法术）
 DEAD_TOWER_BODY_R = 0.9
 
+#: —— 8h 不空砸：伤害型法术必须能罩到 ≥1 个存活敌方目标（塔/建筑/单位都算）——
+#: 引擎数值表半径以千分之一单位存储（Arrows 3500 → 3.5；Fireball 2500 → 2.5）。
+
+
+def _spell_radius_m(card_name: str) -> float:
+    """法术溅射半径（世界单位）；无半径数据返回 0.0（=不做闸门，保持旧语义）。"""
+    data = getattr(Card(card_name), "data", None) or {}
+    raw = data.get("radius")
+    if raw is None:
+        raw = ((data.get("projectileData") or {}).get("radius"))
+    return (float(raw) if raw else 0.0) / 1000.0
+
+
+def _spell_deals_damage(card_name: str) -> bool:
+    """是否输出伤害的法术。伤害型法术受空砸闸门约束；增益/位移/召唤类法术放行。"""
+    data = getattr(Card(card_name), "data", None) or {}
+    pd = data.get("projectileData") or {}
+    return (float(pd.get("damage") or 0.0) > 0.0
+            or float(data.get("damage") or 0.0) > 0.0)
+
+
+def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float) -> bool:
+    """溅射半径内是否有存活敌方目标（塔/建筑/部队）。命中口径与引擎溅射一致：
+    距离 ≤ 半径 + 目标碰撞半径。"""
+    opp = 1 - player_id
+    for e in battle.entities.values():
+        if not getattr(e, "is_alive", True):
+            continue
+        if getattr(e, "player", None) != opp:
+            continue
+        col = getattr(getattr(e, "data", None), "collision_radius", 0.0) or 0.0
+        if pos.distance_to(e.position) <= radius + col + 1e-9:
+            return True
+    return False
+
 
 def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
     """法术落点是否贴着已毁敌方塔本体（塔实体 id≤6 且 is_alive=False 永留场）。"""
@@ -89,14 +124,21 @@ def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
 
 
 def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bool:
-    """复刻 battle.deploy_card 中的部署区域合法性（法术额外挡已毁塔本体）。
+    """复刻 battle.deploy_card 中的部署区域合法性（法术额外挡已毁塔本体 + 空砸闸门）。
 
     7h：法术可打任意格，但不得砸在**已毁敌方塔本体**上——引擎里法术是打坐标，
     已毁塔 is_alive=False 会被溅射跳过，落在那里=纯空砸（也不会转伤国王塔）。
+    8h：伤害型法术必须罩到 ≥1 个存活敌方目标（塔/建筑/单位），否则视为纯空砸拒绝。
     """
     card_info = Card(card_name)
     if card_info.type == "spell":
-        return not _hits_dead_enemy_tower(battle, player_id, pos)
+        if _hits_dead_enemy_tower(battle, player_id, pos):
+            return False
+        if _spell_deals_damage(card_name):
+            radius = _spell_radius_m(card_name)
+            if radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
+                return False
+        return True
     if battle.is_position_occupied_by_building(pos, 0.0):
         return False
     if player_id == 0:
@@ -129,16 +171,21 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bo
 def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
     """返回 (32,18) bool：该卡在玩家本地网格中可以部署的格子。
 
-    法术任意位置但**排除已毁敌方塔本体格**（7h：砸已炸掉的塔=纯空砸）；
+    7h：法术任意位置但**排除已毁敌方塔本体格**（砸已炸掉的塔=纯空砸）。
+    8h：伤害型法术再加空砸闸门——只有溅射能罩到存活敌方目标的格子才合法；
     其余按规则——本地格子 (x, y) 经 sub_position 换算为世界坐标后
     由 _position_legal 校验（与提交路径完全同源，P0-4）。
     """
     cells = np.ones((GRID_H, GRID_W), dtype=bool)
     eff = _effective_card(battle.players[player_id], card_name)
     if Card(eff).type == "spell":
+        radius = _spell_radius_m(eff) if _spell_deals_damage(eff) else 0.0
         for y in range(GRID_H):
             for x in range(GRID_W):
-                if _hits_dead_enemy_tower(battle, player_id, sub_position(player_id, x, y)):
+                pos = sub_position(player_id, x, y)
+                if _hits_dead_enemy_tower(battle, player_id, pos):
+                    cells[y, x] = False
+                elif radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
                     cells[y, x] = False
         return cells
     for y in range(GRID_H):

@@ -1673,7 +1673,8 @@ def test_draw_penalty_as_loss():
 
 def test_reward_v2_ledger():
     """reward v2 资源账（economy）：部署不罚（E−c 与 V+c 同帧抵消）、份额入账/死亡注销、
-    空砸=花费型惩罚、双倍期（t≥120）edw 换档为 elixir_diff_late、单位受伤 shaping 生效。"""
+    有目标法术=花费型惩罚（8h 起无目标空砸被闸门拒绝，不再有合法格）、双倍期（t≥120）
+    edw 换档为 elixir_diff_late、单位受伤 shaping 生效。"""
     import numpy as np
     from rl.env_wrapper import RLEnv, DEFAULT_DECK
     from rl.action_bundle import ActionBundle
@@ -1710,29 +1711,92 @@ def test_reward_v2_ledger():
         env.step(ActionBundle.noop())
     assert abs(env._active_v[0]) < 1e-6, f"死亡后份额应注销: {env._active_v}"
 
-    # ③ 空砸 Arrows（前段 t<120，edw=0.5）：花费型 → ≈ −3×0.5 = −1.5
+    # ③ 有目标法术（8h 空砸闸门：无目标格不再可出，这里取首个覆盖存活敌方塔的合法格）
+    #    花费型 → ≈ −3×0.5 = −1.5
     p[0].elixir = 5.0
     p[0].cycle.remove("Arrows"); p[0].cycle.insert(0, "Arrows")   # 轮转回手（手牌区 = 前 4）
     slot_arrows = p[0].cycle.index("Arrows") + 1
     x, y = first_cell(slot_arrows)
     _, r_blank, _, _, info = env.step(ActionBundle.from_single(slot_arrows, x, y))
-    assert r_blank < -1.2, f"空砸前段应≈−1.5: {r_blank}"
+    assert info["bundle_ok"], f"覆盖敌方塔的法术应可出: {info['bundle_reason']}"
+    assert r_blank < -1.2, f"有目标法术前段应≈−1.5（花费型）: {r_blank}"
 
-    # ④ 双倍期（t≥120）edw 换档 0.5→0.1：同空砸 ≈ −3×0.1 = −0.3
+    # ④ 双倍期（t≥120）edw 换档 0.5→0.1：同有目标法术 ≈ −3×0.1 = −0.3
     env.battle.time = 121.0
     p[0].elixir = 5.0
     p[0].cycle.remove("Arrows"); p[0].cycle.insert(0, "Arrows")
     slot_arrows = p[0].cycle.index("Arrows") + 1
     x, y = first_cell(slot_arrows)
     _, r_late, _, _, info = env.step(ActionBundle.from_single(slot_arrows, x, y))
-    assert -0.6 < r_late < -0.15, f"双倍期空砸应≈−0.3(late edw): {r_late}"
+    assert info["bundle_ok"], f"双倍期覆盖敌方塔的法术应可出: {info['bundle_reason']}"
+    assert -0.6 < r_late < -0.15, f"双倍期有目标法术应≈−0.3(late edw): {r_late}"
 
     # ⑤ 配置契约：standard/economy 都带 v2 键且 late < early、tower late > early
     std = TrainConfig.resolve("standard").reward
     assert std["elixir_diff_late"] < std["elixir_diff_weight"], "双倍期费应更贱"
     assert std["tower_dmg_late"] > std["tower_dmg_opp"], "双倍期塔血应更贵"
     assert std["unit_dmg_k"] > 0.0, "单位受伤 shaping 默认打开"
-    print("[PASS] reward v2 记账：部署不罚/份额入账注销/空砸罚/双倍期换档/单位受伤 shaping 生效")
+    print("[PASS] reward v2 记账：部署不罚/份额入账注销/有目标法术花费型罚（空砸已被闸门拒绝）/"
+          "双倍期换档/单位受伤 shaping 生效")
+
+
+def test_spell_empty_value_gate():
+    """8h 空砸闸门：伤害型法术（Arrows 等）没有存活敌方目标可罩的格子=非法格，
+    validate 整包拒绝；敌人进入溅射半径后该格恢复合法（mask/validate 同源、P0/P1 对称）。"""
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from battle import Troop
+    from rl.action_bundle import ActionBundle, sub_position
+    from rl.action_mask import legal_cells, validate_bundle
+
+    deck = ["Arrows", "Knight", "MiniPekka", "Giant", "Musketeer", "Fireball", "Archer", "Minions"]
+    radius = 3.5  # Arrows 溅射半径（世界单位）
+    for pid in (0, 1):
+        bs = battle_mod.BattleState(
+            player_mod.PlayerState(0, list(deck), 5.0),
+            player_mod.PlayerState(1, list(deck), 5.0))
+        p = bs.players[pid]
+        p.elixir = 10.0
+        p.cycle = ["Arrows"] + [c for c in p.cycle if c != "Arrows"]  # Arrows 固定槽 1
+
+        def enemy_in_radius(pos):
+            for e in bs.entities.values():
+                if not getattr(e, "is_alive", True):
+                    continue
+                if getattr(e, "player", None) != (1 - pid):
+                    continue
+                col = getattr(getattr(e, "data", None), "collision_radius", 0.0) or 0.0
+                if pos.distance_to(e.position) <= radius + col + 1e-9:
+                    return True
+            return False
+
+        cells = legal_cells(bs, pid, "Arrows")
+        assert int(cells.sum()) > 0, f"P{pid} 敌方塔存活时 Arrows 应仍有合法格"
+        empty = None
+        for yy in range(cells.shape[0]):
+            for xx in range(cells.shape[1]):
+                if not enemy_in_radius(sub_position(pid, xx, yy)):
+                    empty = (xx, yy)
+                    break
+            if empty is not None:
+                break
+        assert empty is not None, f"P{pid} 应存在无目标空场格"
+        ex, ey = empty
+        # 空场格：掩码非法 + 整包拒绝
+        assert not bool(cells[ey, ex]), f"P{pid} 空场格不应可出 Arrows"
+        ok, reason, _ = validate_bundle(bs, pid, ActionBundle.from_single(1, ex, ey))
+        assert not ok and "非法" in reason, f"P{pid} 空砸应被 validate 拒绝: {reason}"
+        # 敌人进入该格溅射半径 → 恢复合法
+        wpos = sub_position(pid, ex, ey)
+        t = Troop(bs.next_entity_id, Position(wpos.x, wpos.y), 1 - pid, "Archer", bs)
+        t.hp = 1.0
+        bs._spawn_entity(t)
+        cells2 = legal_cells(bs, pid, "Arrows")
+        assert bool(cells2[ey, ex]), f"P{pid} 有敌人后该格应恢复合法"
+        ok2, reason2, _ = validate_bundle(bs, pid, ActionBundle.from_single(1, ex, ey))
+        assert ok2, f"P{pid} 有敌人后 validate 应通过: {reason2}"
+    print("[PASS] 8h 空砸闸门：伤害法术空场格 mask+validate 双拒；目标进入溅射半径后恢复合法（P0/P1 对称）")
 
 
 def test_plan_v1_layout():
@@ -2309,6 +2373,7 @@ def main():
     test_reward_economy_trade_pricing()
     test_draw_penalty_as_loss()
     test_reward_v2_ledger()
+    test_spell_empty_value_gate()
     test_plan_v1_layout()
     test_bp_new_intent_rules()
     test_pp_new_intent_rules()
