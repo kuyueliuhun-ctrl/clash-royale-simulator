@@ -103,6 +103,9 @@ BACKLINE_HARASSER_CARDS = ("MiniPekka", "Knight", "Valkyrie", "Bandit", "Prince"
 #: 国王塔激活：公主塔残血判定（lv11 3052 的 ~26%）
 KING_ACTIVATE_PRINCESS_HP = 800.0
 
+#: 工具③汇率（与 spell_module/9h 闸门同源）：前段 1 费 ≈ 500 塔 HP（edw=0.5 口径）
+TOWER_HP_PER_ELIXIR_EARLY = 500.0
+
 #: 卡名 → opp_spell_threat 枚举（anti_spell 用；大范围/斩杀法术保守归 big_unknown）
 _SPELL_THREAT_KIND = {
     "Fireball": "fireball", "Poison": "poison", "Lightning": "lightning",
@@ -247,6 +250,34 @@ def _hand_slot(p, card_name):
     return p.cycle.index(card_name) + 1 if card_name in p.cycle[:4] else None
 
 
+def _spell_cast_value(battle, player_id, card_name):
+    """引擎标定的法术落点估值（外置工具③ spell_module 接入，2026-09-07）。
+
+    返回 (score, tower_value, pure_tower)：
+    - score = best_cast 最优落点评分（击杀折费 + 塔伤/500 + 部队伤/650）；
+    - tower_value = 最优落点的对塔伤害折费（塔伤/500，与奖励经济前段 1 费≈500 血同源）；
+    - pure_tower = 最优落点仍然"只罩对手塔"（无任何部队/建筑受益）——与 9h 对塔
+      EV 闸门同口径，作 spell_finish 前段否决信号。
+    无伤害/无目标/异常时返回 (0.0, 0.0, False)。标定缓存使重复调用近零成本。
+    """
+    try:
+        from spell_module import best_cast, get_spell_profile, TOWER_HP_PER_ELIXIR
+        prof = get_spell_profile(card_name, getattr(battle, "card_level", None))
+        if not prof.get("deals_damage"):
+            return 0.0, 0.0, False
+        _pos, ev, score = best_cast(battle, player_id, card_name, grid=2.0)
+        if ev is None:
+            return 0.0, 0.0, False
+        pure_tower = (ev["tower_damage_total"] > 0.0
+                      and ev["troop_damage_total"] <= 0.0
+                      and all(t["kind"] == "tower" for t in ev["targets"]))
+        return (float(score),
+                float(ev["tower_damage_total"]) / TOWER_HP_PER_ELIXIR,
+                bool(pure_tower))
+    except Exception:
+        return 0.0, 0.0, False
+
+
 def _closest_threat(battle):
     """最接近我方塔的敌方部署单位（None=无）。"""
     best, best_w = None, -1.0
@@ -325,12 +356,16 @@ class BeliefPlanner:
         for card in TRADE_SPELL_CARDS:
             slot = _hand_slot(p, card)
             if slot is not None and p.elixir >= Card(card).elixir:
+                # 工具③估值：最优落点评分为 0（罩不到任何目标）→ 这张法术此刻无事可做
+                score, _tv, _pt = _spell_cast_value(battle, 0, card)
+                if score <= 0.0:
+                    continue
                 return PlanToken(
                     macro_intent="spell_trade",
                     focus_region=_own_region(threat_unit.position.x),
                     suggested_card=slot, target_kind="unit",
                     placement_hint="none", elixir_budget=0.5, risk_profile=0.5,
-                    value_estimate=float(min(cost, 6.0)) * 0.5)
+                    value_estimate=float(min(cost, 6.0)) * 0.5 + score * 0.3)
         return None
 
     def _protect_backline(self, battle, p, threat, belief):
@@ -532,14 +567,23 @@ class BeliefPlanner:
         region, hp = min(candidates, key=lambda kv: kv[1])
         if hp > 1200.0:
             return None  # 血还多 → 交给 push 打，法术磨只对低血线有意义
+        # 工具③估值 + 双倍期经济账（spell_finish 只在 t≥120 触发，奖励口径
+        # tower_dmg_late=0.002、edw_late=0.1 → 1 费 ≈ 50 塔 HP）：
+        # 磨塔法术账面必须不亏（对塔伤折费 ≥ 卡费），纯罩塔但亏费的落点直接否决。
+        TOWER_HP_PER_ELIXIR_LATE = 50.0
         for card in FINISH_SPELL_CARDS:
             slot = _hand_slot(p, card)
             if slot is not None and p.elixir >= Card(card).elixir:
+                score, _tv_early, pure_tower = _spell_cast_value(battle, 0, card)
+                tower_value_late = score - _tv_early + \
+                    _tv_early * (TOWER_HP_PER_ELIXIR_EARLY / TOWER_HP_PER_ELIXIR_LATE)
+                if pure_tower and tower_value_late < Card(card).elixir:
+                    continue
                 return PlanToken(
                     macro_intent="spell_finish", focus_region=region,
                     suggested_card=slot, target_kind="tower",
                     placement_hint="none", elixir_budget=0.45, risk_profile=0.6,
-                    value_estimate=1.2)
+                    value_estimate=1.2 + tower_value_late * 0.2)
         return None
 
     def _setup_wait(self, battle, p, threat, belief):

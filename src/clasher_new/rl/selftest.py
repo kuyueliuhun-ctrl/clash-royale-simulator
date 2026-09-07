@@ -1803,6 +1803,65 @@ def test_spell_empty_value_gate():
     print("[PASS] 8h 空砸闸门：伤害法术空场格 mask+validate 双拒；目标进入溅射半径后恢复合法（P0/P1 对称）")
 
 
+def test_spell_tower_ev_gate():
+    """9h 前段法术对塔 EV 闸门：双倍期前"只罩对手公主塔、无部队/建筑可溅"的落点
+    mask+validate 双拒（Arrows 3 费 25 伤 < 0.5×3×500=750 折费线）；塔旁有敌方部队
+    的落点放行（有正事可干）；双倍期(t≥120)放行；部队在溅射半径内但不罩塔的格子
+    不受此闸门影响（8h 空砸闸门已覆盖）。"""
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from rl.action_bundle import ActionBundle
+    from rl.action_mask import legal_cells, validate_bundle, sub_position
+
+    deck = ["Arrows", "Knight", "MiniPekka", "Giant", "Musketeer", "Fireball", "Archer", "Minions"]
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(deck), 5.0),
+                                player_mod.PlayerState(1, list(deck), 5.0))
+    p0 = bs.players[0]
+    p0.elixir = 10.0
+    p0.cycle = ["Arrows"] + [c for c in p0.cycle if c != "Arrows"]
+
+    # P0 视角：P1 左塔世界坐标 (3.5, 25.5)；本地坐标换算 sub_position(0,x,y)
+    cells = legal_cells(bs, 0, "Arrows")
+    tower_local = None
+    for yy in range(32):
+        for xx in range(18):
+            if sub_position(0, xx, yy).distance_to(Position(3.5, 25.5)) < 1.0:
+                tower_local = (xx, yy)
+    assert tower_local is not None, "应能找到 P1 左塔对应本地格"
+    tx, ty = tower_local
+    assert not bool(cells[ty, tx]), "前段纯砸塔格(只罩公主塔)应非法"
+    ok, reason, _ = validate_bundle(bs, 0, ActionBundle.from_single(1, tx, ty))
+    assert not ok and "非法" in reason, f"前段纯砸塔应被 validate 拒绝: {reason}"
+
+    # 塔旁放一个敌方部队（仍在溅射半径内）→ 该格恢复合法
+    from battle import Troop
+    troop_id = bs.next_entity_id
+    t = Troop(bs.next_entity_id, Position(3.5, 24.0), 1, "Archer", bs)
+    t.hp = 1.0
+    bs._spawn_entity(t)
+    cells2 = legal_cells(bs, 0, "Arrows")
+    assert bool(cells2[ty, tx]), "溅射半径含部队后砸塔格应恢复合法"
+
+    # 双倍期放行：把时间拨到 t≥120
+    bs.time = 121.0
+    cells3 = legal_cells(bs, 0, "Arrows")
+    assert bool(cells3[ty, tx]), "双倍期砸塔格应放行（奖励口径已调成近正 EV）"
+    ok3, _, _ = validate_bundle(bs, 0, ActionBundle.from_single(1, tx, ty))
+    assert ok3, "双倍期纯砸塔应被 validate 放行"
+    bs.time = 0.0
+
+    # P1 镜像对称：P1 砸 P0 左塔 (3.5, 6.5)
+    p1 = bs.players[1]
+    p1.elixir = 10.0
+    p1.cycle = ["Arrows"] + [c for c in p1.cycle if c != "Arrows"]
+    bs.entities[troop_id].is_alive = False   # 移走刚才的部队，恢复纯砸塔局面
+    ok4, reason4, _ = validate_bundle(bs, 1, ActionBundle.from_single(1, 3, 18))
+    assert not ok4 and "非法" in reason4, f"P1 镜像纯砸塔应被拒绝: {reason4}"
+    print(f"[PASS] 9h 前段法术对塔 EV 闸门：纯砸塔格 mask+validate 双拒；含部队放行；"
+          f"双倍期放行；对称视角同拒")
+
+
 def test_no_solo_commit_without_lead():
     """8h 不裸下：对手能出手且无 +3 费差时，MiniPekka/Giant 单卡（空 bundle 首卡）
     mask 整槽禁掉、validate 单卡整包拒绝；有费差/对手无法出手/压境防守时放行；
@@ -2809,6 +2868,7 @@ def main():
     test_draw_penalty_as_loss()
     test_reward_v2_ledger()
     test_spell_empty_value_gate()
+    test_spell_tower_ev_gate()
     test_no_solo_commit_without_lead()
     test_tank_backline_geometry()
     test_plan_v1_layout()

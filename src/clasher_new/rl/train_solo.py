@@ -68,8 +68,12 @@ def _sync_frozen_copy(main, opp):
 
 
 def write_solo_state(path, cfg, history, step, status="running",
-                     deck=None, copy_every=None, target_steps=None):
-    """把 solo 训练状态落盘（增量写；dashboard --solo 实时读取）。"""
+                     deck=None, copy_every=None, target_steps=None, controls=None):
+    """把 solo 训练状态落盘（增量写；dashboard --solo 实时读取）。
+
+    controls: 本周期对照组结果 [{"step","vs","wins",...}]（vs 初始模型/上一评估点模型，
+    只做对比不进迭代）；按周期累积在 state["controls_history"]。
+    """
     state = {
         "mode": "solo",
         "agents": [{"agent_id": "main", "kind": "main", "path": None}],
@@ -82,6 +86,18 @@ def write_solo_state(path, cfg, history, step, status="running",
         "status": status,
         "demo": False,
     }
+    if controls is not None:
+        ch = state.setdefault("_controls_history", [])
+        prev = {}
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                prev = json.load(f) or {}
+        except (OSError, ValueError):
+            pass
+        ch = [c for c in (prev.get("_controls_history") or [])
+              if c.get("step") != int(step)]
+        ch.extend(controls)
+        state["_controls_history"] = ch
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
@@ -89,10 +105,12 @@ def write_solo_state(path, cfg, history, step, status="running",
 
 
 def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
-              record_replays=False, replays_dir=None, step=None, frozen_step=None):
+              record_replays=False, replays_dir=None, step=None, frozen_step=None,
+              save_replays=True):
     """main（deterministic）vs 冻结副本（deterministic）打 n_games。
 
-    返回 (stats, replays)。replays 非空时以 league_<step>.pkl 落盘（复用 dashboard 回放）。
+    返回 (stats, replays)。replays 非空且 save_replays 时以 league_<step>.pkl 落盘
+    （复用 dashboard 回放；对照组评估传 save_replays=False 只留数字不落盘）。
     step: main 当前训练步（录像文件步数）；frozen_step: 冻结副本最后同步时的训练步，
     两者一并写入每局 meta.steps，dashboard 对阵列显示 "main@<step> vs main@<frozen_step>"。
     """
@@ -161,7 +179,7 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
     stats = {"step": step, "wins": wins, "losses": losses, "draws": draws,
              "games": n, "winrate": round(winrate, 4),
              "winrate_se": round(se, 4), "mean_reward": round(rew_sum / n, 4)}
-    if replays and replays_dir and step is not None:
+    if replays and replays_dir and step is not None and save_replays:
         os.makedirs(replays_dir, exist_ok=True)
         save_league_replays(replays, os.path.join(replays_dir, f"league_{step}.pkl"))
     return stats, replays
@@ -303,7 +321,7 @@ def _collect_worker_results(procs, out_q, expected):
 
 def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
                        n_workers=8, record_replays=False, replays_dir=None, step=None,
-                       frozen_step=None):
+                       frozen_step=None, save_replays=True):
     """eval_solo 的进程池并行版：n_games 局均分到 n_workers 个 spawn 进程打。
 
     串行 16 局≈126s（主进程单核跑纯 Python 模拟）；16 进程理论 ≈ 126/16 + spawn/import
@@ -320,7 +338,7 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
         print("[eval] 并行评估不可用，降级串行（同种子结果等价，只是慢）", flush=True)
         return eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
                          record_replays=record_replays, replays_dir=replays_dir,
-                         step=step, frozen_step=frozen_step)
+                         step=step, frozen_step=frozen_step, save_replays=save_replays)
     ctx = mp.get_context("spawn")
     out_q = ctx.Queue()
     main_sd = {k: v.detach().cpu() for k, v in main.state_dict().items()}
@@ -358,7 +376,7 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
             print(f"[eval] 并行评估 worker 失败，降级串行: {failure}", flush=True)
             return eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
                              record_replays=record_replays, replays_dir=replays_dir,
-                             step=step, frozen_step=frozen_step)
+                             step=step, frozen_step=frozen_step, save_replays=save_replays)
         for p in procs:
             p.join(timeout=10)
         results.sort(key=lambda r: r[0])   # 按游戏索引还原顺序
@@ -386,7 +404,7 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
     stats = {"step": step, "wins": wins, "losses": losses, "draws": draws,
              "games": n, "winrate": round(winrate, 4),
              "winrate_se": round(se, 4), "mean_reward": round(rew_sum / n, 4)}
-    if replays and replays_dir and step is not None:
+    if replays and replays_dir and step is not None and save_replays:
         os.makedirs(replays_dir, exist_ok=True)
         save_league_replays(replays, os.path.join(replays_dir, f"league_{step}.pkl"))
     return stats, replays
@@ -468,7 +486,45 @@ def run_solo(cfg, resume=False, record_replays=True):
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
     _t_policy = time.monotonic()
 
+    # —— 评估对照组（2026-09-07）：对手每 copy_every 步同步变强，solo 曲线自我对冲
+    # 没有区分度。补两组固定参照对手，只做对比、绝不进训练/迭代：
+    #   baseline0 = 训练起点模型（fresh=随机初始化；resume=断点起点权重）——
+    #               回答"比开始时强了多少"；
+    #   baseline_prev = 上一个评估点权重（每周期末刷新）——回答"这一段有没有真涨"。
+    # 对照结果写 solo_state.json 的 controls 数组，dashboard/分析按对手分别画线。
+    baseline0 = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
+                               belief_dim=belief_dim)
+    baseline0.to_device(device)
+    baseline_prev = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
+                                   belief_dim=belief_dim)
+    baseline_prev.to_device(device)
+    _controls_ready = {"synced": False}   # main 权重定稿后一次性同步 baseline0
+
+    def _sync_controls_once():
+        if not _controls_ready["synced"]:
+            _sync_frozen_copy(main, baseline0)
+            _sync_frozen_copy(main, baseline_prev)
+            _controls_ready["synced"] = True
+
+    def eval_control(step, label, opp_model, seed):
+        """main vs 对照对手打 n_eval_games 局（确定性），返回 stats dict（不落盘、不迭代）。"""
+        if int(cfg.eval_workers) > 1:
+            stats, _ = eval_solo_parallel(env, main, opp_model, int(cfg.n_eval_games),
+                                          int(cfg.max_ep_steps), seed, cfg,
+                                          n_workers=int(cfg.eval_workers),
+                                          record_replays=False, step=step,
+                                          frozen_step=None, save_replays=False)
+        else:
+            stats, _ = eval_solo(env, main, opp_model, int(cfg.n_eval_games),
+                                 int(cfg.max_ep_steps), seed, cfg,
+                                 record_replays=False, step=step,
+                                 frozen_step=None, save_replays=False)
+        stats = dict(stats)
+        stats["vs"] = label
+        return stats
+
     def eval_and_write(step):
+        _sync_controls_once()
         if int(cfg.eval_workers) > 1:
             stats, _ = eval_solo_parallel(env, main, opp, int(cfg.n_eval_games),
                                           int(cfg.max_ep_steps), cfg.seed + step, cfg,
@@ -483,11 +539,26 @@ def run_solo(cfg, resume=False, record_replays=True):
                                  replays_dir=cfg.replays_dir(), step=step,
                                  frozen_step=frozen_step)
         history.append(stats)
+        # 对照组：种子错开 50000/60000，与主评估、彼此互不重叠
+        controls = []
+        try:
+            controls.append(eval_control(step, "baseline0", baseline0,
+                                         cfg.seed + 50000 + step))
+            controls.append(eval_control(step, "baseline_prev", baseline_prev,
+                                         cfg.seed + 60000 + step))
+        except OSError as e:
+            print(f"[solo] 对照评估失败（不影响主评估/训练）: {e!r}", flush=True)
         write_solo_state(cfg.solo_state_path(), cfg, history, step,
-                         status="done" if step >= cfg.total_steps else "running")
+                         status="done" if step >= cfg.total_steps else "running",
+                         controls=controls)
+        # 对照结束、主 checkpoint 落盘后，把"上一评估点"推进到当前权重
+        _sync_frozen_copy(main, baseline_prev)
         print(f"[solo] eval@{step}: 胜率 {stats['winrate']:.3f}±{stats['winrate_se']:.3f} "
               f"({stats['wins']}W/{stats['losses']}L/{stats['draws']}D, "
               f"{stats['games']}局) mean_reward={stats['mean_reward']:.3f}", flush=True)
+        for c in controls:
+            print(f"[solo]   vs {c['vs']}: 胜率 {c['winrate']:.3f}±{c['winrate_se']:.3f} "
+                  f"({c['wins']}W/{c['losses']}L/{c['draws']}D)", flush=True)
         save_checkpoint(main, cfg.solo_main_path())
         save_checkpoint(main, cfg.solo_ckpt_path(step))   # 历史版本保留（solo_main_<step>.pt）
         torch.save(ppo.opt.state_dict(), cfg.solo_opt_path())   # 断点续练恢复 Adam

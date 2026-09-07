@@ -108,6 +108,94 @@ def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float
     return False
 
 
+#: —— 9h 前段法术对塔 EV 闸门（2026-09-07 100k 取证定稿，AGENTS.md 优先级1）——
+#: 取证：37 次砸塔 100% 选择型（被迫=0）、68% 纯空砸塔，前段砸塔率 16%→54% 不降反升。
+#: 软惩罚（edw×费用 ≈ −1.8/次）未被吸收 → 升级为硬约束：
+#: 伤害型法术落点若**只**罩到对手皇冠塔（无任何部队/建筑受益）且
+#: `对塔伤害折费 < edw×费用`（前段 1 费≈500 塔 HP），则该落点非法；双倍期放行。
+#: 数值口径：对塔伤害 = spell_module 引擎标定（首次调用时标定+缓存）；
+#: edw 与奖励 config.DEFAULT_REWARD.elixir_diff_weight 同源（消费者注入，缺省 0.5）。
+TOWER_HP_PER_ELIXIR_EARLY = 500.0   # 与 spell_module.TOWER_HP_PER_ELIXIR 一致
+SPELL_EV_EDW = 0.5                  # 奖励经济前段费差权重（economy 预设）
+
+_spell_tower_dmg_cache = {}
+
+
+def _spell_tower_damage(card_name: str) -> float:
+    """对塔伤害（引擎标定缓存）。标定失败（环境异常）返回 0.0 = 闸门自动放行。"""
+    if card_name in _spell_tower_dmg_cache:
+        return _spell_tower_dmg_cache[card_name]
+    dmg = 0.0
+    try:
+        from spell_module import get_spell_profile
+        prof = get_spell_profile(card_name)
+        if prof.get("deals_damage"):
+            dmg = float(prof.get("tower_damage") or 0.0)
+    except Exception:
+        dmg = 0.0
+    _spell_tower_dmg_cache[card_name] = dmg
+    return dmg
+
+
+def _spell_covers_non_tower(battle, player_id: int, pos: Position, radius: float) -> bool:
+    """溅射半径内是否有对手的**非塔**目标（部队/建筑）。有 → 法术有正事可干，放行。"""
+    opp = 1 - player_id
+    tower_ids = {1, 2, 3, 4, 5, 6}
+    for e in battle.entities.values():
+        if not getattr(e, "is_alive", True):
+            continue
+        if getattr(e, "player", None) != opp:
+            continue
+        if e.id in tower_ids:
+            continue
+        col = getattr(getattr(e, "data", None), "collision_radius", 0.0) or 0.0
+        if pos.distance_to(e.position) <= radius + col + 1e-9:
+            return True
+    return False
+
+
+def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Position) -> bool:
+    """前段"纯砸塔"落点非法判定（空砸闸门的对塔特化加强版）。
+
+    条件（全部满足才拒）：
+    1. 双倍期前（battle.time < 120，双倍期奖励口径本身把砸塔调成近正 EV）；
+    2. 伤害型法术、有半径（无半径/无标定数据 → 放行，不误伤）；
+    3. 落点罩得到对手存活公主塔（王塔血量随公主塔联动，只以公主塔判定落点）；
+    4. 落点半径内**无**对手非塔目标（部队/建筑）——有即放行；
+    5. `对塔伤折费 < edw×费用`：标定对塔伤 / 500 < edw×卡费（前段经济账）。
+    """
+    if battle.time >= 120.0:
+        return False
+    if not _spell_deals_damage(card_name):
+        return False
+    radius = _spell_radius_m(card_name)
+    if radius <= 0.0:
+        return False
+    dmg = _spell_tower_damage(card_name)
+    if dmg <= 0.0:
+        return False
+    # 只对"罩得到存活公主塔"的落点判定（王塔在公主塔后面，砸到公主塔必含王塔误差，
+    # 不重复判王塔； princess 全破后纯砸王塔同样按条件 3-5 判）
+    opp = 1 - player_id
+    hits_princess = False
+    for tid in ((1, 2) if opp == 1 else (3, 4)):
+        tw = battle.entities.get(tid)
+        if tw is None or not tw.is_alive:
+            continue
+        col = getattr(tw.data, "collision_radius", 0.0) or 0.0
+        if pos.distance_to(tw.position) <= radius + col + 1e-9:
+            hits_princess = True
+            break
+    if not hits_princess:
+        return False
+    if _spell_covers_non_tower(battle, player_id, pos, radius):
+        return False
+    cost = Card(card_name).elixir
+    if cost <= 0:
+        return False
+    return dmg / TOWER_HP_PER_ELIXIR_EARLY < SPELL_EV_EDW * cost - 1e-9
+
+
 #: —— 8h 不裸下：圣水无优势时禁止“单独放高承诺进攻单位”（用户口径）——
 #: 例：单独下 MiniPekka，对方手里有 Archers 可解；只有我方多 3~4 费、能用
 #: 法术破防时这波进攻才有意义。不满足 → 模型必须攒费或同刻多卡协同进攻。
@@ -266,6 +354,9 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bo
             radius = _spell_radius_m(card_name)
             if radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
                 return False
+            # 9h 前段纯砸塔 EV 闸门：无部队/建筑可溅、账面亏费 → 非法
+            if radius > 0.0 and _spell_tower_ev_illegal(battle, player_id, card_name, pos):
+                return False
         return True
     if battle.is_position_occupied_by_building(pos, 0.0):
         return False
@@ -311,12 +402,15 @@ def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
     eff = _effective_card(battle.players[player_id], card_name)
     if Card(eff).type == "spell":
         radius = _spell_radius_m(eff) if _spell_deals_damage(eff) else 0.0
+        ev_gate = radius > 0.0 and _spell_deals_damage(eff)
         for y in range(GRID_H):
             for x in range(GRID_W):
                 pos = sub_position(player_id, x, y)
                 if _hits_dead_enemy_tower(battle, player_id, pos):
                     cells[y, x] = False
                 elif radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
+                    cells[y, x] = False
+                elif ev_gate and _spell_tower_ev_illegal(battle, player_id, eff, pos):
                     cells[y, x] = False
         return cells
     for y in range(GRID_H):
