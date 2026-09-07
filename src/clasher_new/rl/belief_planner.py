@@ -756,8 +756,19 @@ class BeliefPlanner:
                 return tok
 
         # —— 回退：旧 8 意图逻辑 ——
+        # 9j（C 层"对牌"触发）：敌军过河（y<16）即建议防守，不等威胁当量攒够 2.0——
+        # 取证（2026-09-08, scripts/forensics_response.py v2）：威胁→首次响应延迟中位
+        # 4.0s、威胁场景 62% 落点距过河敌军 >8 格；单单位过河 threat=1.0 < 阈值 2.0，
+        # 旧条件把它漏给 push/cycle。软偏置语义：只改 plan 建议（intent/region 对准
+        # 威胁所在路），不硬禁任何动作；_pick_suggested_card 的 defend 分支照常生效。
+        crossed = None
+        tu0 = _closest_threat(battle)
+        if tu0 is not None and float(tu0.position.y) < BRIDGE_Y:
+            crossed = tu0
         intent = "cycle_and_wait"
-        if threat >= PRESSURE_THRESHOLD and threat >= my_pressure * 0.8:
+        if crossed is not None:
+            intent = "defend_left" if crossed.position.x < LANE_SPLIT_X else "defend_right"
+        elif threat >= PRESSURE_THRESHOLD and threat >= my_pressure * 0.8:
             intent = "defend_left" if _enemy_main_x(battle) < 9 else "defend_right"
         elif my_pressure >= PRESSURE_THRESHOLD:
             intent = "push_left" if _enemy_main_x(battle) < 9 else "push_right"
@@ -775,10 +786,16 @@ class BeliefPlanner:
         bundle_hint = 2 if (my_pressure >= PRESSURE_THRESHOLD
                             and threat >= PRESSURE_THRESHOLD and risk > 0.6) else 1
         region = _region_from_intent(intent)
+        # 9j：过河防守帧 → 落点提示用桥头拦截位（bridge_front，PLACEMENT_HINTS
+        # 既有语义"桥头拦截/预判防守位"），region 精确对准威胁 x（回退 defend 的
+        # own_left/own_right 与之一致，无需再分）。
+        hint = "bridge_front" if crossed is not None else "none"
         return PlanToken(
             macro_intent=intent,
             focus_region=region,
             suggested_card=suggested,
+            target_kind="unit" if crossed is not None else "none",
+            placement_hint=hint,
             bundle_size_hint=bundle_hint,
             combo_hint=1 if bundle_hint >= 2 else 0,
             risk_profile=risk,

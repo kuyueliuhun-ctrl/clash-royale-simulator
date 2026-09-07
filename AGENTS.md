@@ -56,6 +56,42 @@ LLM 文本**永远不进网络或梯度**，只通过"改训练议程"起作用�
 3. **LLM 局间顾问**（实验性）——把人工录像取证（行为病理诊断）自动化；注意它只解决"发现问题"，修复仍需人。
 4. **专家迭代 / 训练时搜索**——等基线收敛、GPU 空闲（YOLO 训练结束后）、且步骤 2 证明搜索增益为正之后再启动。
 
+### 9j「单边堆牌/不对牌」三层修复（2026-09-08 落地，待复训验证）
+
+**问题定性**（FirstLight 对比分析 + replay 取证 `scripts/forensics_response.py`）：
+模型防守响应率 41.9%（对照对手 60.7%）、威胁→首次响应延迟中位 4.0s、威胁场景
+62% 的落点距过河敌军 >8 格——**时机响应尚可、空间上不对牌**。根因两层：①训练对手是
+frozen_copy，两边都不防守时"换家"是合法策略（单边堆牌在训练分布里不受惩罚）；
+②对手事件信息（"0.5s 前在桥头下了 Giant"）要靠 ~9 格感受野的 CNN 自己从 grid 重新发现。
+**取证教训：P0 塔 y≈3-6.5（y 小半场）、P1 塔 y≈25.5-29，"敌军过河"= P1 troop y<16——
+第一版取证把半场方向量反了（crown0=被 P0 承认的皇冠数是旁证），坐标口径必须用
+entity 实测 + `belief_planner.BRIDGE_Y` 注释互证。**
+
+- **A 层 训练对手池**（`train_solo._OpponentPool`）：frozen 副本 70% + 历史 checkpoint
+  PFSP 20%（`_collect_hist_ckpts` 按步数均匀抽 ≤12 个，`pfsp.PFSP` 乐观先验，
+  每局结束回填胜负）+ **真防守脚本 10%**（`opponents.SelfDefenderPolicy`：
+  复用 `simulate_exchange.script_defender` 的 (DPS+HP/15)/费 反制 + 塔前迎击线，
+  无威胁帧 60% 停手缓出）——单边推进在防守对手面前直接亏塔损，换家 meta 失效。
+  selftest: `test_opponent_pool_mix`。
+- **B 层 对手出牌事件通道**（`belief.py`）：最近 3 次对手出牌 → 每条
+  [card_onehot(13), x/17, y/31, Δt/10] 3×16=48 维追加在 belief_token 尾部
+  （23→71 维）。**旧 checkpoint 尾零兼容**：`follower.load_checkpoint` 对
+  `belief_mlp.0.weight` 复制 plan_mlp 的"前列拷贝+尾部清零"模式（真实 100k 旧 ckpt
+  验证：前 23 列语义保留、事件列从零学）。Δt 以当前决策时刻为基准=事件陈旧度可学，
+  clamp 1.0。调用方零改动自动生效（现有 encode(obs,None)→step→update(opp_played)
+  序列天然因果正确）。selftest: `test_opp_event_token`。
+- **C 层 过河即防**（`belief_planner.plan` 回退段）：敌军过河（y<16）即建议
+  defend_left/right + `placement_hint="bridge_front"` + target_kind="unit"，
+  focus_region 对准威胁 x——不再等威胁当量攒够 2.0（单单位过河 threat=1.0 会被
+  旧条件漏给 push/cycle）。软偏置语义；spell_trade/soft_control 优先级不变。
+  selftest: `test_crossed_river_defend_plan`。
+- **配套教训**：①`ScriptedPolicy(mode="heuristic")` 实为 mask 随机（P0-3 时代占位），
+  "会防守的脚本对手"必须用 SelfDefenderPolicy（其反制落点是**世界坐标**，
+  塞 ActionBundle 前必须做世界→本地网格逆变换，P1 有镜像——曾直接塞导致
+  部署非法）；②belief token 维度 71 硬编码进 selftest 的策略构造（23 会在
+  act 时 mat1/mat2 失配）；③对手经 `env.opponent(obs1)` 调用时 env 引用需在
+  构造时注入（`SelfDefenderPolicy(env=...)`）。
+
 ### 外置工具（2026-09-06 起步，用户确认的路线）
 
 外置工具 = 引擎侧确定性服务，模型/规划器按需调用，不进动作空间。第一个已落地：

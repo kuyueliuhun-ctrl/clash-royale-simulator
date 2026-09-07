@@ -68,6 +68,8 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
     v1 兼容扩展（Phase 2 结构先行）：旧 checkpoint 的 plan_dim（如 21）< 请求维度（如 57）时，
     plan_mlp 首层权重**前 pd_old 列**拷贝、尾部补零 —— 旧权重对前 21 维语义不变，
     尾部新字段从零开始学（与 PlanToken 尾部追加布局一致）。
+    9k（B 层事件通道）：belief_mlp.0.weight 同样处理 —— 旧 belief token（23 维，
+    无事件通道）加载后前 23 维语义不变，尾部事件维度从零学。
     """
     data = torch.load(path, map_location="cpu")
     if isinstance(data, dict) and "state_dict" in data:
@@ -91,7 +93,11 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
             # 不能残留新网络的随机初始化——否则旧 ckpt 加载即注入噪声）
             tv.zero_()
             tv[:, :v.shape[1]].copy_(v)
-        elif k == "plan_mlp.0.bias":
+        elif k == "belief_mlp.0.weight" and v.dim() == 2 and v.shape[1] <= tv.shape[1]:
+            # 9k：事件通道尾部追加（同 plan_mlp 模式）
+            tv.zero_()
+            tv[:, :v.shape[1]].copy_(v)
+        elif k in ("plan_mlp.0.bias", "belief_mlp.0.bias"):
             tv.copy_(v)
         # 其余形状不匹配（结构大改）→ 保持新初始化，不静默崩
     policy.load_state_dict(target)

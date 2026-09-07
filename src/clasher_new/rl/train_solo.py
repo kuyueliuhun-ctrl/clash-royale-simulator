@@ -36,6 +36,7 @@ from rl.follower import FollowerPolicy, save_checkpoint, load_checkpoint
 from rl.ppo import PPOTrainer
 from rl.config import reward_to_env
 from rl.train_follower import FollowerOpponent
+from rl.pfsp import PFSP as _PFSP
 from rl.run_league import (resolve_device, _bundle_cards, LeagueGameRecorder,
                            _stall_probe, STALL_WINDOW, _load_run_state,
                            timeout_winner, overtime_open)
@@ -47,6 +48,19 @@ DEFAULT_SOLO_DECK = ["Knight", "MiniPekka", "Arrows", "Minions",
 
 #: 训练中先知规划注入概率（与 run_league 主训练一致）
 _SOLO_PROPHET_PROB = 0.3
+
+# —— A 层：训练对手池（2026-09-08，"单边堆牌"根因修复）——
+# 取证（scripts/forensics_response.py v2）：对手是 frozen_copy 自我对冲 → 两边都不
+# 防守时"换家"是合法策略，模型学不到对牌。对手池三类混合：
+#   frozen（主力，1-p_pool 权重内默认）  main 周期冻结副本（原行为）；
+#   hist    历史 checkpoint PFSP 采样（自博弈多样性，会惩罚过时策略的漏洞）；
+#   defend  真防守脚本（SelfDefenderPolicy：script_defender 反制 + 低频缓出）——
+#           单边推进在它面前讨不到便宜 → 单边策略直接亏塔损奖励。
+#: 训练局对手构成：frozen 0.7 / hist 0.2 / defend 0.1（frozen 仍是主力避免 curriculum 断裂）
+_OPP_MIX = {"frozen": 0.7, "hist": 0.2, "defend": 0.1}
+#: hist 采样池：从磁盘 checkpoint 目录收集 solo_main_<step>.pt（最多保留 12 个，
+#: 按步数均匀抽样——几百个文件全加载内存吃不消）
+_HIST_POOL_MAX = 12
 
 
 def solo_env(cfg, seed):
@@ -65,6 +79,109 @@ def _draw_penalty(cfg) -> float:
 def _sync_frozen_copy(main, opp):
     """把 main 当前权重同步给冻结副本（周期执行）。"""
     opp.load_state_dict(main.state_dict())
+
+
+def _collect_hist_ckpts(folder, max_n=_HIST_POOL_MAX):
+    """收集 solo 输出目录的历史 checkpoint（solo_main_<step>.pt）。
+
+    按 step 升序均匀抽 max_n 个（含最旧不含当前正在写的 solo_main.pt）。
+    folder 不存在/无文件 → 空列表（对手池退化为 frozen+defend 两类）。"""
+    if not folder or not os.path.isdir(folder):
+        return []
+    steps = []
+    for fn in os.listdir(folder):
+        if fn.startswith("solo_main_") and fn.endswith(".pt"):
+            try:
+                steps.append(int(fn[len("solo_main_"):-3]))
+            except ValueError:
+                continue
+    steps.sort()
+    if len(steps) <= max_n:
+        return [os.path.join(folder, f"solo_main_{s}.pt") for s in steps]
+    idx = np.linspace(0, len(steps) - 1, max_n).astype(int)
+    return [os.path.join(folder, f"solo_main_{steps[i]}.pt") for i in idx]
+
+
+class _OpponentPool:
+    """训练对手选择器（9j）：frozen / hist / defend 三类按 _OPP_MIX 概率采样。
+
+    - frozen：返回主 frozen_copy（FollowerOpponent，权重周期同步）——原行为；
+    - hist：从历史 checkpoint 池 PFSP 采样一个，载入专用 hist 策略 → 包装
+      FollowerOpponent（belief/planner 完整链路）；PFSP 权重按 main 对各 hist
+      ckpt 的近期胜率（低胜率高权重，pfsp.PFSP 语义）；
+    - defend：SelfDefenderPolicy（真防守脚本）。
+    每局开始由外部调 sample()，返回的对手直接赋给 env.opponent。
+    """
+
+    def __init__(self, cfg, env, frozen_side, rng, device):
+        from rl.opponents import SelfDefenderPolicy
+        self.cfg = cfg
+        self.env = env
+        self.frozen_side = frozen_side       # FollowerOpponent（冻结副本）
+        self.rng = rng
+        self.device = device
+        self.defender = SelfDefenderPolicy(seed=cfg.seed + 7, env=env)
+        self.hist_paths = _collect_hist_ckpts(cfg.folder())
+        self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11)
+        self._hist_id = {p: f"hist_{i}" for i, p in enumerate(self.hist_paths)}
+        self._hist_policy = None             # 惰性建（需要 belief_dim/hidden_dim）
+        self._hist_side = None
+        self._loaded_path = None
+        self._last_kind = None
+        self._last_hist_id = None
+        if self.hist_paths:
+            print(f"[solo] 对手池: hist ckpts={len(self.hist_paths)} "
+                  f"(mix frozen={_OPP_MIX['frozen']}/hist={_OPP_MIX['hist']}/"
+                  f"defend={_OPP_MIX['defend']})", flush=True)
+        else:
+            print(f"[solo] 对手池: 无历史 ckpt（本目录首轮训练），退化为 "
+                  f"frozen={_OPP_MIX['frozen']/(1-_OPP_MIX['hist'])} "
+                  f"/ defend={_OPP_MIX['defend']/(1-_OPP_MIX['hist'])}", flush=True)
+
+    def sample(self):
+        """为本局选对手：返回 (kind, opponent, hist_id_or_None)。"""
+        r = self.rng.random()
+        if self.hist_paths and r < _OPP_MIX["hist"]:
+            opp_id = self._pfsp.sample("main", list(self.hist_paths))
+            self._ensure_hist(opp_id)
+            self._last_kind, self._last_hist_id = "hist", self._hist_id[opp_id]
+            return "hist", self._hist_side, self._last_hist_id
+        if r < _OPP_MIX["hist"] + _OPP_MIX["defend"] or \
+                (not self.hist_paths and r >= _OPP_MIX["frozen"] / (1 - _OPP_MIX["hist"])):
+            self._last_kind, self._last_hist_id = "defend", None
+            return "defend", self.defender, None
+        self._last_kind, self._last_hist_id = "frozen", None
+        return "frozen", self.frozen_side, None
+
+    def record(self, winner):
+        """上一局结束回填 PFSP 胜率（frozen/defend 局无操作）。
+
+        winner: 0=main 胜（score 1.0）/ 1=main 负（0.0）/ None=平局（0.5）。"""
+        if self._last_kind == "hist" and self._last_hist_id is not None:
+            score = {0: 1.0, 1: 0.0}.get(winner, 0.5)
+            self._pfsp.update_winrate("main", self._last_hist_id, score)
+
+    def _ensure_hist(self, path):
+        """载入 hist ckpt（换目标才重载；belief_dim 尾部零拷贝兼容旧 23 维）。"""
+        if self._hist_policy is None:
+            self._hist_policy = FollowerPolicy(
+                hidden=self.cfg.hidden_dim, plan_dim=PLAN_DIM,
+                belief_dim=len(BeliefInference(opp_deck=self.env.deck1,
+                                               n_particles=128, seed=0).encode(None, None)))
+            self._hist_policy.to_device(self.device)
+        if self._loaded_path != path:
+            ck = load_checkpoint(path, belief_dim=self._hist_policy.belief_dim)
+            self._hist_policy.load_state_dict(ck.state_dict())
+            self._loaded_path = path
+        if self._hist_side is None:
+            self._hist_side = FollowerOpponent(
+                self._hist_policy, self.env,
+                belief=BeliefInference(opp_deck=self.env.deck1, n_particles=128,
+                                       seed=self.cfg.seed + 3),
+                deterministic=True)
+        else:
+            self._hist_side.policy = self._hist_policy
+        self._hist_side.reset()
 
 
 def write_solo_state(path, cfg, history, step, status="running",
@@ -484,6 +601,8 @@ def run_solo(cfg, resume=False, record_replays=True):
                                 deterministic=True)
     env.opponent = opp_side
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
+    # A 层：训练对手池（frozen 主力 + hist PFSP + defend 脚本；sample() 按局选）
+    opp_pool = _OpponentPool(cfg, env, opp_side, rng, device)
     _t_policy = time.monotonic()
 
     # —— 评估对照组（2026-09-07）：对手每 copy_every 步同步变强，solo 曲线自我对冲
@@ -590,6 +709,24 @@ def run_solo(cfg, resume=False, record_replays=True):
     last_hp = None
     _t0 = time.monotonic()
 
+    def _new_episode_reset(winner):
+        """局间重置 + A 层对手池采样。
+
+        winner：上一局胜负（0/1/None），先于 env.reset() 由调用方捕获 → 回填 PFSP
+        （首局前的 initial reset 不经本函数，无 winner 可回填）；随后采样本局对手
+        （frozen/hist/defend）并替换 env.opponent。"""
+        nonlocal obs, hidden, last_hp, stall_count
+        opp_pool.record(winner)
+        kind, side, hist_id = opp_pool.sample()
+        env.opponent = side
+        obs, _ = env.reset()
+        belief.reset(env.deck1)
+        hidden = None
+        last_hp = None
+        stall_count = 0
+        ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
+        ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
+
     for step in range(start_step + 1, cfg.total_steps + 1):
         # —— 训练环僵局早停（纯 RL 修复）：连续 100 步双方塔血零变化 → 判平结束本局。
         # 否则躺平要拖满 max_ep_steps 才在 360 帧末罚一次 −10，(γλ)^k 视野内不可见，
@@ -616,13 +753,10 @@ def run_solo(cfg, resume=False, record_replays=True):
                                         "old_logprob": ep_lp[i], "adv": float(adv[i]),
                                         "returns": float(ret[i]), "masks": ep_masks[i],
                                         "init_hidden": ep_init[i]})
-                obs, _ = env.reset()
-                belief.reset(env.deck1)
-                opp_side.reset()
-                hidden = None
-                ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
-                ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
-                stall_count, last_hp = 0, None
+                _last_winner = env.battle.winner
+                _new_episode_reset(_last_winner)
+                if isinstance(env.opponent, FollowerOpponent):
+                    env.opponent.reset()
                 continue
         use_prophet = rng.random() < _SOLO_PROPHET_PROB
         plan = prophet.plan(env.get_prophet_state()) if use_prophet \
@@ -674,13 +808,10 @@ def run_solo(cfg, resume=False, record_replays=True):
                                     "old_logprob": ep_lp[i], "adv": float(adv[i]),
                                     "returns": float(ret[i]), "masks": ep_masks[i],
                                     "init_hidden": ep_init[i]})
-            obs, _ = env.reset()
-            belief.reset(env.deck1)
-            opp_side.reset()
-            hidden = None
-            ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew = [], [], [], [], [], [], []
-            ep_term, ep_trunc, ep_masks, ep_init = [], [], [], []
-            stall_count, last_hp = 0, None
+            _last_winner = env.battle.winner
+            _new_episode_reset(_last_winner)
+            if isinstance(env.opponent, FollowerOpponent):
+                env.opponent.reset()
 
         if len(transitions) >= cfg.update_interval:
             batch = (transitions[:cfg.batch_size] if len(transitions) > cfg.batch_size

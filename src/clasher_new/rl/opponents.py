@@ -95,3 +95,82 @@ class ScriptedPolicy:
         if self.env is None:
             raise RuntimeError("ScriptedPolicy 需要先注入 env（.env = ...）")
         return self.play(self.env, 1)
+
+
+class SelfDefenderPolicy:
+    """真防守脚本对手（9j，A 层对手池组件）：把 simulate_exchange.script_defender
+    的确定性反制逻辑包装成 env 对手——威胁出现时从手牌选 (DPS+HP/15)/费 最优的
+    反制部队、塔前迎击线落点；无威胁时按低频缓出（60% 帧停手，其余从掩码随机，
+    模拟"控场但会响应"的人类基线）。
+
+    与 ScriptedPolicy(mode="heuristic")（= mask 随机）的本质区别：会真的把部队
+    放在过河敌军的行进路线上 → 单边堆牌/换家策略在这里讨不到便宜。
+
+    纯函数式反制：script_defender(sim, defender_id) 是无副作用纯函数（selftest
+    test_simulate_exchange 对账），候选落点由本类经 env.battle 的合法性真实执行。
+    """
+
+    def __init__(self, seed=0, env=None, passive_prob: float = 0.6):
+        self.seed = seed
+        self.rng = random.Random(seed)
+        self.env = env
+        #: 无威胁帧的停手概率（高=更省费、更防守；1.0=纯防守零进攻）
+        self.passive_prob = float(passive_prob)
+
+    def deck(self):
+        return None   # 固定默认卡组（与 ScriptedPolicy 无 pool 时一致）
+
+    def _defend_action(self, player_id: int):
+        """script_defender 反制 → (slot, x, y) 或 None。落点必须过引擎合法性。"""
+        from simulate_exchange import script_defender
+        acts = script_defender(self.env.battle, player_id)
+        if not acts:
+            return None
+        p = self.env.battle.players[player_id]
+        for card, pos in acts:
+            if not p.can_play_card(card):
+                continue
+            # 手牌槽位（部署要求卡在手牌前 4）
+            if card not in p.cycle[:4]:
+                continue
+            slot = p.cycle.index(card) + 1
+            # script_defender 返回**世界坐标**（喂 sim.deploy_card 的口径）；
+            # ActionBundle 是**本地网格**坐标 → 需逆变换（P1 有镜像）。
+            wx, wy = float(pos[0]), float(pos[1])
+            if player_id == 1:
+                gx = int(round(17.0 - wx))
+                gy = int(round(31.0 - wy))
+            else:
+                gx = int(round(wx - 0.5))
+                gy = int(round(wy - 0.5))
+            return (slot, gx, gy)
+        return None
+
+    def _random_action(self, player_id: int):
+        mask = self.env.get_action_mask_for(player_id)
+        slots = np.flatnonzero(mask["slots"])
+        if slots.size == 0:
+            return None
+        slot = int(self.rng.choice(slots))
+        cells = np.flatnonzero(mask["cells"][slot])
+        if cells.size == 0:
+            return None
+        cell = int(self.rng.choice(cells))
+        return (slot, int(cell % 18), int(cell // 18))
+
+    def play(self, env, player_id: int = 1) -> ActionBundle:
+        self.env = env
+        act = None
+        if self.rng.random() >= self.passive_prob:
+            act = self._random_action(player_id)   # 无威胁帧：低频随机缓出
+        if act is None:
+            act = self._defend_action(player_id)   # 威胁帧：真防守反制
+        if act is None:
+            return ActionBundle.noop()
+        slot, x, y = act
+        return ActionBundle.from_single(slot, int(x), int(y))
+
+    def __call__(self, obs):
+        if self.env is None:
+            raise RuntimeError("SelfDefenderPolicy 需要先注入 env（.env = ...）")
+        return self.play(self.env, 1)

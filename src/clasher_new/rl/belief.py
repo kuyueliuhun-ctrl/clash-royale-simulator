@@ -31,9 +31,52 @@ from rl.observation import ENTITY_NAMES
 NUM_CARDS = len(ENTITY_NAMES)
 TENDENCIES = ["aggressive", "defensive", "cycle", "spell_heavy", "balanced"]
 
-#: 无神经编码时的信念 token 维度（rule hand + rule next + elixir2 + tendency）
+#: 无神经编码时的信念 token 维度（rule hand + rule next + elixir2 + tendency
+#: + 事件通道 OPP_EVENT_K×OPP_EVENT_DIM）
 def belief_token_dim(deck) -> int:
-    return 2 * len(deck) + 2 + len(TENDENCIES)
+    return 2 * len(deck) + 2 + len(TENDENCIES) \
+        + OPP_EVENT_K * OPP_EVENT_DIM
+
+
+# —— B 层：对手出牌事件通道（2026-09-08）——
+# belief_token 原来只有"概率分布"（手牌后验/风格计数），没有"事件"：对手 0.5s 前在
+# 桥头下了 Giant 这类即时信号要靠 CNN 从 grid 里重新发现（有效感受野 ~9 格，
+# 常与"我该在哪布防"落在不同感受野）。事件 token 把最近 k 次出牌直接喂给策略
+# （FirstLight relation-attention 的最低成本替身：先给"谁/在哪/多久前"）。
+#: 事件窗口长度（最近 k 条对手出牌）
+OPP_EVENT_K = 3
+#: 每条事件维度：card_onehot(len(ENTITY_NAMES)) + x/17 + y/31 + Δt/10
+OPP_EVENT_DIM = len(ENTITY_NAMES) + 3
+
+
+def _event_row(card, x, y, dt) -> np.ndarray:
+    """单条事件 → 16 维行向量。"""
+    row = np.zeros(OPP_EVENT_DIM, dtype=np.float32)
+    if card in ENTITY_NAMES:
+        row[ENTITY_NAMES.index(card)] = 1.0
+    row[len(ENTITY_NAMES)] = (x / 17.0) if x is not None else 0.0
+    row[len(ENTITY_NAMES) + 1] = (y / 31.0) if y is not None else 0.0
+    row[len(ENTITY_NAMES) + 2] = min(max(dt, 0.0), 10.0) / 10.0
+    return row
+
+
+def opp_event_token(history, now=None, k: int = OPP_EVENT_K) -> np.ndarray:
+    """事件历史 [(card, x, y, t), ...]（旧→新）→ 展平事件向量。
+
+    Δt 以当前决策时刻 ``now`` 为基准（无新事件时旧事件 Δt 增大 → "事件陈旧度"
+    可学习）；now 缺省取最后一条事件时刻（维度探测场景）。不足 k 条前补全零行
+    （零行 = "无事件"）。"""
+    out = np.zeros(k * OPP_EVENT_DIM, dtype=np.float32)
+    recent = list(history)[-k:]
+    if not recent:
+        return out
+    if now is None:
+        now = float(recent[-1][3])
+    pad = k - len(recent)
+    for i, (card, x, y, t) in enumerate(recent):
+        out[(pad + i) * OPP_EVENT_DIM:(pad + i + 1) * OPP_EVENT_DIM] = \
+            _event_row(card, x, y, now - float(t))
+    return out
 
 
 def normalize_played(opp_played):
@@ -224,6 +267,9 @@ class BeliefInference:
         self.neural = neural
         self._elixir_est = 5.0
         self._last_time = None
+        self._now_cache = 0.0
+        # B 层：对手出牌事件历史 [(card, x, y, t), ...]（旧→新），encode 时取尾部
+        self.event_history = deque(maxlen=16)
 
     def reset(self, opp_deck=None):
         if opp_deck is not None:
@@ -236,6 +282,8 @@ class BeliefInference:
             self.neural.reset_history()
         self._elixir_est = 5.0
         self._last_time = None
+        self._now_cache = 0.0
+        self.event_history.clear()
 
     def _tick_elixir(self, obs):
         """按观测时间推进圣水估计（决策间隔回复率近似 2.8s/点）。"""
@@ -253,6 +301,10 @@ class BeliefInference:
         """用本 tick 已观测的对手出牌更新信念（支持结构化多卡列表，P1-5）。"""
         self._tick_elixir(obs)
         played = normalize_played(opp_played)
+        # B 层：事件入历史（带观测时刻；obs 不可用时 _now 尾推近似，Δt 仍有效）
+        t_now = self._now(obs)
+        for card, x, y in played:
+            self.event_history.append((card, x, y, t_now))
         for card, x, y in played:
             if self.rule is not None:
                 self.rule.update(card)
@@ -275,14 +327,35 @@ class BeliefInference:
         st.elixir_std = max(0.5, abs(self._elixir_est - 5.0) / 5.0)
         return st.normalize()
 
+    def _now(self, obs):
+        """当前决策时刻（obs.time 优先；obs 缺失时用"上次 _now 的值"）。
+
+        fallback 语义：事件 t 取自上次推算的 now（首个事件前 now=0）——同一帧的
+        update/encode 得到同一 t；跨帧调用 _now 不再无中生有 +0.5，Δt 只在
+        obs.time 缺失的降级场景里保持 0（事件陈旧度信号退化，可用性优先）。"""
+        if obs is not None and not np.isscalar(obs) and isinstance(obs, dict) \
+                and obs.get("time") is not None and hasattr(obs["time"], "__len__") \
+                and len(obs["time"]):
+            self._now_cache = float(obs["time"][0])
+        elif isinstance(obs, (int, float)):
+            self._now_cache = float(obs)
+        return getattr(self, "_now_cache", 0.0)
+
     def encode(self, obs=None, opp_played=None) -> np.ndarray:
-        """belief_token：规则向量 + 统计向量 + 神经 token。"""
+        """belief_token：规则向量 + 统计向量 + 事件通道 + 神经 token。"""
         parts = []
         st = self.state()
         parts.append(st.hand_probs.astype(np.float32))
         parts.append(st.next_probs.astype(np.float32))
         parts.append(np.array([st.elixir_mean, st.uncertainty], dtype=np.float32))
         parts.append(st.tendency_probs.astype(np.float32))
+        # B 层：事件通道（update 已入历史；这里若显式传入 opp_played 先补录——
+        # 兼容"先 encode 后 update"的调用序，避免本帧事件丢窗口）
+        if opp_played:
+            played = normalize_played(opp_played)
+            for card, x, y in played:
+                self.event_history.append((card, x, y, self._now(obs)))
+        parts.append(opp_event_token(self.event_history, now=self._now(obs)))
         if self.neural is not None and obs is not None:
             feat = build_feature(obs, opp_played)
             parts.append(self.neural.encode(feat).astype(np.float32))

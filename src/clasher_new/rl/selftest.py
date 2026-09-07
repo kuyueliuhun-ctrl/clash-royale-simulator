@@ -21,6 +21,7 @@
 """
 
 import os
+import shutil
 import sys
 import random
 
@@ -989,7 +990,9 @@ def test_league_replays():
 
     pool = build_card_pool()
     lg = League(seed=0)
-    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=23)
+    # 9j：belief token 追加事件通道后 71 维（2×8+2+5+3×16）——策略维度须与
+    # BeliefInference.encode 输出一致（旧 23 会在 act 时 mat1/mat2 形状失配）
+    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=71)
     lg.add_agent("main", kind="main", policy=main)
     lg.add_agent("random_deck", kind="baseline",
                  policy=ScriptedPolicy(mode="random", pool=pool, seed=1))
@@ -2964,6 +2967,184 @@ def test_mcts_defense_and_wait():
           f"耗时 {info['elapsed_s']:.2f}s")
 
 
+def test_opp_event_token():
+    """9j B 层：对手出牌事件通道（belief_token 尾部 3×16 维）。
+
+    校验：维度追加（23→71）且旧 checkpoint 尾部零拷贝兼容；事件入历史/
+    Δt 陈旧度随观测时间增长并 clamp 到 1.0；reset 清空；哨兵过滤不误入。"""
+    import numpy as np
+    from rl.belief import (BeliefInference, belief_token_dim,
+                           OPP_EVENT_K, OPP_EVENT_DIM)
+    from rl.observation import ENTITY_NAMES
+
+    deck = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant",
+            "Fireball", "Arrows", "Knight"]
+    NE = len(ENTITY_NAMES)
+    b = BeliefInference(opp_deck=deck)
+    tok0 = b.encode(None, None)
+    assert len(tok0) == belief_token_dim(deck), (len(tok0), belief_token_dim(deck))
+    assert abs(tok0[-OPP_EVENT_K * OPP_EVENT_DIM:]).sum() == 0, "无事件应为全零尾"
+
+    obs = {"time": np.array([30.5], dtype=np.float32)}
+    b.update(obs, [{"card": "Giant", "x": 8.5, "y": 14.5}])
+    row = b.encode(obs)[-48:].reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
+    gi = ENTITY_NAMES.index("Giant")
+    assert row[gi] == 1.0, "Giant onehot 缺失"
+    assert abs(row[NE] - 8.5 / 17) < 1e-6 and abs(row[NE + 1] - 14.5 / 31) < 1e-6
+    assert row[NE + 2] == 0.0, "最新事件 Δt 应为 0"
+    # 陈旧度：35.0 时 Δt=4.5；40.5 时 clamp 到 1.0
+    row2 = b.encode({"time": np.array([35.0], dtype=np.float32)})[-48:] \
+        .reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
+    assert abs(row2[NE + 2] - 0.45) < 1e-6, row2[NE + 2]
+    row3 = b.encode({"time": np.array([40.5], dtype=np.float32)})[-48:] \
+        .reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
+    assert abs(row3[NE + 2] - 1.0) < 1e-6, "Δt 必须 clamp 到 1.0"
+    # reset 清空；显式 encode(opp_played) 不与 update 重复入账
+    b.reset()
+    assert abs(b.encode(None, None)[-48:]).sum() == 0
+    b2 = BeliefInference(opp_deck=deck)
+    t = b2.encode(obs, [{"card": "Fireball", "x": 9.0, "y": 16.0}])
+    fi = ENTITY_NAMES.index("Fireball")
+    assert sum(1 for r in t[-48:].reshape(OPP_EVENT_K, OPP_EVENT_DIM) if r[fi] == 1.0) == 1
+    # 旧 checkpoint 兼容：23 维 → 71 维尾部零
+    import torch, tempfile
+    from rl.follower import FollowerPolicy, load_checkpoint
+    pol_old = FollowerPolicy(hidden=128, plan_dim=57, belief_dim=23)
+    with tempfile.NamedTemporaryFile(suffix=".pt", delete=False) as f:
+        torch.save({"state_dict": pol_old.state_dict(), "plan_dim": 57,
+                    "belief_dim": 23, "hidden_dim": 128}, f.name)
+        pol_new = load_checkpoint(f.name, belief_dim=belief_token_dim(deck))
+    w = pol_new.belief_mlp[0].weight
+    assert int((w.abs().sum(dim=0) > 0).sum()) == 23, "事件通道列必须从零开始"
+    print(f"[PASS] 事件通道：token {len(tok0)} 维（23+3×16），Δt 陈旧度/零拷贝兼容/reset 全过")
+
+
+def test_crossed_river_defend_plan():
+    """9j C 层：敌军过河（y<16）即触发 defend_* + bridge_front 落点提示。
+
+    校验：单远程单位过河（threat=1.x < 2.0 阈值）也建议防守且对准威胁路；
+    有法术可解时 spell_trade 优先级不变；未过河/空场不误触发。"""
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.observation import observe
+
+    deck = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant",
+            "Fireball", "Arrows", "Knight"]
+    bp = BeliefPlanner()
+
+    def battle_moved(card, side_x, y_target):
+        b = battle_mod.BattleState(player_mod.PlayerState(0, list(deck), 5.0),
+                                   player_mod.PlayerState(1, list(deck), 5.0),
+                                   card_level=11)
+        b.update_player_hp()
+        assert b.deploy_card(1, card, Position(8.5, 18.0))
+        for e in b.entities.values():
+            if e.player == 1 and e.id > 6 and e.name == card:
+                e.position = Position(side_x, y_target)
+        return b
+
+    def plan_of(b):
+        belief = BeliefInference(opp_deck=deck)
+        return bp.plan(b, belief.state(), observe(b, 0))
+
+    # 左路过河（远程脆皮在手、无解法术于手牌前 4 → 走到回退 crossed 分支）
+    p1 = plan_of(battle_moved("Musketeer", 8.5, 14.5))
+    if p1.macro_intent not in ("spell_trade", "soft_control"):
+        # P0 手牌（Minions/Musketeer/Giant/Archer）无软控法术 → 必为过河 defend
+        assert p1.macro_intent == "defend_left", p1.macro_intent
+        assert p1.focus_region == "own_left", p1.focus_region
+        assert p1.placement_hint == "bridge_front", p1.placement_hint
+        assert p1.target_kind == "unit"
+    # 右路
+    p3 = plan_of(battle_moved("Musketeer", 14.5, 14.5))
+    assert p3.macro_intent == "defend_right" and p3.focus_region == "own_right"
+    # 有法术在手：spell_trade 优先于回退（优先链语义不变）
+    b1b = battle_moved("Musketeer", 8.5, 14.5)
+    p0 = b1b.players[0]
+    if "Fireball" not in p0.cycle[:4]:
+        p0.cycle.remove("Fireball")
+        p0.cycle.insert(3, "Fireball")
+        p0.elixir = max(p0.elixir, 6.0)
+    assert plan_of(b1b).macro_intent == "spell_trade"
+    # 未过河（y=18 对手半场）→ 无 bridge_front
+    p2 = plan_of(battle_moved("Musketeer", 8.5, 18.0))
+    assert p2.placement_hint == "none" and p2.macro_intent not in ("defend_left", "defend_right")
+    print("[PASS] 过河即防：单单位过河触发 defend_*+bridge_front、对准威胁路；"
+          "spell_trade 优先级保持；未过河不误触发")
+
+
+def test_opponent_pool_mix():
+    """9j A 层：训练对手池（frozen/hist/defend 混合）+ SelfDefenderPolicy 反制。
+
+    校验：真实旧 ckpt 池加载（23 维 belief 尾零兼容）；采样分布接近名义混合；
+    PFSP 败局回填；纯防守模式面对过河威胁真的出反制部队。"""
+    import random, glob, tempfile
+    from collections import Counter
+    from rl.train_solo import _OpponentPool, _collect_hist_ckpts
+    from rl.opponents import SelfDefenderPolicy
+    from rl.config import TrainConfig
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy
+    from rl.train_follower import FollowerOpponent
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+    from core import Position
+
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    from rl.action_mask import validate_bundle
+    # SelfDefenderPolicy 反制：P0 部队推进过河 → P1 侧出反制（passive_prob=1.0 纯防守）
+    obs, _ = env.reset(seed=42)
+    assert env.battle.deploy_card(0, "Musketeer", Position(8.5, 12.0))
+    for _ in range(600):
+        env.battle.step(1 / 60)
+    defen = SelfDefenderPolicy(seed=3, env=env, passive_prob=1.0)
+    acted = None
+    for _ in range(20):
+        bundle = defen(None)
+        if bundle.sub_actions:
+            acted = bundle.sub_actions
+            break
+    assert acted is not None, "过河威胁下纯防守模式必须出反制"
+    ok, reason, _ = validate_bundle(env.battle, 1, bundle)
+    assert ok, f"反制动作非法: {reason}"
+
+    # 池分布：临时目录放 3 个真实 ckpt（本仓库 runs/economy 或归档目录）
+    src_candidates = (sorted(glob.glob("runs/economy/solo_main_*.pt")) +
+                      sorted(glob.glob("../../runs/archive/*/solo_main_*.pt")))
+    if not src_candidates:
+        print("[SKIP] 对手池分布：无可用历史 ckpt（仅验证 defender）")
+        return
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "economy"), exist_ok=True)
+        for src in src_candidates[::max(1, len(src_candidates) // 3)][:3]:
+            shutil.copy(src, os.path.join(td, "economy", os.path.basename(src)))
+        cfg = TrainConfig.resolve("economy")
+        cfg.out_dir = td
+        frozen_pol = FollowerPolicy(hidden=128, plan_dim=PLAN_DIM, belief_dim=71)
+        frozen_side = FollowerOpponent(frozen_pol, env,
+                                       belief=BeliefInference(opp_deck=env.deck1),
+                                       deterministic=True)
+        pool = _OpponentPool(cfg, env, frozen_side, random.Random(0), "cpu")
+        assert len(pool.hist_paths) == 3
+        kinds = Counter()
+        hist_ids = set()
+        for _ in range(400):
+            kind, side, hid = pool.sample()
+            kinds[kind] += 1
+            if kind == "hist":
+                hist_ids.add(hid)
+                assert side is not None
+        assert 40 <= kinds["hist"] <= 120, kinds      # 名义 20%
+        assert 20 <= kinds["defend"] <= 80, kinds     # 名义 10%
+        assert len(hist_ids) == 3, hist_ids
+        pool.record(1)                                 # 败局回填不崩
+    print(f"[PASS] 对手池：分布 {dict(kinds)} ≈ 0.7/0.2/0.1；hist 旧 ckpt 加载+PFSP 回填；"
+          f"SelfDefender 面对过河威胁出合法反制")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -3029,6 +3210,9 @@ def main():
     test_spell_module()
     test_mcts_basic()
     test_mcts_defense_and_wait()
+    test_opp_event_token()
+    test_crossed_river_defend_plan()
+    test_opponent_pool_mix()
     print("\nALL SELFTESTS PASSED")
 
 

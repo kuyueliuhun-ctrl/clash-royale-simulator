@@ -15,7 +15,7 @@
 | `action_mask.py` | 动态动作掩码 + 整包原子校验（含 Mirror 引擎语义、技能耗蓝模拟、`at_cap` 强制 STOP） |
 | `observation.py` | 玩家视角观测 + 特权隐藏状态标签 |
 | `env_wrapper.py` | `RLEnv`：整包校验 → 同 tick 批量 `deploy_card` → 统一推进决策帧；掩码指纹含 `player_id`/手牌 |
-| `belief.py` | 信念推断：规则队列锁定（第 4 张起 0/1）+ 早期/异常粒子滤波 + 统计倾向 + 神经 GRU 编码；`opp_played` 结构化多卡契约 |
+| `belief.py` | 信念推断：规则队列锁定（第 4 张起 0/1）+ 早期/异常粒子滤波 + 统计倾向 + 神经 GRU 编码 + **对手出牌事件通道**（9j：最近 3 次出牌的 onehot/落点/Δt 陈旧度 3×16 维追加在 belief_token 尾部，旧 ckpt 尾零兼容）；`opp_played` 结构化多卡契约 |
 | `bayes_filter.py` | 对手 8 卡循环队列信念：O(1) 队列锁定（手牌=卡组−最近4张）+ 前 3 张/异常粒子相；无 40320 全量重建 |
 | `belief_planner.py` | 基于 `b_t` 的可部署规划器（过滤静态塔、region 由 intent 推导）；Phase 2 v1 **bp 组 12 意图**（含 protect_backline 反应+信念预判、king_activate），与 ProphetPlanner 同链同序 |
 | `prophet.py` | 特权完整状态启发式先知（训练期教师 30% 帧；消费对手手牌/圣水）；Phase 2 v1 pp 组：punish/anti_spell/save_ace 特权精确版 + king_activate/protect_backline（bp 尚未实现的意图先示范）+ 与 bp 同链标签一致 |
@@ -34,11 +34,11 @@
 | `run_league.py` | `--mode eval` 轮转评估（换边/三态/逐局 Elo）+ `--mode run` 联赛主循环（**同时维护 5 个卡组模型**：推进流 / 防守反击流 / 自闭流 / 全 200 卡组 / 全随机，+ 训练中的 main）；支持**命名配置**、**断点续训 --resume**、**CUDA --device**、**每 2000 步联赛录像** |
 | `flow_league.py` | **全配对分流派联赛（`--mode flow`）**：6 个**可训练 PPO**（main/推进/防反/自闭/全量/随机）卡组池两两全配对，每对数据只喂该对双方模型（对内流式），双侧轨迹收集 + 镜像奖励；一次训练 148,800 局 |
 | `decks.py` | **三分类卡组加载器**：读取 `docs/leaderboard_decks_classified.json`（200 副天梯卡组，推进流 60 / 防守反击流 120 / 自闭流 20），RoyaleAPI 卡名 → 引擎卡名映射 + 兜底补位 |
-| `opponents.py` | 脚本策略 `ScriptedPolicy`：random / heuristic / **卡组完全随机**（每局从 139 张引擎卡池重采样 8 张）/ **deck_pool 随机抽整副卡组**（三分类/全 200 模型用） |
+| `opponents.py` | 脚本策略 `ScriptedPolicy`：random / heuristic / **卡组完全随机**（每局从 139 张引擎卡池重采样 8 张）/ **deck_pool 随机抽整副卡组**（三分类/全 200 模型用）；**`SelfDefenderPolicy`**（9j：script_defender 反制 + 低频缓出的真防守对手，A 层对手池组件） |
 | `dashboard.py` | **训练网页 UI**：Elo-训练次数 曲线仪表盘 + **最近训练回放列表 / Canvas 播放器**（纯 Canvas 自绘、离线可用、3s 轮询 `/api/state`、5s 轮询 `/api/replays`） |
 | `evaluate.py` | 评测：Win/Lose/Draw、Bundle 合法率、Next-Card Acc/Brier/ECE、消融、`--belief-only` 协议；消融含 **逐意图采纳探针**（region 吻合率 + save_ace hold 服从率，full vs plan-off Δ） |
 | `selftest.py` | 全链路自检 + 评审回归测试（P0-1..P0-6、P1-4/5/9/18/21） |
-| `train_solo.py` | 单人自对弈训练（无联赛机制）：main vs frozen_copy、命名配置、断点续训、并行评估（crash 检测 + 静默 worker 回退） |
+| `train_solo.py` | 单人自对弈训练（无联赛机制）：main vs **对手池**（9j：frozen 副本 70% + 历史 checkpoint PFSP 20% + 真防守脚本 10%，修"单边堆牌/换家"meta）、命名配置、断点续训、并行评估（crash 检测 + 静默 worker 回退） |
 | `overtime.py` | 加时（突然死亡）窗口判定：[180,300) 皇冠平进入加时，最迟 300s 按最低塔血裁决；纯逻辑零依赖 |
 | `export_replay.py` | 对局 replay 导出（含特权隐藏状态标签），供信念监督训练 / BC |
 | `human_play.py` | 人机对战 + 人类出牌采集（dashboard `--play` 集成，BC 素材来源） |
