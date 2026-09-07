@@ -43,6 +43,7 @@
 | `export_replay.py` | 对局 replay 导出（含特权隐藏状态标签），供信念监督训练 / BC |
 | `human_play.py` | 人机对战 + 人类出牌采集（dashboard `--play` 集成，BC 素材来源） |
 | `launcher_menu.py` | `start_rl.bat` 无参数/`--menu` 的多层问答式配置向导 |
+| `mcts.py` | **推理时浅 MCTS（RL-MCTS v1）**：UCT + 引擎确定性叶推演估值（economy 口径值函数），候选动作复用 `legal_cells`/`validate_bundle`（闸门同源），策略 (slot,cell) logits 作先验截断；零训练风险，挂评估路径量"搜索收益"。设计文档 `docs/mcts_design.md` |
 
 ## 外置工具（引擎侧确定性服务，与 `rl/` 解耦，位于 `src/clasher_new/` 根）
 

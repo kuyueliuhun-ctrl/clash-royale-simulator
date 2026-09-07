@@ -32,6 +32,7 @@
 | `rl_review_fix_plan.md` | RL 链路修复手册（6 条 Critical 已修） | `rl/selftest.py`（回归） |
 | `rl_reward_plan_v2.md` | 奖励与计划通道重构 v2（奖励经济预设、法术空砸/裸下/坦克几何闸门） | `rl/config.py` `rl/env_wrapper.py` `rl/action_mask.py` |
 | `rl_plan_design_v1.md` | PlanToken 战术意图扩展设计 v1（57 维/21 意图） | `rl/plan_space.py` `rl/belief_planner.py` `rl/prophet.py` `rl/follower.py` |
+| `mcts_design.md` | 推理时浅 MCTS 设计（UCT+引擎叶推演，预算/对手口径/评估接入） | `rl/mcts.py` `rl/selftest.py`（test_mcts_*） |
 
 ## 2. 外置工具（引擎侧确定性服务，2026-09 起步；设计与优先级见 `../AGENTS.md`）
 

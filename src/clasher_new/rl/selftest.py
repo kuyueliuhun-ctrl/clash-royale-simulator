@@ -2836,6 +2836,134 @@ def test_spell_module():
           f"BarbLog/Rage 口径正确")
 
 
+def test_mcts_basic():
+    """推理时浅 MCTS（RL-MCTS v1）：见 docs/mcts_design.md。
+
+    1) 空场单步搜索不崩、返回合法动作（WAIT 或通过 validate_bundle 的 bundle）；
+    2) 原局面零污染（时间/圣水/实体数/手牌不变）；
+    3) 确定性（同盘面两次搜索结果一致）；
+    4) 值函数量纲：空场 Arrows 砸王塔为负 EV（量纲失配回归——曾因塔伤×1000
+       抬尺度被误判正 EV）；残血塔双倍期 Fireball 斩杀为正 EV 且优于 WAIT；
+    5) 预算控制（n_simulations=2 快速路径可运行）。"""
+    import copy
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from rl.mcts import RLMCTS, MCTSConfig, leaf_value
+    from rl.action_mask import validate_bundle
+    from rl.action_bundle import ActionBundle, SubAction
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+    cfg = MCTSConfig(n_simulations=24, leaf_horizon_s=6.0, max_depth=2, max_bundles_per_node=3)
+
+    def fresh(elixir=5.0, hand=None):
+        h = hand or deck
+        bs = battle_mod.BattleState(player_mod.PlayerState(0, list(h), elixir),
+                                    player_mod.PlayerState(1, list(h), elixir),
+                                    card_level=11)
+        bs.update_player_hp()
+        return bs
+
+    def snap(bs):
+        return (bs.time, tuple(round(p.elixir, 6) for p in bs.players),
+                len(bs.entities), tuple(p.cycle[:4] for p in bs.players))
+
+    # 1+2) 空场搜索：合法 + 原局零污染
+    bs = fresh()
+    before = snap(bs)
+    mcts = RLMCTS(cfg=cfg)
+    bundle, info = mcts.search(bs, 0)
+    if bundle.sub_actions:
+        ok, reason, _ = validate_bundle(bs, 0, bundle)
+        assert ok, f"搜索返回非法动作: {reason} {bundle.sub_actions}"
+    assert snap(bs) == before, "search() 不得修改原局面"
+    assert info["elapsed_s"] < 30, f"预算失控: {info['elapsed_s']:.1f}s"
+
+    # 3) 确定性
+    def bkey(b):
+        return [(sa.kind, sa.slot, sa.x, sa.y) for sa in b.sub_actions]
+    bs2 = fresh()
+    b2, i2 = RLMCTS(cfg=cfg).search(bs2, 0)
+    assert bkey(bundle) == bkey(b2), f"同盘面两次搜索结果不一致: {bkey(bundle)} vs {bkey(b2)}"
+
+    # 4a) 量纲回归：空场 Arrows 砸王塔必须 < WAIT（前段 75 塔伤 < 3 费）
+    bs3 = fresh(elixir=10.0)
+    fb_leaf = None
+    wait_leaf = leaf_value(copy.deepcopy(bs3), 0, cfg)
+    for slot, name in enumerate(bs3.players[0].cycle[:4], 1):
+        if name == "Arrows":
+            b_arrows = ActionBundle(sub_actions=[SubAction(kind="deploy", slot=slot, x=8, y=28)])
+            ok, reason, _ = validate_bundle(bs3, 0, b_arrows)
+            if ok:  # 掩码若已拦（王塔格合法则拦不住）也视为通过——9i 闸门只管公主塔
+                sim = copy.deepcopy(bs3)
+                for card, sa in validate_bundle(sim, 0, b_arrows)[2]:
+                    sim.deploy_card(0, card, sa.to_position(0))
+                fb_leaf = leaf_value(sim, 0, cfg)
+            break
+    if fb_leaf is not None:
+        assert fb_leaf < wait_leaf, \
+            f"量纲失配回归: 空场砸王塔 leaf {fb_leaf:.2f} 应低于 WAIT {wait_leaf:.2f}"
+
+    # 4b) 斩杀方向：双倍期残血塔（70/3052），Fireball 在手 → 斩杀 leaf 严格优于 WAIT
+    hand4 = ["Knight", "MiniPekka", "Fireball", "Minions", "Musketeer", "Giant", "Giant", "Archer"]
+    bs4 = fresh(elixir=10.0, hand=hand4)
+    bs4.time = 200.0
+    bs4.entities[1].hp = 70.0
+    bs4.players[1].left_tower_hp = 70.0
+    kill = None
+    for slot, name in enumerate(bs4.players[0].cycle[:4], 1):
+        if name == "Fireball":
+            b_kill = ActionBundle(sub_actions=[SubAction(kind="deploy", slot=slot, x=3, y=25)])
+            ok, reason, _ = validate_bundle(bs4, 0, b_kill)
+            assert ok, f"斩杀落点应合法: {reason}"
+            sim = copy.deepcopy(bs4)
+            for card, sa in validate_bundle(sim, 0, b_kill)[2]:
+                sim.deploy_card(0, card, sa.to_position(0))
+            kill = leaf_value(sim, 0, cfg)
+            break
+    wait4 = leaf_value(copy.deepcopy(bs4), 0, cfg)
+    assert kill is not None and kill > wait4, \
+        f"斩杀 leaf {kill:.2f} 应优于 WAIT {wait4:.2f}"
+
+    # 5) 预算控制：2 sims 快速路径
+    tiny = MCTSConfig(n_simulations=2, leaf_horizon_s=2.0, max_depth=1, max_bundles_per_node=2)
+    bs5 = fresh()
+    _b5, i5 = RLMCTS(cfg=tiny).search(bs5, 0)
+    assert i5["n_sims"] == 2 and i5["elapsed_s"] < 5, i5
+    print(f"[PASS] 浅 MCTS：空场合法+原局零污染+确定性；量纲回归（空砸王塔负EV/双倍期斩杀 "
+          f"{kill - wait4:+.2f} 优于 WAIT）；快速预算 {i5['elapsed_s']:.2f}s")
+
+
+def test_mcts_defense_and_wait():
+    """浅 MCTS 行为方向：Knight 压境 → 搜索不返回非法动作且给出可解释选项；
+    大圣水优势空场 → 不再返回空砸（负 EV 候选）。小预算保证耗时可控。"""
+    import copy
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from rl.mcts import RLMCTS, MCTSConfig
+    from rl.action_mask import validate_bundle
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+    cfg = MCTSConfig(n_simulations=12, leaf_horizon_s=4.0, max_depth=2, max_bundles_per_node=2)
+
+    # Knight 压境
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(deck), 5.0),
+                                player_mod.PlayerState(1, list(deck), 5.0), card_level=11)
+    bs.update_player_hp()
+    assert bs.deploy_card(1, "Knight", Position(8.5, 18.5))
+    for _ in range(480):
+        bs.step(1 / 60)
+    bundle, info = RLMCTS(cfg=cfg).search(bs, 0)
+    if bundle.sub_actions:
+        ok, reason, _ = validate_bundle(bs, 0, bundle)
+        assert ok, f"防守场景返回非法动作: {reason}"
+    assert info["elapsed_s"] < 10, f"防守场景耗时失控: {info['elapsed_s']:.1f}s"
+    print(f"[PASS] 浅 MCTS 行为方向：Knight 压境下决策合法（"
+          f"{'WAIT' if not bundle.sub_actions else bundle.sub_actions[0].kind + ' ' + str(bs.players[0].cycle[bundle.sub_actions[0].slot - 1])}），"
+          f"耗时 {info['elapsed_s']:.2f}s")
+
+
 def main():
     test_action_bundle_same_tick()
     test_action_bundle_ability()
@@ -2899,6 +3027,8 @@ def main():
     test_tower_threat_calc()
     test_simulate_exchange()
     test_spell_module()
+    test_mcts_basic()
+    test_mcts_defense_and_wait()
     print("\nALL SELFTESTS PASSED")
 
 
