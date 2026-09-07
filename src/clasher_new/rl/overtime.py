@@ -13,15 +13,17 @@ flow_league / evaluate / workers 各循环统一消费（放进轻量模块，�
 规则（用户确认，2026-09）：
   - battle.time ∈ [180, 300) 且双方被拆塔数相同、对局未终局 → overtime_open=True
     （各 RL 循环绕过 max_ep_steps 截断继续打；引擎会先破塔立即终局）；
-  - 恰达 300s 仍平 → overtime_open=False（RL 层在触发引擎 ≥300s 塔血兜底分支前收手，
-    把加时末判定统一交给 timeout_winner 的“平局”口径）；
+  - 恰达 300s 仍平 → overtime_open=False（RL 层收手）。终局裁决统一走
+    timeout_winner：皇冠平 → 双方存活塔中血量百分比更低者输（真实 CR 加时末
+    规则，与引擎 300s 硬顶分支同口径），完全相等才记平局；
   - 皇冠不同 → False（常规时间末已有领先者，直接按皇冠结算胜负）；
   - 终局 → False。
 """
 
 #: 常规时间末（秒）。battle.time ≥ NORMAL_TIME_S 且双方被拆塔数相同 → 进入加时窗口。
 NORMAL_TIME_S = 180.0
-#: 加时硬顶（秒）。到 OVERTIME_END_S 仍未破塔 → 不再延长，由 timeout_winner 记平局。
+#: 加时硬顶（秒）。到 OVERTIME_END_S 仍未破塔 → 不再延长，按 timeout_winner 的
+#: 最低塔血百分比裁决终局（完全相等才平局）。
 OVERTIME_END_S = 300.0
 
 

@@ -39,9 +39,11 @@ DEFAULT_DECK_1 = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant", "Fireb
 #: （120s 切双倍：tower_dmg_late 塔血贵、elixir_diff_late 费贱）；unit_dmg_k 单位受伤 shaping。
 _DEFAULT_REWARD = {
     "crown_weight": 8.0,
+    "crown_lose_weight": 10.0,   # 被破塔惩罚（> crown_weight：丢塔比破塔更痛，教防守价值）
     "tower_dmg_opp": 0.001,
-    "tower_dmg_self": 0.001,
+    "tower_dmg_self": 0.0012,    # 挨打 > 打人（塔伤奖励 0.001 末位加"2"→ 0.0012，防守不对称）
     "tower_dmg_late": 0.002,     # v2 双倍期塔血系数（t≥120；斩杀/法术砸塔自动变正 EV）
+    "tower_dmg_self_late": 0.0022,  # 双倍期我方塔损（同上不对称：0.002 末位加"2"）
     "win_bonus": 10.0,
     "lose_penalty": 10.0,
     "invalid_penalty": 0.05,
@@ -85,18 +87,20 @@ PHASE_SWITCH_S = 120.0
 
 
 def _phase_weights(rw, battle_time):
-    """返回 (tower_coef, edw_coef)：120s 切换的两段离散权重。
+    """返回 (tower_opp, tower_self, edw_coef)：120s 切换的两段离散权重。
 
-    tower_coef 同时作用于打击/自损塔血；edw_coef 作用于资源账 Φ。
-    rw 缺 late 键时回退 base（兼容旧 reward 字典）。
+    tower_opp 作用于打击敌方塔血；tower_self 作用于我方塔损（不对称：挨打 > 打人）；
+    edw_coef 作用于资源账 Φ。rw 缺 late 键时回退 base（兼容旧 reward 字典）。
     """
     rw = dict(_DEFAULT_REWARD, **(rw or {}))
     late = float(battle_time) >= PHASE_SWITCH_S
-    tower = (float(rw.get("tower_dmg_late", rw["tower_dmg_opp"])) if late
-             else float(rw["tower_dmg_opp"]))
+    tower_opp = (float(rw.get("tower_dmg_late", rw["tower_dmg_opp"])) if late
+                 else float(rw["tower_dmg_opp"]))
+    tower_self = (float(rw.get("tower_dmg_self_late", rw["tower_dmg_late"])) if late
+                  else float(rw["tower_dmg_self"]))
     edw = (float(rw.get("elixir_diff_late", rw.get("elixir_diff_weight", 0.0))) if late
            else float(rw.get("elixir_diff_weight", 0.0)))
-    return tower, edw
+    return tower_opp, tower_self, edw
 
 
 def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
@@ -131,7 +135,7 @@ def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
             red_dmg = red_dmg * (_TOWER_HP_ANCHOR / red_hps_max)
     reward = (
         rw["crown_weight"] * (red_left_old - red_left_new)
-        - rw["crown_weight"] * (blue_left_old - blue_left_new)
+        - rw.get("crown_lose_weight", rw["crown_weight"]) * (blue_left_old - blue_left_new)
         + rw["tower_dmg_opp"] * red_dmg
         - rw["tower_dmg_self"] * blue_dmg
         + rw["elixir_bonus"] * my_elixir_after
@@ -550,10 +554,11 @@ class RLEnv(gym.Env):
         red_left_new = 3 - p1.get_crown_count()
 
         # 5) reward v2：两段离散价格（120s 切双倍）——塔血系数与资源账 edw 同步切换
-        tower_coef, edw_coef = _phase_weights(self.reward_weights, self.battle.time)
+        #    （塔血打击/自损不对称：crown_lose 与 tower_dmg_self 均高于进攻侧）
+        tower_opp, tower_self, edw_coef = _phase_weights(self.reward_weights, self.battle.time)
         rw = dict(self.reward_weights)
-        rw["tower_dmg_opp"] = tower_coef
-        rw["tower_dmg_self"] = tower_coef
+        rw["tower_dmg_opp"] = tower_opp
+        rw["tower_dmg_self"] = tower_self
         rw["elixir_diff_weight"] = edw_coef
 
         reward = compute_reward(

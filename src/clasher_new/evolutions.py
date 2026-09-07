@@ -1,6 +1,8 @@
 """M4 族7 觉醒系统数据层。
 周期表来源：Fandom Card Evolution 主表 + 1/2-Cycles 分类页三源交叉验证（见 docs/evolution_cycles.json
-与 docs/数值规则查证汇总.md，取数 2026-08-28）。周期语义：cycle=N = 先出 N 次普通形态，第 N+1 次为觉醒形态，之后交替。
+与 docs/数值规则查证汇总.md，取数 2026-08-28）；2026-09-03 经 CDP 重新采集 Fandom 主表补全至 42 张
+（re/fandom_stats/evo_42.json，total=cost×(cycle+1) 全部校验通过）。周期语义：cycle=N = 先出 N 次
+普通形态，第 N+1 次为觉醒形态，之后交替。
 键名映射勘误（经 data_official/cards_i18n.json 确认）：RageBarbarian=Lumberjack、AxeMan=Executioner。
 Elite Barbarians（AngryBarbarians）不在 34 张快照觉醒内，其 2026 觉醒周期=1（RoyaleZone/gamer.org，v6 主册已录）。
 """
@@ -16,6 +18,13 @@ EVOLUTION_CYCLES = {
     'Hunter': 2, 'IceSpirits': 2, 'InfernoDragon': 2, 'Knight': 2, 'Mortar': 2,
     'Musketeer': 2, 'RageBarbarian': 2, 'SkeletonBalloon': 2, 'Skeletons': 2,
     'Snowball': 2, 'Tesla': 2, 'Valkyrie': 2, 'Wallbreakers': 2, 'Zap': 2,
+    # 2025 新觉醒 7 张（Fandom Card_Evolution 页 2026-09-03 CDP 采集, re/fandom_stats/evo_42.json,
+    # 共 42 张、total=cost×(cycle+1) 全部校验通过; 此 7 张 evolvedSpellsData 快照缺失,
+    # 数据层见 evo_2025_data.py（M6 自建））
+    'Furnace': 2, 'BabyDragon': 2, 'SkeletonArmy': 2, 'Ghost': 2,
+    'RoyalHogs': 2, 'MinionHorde': 1, 'Princess': 2,
+    # M6：Furnace 在 gamedata 的实际卡名 = FirespiritHut（周期表键别名，与上行等价）
+    'FirespiritHut': 2,
     # 2026 觉醒（快照外，已人工确认）：觉醒野蛮人精锐周期=1
     'AngryBarbarians': 1,
 }
@@ -31,6 +40,50 @@ OFFICIAL_OVERRIDES = {
     'Monk': {'damage_reduction': 0.65},          # wiki 65% vs gamedata 80% 冲突，按官方
     'SkeletonKing': {'spawn_radius': 3.5},       # wiki 3.5 vs gamedata 4.0 冲突，按官方
 }
+
+
+# M5 觉醒补全：觉醒动作组/钩子字段族白名单（derive_evolved_stats 透传到 Entity.evo）。
+# 覆盖矩阵 docs/evo_hook_gap_matrix.md 的全部游戏性字段；纯视觉/导出字段（*Effect/Export/
+# shadow/healthBar 等）不在此列——无战斗语义，引擎跳过。
+M5_EVO_PASSTHROUGH = (
+    # Pekka：临时复活（tempResurrect + resurrectParameters + 击杀治疗 onKilledDoneAction）
+    'tempResurrect', 'resurrectParameters', 'onKilledDoneAction',
+    # MegaKnight：冲刺跳 + 上勾拳击退
+    'dashDamage', 'dashMinRange', 'dashMaxRange', 'dashFollowUpMinRange', 'dashFollowUpMaxRange',
+    'doFollowUpJump', 'pushBackStrength',
+    # ElectroDragon：链电弹射；Bomber：二段爆炸链；Firecracker/IceSpirits：命中领域
+    'chainedHitCount', 'spawnChain',
+    # 通用动作组（ActionInterpreter 消费）
+    'subActionsData', 'actionsData', 'actionToExecute', 'actionToExecuteData', 'onHitActionData',
+    'onHitTargetActionData', 'healthPercentages', 'nextAction.spawnData',
+    # 建筑：GoblinDrill 隐匿 / GoblinCage 捕获 / 出兵节流
+    'hideHpThresholds', 'hideTime', 'spawnCharacterOnHide', 'spawnCharacterOnHideCounts',
+    'captureRadius', 'damagePerHit', 'numberOfUnitsToCapture', 'deathSpawnCount', 'spawnPauseTime',
+    # 其他
+    'decoyData', 'allowedOverHealPerc', 'customRange', 'specialAttackRangeForStats',
+    'hitFrequency', 'areaEffectObjectData',
+    # M6：2025 新觉醒 7 张钩子参数包（evo_2025_data.py 定义, battle.py 消费）
+    'evo2025Hooks',
+)
+
+
+def collect_evo_mechanics(evo_raw):
+    """M5 觉醒补全：递归收集 evolvedSpellsData 中所有机制字段。
+    机制参数常内嵌于动作组内部（如 GoblinDrill 的 hideHpThresholds 位于
+    onStartingActionData.subActionsData[0]、GoblinCage 的 captureRadius 同理），
+    浅层合并拿不到 → 全树扫描，同名键首见优先。"""
+    out = {}
+    def _walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in M5_EVO_PASSTHROUGH and k not in out:
+                    out[k] = v
+                _walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                _walk(v)
+    _walk(evo_raw or {})
+    return out
 
 
 def evolution_state(plays: int, card_name: str):
@@ -68,4 +121,13 @@ def derive_evolved_stats(card_name, evolved_scd, base_card, characters, building
               'attackSequence', 'attackSequenceMode', 'attackSequenceList'):
         if k in evolved_scd:
             out[k] = evolved_scd[k]
+    # —— M5 觉醒补全：动作组/钩子字段族透传（详见 M5_EVO_PASSTHROUGH）——
+    for k in M5_EVO_PASSTHROUGH:
+        if k in evolved_scd and k not in out:
+            out[k] = evolved_scd[k]
+    # —— M5 觉醒补全：觉醒弹道定义（链电 chainedHitCount / 二段爆炸 spawnChain /
+    # 效果领域 spawnAreaEffectObjectData / onHitTargetActionData 等）——
+    _pd = evolved_scd.get('projectileData') or (evolved_scd.get('baseData') or {}).get('projectileData')
+    if _pd:
+        out['evoProjectileData'] = _pd
     return out

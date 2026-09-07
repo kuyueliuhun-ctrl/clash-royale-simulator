@@ -11,10 +11,23 @@ class PlayerState:
         self.last_card = None  # M1: 镜像法术需要记录上一张使用的卡
         self.evo_slots = set()  # M4: 卡组携带的觉醒位（≤2 张卡名）
         self.evo_plays = {}     # M4: 觉醒周期计数（card_name → 已打出次数）
+        self.hero_slots = set()  # M8: 卡组声明 Hero 化的卡（≤2，官方 Hero 槽+Wild 槽共享上限）
+        self.tower_troop = None  # 勘误批7: 卡组第 9 张「塔兵」（Cannoneer/DaggerDuchess/RoyalChef；None=默认 Princess）
 
     def set_evolution_slots(self, cards):
         """M4：声明该卡组携带的觉醒卡（最多 2 个觉醒位）"""
         self.evo_slots = set(list(cards)[:2])
+
+    def set_tower_troop(self, name):
+        """勘误批7: 塔兵=卡组第 9 张（Basics of Battle 页明载），两座公主塔使用该塔兵；
+        对局内不可更换（官方无此机制）。合法值: King_CannonTowers / King_KnifeTowers / King_ChefTowers / None。"""
+        assert name in (None, 'King_CannonTowers', 'King_KnifeTowers', 'King_ChefTowers')
+        self.tower_troop = name
+
+    def set_hero_slots(self, cards):
+        """M8：声明该卡组 Hero 化的卡（官方每套卡组 Hero 数上限 2：Hero 槽+Wild 槽共享）。
+        Wild slot 互斥语义：声明 hero 化的卡按 Hero 形态部署 + 能力可用，觉醒禁用（二选一）。"""
+        self.hero_slots = set(list(cards)[:2])
     
     def regenerate_elixir(self, dt: float, base_regen_time: float = 2.8):
         elixir_per_second = 1.0 / base_regen_time

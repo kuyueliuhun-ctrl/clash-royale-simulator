@@ -63,15 +63,25 @@ client_side/client.py
 
 RL环境和训练代码：
 ```plaintext
-environment.py
-train.py
+environment.py          # 旧版单卡 RL 环境入口
+rl/                     # 完整训练闭环：同刻多卡动作包 / 信念推断 / 规划师 / PPO / 联赛（模块表见 rl/README.md）
+start_rl.bat            # 训练统一启动器（solo / run / flow 三模式 + 网页仪表盘）
 ```
+
+引擎侧外置工具（供规划器/分析调用，不进动作空间）：
+```plaintext
+threat_calc.py          # ① 塔伤威胁计算器：现存部队"不管"的塔损预估
+simulate_exchange.py    # ② 交换模拟器：打出某张牌的反事实推演
+spell_module.py         # ③ 法术知识模块：引擎标定档案 + 落点估值
+```
+
+文档与源码的完整索引（每篇策划/规格文档对应哪些源文件、原始采集数据的命名约定）见 [docs/README.md](./docs/README.md)。
 
 ## 模拟器特性
 
-目前我实现了47张卡牌，因为时间精力有限，暂时没有实现觉醒、精英和英雄卡的打算。模拟器有着和原游戏一致的寻路算法，大部分角色有和游戏相同的数值。
+模拟器现已覆盖 148 张卡的数值快照（含觉醒 42+7 张、精英/Hero 机制），全卡可通过批量冒烟（`scripts/batch_smoke.py`，报告见 `docs/batch_smoke_report.json`），覆盖进度见 `docs/card_coverage.md`。模拟器有着和原游戏一致的寻路算法，大部分角色有和游戏相同的数值。
 
-下面是我实现的所有卡牌名称：
+最早实现的 47 张基础卡名称如下：
 
 - Knight
 - Giant

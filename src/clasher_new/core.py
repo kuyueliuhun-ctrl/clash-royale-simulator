@@ -26,15 +26,16 @@ class BasicCharacter:
         # M4.5 动作链：Berserker 等伤害仅在攻击序列内（data.damage=0）也须结算
         if self.entity.data.damage or getattr(self.entity, 'attack_seq', None):
             damage = self.entity.ramped_damage(self.data.damage)  # M1 递增伤害 / M4.5 攻击序列
+            damage *= getattr(self.entity, '_damage_mult', 1.0)   # 勘误批7：Royal Chef 蛋糕 +1 级伤害载体
             if self.entity.data.area_damage_radius:
                 self.battle_state.deal_area_damage(self.entity.player, self.entity.position, self.data.area_damage_radius,
                                                    damage,
                                                    self.data.attack_air, self.data.attack_ground)
             else:
-                if 'King' in current_target.name:
-                    current_target.take_damage(damage*self.entity.data.tower_damage_mult, delayed=True)
+                if 'King' in current_target.name or 'PrincessTower' in current_target.name:  # 勘误批8：对塔减伤覆盖公主塔（Miner 25%）
+                    current_target.take_damage(damage*self.entity.data.tower_damage_mult, delayed=True, source=self.entity)  # M5：击杀归因
                 else:
-                    current_target.take_damage(damage, delayed=True)
+                    current_target.take_damage(damage, delayed=True, source=self.entity)  # M5：击杀归因（觉醒击杀治疗）
         elif self.entity.data.projectiles:
             # must have projectiles
             self.entity.create_projectile(current_target)

@@ -87,7 +87,9 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
         if tv.shape == v.shape:
             tv.copy_(v)
         elif k == "plan_mlp.0.weight" and v.dim() == 2 and v.shape[1] <= tv.shape[1]:
-            # 尾部追加兼容：前 ckpt_pd 列原样拷贝，其余列保持 0（新字段从零学）
+            # 尾部追加兼容：整行先清零再拷贝前 ckpt_pd 列（尾部必须从零学，
+            # 不能残留新网络的随机初始化——否则旧 ckpt 加载即注入噪声）
+            tv.zero_()
             tv[:, :v.shape[1]].copy_(v)
         elif k == "plan_mlp.0.bias":
             tv.copy_(v)

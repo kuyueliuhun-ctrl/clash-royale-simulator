@@ -136,7 +136,8 @@ def _record_adoption(stats, plan, bundle, obs=None):
     # 7h：预算服从（bundle 实际花费 vs plan.elixir_budget × 当帧圣水）
     if plan.elixir_budget < 1.0 - 1e-6 and obs is not None \
             and "hand" in obs and "elixir" in obs:
-        allowed = float(obs["elixir"]) * float(plan.elixir_budget)
+        # obs["elixir"] 是 shape-(1,) 数组（observation.py），新 numpy 禁止隐式标量转换
+        allowed = float(np.asarray(obs["elixir"]).item()) * float(plan.elixir_budget)
         spent = 0.0
         for slot, _, _ in dep:
             cid = int(obs["hand"][slot - 1])

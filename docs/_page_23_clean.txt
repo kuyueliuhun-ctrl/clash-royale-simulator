@@ -1,0 +1,639 @@
+ 
+ 
+ 
+ Night Witch 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ Elixir Cost 
+ 
+ 4 
+ 
+
+ 
+ 
+ Rarity 
+ 
+ Legendary 
+ 
+
+ 
+ 
+ Type 
+ 
+ Troop 
+ 
+
+ 
+ 
+ Arena 
+ 
+ Serenity Peak 
+ 
+
+ 
+ 
+ Release Date 
+ 
+ 31 May 2017 
+ 
+ 
+
+ 
+ 
+ “Summons Bats to do her bidding! If you get too close, she's not afraid of pitching in with her mean-looking battle staff.” 
+ The Night Witch is a Legendary card that is unlocked from the Serenity Peak (Arena 14) . It spawns a single-target, ground-targeting, melee, ground troop with moderate hitpoints and high damage. Every 5 seconds, the Night Witch will passively summon a group of two Bats surrounding her. However, her first wave of Bats will spawn 1 second after she is deployed. When defeated, she will also spawn a single Bat. She appears similar to the Witch , but has glowing blue eyes, wears a black cloak, top and gloves with silver armlets, a silver belt with an axe-shaped buckle and a glowing blue crystal in the center, and wields a long, darker axe-shaped staff with a glowing blue crystal on the top, which appears similar to her belt. A Night Witch card costs 4 Elixir to deploy.
+ 
+ Modifiers [ ] 
+ Common: Barely Haunted Bats [ ] 
+ “+6 Bats on defeat” 
+ Spawns an additional 6 Bats upon defeat.
+ 
+ Rare: Purple Please! [ ] 
+ “Spawn Evo Bats” 
+ Spawns Evolved Bats instead of normal Bats.
+ 
+ Epic: DUCK…no…BATS! [ ] 
+ “Spawn swarm of Bats” 
+ Randomly spawns Bats throughout the arena.
+ 
+ Strategy [ ] 
+ For Battle Decks with this card , click here . 
+ 
+ The Night Witch's high damage per attack in addition to her continuous spawns make her potent at defeating high-hitpoint units, whether it be on offense or defense. 
+ Her damage is enough to be able to OHKO any troop with as many hitpoints as Archers or a Firecracker . Keep this in mind when deploying her on top on single frail troops to preserve as many of her hitpoints as possible. 
+ She cannot perfectly counter some troops that the Witch can, as the Night Witch cannot distract ground-targeting troops with her Bats . However, the Night Witch can defeat nearly all cards that cannot target air, like Sparky , Lumberjack , Prince , P.E.K.K.A , Mega Knight , Barbarians , etc.
+ The Night Witch's role in a deck is fairly different compared to her counterpart, the Witch. The Night Witch does not do splash damage, only spawns two Bats at a time, is very fragile without the help of a tank (unlike how the Witch could protect herself using her spawned Skeletons), and cannot target air troops. On the other hand, the Night Witch's higher melee damage, increased health and her faster Bats make her more threatening on a counterpush. 
+ The Night Witch cannot attack air troops by herself, so Minions , Bats, Electro Dragon , Mega Minion , Flying Machine, Phoenix , Skeleton Dragons , or the Baby Dragon will be effective at taking her out since they can also easily take out her summoned Bats. However, if these units are distracted with something else, the Bats may heavily damage or even defeat them. 
+ The Night Witch is very dangerous to the Cannoneer as she will distract him with her Bats for a long time, although unlike the Witch, she will not distract him indefinitely, due to spawning fewer Bats. 
+ Upon deployment, the Night Witch's first wave of Bats spawns more quickly that all subsequent spawns, appearing 1 second after she is deployed. When she is placed directly behind the King's Tower , 1 Bat will fly into the other lane, which can be useful if the player wants to lightly protect the other lane. 
+ The Night Witch pairs well with most large building-targeting tanks, because they can tank for the Bats spawned by her and deal massive damage to Towers , while the Bats deal with threats to the tank, either with attacks or simply by distracting cards like the Inferno Tower .
+ The Giant is a cheap high-hitpoints tank that works well with the Night Witch, allowing him to be played either to setup a push in the back or by placing them both at the bridge for a rush attack. 
+ The Golem is similar to the Giant, except that he comes with higher hitpoints and damage, as well as two Golemites that will start tanking for the Night Witch once the Golem is defeated. If the Night Witch is placed behind the King's Tower, when she reach the Crown Tower, the Golem can be placed right in front. The Night Witch will be blocked, staying there until the Golem starts moving. This can let the player generate more Elixir to support this push afterwards. 
+ She also pairs well with the Lava Hound . As an air troop, the Bats will assist the Lava Hound with distracting counters to it, while the Night Witch continues her way to her target. If defeated, the Night Witch will tank for the Lava Pups while also spawning more Bats to increase the swarm count and overwhelm the opponent.
+ Conversely, she is an effective counter to a Lava Hound. By placing her in the back while the Lava Hound proceeds towards the Tower, she will spawn enough Bats to have them distracted by the Lava Hound, and defeat him. Note that the Lava Pups can OHKO the Bats so prepare with an additional cheap swarm to finish them off. 
+ The Goblin Giant is slightly faster than the other tanks, which in this case, allows the Bats to stay closer to him and assist him against counters, while also preventing the Night Witch from being too close and provide splash value. 
+ The Elixir Golem is the cheapest tank to use alongside the Night Witch. Like the Golem, he will also spawn smaller forms that will tank further for the Night Witch, with her Bats distracting and dealing more damage. 
+ The Night Witch can be a situational support troop for fast attackers like the Battle Ram , Lumberjack , Berserker , and Ram Rider . Her spawned Bats can catch up quickly with the fast attacker, while also punishing attempts at using a Fisherman to activate the King Tower with them, while the Night Witch stays away from them to avoid spell value. 
+ When the Night Witch is cloned , her clone will also spawn cloned Bats. If the opponent lacks a spell or proper area damage unit, this will often overwhelm them and destroy their Crown Tower in seconds. 
+ Ranged splash damage troops that can target air like the Wizard or Witch are very effective against the Night Witch since they can defeat her and her spawned Bats quickly without receiving much damage.
+ The Ice Wizard combines area-damage with a slow effect, forcing the Night Witch to take longer to spawn the next wave of Bats. While he deals lower damage than the previous options, it is still enough to OHKO the Bats, while he also costs 1 less Elixir than the Night Witch, making him a cheap counter to her. 
+ Area denial units like the Executioner , Magic Archer , and Firecracker will be able to immediately defeat the spawned Bats as they are spawned and continue to attack the Night Witch with little issue. In addition, when they land the fatal hit on the Night Witch, the singular Bat will be instantly defeated as well. 
+ The Electro Dragon may not be able to deal area damage but its chain attack is very effective at dealing damage to the Night Witch while also defeating her Bats. It will also stun her, delaying her from spawning additional Bats. The Electro Spirit works in a similar way for only 1 Elixir, but remember that it will only do that once. 
+ Unlike the regular Valkyrie , the Evolved Valkyrie is an effective counter to the Night Witch. The Evolved Valkyrie will attack her with her regular attacks while also dealing the tornado damage. The combination of the regular attacks and the tornado is enough to 3HKO the Night Witch, while the tornado alone can OHKO any Bats that are spawned. However, the death spawn Bat will stay alive to continue attacking the Evolved Valkyrie, so try to destroy it with another card like an Electro Wizard , Dart Goblin , Musketeer , or Hunter to ensure that the Evolved Valkyrie can remain for a counterattack. 
+ Because of her melee range and medium movement speed, she can be countered by pulling her to the center with a ranged card that can target air, even single-target ones like the Archers , Musketeer , Hunter , Mother Witch , Archer Queen , Electro Wizard , Dart Goblin , Zappies , Little Prince , and Spear Goblins . However, this should not be done if she is supported with a tank, as they will target the tank in this case, which will allow the Night Witch to spawn more Bats and overwhelm them. 
+ Poison is the most effective spell against the Night Witch. If timed correctly, not only will the Poison cripple the Night Witch, it will also eliminate all the spawned Bats. However, it is not enough to destroy her by itself, so it may have to be combined with a 2-Elixir spell like Zap or Giant Snowball to fully defeat her.
+ Fireball deals less damage than Poison, so a combination of the spell with Zap or Rage is not enough to defeat her. In this case, a Barbarian Barrel or The Log would be necessary for the job, which is less effective due to its inability to hit the Bats. 
+ Just like the regular Witch, if the Night Witch summons Bats while under  Rage , her Bats are also affected. Not only that, but Rage will also allow the Night Witch to spawn more Bats faster. 
+ The Night Witch can be used to effectively counter the Graveyard since her Bats can quickly defeat the Skeletons. However, a spell like Poison can easily defeat her and allow the Skeletons to deal massive damage to the Tower.
+ Conversely, she is also a great synergy with Graveyard. The Night Witch will tank for the Graveyard, while the Skeletons and Bats deal massive damage while staying relatively spread out. 
+ The Night Witch pairs well with the Miner , as he can tank for her and her Bats, allowing her to spawn them more safely and cause a considerable damage to a Crown Tower, being more useful if the opponent has low Elixir. The combo, however, is still weak to swarms or spells, due to the fact that since Night Witch targets the Tower, she will ignore every enemy surrounding her.
+ Alternatively, in larger pushes, a Miner can distract ranged area attackers that can threaten the Night Witch, allowing her to stay alive and spawn more Bats to assist the push. 
+ A Night Witch, even with the assistance of a Crown Tower, cannot prevent a Balloon from connecting to the Tower. Her first wave of Bats don't spawn and attack quickly enough to prevent the Balloon's first attack, even when she is placed slightly in advance. 
+ Against a Goblin Barrel , place her behind the bottom Goblin . The Night Witch will attack it while her first wave of Bats will go for the other two Goblins. This will prevent the most damage from the Goblin Barrel. 
+ A Night Witch can be countered by kiting her into the other lane with an Ice Golem . Since the Night Witch and her spawned Bats are melee, they will follow the Ice Golem completely, while the Tower attacks them. If necessary, the Ice Golem's death damage will wipe out some Bats and slow down the Night Witch further, buying more time for the other tower troop to finish her off. 
+ The Night Witch can fully stop a Mega Knight with the help of the Tower Princess . Place her in such a way that the Mega Knight does not jump on her. She spawns Bats fast enough that will keep up with the Mega Knight, as well as a singular one after death, which is enough to defeat him before he lands on the Tower Princess. After that, the player can make use of those Bats for a small counterattack. 
+ While a Mother Witch does not deal area damage, she will immediately defeat each Bat in one hit, spawning Cursed Hogs from them. These Cursed Hogs will distract the Night Witch and any remaining Bats for a long time, allowing the Mother Witch to curse the Night Witch, eventually defeating her and spawning a Cursed Hog out of her. 
+ A Night Witch is actually able to slightly outrange some troops because of her staff, similar to the Prince , Guards , and Royal Recruits . Because of this, she can poke at a distracted Valkyrie without taking any damage, setting you up for a counterpush. 
+ The Night Witch is very effective at baiting spells from the opponent. She can either bait weaker spells like Zap and Giant Snowball that are used against her Bats or she can bait stronger spells like Lightning and Poison that are used to directly target her. This allows the user to deploy other cards that are weak to those spells such as Skeleton Barrel and Flying Machine respectively. 
+ Like any spawner card, she pairs well with the Skeleton King . The Bats that she spawns will be able to accumulate his ability, allowing him to spawn more Skeletons from it, while they also attack opposing air troops that can threaten the duo. 
+ The Night Witch is very effective in game modes where there are no Crown Towers to attack the Bats, such as Touchdown and Heist . The lack of Crown Towers means that each Bat will have to addressed individually, and since they are air troops, it will necessitate the use of cards that can target them, which can allow other allied air cards like the Flying Machine to be used unharmed. 
+ 
+ Statistics 
+ 
+ 
+ 
+ 
+ 
+ 
+ Night Witch Attributes 
+ 
+ 
+ Cost 
+ 
+ Hit Speed 
+ 
+ First Hit Speed 
+ 
+ Speed 
+ 
+ Deploy Time 
+ 
+ Spawn Speed 
+ 
+ Range 
+ 
+ Target 
+ 
+ Count 
+ 
+ Transport 
+ 
+ Type 
+ 
+ Rarity 
+ 
+ 
+ 4 
+ 1.3 sec 
+ 0.75 sec 
+ Medium (60) 
+ 1 sec 
+ 5 sec 
+ Melee: Long (1.6) 
+ Ground 
+ x1 
+ Ground 
+ Troop 
+ Legendary 
+ 
+ Bat Attributes 
+ 
+ 
+ Hit Speed 
+ 
+ First Hit Speed 
+ 
+ Speed 
+ 
+ Range 
+ 
+ Target 
+ 
+ Transport 
+ 
+ 
+ 1.3 sec 
+ 0.6 sec 
+ Very Fast (120) 
+ Melee: Medium (1.2) 
+ Air & Ground 
+ Air
+ 
+ Card Statistics 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Level 
+ 
+ Night Witch Hitpoints 
+ 
+ Night Witch Damage 
+ 
+ Night Witch Damage per second 
+ 
+ Bat Hitpoints 
+ 
+ Bat Damage 
+ 
+ Bat Damage per second 
+ 
+ 
+ 9 
+ 749 
+ 260 
+ 200
+ 
+ 67 
+ 67 
+ 51
+ 
+ 
+ 10 
+ 824 
+ 285 
+ 219
+ 
+ 74 
+ 74 
+ 56
+ 
+ 
+ 11 
+ 906 
+ 314 
+ 241
+ 
+ 81 
+ 81 
+ 62
+ 
+ 
+ 12 
+ 997 
+ 345 
+ 265
+ 
+ 89 
+ 89 
+ 68
+ 
+ 
+ 13 
+ 1096 
+ 380 
+ 292
+ 
+ 98 
+ 98 
+ 75
+ 
+ 
+ 14 
+ 1206 
+ 418 
+ 321
+ 
+ 108 
+ 108 
+ 83
+ 
+ 
+ 15 
+ 1326 
+ 460 
+ 353
+ 
+ 119 
+ 119 
+ 91
+ 
+ 
+ 16 
+ 1459 
+ 506 
+ 389
+ 
+ 130 
+ 130 
+ 100
+ 
+ There will be rounding mistakes, as we have stats from level 11
+ 
+ Card Mastery 
+ 
+ 
+ Type
+ 
+ Level/Tier
+ 
+ Objective
+ 
+ Rewards
+ 
+ 
+ Damage Dealer 
+ 
+ 1
+ 
+ Deal a total of 175,000 Damage to enemy Troops or buildings 
+ 
+ 2 Night Witch cards 100 
+ 
+ 
+ 2
+ 
+ Deal a total of 530,000 Damage to enemy Troops or buildings
+ 
+ 8,000 100 
+ 
+ 
+ 3
+ 
+ Deal a total of 880,000 Damage to enemy Troops or buildings
+ 
+ 100 100 
+ 
+ 
+ Spawner 
+ 
+ 1
+ 
+ Spawn a total of 1,400 Troops
+ 
+ 12,000 150 
+ 
+ 
+ 2
+ 
+ Spawn a total of 4,000 Troops
+ 
+ 2 150 
+ 
+ 
+ 3
+ 
+ Spawn a total of 7,000 Troops
+ 
+ 18,000 150 
+ 
+ 
+ 
+ History [ ] 
+ 2017
+ 
+ The Night Witch was once available in the Night Witch Draft Challenge which started on 26/5/2017. In this challenge , gameplay was similar to a regular Draft Challenge, except that one of the players was able to choose who would use the Night Witch. If the player achieved 12 wins, they obtained the Night Witch early. 
+ The Night Witch card was generally released on 31/5/2017. 
+ On 12/6/2017, the June 2017 Update , decreased the Night Witch's Bats spawned upon death to 3 (from 4), increased her spawn time interval to 6 seconds (from 5 seconds), and added a 1.5 second delay in her first spawn. 
+ On 11/8/2017, a  Balance Update , decreased the Night Witch's damage by 9%, decreased her range to 1.65 tiles (from 1.85 tiles), increased her spawn time interval to 7 seconds (from 6 seconds), and decreased the Bats spawned upon death to 2 (from 3). 
+ 2018
+ 
+ On 24/1/2018, a Balance Update , decreased the first spawn time interval to 1.3 seconds (from 1.5 seconds), increased her Bats' attack time interval to 1.1 seconds (from 1 second), and increased their first attack time interval to 0.6 seconds (from 0.5 seconds). 
+ On 20/6/2018, the Summer 2018 Update , moved the Arena to unlock the Night Witch from Frozen Peak to Spell Valley. 
+ On 5/9/2018, the September 2018 Update , changed it so that Legendary cards start at Level 9 and end at Level 13 (from 1 to 5). 
+ 2019
+ 
+ On 1/7/2019, the July 2019 Update , decreased the Night Witch's range to 1.6 tiles (from 1.65 tiles), now classified as Melee: Long. 
+ On 7/10/2019, a Balance Update , increased the Night Witch's Bats spawned upon death to 4 (from 2). 
+ On 26/11/2019, the End of November 2019 Update , added a card render to the Night Witch's card info screen. 
+ 2020
+ 
+ On 7/1/2020, a Balance Update , increased the Night WItch's first attack time interval to 0.75 seconds (from 0.4 seconds) and increased the first spawn time interval to 3.5 seconds (from 1.3 seconds). 
+ On 4/8/2020, a Balance Update , increased the Bats' attack time interval to 1.3 seconds (from 1.1 seconds), and increased their first attack time interval to 0.8 seconds (from 0.6 seconds). 
+ On 9/12/2020, a Balance Update , decreased the Bats' first attack time interval to 0.6 seconds (from 0.8 seconds). 
+ 2021
+ 
+ On 7/6/2021, the Summer 2021 Update , moved the Arena to unlock the Night Witch from Spell Valley to Serenity Peak. 
+ On 6/9/2021, the 2021 Quarter 3 Update , decreased the first spawn time interval to 1 second (from 3.5 seconds), decreased her spawn time interval to 5 seconds (from 7 seconds), and removed the Night Witch's death spawn. 
+ On 27/10/2021, the Champions Update , increased the Level cap of all cards to 14 (from 13). The " even after death " words from her description were also removed. 
+ 2022
+ 
+ On 3/2/2022, a Balance Update , made it so that the Ram Rider 's snare ability would no longer affect the spawn speed of the Night Witch. 
+ On 7/6/2022, a Balance Update , increased the Night Witch's attack time interval to 1.3 seconds (from 1.5 seconds). 
+ On 30/9/2022, a maintenance break, changed the Night Witch's card image. 
+ 2023
+ 
+ On 6/6/2023, a Balance Update , allowed the Night Witch to spawn 1 Bat after death. 
+ On 19/6/2023, the Card Evolution Update , increased the Level cap of all cards to 15 (from 14). 
+ 2025
+ 
+ On 31/3/2024, the 2025 Quarter 1 Update , decreased the Night Witch's hitpoints by 0.11%. It also fixed a bug where the Bat would not spawn after being buffed by Royal Chef . 
+ Gallery [ ] 
+ Night Witch's card image before 30/9/2022. Current card render. Night Witch 1 Night Witch with her Bats. Night Witch alone. Night Witch 2 Night Witch 3 Full render of the current card image 
+ Sound Effects [ ] 
+ 
+ 
+ Sound Effect
+ 
+ Action
+ 
+ Description
+ 
+ Line
+ 
+ 
+ https://clashroyale.fandom.com/wiki/File:Night_Witch_Deploy.mp3 
+ 
+ Deployment
+ 
+ Plays when the Night Witch is deployed.
+ 
+ "Hahahaa!"
+ 
+ 
+ https://clashroyale.fandom.com/wiki/File:Night_Witch_Swing.mp3 
+ 
+ Swing
+ 
+ Plays when the Night Witch swings her staff.
+ 
+ 
+ https://clashroyale.fandom.com/wiki/File:Night_Witch_Hit.mp3 https://clashroyale.fandom.com/wiki/File:Night_Witch_Staff_Impact.mp3 
+ 
+ Hit
+ 
+ Plays when the Night Witch hits something.
+ 
+ "Haah!"
+ 
+ Trivia [ ] 
+ The Bats that the Night Witch spawns resemble the in-life bat species called " Desmodus rotundus" ( common vampire bat ). The common vampire bat is a hematophagous bat species that primarily feeds on the blood of livestock, which is done by biting their prey while they are sleeping. In Clash Royale, Bats attack in a similar way by biting their enemies. 
+ The Night Witch is 1 of 17 troops that inspired a troop in Clash of Clans, the others being Spear Goblins , Bomber , Bats, Skeleton Barrel , Minion Horde , Firecracker , Battle Ram , Ice Golem , Zappies , Baby Dragon , Giant Skeleton , Ram Rider , Inferno Dragon , Miner , Royal Ghost , and Ice Wizard .
+ The Night Witch is confirmed to be Witch 's sister, according to the Night Witch Karaoke Contest video and her description in Clash of Clans. 
+ An opposing Star Level 2 skin resembles the Level 13 Night Witch in Clash of Clans. 
+ The Night Witch in Clash of Clans is ranged and deals area damage, unlike in Clash Royale. 
+ The Night Witch is one of the first troop cards to receive a card render, alongside the Archers , Knight , Goblins , Bomber, Skeletons , Barbarians , Bats, Royal Recruits , Skeleton Barrel, Rascals , Musketeer , Giant , Valkyrie , Wizard , Flying Machine , Hog Rider , Royal Hogs , Dart Goblin , Zappies, Elixir Golem , Baby Dragon, Skeleton Army , Witch , P.E.K.K.A , Prince , Balloon , Giant Skeleton, Goblin Giant , Hunter , Electro Dragon , Wall Breakers , Bowler , Cannon Cart , Mega Knight , Ram Rider, Miner, Royal Ghost, Ice Wizard, Magic Archer , Bandit , Lava Hound , and Fisherman . 
+ In the Korean, Portuguese, Persian, and Vietnamese language settings of the game, the Night Witch's name translates to "Dark Witch". In the French and Finnish language settings of the game, the Night Witch's name translates to "Witch of the Night". In the Japanese and Thai language settings of the game, the Night Witch's name translates to "Dark Necromancer" and "Night Magic Girl" respectively. 
+ The Night Witch is 1 of 15 troops which bring an excited reaction from the audience upon spawning and brings a collective groan from the audience when defeated, as well as a concerning gasp when the opponent plays her, the others include Royal Giant , Giant, P.E.K.K.A., Giant Skeleton, Rune Giant , Goblin Giant, Golem , Bowler, Electro Wizard , Inferno Dragon, Sparky , Lava Hound, Super Lava Hound , and the Monk . 
+ In Spooky Town , a Night Witch statue can be seen behind the enemy's King's Tower . 
+ It is rumored that the Super Witch has been summoned from all the other 3 Witches, as demonstrated in the Super Witch trailer , hence explaining the combination of all the other Witches' abilities. 
+ The Night Witch is the only troop that has been featured with a Passive Heal buff . 
+ The Night Witch is featured as a character skin for Mortis in Brawl Stars. 
+ The Night Witch, along with the Archers, Goblins, Barbarians, Ice Spirit , Mini P.E.K.K.A , Musketeer, Giant, Wizard, Hog Rider, Witch, and Prince, is featured as a sticker in iMessage , in a sticker pack called Clash Theater . 
+ The Night Witch is the subject of certain cosmetics in the game. More specifically:
+ The Night Witch is the subject of a few Emotes .
+ The Night Witch Rocking Emote may be a reference to Marceline from Adventure Time , being a vampire girl that plays an electric guitar. 
+ The Night Witch is the subject of a Tower Skin . 
+ The Night Witch is the subject of a few Battle Banner items.
+ The Dancing Witch decoration is created by Myoho. 
+ The Night Witch decoration's description says " Bats frighten me. It's time my enemies share my dread!" which is a reference to a quote mentioned in Batman Begins . 
+ A cloned Night Witch does not fall from the sky when deployed. 
+ In the Clash-A-Rama episode " Archer Departure ", the Night Witch was incorrectly shown as a 5-Elixir card. 
+ On 27/3/2023, a Trainer was added to the game called Boss Cheddar, and used a Level 18 Night Witch in their deck , despite the highest Level being Level 14 at the time. This Trainer was removed on 18/4/2023. 
+ The initial balance change for Night Witch on the 6/6/2023 balance changes was the addition of 2 Bats after death, but it lowered to 1 Bat last minute . 
+ 
+
+ 
+ Wiki Navigation
+ 
+ 
+ 
+ 
+
+ 
+ Community
+ 
+ 
+ Community
+ 
+ Home • Game Version History • Esports • Supercell ID • Supercell Make • Glossary 
+ 
+ 
+ Assets
+ 
+ Loading Screens • Loading Screen Hints • Notifications • Soundtracks 
+ 
+ 
+
+ 
+ Cards
+ 
+ 
+ General
+ 
+ About Cards • Card Overviews ( Merge Tactics ) • Battle Decks 
+ 
+ 
+ Troop Cards
+ 
+ Common 
+ 
+ Minions • Archers ( Evolution ) ( Merge Tactics ) • Knight ( Evolution ) ( Hero ) ( Merge Tactics ) • Spear Goblins ( Merge Tactics ) • Goblins ( Hero ) ( Merge Tactics ) • Bomber ( Evolution ) ( Merge Tactics ) • Skeletons ( Evolution ) ( Merge Tactics ) • Barbarians ( Evolution ) ( Merge Tactics ) • Electro Spirit • Skeleton Dragons ( Merge Tactics ) • Fire Spirit • Bats ( Evolution ) • Royal Recruits ( Evolution ) • Royal Giant ( Evolution ) ( Merge Tactics ) • Ice Spirit ( Evolution ) • Berserker ( Hero ) • Skeleton Barrel ( Evolution ) • Goblin Gang • Elite Barbarians ( Evolution ) • Minion Horde ( Evolution ) • Firecracker ( Evolution )( Merge Tactics ) • Rascals 
+ 
+ 
+ Rare 
+ 
+ Mini P.E.K.K.A. ( Hero ) ( Merge Tactics ) • Musketeer ( Evolution ) ( Hero ) ( Merge Tactics ) • Giant ( Hero • ( Merge Tactics ) • Valkyrie ( Evolution )( Hero ) ( Merge Tactics ) • Mega Minion ( Hero ) • Battle Ram ( Evolution ) • Wizard ( Evolution ) ( Hero ) ( Merge Tactics ) • Flying Machine • Hog Rider • Royal Hogs ( Evolution ) • Three Musketeers • Battle Healer • Ice Golem ( Hero ) • Dart Goblin ( Evolution ) ( Merge Tactics ) • Furnace ( Evolution ) • Zappies • Goblin Demolisher ( Merge Tactics ) • Heal Spirit • Suspicious Bush • Elixir Golem 
+ 
+ 
+ Epic 
+ 
+ Guards • Baby Dragon ( Evolution ) ( Merge Tactics ) • Skeleton Army ( Evolution ) • Witch ( Evolution ) ( Merge Tactics ) • P.E.K.K.A. ( Evolution ) ( Merge Tactics ) • Dark Prince ( Hero ) • Prince ( Merge Tactics ) • Balloon ( Hero ) • Giant Skeleton ( Merge Tactics ) • Rune Giant • Goblin Giant ( Evolution ) • Hunter ( Evolution ) • Golem • Electro Dragon ( Evolution ) • Wall Breakers ( Evolution ) • Electro Giant ( Merge Tactics ) • Bowler ( Hero ) • Executioner ( Evolution ) ( Merge Tactics ) • Cannon Cart • Raging Prince +
+ 
+ 
+ Legendary 
+ 
+ Mega Knight ( Evolution ) ( Merge Tactics ) • Ram Rider • Electro Wizard ( Merge Tactics ) • Inferno Dragon ( Evolution ) • Sparky • Miner • Princess ( Evolution ) ( Merge Tactics ) • Phoenix • Royal Ghost ( Evolution ) ( Merge Tactics ) • Ice Wizard • Magic Archer ( Hero )( Merge Tactics ) • Bandit ( Merge Tactics ) • Lava Hound • Night Witch • Lumberjack ( Evolution ) • Ronin • Spirit Empress • Goblin Machine ( Merge Tactics ) • Mother Witch • Fisherman • Super Lava Hound + • Super Witch + • Super Mini P.E.K.K.A. + • Santa Hog Rider + • Super Ice Golem + • Super Magic Archer + • Super Archers + • Wizard Trio + • Super Knight +
+ 
+ 
+ Champion 
+ 
+ Golden Knight ( Merge Tactics ) • Skeleton King ( Merge Tactics ) • Boss Bandit ( Merge Tactics ) • Archer Queen ( Merge Tactics ) • Mighty Miner • Monk ( Merge Tactics ) • Little Prince • Goblinstein • Terry +
+ 
+ 
+ Spell Cards
+ 
+ Common 
+ 
+ Arrows • Zap ( Evolution ) • Giant Snowball ( Evolution ) • Royal Delivery • Warmth +
+ 
+ 
+ Rare 
+ 
+ Fireball • Rocket • Earthquake • Heal 
+ 
+ 
+ Epic 
+ 
+ Goblin Barrel ( Evolution ) • Vines • Lightning • Freeze • Barbarian Barrel ( Hero ) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror 
+ 
+ 
+ Legendary 
+ 
+ The Log • Graveyard • Party Rocket +
+ 
+ 
+ Building Cards
+ 
+ Common 
+ 
+ Cannon ( Evolution ) • Mortar ( Evolution ) ( Merge Tactics ) • Tesla ( Evolution ) ( Merge Tactics ) • Barbarian Launcher +
+ 
+ 
+ Rare 
+ 
+ Goblin Cage ( Evolution )( Merge Tactics ) • Goblin Hut • Tombstone ( Hero )( Merge Tactics ) • Bomb Tower • Inferno Tower ( Merge Tactics ) • Barbarian Hut • Elixir Collector ( Merge Tactics ) 
+ 
+ 
+ Epic 
+ 
+ X-Bow ( Merge Tactics ) • Goblin Drill ( Evolution ) 
+ 
+ 
+ Legendary 
+ 
+ Party Hut + • Rocket Silo +
+ 
+ 
+ Tower Troop Cards
+ 
+ Common 
+ 
+ Tower Princess • Baby Goblins +
+ 
+ 
+ Epic 
+ 
+ Cannoneer 
+ 
+ 
+ Legendary 
+ 
+ Dagger Duchess • Royal Chef 
+ 
+ 
+ Merge Tactics
+ 
+ Traits
+ 
+ Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan 
+ 
+ 
+ Rulers
+ 
+ Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin 
+ 
+ 
+
+ 
+ Battle
+ 
+ 
+ Basics
+ 
+ Basics of Battle • Cards • Elixir • Card Evolution • Heroes • Buff + • Ruler Ability + • Modifiers (merge Tactics) • Equipment (Merge Tactics) 
+ 
+ 
+ Modes
+ 
+ 2v2 • Touchdown • Global Spell • Heist • Troop Rush + • Treasure Hunt + • Obstacle Course + • Battleground • Chess Royale + • Trick or Treat + • C.H.A.O.S +
+ 
+ 
+ Formats
+ 
+ Training Camp • Tournament ( Special Event Challenges ) • Card Delivery 
+ 
+ 
+ Trophy Roads
+ 
+ Arenas • Ranked • Merge Tactics • Goblin Queen's Journey + • 2v2 League + • Retro Royale + • Undead March +
+ 
+ 
+ Crown Towers/Rulers
+ 
+ King's Tower • Goblin Queen Tower • Princess Tower 
+ 
+ 
+
+ 
+ Gameplay
+ 
+ 
+ Social
+ 
+ Clans • Clan Wars • Clan Voyage • Friendly Battle • Trade Tokens • Emotes • Clan Chest • Clan Wars I 
+ 
+ 
+ Currencies
+ 
+ Gold • Gems • Chests • Trophies • Star Points • Magic Items • Lucky Chests • Collection Level • Experience 
+ 
+ 
+ Features
+ 
+ Shop • Pass Royale • Player Profile • Events + • Card Mastery • Battle Banners • TV Royale • Achievements • Quests • Season Shop • Daily Tasks 
+ 
+ 
+ 
+ Current cards and features appear in blue . Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray . Upcoming cards and features that are not yet in the game appear in yellow . A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple , while Evolutions are pink , and Heroes are orange .
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 

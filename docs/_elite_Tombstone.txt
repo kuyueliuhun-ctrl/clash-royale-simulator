@@ -1,0 +1,193 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 3-Elixir Cards, Heroes with 5-Elixir Abilities, Rare Cards, and 2 more
+Tombstone/Hero
+< Tombstone
+SAVE
+EDIT
+Hero Tombstone
+Elixir Cost
+3 
+Ability Cost
+5 
+Rarity
+Rare
+Type
+Building
+Arena
+Bone Pit
+Release Date
+1 June 2026
+
+
+
+
+
+
+
+Strategy
+For the purposes of determining Elixir trades, the Heroic Tombstone and its activated Ability count as 8 Elixir, as the player must play the 3 Elixir Heroic Tombstone and then spend a further 5 on his Ability.
+Do not place a Heroic Tombstone in a position where you would never place a regular Tombstone. This is because it can easily reveal to the opponent that the ability will be used, incentivizing them to destroy it before the ability can be used.
+Statistics
+Tombstone Attributes
+Cost
+
+	Spawn Speed
+
+	Deploy Time
+
+	Lifetime
+
+	Type
+
+	Rarity
+
+
+3	4 sec	1 sec	30 sec	Building	Rare
+Skeleton Attributes
+Hit Speed
+
+	First Hit Speed
+
+	Speed
+
+	Range
+
+	Target
+
+	Transport
+
+
+1.1 sec	0.5 sec	Fast (90)	Melee: Short (0.5)	Ground	Ground
+Card Statistics
+Level
+
+	Hitpoints
+
+	Hitpoints lost per second
+
+	Hitpoints
+
+	Damage
+
+	Damage Per Second
+
+	Queen Hitpoints
+
+	Queen Damage
+
+
+3	247	8.2	38	38	34	1971	197
+4	271	9	42	42	38	2168	217
+5	299	10	46	46	41	2384	238
+6	328	10.9	50	50	45	2623	262
+7	361	12	55	55	49	2885	288
+8	397	13.2	61	61	55	3174	317
+9	437	14.6	67	67	60	3491	349
+10	481	16	74	74	67	3840	384
+11	529	17.6	81	81	73	4224	422
+12	582	19.4	89	89	80	4646	464
+13	640	21.3	98	98	89	5111	511
+14	704	23.5	108	108	98	5622	562
+15	775	25.8	119	119	108	6184	618
+16	852	28.4	130	130	118	6803	680
+
+There will be rounding mistakes, as we have stats from level 11
+
+History
+On 1/6/2026, the Hero Tombstone was added in the game, along with Evo Princess
+On 6/7/2026, a Balance Update, increased the Tomb Queen's Hitpoints by 20%, decreased the ability cost to 5 elixir (from 6), and her continuous skeleton spawn was removed entirely
+On 4/8/2026, a Balance Update, increased the Tomb Queen's Damage by 32%, increased her sight range to 7 tiles (from 5.5 tiles), and increased her hitpoints by 4%
+Categories
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+Comments
+
+Start a conversation
+Sign in to share your thoughts and get the conversation going.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+5 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

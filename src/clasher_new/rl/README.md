@@ -38,6 +38,21 @@
 | `dashboard.py` | **训练网页 UI**：Elo-训练次数 曲线仪表盘 + **最近训练回放列表 / Canvas 播放器**（纯 Canvas 自绘、离线可用、3s 轮询 `/api/state`、5s 轮询 `/api/replays`） |
 | `evaluate.py` | 评测：Win/Lose/Draw、Bundle 合法率、Next-Card Acc/Brier/ECE、消融、`--belief-only` 协议；消融含 **逐意图采纳探针**（region 吻合率 + save_ace hold 服从率，full vs plan-off Δ） |
 | `selftest.py` | 全链路自检 + 评审回归测试（P0-1..P0-6、P1-4/5/9/18/21） |
+| `train_solo.py` | 单人自对弈训练（无联赛机制）：main vs frozen_copy、命名配置、断点续训、并行评估（crash 检测 + 静默 worker 回退） |
+| `overtime.py` | 加时（突然死亡）窗口判定：[180,300) 皇冠平进入加时，最迟 300s 按最低塔血裁决；纯逻辑零依赖 |
+| `export_replay.py` | 对局 replay 导出（含特权隐藏状态标签），供信念监督训练 / BC |
+| `human_play.py` | 人机对战 + 人类出牌采集（dashboard `--play` 集成，BC 素材来源） |
+| `launcher_menu.py` | `start_rl.bat` 无参数/`--menu` 的多层问答式配置向导 |
+
+## 外置工具（引擎侧确定性服务，与 `rl/` 解耦，位于 `src/clasher_new/` 根）
+
+| 工具 | 文件 | 用途 |
+|---|---|---|
+| 塔伤威胁计算器 | `../threat_calc.py` | 候选动作估值 / prophet 特征 / 观测附加通道 |
+| 交换模拟器 | `../simulate_exchange.py` | 条件威胁数据集标签 / 浅 MCTS 叶估值 / 模块对账老师 |
+| 法术知识模块 | `../spell_module.py` | 法术落点估值特征 / LLM 生成卡牌模块的 few-shot 范例 |
+
+设计与优先级决策存档：根目录 `AGENTS.md`；文档↔源码总索引：`docs/README.md`。
 
 ## 训练入口
 

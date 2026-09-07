@@ -1,20 +1,20 @@
 import json
 # （原依赖 fastcore.nested_idx，仅一处嵌套取值，已内联等价实现——消除非必要依赖）
 
-with open('gamedata.json') as f:
+with open('gamedata.json', encoding='utf-8') as f:
     data = json.load(f)
 
-with open('cards_stats_characters.json') as f:
+with open('cards_stats_characters.json', encoding='utf-8') as f:
     characters_data = json.load(f)
     air_units = [each['name'] for each in characters_data if each['flying_height'] != 0]
     characters = {each['name']:each for each in characters_data}
-with open('cards_stats_spell.json') as f:
+with open('cards_stats_spell.json', encoding='utf-8') as f:
     spells_data = json.load(f)
     spells = {each['name']:each for each in spells_data}
-with open('cards_stats_building.json') as f:
+with open('cards_stats_building.json', encoding='utf-8') as f:
     buildings_data = json.load(f)
     buildings = {each['name']:each for each in buildings_data}
-with open('cards_stats_projectile.json') as f:
+with open('cards_stats_projectile.json', encoding='utf-8') as f:
     projectiles = {each['name']:each for each in json.load(f)}
 
 data = data['items']['spells']
@@ -74,6 +74,27 @@ def _register_derived_character(char_def):
         return
     hp0 = char_def.get('hitpoints') or 0
     dmg0 = char_def.get('damage') or 0
+    # —— 勘误批5 修复：内嵌衍生定义缺 damage/speed 时回退同族基础卡
+    # （如 GoblinCage_EV1_GoblinBrawler 缺 damage/speed → 回退 GoblinBrawler, 此前生成 0 伤 0 速单位）
+    _base_scd = None
+    if not dmg0 or not char_def.get('speed'):
+        _tail = name.split('_EV1_')[-1]
+        for _bn in (_tail, name.split('_')[-1]):
+            _bc = card_data.get(_bn)
+            _bscd = (_bc or {}).get('summonCharacterData') or {}
+            if _bscd.get('hitpoints'):
+                _base_scd = _bscd
+                break
+    if _base_scd is not None:
+        if not dmg0:
+            dmg0 = _base_scd.get('damage') or 0
+            if dmg0 and 'damage' not in char_def:
+                char_def = dict(char_def)
+                char_def['damage'] = dmg0
+        if not char_def.get('speed') and _base_scd.get('speed'):
+            char_def = dict(char_def) if 'damage' in char_def else char_def
+            char_def['speed'] = _base_scd['speed']
+            entry_fix = char_def
     entry = {'name': name, 'tidType': 'TID_CARD_TYPE_CHARACTER',
              'summonCharacterData': dict(char_def)}
     card_data[name] = entry
@@ -109,11 +130,50 @@ for _c in list(card_data.values()):
     if _tb.get('deathSpawnData'):
         # 女巫妈妈诅咒：目标死亡生成 VoodooHog（注册该生成物为可构造卡）
         _scan_and_register(_tb['deathSpawnData'])
+    # —— 勘误批2+：基础卡亡语链（deathSpawnCharacterData 递归链注册：
+    # ElixirGolem2/4、SkeletonContainer、GoblinBrawler 等）——
+    _dsd = _scd.get('deathSpawnCharacterData')
+    _seen = set()
+    while isinstance(_dsd, dict) and _dsd.get('name') and id(_dsd) not in _seen:
+        _seen.add(id(_dsd))
+        _scan_and_register(_dsd)
+        _dsd = _dsd.get('deathSpawnCharacterData')
+    # —— 勘误批2+：双部队卡第二部队（GoblinGang 枪哥布林 / Rascals 女兵 / Goblinstein 医生）——
+    if _c.get('summonCharacterSecondData'):
+        _scan_and_register(_c['summonCharacterSecondData'])
+    # —— 勘误批14：Phoenix 蛋/亡语火球 + MovingCannon 破车注册 ——
+    _dsp = _scd.get('deathSpawnProjectileData')
+    if _dsp:
+        _scan_and_register(_dsp)
+    if _c.get('name') == 'MovingCannon' and 'BrokenCannon' not in card_data:
+        _mcs = _scd
+        _bc = dict(_mcs)
+        _bc['name'] = 'BrokenCannon'
+        _bc.pop('speed', None)          # 破车定身（建筑态）
+        _bc['lifeTime'] = 15000          # 【Fandom 15s, 快照无字段】
+        _register_derived_character(_bc)
     _evo = _c.get('evolvedSpellsData') or {}
     _evo_scd = _evo.get('summonCharacterData') or {}
     for _k in ('deathSpawnCharacterData', 'onKilledActionData'):
         if _evo_scd.get(_k):
             _scan_and_register(_evo_scd[_k])
+    # —— M5 觉醒补全：全量扫描 evolvedSpellsData（动作组内嵌角色定义登记为可构造卡：
+    # Wallbreaker_mini / GoblinDummy（诱饵）/ Goblin（巨人投掷）/ GoblinCage_EV1_GoblinBrawler 等）——
+    if _evo:
+        _scan_and_register(_evo)
+
+# —— M6：2025 新觉醒 7 张（快照无 evolvedSpellsData，自建数据层 evo_2025_data.py）——
+# 注入 7 卡觉醒数据 + 注册 Souldier / SkeletonArmy_EV1_General / SkeletonArmy_EV1_Shadow。
+# 数值来源逐条标注于 evo_2025_data.py（Fandom CDP 采集 / 官方内存快照 / 标注假设）。
+import evo_2025_data as _evo_2025_mod
+_evo_2025_mod.apply(card_data, characters, character_to_card)
+# —— M7：数据接入三卡补全（Vines 弹速 / Spirit Empress 双形态 SCD + Normal 数值行）——
+_evo_2025_mod.apply_m7(card_data, characters, character_to_card, air_units)
+# —— M8：Elite17 精英卡（Hero 化）数据层（规格 docs/elite17_spec.md）：
+# 17 卡 abilityData 注入（冠军同链路）+ Hero 专属派生角色注册（炮塔/TombQueen/Skeletrooper/Rhino/假人）。
+# Hero 独立数值表与能力参数见 elite17_data.py（逐条来源标注）。
+import elite17_data as _elite17_mod
+_elite17_mod.apply(card_data, characters, character_to_card)
 
 def _rarity_level_index(rarity, level):
     """稀有度 → 等级索引（数组 0 为该稀有度起始等级）：Common=lv1, Rare=lv3, Epic=lv6,
@@ -370,6 +430,11 @@ class Projectile:
         self.name = self.data.get('name', 'Unknown')
         self.roll_range = self.data.get('projectileRange', 0) / 1000
         self.crown_tower_percent = (self.data.get("crownTowerDamagePercent", 0) + 100)/100
+        # —— 勘误批1（2026-09-04 用户口径, Fandom 权威）：Arrows 官方 lv11 对部队 122×3 波 /
+        # 对皇冠塔 25×3 波；gamedata crownTowerDamagePercent=-75（→25%）与官方表不符
+        # → Arrows 特例 25/122（≈20.5%）；其他法术维持通用口径不变。
+        if self.data.get('name') == 'ArrowsSpell':
+            self.crown_tower_percent = 25 / 122
         # —— M1 弹道生成链 ——
         self.spawn_projectile = None    # 命中后生成的二段弹名（数值表 spawn_projectile）
         self.spawn_characters = None    # 命中后生成的部队 (数量, 卡名)（gamedata spawnCharacterData）

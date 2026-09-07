@@ -292,10 +292,10 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
         # player-1 视角 reward：交换 blue/red、winner 翻转（invalid 视为 0），用 B 的权重
         # v2：与 RLEnv.step 同口径——两段价格 + 资源账 V（份额在 env 内维护）
         v_after = info.get("field_v") or [env._active_v[0], env._active_v[1]]
-        tower_b, edw_b = _phase_weights(rw_b, env.battle.time)
+        tower_opp_b, tower_self_b, edw_b = _phase_weights(rw_b, env.battle.time)
         rw_b2 = dict(rw_b)
-        rw_b2["tower_dmg_opp"] = tower_b
-        rw_b2["tower_dmg_self"] = tower_b
+        rw_b2["tower_dmg_opp"] = tower_opp_b
+        rw_b2["tower_dmg_self"] = tower_self_b
         rw_b2["elixir_diff_weight"] = edw_b
         reward1 = compute_reward(
             rw_b2,

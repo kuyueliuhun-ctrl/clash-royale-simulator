@@ -1,33 +1,44 @@
 {
- "total": 156,
+ "total": 212,
  "ok": [
   "AngryBarbarians",
   "Archer",
   "ArcherQueen",
+  "Archer_EV1",
   "Arrows",
   "Assassin",
   "AxeMan",
+  "AxeMan_EV1",
   "BabyDragon",
   "Balloon",
   "BarbLog",
   "Barbarian",
   "BarbarianHut",
   "BarbarianLauncher",
+  "Barbarian_EV1",
   "Barbarians",
+  "Bat",
+  "Bat_EV1",
   "Bats",
   "BattleHealer",
   "BattleRam",
+  "BattleRam_EV1",
   "Berserker",
   "BlowdartGoblin",
+  "BlowdartGoblin_EV1",
   "BombTower",
   "Bomber",
+  "Bomber_EV1",
   "BossBandit",
   "Bowler",
+  "BrokenCannon",
   "Cannon",
+  "Cannon_EV1",
   "ChampionGuard",
   "Clone",
   "DarkMagic",
   "DarkPrince",
+  "DarkPrinceHeroRhino",
   "DarkWitch",
   "DartBarrell",
   "Earthquake",
@@ -35,12 +46,17 @@
   "ElectroGiant",
   "ElectroSpirit",
   "ElectroWizard",
+  "Electro_dragon_ev1",
   "EliteArcher",
+  "EliteArcherHeroDummy",
   "Elixir Collector",
   "ElixirGolem",
+  "ElixirGolem2",
+  "ElixirGolem4",
   "FireSpirits",
   "Fireball",
   "Firecracker",
+  "Firecracker_EV1",
   "FirespiritHut",
   "Fisherman",
   "Freeze",
@@ -50,15 +66,20 @@
   "GiantSkeleton",
   "GlobalClone",
   "GlobalLightning",
+  "Goblin",
   "GoblinBarrel",
   "GoblinBrawler",
   "GoblinCage",
   "GoblinCage_EV1_GoblinBrawler",
+  "GoblinCage_EV1_TEMPNAME",
   "GoblinCurse",
   "GoblinDemolisher",
   "GoblinDrill",
+  "GoblinDrill_EV1",
+  "GoblinDummy",
   "GoblinGang",
   "GoblinGiant",
+  "GoblinGiant_EV1",
   "GoblinHut",
   "GoblinMachine",
   "GoblinPartyHut",
@@ -66,6 +87,7 @@
   "GoblinRocketSilo",
   "Goblins",
   "Goblinstein",
+  "Goblinstein_doctor",
   "GoldenKnight",
   "Golem",
   "Golemite",
@@ -73,23 +95,27 @@
   "Heal",
   "HogRider",
   "Hunter",
+  "Hunter_EV1",
   "IceGolemite",
   "IceSpirits",
+  "IceSpirits_EV1",
   "IceWizard",
   "InfernoDragon",
+  "InfernoDragon_EV1",
   "InfernoTower",
   "KingTower",
   "King_CannonTowers",
-  "King_ChefTowers",
   "King_KnifeTowers",
   "King_PrincessTowers",
   "Knight",
+  "Knight_EV1",
   "LavaHound",
   "LavaPups",
   "Lightning",
   "LittlePrince",
   "Log",
   "MegaKnight",
+  "MegaKnight_EV1",
   "MegaMinion",
   "MergeMaiden",
   "MergeMaiden_Mounted",
@@ -103,33 +129,53 @@
   "Mirror",
   "Monk",
   "Mortar",
+  "Mortar_EV1",
   "MovingCannon",
   "Musketeer",
+  "MusketeerHeroTurret",
+  "Musketeer_EV1",
   "Pekka",
+  "Pekka_EV1",
   "Phoenix",
+  "PhoenixEgg",
+  "PhoenixNoRespawn",
   "Poison",
   "Prince",
   "PrinceBuff",
   "Princess",
   "Rage",
   "RageBarbarian",
+  "RageBarbarian_EV1",
   "RamRider",
+  "RascalGirl",
   "Rascals",
+  "Recruit_EV1",
   "Rocket",
+  "Ronin",
   "RoyalDelivery",
   "RoyalGiant",
+  "RoyalGiant_EV1",
   "RoyalHogs",
   "RoyalRecruits",
   "RoyalRecruits_Chess",
+  "Skeleton",
   "SkeletonArmy",
-  "SkeletonBalloon",
+  "SkeletonArmy_EV1_General",
+  "SkeletonArmy_EV1_Shadow",
   "SkeletonDragons",
   "SkeletonKing",
   "SkeletonKingSkeleton",
   "SkeletonWarriors",
   "SkeletonWarriors_SpookyChess",
+  "Skeleton_EV1",
   "Skeletons",
+  "Skeletrooper",
   "Snowball",
+  "Souldier",
+  "SpearGoblin",
+  "SpearGoblinGiant",
+  "SpearGoblinGiant_EV1",
+  "SpearGoblinParty",
   "SpearGoblins",
   "SuperArcher",
   "SuperEliteArcher",
@@ -138,32 +184,43 @@
   "SuperIceGolemite",
   "SuperKnight",
   "SuperLavaHound",
+  "SuperLavaHound2",
   "SuperMiniPekka",
   "SuperWitch",
   "SuspiciousBush",
   "Tesla",
+  "Tesla_EV1",
   "ThreeMusketeers",
+  "TombQueen",
   "Tombstone",
   "Tornado",
   "TriWizards",
   "Valkyrie",
+  "Valkyrie_EV1",
+  "Vines",
   "VoodooHog",
+  "Wallbreaker_EV1",
   "Wallbreaker_mini",
   "Wallbreakers",
   "WarmSpell",
   "Witch",
   "WitchMother",
+  "Witch_EV1",
   "Wizard",
+  "Wizard_EV1",
   "Xbow",
   "Zap",
   "ZapMachine"
  ],
  "no_act": [],
- "errors": {},
+ "errors": {
+  "King_ChefTowers": "STEP AttributeError: 'Card' object has no attribute 'hitSpeed' @hit = (self.entity.data.hitSpeed or 1000) / 1000",
+  "SkeletonBalloon": "STEP KeyError: 'collisionRadius' @self.collision_radius = self.data['collisionRadius'] / 1000"
+ },
  "detail": {
   "AngryBarbarians": {
    "spawned_extra": true,
-   "enemy_dmg": 1536
+   "enemy_dmg": 1536.0
   },
   "Archer": {
    "spawned_extra": true,
@@ -173,17 +230,25 @@
    "spawned_extra": true,
    "enemy_dmg": 1670
   },
+  "Archer_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "Arrows": {
    "spawned_extra": true,
    "enemy_dmg": 1674
   },
   "Assassin": {
    "spawned_extra": false,
-   "enemy_dmg": 1728
+   "enemy_dmg": 1728.0
   },
   "AxeMan": {
    "spawned_extra": true,
    "enemy_dmg": 1679
+  },
+  "AxeMan_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "BabyDragon": {
    "spawned_extra": true,
@@ -199,30 +264,46 @@
   },
   "Barbarian": {
    "spawned_extra": false,
-   "enemy_dmg": 1683
+   "enemy_dmg": 1683.0
   },
   "BarbarianHut": {
    "spawned_extra": false,
-   "enemy_dmg": 1744
+   "enemy_dmg": 1666.0
   },
   "BarbarianLauncher": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
+  "Barbarian_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "Barbarians": {
    "spawned_extra": true,
-   "enemy_dmg": 1640
+   "enemy_dmg": 1640.0
+  },
+  "Bat": {
+   "spawned_extra": true,
+   "enemy_dmg": 1713.0
+  },
+  "Bat_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "Bats": {
    "spawned_extra": true,
-   "enemy_dmg": 1735
+   "enemy_dmg": 1735.0
   },
   "BattleHealer": {
-   "spawned_extra": false,
-   "enemy_dmg": 1690
+   "spawned_extra": true,
+   "enemy_dmg": 1690.0
   },
   "BattleRam": {
    "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "BattleRam_EV1": {
+   "spawned_extra": false,
    "enemy_dmg": 1744
   },
   "Berserker": {
@@ -233,6 +314,10 @@
    "spawned_extra": true,
    "enemy_dmg": 1679
   },
+  "BlowdartGoblin_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "BombTower": {
    "spawned_extra": true,
    "enemy_dmg": 1760
@@ -241,37 +326,53 @@
    "spawned_extra": true,
    "enemy_dmg": 1748
   },
+  "Bomber_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "BossBandit": {
    "spawned_extra": false,
-   "enemy_dmg": 1632.0
+   "enemy_dmg": 1708.0
   },
   "Bowler": {
    "spawned_extra": true,
    "enemy_dmg": 1736
   },
+  "BrokenCannon": {
+   "spawned_extra": true,
+   "enemy_dmg": 1702
+  },
   "Cannon": {
    "spawned_extra": true,
    "enemy_dmg": 1720
   },
+  "Cannon_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "ChampionGuard": {
    "spawned_extra": false,
-   "enemy_dmg": 1640
+   "enemy_dmg": 1640.0
   },
   "Clone": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
   "DarkMagic": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1744
   },
   "DarkPrince": {
    "spawned_extra": false,
    "enemy_dmg": 1706
   },
+  "DarkPrinceHeroRhino": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
   "DarkWitch": {
-   "spawned_extra": false,
-   "enemy_dmg": 1692
+   "spawned_extra": true,
+   "enemy_dmg": 1742.0
   },
   "DartBarrell": {
    "spawned_extra": true,
@@ -295,11 +396,19 @@
   },
   "ElectroWizard": {
    "spawned_extra": false,
-   "enemy_dmg": 1746
+   "enemy_dmg": 1530.0
+  },
+  "Electro_dragon_ev1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "EliteArcher": {
    "spawned_extra": true,
    "enemy_dmg": 1710
+  },
+  "EliteArcherHeroDummy": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
   },
   "Elixir Collector": {
    "spawned_extra": false,
@@ -307,23 +416,35 @@
   },
   "ElixirGolem": {
    "spawned_extra": true,
-   "enemy_dmg": 1199
+   "enemy_dmg": 327
+  },
+  "ElixirGolem2": {
+   "spawned_extra": true,
+   "enemy_dmg": 1417
+  },
+  "ElixirGolem4": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
   },
   "FireSpirits": {
    "spawned_extra": false,
    "enemy_dmg": 1733
   },
   "Fireball": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1669
   },
   "Firecracker": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
-  "FirespiritHut": {
+  "Firecracker_EV1": {
    "spawned_extra": false,
    "enemy_dmg": 1744
+  },
+  "FirespiritHut": {
+   "spawned_extra": true,
+   "enemy_dmg": 1733
   },
   "Fisherman": {
    "spawned_extra": false,
@@ -331,10 +452,10 @@
   },
   "Freeze": {
    "spawned_extra": false,
-   "enemy_dmg": 1683
+   "enemy_dmg": 1750
   },
   "Ghost": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1744
   },
   "Giant": {
@@ -354,27 +475,35 @@
    "enemy_dmg": 1744
   },
   "GlobalLightning": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1744
+  },
+  "Goblin": {
+   "spawned_extra": false,
+   "enemy_dmg": 1755.0
   },
   "GoblinBarrel": {
    "spawned_extra": true,
-   "enemy_dmg": 1755
+   "enemy_dmg": 1755.0
   },
   "GoblinBrawler": {
    "spawned_extra": false,
-   "enemy_dmg": 1685
+   "enemy_dmg": 1685.0
   },
   "GoblinCage": {
    "spawned_extra": false,
-   "enemy_dmg": 1744
+   "enemy_dmg": 1685.0
   },
   "GoblinCage_EV1_GoblinBrawler": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1744
   },
+  "GoblinCage_EV1_TEMPNAME": {
+   "spawned_extra": true,
+   "enemy_dmg": 1526
+  },
   "GoblinCurse": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1744
   },
   "GoblinDemolisher": {
@@ -385,13 +514,25 @@
    "spawned_extra": false,
    "enemy_dmg": 1744
   },
+  "GoblinDrill_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "GoblinDummy": {
+   "spawned_extra": false,
+   "enemy_dmg": 1757.0
+  },
   "GoblinGang": {
    "spawned_extra": true,
-   "enemy_dmg": 1755
+   "enemy_dmg": 1696.0
   },
   "GoblinGiant": {
    "spawned_extra": true,
-   "enemy_dmg": 1090
+   "enemy_dmg": 1676.0
+  },
+  "GoblinGiant_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1199
   },
   "GoblinHut": {
    "spawned_extra": false,
@@ -399,11 +540,11 @@
   },
   "GoblinMachine": {
    "spawned_extra": false,
-   "enemy_dmg": 1720
+   "enemy_dmg": 1696.0
   },
   "GoblinPartyHut": {
    "spawned_extra": true,
-   "enemy_dmg": 1679
+   "enemy_dmg": 1704
   },
   "GoblinPartyRocket": {
    "spawned_extra": true,
@@ -415,15 +556,19 @@
   },
   "Goblins": {
    "spawned_extra": true,
-   "enemy_dmg": 1755
+   "enemy_dmg": 1755.0
   },
   "Goblinstein": {
    "spawned_extra": true,
-   "enemy_dmg": 1417
+   "enemy_dmg": 1743
+  },
+  "Goblinstein_doctor": {
+   "spawned_extra": true,
+   "enemy_dmg": 1743
   },
   "GoldenKnight": {
    "spawned_extra": false,
-   "enemy_dmg": 1760
+   "enemy_dmg": 1760.0
   },
   "Golem": {
    "spawned_extra": true,
@@ -435,7 +580,7 @@
   },
   "Graveyard": {
    "spawned_extra": true,
-   "enemy_dmg": 1685
+   "enemy_dmg": 1685.0
   },
   "Heal": {
    "spawned_extra": true,
@@ -449,6 +594,10 @@
    "spawned_extra": true,
    "enemy_dmg": 1669
   },
+  "Hunter_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "IceGolemite": {
    "spawned_extra": true,
    "enemy_dmg": 1526
@@ -457,6 +606,10 @@
    "spawned_extra": false,
    "enemy_dmg": 1745
   },
+  "IceSpirits_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "IceWizard": {
    "spawned_extra": true,
    "enemy_dmg": 1668
@@ -464,6 +617,10 @@
   "InfernoDragon": {
    "spawned_extra": true,
    "enemy_dmg": 1689.0
+  },
+  "InfernoDragon_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "InfernoTower": {
    "spawned_extra": false,
@@ -478,12 +635,11 @@
    "enemy_dmg": 1761
   },
   "King_ChefTowers": {
-   "spawned_extra": true,
-   "enemy_dmg": 1708
+   "error": "STEP AttributeError: 'Card' object has no attribute 'hitSpeed' @hit = (self.entity.data.hitSpeed or 1000) / 1000"
   },
   "King_KnifeTowers": {
    "spawned_extra": true,
-   "enemy_dmg": 1737
+   "enemy_dmg": 1762
   },
   "King_PrincessTowers": {
    "spawned_extra": true,
@@ -491,7 +647,11 @@
   },
   "Knight": {
    "spawned_extra": false,
-   "enemy_dmg": 1616
+   "enemy_dmg": 1616.0
+  },
+  "Knight_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "LavaHound": {
    "spawned_extra": true,
@@ -503,7 +663,7 @@
   },
   "Lightning": {
    "spawned_extra": true,
-   "enemy_dmg": 1744
+   "enemy_dmg": 654.0
   },
   "LittlePrince": {
    "spawned_extra": true,
@@ -515,23 +675,27 @@
   },
   "MegaKnight": {
    "spawned_extra": false,
-   "enemy_dmg": 1608
+   "enemy_dmg": 1608.0
+  },
+  "MegaKnight_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 545
   },
   "MegaMinion": {
    "spawned_extra": true,
    "enemy_dmg": 1494
   },
   "MergeMaiden": {
-   "spawned_extra": false,
-   "enemy_dmg": 1744
+   "spawned_extra": true,
+   "enemy_dmg": 1690.0
   },
   "MergeMaiden_Mounted": {
-   "spawned_extra": false,
-   "enemy_dmg": 1744
+   "spawned_extra": true,
+   "enemy_dmg": 1690.0
   },
   "MergeMaiden_Normal": {
    "spawned_extra": false,
-   "enemy_dmg": 1744
+   "enemy_dmg": 1545.0
   },
   "MightyMiner": {
    "spawned_extra": false,
@@ -539,15 +703,15 @@
   },
   "Miner": {
    "spawned_extra": false,
-   "enemy_dmg": 1728
+   "enemy_dmg": 1728.0
   },
   "MiniPekka": {
    "spawned_extra": false,
-   "enemy_dmg": 1510
+   "enemy_dmg": 1510.0
   },
   "MiniSparkys": {
    "spawned_extra": true,
-   "enemy_dmg": 1698
+   "enemy_dmg": 1740.0
   },
   "MinionHorde": {
    "spawned_extra": true,
@@ -559,35 +723,59 @@
   },
   "Mirror": {
    "spawned_extra": false,
-   "enemy_dmg": 1616
+   "enemy_dmg": 1616.0
   },
   "Monk": {
    "spawned_extra": false,
-   "enemy_dmg": 1680
+   "enemy_dmg": 1680.0
   },
   "Mortar": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
+  "Mortar_EV1": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
   "MovingCannon": {
    "spawned_extra": true,
-   "enemy_dmg": 1708
+   "enemy_dmg": 1720
   },
   "Musketeer": {
    "spawned_extra": true,
    "enemy_dmg": 1740
   },
+  "MusketeerHeroTurret": {
+   "spawned_extra": false,
+   "enemy_dmg": 1668.0
+  },
+  "Musketeer_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "Pekka": {
    "spawned_extra": false,
-   "enemy_dmg": 1632
+   "enemy_dmg": 1632.0
+  },
+  "Pekka_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 872
   },
   "Phoenix": {
    "spawned_extra": true,
-   "enemy_dmg": 1632
+   "enemy_dmg": 1632.0
+  },
+  "PhoenixEgg": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "PhoenixNoRespawn": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
   },
   "Poison": {
    "spawned_extra": true,
-   "enemy_dmg": 1753.4
+   "enemy_dmg": 1718.3
   },
   "Prince": {
    "spawned_extra": false,
@@ -595,7 +783,7 @@
   },
   "PrinceBuff": {
    "spawned_extra": false,
-   "enemy_dmg": 1568
+   "enemy_dmg": 1568.0
   },
   "Princess": {
    "spawned_extra": true,
@@ -603,30 +791,50 @@
   },
   "Rage": {
    "spawned_extra": true,
-   "enemy_dmg": 1744
+   "enemy_dmg": 1705.0
   },
   "RageBarbarian": {
    "spawned_extra": false,
-   "enemy_dmg": 1694
+   "enemy_dmg": 1694.0
+  },
+  "RageBarbarian_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "RamRider": {
    "spawned_extra": true,
-   "enemy_dmg": 1526
+   "enemy_dmg": 1744
+  },
+  "RascalGirl": {
+   "spawned_extra": true,
+   "enemy_dmg": 1683
   },
   "Rascals": {
+   "spawned_extra": true,
+   "enemy_dmg": 1729.0
+  },
+  "Recruit_EV1": {
    "spawned_extra": false,
-   "enemy_dmg": 1718
+   "enemy_dmg": 1744
   },
   "Rocket": {
    "spawned_extra": true,
    "enemy_dmg": 1702
   },
-  "RoyalDelivery": {
+  "Ronin": {
    "spawned_extra": false,
+   "enemy_dmg": 1517.0
+  },
+  "RoyalDelivery": {
+   "spawned_extra": true,
    "enemy_dmg": 1744
   },
   "RoyalGiant": {
    "spawned_extra": true,
+   "enemy_dmg": 1417
+  },
+  "RoyalGiant_EV1": {
+   "spawned_extra": false,
    "enemy_dmg": 1417
   },
   "RoyalHogs": {
@@ -635,19 +843,30 @@
   },
   "RoyalRecruits": {
    "spawned_extra": true,
-   "enemy_dmg": 1729
+   "enemy_dmg": 1729.0
   },
   "RoyalRecruits_Chess": {
    "spawned_extra": true,
-   "enemy_dmg": 1729
+   "enemy_dmg": 1729.0
+  },
+  "Skeleton": {
+   "spawned_extra": false,
+   "enemy_dmg": 1716.0
   },
   "SkeletonArmy": {
    "spawned_extra": true,
-   "enemy_dmg": 1738
+   "enemy_dmg": 1738.0
+  },
+  "SkeletonArmy_EV1_General": {
+   "spawned_extra": false,
+   "enemy_dmg": 1699.0
+  },
+  "SkeletonArmy_EV1_Shadow": {
+   "spawned_extra": false,
+   "enemy_dmg": 1685.0
   },
   "SkeletonBalloon": {
-   "spawned_extra": true,
-   "enemy_dmg": 1744
+   "error": "STEP KeyError: 'collisionRadius' @self.collision_radius = self.data['collisionRadius'] / 1000"
   },
   "SkeletonDragons": {
    "spawned_extra": true,
@@ -659,23 +878,51 @@
   },
   "SkeletonKingSkeleton": {
    "spawned_extra": false,
-   "enemy_dmg": 1716
+   "enemy_dmg": 1716.0
   },
   "SkeletonWarriors": {
    "spawned_extra": true,
-   "enemy_dmg": 1682
+   "enemy_dmg": 1682.0
   },
   "SkeletonWarriors_SpookyChess": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
+  "Skeleton_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "Skeletons": {
    "spawned_extra": false,
-   "enemy_dmg": 1716
+   "enemy_dmg": 1716.0
+  },
+  "Skeletrooper": {
+   "spawned_extra": false,
+   "enemy_dmg": 1747.0
   },
   "Snowball": {
-   "spawned_extra": false,
+   "spawned_extra": true,
    "enemy_dmg": 1718
+  },
+  "Souldier": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "SpearGoblin": {
+   "spawned_extra": true,
+   "enemy_dmg": 1716
+  },
+  "SpearGoblinGiant": {
+   "spawned_extra": true,
+   "enemy_dmg": 1731
+  },
+  "SpearGoblinGiant_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "SpearGoblinParty": {
+   "spawned_extra": false,
+   "enemy_dmg": 1716
   },
   "SpearGoblins": {
    "spawned_extra": true,
@@ -703,9 +950,13 @@
   },
   "SuperKnight": {
    "spawned_extra": false,
-   "enemy_dmg": 1631
+   "enemy_dmg": 1631.0
   },
   "SuperLavaHound": {
+   "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "SuperLavaHound2": {
    "spawned_extra": true,
    "enemy_dmg": 1744
   },
@@ -715,7 +966,7 @@
   },
   "SuperWitch": {
    "spawned_extra": true,
-   "enemy_dmg": 1670
+   "enemy_dmg": 1643.0
   },
   "SuspiciousBush": {
    "spawned_extra": false,
@@ -725,13 +976,21 @@
    "spawned_extra": false,
    "enemy_dmg": 1695
   },
+  "Tesla_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "ThreeMusketeers": {
    "spawned_extra": true,
    "enemy_dmg": 1736
   },
+  "TombQueen": {
+   "spawned_extra": true,
+   "enemy_dmg": 545
+  },
   "Tombstone": {
-   "spawned_extra": false,
-   "enemy_dmg": 1744
+   "spawned_extra": true,
+   "enemy_dmg": 1716.0
   },
   "Tornado": {
    "spawned_extra": false,
@@ -743,10 +1002,22 @@
   },
   "Valkyrie": {
    "spawned_extra": false,
-   "enemy_dmg": 1602
+   "enemy_dmg": 1602.0
+  },
+  "Valkyrie_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
+  "Vines": {
+   "spawned_extra": false,
+   "enemy_dmg": 1723.0
   },
   "VoodooHog": {
    "spawned_extra": true,
+   "enemy_dmg": 1744
+  },
+  "Wallbreaker_EV1": {
+   "spawned_extra": false,
    "enemy_dmg": 1744
   },
   "Wallbreaker_mini": {
@@ -763,15 +1034,23 @@
   },
   "Witch": {
    "spawned_extra": true,
-   "enemy_dmg": 1754
+   "enemy_dmg": 1754.0
   },
   "WitchMother": {
    "spawned_extra": true,
    "enemy_dmg": 1707
   },
+  "Witch_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
+  },
   "Wizard": {
    "spawned_extra": true,
    "enemy_dmg": 1715
+  },
+  "Wizard_EV1": {
+   "spawned_extra": false,
+   "enemy_dmg": 1744
   },
   "Xbow": {
    "spawned_extra": true,

@@ -1,0 +1,245 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: Basics, Cards
+English
+Heroes
+7
+SAVE
+EDIT
+
+Heroes are a feature rarity that allow specific Cards placed in the Champion slots to gain an ability. Heroes and the first Champion slot are both unlocked at Arena 5. Every card with a Hero variation requires 200  to be unlocked. All Heroes have an ability that the original card doesn't have, similar to Champion cards.
+
+Summary
+The Champion slot is unlocked at Arena 5, while the Wild slot is unlocked at Arena 10.
+Heroes have a unique gimmick which is shared with Champion cards. Just like Champion cards, Abilities are accessible just above the player's “hand” in battle. They cost Elixir to cast, granting the last played Heroic cards their special ability depending on the Hero, and will only stay as long as the selected Hero that you want to use the ability of is alive.
+The average Elixir cost in the deck menu only counts the base Elixir cost instead of both the base and the ability.
+Only two Heroes can be in a deck at a time, and only in the Hero and Wild slots. Those slots are also shared with Champion card, which means that the player can have 1 Hero and 1 Champion at the same time.
+Clone can be used on a Heroic card, but the Heroic card's ability will only be used by the original.
+When a Hero activates their ability, but did not start casting it before they are defeated, the Elixir spent on the ability will be refunded once they are defeated.
+Heroes can be upgraded by the base card's Wild Cards of respective rarity.
+List of Heroes
+Card
+
+	Cost
+
+	Ability Cost
+
+	Total Elixir Cost
+
+	Ability
+Knight
+	3	2	5	Triumphant Taunt -
+
+Gains a shield and taunts nearby enemies, forcing them to attack him.
+
+
+Giant
+	5	2	7	Heroic Hurl -
+
+Throws the highest-hitpoint enemy troop in reach across the Arena.
+
+
+Mini P.E.K.K.A.
+	4	1	5	Breakfast Boost -
+
+Eats pancakes to level up. The longer you wait, the more pancakes he cooks!
+
+
+Musketeer
+	4	3	7	Trusty Turret -
+
+Spawns a short-range, rapid-firing auto-turret that deals landing damage in front of the Musketeer.
+
+
+Ice Golem
+	2	2	4	Snowstorm -
+
+Conjures a blizzard that damages and slows nearby enemies.
+
+
+Wizard
+	5	1	6	Fiery Flight -
+
+Launches into the air and throws fearsome fire tornadoes.
+
+
+Goblins
+	2	1	3	Banner Brigade -
+The last Goblin standing drops a banner that calls in reinforcements.
+Mega Minion
+	3	2	5	Wounding Warp -
+Warps to the lowest-hitpoint enemy, dealing damage on arrival.
+Barbarian Barrel
+	2	1	3	Rowdy Reroll -
+Barrels down the lane a second time for maximum impact.
+Magic Archer
+	4	2	6	Triple Threat -
+Summons a decoy while darting back and fires a triple shot on his next attack.
+Balloon
+	5	2	7	Coffin Cadet -
+
+A Skeletrooper soars to the nearest enemy on the ground, dealing landing damage.
+
+
+Bowler
+	5	2	7	Stone Swish -
+
+Plants his feet and throws boulders with increased range.
+
+
+Dark Prince
+	4	3	7	Destructive Dismount -
+
+Dismount doing damage, attacking on foot while Rhino charges buildings.
+
+
+Tombstone
+	3	5	8	Regal Revive -
+
+Tomb Queen rises from the earth, targeting buildings.
+
+
+Berserker
+	2	3	5	Savage Survival -
+
+A Bear spirit emerges through her, making her attacks go rapid and preventing her health from going below 1 HP while dealing reduced damage to Crown Towers.
+
+
+Valkyrie
+	4	3	7	Wild Whirlwind -
+
+Spins rapidly, dealing damage and increasing her movement speed while taking less damage.
+
+History
+
+2025
+
+4 Cards had Hero variants in the December 2025 Update on 1/12/2025, those being the Knight, Giant, Mini P.E.K.K.A., and Musketeer.
+On 22/12/2025, a Maintenance Break, made it so that you will always get a new hero. Additionaly only 1 Hero Slot is available in Classic 1v1s, Classic 2v2s, Classic Challenges, and Grand Challenges.
+
+2026
+
+On 5/1/2026, the January 2026 Update allowed the Wizard and Ice Golem to have a hero form.
+On 2/2/2026, the February 2026 Update allowed the Goblins and Mega Minion to have a hero form.
+On 23/2/2026 the 2026 Q1 Update, moved the hero slot to arena 5. This also removed the Hero Box.
+ On 2/3/2026, the March 2026 Update allowed the Barbarian Barrel and Magic Archer to have a hero form.
+On 16/3/2026 the 2026 Mid-March Update, made it so you can chose the hero (instead of random) . This also changed the format of Evolution and Hero slots into one Evolution, one Hero and one Wild (from 2 evo and 2 hero) .
+ On 6/4/2026, the April 2026 Update allowed the Balloon to have a hero form.
+ On 4/5/2026, the May 2026 Update allowed the Dark Prince and Bowler to have a hero form.
+ On 1/6/2026, the June 2026 Update allowed the Tombstone to have a hero form.
+ On 3/8/2026, the August 2026 Update allowed the Berserker and Valkyrie to have a hero form.
+ On 4/8/2026 the Balance Update made every ability single-use
+Trivia
+Heroes have the same defeat sound effect as Evolutions and also leave similar puddles, except that they're colored golden.
+Every new seasons arrived, the previous season newest Heroes' golden glowing eyes will replaced with white sclera with golden pupils (but some exceptions like the Ice Golem and Mini P.E.K.K.A.).
+Hide
+Wiki Navigation
+
+Show
+Community
+Show
+Cards
+Hide
+Battle
+Basics	Basics of Battle • Cards • Elixir • Card Evolution • Heroes • Buff+ • Ruler Ability+ • Modifiers (merge Tactics) • Equipment (Merge Tactics)
+Modes	2v2 • Touchdown • Global Spell • Heist • Troop Rush+ • Treasure Hunt+ • Obstacle Course+ • Battleground • Chess Royale+ • Trick or Treat+ • C.H.A.O.S+
+Formats	Training Camp • Tournament (Special Event Challenges) • Card Delivery
+Trophy Roads	Arenas • Ranked • Merge Tactics • Goblin Queen's Journey+ • 2v2 League+ • Retro Royale+ • Undead March+
+Crown Towers/Rulers	King's Tower • Goblin Queen Tower • Princess Tower
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+7 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+5 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

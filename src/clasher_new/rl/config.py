@@ -35,10 +35,12 @@ from dataclasses import dataclass, field, asdict
 #:   elixir_diff_late=0.1 费贱 → 双倍期亏费换塔血、法术砸塔自动变正 EV；
 #: - unit_dmg_k：单位受伤 shaping（客观伤害事件，非估值：敌方单位每掉 1 血 → 我方 +k）。
 DEFAULT_REWARD = {
-    "crown_weight": 8.0,        # 皇冠差系数（每差 1 皇冠 ±8：破塔里程碑，胜利太稀疏需中间大奖励）
-    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（前段 t<120，与 self 统一）
-    "tower_dmg_self": 0.001,    # 我方塔损 → 负奖励（与 opp 统一）
+    "crown_weight": 8.0,        # 皇冠差系数（破敌塔每座 +8：破塔里程碑，胜利太稀疏需中间大奖励）
+    "crown_lose_weight": 10.0,  # 被破塔惩罚（> crown_weight：丢塔比破塔更痛，教防守价值）
+    "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（前段 t<120）
+    "tower_dmg_self": 0.0012,   # 我方塔损 → 负奖励（不对称：塔伤奖励 0.001 末位加"2"）
     "tower_dmg_late": 0.002,    # v2 双倍期塔血系数（t≥120：斩杀/法术砸塔自动变正 EV）
+    "tower_dmg_self_late": 0.0022,  # 双倍期我方塔损（同上不对称：0.002 末位加"2"）
     "win_bonus": 10.0,          # 获胜加成
     "lose_penalty": 10.0,       # 失败惩罚
     "draw_penalty": 10.0,       # 平局惩罚（= 失败：平局归类为败，逼策略主动求胜；0=旧行为免费平局）

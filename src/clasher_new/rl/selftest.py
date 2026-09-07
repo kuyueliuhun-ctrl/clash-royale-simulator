@@ -635,7 +635,7 @@ def test_league_training_loop():
 
 
 def test_config_reward_weights():
-    """命名配置：预设解析互不影响、塔血统一、奖励权重可注入 RLEnv 并改变回报。"""
+    """命名配置：预设解析互不影响、塔血不对称基线、奖励权重可注入 RLEnv 并改变回报。"""
     import tempfile
     from rl.config import TrainConfig, reward_to_env
     from rl.env_wrapper import RLEnv
@@ -645,10 +645,12 @@ def test_config_reward_weights():
     agg = TrainConfig.resolve("aggressive")
     assert std.reward["crown_weight"] == 8.0
     assert agg.reward["crown_weight"] == 8.0
-    # 2025-06 改版：塔血统一（打击=损失同价）；预设差异体现在皇冠/费差
+    # 2026-09 改版：塔血不对称（挨打 0.0012 > 打人 0.001）+ 被破塔 10 > 破塔 8；
+    # 预设差异体现在皇冠/费差
     for name in ("standard", "aggressive", "defensive", "lockdown", "elixir", "economy", "fast"):
         rw = TrainConfig.resolve(name).reward
-        assert rw["tower_dmg_self"] == rw["tower_dmg_opp"], f"{name} 塔血应统一"
+        assert rw["tower_dmg_opp"] == 0.001 and rw["tower_dmg_self"] == 0.0012, f"{name} 塔血不对称基线"
+        assert rw["crown_lose_weight"] == 10.0 > rw["crown_weight"], f"{name} 被破塔惩罚应更重"
     assert agg.reward["elixir_diff_weight"] > std.reward["elixir_diff_weight"]
     # 二次解析不污染预设（共享实例回归）
     assert TrainConfig.resolve("standard").reward["crown_weight"] == 8.0
@@ -671,7 +673,7 @@ def test_config_reward_weights():
     agg.save(p)
     back = TrainConfig.load(p)
     assert back.name == "aggressive" and back.reward["crown_weight"] == 8.0
-    print("[PASS] 命名配置：预设/加载/奖励权重注入 RLEnv 正常、塔血统一")
+    print("[PASS] 命名配置：预设/加载/奖励权重注入 RLEnv 正常、塔血不对称 0.001/0.0012 + 被破塔 10")
 
 
 def test_model_reward_overrides():
@@ -682,7 +684,9 @@ def test_model_reward_overrides():
     base = model_reward_weights("main", std)
     assert model_reward_weights("all_decks", std) == base, "all_decks 应与 main 同参数"
     assert model_reward_weights("random_deck", std) == base, "random_deck 应与 main 同参数"
-    assert base["tower_dmg_self"] == base["tower_dmg_opp"] == 0.001, "塔血应统一 0.001/0.001"
+    assert base["tower_dmg_opp"] == 0.001 and base["tower_dmg_self"] == 0.0012, \
+        "塔血不对称 0.001/0.0012（挨打 > 打人）"
+    assert base["crown_lose_weight"] == 10.0 > base["crown_weight"], "被破塔 10 > 破塔 8"
     assert base["normalize_tower_dmg"] is True, "费差机制默认打开"
     assert base["elixir_diff_weight"] == 0.5, "基线费差 = 0.5（1圣水≈500血）"
     # 流派覆盖：推进 > 基线 > 防反 > 自闭
@@ -692,14 +696,14 @@ def test_model_reward_overrides():
     assert push["elixir_diff_weight"] == 0.7 > base["elixir_diff_weight"], "推进应加码费差"
     assert counter["elixir_diff_weight"] == 0.3 < base["elixir_diff_weight"], "防反应减码费差"
     assert lock["elixir_diff_weight"] == 0.05 < counter["elixir_diff_weight"], "自闭应压到≈0"
-    # 塔血在所有流派也统一
+    # 塔血在所有流派也保持不对称
     for mid in ("push_flow", "counter_flow", "lockdown_flow"):
         rw = model_reward_weights(mid, std)
-        assert rw["tower_dmg_self"] == rw["tower_dmg_opp"] == 0.001, mid
+        assert rw["tower_dmg_opp"] == 0.001 and rw["tower_dmg_self"] == 0.0012, mid
     # 未知模型回退到所选预设（不改基线行为）
     assert model_reward_weights("unknown_model", std) == base
     print("[PASS] 按流派奖惩：main/all/random 同基线 0.5、推进 0.7 / 防反 0.3 / 自闭 0.05、"
-          "塔血统一 0.001/0.001、未知模型回退基线")
+          "塔血不对称 0.001/0.0012 + 被破塔 10、未知模型回退基线")
 
 
 def test_reward_economy_preset():
@@ -2462,7 +2466,8 @@ def test_overtime_window():
     规则（用户确认，2026-09）：
       - battle.time ∈ [180, 300) 且双方被拆塔数相同、未终局 → overtime_open=True
         （RL 循环继续打，引擎 [180,300) 内谁先被再破一塔谁输）；
-      - 恰达 300s 仍平 → overtime_open=False，收手后由 timeout_winner 记平局；
+      - 恰达 300s 仍平 → overtime_open=False，收手后由 timeout_winner 按最低塔血
+        百分比裁决（真实 CR 加时末规则），完全相等才平局；
       - 皇冠不同 → 直接按皇冠结算（常规时间末领先者胜）。
     """
     from rl.run_league import overtime_open, timeout_winner
@@ -2480,6 +2485,22 @@ def test_overtime_window():
             self.players = [_P(c0), _P(c1)]
             self.game_over = bool(over)
 
+    class _T:  # 假塔：最低血量百分比裁决用
+        def __init__(self, hp, max_hp):
+            self.hp = hp
+            self.is_alive = hp > 0
+            self.data = type('D', (), {'hp': max_hp})()
+
+    class _BT(_B):
+        """带塔实体的假战场：p0 塔 = ids(3,4,6)，p1 塔 = ids(1,2,5)。"""
+        def __init__(self, t, c0, c1, towers0, towers1, over=False):
+            super().__init__(t, c0, c1, over)
+            self.entities = {}
+            for eid, (hp, mhp) in zip((3, 4, 6), towers0):
+                self.entities[eid] = _T(hp, mhp)
+            for eid, (hp, mhp) in zip((1, 2, 5), towers1):
+                self.entities[eid] = _T(hp, mhp)
+
     # 加时窗口开启：180s ≤ t < 300s、皇冠平、未终局
     assert overtime_open(_B(180.0, 1, 1)) is True
     assert overtime_open(_B(299.5, 0, 0)) is True
@@ -2489,12 +2510,271 @@ def test_overtime_window():
     assert overtime_open(_B(200.0, 1, 1, over=True)) is False
     # 皇冠不同 → 不进入加时（按领先者直接结算）
     assert overtime_open(_B(200.0, 2, 1)) is False
-    # timeout_winner：皇冠多者胜；皇冠相同 → None（平局，不再按塔血提前判胜）
+    # timeout_winner：皇冠多者胜（皇冠规则优先）
     assert timeout_winner(_B(200.0, 1, 2)) == 0
     assert timeout_winner(_B(200.0, 2, 1)) == 1
+    # 皇冠平 + 无实体信息（mock）→ 退回平局
     assert timeout_winner(_B(300.0, 1, 1)) is None
     assert timeout_winner(_B(180.0, 0, 0)) is None
-    print("[PASS] 加时窗口：180s 皇冠平进入 [180,300) 突然死亡；到顶仍平=平局；皇冠差直接判胜")
+    # 皇冠平 + 塔血裁决：双方满血公主塔（p0 左塔残血 50%）→ p0 输
+    assert timeout_winner(_BT(300.0, 1, 1,
+                              [(3052, 3052), (1526, 3052), (4824, 4824)],
+                              [(4824, 4824), (3052, 3052), (3052, 3052)])) == 1
+    # 镜像：p1 塔更残 → p0 胜（僵局早停不再一律记平局）
+    assert timeout_winner(_BT(200.0, 1, 1,
+                              [(4824, 4824), (3052, 3052), (3052, 3052)],
+                              [(4824, 4824), (1000, 3052), (3052, 3052)])) == 0
+    # 双方最低塔血完全相等（各 100%）→ 平局
+    assert timeout_winner(_BT(110.0, 1, 1,
+                              [(4824, 4824), (0, 3052), (3052, 3052)],
+                              [(4824, 4824), (3052, 3052), (0, 3052)])) is None
+    print("[PASS] 加时窗口：180s 皇冠平进入 [180,300) 突然死亡；到顶按最低塔血裁决；皇冠差直接判胜")
+
+
+def test_tower_threat_calc():
+    """外置工具①塔伤威胁计算器：deepcopy+引擎推演，"双方不再部署"语义下
+    敌方现存部队对我方各塔的伤害预估。空场=0；威胁只落在行进路线的塔上；
+    调用不污染原局面；确定性（两次调用同值）；P0/P1 双向可用。"""
+    import copy as _copy
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from threat_calc import estimate_tower_threat
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+
+    def fresh():
+        return battle_mod.BattleState(player_mod.PlayerState(0, list(deck), 5.0),
+                                      player_mod.PlayerState(1, list(deck), 5.0),
+                                      card_level=11)
+
+    # 1) 空场零威胁
+    bs = fresh()
+    th = estimate_tower_threat(bs, 0)
+    assert th["total"] == 0.0 and th["sim_time"] == 0.0, f"空场威胁应为 0: {th}"
+
+    # 2) 敌方 Giant 从右路过桥 → 右塔受威胁，左塔/王塔为 0，原局面不被污染
+    bs = fresh()
+    p1 = bs.players[1]
+    p1.cycle = ["Giant"] + [c for c in p1.cycle if c != "Giant"]
+    p1.elixir = 10.0
+    assert bs.deploy_card(1, "Giant", Position(14.5, 19.0)), "Giant 部署应成功"
+    t_before, hp6_before = bs.time, bs.entities[6].hp
+    snapshot = _copy.deepcopy(bs.entities[1].hp)
+    th = estimate_tower_threat(bs, 0, horizon=20.0)
+    assert th["right"] > 0, f"右塔应受威胁: {th}"
+    assert th["left"] == 0.0 and th["king"] == 0.0, f"左塔/王塔不应受威胁: {th}"
+    assert th["total"] == th["right"], f"total 应等于各塔之和: {th}"
+    assert bs.time == t_before and bs.entities[6].hp == hp6_before, "调用不得污染原局面"
+    assert bs.entities[1].hp == snapshot, "敌方塔血也不应被污染"
+    # 3) 确定性：同局面两次调用完全一致
+    th2 = estimate_tower_threat(bs, 0, horizon=20.0)
+    assert th == th2, f"推演应确定性: {th} vs {th2}"
+    # 4) P1 视角对称：我方 Giant 过桥威胁 P1 的左塔
+    bs2 = fresh()
+    p0 = bs2.players[0]
+    p0.cycle = ["Giant"] + [c for c in p0.cycle if c != "Giant"]
+    p0.elixir = 10.0
+    assert bs2.deploy_card(0, "Giant", Position(3.5, 14.0)), "P0 Giant 部署应成功"
+    th_p1 = estimate_tower_threat(bs2, 1, horizon=20.0)
+    assert th_p1["left"] > 0 and th_p1["right"] == 0.0 and th_p1["king"] == 0.0, \
+        f"P1 视角应对称地看到左塔受威胁: {th_p1}"
+    print(f"[PASS] 塔伤威胁计算器：空场=0；敌方 Giant 20s 视界右塔 {th['right']:.0f} 伤、"
+          f"左/王塔 0；无污染、确定、P0/P1 对称")
+
+
+def test_simulate_exchange():
+    """外置工具②交换模拟器：deepcopy+真部署+确定性推演。none 模式=threat_calc 对照
+    口径；script 模式对手真的会防守（花圣水、解掉 Giant、把塔损压到 0）；非法部署
+    正确报 legal=False；调用不污染原局面；确定性；法术候选与 P1 镜像视角可用。"""
+    import copy as _copy
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from simulate_exchange import simulate_exchange
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+
+    def fresh(elixir=10.0):
+        bs = battle_mod.BattleState(player_mod.PlayerState(0, list(deck), elixir),
+                                    player_mod.PlayerState(1, list(deck), elixir),
+                                    card_level=11)
+        bs.players[0].cycle = ["Giant"] + [c for c in bs.players[0].cycle if c != "Giant"]
+        return bs
+
+    # 1) none 模式：Giant 单独过桥，对手不响应 → 对塔有伤、我方塔无损、花 5 费
+    bs = fresh()
+    res_n = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=12.0,
+                              defender="none")
+    assert res_n["legal"] and res_n["my_cost"] == 5.0 and res_n["opp_cost"] == 0.0, res_n
+    assert res_n["opp_towers"]["total"] > 0, f"对手塔应受创: {res_n}"
+    assert res_n["my_towers"]["total"] == 0.0, f"我方塔不应受损: {res_n}"
+    assert res_n["my_units"]["deployed"] >= 1 and res_n["my_units"]["alive"] >= 1, res_n
+
+    # 2) script 模式：对手真的防守 → 花 3+ 费、Giant 被解、塔损被压低于 none 模式
+    bs = fresh()
+    res_s = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=12.0,
+                              defender="script")
+    assert res_s["legal"] and res_s["opp_cost"] > 0.0, f"脚本防守应花圣水: {res_s}"
+    assert res_s["opp_towers"]["total"] < res_n["opp_towers"]["total"], \
+        f"防守应降低塔损: script {res_s['opp_towers']} vs none {res_n['opp_towers']}"
+    assert res_s["my_units"]["hp_frac"] < res_n["my_units"]["hp_frac"], \
+        f"防守应打掉 Giant 血: {res_s['my_units']} vs {res_n['my_units']}"
+
+    # 3) fn 模式：注入对手回调（首 tick 下 Knight 解场）
+    bs = fresh()
+    calls = {"n": 0}
+    def opp_fn(sim, defender_id):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return [("Knight", (3.5, 20.0))]
+        return []
+    res_f = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=8.0,
+                              defender="fn", opponent_fn=opp_fn)
+    assert res_f["legal"] and res_f["opp_cost"] == 3.0, f"fn 对手应花 3 费: {res_f}"
+    assert res_f["my_units"]["hp_frac"] < res_n["my_units"]["hp_frac"], \
+        f"Knight 应打到 Giant: {res_f['my_units']}"
+
+    # 4) 非法部署：圣水不足 → legal=False
+    bs = fresh(elixir=1.0)
+    res_bad = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=4.0,
+                                defender="none")
+    assert not res_bad["legal"] and res_bad["reason"] == "deploy_failed", res_bad
+
+    # 5) 法术候选：Fireball 砸 P1 左塔 ≈ 206（lv11 已知实测口径）
+    bs = fresh()
+    bs.players[0].cycle = ["Fireball"] + [c for c in bs.players[0].cycle if c != "Fireball"]
+    res_fb = simulate_exchange(bs, 0, "Fireball", Position(3.5, 25.5), horizon=6.0,
+                               defender="none")
+    assert res_fb["legal"] and res_fb["my_cost"] == 4.0, res_fb
+    assert abs(res_fb["opp_towers"]["left"] - 206.0) <= 2.0, \
+        f"Fireball 对塔应 ≈206: {res_fb['opp_towers']}"
+
+    # 6) P1 镜像视角（Giant 从 y19 走到 y6.5 需 ~10s，16s 视界保证够到塔并还手）
+    bs = fresh()
+    bs.players[1].cycle = ["Giant"] + [c for c in bs.players[1].cycle if c != "Giant"]
+    res_m = simulate_exchange(bs, 1, "Giant", Position(14.5, 19.0), horizon=16.0,
+                              defender="none")
+    assert res_m["legal"] and res_m["opp_towers"]["total"] > 0 \
+        and res_m["my_towers"]["total"] == 0.0, res_m
+
+    # 7) 无污染 + 确定性
+    bs = fresh()
+    t0, el0 = bs.time, bs.players[0].elixir
+    hp0 = {eid: e.hp for eid, e in bs.entities.items()}
+    r1 = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=8.0, defender="script")
+    assert bs.time == t0 and bs.players[0].elixir == el0, "调用不得污染原局面"
+    for eid, e in bs.entities.items():
+        assert e.hp == hp0[eid], f"实体 {eid} 血被污染"
+    r2 = simulate_exchange(bs, 0, "Giant", Position(3.5, 14.0), horizon=8.0, defender="script")
+    assert r1 == r2, f"推演应确定性"
+    print(f"[PASS] 交换模拟器：none 塔损 {res_n['opp_towers']['total']:.0f} → "
+          f"script 压到 {res_s['opp_towers']['total']:.0f}（对手花 {res_s['opp_cost']:.0f} 费）；"
+          f"fn 注入 OK；Fireball 对塔 {res_fb['opp_towers']['left']:.0f}；非法/镜像/无污染/确定 全过")
+
+
+def test_spell_module():
+    """外置工具③法术知识模块：伤害数字全部来自引擎标定（不拍脑袋）。
+    对账口径：evaluate_cast 静态预测 == engine_resolution 实测（确定性引擎应逐位一致）；
+    击杀判定与引擎一致；best_cast 覆盖目标簇；BarbLog 部署区限制正确上报；
+    无污染、缓存一致。"""
+    import battle as battle_mod
+    import player as player_mod
+    from core import Position
+    from spell_module import (get_spell_profile, evaluate_cast, best_cast,
+                              engine_resolution, clear_profile_cache)
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+
+    def fresh():
+        return battle_mod.BattleState(player_mod.PlayerState(0, list(deck), 10.0),
+                                      player_mod.PlayerState(1, list(deck), 10.0),
+                                      card_level=11)
+
+    clear_profile_cache()
+    # 1) Fireball 档案：标定值落在已知口径内（lv11 对塔 206、对部队 687×等级曲线）
+    prof = get_spell_profile("Fireball", 11)
+    assert prof["calibrated"] and prof["elixir"] == 4 and abs(prof["radius"] - 2.5) < 1e-6, prof
+    assert 180.0 <= prof["tower_damage"] <= 230.0, f"Fireball 对塔标定异常: {prof}"
+    assert 600.0 <= prof["troop_damage"] <= 780.0, f"Fireball 对部队标定异常: {prof}"
+    assert get_spell_profile("Fireball", 11) is prof, "档案缓存应复用同一对象"
+
+    # 2) 对账：evaluate_cast 预测 == engine_resolution 实测（Giant 静靶）
+    bs = fresh()
+    hp_before = {eid: e.hp for eid, e in bs.entities.items()}
+    bs.players[0].cycle = ["Fireball"] + [c for c in bs.players[0].cycle if c != "Fireball"]
+    bs.players[1].cycle = ["Giant"] + [c for c in bs.players[1].cycle if c != "Giant"]
+    assert bs.deploy_card(1, "Giant", Position(9.0, 19.0))
+    ev = evaluate_cast(bs, 0, "Fireball", Position(9.0, 19.0))
+    gts = [t for t in ev["targets"] if t["name"] == "Giant"]
+    assert len(gts) == 1 and not gts[0]["dies"], ev
+    assert abs(gts[0]["damage"] - prof["troop_damage"]) <= 2.0, ev
+    res = engine_resolution(bs, 0, "Fireball", Position(9.0, 19.0))
+    assert res["legal"] and len(res["per_entity"]) == 1, res
+    (dmg_meas,) = res["per_entity"].values()
+    assert abs(dmg_meas - gts[0]["damage"]) <= 2.0, \
+        f"预测 {gts[0]['damage']} vs 实测 {dmg_meas} 漂移超容差"
+    assert bs.entities[1].hp == 3052, "对账调用不得污染原局面"
+
+    # 3) Zap 罩 3 Knight：全命中、不死、逐目标预测==实测
+    bs = fresh()
+    bs.players[0].cycle = ["Zap"] + [c for c in bs.players[0].cycle if c != "Zap"]
+    for kx, ky in ((8.5, 19.0), (9.5, 19.0), (9.0, 20.0)):
+        bs.players[1].cycle = ["Knight"] + [c for c in bs.players[1].cycle if c != "Knight"]
+        assert bs.deploy_card(1, "Knight", Position(kx, ky))
+    knights = [e.id for e in bs.entities.values() if e.card_name == "Knight"]
+    ev_z = evaluate_cast(bs, 0, "Zap", Position(9.0, 19.3))
+    hit = {t["id"]: t for t in ev_z["targets"]}
+    assert set(hit) == set(knights) and ev_z["n_targets"] == 3, ev_z
+    assert all(not t["dies"] for t in ev_z["targets"]), ev_z
+    res_z = engine_resolution(bs, 0, "Zap", Position(9.0, 19.3))
+    for eid in knights:
+        assert abs(res_z["per_entity"][eid] - hit[eid]["damage"]) <= 2.0, \
+            f"Zap 预测 {hit[eid]['damage']} vs 实测 {res_z['per_entity'][eid]}"
+
+    # 4) 击杀判定对账（静止靶 Cannon，避免移动目标的驻留乐观偏差）：
+    #    Rocket(6 费) 应砸死 Cannon(824 hp)；Arrows(3 连波 366) 打不死 → dies=False 一致
+    bs = fresh()
+    bs.players[1].cycle = ["Cannon"] + [c for c in bs.players[1].cycle if c != "Cannon"]
+    assert bs.deploy_card(1, "Cannon", Position(9.0, 19.0))
+    cannons = [e.id for e in bs.entities.values() if e.card_name == "Cannon"]
+    assert len(cannons) == 1
+    cid = cannons[0]
+    bs.players[0].cycle = ["Rocket"] + [c for c in bs.players[0].cycle if c != "Rocket"]
+    ev_r = evaluate_cast(bs, 0, "Rocket", Position(9.0, 19.0))
+    tgt = [t for t in ev_r["targets"] if t["id"] == cid][0]
+    assert tgt["kind"] == "building" and tgt["dies"] is True, tgt
+    res_r = engine_resolution(bs, 0, "Rocket", Position(9.0, 19.0))
+    assert res_r["per_entity"].get(cid, 0.0) >= tgt["hp"] - 1e-6, \
+        f"Rocket 应实测砸死 Cannon: 预测 {tgt} vs 实测 {res_r['per_entity']}"
+    bs.players[0].cycle = ["Arrows"] + [c for c in bs.players[0].cycle if c != "Arrows"]
+    ev_a = evaluate_cast(bs, 0, "Arrows", Position(9.0, 19.0))
+    tgt_a = [t for t in ev_a["targets"] if t["id"] == cid][0]
+    assert tgt_a["dies"] is False, tgt_a
+    res_a2 = engine_resolution(bs, 0, "Arrows", Position(9.0, 19.0))
+    assert abs(res_a2["per_entity"].get(cid, 0.0) - tgt_a["damage"]) <= 2.0, \
+        f"Arrows 静止靶伤害预测==实测: 预测 {tgt_a['damage']} vs 实测 {res_a2['per_entity']}"
+    assert ev_r["elixir_killed_value"] > 0, f"击杀应折费: {ev_r}"
+
+    # 5) best_cast：3 Knight 簇上找覆盖 ≥2 目标的落点
+    bs = fresh()
+    bs.players[0].cycle = ["Zap"] + [c for c in bs.players[0].cycle if c != "Zap"]
+    for kx, ky in ((8.5, 19.0), (9.5, 19.0), (9.0, 20.0)):
+        bs.players[1].cycle = ["Knight"] + [c for c in bs.players[1].cycle if c != "Knight"]
+        bs.deploy_card(1, "Knight", Position(kx, ky))
+    pos, ev_b, score = best_cast(bs, 0, "Zap", grid=1.0)
+    assert pos is not None and score > 0 and ev_b["n_targets"] >= 2, (pos, ev_b, score)
+
+    # 6) BarbLog 部署区限制：敌半场落点 castable=False
+    ev_l = evaluate_cast(bs, 0, "BarbLog", Position(9.0, 25.0))
+    assert ev_l["castable"] is False, ev_l
+    # 7) 非伤害法术：Rage 无伤害路径，targets 为空
+    ev_r = evaluate_cast(bs, 0, "Rage", Position(9.0, 19.0))
+    assert ev_r["deals_damage"] is False and ev_r["targets"] == [], ev_r
+    print(f"[PASS] 法术知识模块：Fireball 标定 对塔 {prof['tower_damage']:.0f}/对部队 "
+          f"{prof['troop_damage']:.0f}；对账预测==实测（Fireball/Zap/Rocket/Arrows 逐目标 ±2）；"
+          f"Rocket 砸死 Cannon 击杀判定一致；best_cast 覆盖 {ev_b['n_targets']} 目标；"
+          f"BarbLog/Rage 口径正确")
 
 
 def main():
@@ -2556,6 +2836,9 @@ def main():
     test_eval_stall_early_stop()
     test_eval_solo_parallel()
     test_overtime_window()
+    test_tower_threat_calc()
+    test_simulate_exchange()
+    test_spell_module()
     print("\nALL SELFTESTS PASSED")
 
 

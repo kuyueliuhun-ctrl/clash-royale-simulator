@@ -1,0 +1,336 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 3-Elixir Cards, Rare Cards, Troop Cards, Serenity Peak Cards
+English
+Elixir Golem
+54
+SAVE
+EDIT
+Elixir Golem
+Elixir Cost
+3 
+Rarity
+Rare
+Type
+Troop
+Arena
+Serenity Peak
+Release Date
+4 November 2019
+
+
+
+
+“Splits into two Elixir Golemites when destroyed, which split into two sentient Blobs when defeated. Each part of the Elixir Golem gives your opponent some Elixir when destroyed!”
+
+The Elixir Golem is a Rare card that is unlocked from Serenity Peak (Arena 14). It spawns a slow, single-target, building-targeting, melee, ground troop with high hitpoints and high damage. When defeated, Elixir Golem splits into two faster Elixir Golemites which have moderate hitpoints and low damage. When the Elixir Golemites are defeated, each one produces two faster Elixir Blobs which have low hitpoints and very low damage. Each part of the Elixir Golem awards the opponent Elixir when destroyed; the main Elixir Golem gives 1 Elixir, and both Elixir Golemites and Elixir Blobs give 0.5 Elixir. The Elixir Golem appears as a massive brute made of Elixir, wearing two team-colored collars on its arms, with its Elixir Golemites being smaller versions with the team-colored collar on their waist, and their Elixir Blobs resembling a plain lump of Elixir. An Elixir Golem card costs 3 Elixir to deploy.
+
+Modifiers
+ Common: Gooey Golemites
+“+2 Elixir Golemite”
+
+When the Elixir Golem is defeated, it splits into 4 Elixir Golemites instead of 2.
+
+ Rare: Give Some, Get Some
+“Get Elixir when defeated”
+
+When any form of the Elixir Golem is defeated, both the player and the opponent will gain the Elixir death spawn instead of only the opponent.
+
+ Epic: From Blob to Glob
+“Evolving Blobs”
+
+Every few seconds, an Elixir Blob spawns behind the Elixir Golem. This Elixir Blob will change to an Elixir Golemite if it remains alive.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+An Elixir Golem costs 3 Elixir, but gives the opponent 4 Elixir after being fully defeated, giving the opponent a 7 Elixir advantage, although the actual advantage is usually lower, since the opponent will almost certainly deploy troops to counter the Elixir Golem.
+The Elixir Golem's low cost of 3 Elixir enables it to be the center point of many offensive strategies. For example, its low upfront cost means it can be more easily played in front of counter pushing troops compared to other bulky tanks like the Giant, Lava Hound, Giant Skeleton, P.E.K.K.A, Mega Knight, Goblin Giant, Electro Giant, or Golem, and it will advance the player's card rotation more quickly for a lower cost. Its lower upfront cost also makes deploying it less risky than other large tanks, as the player can have up to 7 Elixir left in their hand after placing it.
+Similarly, the player can afford to support the Elixir Golem with more expensive support units compared to the other tanks. For example: a push with a Golem and a Sparky costs a significant 14 Elixir, while the same push with the Elixir Golem only costs 9 Elixir.
+The Elixir Golem must be used with great care and planning, as it gives the enemy 4 Elixir when fully destroyed. This can be offset in numerous ways:
+Starting an Elixir Golem push right after making a positive Elixir trade or after defending for a good trade is a simple but effective method. This means that if the opponent survives the defense, they will merely be at an even amount of Elixir rather than in the lead.
+Protecting the Elixir Golem means that the opponent cannot destroy it and gain Elixir to begin with. Putting a mini tank in front of the Golem can protect it and allow it to stay alive for as long as possible. In particular, Elixir Golem and Battle Healer or Valkyrie are fairly cheap pushes that can be devastating if not handled properly.
+If the opponent's Elixir is full, the Elixir Golem's parts will not give any more Elixir. They may have to deploy cards simply to prevent a waste of potential extra Elixir, which could result in a less effective counterpush.
+Having an Elixir Collector on the field can offset the negative Elixir trade from using the card. Since the Elixir Collector will grant 1 more Elixir to the player compared to its cost, as well as the death Elixir, it is enough to completely negate the 1 extra Elixir that the Elixir Golem will grant compared to its cost, which will neutralize any possible Elixir trades with the card.
+In the presence of buildings in the opponent's deck, it may be a better idea to place the Elixir Golem at the corner of the Arena. Since the Elixir Golem has a lower sight range than a Giant, he may be able to bypass certain building placements when he is placed that way.
+The Elixir Golem's sub-units each have half the health and the damage of their previous form, meaning that for 3 Elixir, a player gets three Elixir Golems' worth of health and damage if every unit summoned by the card is counted and left ignored. However, since each subsequent form raises the unit count, it makes the total health less effective over time. For example, The Log will bring down the health of each Elixir Blob enough so that the Crown Tower's arrow can OHKO them. When using spells to defend against an Elixir Golem push, try and save them for the last two phases to get the most area damage value.
+Although the Elixir Golem spawns Elixir Golemites upon death, buildings and troops will start targeting troops behind the Elixir Golem since it takes a split second for the Elixir Golemites to spawn and the closest targets will be the troops the Elixir Golem is protecting. This can easily be fixed by placing a spell such as Zap, Lightning, or Freeze, which can all stun or freeze the Tower changing its target to the Golemites instead. An Ice Spirit or Electro Wizard could also work, but they are blockable and may result in a waste of Elixir.
+Piercing splash cards like the Bowler, Executioner, Barbarian Barrel, and Firecracker are particularly effective against the Elixir Golem. Their attacks will be able to hit multiple of the forms of the Elixir Golem, even being able to hit the next form if the previous form takes a fatal attack. In the case of the Bowler and Evolved Executioner, their attacks will be able to also knockback the Elixir Golemites and Elixir Blobs, which can prevent them from connecting to their target, while the Evolved Firecracker will slow them down with her sparks.
+The Arrows deal enough damage to destroy the Elixir Blobs, immediately gaining 2 Elixir upon defeating them. Poison can also defeat the Elixir Blobs, requiring at least 4 hits to destroy each one of them. Other spells are not recommended to use, either because the forms of the Elixir Golem will survive or the damage will not carry over to its frailer forms.
+The splitting can also be beneficial to the player. Troops like the Inferno Dragon and Mighty Miner that ramp up in damage over time are less effective due the defending troop having to charge up on every sub-unit. Additionally, all healing will effect all of the sub-units, making it more effective.
+The Elixir Golem is capable of doing devastating damage to buildings unlike the Golem and Ice Golem, especially as it divides into more units. This makes it a good chip damage card, boasting high health, sub-units, and good damage for 3 Elixir. As such, it is not recommended to ignore it.
+The Barbarian Hut is the most effective spawner building at destroying the Elixir Golem. The spawned Barbarians will deal high damage to the Golem, preventing it from reaching a Crown Tower. Some Barbarians will survive, allowing for a small counterpush.
+Due to Elixir Golem's lower hitpoints than the Golem, in all of its forms, the Bomb Tower 's splash damage is quite useful against a larger Elixir Golem push, hitting multiple troops in the push, particularly when the Elixir Golemites appear. However, it does not work against a push with air support troops like the Skeleton Dragons, Flying Machine, Baby Dragon, Minion Horde, and Electro Dragon.
+A reactive Tesla placed 4 tiles from the bridge and 4 tiles from the Crown Tower can pull an Elixir Golem that was initially placed behind the King Tower. This is because the unit will walk closer to the inner side of the bridge (i.e. closer to the center of the Arena), rather than the center or the outside. Although this is somewhat situational, it is more effective at separating a tank from its support units than the above middle placement, as the tank will have to walk slightly farther, and the Tesla will not draw the attention of other grounded troops. However, because of the Elixir Golem's lower sight range compared to a Giant, this placement will not work if he was placed directly at the bridge.
+Other buildings are less effective overall, however they can still handle a lone Elixir Golem. Try to use them if the Elixir Golem is unsupported or the support troops are separated from the Elixir Golem.
+If an opponent deploys an Elixir Golem, the defender should not be afraid to spend more Elixir than usual to counter something of its cost - the Elixir provided by it will make up for that. If a cheap anti-tank card such a Mini P.E.K.K.A, Hunter, Lumberjack, Mega Minion, Evolved Skeletons, or Skeleton Army is used, it may even be possible to make a profit in Elixir from the opponent's play.
+Due to its high mass, the Elixir Golem's first form cannot be pulled with a Tornado towards the player's King's Tower to activate it, even when it is locked onto a Crown Tower. However, some of the Elixir Golemites or the Elixir Blobs can be pulled towards the King's Tower.
+If an Elixir Golem push is struggling to reach the Tower, it is not recommended to use Clone or Mirror the Elixir Golem, as this will spawn more units, which all give Elixir when destroyed, and potentially give the defender a large amount of Elixir. Clone is particularly ineffective as all of its forms are easily destroyed, allowing the defender to easily gain Elixir.
+The Elixir Golem is not a replacement for an Ice Golem in any deck, and their playstyles are very different. The Ice Golem costs less Elixir, has much fewer hitpoints and damage, has death damage, doesn't spawn Golemites upon death, and slows down troops. The Elixir Golem serves the role of being a large tank for a large, tower-taking push, while the Ice Golem is a cheap, reactive mini-tank that is useful on both offense and defense.
+In periods or game modes where Elixir generation is increased, the Elixir gained from defeating the Elixir Golem may become less meaningful as it is easier for the defender to accidentally leak Elixir. Because of this, he is slightly more effective in those modes.
+In 2v2 battles, only the player that defeats the Elixir Golem or any of its smaller forms will receive the Elixir. Because of this, he is more effective to use as a tank in the mode, but less effective if both players are using it. The player can manipulate which opponent will receive the Elixir by playing it towards the lane with the tower troop of the player who is more likely to leak Elixir.
+The Elixir Golem is excellent in Boat Battles. He has a low Elixir cost for the amount of total hitpoints that he has, making him a great tank for the mode. In adddition, the defender deploys their cards independent of the Elixir mechanic, meaning that the drawback of giving Elixir to the opponent does not matter in that mode.
+Statistics
+Elixir Golem Attributes
+Cost
+	Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+3	1.1 sec	0.8 sec	Slow (45)	1 sec	Melee: Short (0.8)	Buildings	x1	Ground	Troop	Rare
+Elixir Golemite Attributes
+Hit Speed
+	First Hit Speed
+	Speed
+	Range
+	Target
+	Count
+	Transport
+
+1.1 sec	0.8 sec	Medium (60)	Melee: Short (0.8)	Buildings	x2	Ground
+Elixir Blob Attributes
+Hit Speed
+	First Hit Speed
+	Speed
+	Range
+	Target
+	Count
+	Transport
+
+1.1 sec	0.8 sec	Fast (90)	Melee: Short (0.8)	Buildings	x4	Ground
+Card Statistics
+Level
+	Elixir Golem Hitpoints
+	Elixir Golem Damage
+	Elixir Golem Damage per second
+	Elixir Golemite Hitpoints
+	Elixir Golemite Damage
+	Elixir Golemite Damage per second
+	Elixir Blob Hitpoints
+	Elixir Blob Damage
+	Elixir Blob Damage per second
+
+3	732	118	107	355	60	54	168	30	27
+4	805	130	118	391	66	59	185	33	29
+5	886	143	130	430	72	65	203	36	32
+6	974	157	142	473	79	71	224	40	36
+7	1072	173	157	520	87	79	246	44	40
+8	1179	190	172	573	96	87	270	48	43
+9	1297	209	189	630	106	96	298	53	48
+10	1426	230	209	693	116	105	327	58	52
+11	1569	253	229	762	128	116	360	64	58
+12	1726	278	252	838	141	128	396	70	63
+13	1898	306	278	922	155	140	436	77	70
+14	2088	337	306	1014	170	154	479	85	77
+15	2297	370	336	1116	187	170	527	94	85
+16	2527	407	369	1227	206	187	580	103	93
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Rewards
+Damage Dealer
+	1	Deal a total of 110,000 Damage to enemy Troops or buildings	100 Elixir Golem cards
+50 
+2	Deal a total of 325,000 Damage to enemy Troops or buildings	4,000 
+50 
+3	Deal a total of 540,000 Damage to enemy Troops or buildings	100 
+50 
+Tower Tapper
+	1	Hit enemy Crown Towers a total of 2,100 times	6,000 
+125 
+2	Hit enemy Crown Towers a total of 6,000 times	100 
+125 
+3	Hit enemy Crown Towers a total of 11,000 times	9,000 
+125 
+History
+
+2019
+
+The Elixir Golem was once available in the Elixir Golem Draft Challenge, which started on 11/10/2019. In this challenge, gameplay was similar to a regular Draft Challenge, except that one of the players was able to choose who would use the Elixir Golem. If the player achieved at least 8 wins, they obtained the Elixir Golem early.
+The Elixir Golem card was generally released on 4/11/2019. On the same day, a Balance Update, decreased the hitpoints of all of Elixir Golem's forms by 10%. It also moved the Arena to unlock the Elixir Golem from Spooky Town to Electro Valley.
+On 26/11/2019, the End of November 2019 Update, added a card render to the Elixir Golem's card info screen.
+On 2/12/2019, a Balance Update, normalized the attack time interval of all Elixir Golem forms to 1.3 seconds. Being beneficial to the Elixir Golem and Elixir Golemites, but hurting the Elixir Blob damage per second significantly.
+
+2020
+
+On 7/1/2020, a Balance Update, decreased the hitpoints of all Elixir Golem forms by 6%.
+
+2021
+
+On 7/6/2021, the Summer 2021 Update, moved the Arena to unlock the Elixir Golem from Electro Valley to Serenity Peak.
+On 27/10/2021, the Champions Update, increased the Level cap of all cards to 14 (from 13).
+
+2022
+
+On 2/8/2022, a Balance Update, increased the Elixir Golem's hitpoints by 9%, and the Elixir Golemites' hitpoints by 6%. It also increased the Elixir given by the Elixir Golem after being killed to 1 Elixir (from 0 Elixir), the Elixir given by the Elixir Golemite after being killed to 0.5 Elixir (from 0 Elixir), and decreased the Elixir given by the Elixir Blob after being killed to 0.5 Elixir (from 1 Elixir). The card description was also changed. It used to read "Splits into two Elixir Golemites when destroyed, which split into two sentient Blobs when defeated. A Blob gives your opponent 1 Elixir when destroyed!"
+On 4/10/2022, a Balance Update, decreased the attack time interval of all Elixir Golem forms to 1.1 seconds (from 1.3 seconds). Their first attack time interval was also increased to 0.8 seconds (from 1 second).
+
+2023
+
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+On 30/6/2023, a maintenance break, fixed an issue where Elixir Golem was not giving Elixir to opponent when destroyed.
+
+2025
+
+On 31/3/2025, the 2025 Quarter 1 Update, increased the Elixir Golem's hitpoints by 0.06%, and decreased the Elixir Golemites' hitpoints by 0.13%. It also decreased the Elixir Golem's damage by 0.39%, increased the Elixir Golemites' damage by 0.78%, and increased the Elixir Blobs' damage by 1.58%. The same update also fixed a bug where Elixir Golemites and Elixir Blobs would not spawn after being buffed by Royal Chef.
+Gallery
+Current card render.
+Current card preview
+Elixir Golem 1
+Elixir Golem 2
+Elixir Golem 3
+Elixir Golem 4
+The Elixir Golem making an appearance in an April Fool's image.
+Screenshot of the Elixir Golem from its release video.
+Trivia
+The word "Golem" occurs once in the Bible in Psalm 139:16, which uses the word "golmi", that means "my light form", "raw" material, connoting the unfinished human being. A golem is an animated, anthropomorphic being in Jewish folklore, which is entirely created from inanimate matter, usually clay or mud. The most famous golem narrative involves Judah Loew ben Bezalel, the late 16th-century rabbi of Prague.
+The word “Elixir” comes from the Arabic word "اَلْإِكْسِير" (al iksir), which is the word for miracle substances. Dating back to the third century BC, Elixir was rumored to change base metals into gold and prolong life indefinitely.
+The Elixir Golem was designed after a scrapped concept, which involved a monster constructed entirely from Elixir. It was also originally called "Elixir Monster", and it would involve an Elixir Monster that would spawn Elixirmites when destroyed, Those Elixirmites would be fused back to an Elixir Monster if they were not defeated in time. This was later introduced with the C.H.A.O.S Epic Modifier From Blob to Glob.
+The Elixir Golem first made an appearance in an April Fool's image that Supercell posted in a Tweet, showing an 8v8 battle.
+According to a Clash of Clans comment on Reddit, the Elixir Golem was prototyped during the development of TH12 in Clash of Clans. It would have gained strength as it creates destruction, and adopt the Rage Spell's characteristics when destroyed, similar to the Lumberjack. However, it was scrapped due to its complex mechanics.
+The Elixir Golem is 1 of 2 cards being associated with the Elixir mechanic, with the other being Elixir Collector.
+The Elixir Golem is tied with the Super Lava Hound for the highest amount of forms and divisions of any card - it has 3 forms and divides 3 times.
+The Elixir Golem is one of the first troop cards to receive a card render, alongside the Archers, Knight, Goblins, Bomber, Skeletons, Barbarians, Bats, Royal Recruits, Skeleton Barrel, Rascals, Musketeer, Giant, Valkyrie, Wizard, Flying Machine, Hog Rider, Royal Hogs, Dart Goblin, Zappies, Baby Dragon, Skeleton Army, Witch, P.E.K.K.A, Prince, Balloon, Giant Skeleton, Goblin Giant, Hunter, Electro Dragon, Wall Breakers, Bowler, Cannon Cart, Mega Knight, Ram Rider, Miner, Royal Ghost, Ice Wizard, Magic Archer, Bandit, Lava Hound, Night Witch, and Fisherman.
+The Elixir Blobs are 1 of 9 troops that have the same sprite for both players, the others are Skeletons, Electro Spirit, Fire Spirit, Bats, Ice Spirit, Heal Spirit, Phoenix, and Lava Pup.
+The Elixir Golem is 1 of 23 troops that has been featured in the Troop Rush game mode, the others being Skeletons, Skeleton Dragons, Fire Spirit, Bats, Elite Barbarians, Firecracker, Rascal Girls, Royal Hogs, Heal Spirit, Guards, Prince, Balloon, Golem, Wall Breakers, Ram Rider, Sparky, Phoenix, Royal Ghost, Bandit, Lumberjack, Santa Hog Rider, and the Monk.
+The Elixir Golem, along with the Minions, Bomber, Skeletons, Skeleton Dragons, Ice Spirit, Mini P.E.K.K.A, Mega Minion, Ice Golem, Dart Goblin, Goblin Brawler, Guards, Baby Dragon, P.E.K.K.A, Giant Skeleton, Golem, Wall Breakers, Bowler, Executioner, Mega Knight, Inferno Dragon, Royal Ghost, and Lava Hound, are featured as a monster in Squad Busters.
+Unlike the Golem and Ice Golem, the Elixir Golem and its subsequent forms do not inflict death damage.
+According to the Season 4 trailer, the Elixir Golem originates from a meteor that came from outer space.
+The Elixir Golem is the subject of 4 Emotes.
+Its Star Level 1 skin has a different deploy sound effect to the one of an Elixir Golem without Star Levels.
+Despite the Damage Dealer Card Mastery task mentioning that the Elixir Golem can deal damage to troops or buildings, it cannot progress the task by dealing damage to troops.
+The Elixir Golem is 1 of 6 troops that cannot deal damage to other troops whatsoever, the others being the Royal Giant, Giant, Hog Rider, Royal Hogs, and Rune Giant.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+54 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+2026/8/30
+Card Overviews/Merge Tactics
+2026/8/30
+Arenas
+2026/8/28
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

@@ -316,11 +316,12 @@ def test_evo_royal_giant_push():
     check('RG 对建筑造成伤害（攻击+推击 AoE）', dmg > 300, f'dmg={dmg:.0f}')
 
 def test_evo_all_construct():
-    print('[族7] 全 34 张快照觉醒卡 evolved 形态可构造')
-    from card_utils import Card
+    print('[族7] 全快照觉醒卡 evolved 形态可构造')
+    from card_utils import Card, card_data
     ok_n = 0
     for name in EVOLUTION_CYCLES:
         if name == 'AngryBarbarians': continue  # 2026 快照外
+        if name not in card_data: continue  # 'Furnace' 为别名键（gamedata 卡名=FirespiritHut）
         try:
             c = Card(name)
             if not c.evo_raw: continue
@@ -331,7 +332,8 @@ def test_evo_all_construct():
             ok_n += 1
         except Exception as e:
             check(f'{name} evolved 构造', False, f'{type(e).__name__}: {str(e)[:60]}')
-    check(f'觉醒形态构造 {ok_n}/34', ok_n == 34, f'{ok_n}')
+    # M6：2025 新觉醒 7 张数据层落地（evo_2025_data.py）→ 可构造数 34→41（Furnace 别名键不计）
+    check(f'觉醒形态构造 {ok_n}/41', ok_n == 41, f'{ok_n}')
 
 # ---------- M4.5 动作链：攻击序列（attackSequenceList） ----------
 def test_attack_seq_inferno_evo():
@@ -373,26 +375,26 @@ def test_attack_seq_inferno_battle():
     check('首击 ≈36（首档）', abs(hits[0] - 36) <= 6, f'first={hits[0]}')
 
 def test_attack_seq_berserker():
-    """Berserker：攻击序列三连击 40×3（lv1 基准，lv11 按 1.1 曲线 ×2.594 → 104×3），单次攻击周期内打满。"""
-    print('[M4.5] Berserker 三连击（40×3 → lv11 104×3）')
+    """Berserker：攻击序列三连击（lv11 官方 102×3, Fandom 实测 official_table; 旧曲线推导 104 已被替代），单次攻击周期内打满。"""
+    print('[M4.5] Berserker 三连击（lv11 102×3 官方）')
     b = make_battle()
     ber = spawn_troop(b, 'Berserker', 9.0, 14.0, 0)
-    check('序列解析为三段且按曲线缩放', [round(x) for x in ber.attack_seq_damages] == [104, 104, 104],
+    check('序列解析为三段且按曲线缩放', [round(x) for x in ber.attack_seq_damages] == [102, 102, 102],
           f'{ber.attack_seq_damages}')
     ber._on_attack_done()
     check('攻击后排队 2 段剩余', ber.attack_seq_pending == 2, f'pending={ber.attack_seq_pending}')
     # 集成：直接驱动一次攻击（Berserker 索敌数据缺失 STATS_UNRESOLVED，不走 get_nearest_target）
-    # 剩余两段应在 hit_speed/3 ≈0.17s 内依次结算，总伤 = 3×104=312
+    # 剩余两段应在 hit_speed/3 ≈0.17s 内依次结算，总伤 = 3×102=306
     b2 = make_battle()
     ber2 = spawn_troop(b2, 'Berserker', 9.0, 14.0, 0)
     k = spawn_troop(b2, 'Knight', 9.0, 13.0, 1)
     ber2.deploy_delay_remaining = 0.0
     k.deploy_delay_remaining = 0.0
-    ber2.entity_holder.on_attack(k)   # 第一段 104（delayed）+ 排队 2 段
+    ber2.entity_holder.on_attack(k)   # 第一段 102（delayed）+ 排队 2 段
     for _ in range(int(1.0 * 60)):
         b2.step(1 / 60)
     dmg = 1766 - k.hp
-    check('一次攻击打满 312（3×104）', abs(dmg - 312) <= 8, f'dmg={dmg:.0f}')
+    check('一次攻击打满 306（3×102）', abs(dmg - 306) <= 8, f'dmg={dmg:.0f}')
 
 # ---------- 16 级数据支持（set_level 全卡无越界 + 数值轴正确） ----------
 def test_level16_support():

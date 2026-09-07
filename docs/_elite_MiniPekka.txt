@@ -1,0 +1,272 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 4-Elixir Cards, Heroes with 1-Elixir Abilities, Rare Cards, and 2 more
+English
+Heroic Mini P.E.K.K.A.
+< Mini P.E.K.K.A.
+3
+SAVE
+EDIT
+Hero Mini P.E.K.K.A.
+Elixir Cost
+4 
+Ability Cost
+1 
+Rarity
+Rare
+Type
+Troop
+Arena
+Training Camp
+Release Date
+December 1 2025
+“Hero Mini P.E.K.K.A has finally perfected his pancake recipe by speeding up cooking time with each attack! Stacks on stacks on stacks! ”
+
+The Heroic Mini P.E.K.K.A. is a Rare card that is unlocked with 200 hero fragments. It spawns one single-target, ground-targeting, melee, and ground troop with high hitpoints and high damage. The Heroic Mini P.E.K.K.A takes the appearance of a robot-looking troop similar to Mini P.E.K.K.A. who wears gold metallic armor with two pearl white horns, shoulder and arm pads, golden spikes on his arms and a single round glowing eye, along with a team-colored cape and faulds, while wielding both a cracked refined sword with a pearl white base, a golden hilt and a wooden grip and a golden spatula with a small golden spike near the top. A Heroic Mini P.E.K.K.A. card costs 4  to deploy, and his ability costs an additional 1  to activate.
+
+Ability: Breakfast Boost
+“Eats pancakes to level up. The longer you wait, the more pancakes he cooks!”
+
+The Heroic Mini P.E.K.K.A. has a special ability accessible from whatever side of the screen was put in, just above the player's card slots in battle. After a 1-second delay, the Mini P.E.K.K.A. activates his "Breakfast Boost", immediately eats all the pancakes he cooked, granting him extra Levels and healing himself for 30%.
+
+Heroic Mini P.E.K.K.A. can constantly gain progress for his pancake meters. He will need 22 seconds to get one pancake meter filled, but he can also get 10 seconds of progress with every attack. Every filled pancake meter increases the Levels gained when his ability is used by 1, except the last meter grants 2 extra Levels. With no meters, the Heroic Mini P.E.K.K.A. will gain 1 Level, but with a maximum of 3 meters, he can gain 5 Levels. The amount of meters the Heroic Mini P.E.K.K.A. has can be seen in a golden bar above his hitpoint bar.The Breakfast Boost ability costs 1  to activate.
+
+Strategy
+For the purposes of determining Elixir trades, the Heroic Mini P.E.K.K.A. and his activated Ability count as 5 Elixir, as the player must play the 4 Elixir Heroic Mini P.E.K.K.A and then spend a further 1 on his Ability.
+This card would be good in decks with large tanks, as with his ability, he would be able to take out anti-tank cards like P.E.K.K.A, Mighty Miner, Monk, and Prince even better, as well as being good at taking a Tower on its own, while a tank protects him.
+To counter the Heroic Mini P.E.K.K.A, it is important to stop it before he boosts himself with his Breakfast Boost ability. This includes using the Rocket to OHKO him. If the player anticipates the enemy Rocket, they can activate his ability causing him to survive the spell, however this result in its healing being completely wasted.
+Although he defends the same way as the regular Mini P.E.K.K.A, the Heroic Mini P.E.K.K.A offers a better counterattack afterwards after using his ability, granting him more damage on the counterattack and healing 30% of his hitpoints.
+When using Heroic Mini P.E.K.K.A, pay attention to your opponent's card rotation. The opponent is more likely to have building-targeting troops to be able to hit your Crown Towers, allowing the Heroic Mini P.E.K.K.A to accumulate his ability easily. Try to reserve the Heroic Mini P.E.K.K.A for that card as much as possible.
+The Heroic Mini P.E.K.K.A has incredible synergy with the Royal Chef. The Royal Chef's low damage and lack of burst will force the Heroic Mini P.E.K.K.A to attack more times, accumulating more of his ability.
+Conversely, he is completely ineffective with the Cannoneer and Dagger Duchess, as the high damage and quick burst will lower the amount of hits the Heroic Mini P.E.K.K.A will dish out, which will result in less ability meters.
+Depending on what side of the arena this happens, but if the Mini P.E.K.K.A was facing an equal level P.E.K.K.A, if the player who played the Mini P.E.K.K.A would have to wait until the P.E.K.K.A strikes, then if all bars are full, then they use the ability right after the first strike from P.E.K.K.A, which will then have a lot more health than the P.E.K.K.A can take out in 2 or less strikes. By that point though, the Mini P.E.K.K.A would have killed her for a +2 elixir trade.
+Although situational, the player can manipulate the Royal Chef by using the Heroic Mini P.E.K.K.A to grant an additional Level and gain more hitpoints and damage. This can allow him to accumulate the ability more safely and generate more Levels after using it. The player can further manipulate extra Levels by using Mirror on the Heroic Mini P.E.K.K.A, granting a total of 7 extra Levels on the Heroic Mini P.E.K.K.A that way.
+Statistics
+Cost
+	Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+4	1.6 sec	0.5 sec	Fast (90)	1 sec	Melee: Short (0.8)	Ground	x1	Ground	Troop	Rare
+Breakfast Boost Attributes
+Cost
+
+	Ability Range
+
+	Cast Time
+
+	Heal Percentage
+
+	Level Increase from Pancake Bar
+
+
+1	Himself	0.933 sec	30%	0 bars filled = +1 level
+
+
+1 bar filled = +1 level/ 2 levels altogether
+
+2 bars filled = +1 level/ 3 levels altogether
+
+3 bars filled = + 2 levels/ 5 levels altogether
+
+
+
+
+
+
+
+Level
+	Hitpoints
+	Damage
+	Damage Per Second
+
+3	669	352	220
+4	735	387	241
+5	809	426	266
+6	890	469	293
+7	979	516	322
+8	1077	567	354
+9	1184	624	390
+10	1303	686	428
+11	1433	755	471
+12	1576	831	519
+13	1734	914	571
+14	1907	1005	628
+15	2098	1105	690
+16	2308	1216	760
+17	2539	1338	836
+
+
+18	2793	1471	919
+
+
+19	3072	1618	1011
+
+
+20	3379	1780	1112
+
+
+21	3717	1958	1223
+
+There will be rounding mistakes, as we have stats from level 11
+
+Bold: Extra levels added if ability used while card is in Level 16
+
+
+
+
+History
+
+2025
+
+Card was added in the 2025 Quarter 4 Update with the other 3 original heroes Knight, Musketeer, and Giant.
+On 22/12/2025 a Maintenance Break, allowed Hero Mini P.E.K.K.A to be a summonable hero. Previously he could only be gotten in Pass Royale.
+
+2026
+
+On 12/1/2026, a Balance Update, decreased the Hero Mini P.E.K.K.A.'s healing to 30% (from 40%), and decreased the it's Hitpoints by 3%.
+On 2/2/2026, a Balance Update, increased the Hero Mini P.E.K.K.A.'s cook time to 22 seconds (from 20 seconds).
+Gallery
+Current Card Render of Heroic Mini P.E.K.K.A
+This representing his Pancake Boost ability.
+2nd picture of Pancake Boost, already eaten
+Card Image with Pancake Boost not used yet
+Card Image with Pancake Boost used
+Heroic Mini P.E.K.K.A Shard.
+Trivia
+The Mini P.E.K.K.A.'s name derives from the Finnish name for "Peter", which in turn comes from the Greek name "Petros", meaning stone.
+He is 1 of 3 troops that are “miniature” versions of another troop in Clash of Clans, the others being the Baby Dragon and Electro Dragon. They are a smaller version of P.E.K.K.A., Dragon, and Electro Dragon, respectively.
+The Heroic Mini P.E.K.K.A. was one of the first Heroes to be added in the game, alongside the Giant, Knight, and Musketeer.
+Before the Mini P.E.K.K.A. Hero's release, the Breakfast Boost's healing was decreased to 40% (from 50%).
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+3 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+5 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis

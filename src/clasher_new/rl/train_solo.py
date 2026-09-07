@@ -276,6 +276,31 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
             pass
 
 
+def _collect_worker_results(procs, out_q, expected):
+    """收齐 expected 份 worker 消息，返回 (results, failure_or_None)。
+
+    worker 静默死亡（启动即崩，如 WinError 1455 页面文件不足导致 import torch
+    失败）不会往队列里放任何消息——原实现 out_q.get() 会永久阻塞；这里用
+    超时 + 存活探针兜底。
+    """
+    import queue as _queue
+    results = []
+    got = 0
+    while got < expected:
+        try:
+            msg = out_q.get(timeout=20)
+        except _queue.Empty:
+            if not any(p.is_alive() for p in procs):
+                return results, (f"{expected - got} 个 worker 退出但未回传结果"
+                                 "（启动即崩溃，典型原因：页面文件不足 WinError 1455）")
+            continue
+        if msg[0] == "error":
+            return results, msg[1]
+        results.extend(msg[1])
+        got += 1
+    return results, None
+
+
 def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
                        n_workers=8, record_replays=False, replays_dir=None, step=None,
                        frozen_step=None):
@@ -283,39 +308,65 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
 
     串行 16 局≈126s（主进程单核跑纯 Python 模拟）；16 进程理论 ≈ 126/16 + spawn/import
     开销 ≈ 15-25s。统计与串行同公式（wins/losses/draws + mean_reward + SE）。
+
+    Windows 上每个 spawn worker import torch 都要加载 CUDA DLL（约 2GB 提交内存）：
+    任一 worker 启动失败/崩溃时整体降级串行 eval_solo（同种子结果等价），
+    评估乃至整个训练不再因此崩掉。
     """
     import multiprocessing as mp
-    n_workers = max(1, min(int(n_workers), int(n_games)))
+    n_games = int(n_games)
+    n_workers = min(int(n_workers), n_games)
+    if n_workers < 2:
+        print("[eval] 并行评估不可用，降级串行（同种子结果等价，只是慢）", flush=True)
+        return eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
+                         record_replays=record_replays, replays_dir=replays_dir,
+                         step=step, frozen_step=frozen_step)
     ctx = mp.get_context("spawn")
     out_q = ctx.Queue()
     main_sd = {k: v.detach().cpu() for k, v in main.state_dict().items()}
     opp_sd = {k: v.detach().cpu() for k, v in opp.state_dict().items()}
-    games = list(range(int(n_games)))
+    games = list(range(n_games))
     chunks = [games[i::n_workers] for i in range(n_workers)]
     env_kwargs = {"reward_weights": reward_to_env(cfg), "card_level": cfg.card_level,
                   "deck0": list(env.deck0), "deck1": list(env.deck1),
-                  "hidden_dim": int(cfg.hidden_dim), "n_total": int(n_games),
+                  "hidden_dim": int(cfg.hidden_dim), "n_total": n_games,
                   "eval_step": step, "frozen_step": frozen_step}
     procs = []
-    for wid, chunk in enumerate(chunks):
-        if not chunk:
-            continue
-        p = ctx.Process(target=_eval_worker_main,
-                        args=(wid, main_sd, opp_sd, chunk, env_kwargs,
-                              int(seed), int(max_steps), 128, bool(record_replays), out_q))
-        p.start()
-        procs.append(p)
-    results = []
-    for _ in procs:
-        msg = out_q.get()
-        if msg[0] == "error":
+    # worker 是纯 CPU 推理：启动前屏蔽 CUDA 省掉子进程的 CUDA 初始化。父进程不受
+    # 影响（torch 已初始化），环境变量在全部 worker 结束后才恢复。
+    _prev_cvd = os.environ.get("CUDA_VISIBLE_DEVICES")
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    try:
+        for wid, chunk in enumerate(chunks):
+            if not chunk:
+                continue
+            p = ctx.Process(target=_eval_worker_main,
+                            args=(wid, main_sd, opp_sd, chunk, env_kwargs,
+                                  int(seed), int(max_steps), 128, bool(record_replays), out_q))
+            try:
+                p.start()
+            except OSError as e:
+                failure = f"启动 worker{wid} 失败: {e!r}"
+                break
+            procs.append(p)
+        else:
+            results, failure = _collect_worker_results(procs, out_q, len(procs))
+        if failure is not None:
             for p in procs:
-                p.terminate()
-            raise RuntimeError(f"并行评估 worker 失败: {msg[1]}")
-        results.extend(msg[1])
-    for p in procs:
-        p.join(timeout=10)
-    results.sort(key=lambda r: r[0])   # 按游戏索引还原顺序
+                if p.is_alive():
+                    p.terminate()
+            print(f"[eval] 并行评估 worker 失败，降级串行: {failure}", flush=True)
+            return eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
+                             record_replays=record_replays, replays_dir=replays_dir,
+                             step=step, frozen_step=frozen_step)
+        for p in procs:
+            p.join(timeout=10)
+        results.sort(key=lambda r: r[0])   # 按游戏索引还原顺序
+    finally:
+        if _prev_cvd is None:
+            os.environ.pop("CUDA_VISIBLE_DEVICES", None)
+        else:
+            os.environ["CUDA_VISIBLE_DEVICES"] = _prev_cvd
     wins = losses = draws = 0
     rew_sum = 0.0
     replays = []

@@ -37,6 +37,7 @@ import os
 import sys
 import json
 import time
+import queue
 import argparse
 import itertools
 import random
@@ -140,21 +141,41 @@ def towers_hp(env):
             + p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp)
 
 
+def _min_alive_tower_pct(battle, player_id):
+    """该玩家存活塔中最低的血量百分比（真实 CR 加时末裁决口径）。
+
+    实体不可得（纯 mock/假 battle，如 selftest）返回 None，调用方退回平局。
+    """
+    ents = getattr(battle, 'entities', None)
+    if not ents:
+        return None
+    best = None
+    for eid in ((3, 4, 6) if player_id == 0 else (1, 2, 5)):
+        e = ents.get(eid)
+        if e is None or not getattr(e, 'is_alive', False):
+            continue
+        max_hp = float(getattr(getattr(e, 'data', None), 'hp', 0) or 0)
+        if max_hp <= 0:
+            return None
+        pct = float(e.hp) / max_hp
+        if best is None or pct < best:
+            best = pct
+    return best
+
+
 def timeout_winner(battle, hp_tiebreak=None):
     """截断/早停时的到期结算兜底（不动引擎，只在 episode 提前结束时补判）。
 
-    规则（加时窗口化后，2026-09 定稿）：
+    规则（2026-09 定稿）：
       1) 皇冠多者胜：皇冠 = 对方被拆塔数（players[X].get_crown_count()
          是 X 侧被拆塔数 = 对方得分）；
-      2) 皇冠相同 → None（真平/平局）：180s 皇冠平**不再按塔血提前判胜负**，
-         由 overtime_open() 让对局进入 [180,300) 加时继续打——加时内谁先被再破
-         一塔谁输（引擎皇冠差立即终局）；到 300s 仍无塔被破 → 记平局。
+      2) 皇冠相同 → 双方存活塔中血量百分比更低者输（真实 CR 加时末裁决口径，
+         与引擎 300s 硬顶分支同一规则）；完全相等 → None（平局）。
+         僵局早停/截断等价于把终局提前到这里，不能一律记平局——否则出现
+         "1-1、双方塔血差 1000+ HP 却记 D" 的错误平局（回放实证：
+         economy league_6000 局3/局11 等）。mock 战场无实体信息时退回平局。
 
-    hp_tiebreak: 兼容旧签名保留，不再参与判胜（塔血累计不决定胜负——
-    加时只认“谁的塔先破谁输”）。
-
-    说明：ebca3a9 曾用“≥180s 塔血判”避免领先/占优被记平局；现在皇冠领先仍按
-    规则 1 判胜，皇冠相同则整场进入加时，不再需要塔血兜底，因此删除该分支。
+    hp_tiebreak: 兼容旧签名保留，不再作为开关（塔血裁决总是启用，见规则 2）。
     """
     if battle is None:
         return None
@@ -164,6 +185,14 @@ def timeout_winner(battle, hp_tiebreak=None):
     if lost1 > lost0:
         return 0
     if lost0 > lost1:
+        return 1
+    m0 = _min_alive_tower_pct(battle, 0)
+    m1 = _min_alive_tower_pct(battle, 1)
+    if m0 is None or m1 is None:
+        return None
+    if m0 > m1 + 1e-9:
+        return 0
+    if m1 > m0 + 1e-9:
         return 1
     return None
 
@@ -881,13 +910,27 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
         iq, oq = ctx.Queue(), ctx.Queue()
         w = ctx.Process(target=worker_main,
                         args=(i, cfg.seed + i, reward_to_env(cfg), iq, oq, cfg.card_level))
-        w.start()
+        try:
+            w.start()
+        except OSError as e:
+            for p in procs:
+                p.terminate()
+            print(f"[mp] 训练 worker 启动失败（{e}），降级单进程模式继续训练", flush=True)
+            return _run_single(cfg, resume=resume, record_replays=record_replays)
         in_qs.append(iq)
         out_qs.append(oq)
         procs.append(w)
 
     def recv(i, expect):
-        msg = out_qs[i].get()
+        try:
+            msg = out_qs[i].get(timeout=120)
+        except queue.Empty:
+            if not procs[i].is_alive():
+                # worker 启动即崩（如 WinError 1455 页面文件不足）不会发任何消息，
+                # 原实现会在这里永久阻塞
+                raise RuntimeError(f"worker{i} 已退出（exitcode={procs[i].exitcode}，"
+                                   "常见原因：页面文件不足 WinError 1455）")
+            raise
         if msg[0] != expect:
             raise RuntimeError(f"worker{i} 异常响应 '{msg[0]}'（期望 '{expect}'）: "
                                f"{msg[1] if len(msg) > 1 else ''}")

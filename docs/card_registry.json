@@ -1,7 +1,7 @@
 {
  "policy": {
   "special_mechanics_baseline": "nulls-royale-snapshot (gamedata.json, meta.fingerprint)",
-  "numbers_baseline": "official (meta: 仓库 cards.json + cr-api-data 补充(11); per-level: {'characters': 'repo(120)', 'building': 'repo(89)', 'spell': 'repo(71)', 'projectile': 'repo(92)'})",
+  "numbers_baseline": "official (meta: 仓库 cards.json + cr-api-data 补充(11); per-level: {'characters': 'repo(130)', 'building': 'repo(90)', 'spell': 'repo(76)', 'projectile': 'repo(93)'})",
   "uncertainty_policy": "flag-for-human-review, no silent guessing",
   "official_data_upgrade": "curl cr-api-data -> src/clasher_new/data_official/（命令见脚本头）"
  },
@@ -2555,10 +2555,14 @@
    "elixir_snapshot": 3,
    "elixir_official": 3,
    "elixir_canonical": 3,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "LittlePrince",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 698.0,
+    "damage_lv11": 104.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "abilityData",
     "projectileData",
@@ -2566,10 +2570,8 @@
    ],
    "has_evolution": false,
    "has_ability": true,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter LittlePrince 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2610,10 +2612,14 @@
    "elixir_snapshot": 4,
    "elixir_official": 4,
    "elixir_canonical": 4,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "GoblinDemolisher",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1300.0,
+    "damage_lv11": 186.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "deathSpawnProjectileData",
     "onStartingActionData",
@@ -2622,10 +2628,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter GoblinDemolisher 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2638,20 +2642,22 @@
    "elixir_snapshot": 5,
    "elixir_official": 5,
    "elixir_canonical": 5,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "GoblinMachine",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2150.0,
+    "damage_lv11": 212.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "onStartingActionData",
     "summonNumber"
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter GoblinMachine 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2664,10 +2670,14 @@
    "elixir_snapshot": 2,
    "elixir_official": 2,
    "elixir_canonical": 2,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "SuspiciousBush",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 81.0,
+    "damage_lv11": 256.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "buffWhenNotAttackingData",
     "deathAreaEffectData",
@@ -2676,10 +2686,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter SuspiciousBush 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2721,10 +2729,14 @@
    "elixir_snapshot": 5,
    "elixir_official": 5,
    "elixir_canonical": 5,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "Goblinstein",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 721.0,
+    "damage_lv11": 92.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "summonCharacterSecondCount",
     "summonCharacterSecondData",
@@ -2733,10 +2745,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter Goblinstein 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2778,20 +2788,22 @@
    "elixir_snapshot": 4,
    "elixir_official": 4,
    "elixir_canonical": 4,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "GiantBuffer",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2662.0,
+    "damage_lv11": 120.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "abilityData",
     "onStartingActionData"
    ],
    "has_evolution": false,
    "has_ability": true,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter GiantBuffer 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2804,10 +2816,14 @@
    "elixir_snapshot": 2,
    "elixir_official": 2,
    "elixir_canonical": 2,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "Berserker",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 896.0,
+    "damage_lv11": 102.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "attackSequenceList",
     "onStartingAction",
@@ -2815,10 +2831,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter Berserker 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2831,10 +2845,14 @@
    "elixir_snapshot": 6,
    "elixir_official": 6,
    "elixir_canonical": 6,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "BossBandit",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 2624.0,
+    "damage_lv11": 244.0,
+    "stats_source": "characters"
+   },
    "special_fields": [
     "abilityData",
     "dashDamage",
@@ -2846,10 +2864,8 @@
    ],
    "has_evolution": false,
    "has_ability": true,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter BossBandit 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -2943,10 +2959,14 @@
    "elixir_snapshot": 4,
    "elixir_official": 4,
    "elixir_canonical": 4,
-   "implemented": false,
+   "implemented": true,
    "summon_character": "GoblinHut_Rework",
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1228.0,
+    "damage_lv11": 81.0,
+    "stats_source": "building"
+   },
    "special_fields": [
     "deathSpawnCharacterData",
     "deathSpawnCount",
@@ -2957,10 +2977,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: summonCharacter GoblinHut_Rework 不在 per-level 数值表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -3817,9 +3835,9 @@
    "elixir_snapshot": 3,
    "elixir_official": 3,
    "elixir_canonical": 3,
-   "implemented": false,
+   "implemented": true,
    "summon_character": null,
-   "stats_resolved": false,
+   "stats_resolved": true,
    "basic_stats_lv11": {},
    "special_fields": [
     "areaEffectObjectData",
@@ -3828,10 +3846,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: spell RoyalDelivery 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -3922,9 +3938,9 @@
    "elixir_snapshot": 1,
    "elixir_official": 6,
    "elixir_canonical": 6,
-   "implemented": false,
+   "implemented": true,
    "summon_character": null,
-   "stats_resolved": false,
+   "stats_resolved": true,
    "basic_stats_lv11": {},
    "special_fields": [
     "areaEffectObjectData",
@@ -3932,10 +3948,9 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
+   "status": "implemented",
    "flags": [
-    "ELIXIR_MISMATCH: 官方=6 vs 快照=1（数值按官方）",
-    "STATS_UNRESOLVED: spell GlobalLightning 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
+    "ELIXIR_MISMATCH: 官方=6 vs 快照=1（数值按官方）"
    ],
    "smoke_verified": true
   },
@@ -3949,9 +3964,9 @@
    "elixir_snapshot": 3,
    "elixir_official": 3,
    "elixir_canonical": 3,
-   "implemented": false,
+   "implemented": true,
    "summon_character": null,
-   "stats_resolved": false,
+   "stats_resolved": true,
    "basic_stats_lv11": {},
    "special_fields": [
     "areaEffectObjectData",
@@ -3959,10 +3974,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: spell DarkMagic 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -3975,9 +3988,9 @@
    "elixir_snapshot": 2,
    "elixir_official": 2,
    "elixir_canonical": 2,
-   "implemented": false,
+   "implemented": true,
    "summon_character": null,
-   "stats_resolved": false,
+   "stats_resolved": true,
    "basic_stats_lv11": {},
    "special_fields": [
     "areaEffectObjectData",
@@ -3985,10 +3998,8 @@
    ],
    "has_evolution": false,
    "has_ability": false,
-   "status": "needs_review",
-   "flags": [
-    "STATS_UNRESOLVED: spell GoblinCurse 不在 spell/projectile 表（需 L1 升级数值表或人工录入）"
-   ],
+   "status": "implemented",
+   "flags": [],
    "smoke_verified": true
   },
   {
@@ -4109,6 +4120,65 @@
    "smoke_verified": true
   },
   {
+   "internal_name": "Ronin",
+   "english_name": "Ronin",
+   "cr_id": 26000106,
+   "category": "character",
+   "rarity_snapshot": "Legendary",
+   "rarity_official": "legendary",
+   "elixir_snapshot": 5,
+   "elixir_official": 5,
+   "elixir_canonical": 5,
+   "implemented": true,
+   "summon_character": "Ronin",
+   "stats_resolved": true,
+   "basic_stats_lv11": {
+    "hp_lv11": 1779.0,
+    "damage_lv11": 371.0,
+    "stats_source": "characters"
+   },
+   "special_fields": [
+    "abilityData",
+    "attacksAir",
+    "data_note",
+    "parryCooldownMs",
+    "parryMeleeOnly",
+    "parryReflectPercent"
+   ],
+   "has_evolution": false,
+   "has_ability": true,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
+   "internal_name": "Vines",
+   "english_name": "Vines",
+   "cr_id": 28000026,
+   "category": "spell",
+   "rarity_snapshot": "Epic",
+   "rarity_official": "epic",
+   "elixir_snapshot": 3,
+   "elixir_official": 3,
+   "elixir_canonical": 3,
+   "implemented": true,
+   "summon_character": null,
+   "stats_resolved": true,
+   "basic_stats_lv11": {},
+   "special_fields": [
+    "areaEffectObjectData",
+    "data_note",
+    "projectileData",
+    "radius",
+    "summonNumber"
+   ],
+   "has_evolution": false,
+   "has_ability": false,
+   "status": "implemented",
+   "flags": [],
+   "smoke_verified": true
+  },
+  {
    "internal_name": null,
    "english_name": "Hero Berserker",
    "cr_id": null,
@@ -4163,52 +4233,6 @@
     "UNDERLYING_CARD: 属性继承基础卡 Valkyrie（快照已有）",
     "MECHANICS_PENDING_L2: 技能参数（窗口时长/倍率）待 L2 新快照 abilityData",
     "SOURCE: https://royalezone.com/cards/hero-valkyrie"
-   ],
-   "smoke_verified": false
-  },
-  {
-   "internal_name": null,
-   "english_name": "Ronin",
-   "cr_id": 26000106,
-   "category": "unknown",
-   "rarity_snapshot": null,
-   "rarity_official": "legendary",
-   "elixir_snapshot": null,
-   "elixir_official": 5,
-   "elixir_canonical": 5,
-   "implemented": false,
-   "summon_character": null,
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
-   "special_fields": [],
-   "has_evolution": false,
-   "has_ability": false,
-   "status": "missing_from_snapshot",
-   "flags": [
-    "MISSING_FROM_SNAPSHOT: Null服快照无此卡（官方新卡），机制字段需 L2 提取；数值可先按官方录入"
-   ],
-   "smoke_verified": false
-  },
-  {
-   "internal_name": null,
-   "english_name": "Vines",
-   "cr_id": 28000026,
-   "category": "unknown",
-   "rarity_snapshot": null,
-   "rarity_official": "epic",
-   "elixir_snapshot": null,
-   "elixir_official": 3,
-   "elixir_canonical": 3,
-   "implemented": false,
-   "summon_character": null,
-   "stats_resolved": false,
-   "basic_stats_lv11": {},
-   "special_fields": [],
-   "has_evolution": false,
-   "has_ability": false,
-   "status": "missing_from_snapshot",
-   "flags": [
-    "MISSING_FROM_SNAPSHOT: Null服快照无此卡（官方新卡），机制字段需 L2 提取；数值可先按官方录入"
    ],
    "smoke_verified": false
   }

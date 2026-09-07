@@ -1,0 +1,381 @@
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 5-Elixir Cards, Legendary Cards, Troop Cards, Electro Valley Cards
+English
+Ram Rider
+39
+EDIT
+
+Ram Rider
+Elixir Cost
+5 
+Rarity
+Legendary
+Type
+Troop
+Arena
+Electro Valley
+Release Date
+24 December 2018
+
+
+
+
+“Together they charge through the Arena; snaring enemies, knocking down towers... and chewing grass!?”
+
+The Ram Rider is a Legendary card that is unlocked from the Electro Valley (Arena 11). It spawns a single-target, building-targeting, melee, ground troop with high hitpoints and high damage. After she travels 2 tiles, she will begin to charge towards her target, and deals double damage if she hits the target whilst charging. She is able to jump over the river. She carries a Rider on her back that can attack independently of the Ram. The Rider's attacks only affect troops, but she can snare them, slowing down their movement speed by 70%. The Ram Rider appears as a dark-skinned woman who has light brown eyes, black hair and eyebrows, and white spots on her face, wears a sandal dress, a team-colored belt, and a golden band on her neck and right arm, wield bolas, and rides a ram that wears a team-colored headband, has a golden piercing in its left ear, and carries a team-colored scroll on its back. A Ram Rider card costs 5 Elixir to deploy.
+
+Modifiers
+ Common: CHAAAARGE!
+“+100% charge damage”
+
+Ram charge deals double the damage.
+
+ Rare: Tie Me Down
+“Hunter net attack”
+
+Gives the Ram Rider an Evolved Hunter net attack.
+
+ Epic: Battering Net
+“Battle Ram & Hunter net abilities”
+
+Has both Evolved Hunter and Evolved Battle Ram attributes.
+
+Strategy
+
+For Battle Decks with this card, click here.
+
+The Ram Rider herself has a snare which reduces movement speed by 70%. It will slow wind-ups and charges such as Bandit and Prince. However, the snare does not stun, so the Sparky and Inferno Dragon will still harm her.
+The Ram Rider's snare does not prevent troops from attacking. This makes ranged troops that have slowing, stun, or knockback effects like the Ice Wizard and Electro Wizard strong counters to Ram Rider. However, short-range troops like Minions and Mega Minion will not attack the Ram Rider until she runs into range, or until they slowly reach her. Snared melee troops can still attack her, although she can easily run past them after charging. This can be prevented by placing the troop near the Ram Rider's destination.
+The snare does not affect attack speed like the Ice Wizard's attack, so if she is in the range of an enemy unit, they will attack at full speed. It also does not affect the spawn speed of the Witch and Night Witch.
+When using the Hunter to counter the Ram Rider, he should be placed similar to a melee troop. This will prevent more damage to the Crown Tower than if he was placed like a ranged troop.
+It also does not completely stop units from moving, so melee units with a high movement speed like the Lumberjack, Mini P.E.K.K.A, Prince, Berserker, or the Fire Spirit can still inch closer to her as she attacks.
+A Ram Rider is extremely good at kiting troops. Wait for the enemy to cross the bridge and place the Ram Rider near the river. The Ram Rider will jump across the river, pulling the enemy while snaring them. The Crown Tower will also chip away at the enemy while it is snared.
+Against Elite Barbarians, it is best to kite them without her jumping over the river. This will keep her in range for longer, doing more damage and snaring them for longer. This is enough to stop them for a +1 Elixir trade.
+Just like any other ranged unit, the Ram Rider will target the nearest valid target. However, she is unique in that she will prioritize non-snared troops over snared ones; even if they are on low health.
+Due to the Ram Rider's 5.5 tile range, any ranged troop with a higher range than that can easily attack without being attacked in return. Try to use such ranged units from a high distance so that they take no damage from her, while attacking her, saving all of their hitpoints for a counterpush.
+The Ram Rider can easily shut down slow, tanky troops such as P.E.K.K.A, Mighty Miner, Valkyrie, Skeleton King, and Giant Skeleton. The Rider snares them, rendering them almost completely immobile. This also works very well when these troops are placed in the back, as they will not be able to reach her in time to defend against her.
+Buildings are a great way to stop the Ram Rider from charging. With the help of the Crown Towers, they can stop her for a positive or neutral Elixir trade.
+Active buildings should be placed in a similar way to how they are used against other building-targeting troops. This will allow them to utilize their ranged attacks, as well as lure the Ram Rider deep enough for the second Crown Tower to attack her. The Furnace and Goblin Hut can be placed in a similar way, due to them spawning ranged troops that would still be in range even if she snares her way past them.
+Passive buildings that spawn melee troops like the Tombstone and Goblin Cage are better to be placed in front of the Crown Tower. This will prevent the Ram Rider from keeping their spawned troops out of range, allowing them to reach her and defeat her for a positive Elixir trade.
+She can be used alongside another building-targeting card in the same deck. One of them baits buildings, for the other to be able to attack afterwards without resistance. This works especially well with the Balloon, as the Ram Rider can also attack air troops used to counter the Balloon.
+Unlike the Hog Rider, the sight range of the Ram Rider is shorter. This means that an Elixir Collector placed in front of the King's Tower will not distract her, and as such she should not be used with the intention to destroy the Elixir Collector.
+In a pinch, spells with knockback or stun effects like the Giant Snowball, Fireball, Lightning, and Zap can be used to stop the Ram Rider's charge, preventing a lot of would-be damage from being dealt to the Crown Tower. However, only use them as a last resort.
+While the Rocket has the same attributes as these aforementioned spells, its damage is high enough to completely prevent the Ram Rider from connecting to the Crown Tower. However, this is still a negative Elixir trade.
+Her charge can be utilized with other troops in order to push them to the Tower faster. This works well with slow mini tanks like the Valkyrie and Battle Healer, creating a great synergy; Ram Rider pushes them closer to the Tower while protecting them from air troops, and the mini tank distracts the Crown Tower and troops used to counter the Ram Rider.
+The Skeleton Army and Minion Horde can completely stop a Ram Rider with quick reaction time. The P.E.K.K.A. and Mega Knight are also great counters because of their high health and high damage, with the latter also knocking the Ram Rider back when he spawns, giving more time to destroy them. Place them near the Ram Rider, or she'll snare them, immobilizing them and dealing massive damage to the Tower.
+The Barbarians and Elite Barbarians occupy large space when placed down. Their high mass will obstruct the Ram Rider's pathing, forcing her to take a longer path, which will allow them to defeat her. Since they are swarm cards, the damage caused by the Rider on them will also be split, meaning that they have taken pretty minimal damage from her, setting up for a counterattack.
+The Bowler and Zappies are very effective counters to the Ram Rider. The Bowler will take minimal damage from the Rider, while the Zappies will have her damage split into all three of them. In addition, their stuns and knockback will prevent her from charging and doing heavy damage to the Crown Tower, as well as lower any damage that the troops themselves would take. Note that the latter can be weakened or outright destroyed with spells like Fireball and Poison.
+When placing the Ram Rider at the bridge, it is most recommended to place her two tiles to the side of the bridge instead of directly at the center of the bridge. This will allow her to jump over the river, similar to the Hog Rider. Not only will she be further away from building distractions, allowing her to bypass them more easily, but it will also let her connect to the Crown Tower faster compared to the center bridge placement.
+The Ram Rider is very viable on defense, given the situation. She can almost completely immobilize single troops, such as a Golem, Giant, Lava Hound, Prince, Monk, or Mini P.E.K.K.A.. This makes her a great counter to most building-targeting units, especially the Hog Rider, Balloon, and herself since she can slow them down heavily and prevent a lot of damage from being dealt. She won't move fast enough to allow the unit to be freed until it has taken a lot of damage. It is a good idea to combine her with cheap swarms like Goblins, Skeletons, Guards, Archers, or Spear Goblins to stop these troops completely, while also setting up for a counterpush.
+Deploying her in front of the building-targeting unit will cause her to collides with them and obstruct their pathing, keeping them from reaching the Tower for slightly longer.
+She is quite decent against X-Bow and Mortar setups. The Ram Rider will be attacking the building, while the Rider attacks troops that are used to protect the building.
+On the contrary, the player can also use the Mortar to lure her to the center of the river. The Crown Tower will keep attacking her while the Mortar will deal damage to the Crown Tower.
+The Ram Rider can be used with Minions or Bats. These air troops can help protect the Ram Rider from counters like Goblins, Skeletons, Guards, Archers, or Goblin Gang.
+Certain spells work particularly well with the Ram Rider, due to her snare attack and ability to attack troops while she also attacks a building simultaneously.
+The Giant Snowball pairs very well with the Ram Rider, especially on offense. The Giant Snowball will knock melee defenders away from her, while her snare will keep them where they are for the most part. Against certain swarms like Minions, the spell will bring their health low enough to be OHKOed by the Rider's attack.
+Zap does slightly more damage than Giant Snowball, and this allows the Ram Rider to OHKO the same swarms that Giant Snowball can alongside the Ram Rider's attack.
+Rage does similar damage to the Zap, allowing the Ram Rider to OHKO the same swarms, as well as allow her to start charging faster. The Rage will be able to affect both the Ram Rider and the Rider, allowing the spell to benefit multiple troops without the risk that comes from using it on frail swarms.
+Similarly, the Fireball synergizes well with the Ram Rider due to the Ram Rider being able to finish off defenders like Musketeer, Little Prince, Goblinstein, Wizard, or Electro Wizard, allowing the Ram Rider to deal more damage. The Fireball's knockback will also knock bulkier troops away from the Ram Rider, buying more time for her to deal more damage.
+Due to the Ram Rider's weakness to buildings, she pairs quite well with the Earthquake. The Earthquake will destroy buildings for the Ram Rider to continue pursuing towards the Crown Tower. The Rider can also finish off troops that can survive a lone Earthquake such as a Dart Goblin, Firecracker, Bomber, Archers, or Princess.
+The Ram Rider in conjunction with the Freeze can surprise the opponent and allow the Ram Rider to deal much more damage than anticipated, especially if the opponent's go-to counter is a swarm, or swarms are their only effective counter to her. Skeletons and Bats will immediately be defeated by the spell, while Spear Goblins, Goblins, and Minions will be at low enough health to be defeated by the Ram Rider.
+Against non-swarm troops, it can deal a lot of damage during the freeze time, but this can allow the opponent to set up a massive counterpush. For this reason, players should either only go for a Ram Rider + Freeze push when they have other units backing it up from a counterattack, or if the match is about to end and they need to deal as much damage as possible.
+The Ram Rider can easily stop a Cannon Cart. Her attack will slowly kill the first form while her charge will deal massive damage to the second form of the Cannon Cart.
+She is good when used against a Princess at the bridge. Whether she distracts the Princess or not, she will deal damage to her and immediately start a push on top of that, forcing the opponent to spend additional Elixir on her.
+The Ram Rider can be countered with the Monk for a slight negative Elixir trade. Activating the ability will cause the Ram Rider's snare to be used against her. Even after the ability ends, his combo attack will knockback the Ram Rider, stopping her charge completely.
+A Fisherman can pull the Ram Rider towards the King's Tower and cause an activation, further weakening future pushes. However, the charge will still hit the Crown Tower, so try to stop it first with a card that can inflict a stun or knockback first before the Fisherman pulls her.
+The Ram Rider pairs well with the Graveyard. Both cards will deal damage to the Crown Towers in two different positions, and the Ram Rider will assist against Graveyard counters. However, this is an expensive push so do this as a counterattack.
+Statistics
+Ram Attributes
+Cost
+	Hit Speed
+	First Hit Speed
+	Speed
+	Deploy Time
+	Range
+	Target
+	Count
+	Transport
+	Type
+	Rarity
+
+5	1.8 sec	0.6 sec	Medium (60)	1 sec	Melee: Short (0.8)	Buildings	x1	Ground	Troop	Legendary
+Charge Attributes
+Speed
+	Charge Range
+	Target
+	Transport
+
+Very Fast (120)	2.5	Buildings	Ground
+Rider Attributes
+Hit Speed
+	First Hit Speed
+	Snare Duration
+	Slowdown
+	Range
+	Projectile Speed
+	Target
+	Count
+
+1.1 sec	0.4 sec	2 sec	-70%	5.5	600	Air & Ground (Troops only)	x1
+Card Statistics
+
+
+
+
+
+
+
+
+
+
+
+
+
+Level
+	Hitpoints
+	Ram Damage
+	Ram Charge Damage
+	Ram Damage per second
+	Rider Damage
+	Rider Damage per second
+
+9	1402	207	414	115	86	78
+10	1543	227	455	126	95	86
+11	1697	250	501	138	104	94
+12	1867	275	551	152	114	103
+13	2053	303	606	168	126	114
+14	2259	333	667	185	138	125
+15	2485	366	734	203	152	138
+16	2733	403	807	223	167	151
+
+
+
+
+There will be rounding mistakes, as we have stats from level 11
+
+Card Mastery
+Type	Level/Tier	Objective	Rewards
+Damage Dealer
+	1	Deal a total of 170,000 Damage to enemy Troops or buildings	2 Ram Rider cards
+100 
+2	Deal a total of 510,000 Damage to enemy Troops or buildings	8,000 
+100 
+3	Deal a total of 850,000 Damage to enemy Troops or buildings	100 
+100 
+CHARGE!!!
+	1	Hit a total of 195 buildings with the Charge ability	12,000 
+150 
+2	Hit a total of 560 buildings with the Charge ability	2 
+150 
+3	Hit a total of 980 buildings with the Charge ability	18,000 
+150 
+History
+
+2018
+
+The Ram Rider was once available in the Ram Rider Draft Challenge which started on 21/12/2018. In this challenge, gameplay was similar to a regular Draft Challenge, except that one of the players was able to choose who would use the Ram Rider. If the player achieved at least 10 wins, they obtained the Ram Rider early.
+The Ram Rider card was generally released on 24/12/2018.
+
+2019
+
+On 28/1/2019, the January 2019 Update, changed the Ram Rider's card description. It used to read “Her bola snares enemy troops while Ram heads for the nearest building! Rams and Hogs don't mingle at parties…”
+On 1/4/2019, a Balance Update, decreased the Ram Rider's snare movement speed reduction to 85% (from 100%).
+On 17/5/2019, the Ram Rider's card image was changed. The new image replaces the old image upon a new install; keeping the app installed prior to the update retains the old card image, even if the app is updated.
+On 26/11/2019, the End of November 2019 Update, removed the Ram Rider from Mega Deck Touchdown. It also added a card render to the Ram Rider's card info screen.
+
+2021
+
+On 27/10/2021, the Champions Update, increased the Level cap of all cards to 14 (from 13).
+
+2022
+
+On 3/2/2022, a Balance Update, made it so that the Ram Rider's snare ability would no longer affect the troop spawning of the Witch and Night Witch.
+On 4/4/2022, the April 2022 Update, decreased the Ram Rider's snare movement speed reduction to 70% (from 85%).
+On 2/8/2022, a Balance Update, decreased the distance required for charging to 3 tiles (from 3.5 tiles).
+On 26/10/2022, the 2022 Quarter 3 Update, moved the Arena to unlock the Ram Rider from Hog Mountain to Electro Valley.
+
+2023
+
+On 19/6/2023, the Card Evolution Update, increased the Level cap of all cards to 15 (from 14).
+
+2024
+
+On 17/6/2024, the Goblin World Update, decreased the distance required for charging to 1.5 tiles (from 3 tiles).
+On 2/7/2024, a Balance Update, increased the distance required for charging to 2 tiles (from 1.5 tiles).
+On 14/11/2024, a Balance Update, decreased the Ram Rider's damage and charge damage by 6%.
+
+2025
+
+On 8/1/2025, a Balance Update, decreased the Ram Rider's hitpoints by 4%.
+On 30/1/2025, a maintenance break, made it so that Rune Giant's damage boost would no longer affect the Ram Rider's Rider.
+On 31/3/2025, the 2025 Quarter 1 Update, increased the Ram Rider's hitpoints by 0.05% and her charge damage by 0.2%. It also allowed the Ram Rider to be affected by Rage.
+On 6/10/2025, a Balance Update, increased the distance required for charging to 2.5 tiles (from 2 tiles).
+
+2026
+
+On 12/1/2026, a Balance Update increased the Ram Rider's attack speed to 1.7 (from 1.8)
+On 6/7/2026, a Balance Update, increased her hitpoints by 4%
+Gallery
+Ram Rider's card image before 17/5/2019.
+Current card render.
+Ram Rider Preview.gif
+Current card preview
+Ram Rider charging.
+With Hog Rider
+Ram Rider and a tied-up Hog Rider.
+Ram Rider charging towards a tower.
+Ram Rider with her Ram.
+Ram Rider
+Full body
+Ram Rider poster
+Trivia
+The weapon that the Ram Rider wields is called a bola. Bolas were most famously used by the gauchos, but have been found in excavations of Pre-Columbian settlements, especially in Patagonia, where indigenous peoples used them to catch guanacos and rheas.
+The ram that she rides resembles an "Ovis canadensis" (bighorn sheep) and similar species. Bighorn sheep have large compact curved horns and attack by charging towards their target with their horns, similarly to the Ram Rider's ram in Clash Royale.
+The Ram Rider is 1 of 17 troops that inspired a troop in Clash of Clans, the others being Spear Goblins, Bomber, Bats, Skeleton Barrel, Minion Horde, Firecracker, Battle Ram, Ice Golem, Zappies, Baby Dragon, Giant Skeleton, Inferno Dragon, Miner, Royal Ghost, Ice Wizard, and Night Witch.
+Unlike her Clash of Clans counterpart, the Ram Rider in Clash Royale only attacks with her ram once, with the Ram Rider herself attacking the target afterwards from range. In addition, the ram is able to apply a slow effect to its target.
+The appearance of the Ram Rider is also different in Clash Royale, appearing without holiday decorations, or as a cookie.
+The Ram Rider is one of the first troop cards to receive a card render, alongside the Archers, Knight, Goblins, Bomber, Skeletons, Barbarians, Bats, Royal Recruits, Skeleton Barrel, Rascals, Musketeer, Giant, Valkyrie, Wizard, Flying Machine, Hog Rider, Royal Hogs, Dart Goblin, Zappies, Elixir Golem, Baby Dragon, Skeleton Army, Witch, P.E.K.K.A, Prince, Balloon, Giant Skeleton, Goblin Giant, Hunter, Electro Dragon, Wall Breakers, Bowler, Cannon Cart, Mega Knight, Miner, Royal Ghost, Ice Wizard, Magic Archer, Bandit, Lava Hound, Night Witch, and Fisherman.
+She is 1 of 5 troops that have a charge, the others being Battle Ram, Dark Prince, Prince, and Raging Prince.
+The Ram Rider is 1 of 8 troops that can jump over the river, the others being Hog Rider, Royal Hogs, Dark Prince, Prince, Raging Prince, Cursed Hog, and Santa Hog Rider.
+The Ram Rider is 1 of 2 troops with the “Ranged Ground & Air targeting unit riding on Melee Building targeting unit” pattern, the other being the Goblin Giant. However, the Rider cannot attack alone if the Ram is destroyed, and only the Ram can attack buildings.
+In the Dutch and Norwegian language settings of the game, the Ram Rider's name translates to "Buck Rider". In the Indonesian and Malaysian language settings of the game, the Ram Rider's name translates to "Sheep Rider". In the Italian, French, Portuguese, Thai, and Vietnamese language settings of the game, the Ram Rider's name translates to "Ram Tamer", "Cavalier", "Sheep Tamer", "Sheepwoman", and "City Breaker" respectively. In both the Simplified Chinese and the Traditional Chinese language setting, the Ram Rider's name translates to "Barbary sheep Knight".
+Ammotragus lervia, the common names of which include Barbary sheep, inhabits a range across North Africa.
+The Ram Rider has been featured in multiple special game modes outside of the card. More specifically:
+The Ram Rider is 1 of 22 troops that has been featured in the Troop Rush game mode, the others being Skeletons, Skeleton Dragons, Fire Spirit, Bats, Elite Barbarians, Firecracker, Rascal Girls, Royal Hogs, Heal Spirit, Elixir Golem, Guards, Prince, Balloon, Golem, Wall Breakers, Sparky, Phoenix, Royal Ghost, Bandit, Lumberjack, Santa Hog Rider, and the Monk.
+The Ram Rider is 1 of 14 troops that has been featured with a Rage buff, the others being Electro Spirit, Giant, Zappies, Guards, Giant Skeleton, Goblin Giant, Electro Dragon, Wall Breakers, Electro Giant, Mega Knight, Electro Wizard, Sparky, and Royal Ghost.
+The Rider on the Ram is the only troop in the game that only attacks troops.
+When deployed, the Ram Rider will say "Out of my way!".
+The Ram Rider is 1 of 24 troops that speak distinct words when on the field, the others being Mini P.E.K.K.A., Mega Minion, Wizard, Hog Rider, P.E.K.K.A., Dark Prince, Bowler, Electro Wizard, Princess, Ice Wizard, Magic Archer, Lumberjack, Mother Witch, Fisherman, Goblin Machine, Super Mini P.E.K.K.A., Santa Hog Rider, Super Magic Archer, Golden Knight, Boss Bandit, Archer Queen, Little Prince, and the Terry.
+The Ram Rider is 1 of 10 cards to have an alliterative name, the others being the Royal Recruits, Goblin Gang, Mega Minion, Goblin Giant, Cannon Cart, Barbarian Barrel, Dagger Duchess, Boss Bandit, and the Mighty Miner.
+According to a Clash-A-Rama comic strip, the Ram Rider is the Hog Rider's sister.
+The Ram Rider, Phoenix, Lumberjack, and the Fisherman are the only normal spawning Legendary troops that do not fall from the sky when deployed.
+The Ram Rider is the subject of certain cosmetics in the game. More specifically:
+The Ram Rider is the subject of 3 Emotes. Her ram is also the subject of 2 Emotes.
+The Ram Rider is the subject of a Tower Skin.
+The Ram Rider is the subject of a few Battle Banner items.
+The Riders decoration is created by Myoho.
+The Ram Rider was featured in the winning deck of the Clash Royale League 2023 Tournament, by a player called Mugi.
+The original concept for the Ram Rider was a Wolf Rider troop that used a bow instead of a bola.[1] However, it was replaced with the Ram Rider for unknown reasons.
+Supposedly, part of the reasoning was that there wasn't an easy explanation for having the wolf deal damage to towers.
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+↑ https://x.com/supercell/status/1912137641379717337
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+39 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+2026/8/30
+Card Overviews/Merge Tactics
+2026/8/30
+Arenas
+2026/8/28
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE

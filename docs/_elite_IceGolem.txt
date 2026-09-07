@@ -1,0 +1,263 @@
+We want to hear from you! Take our quick survey and help shape your personalized fan experience.
+
+SHARE YOUR THOUGHTS
+SIGN IN
+CREATE A FREE ACCOUNT
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+SIGN IN
+Home
+Explore
+Saved
+Progress
+History
+Utilities
+More
+ADVERTISEMENT
+SKIP TO CONTENT
+Clash Royale Wiki
+1,998
+PAGES
+EXPLORE
+CARDS
+BATTLE
+GAMEPLAY
+MERGE TACTICS
+in: 2-Elixir Cards, Heroes with 2-Elixir Abilities, Rare Cards, and 2 more
+English
+Ice Golem/Hero
+< Ice Golem
+3
+SAVE
+EDIT
+Hero Ice Golem
+Elixir Cost
+2 
+Ability Cost
+2 
+Rarity
+Rare
+Type
+Troop
+Arena
+Frozen Peak
+Release Date
+5 January 2026
+“In a chilling return to the Arena, Hero Ice Golem keeps enemies at bay with a brain-freezing blizzard! The only things he has to fear are fireballs and a hot summer's day.”
+
+The Hero Ice Golem is a Rare card that is unlocked by unlocking 200  and choosing the Hero Ice Golem. The Heroic Ice Golem takes the appearance of a large creature made out of snow with glowing yellow eyes and golden ice shards on his head, with his hands being also colored golden and his nose and rocks on his spine being in the form of coal. He also dons a team-colored cape, two heavy golden armpads and gauntlets, and a gold headpiece with the Hero Shard in the center. This card costs 2to put on the arena and an additional 2  to activate his ability.
+
+Contents
+1	Ability: Snowstorm
+2	Strategy
+3	Statistics
+3.1	Hero Ice Golem Attributes
+3.2	Snowstorm Ability Attributes
+3.3	Card Statistics
+4	History
+5	Gallery
+6	Trivia
+Ability: Snowstorm
+“Conjures a blizzard that damages and slows enemies.”
+
+The Hero Ice Golem has a special ability accessible from whatever side of the screen was put in, just above the player's card slots in battle. After a 1-second delay, the Hero Ice Golem activates his "Blizzard" ability, which generates a 4-tile aura radius that has 3 pulses, with each one slowing down enemy troops and dealing damage. The Snowstorm ability costs 2  to activate.
+
+Strategy
+Use your Ice Golem to distract enemy troops then pop the ability to freeze any defensive cards once it's at the tower.
+All 3 blast are enough to kill Goblins.
+Use the ability on defense, to stall any push.
+Statistics
+Hero Ice Golem Attributes
+Cost
+
+	Hit Speed
+
+	First Hit Speed
+
+	Speed
+
+	Deploy Time
+
+	Range
+
+	Target
+
+	Count
+
+	Transport
+
+	Type
+
+	Rarity
+
+
+2	2.5 sec	1.5 sec	Slow (45)	1 sec	Melee: Medium (1.2)	Buildings	x1	Ground	Troop	Rare
+Snowstorm Ability Attributes
+Cost
+
+	Radius
+
+	Slowdown
+
+	Blasts
+
+	Slowdown Duration
+
+	Target
+
+
+2	4	30%	3	2 seconds	Air & Ground
+Card Statistics
+
+
+
+
+
+
+
+
+
+
+Level
+	Hitpoints
+	Damage
+	Damage per second
+	Death Damage
+	Blizzard Pulse Damage
+
+3	613	39	15	39	32 x3 (96)
+4	675	43	17	43	35 x3 (105)
+5	742	47	18	47	39 x3 (117)
+6	817	52	20	52	43 x3 (129)
+7	898	57	22	57	47 x3 (141)
+8	988	63	25	63	52 x3 (156)
+9	1087	69	27	69	57 x3 (171)
+10	1195	76	30	76	63 x3 (189)
+11	1315	84	33	84	69 x3 (207)
+12	1447	92	36	92	76 x3 (228)
+13	1591	102	40	102	83 x3 (249)
+14	1750	112	44	112	92 x3 (276)
+15	1925	123	49	123	101 x3 (303)
+16	2118	135	54	135	111 x3 (333)
+
+There will be rounding mistakes, as we have stats from level 11
+
+History
+
+2026
+
+Hero Ice Golem was added to the game on 5/1/2026 with the January 2026 Update, along with Hero Wizard.
+On 2/3/2026, a Balance Update, decreased Freeze duration to 1.5sec (from 2sec).
+On 7/4/2026, a Balance Update, the pushback on the Hero Ice Golem was removed entirely.
+On 4/8/2026, a Balance Update, the 3rd Blast Effect went from being a freeze effect to a slowdown effect, and the blast damage was increased by 82%. This also made the ability single use (from 17 sec cooldown).
+Gallery
+Heroic Ice Golem Card Render.png
+Current card render.
+Heroic Ice Golem Shard.
+Trivia
+The word "Golem" occurs once in the Bible in Psalm 139:16, which uses the word "golmi", that means "my light form", "raw" material, connoting the unfinished human being. A golem is an animated, anthropomorphic being in Jewish folklore, which is entirely created from inanimate matter, usually clay or mud. The most famous golem narrative involves Judah Loew ben Bezalel, the late 16th-century rabbi of Prague.
+The Ice Golem is 1 of 17 troops that inspired a troop in Clash of Clans, the others being Spear Goblins, Bomber, Bats, Skeleton Barrel, Minion Horde, Firecracker, Battle Ram, Zappies, Baby Dragon, Giant Skeleton, Ram Rider, Inferno Dragon, Miner, Royal Ghost, Ice Wizard, and Night Witch.
+The Ice Golem is 1 of 7 cards associated with ice, with the others being Ice Spirit, Giant Snowball, Freeze, Ice Wizard, Super Ice Golem, and Wizard Trio.
+In the Finnish language setting of the game, the Ice Golem's name translates to "Freezing Golem".
+Hide
+Wiki Navigation
+
+Show
+Community
+Hide
+Cards
+General	About Cards • Card Overviews(Merge Tactics) • Battle Decks
+Troop Cards	Common	Minions • Archers(Evolution) (Merge Tactics) • Knight(Evolution) (Hero) (Merge Tactics) • Spear Goblins(Merge Tactics) • Goblins(Hero) (Merge Tactics) • Bomber(Evolution) (Merge Tactics) • Skeletons(Evolution) (Merge Tactics) • Barbarians(Evolution) (Merge Tactics) • Electro Spirit • Skeleton Dragons(Merge Tactics) • Fire Spirit • Bats(Evolution) • Royal Recruits(Evolution) • Royal Giant(Evolution) (Merge Tactics) • Ice Spirit(Evolution) • Berserker(Hero) • Skeleton Barrel(Evolution) • Goblin Gang • Elite Barbarians(Evolution) • Minion Horde(Evolution) • Firecracker(Evolution)(Merge Tactics) • Rascals
+Rare	Mini P.E.K.K.A.(Hero) (Merge Tactics) • Musketeer(Evolution) (Hero) (Merge Tactics) • Giant(Hero • (Merge Tactics) • Valkyrie(Evolution)(Hero) (Merge Tactics) • Mega Minion(Hero) • Battle Ram(Evolution) • Wizard(Evolution) (Hero) (Merge Tactics) • Flying Machine • Hog Rider • Royal Hogs(Evolution) • Three Musketeers • Battle Healer • Ice Golem(Hero) • Dart Goblin(Evolution) (Merge Tactics) • Furnace(Evolution) • Zappies • Goblin Demolisher(Merge Tactics) • Heal Spirit • Suspicious Bush • Elixir Golem
+Epic	Guards • Baby Dragon(Evolution) (Merge Tactics) • Skeleton Army(Evolution) • Witch(Evolution) (Merge Tactics) • P.E.K.K.A.(Evolution) (Merge Tactics) • Dark Prince(Hero) • Prince(Merge Tactics) • Balloon(Hero) • Giant Skeleton(Merge Tactics) • Rune Giant • Goblin Giant(Evolution) • Hunter(Evolution) • Golem • Electro Dragon(Evolution) • Wall Breakers(Evolution) • Electro Giant(Merge Tactics) • Bowler(Hero) • Executioner(Evolution) (Merge Tactics) • Cannon Cart • Raging Prince+
+Legendary	Mega Knight(Evolution) (Merge Tactics) • Ram Rider • Electro Wizard(Merge Tactics) • Inferno Dragon(Evolution) • Sparky • Miner • Princess(Evolution)(Merge Tactics) • Phoenix • Royal Ghost(Evolution) (Merge Tactics) • Ice Wizard • Magic Archer(Hero)(Merge Tactics) • Bandit(Merge Tactics) • Lava Hound • Night Witch • Lumberjack(Evolution) • Ronin •Spirit Empress • Goblin Machine(Merge Tactics) • Mother Witch • Fisherman • Super Lava Hound+ • Super Witch+ • Super Mini P.E.K.K.A.+ • Santa Hog Rider+ • Super Ice Golem+ • Super Magic Archer+ • Super Archers+ • Wizard Trio+ • Super Knight+
+Champion	Golden Knight(Merge Tactics) • Skeleton King(Merge Tactics) • Boss Bandit(Merge Tactics) • Archer Queen(Merge Tactics) • Mighty Miner • Monk(Merge Tactics) • Little Prince • Goblinstein • Terry+
+Spell Cards	Common	Arrows • Zap(Evolution) • Giant Snowball(Evolution) • Royal Delivery • Warmth+
+Rare	Fireball • Rocket • Earthquake • Heal
+Epic	Goblin Barrel(Evolution) • Vines • Lightning • Freeze • Barbarian Barrel(Hero) • Poison • Goblin Curse • Rage • Void • Clone • Tornado • Mirror
+Legendary	The Log • Graveyard • Party Rocket+
+Building Cards	Common	Cannon(Evolution) • Mortar(Evolution) (Merge Tactics) • Tesla(Evolution) (Merge Tactics) • Barbarian Launcher+
+Rare	Goblin Cage(Evolution)(Merge Tactics)• Goblin Hut • Tombstone(Hero)(Merge Tactics)• Bomb Tower • Inferno Tower(Merge Tactics) • Barbarian Hut • Elixir Collector(Merge Tactics)
+Epic	X-Bow(Merge Tactics) • Goblin Drill(Evolution)
+Legendary	Party Hut+ • Rocket Silo+
+Tower Troop Cards	Common	Tower Princess • Baby Goblins+
+Epic	Cannoneer
+Legendary	Dagger Duchess • Royal Chef
+Merge Tactics	Traits	Clan • Goblin • Noble • Undead • Forest • Boss • Electric • Warrior • Avenger • Blaster • Brawler • Brutalist • Giant • Juggernaut • Mage • P.E.K.K.A • Ranger • Thrower • Ace • Assassin • Dragon • Fire • Hinder • Marksman • Superstar • Tank • Titan
+Rulers	Royale King • Spirit Empress • Goblin Queen • Elixir Loong • Battle Machine • Echo Sage • Dagger Duchess • Grand Warden • Skeleton Queen • Ronin
+Show
+Battle
+Show
+Gameplay
+Current cards and features appear in blue. Cards/Features that have since been removed from the game, or were only available in a since-discontinued Event, appear in gray. Upcoming cards and features that are not yet in the game appear in yellow. A card or a feature with a + next to it denotes something that is only available in temporary challenges (has a timer on it, and the event may still come back every once in a while). Merge Tactics cards are purple, while Evolutions are pink, and Heroes are orange.
+Categories
+Languages
+Community content is available under CC-BY-SA unless otherwise noted.
+More Fandoms
+Fantasy Clash Royale
+
+3 Comments
+
+Join the conversation
+Sign in to read what others are saying and share your thoughts.
+SIGN IN
+
+Don't have account? Register now
+
+ADVERTISEMENT
+New to Fandom? Let's make it official.
+
+Create your free account and dive into the worlds you love with fans who love them too.
+
+Continue with Email
+
+By continuing, you agree to Fandom's Terms of Use and Privacy Policy.
+
+Recent Images
+Merge Tactics
+5 days ago
+Arenas
+2026/8/28
+Mega Knight
+2026/8/27
+ADVERTISEMENT
+ADVERTISEMENT
+ADVERTISEMENT
+EXPLORE PROPERTIES
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+FOLLOW US
+OVERVIEW
+What is Fandom?
+Essentials
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Cookies Settings
+COMMUNITY
+Community Central
+Support
+Help
+Accessibility Statement
+ADVERTISE
+Media Kit
+Contact
+FANDOM APPS
+Take your favorite fandoms with you and never miss a beat.
+Clash Royale Wiki is a Fandom Games Community.
+VIEW MOBILE SITE
+Search this wiki
+Search all wikis
