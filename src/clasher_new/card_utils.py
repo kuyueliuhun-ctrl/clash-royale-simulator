@@ -457,6 +457,13 @@ def projectile_from_row(row, level=11):
     w.roll_range = (row.get('projectile_range') or 0) / 1000.0
     w.spawn_projectile = row.get('spawn_projectile')
     w.spawn_count = row.get('spawn_count', 1) or 1
+    # —— 勘误批2（2026-09-08）：落地出兵解析（此前仅 Card 顶层 projectileData 路径有，
+    # stats 表行 spawn_character 字段被漏读 → BarbLog 滚完不出野蛮人）。
+    # spawn_character_count 缺省 1（官方 Hero BarbBarrel "spawns a single Barbarian"）。
+    _sc = row.get('spawn_character')
+    if _sc:
+        w.spawn_characters = (int(row.get('spawn_character_count') or 1),
+                              character_to_card.get(_sc, _sc))
     return w
 
 class TimedExplosiveData:

@@ -1482,6 +1482,9 @@ class Projectile(Entity):
         if self.rolling:
             distance = self.position.distance_to(self.initial_position)
             if distance > self.proj.roll_range:
+                # 勘误批2（2026-09-08）：滚动弹到终点也要走出兵链（BarbLog 滚木终点
+                # 出 1 野蛮人；此前 rolling 分支直接消亡，_chain 永不触发）。
+                self._chain(self.position)
                 self.is_alive = False
                 return
             # now deal area damage
@@ -2304,7 +2307,7 @@ def apply_hero_overlay(entity, bs):
 def _barb_log_reroll_effect(bs):
     """M8 ⑮：BarbLog Hero「Rowdy Reroll」效果体（由 use_ability 条件窗分支回调）：
     桶沿原方向二次全车道滚（reset path 语义 = 重置已命中列表、伤害重新结算；
-    引擎直接再生成一枚 Rolling 弹）+ 治疗落点附近的野蛮人 = 桶伤害 50%。"""
+    引擎直接再生成一枚 Rolling 弹）+ 落点附近野蛮人回复 50% 桶伤害。"""
     win = player = None
     for pid in (0, 1):
         w = bs.hero_windows.get(pid)
@@ -2313,16 +2316,36 @@ def _barb_log_reroll_effect(bs):
             break
     if win is None: return
     bs.spawn_projectile_chain('BarbLogProjectileRolling', win['origin'], player, win['dir'])
-    # —— 勘误批1（用户口径 2026-09-04）：开启技能后野蛮人回复满血（原 50% 桶伤口径作废）。
-    # 治疗范围=落点 6 格内（二次滚车道）【假设保留, 待实测】。
+    # —— 勘误批2（2026-09-08，勘误批1 回滚）：Fandom Rowdy Reroll 属性表
+    # Damage Healed=50%（docs/_elite_BarbarianBarrel.txt L119），正文同口径；
+    # "回满血"系误读。治疗量 = 桶伤害（BarbLogProjectileRolling，Epic 轴 per-level）
+    # × 50%，按出桶方战斗等级取值（HERO_ABILITIES['BarbLog']['healPct']）。
+    # 治疗范围 = Rowdy Reroll 属性 Range 3 / Width 2.6 → 二次滚车道带内
+    #（origin → origin+dir×(滚程) 矩形带，宽 2.6/2=1.3 格；旧"落点 6 格"假设
+    # 实测永远滤不到首滚终点出兵（距 origin 6.33），作废）。
+    from elite17_data import HERO_ABILITIES
+    heal_pct = HERO_ABILITIES['BarbLog'].get('healPct', 0.50)
+    _bp = projectiles.get('BarbLogProjectileRolling') or {}
+    barrel_dmg = _value_at_level(_bp.get('damage_per_level') or [],
+                                 _bp.get('rarity') or 'Epic',
+                                 bs.card_level,
+                                 _bp.get('damage') or 0)
+    heal = barrel_dmg * heal_pct
+    _ox, _oy = win['origin'].x, win['origin'].y
+    _dx, _dy = win['dir']
+    _range = float(HERO_ABILITIES['BarbLog'].get('rerollRange', 3.0))
+    _half_w = float(HERO_ABILITIES['BarbLog'].get('width', 2.6)) / 2.0
     for e in list(bs.entities.values()):
-        if (not e.is_alive or e.player != player or e.name != 'Barbarian'
+        if (not e.is_alive or e.player != player or e.name not in ('Barbarian', 'Barbarians')
                 or not isinstance(e, Troop)):
             continue
-        if e.position.distance_to(win['origin']) > 6.0:
+        # 二次滚车道带：沿滚向投影 ∈ [-1, _range]（滚程可到 4.5 但官方 Range=3，
+        # 取并集覆盖：起点后方 1 格到滚程终点），垂向偏差 ≤ Width/2
+        along = (e.position.x - _ox) * _dx + (e.position.y - _oy) * _dy
+        perp = abs((e.position.x - _ox) * -_dy + (e.position.y - _oy) * _dx)
+        if along < -1.0 or perp > _half_w:
             continue
-        e.hp = e.data.hp
-        e.shield_health = e.data.shield_health
+        e.hp = min(e.data.hp, e.hp + heal)
 
 
 class IceGolemiteSnowZone(EvoEffectZone):

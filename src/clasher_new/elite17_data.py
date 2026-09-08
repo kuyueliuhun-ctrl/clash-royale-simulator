@@ -159,11 +159,14 @@ HERO_ABILITIES = {
                 'landingRadius': 1.5,  # [假设] 落地 AOE 半径无字段
                 'crownMult': 0.10, 'flySpeed': 3.0,  # [假设] 伞降弹速
                 'source': '[Fandom L11]'},
-    # §15 BarbarianBarrel — Rowdy Reroll（1 费）：桶再滚一次 + 野蛮人回满血（勘误批1 用户口径）
+    # §15 BarbarianBarrel — Rowdy Reroll（1 费）：桶再滚一次 + 野蛮人回复 50% 桶伤害
     'BarbLog': {'name': 'BarbLogHero_spawn_reroll', 'manaCost': 1,
                 'window': 10.0,  # [假设] 按钮窗口=桶滚出后 10s 内（单次）
-                'healFull': True,  # 勘误批1（2026-09-04 用户口径）：开启技能后野蛮人回满血（原 healPct 0.50 作废）
-                'source': '[Fandom Range 3 / Width 2.6]'},
+                'healPct': 0.50,  # 勘误批2（2026-09-08 勘误批1 回滚）：Fandom Rowdy Reroll
+                # 属性表 Damage Healed=50%、正文 "healling the barbarian for 50% of
+                # the damage"（docs/_elite_BarbarianBarrel.txt L68/L115）——勘误批1 的
+                # "回满血"系误读，恢复 50% 桶伤害口径。
+                'source': '[Fandom Range 3 / Width 2.6 / Damage Healed 50%]'},
     # §16 EliteArcher — Warp + Triple Shot + 假人分身（机制结构 [内存 17 动作组]；数值全缺）：
     #     瞬移 3 格【假设-暂借】；三连射攻速 0.3s【暂借-待实测】；假人 HP104 [内存·中置信] 寿命 5s【假设】
     'EliteArcher': {'name': 'EliteArcherHero_Ability', 'manaCost': 2,  # 费用【假设】
