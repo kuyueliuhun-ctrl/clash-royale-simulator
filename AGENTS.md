@@ -229,9 +229,15 @@ PPO，速猪专精模型上过名人堂。可借鉴的是**卡组口径的三表
 此卡），速猪位用 IceGolemite 同价替代。其训练史教训（固定 IL 高胜率歪路 = 296/306 胜局
 对手 ≤3 次出牌）与本仓库"对照曲线防自欺"结论同源。
 
-- **四种卡组**（`docs/four_decks_manual.md`，逐卡数值+战术角色手册）：速猪2.6（2.62费）/
-  皇家巨人（3.12）/ X弩（3.25）/ 双线快攻（3.38）——覆盖速攻/推进/自闭/双线四 archetype，
-  全部 batch smoke 通过。`FOUR_DECK_SET` 定义在 `rl/opponents.py`。
+- **四种卡组**（`docs/four_decks_manual.md`，逐卡数值+战术角色手册；2026-09-08 用户换血）：
+  速猪2.6（2.62）/ 石头人（3.62，替换皇家巨人）/ X弩（3.25）/ 巨骷髅攻城槌（3.88，
+  替换双线快攻，用户指定卡单）——覆盖速攻/重推/自闭/攻城组合四 archetype，
+  全部 deploy 实测通过。`FOUR_DECK_SET` 定义在 `rl/opponents.py`。
+  **卡名映射陷阱：官方 Zappies = 引擎 `MiniSparkys`（gamedata id 26000052，
+  TID_SPELL_MINI_ZAPMACHINE），不是 `ZapMachine`（26000033，6费电击机器）——
+  对卡先对 id 再对名字；GiantSkeleton 亡语炸弹走 TimedExplosive 链路
+  （death_spawn_data 带 deathDamage 无 hitpoints），实测 209伤/3.02s引信/3格半径/
+  对塔 200%；BarbLog/Vines 等法术受部署区限制（仅己方半场）。**
 - **接入**：`--deck-set four`（defend 对手每局从四卡组抽一副，逼出"对牌"能力）/
   `--deck-set list:卡1,...`（显式镜像）；`TrainConfig.deck_set` 落 config.json。
   `_new_episode_reset` 经 `env.deck1_factory` 注入（FollowerOpponent 无 deck 属性 →
