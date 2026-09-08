@@ -45,6 +45,7 @@ def classify_games(games, label):
     def_deploy_my = 0        # 其中有我方 deploy 的帧
     latencies = []           # 威胁开始 → 我方首次 deploy 延迟
     dist_near = []           # 威胁场景下落点到最近过河敌军距离
+    intercepts = []          # 拦截口径：落点是否在 敌军→我方塔 路径 4 格内
     for g in games:
         frames = g["frames"]
         last_opp_play_t = -999.0
@@ -83,6 +84,22 @@ def classify_games(games, label):
                         if p1_troops:
                             dist_near.append(min(abs(wx - fx) + abs(wy - fy)
                                                  for fx, fy in p1_troops))
+                            # 拦截口径：落点是否挡在"最近过河敌军 → 我方最前塔"的
+                            # 直线路径近旁（曼氏距离到线段 ≤4 格）。防守方落塔前
+                            # 迎击（距敌远但在线上）是正确行为，"距敌 8 格"会误伤它。
+                            fy_near = min(p1_troops,
+                                          key=lambda p: abs(wx - p[0]) + abs(wy - p[1]))
+                            tx, ty = 8.5, 6.0   # 我方公主塔前缘近似（y≈3-6.5）
+                            vx, vy = tx - fy_near[0], ty - fy_near[1]
+                            L2 = vx * vx + vy * vy
+                            if L2 > 1e-9:
+                                s = max(0.0, min(1.0, ((wx - fy_near[0]) * vx
+                                                       + (wy - fy_near[1]) * vy) / L2))
+                                px, py = fy_near[0] + s * vx, fy_near[1] + s * vy
+                                if abs(wx - px) + abs(wy - py) <= 4.0:
+                                    intercepts.append(1)
+                                else:
+                                    intercepts.append(0)
                 elif t - last_opp_play_t <= RESP_WINDOW:
                     my_cls["response_session"] += len(my_deploys)
                 else:
@@ -132,10 +149,17 @@ def classify_games(games, label):
         print(f"威胁场景落点到最近过河敌军: n={n} median={dist_near[n//2]:.1f} "
               f"p25={dist_near[n//4]:.1f} p75={dist_near[3*n//4]:.1f} | "
               f">8格 {100.0*sum(1 for d in dist_near if d > 8)/n:.1f}%")
+    if intercepts:
+        ni = len(intercepts)
+        print(f"拦截口径（落点在 敌→塔 路径4格内）: {sum(intercepts)}/{ni} = "
+              f"{100.0*sum(intercepts)/ni:.1f}%")
 
 
 if __name__ == "__main__":
-    new_games = load_games("src/clasher_new/runs/economy/replays/league_*.pkl")
-    classify_games(new_games, "带闸门 100k 复训（v2 修正坐标）")
+    import sys as _sys
+    pat = _sys.argv[1] if len(_sys.argv) > 1 else \
+        "src/clasher_new/runs/economy/replays/league_*.pkl"
+    classify_games(load_games(pat),
+                   f"9j 三层复训 economy_9j（v2 修正坐标）[{pat}]")
     old_games = load_games("runs/archive/economy_100k_v1_ungated/replays/league_*.pkl")
     classify_games(old_games, "上次无闸门 100k（v2 修正坐标）")
