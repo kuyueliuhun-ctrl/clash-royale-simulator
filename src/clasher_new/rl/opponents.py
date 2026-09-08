@@ -24,6 +24,25 @@ from rl.action_bundle import ActionBundle, K_MAX
 DECK_SIZE = 8
 
 
+#: 四种卡组（2026-09-07 定稿，docs/four_decks_manual.md）：
+#: 对齐 FirstLight CR 训练哲学的四个互补 archetype——速攻循环 / 推进 / 自闭攻城 /
+#: 双线快攻。全部 8/8 引擎可用（batch smoke 通过），数值口径见手册。
+FOUR_DECK_SET = [
+    # 速猪 2.6（均费 2.62）：野猪快攻 + Cannon 拉扯 + 极速循环
+    ["HogRider", "IceGolemite", "IceSpirits", "Musketeer",
+     "Cannon", "Skeletons", "Fireball", "Log"],
+    # 皇家巨人（均费 3.12）：桥头平推 + 空中护航
+    ["RoyalGiant", "Hunter", "MegaMinion", "Bats",
+     "Skeletons", "Cannon", "Log", "Fireball"],
+    # X 弩（均费 3.25）：自闭攻城 + 层层保弩
+    ["Xbow", "Tesla", "Skeletons", "IceWizard",
+     "Archer", "Knight", "Log", "Fireball"],
+    # 双线快攻（均费 3.38）：野猪/皇家猪双路分推
+    ["HogRider", "RoyalHogs", "IceWizard", "Musketeer",
+     "Valkyrie", "Zap", "Fireball", "Skeletons"],
+]
+
+
 def build_card_pool() -> list:
     """引擎可部署的卡池（实测 139 张；Mirror 依赖 last_card，放池内由掩码门控）。"""
     pool = []
@@ -32,7 +51,10 @@ def build_card_pool() -> list:
             c = Card(n)
         except Exception:
             continue
-        if n.startswith("King_") or "Tower" in n:
+        if n.startswith("King_"):
+            # 王塔/塔形态卡都有 King_ 前缀（King_PrincessTowers/King_CannonTowers...）。
+            # 注意不能用 "Tower" in n / endswith("Tower")：会误伤 BombTower、
+            # InfernoTower（名字里带 Tower 的合法建筑卡，registry 均 implemented）。
             continue
         cost = getattr(c, "elixir", 0)
         if cost is None or cost <= 0:
@@ -110,14 +132,21 @@ class SelfDefenderPolicy:
     test_simulate_exchange 对账），候选落点由本类经 env.battle 的合法性真实执行。
     """
 
-    def __init__(self, seed=0, env=None, passive_prob: float = 0.6):
+    def __init__(self, seed=0, env=None, passive_prob: float = 0.6,
+                 deck_pool=None):
         self.seed = seed
         self.rng = random.Random(seed)
         self.env = env
         #: 无威胁帧的停手概率（高=更省费、更防守；1.0=纯防守零进攻）
         self.passive_prob = float(passive_prob)
+        #: list[deck] → 每局 deck() 从该卡组集合随机抽一副（None=固定默认卡组）
+        self.deck_pool = list(deck_pool) if deck_pool else None
 
     def deck(self):
+        """本局卡组：有 deck_pool 抽一副完整卡组（四卡组对手池用），否则固定默认。"""
+        if self.deck_pool:
+            pick = self.rng.choice(self.deck_pool)
+            return list(pick["cards"]) if isinstance(pick, dict) else list(pick)
         return None   # 固定默认卡组（与 ScriptedPolicy 无 pool 时一致）
 
     def _defend_action(self, player_id: int):

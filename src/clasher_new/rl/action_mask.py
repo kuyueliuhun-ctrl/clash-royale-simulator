@@ -76,18 +76,19 @@ DEAD_TOWER_BODY_R = 0.9
 #: 引擎数值表半径以千分之一单位存储（Arrows 3500 → 3.5；Fireball 2500 → 2.5）。
 
 
-def _spell_radius_m(card_name: str) -> float:
-    """法术溅射半径（世界单位）；无半径数据返回 0.0（=不做闸门，保持旧语义）。"""
-    data = getattr(Card(card_name), "data", None) or {}
+def _spell_radius_m(card_name: str, card_info: "Card" = None) -> float:
+    """法术溅射半径（世界单位）；无半径数据返回 0.0（=不做闸门，保持旧语义）。
+    P0 优化：card_info 已构造时直接复用（省 7µs/次构造，掩码循环热路径）。"""
+    data = getattr(card_info if card_info is not None else Card(card_name), "data", None) or {}
     raw = data.get("radius")
     if raw is None:
         raw = ((data.get("projectileData") or {}).get("radius"))
     return (float(raw) if raw else 0.0) / 1000.0
 
 
-def _spell_deals_damage(card_name: str) -> bool:
+def _spell_deals_damage(card_name: str, card_info: "Card" = None) -> bool:
     """是否输出伤害的法术。伤害型法术受空砸闸门约束；增益/位移/召唤类法术放行。"""
-    data = getattr(Card(card_name), "data", None) or {}
+    data = getattr(card_info if card_info is not None else Card(card_name), "data", None) or {}
     pd = data.get("projectileData") or {}
     return (float(pd.get("damage") or 0.0) > 0.0
             or float(data.get("damage") or 0.0) > 0.0)
@@ -154,7 +155,8 @@ def _spell_covers_non_tower(battle, player_id: int, pos: Position, radius: float
     return False
 
 
-def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Position) -> bool:
+def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Position,
+                            card_info: "Card" = None) -> bool:
     """前段"纯砸塔"落点非法判定（空砸闸门的对塔特化加强版）。
 
     条件（全部满足才拒）：
@@ -166,9 +168,9 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     """
     if battle.time >= 120.0:
         return False
-    if not _spell_deals_damage(card_name):
+    if not _spell_deals_damage(card_name, card_info):
         return False
-    radius = _spell_radius_m(card_name)
+    radius = _spell_radius_m(card_name, card_info)
     if radius <= 0.0:
         return False
     dmg = _spell_tower_damage(card_name)
@@ -190,7 +192,7 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
         return False
     if _spell_covers_non_tower(battle, player_id, pos, radius):
         return False
-    cost = Card(card_name).elixir
+    cost = card_info.elixir if card_info is not None else Card(card_name).elixir
     if cost <= 0:
         return False
     return dmg / TOWER_HP_PER_ELIXIR_EARLY < SPELL_EV_EDW * cost - 1e-9
@@ -284,11 +286,28 @@ def _active_push_tanks(battle, player_id: int):
     return out
 
 
-def _backline_min_gap_m(back_card: str, tank_card: str) -> float:
+#: 后排/坦克 Card 静态解析缓存：(卡名, Card.default_level) → Card。
+#: Card 构造 ~7µs 且 backline gap 检查逐坦克调用；数值只随 (名, 级) 变化，
+#: Card 实例上可变状态仅 set_level 产物，同 level 重建结果恒定 → 可安全复用。
+#: 注意：Card.default_level 被 BattleState 构造时切换，缓存键必须含它。
+_card_static_cache = {}
+
+
+def _card_cached(card_name: str) -> "Card":
+    key = (card_name, Card.default_level)
+    c = _card_static_cache.get(key)
+    if c is None:
+        c = Card(card_name)
+        _card_static_cache[key] = c
+    return c
+
+
+def _backline_min_gap_m(back_card: str, tank_card: str,
+                        back_info: "Card" = None) -> float:
     """后排与坦克的最小纵向间距（世界单位）：
     基础 = 后排攻击距离；后排比坦克快 → 每 1 速度差再多后置 2 单位。"""
-    b = Card(back_card)
-    t = Card(tank_card)
+    b = back_info if back_info is not None else _card_cached(back_card)
+    t = _card_cached(tank_card)
     base = float(getattr(b, "range", 0.0) or 0.0)
     dv = max(0.0, float(getattr(b, "speed", 0.0) or 0.0)
              - float(getattr(t, "speed", 0.0) or 0.0))
@@ -296,7 +315,7 @@ def _backline_min_gap_m(back_card: str, tank_card: str) -> float:
 
 
 def _backline_placement_illegal(battle, player_id: int, card_name: str,
-                                pos: Position) -> bool:
+                                pos: Position, card_info: "Card" = None) -> bool:
     """后排落点几何闸门：同路有推进坦克时，落点必须位于某坦克之后且留足
     最小间距（否则会抢仇恨/超车裸奔）。异路防守部署不受影响。"""
     if card_name not in BACKLINE_CARDS:
@@ -318,7 +337,7 @@ def _backline_placement_illegal(battle, player_id: int, card_name: str,
             gap_along = tk.position.y - pos.y
         else:
             gap_along = pos.y - tk.position.y
-        need = _backline_min_gap_m(card_name, tk.name)
+        need = _backline_min_gap_m(card_name, tk.name, card_info)
         if gap_along >= need - 0.5:
             return False  # 能跟在至少一个推进坦克后面 → 合法
     return True
@@ -339,23 +358,28 @@ def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:
     return False
 
 
-def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bool:
+def _position_legal(battle, player_id: int, card_name: str, pos: Position,
+                    card_info: "Card" = None) -> bool:
     """复刻 battle.deploy_card 中的部署区域合法性（法术额外挡已毁塔本体 + 空砸闸门）。
 
     7h：法术可打任意格，但不得砸在**已毁敌方塔本体**上——引擎里法术是打坐标，
     已毁塔 is_alive=False 会被溅射跳过，落在那里=纯空砸（也不会转伤国王塔）。
     8h：伤害型法术必须罩到 ≥1 个存活敌方目标（塔/建筑/单位），否则视为纯空砸拒绝。
+    P0 优化：card_info 由调用方传入可省逐格 Card 构造（legal_cells 576 格热路径）；
+    缺省仍自建（提交路径 validate_bundle 语义不变）。
     """
-    card_info = Card(card_name)
+    if card_info is None:
+        card_info = Card(card_name)
     if card_info.type == "spell":
         if _hits_dead_enemy_tower(battle, player_id, pos):
             return False
-        if _spell_deals_damage(card_name):
-            radius = _spell_radius_m(card_name)
+        if _spell_deals_damage(card_name, card_info):
+            radius = _spell_radius_m(card_name, card_info)
             if radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
                 return False
             # 9h 前段纯砸塔 EV 闸门：无部队/建筑可溅、账面亏费 → 非法
-            if radius > 0.0 and _spell_tower_ev_illegal(battle, player_id, card_name, pos):
+            if radius > 0.0 and _spell_tower_ev_illegal(battle, player_id, card_name, pos,
+                                                        card_info):
                 return False
         return True
     if battle.is_position_occupied_by_building(pos, 0.0):
@@ -385,7 +409,7 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position) -> bo
                 if battle.players[0].right_tower_hp > 0:
                     return False
     # 8h 坦克后屯兵：后排落点必须待在推进坦克后面并留出攻击距离间距
-    if _backline_placement_illegal(battle, player_id, card_name, pos):
+    if _backline_placement_illegal(battle, player_id, card_name, pos, card_info):
         return False
     return True
 
@@ -397,12 +421,18 @@ def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
     8h：伤害型法术再加空砸闸门——只有溅射能罩到存活敌方目标的格子才合法；
     其余按规则——本地格子 (x, y) 经 sub_position 换算为世界坐标后
     由 _position_legal 校验（与提交路径完全同源，P0-4）。
+    P0 优化（2026-09-08）：Card 构造提出 576 格循环（此前每格重建 1-3 张，
+    占本函数耗时 ~92%）；判定逻辑逐位不变。
     """
     cells = np.ones((GRID_H, GRID_W), dtype=bool)
-    eff = _effective_card(battle.players[player_id], card_name)
-    if Card(eff).type == "spell":
-        radius = _spell_radius_m(eff) if _spell_deals_damage(eff) else 0.0
-        ev_gate = radius > 0.0 and _spell_deals_damage(eff)
+    p = battle.players[player_id]
+    eff = _effective_card(p, card_name)
+    eff_info = Card(eff)
+    is_spell = eff_info.type == "spell"
+    if is_spell:
+        deals_dmg = _spell_deals_damage(eff, eff_info)
+        radius = _spell_radius_m(eff, eff_info) if deals_dmg else 0.0
+        ev_gate = radius > 0.0 and deals_dmg
         for y in range(GRID_H):
             for x in range(GRID_W):
                 pos = sub_position(player_id, x, y)
@@ -410,12 +440,14 @@ def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
                     cells[y, x] = False
                 elif radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
                     cells[y, x] = False
-                elif ev_gate and _spell_tower_ev_illegal(battle, player_id, eff, pos):
+                elif ev_gate and _spell_tower_ev_illegal(battle, player_id, eff, pos,
+                                                         eff_info):
                     cells[y, x] = False
         return cells
     for y in range(GRID_H):
         for x in range(GRID_W):
-            if not _position_legal(battle, player_id, eff, sub_position(player_id, x, y)):
+            if not _position_legal(battle, player_id, eff, sub_position(player_id, x, y),
+                                   eff_info):
                 cells[y, x] = False
     return cells
 

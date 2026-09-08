@@ -28,6 +28,7 @@ import numpy as np
 import torch
 
 from rl.env_wrapper import RLEnv
+from card_utils import Card
 from rl.belief import BeliefInference
 from rl.belief_planner import BeliefPlanner
 from rl.prophet import ProphetPlanner
@@ -46,6 +47,28 @@ from rl.replay import save_league_replays
 DEFAULT_SOLO_DECK = ["Knight", "MiniPekka", "Arrows", "Minions",
                      "Musketeer", "Fireball", "Giant", "Archer"]
 
+
+def resolve_deck_set(deck_set: str):
+    """cfg.deck_set → (mirror_deck, deck_pool_for_defender)。
+
+    - "default"：原版 8 卡镜像，defend 对手无 deck_pool（旧行为）；
+    - "four"：原版 8 卡镜像不变，defend 对手每局从 FOUR_DECK_SET 抽一副
+      （docs/four_decks_manual.md：速猪/皇家巨人/X弩/双线快攻）；
+    - "list:Card1,..."：显式 8 卡镜像（逗号分隔引擎卡名），defend 无 deck_pool。
+    """
+    from rl.opponents import FOUR_DECK_SET
+    s = (deck_set or "default").strip()
+    if s == "four":
+        return list(DEFAULT_SOLO_DECK), FOUR_DECK_SET
+    if s.startswith("list:"):
+        cards = [c.strip() for c in s[5:].split(",") if c.strip()]
+        if len(cards) != 8:
+            raise ValueError(f"--deck-set list: 需要 8 张卡，收到 {len(cards)}: {cards}")
+        for c in cards:
+            Card(c)   # 不可部署卡直接抛错（快速失败）
+        return cards, None
+    return list(DEFAULT_SOLO_DECK), None
+
 #: 训练中先知规划注入概率（与 run_league 主训练一致）
 _SOLO_PROPHET_PROB = 0.3
 
@@ -63,11 +86,11 @@ _OPP_MIX = {"frozen": 0.7, "hist": 0.2, "defend": 0.1}
 _HIST_POOL_MAX = 12
 
 
-def solo_env(cfg, seed):
-    """双方同一副固定卡组的镜像 RLEnv。"""
+def solo_env(cfg, seed, deck0=None, deck1=None):
+    """双方固定卡组的镜像 RLEnv（deck_set=list:/default 时同副镜像）。"""
     return RLEnv(opponent=None, seed=seed, reward_weights=reward_to_env(cfg),
                  card_level=cfg.card_level,
-                 deck0=DEFAULT_SOLO_DECK, deck1=DEFAULT_SOLO_DECK)
+                 deck0=deck0 or DEFAULT_SOLO_DECK, deck1=deck1 or DEFAULT_SOLO_DECK)
 
 
 def _draw_penalty(cfg) -> float:
@@ -113,14 +136,17 @@ class _OpponentPool:
     每局开始由外部调 sample()，返回的对手直接赋给 env.opponent。
     """
 
-    def __init__(self, cfg, env, frozen_side, rng, device):
+    def __init__(self, cfg, env, frozen_side, rng, device, defender_deck_pool=None):
         from rl.opponents import SelfDefenderPolicy
         self.cfg = cfg
         self.env = env
         self.frozen_side = frozen_side       # FollowerOpponent（冻结副本）
         self.rng = rng
         self.device = device
-        self.defender = SelfDefenderPolicy(seed=cfg.seed + 7, env=env)
+        # defend 对手卡组：deck_set=four 时从四卡组抽一副（docs/four_decks_manual.md）
+        #（script_defender 的反制逻辑按卡牌语义工作，四套 archetype 各逼出不同防守模式）。
+        self.defender = SelfDefenderPolicy(seed=cfg.seed + 7, env=env,
+                                           deck_pool=defender_deck_pool)
         self.hist_paths = _collect_hist_ckpts(cfg.folder())
         self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11)
         self._hist_id = {p: f"hist_{i}" for i, p in enumerate(self.hist_paths)}
@@ -547,7 +573,10 @@ def run_solo(cfg, resume=False, record_replays=True):
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)
 
-    env = solo_env(cfg, cfg.seed)
+    # deck_set 解析：镜像卡组 + defend 对手卡组池（four=四卡组对手池）
+    mirror_deck, defender_deck_pool = resolve_deck_set(getattr(cfg, "deck_set", None)
+                                                       or "default")
+    env = solo_env(cfg, cfg.seed, deck0=mirror_deck, deck1=mirror_deck)
     _t_env = time.monotonic()
     belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                      seed=0).encode(None, None))
@@ -607,7 +636,8 @@ def run_solo(cfg, resume=False, record_replays=True):
     env.opponent = opp_side
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
     # A 层：训练对手池（frozen 主力 + hist PFSP + defend 脚本；sample() 按局选）
-    opp_pool = _OpponentPool(cfg, env, opp_side, rng, device)
+    opp_pool = _OpponentPool(cfg, env, opp_side, rng, device,
+                             defender_deck_pool=defender_deck_pool)
     _t_policy = time.monotonic()
 
     # —— 评估对照组（2026-09-07）：对手每 copy_every 步同步变强，solo 曲线自我对冲
@@ -674,7 +704,7 @@ def run_solo(cfg, resume=False, record_replays=True):
             print(f"[solo] 对照评估失败（不影响主评估/训练）: {e!r}", flush=True)
         write_solo_state(cfg.solo_state_path(), cfg, history, step,
                          status="done" if step >= cfg.total_steps else "running",
-                         controls=controls)
+                         deck=list(mirror_deck), controls=controls)
         # 对照结束、主 checkpoint 落盘后，把"上一评估点"推进到当前权重
         _sync_frozen_copy(main, baseline_prev)
         print(f"[solo] eval@{step}: 胜率 {stats['winrate']:.3f}±{stats['winrate_se']:.3f} "
@@ -729,6 +759,10 @@ def run_solo(cfg, resume=False, record_replays=True):
         opp_pool.record(winner)
         kind, side, hist_id = opp_pool.sample()
         env.opponent = side
+        # 对手卡组工厂：defend 脚本有 deck_pool（四卡组）时每局抽一副；
+        # frozen/hist（FollowerOpponent）或无 deck_pool → None = 保持镜像固定卡组。
+        env.deck1_factory = (side.deck if kind == "defend"
+                             and getattr(side, "deck_pool", None) else None)
         obs, _ = env.reset()
         belief.reset(env.deck1)
         hidden = None

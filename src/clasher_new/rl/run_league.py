@@ -1121,6 +1121,9 @@ def main():
     ap.add_argument("--main-init", type=str, default=None)
     ap.add_argument("--decks-path", type=str, default=None,
                     help="三分类卡组 JSON 路径（缺省自动探测 docs/leaderboard_decks_classified.json）")
+    ap.add_argument("--deck-set", type=str, default=None,
+                    help="solo 镜像/对手卡组：default=原版 8 卡 / four=四种卡组对手池"
+                         "（docs/four_decks_manual.md）/ list:卡1,卡2,...=显式 8 卡镜像")
     ap.add_argument("--keep-snapshot", action="store_true",
                     help="同时维护 main_ckpt 快照槽位（默认只维护 5 卡组模型 + main）")
     ap.add_argument("--batch-size", type=int, default=None)
@@ -1174,6 +1177,7 @@ def main():
     for k in ("total_steps", "steps_per_eval", "n_envs", "parallel", "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
+              "deck_set",
               "solo_copy_every", "eval_workers",
               "gae_lambda", "ent_coef", "adv_norm"):
         v = getattr(args, k)

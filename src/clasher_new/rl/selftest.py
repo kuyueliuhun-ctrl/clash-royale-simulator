@@ -2043,7 +2043,8 @@ def test_plan_v1_layout():
     from rl.plan_space import (PLAN_DIM, PlanToken, MACRO_INTENTS, _OLD_INTENT_COUNT,
                                FOCUS_REGIONS, TARGET_KINDS, PLACEMENT_HINTS,
                                OPP_SPELL_THREATS)
-    assert PLAN_DIM == 57, f"PLAN_DIM 应为 57（旧21+新36）: {PLAN_DIM}"
+    # 9k：PLACEMENT_HINTS 7→8（新增 intercept_mid）→ PLAN_DIM 57→58（旧21+新37）
+    assert PLAN_DIM == 58, f"PLAN_DIM 应为 58（旧21+新37）: {PLAN_DIM}"
 
     # ① 旧意图帧：前 21 维 == 旧布局（intent8 + region8 + 旧标量5）
     v = PlanToken().to_vector()
@@ -2098,7 +2099,7 @@ def test_plan_v1_layout():
     torch.save({"state_dict": old.state_dict(), "plan_dim": 21,
                 "belief_dim": 8, "hidden_dim": 32}, p)
     new = load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=8)
-    assert new.plan_dim == 57
+    assert new.plan_dim == PLAN_DIM
     sd_old = old.state_dict()
     sd_new = new.state_dict()
     assert torch.allclose(sd_new["plan_mlp.0.weight"][:, :21],

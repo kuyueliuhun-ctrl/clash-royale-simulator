@@ -104,6 +104,10 @@ class TrainConfig:
     train_stall_stop: bool = True
     # —— 数据 / 运行时 ——
     decks_path: str = None      # 三分类卡组 JSON（缺省自动探测）
+    # solo 镜像卡组选择："default"=原版 8 卡镜像；"four"=四种卡组对手池
+    # （docs/four_decks_manual.md：defend 对手每局从四卡组抽一副，镜像卡组不变）；
+    # "list:Card1,..."=显式镜像卡组（逗号分隔 8 张引擎卡名）。
+    deck_set: str = "default"
     main_init: str = None       # BC 预训练 / 旧检查点
     device: str = "auto"        # cpu / cuda / auto（=cuda 可用则 cuda）
     only_vs_main: bool = False
