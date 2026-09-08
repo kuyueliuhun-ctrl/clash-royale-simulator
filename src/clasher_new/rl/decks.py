@@ -51,13 +51,24 @@ def _engine_lookup():
 
 
 def normalize_card(name: str):
-    """数据集卡名 → 引擎卡名；无法映射返回 None。"""
+    """数据集卡名 → 引擎卡名；无法映射返回 None。
+
+    2026-09-08：接入 card_aliases 多别名索引作兜底——本地英文名表查不到时，
+    走官方 i18n 中英文/俗名索引（支持中文名、俗名、异名、驼峰拆分）。"""
     n = re.sub(r"-(ev\d+|hero|star\d*|lvl\d+)$", "", name)
     n = re.sub(r"[^a-z0-9]", "", n.lower())
     hit = _engine_lookup().get(n)
     if hit:
         return hit
-    return CARD_ALIASES.get(name)
+    if name in CARD_ALIASES:
+        return CARD_ALIASES[name]
+    from card_aliases import search_card
+    # 先试原始名（中文/俗名），再试剥后缀的 key（giant-snowball-ev1 → giant-snowball）
+    hit = search_card(name)
+    if hit:
+        return hit
+    base = re.sub(r"-(ev\d+|hero|star\d*|lvl\d+)$", "", name.strip().lower())
+    return search_card(base) if base != name else None
 
 
 def map_deck_cards(cards, seed=0):
