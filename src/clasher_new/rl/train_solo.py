@@ -570,7 +570,11 @@ def run_solo(cfg, resume=False, record_replays=True):
 
     if cfg.main_init and not (rs and rs.get("solo_ckpt")
                               and os.path.exists(rs["solo_ckpt"])):
-        main = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim)
+        # 显式 plan_dim/belief_dim=当前网络维度 → load_checkpoint 走"前列拷贝+尾零"
+        # 兼容分支（旧 ckpt 的 plan_dim=57/belief_dim=23 元数据否则把 main 建成旧维度，
+        # 之后 _sync_frozen_copy 拷进 PLAN_DIM 网络即 shape 失配崩溃）
+        main = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
+                               plan_dim=PLAN_DIM, belief_dim=belief_dim)
     else:
         main = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                               belief_dim=belief_dim)
