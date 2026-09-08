@@ -147,3 +147,36 @@ King 塔 + 字面塔名（CannonTower 类），BombTower/InfernoTower 回到随�
   会从四卡组抽牌，与 `docs/leaderboard_decks_classified.json` 三分类池叠加。
 - **手册的用法**：写脚本对手/专项奖励时按本表查"这张卡该出现在哪、它的威胁是什么"
   （如：Cannon 应在河后 3-4 格中场 → 拉扯；RoyalGiant 桥头即开塔 → punish 窗口是它过河前）。
+
+---
+
+## 附2：精英（Hero）与觉醒（Evolution）可用性（2026-09-08 实测）
+
+**先说结论：训练环境当前全部为普通形态。** `RLEnv.reset` 构造 `PlayerState` 后从不调用
+`set_evolution_slots` / `set_hero_slots`（两集合恒为空集），引擎在 `deploy_card` 入口
+判定 `card_name in _p.evo_slots` 不通过 → 觉醒/精英分支永不触发。精英与觉醒系统本身
+（M4/M5/M6/M8）已实现且有 selftest，**但训练/评估管线未接线**——要启用需给 RLEnv
+加卡组声明参数（注意官方约束：每套卡组觉醒位 ≤2、Hero 槽+Wild 槽共享上限 2，
+且同一张卡 Hero 与觉醒互斥）。
+
+### 引擎形态覆盖实弹验证（声明后逐卡部署 + 能力使用）
+
+| 卡组 | 精英（Hero） | 觉醒（Evolution） |
+|------|-------------|------------------|
+| 速猪 2.6 | IceGolemite✓ Musketeer✓（能力=炮塔） | IceSpirits✓ Musketeer✓ Cannon✓ Skeletons✓（全 2 周期） |
+| 石头人 | MegaMinion✓ Tombstone✓（能力=TombQueen） | Witch✓(1周期,觉醒体 hp 524) BabyDragon✓ Bats✓ Zap✓(EvoZapZone 领域) Snowball⚠️ |
+| X 弩 | IceWizard✓ Knight✓ | Tesla✓ Skeletons✓ Archer✓ Knight✓ |
+| 巨骷髅攻城槌 | BarbLog✓(二次滚窗口) Wizard✓ | BattleRam✓ Ghost✓(显形召唤 Souldier) Wizard✓(1周期) |
+
+✓ = 部署进觉醒/精英形态且核心机制生效；⚠️ 见下。
+
+### 已知缺口（实弹发现）
+
+1. **Snowball 觉醒未接线**：`evo_raw.projectile = 'SnowballSpell_EV1'` 指向的弹丸行
+   在 `cards_stats_projectile.json` 中**不存在**（快照未含觉醒弹丸行），deploy 后
+   弹丸仍为普通 `SnowballSpell`（rolling=False）。要补齐需从官方快照/规则自建 EV1
+   弹丸行（滚动大雪球：roll_range>0 + 推撞），属数据补全而非代码改动。
+2. **MiniSparkys / GiantSkeleton / WitchMother / Vines / Golem / Xbow / HogRider /
+   Fireball / Log** 不在精英/觉醒名单（官方也无），只有普通形态——与预期一致。
+3. Hero 与觉醒互斥（Wild slot）：如 Knight（X弩）同时具备两者，声明时只能二选一；
+   `battle.py:2686` 的 `card_name not in _p.hero_slots` 已处理该互斥。
