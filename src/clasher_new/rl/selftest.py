@@ -1453,12 +1453,28 @@ def test_solo_mode_smoke():
     import json as _json
     from rl import train_solo
     from rl.config import TrainConfig
+    from rl.ppo import PPOTrainer
 
     d = tempfile.mkdtemp()
     cfg = TrainConfig(name="selftest_solo", total_steps=8, steps_per_eval=4,
                       update_interval=4, batch_size=4, hidden_dim=32, seed=0,
                       n_eval_games=2, max_ep_steps=4, solo_copy_every=2, out_dir=d)
-    train_solo.run_solo(cfg, record_replays=False)
+    # 泄漏回归哨兵：max_ep_steps=4 保证 8 步内跨过局边界（bug 恰在 reset 路径）。
+    # _new_episode_reset 若漏 nonlocal ep_* 缓冲区，旧对局帧会反复 flush 进 PPO
+    # 批（当时实测 8 步喂了 30+ 条过渡）。每环境步至多产生 1 条过渡，
+    # total(update) ≤ total(env steps)+k_max·1 是硬上界——超过即缓冲区泄漏。
+    _real_update = PPOTrainer.update
+    _upd_calls = []
+    train_solo.PPOTrainer.update = lambda self, batch, **kw: (
+        _upd_calls.append(len(batch)) or _real_update(self, batch, **kw))
+    try:
+        train_solo.run_solo(cfg, record_replays=False)
+    finally:
+        train_solo.PPOTrainer.update = _real_update
+    total_upd = sum(_upd_calls)
+    assert total_upd <= cfg.total_steps, (
+        f"PPO 批累计 {total_upd} > 环境步 {cfg.total_steps}：ep_* 缓冲区泄漏"
+        f"（_new_episode_reset 漏 nonlocal，旧对局帧重复入批）")
     assert os.path.exists(cfg.solo_state_path()), "solo_state.json 应已落盘"
     st = _json.load(open(cfg.solo_state_path(), "r", encoding="utf-8"))
     assert st["mode"] == "solo" and st["opponent"] == "self-play-frozen-copy"

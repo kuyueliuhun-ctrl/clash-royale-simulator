@@ -715,7 +715,12 @@ def run_solo(cfg, resume=False, record_replays=True):
         winner：上一局胜负（0/1/None），先于 env.reset() 由调用方捕获 → 回填 PFSP
         （首局前的 initial reset 不经本函数，无 winner 可回填）；随后采样本局对手
         （frozen/hist/defend）并替换 env.opponent。"""
-        nonlocal obs, hidden, last_hp, stall_count
+        # 缓冲区必须一并 nonlocal：漏了的话这里只是给嵌套函数自己的局部名字
+        # 绑新列表，外层循环的 ep_* 从未被清空 → done 后每迭代重复 flush/结算，
+        # 平局惩罚在泄漏缓冲上逐帧堆积（adv=-671、value loss 43 万的事故形态）。
+        nonlocal obs, hidden, last_hp, stall_count, \
+            ep_obs, ep_belief, ep_plan, ep_bundle, ep_lp, ep_val, ep_rew, \
+            ep_term, ep_trunc, ep_masks, ep_init
         opp_pool.record(winner)
         kind, side, hist_id = opp_pool.sample()
         env.opponent = side
