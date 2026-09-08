@@ -220,6 +220,42 @@ entity 实测 + `belief_planner.BRIDGE_Y` 注释互证。**
     9j 修时机（响应率 38→62%）、9k_ft 修落点语义（中段 60%+接敌 10.5%）。
     winrate 平台期下这是行为质量的真实爬坡。
 
+### 四卡组对手池 + P0 掩码优化（2026-09-08，FirstLight 参照）
+
+**FirstLight CR 参照（`E:/FirstLight_CR`，读后定稿）**：native 引擎 + IL 252k 回放 +
+PPO，速猪专精模型上过名人堂。可借鉴的是**卡组口径的三表**：`card_support.json`（122 张
+支持卡）、`card_specs.json.gz`（152 条 native 提取数值）、`card_logic.json.gz`（机制规则）。
+本引擎 148 张卡全覆盖其 122 张（Card() 全部可构造）；唯一缺口 = IceGolem（gamedata 无
+此卡），速猪位用 IceGolemite 同价替代。其训练史教训（固定 IL 高胜率歪路 = 296/306 胜局
+对手 ≤3 次出牌）与本仓库"对照曲线防自欺"结论同源。
+
+- **四种卡组**（`docs/four_decks_manual.md`，逐卡数值+战术角色手册）：速猪2.6（2.62费）/
+  皇家巨人（3.12）/ X弩（3.25）/ 双线快攻（3.38）——覆盖速攻/推进/自闭/双线四 archetype，
+  全部 batch smoke 通过。`FOUR_DECK_SET` 定义在 `rl/opponents.py`。
+- **接入**：`--deck-set four`（defend 对手每局从四卡组抽一副，逼出"对牌"能力）/
+  `--deck-set list:卡1,...`（显式镜像）；`TrainConfig.deck_set` 落 config.json。
+  `_new_episode_reset` 经 `env.deck1_factory` 注入（FollowerOpponent 无 deck 属性 →
+  getattr 缺省 None，frozen/hist 保持镜像不变）。
+- **卡池修复**：`build_card_pool` 的 `"Tower" in n` 过滤误伤 BombTower/InfernoTower
+  （名字带 Tower 的合法建筑卡）——注意 `endswith("Tower")` 同样误伤，唯一正确口径是
+  `n.startswith("King_")`（塔类卡全部有 King_ 前缀）。卡池 142→144。
+- **P0 掩码优化（预期 2.8×，实测远超）**：`legal_cells` 的 576 格循环内每格重建
+  Card（部队 576 次/法术 ~2300 次/调用），profile 显示 `Card.__init__` 占 92% 耗时
+  （0.730/0.794s，其中 dict.get 2.25M 次 0.23s + set_level 0.09s + Projectile 0.11s）。
+  改法：`card_info` 参数贯通 legal_cells → _position_legal → _spell_* → backline 全链路
+  （构造 1 次循环外复用）+ `_card_static_cache` 按 (卡名, Card.default_level) 缓存。
+  **实测：legal_cells 单卡 4.37→0.23ms（19×）、整帧 4 手牌 18→3.0ms（6×）、
+  训练循环 3-4→14.4 步/s（单 env CPU）**。
+  **验证纪律（改判定逻辑必做）**：改动前后各跑 `scripts/_mask_diff_snapshot.py`
+  dump 位图（8 状态×双方×8 手牌=128 张：空场/压境/双倍期/推进坦克/残血塔/群杂/lv14），
+  逐位 diff 必须全等——本次 128/128 一致才提交。
+- **economy_10d 验证 run**（12k warm-start 从 9j 100k，四卡组 defend 池，selftest 74/74）：
+  曲线 eval@0 0.625 → 2k 0.875 → 4k-12k 多点 1.000（vs baseline0/prev 同步爬升，
+  终点双对照 1.000）；**eval@0 16 局 54.4s（worker 16 全成）vs 9j 时代串行 ~30min**——
+  页面文件充足时 spawn worker 是数量级收益。注：本轮 winrate 大幅爬升是 defend 对手
+  从默认 8 卡换成四卡组所致（对手变强，对照基线同步变强，*不能*与旧曲线直读对比）；
+  行为取证待做。
+
 ### 外置工具（2026-09-06 起步，用户确认的路线）
 
 外置工具 = 引擎侧确定性服务，模型/规划器按需调用，不进动作空间。第一个已落地：
