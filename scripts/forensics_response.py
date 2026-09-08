@@ -46,12 +46,13 @@ def classify_games(games, label):
     latencies = []           # 威胁开始 → 我方首次 deploy 延迟
     dist_near = []           # 威胁场景下落点到最近过河敌军距离
     intercepts = []          # 拦截口径：落点是否在 敌军→我方塔 路径 4 格内
+    engagements = []         # 接敌口径（9k 正式指标）：部署后 8s 内 5 格内敌我同框
     for g in games:
         frames = g["frames"]
         last_opp_play_t = -999.0
         in_threat = False
         threat_start = None
-        for fr in frames:
+        for idx, fr in enumerate(frames):
             t = fr["t"]
             tp = troop_list(fr)
             foes_crossed = any(y < RIVER for _, y in tp if True) if False else \
@@ -81,9 +82,26 @@ def classify_games(games, label):
                     my_cls["response_defense"] += len(my_deploys)
                     for b in my_deploys:
                         wx, wy = b[2] + 0.5, b[3] + 0.5
+                        if b[3] >= 20:
+                            continue   # 幽灵动作：非法尝试，引擎未执行，不进空间统计
                         if p1_troops:
                             dist_near.append(min(abs(wx - fx) + abs(wy - fy)
                                                  for fx, fy in p1_troops))
+                            # 接敌口径（9k 正式指标，用户防守语义）：部署后 8s 内
+                            # 部署点 5 格内是否出现敌我 troop 同框（真交战才叫防守）
+                            t0, eng = t, False
+                            for j in range(idx + 1, len(frames)):
+                                fj = frames[j]
+                                if fj["t"] > t0 + 8.0:
+                                    break
+                                near = [e for e in fj.get("entities") or []
+                                        if e[5] == "troop"
+                                        and abs(float(e[1]) - wx) + abs(float(e[2]) - wy) < 5.0]
+                                if any(int(e[4]) == 0 for e in near) and \
+                                        any(int(e[4]) == 1 for e in near):
+                                    eng = True
+                                    break
+                            engagements.append(1 if eng else 0)
                             # 拦截口径：落点是否挡在"最近过河敌军 → 我方最前塔"的
                             # 直线路径近旁（曼氏距离到线段 ≤4 格）。防守方落塔前
                             # 迎击（距敌远但在线上）是正确行为，"距敌 8 格"会误伤它。
@@ -153,6 +171,10 @@ def classify_games(games, label):
         ni = len(intercepts)
         print(f"拦截口径（落点在 敌→塔 路径4格内）: {sum(intercepts)}/{ni} = "
               f"{100.0*sum(intercepts)/ni:.1f}%")
+    if engagements:
+        ne = len(engagements)
+        print(f"接敌口径（9k 正式指标：部署后8s内部署点5格内出现敌我交战）: "
+              f"{sum(engagements)}/{ne} = {100.0*sum(engagements)/ne:.1f}%")
 
 
 if __name__ == "__main__":

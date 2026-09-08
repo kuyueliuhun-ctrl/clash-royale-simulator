@@ -170,7 +170,8 @@ class _OpponentPool:
                                                n_particles=128, seed=0).encode(None, None)))
             self._hist_policy.to_device(self.device)
         if self._loaded_path != path:
-            ck = load_checkpoint(path, belief_dim=self._hist_policy.belief_dim)
+            ck = load_checkpoint(path, plan_dim=PLAN_DIM,
+                                 belief_dim=self._hist_policy.belief_dim)
             self._hist_policy.load_state_dict(ck.state_dict())
             self._loaded_path = path
         if self._hist_side is None:

@@ -116,11 +116,27 @@ def script_defender(sim, defender_id):
     tower = min(towers, key=lambda t: (t.position.x - cx) ** 2 + (t.position.y - cy) ** 2)
     dx, dy = cx - tower.position.x, cy - tower.position.y
     norm = (dx * dx + dy * dy) ** 0.5 or 1.0
-    # 候选落点 = 塔前迎击线（朝威胁 2/3.5/1 格）+ 塔侧翼；调用方逐个尝试
+    # 9k 拦截几何（2026-09-09 用户防守原则：增加我方可操作时间、减少消耗、
+    # 尽量双塔同打）——旧"塔前 2/3.5/1 格"迎击线对深威胁会退化成塔根蹲守、
+    # 对刚过河威胁又贴桥头硬顶。按威胁→被威胁塔连线分三档：
+    #   中点靠敌侧（行进线中段，输出窗口最长+双塔覆盖概率最大，主推）→
+    #   威胁贴近塔（L<6）时退到塔前 3 格（防拉不出输出）→
+    #   近战高伤反制卡贴身敌侧 1.5 格（MiniPekka 贴 Giant 打满输出——用户正例）。
+    info = Card(best_name)
+    L = norm
+    mid_d = max(1.5, L * 0.5 - 1.5)          # 中点靠敌侧 1.5 格
+    if L < 6.0:
+        mid_d = max(1.5, L - 3.0)            # 威胁已贴塔：塔前 3 格
+    if info.range < 2.0 and all(
+            t.data.hp >= 1500 for t in threats):
+        mid_d = min(1.5, max(1.0, L * 0.15))  # 近战贴身档：高血威胁贴敌侧
+                                                   # （MiniPekka/Knight 贴 Giant
+                                                   # 打满输出——用户正例；移速
+                                                   # 不设限，贴身本身就会开打）
     cands = []
-    for d in (2.0, 3.5, 1.0):
-        cands.append((tower.position.x + dx / norm * d,
-                      tower.position.y + dy / norm * d))
+    for d in (mid_d, max(1.0, mid_d - 1.5), max(1.0, mid_d + 2.0)):
+        cands.append((tower.position.x + dx / norm * (L - d) if d < L else cx,
+                      tower.position.y + dy / norm * (L - d) if d < L else cy))
     cands.append((tower.position.x + 2.0, tower.position.y))
     cands.append((tower.position.x - 2.0, tower.position.y))
     out = []

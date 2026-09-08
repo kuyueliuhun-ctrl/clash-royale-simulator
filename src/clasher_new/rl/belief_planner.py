@@ -786,10 +786,28 @@ class BeliefPlanner:
         bundle_hint = 2 if (my_pressure >= PRESSURE_THRESHOLD
                             and threat >= PRESSURE_THRESHOLD and risk > 0.6) else 1
         region = _region_from_intent(intent)
-        # 9j：过河防守帧 → 落点提示用桥头拦截位（bridge_front，PLACEMENT_HINTS
-        # 既有语义"桥头拦截/预判防守位"），region 精确对准威胁 x（回退 defend 的
-        # own_left/own_right 与之一致，无需再分）。
-        hint = "bridge_front" if crossed is not None else "none"
+        # 9j+拦截几何（2026-09-09 用户防守原则定稿）：防守核心 = 增加我方可操作时间、
+        # 减少消耗、尽量双塔同打。取证（接敌口径）证实固定 bridge_front 偏置学成
+        # "追尾式"模板——敌军 y≈4 站塔前、我兵 y≈12-16 桥头背向而行，93% 未接敌。
+        # 改为按"威胁深度 × 反制卡型"分派 hint（拦截几何 = 威胁→被威胁塔连线上）：
+        #   - 威胁在河附近（y>=9，刚过河/中段）：hint="intercept_mid"——连线中点
+        #     靠敌侧（用户口径：不站桥头硬顶，站行进线中段，最大化输出窗口+双塔覆盖）；
+        #   - 威胁已深入（y<9，塔 5.5 格内）：
+        #     高血坦克/仅建筑 → "pull_aggro"（贴身放敌侧 1-2 格：MiniPekka/Knight
+        #     贴 Giant 大量输出——用户给的正例；气球+无对空时重甲亡灵贴桥头同理，
+        #     共享"高价值目标贴身打满输出"语义）；
+        #     其它（远程/杂兵）→ "king_front"（塔后 2-3 格拉扯，借塔输出减消耗）。
+        hint = "none"
+        if crossed is not None:
+            fy = float(crossed.position.y)
+            data = getattr(crossed, "data", None)
+            tank = (getattr(data, "hitpoints", 0) or 0) >= 2500 or \
+                getattr(getattr(data, "summonCharacterData", None),
+                        "tidTarget", "") == "TID_TARGETS_BUILDINGS"
+            if fy < 9.0:
+                hint = "pull_aggro" if tank else "king_front"
+            else:
+                hint = "intercept_mid"
         return PlanToken(
             macro_intent=intent,
             focus_region=region,

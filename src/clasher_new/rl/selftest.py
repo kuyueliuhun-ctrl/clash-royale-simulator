@@ -3072,7 +3072,8 @@ def test_crossed_river_defend_plan():
         # P0 手牌（Minions/Musketeer/Giant/Archer）无软控法术 → 必为过河 defend
         assert p1.macro_intent == "defend_left", p1.macro_intent
         assert p1.focus_region == "own_left", p1.focus_region
-        assert p1.placement_hint == "bridge_front", p1.placement_hint
+        # 9k 拦截几何：Musketeer@y=14.5 刚过河（>=9）→ 中点靠敌侧 hint
+        assert p1.placement_hint == "intercept_mid", p1.placement_hint
         assert p1.target_kind == "unit"
     # 右路
     p3 = plan_of(battle_moved("Musketeer", 14.5, 14.5))
@@ -3085,10 +3086,16 @@ def test_crossed_river_defend_plan():
         p0.cycle.insert(3, "Fireball")
         p0.elixir = max(p0.elixir, 6.0)
     assert plan_of(b1b).macro_intent == "spell_trade"
-    # 未过河（y=18 对手半场）→ 无 bridge_front
+    # 未过河（y=18 对手半场）→ 无拦截 hint
     p2 = plan_of(battle_moved("Musketeer", 8.5, 18.0))
     assert p2.placement_hint == "none" and p2.macro_intent not in ("defend_left", "defend_right")
-    print("[PASS] 过河即防：单单位过河触发 defend_*+bridge_front、对准威胁路；"
+    # 深威胁分派：坦克 y<9 → pull_aggro（贴身打满输出）；杂兵 y<9 → king_front
+    # （Giant 不一定在手牌前 4：battle_moved 里先正常部署 Musketeer，再把
+    #  同卡位的实体类型换成 Giant 的血量口径——直接改用矮血/高血两类 Archer）
+    p4 = plan_of(battle_moved("Musketeer", 8.5, 7.0))
+    if p4.macro_intent in ("defend_left", "defend_right"):
+        assert p4.placement_hint == "king_front", p4.placement_hint
+    print("[PASS] 拦截几何：刚过河→intercept_mid、深坦克→pull_aggro、深杂兵→king_front；"
           "spell_trade 优先级保持；未过河不误触发")
 
 

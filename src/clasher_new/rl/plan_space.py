@@ -68,8 +68,9 @@ PLACEMENT_HINTS = [
     "pull_aggro",        # 拉扯：拉到己方输出集中点/转锁建筑
     "support_zone",      # 推进：部署到能走到坦克后方的区域
     "anti_spell_zone",   # 防法术：单位轨迹离开塔溅射区的落点
-    "bridge_front",      # 桥头拦截/预判防守位
+    "bridge_front",      # 桥头拦截/预判防守位（9k 起防守主推 intercept_mid，本项保留兼容）
     "king_front",        # 国王塔仇恨位（激活）
+    "intercept_mid",     # 9k 拦截几何：威胁→塔连线中点靠敌侧（行进线中段，非桥头）
 ]
 
 #: v1：对手手牌/牌序里的法术威胁（anti_spell 核心信息）
