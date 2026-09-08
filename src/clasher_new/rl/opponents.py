@@ -24,22 +24,25 @@ from rl.action_bundle import ActionBundle, K_MAX
 DECK_SIZE = 8
 
 
-#: 四种卡组（2026-09-07 定稿，docs/four_decks_manual.md）：
-#: 对齐 FirstLight CR 训练哲学的四个互补 archetype——速攻循环 / 推进 / 自闭攻城 /
-#: 双线快攻。全部 8/8 引擎可用（batch smoke 通过），数值口径见手册。
+#: 四种卡组（2026-09-08 用户指定换血，docs/four_decks_manual.md）：
+#: 对齐 FirstLight CR 训练哲学的四个互补 archetype——速攻循环 / 重坦克推进 /
+#: 自闭攻城 / 攻城槌组合。全部 8/8 引擎可用（batch smoke + deploy 实测），数值口径见手册。
 FOUR_DECK_SET = [
     # 速猪 2.6（均费 2.62）：野猪快攻 + Cannon 拉扯 + 极速循环
     ["HogRider", "IceGolemite", "IceSpirits", "Musketeer",
      "Cannon", "Skeletons", "Fireball", "Log"],
-    # 皇家巨人（均费 3.12）：桥头平推 + 空中护航
-    ["RoyalGiant", "Hunter", "MegaMinion", "Bats",
-     "Skeletons", "Cannon", "Log", "Fireball"],
+    # 石头人（均费 3.62，替换皇家巨人）：Golem 平推 + Witch 清杂 +
+    # 空中护航 + 极小费循环（引擎无 NightWitch/Lumberjack，Witch 对位）
+    ["Golem", "Witch", "BabyDragon", "MegaMinion",
+     "Bats", "Tombstone", "Zap", "Snowball"],
     # X 弩（均费 3.25）：自闭攻城 + 层层保弩
     ["Xbow", "Tesla", "Skeletons", "IceWizard",
      "Archer", "Knight", "Log", "Fireball"],
-    # 双线快攻（均费 3.38）：野猪/皇家猪双路分推
-    ["HogRider", "RoyalHogs", "IceWizard", "Musketeer",
-     "Valkyrie", "Zap", "Fireball", "Skeletons"],
+    # 巨骷髅攻城槌（均费 3.88，替换双线快攻，用户指定卡单）：
+    # BattleRam 开路 + GiantSkeleton 亡语炸弹清防守（209伤/3s引信/3格，引擎实测）
+    # + WitchMother 诅咒滚雪球 + Ghost 不可锁定 + MiniSparkys(=Zappies) 对空控制
+    ["BarbLog", "BattleRam", "GiantSkeleton", "WitchMother",
+     "Ghost", "Vines", "Wizard", "MiniSparkys"],
 ]
 
 
