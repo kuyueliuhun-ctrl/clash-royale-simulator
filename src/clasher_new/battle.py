@@ -1606,6 +1606,14 @@ class SpawnProjectile(Projectile):
         self.path = []
         self.shield_health = 0
         self.hp = 0
+        # Entity.__init__ 被跳过（无卡牌身份），但 buff 状态字段是全场实体的公共接口：
+        # IceWizard 落地光环等 AOE 会给路径上所有实体写 speed_debuff/debuff_time_remaining
+        #（词表 v2 后滚弹实体进观测/交战路径，缺字段即 AttributeError）
+        self.speed_buff = 1.0
+        self.speed_debuff = 1.0
+        self.buff_time_remaining = 0.0
+        self.debuff_time_remaining = 0.0
+        self.hit_speed_mult = 1.0
         self.data = _ProjectileShim(proj_wrapper)
 
     def to_dict(self):
