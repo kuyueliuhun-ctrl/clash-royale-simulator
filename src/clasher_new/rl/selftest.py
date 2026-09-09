@@ -108,7 +108,9 @@ def test_bayes_filter():
     played = []
     for _ in range(6):
         card = real.cycle[0]
-        if b.deploy_card(1, card, Position(3.5, 25.5)):
+        # 落点不能选塔上：塔矩形化后 (3.5,25.5)=P1 公主塔中心，部署正确拒绝
+        #（旧圆形几何因 _is_tower_alive 属性名 bug 塔占位从未生效才放过）
+        if b.deploy_card(1, card, Position(6.5, 22.5)):
             played.append(card)
             bf.update(card)
     assert abs(bf.hand_probs().sum() - 4.0) < 0.01
@@ -2022,7 +2024,9 @@ def test_tank_backline_geometry():
     bs2 = mk_battle()
     spawn(bs2, 1, "Knight", 14.5, 20.0, 2000.0)
     cells4 = legal_cells(bs2, 1, "Archer")
-    xb2, yb2 = cell_near(bs2, 1, 14.5, 26.0)   # Knight 身后（y 更大）→ 合法
+    # 塔矩形化后 (14.5,26.0) 落在 P1 右公主塔 3×3（y∈[24,27]）内，非法是正确行为；
+    # 身后位测试点移到塔矩形上方 (14.5, 28.5)
+    xb2, yb2 = cell_near(bs2, 1, 14.5, 28.5)   # Knight 身后（y 更大，塔外）→ 合法
     assert bool(cells4[yb2, xb2]), "P1 Knight 身后位应合法"
     xa2, ya2 = cell_near(bs2, 1, 14.5, 18.0)   # Knight 前方 → 非法
     assert not bool(cells4[ya2, xa2]), "P1 Knight 前方位应非法"

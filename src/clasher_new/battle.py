@@ -1,5 +1,6 @@
 from core import BlankEntity
 from player import PlayerState
+from arena import TileGrid
 from pathfinding_heap import EntityPathfinder, position_to_cell, cell_to_position
 from card_mechanics import *
 from card_utils import Card, TimedExplosiveData, spells, buildings, projectiles, character_to_card, projectile_from_row
@@ -141,6 +142,39 @@ class Entity:
             self.damage_reduction_timer = max(self.damage_reduction_timer, duration)
         if heal:
             self.regen_buffs.append({'hps': heal['hps'], 'time': heal.get('time', 1.0)})
+
+    def edge_distance_from(self, pos) -> float:
+        """pos 到本实体「实体边缘」的距离（索敌/射程统一口径）。
+
+        塔（id≤6 的 persistent 建筑）是矩形：距离 = 到矩形最近点（矩形内 0）；
+        其余实体保持圆形口径：中心距 − collision_radius。射程判定原来是
+        dist ≤ range + target.collision_radius，等价于 edge_dist ≤ range。"""
+        rect = getattr(self, '_tower_rect', 0)
+        if rect == 0:
+            self._bind_tower_rect()
+            rect = self._tower_rect
+        if rect is not None:
+            px, py = pos.x, pos.y
+            cx, cy, hw, hh = rect
+            dx = max(abs(px - cx) - hw, 0.0)
+            dy = max(abs(py - cy) - hh, 0.0)
+            return math.hypot(dx, dy)
+        return pos.distance_to(self.position) - self.data.collision_radius
+
+    def _bind_tower_rect(self):
+        """塔矩形惰性绑定 (cx,cy,hw,hh)（首次索敌时 battle_state/arena 已挂上）。
+
+        塔位置永不移动（Building 静态），绑定一次终身有效；非塔/查无此塔 →
+        None（回退圆形口径，且用 0 哨兵与「未绑定」区分避免重复查表）。"""
+        if not (getattr(self, 'persistent', False) and getattr(self, 'id', 99) <= 6) \
+                or self.battle_state is None:
+            self._tower_rect = None
+            return
+        for tower_pos, hw, hh, _pid in self.battle_state.arena.towers:
+            if tower_pos.x == self.position.x and tower_pos.y == self.position.y:
+                self._tower_rect = (tower_pos.x, tower_pos.y, hw, hh)
+                return
+        self._tower_rect = None
 
     def to_dict(self):
         """If I want to render a certain entity on the screen, what's the minimal information I'll need?"""
@@ -532,29 +566,31 @@ class Entity:
             bonus = 0.5
         else:
             bonus = 0
-        dist = self.position.distance_to(target.position)
+        # 塔目标用矩形边缘距离（塔矩形几何，2026-09-09）；其余实体圆形口径不变
+        dist = target.edge_distance_from(self.position)
         # —— 勘误批12：形态射程覆盖（ThreeMusketeers 近战形态等）——
         _ro = getattr(self, '_range_override', None)
         if _ro is not None:
-            return dist <= _ro + bonus + self.data.collision_radius
+            return dist <= _ro + bonus
         # M2 族3：建筑最小射程（Mortar 贴脸不攻击）
         if getattr(self.data, 'min_range', 0) and dist < self.data.min_range:
             return False
         # M5 觉醒补全：觉醒火枪手狙击弹临时射程（customRange 30000）
         _snipe = getattr(self, '_snipe_range_active', 0)
         if _snipe and dist <= _snipe: return True
-        return dist <= self.data.range + target.data.collision_radius + bonus
+        return dist <= self.data.range + bonus
     def in_sight_range(self, target):
         if target is None: return False
         if 'PrincessTower' in target.name:
             bonus = 0.5
         else:
             bonus = 0
-        dist = self.position.distance_to(target.position)
+        # 塔目标用矩形边缘距离（与 in_range 同口径）
+        dist = target.edge_distance_from(self.position)
         # M5 觉醒补全：狙击弹索敌范围同步扩展（否则 30 格目标因视距 6 永远锁不到）
         _snipe = getattr(self, '_snipe_range_active', 0)
         if _snipe and dist <= _snipe: return True
-        return dist <= self.data.sight_range + target.data.collision_radius + bonus
+        return dist <= self.data.sight_range + bonus
 
     def get_nearest_target(self):
         """Find nearest valid target with priority rules"""
@@ -647,7 +683,8 @@ class Entity:
                 if not self.battle_state.entities[i].is_alive: continue
                 possible_princess_tower = self.battle_state.entities[i]
                 if possible_princess_tower.player == self.player: continue
-                distance = possible_princess_tower.position.distance_to(self.position) - possible_princess_tower.data.collision_radius
+                # 塔索敌距离 = 到矩形边缘（塔矩形几何）；原 −collision_radius 圆形口径作废
+                distance = possible_princess_tower.edge_distance_from(self.position)
                 if best_any is None or distance < best_any[0]:
                     best_any = (distance, i)
                 # 索敌范围不跨中轴：永远不把对侧公主塔作为回退目标。王塔(位于中轴)
@@ -1173,6 +1210,7 @@ class Building(Entity):
         self.name = self.data.name
         self.evo_hits = 0
         self.evo_extra_spawned = 0
+        self._tower_rect = 0   # 0=未绑定哨兵；None=非塔；tuple=塔矩形（惰性绑定）
         if evolved and self.data.evo_raw:
             # 觉醒建筑（ Cannon/Mortar/Tesla ）：数值按曲线推导；出场脉冲延迟到首次 update（battle_state 届时才挂上）
             from card_utils import characters, buildings
@@ -2558,7 +2596,12 @@ class BattleState:
         for each in self.players:
             each.regenerate_elixir(dt, 2.8 if self.time < 120 else 1.4 if self.time < 240 else 2.8/3)
         self.entities = {key:value for key,value in self.entities.items() if (value.is_alive or key <= 6)}
-        self.building_positions = [(entity.position.x, entity.position.y, entity.data.collision_radius) for entity in self.entities.values() if isinstance(entity, Building)]
+        # 塔矩形不进圆形列表（id≤6）：塔占位走 _tower_footprint_blocks 矩形判定，
+        # 圆形条目（collision_radius 1.0/1.4）与矩形（3×3/4×4）口径不一致会双重计算
+        # ——building_cache（A* 障碍距离场）同样只服务非塔建筑。
+        self.building_positions = [(entity.position.x, entity.position.y, entity.data.collision_radius) for entity in self.entities.values() if isinstance(entity, Building) and entity.id > 6]
+        # 塔存活缓存同步刷新（tower_rect_dist 热路径用；死亡塔即刻退出占位/索敌）
+        self.arena.refresh_tower_alive_cache(self)
         if not self.cache_fresh:
             self.calculate_building_cache()
             self.cache_fresh = True
@@ -2721,6 +2764,9 @@ class BattleState:
         if card_info.type != 'spell':
             # Check the deployment area is legit
             if self.is_position_occupied_by_building(position, 0): return False
+            # 王塔身后 1 格宽禁建筑（部队不限制；arena.behind_king 与掩码层同源）
+            if card_info.type == 'building' and self.arena.is_behind_king(position, player_id):
+                return False
             # —— 勘误批8：Miner 官方可部署全场（含敌半场）——
             if card_name != 'Miner' and player_id == 0:
                 if position.y <= 1.0 and (position.x <= 6.0 or position.x > 12.0): return False
@@ -2867,12 +2913,22 @@ class BattleState:
             self.building_cache.append([])
             for y_cell in range(0, 64):
                 self.building_cache[x_cell].append(float('inf'))
+        # 塔矩形先入距离场（A* 寻路障碍必须含塔——部队要绕着塔走）
+        for tower_pos, hw, hh, _pid in self.arena.towers:
+            for x_cell in range(0, 36):
+                for y_cell in range(0, 64):
+                    pos = cell_to_position((x_cell, y_cell))
+                    d = self.arena.dist_to_rect(pos.x, pos.y, tower_pos.x, tower_pos.y, hw, hh)
+                    if d < self.building_cache[x_cell][y_cell]:
+                        self.building_cache[x_cell][y_cell] = d
         for x_cell in range(0, 36):
             for y_cell in range(0, 64):
                 pos = cell_to_position((x_cell, y_cell))
-                m = min(self.building_positions, key=lambda x: math.sqrt((pos.x-x[0])**2+(pos.y-x[1])**2)-x[2])
-                minimum_distance = math.sqrt((pos.x-m[0])**2+(pos.y-m[1])**2)-m[2]
-                self.building_cache[x_cell][y_cell] = minimum_distance
+                if self.building_positions:
+                    m = min(self.building_positions, key=lambda x: math.sqrt((pos.x-x[0])**2+(pos.y-x[1])**2)-x[2])
+                    minimum_distance = math.sqrt((pos.x-m[0])**2+(pos.y-m[1])**2)-m[2]
+                    if minimum_distance < self.building_cache[x_cell][y_cell]:
+                        self.building_cache[x_cell][y_cell] = minimum_distance
     def pathfind_ground_walkable(self, position, mover_radius):
         if not self.arena.is_walkable(position): return False
         x, y = position_to_cell(position)
@@ -2882,8 +2938,22 @@ class BattleState:
         if not self.arena.is_walkable(position): return False
         return not self.is_position_occupied_by_building(position, mover_radius)
 
+    def _tower_footprint_blocks(self, position, mover_radius: float) -> bool:
+        """存活塔矩形对行军/部署的占位。
+
+        mover_radius=0（部署脚点）：点在矩形内（含边界，dist<=0）即占位；
+        mover_radius>0（行军圆）：到矩形最近点距离 < mover_radius 即阻挡。"""
+        d = self.arena.tower_rect_dist(position, battle_state=self)
+        if mover_radius <= 0.0:
+            return d <= 0.0
+        return d < mover_radius
+
     def is_position_occupied_by_building(self, position, mover_radius: float = 0.5) -> bool:
         """Return True when a position overlaps any live building footprint."""
+        # 塔矩形：mover_radius=0（部署脚点）时点在矩形内即占位；mover_radius>0
+        # （行军）时侵入矩形边缘即占位。塔不再依赖圆形 collision_radius。
+        if self._tower_footprint_blocks(position, mover_radius):
+            return True
         for x,y,r in self.building_positions:
             # I choose not to use math.hypot to speed things up. This functino gets called several millions times per game
             if (x-position.x)**2+ (y-position.y)**2 < (r + mover_radius)**2:
@@ -2896,6 +2966,12 @@ class BattleState:
         flying_troops = combinations([each for each in entities_alive if each.data.is_air_unit], 2)
         for troop in (ground_troops, flying_troops):
             for e1, e2 in troop:
+                # 塔矩形：一对一情况按矩形推出（塔不动，全部位移给部队）；
+                # 部队-部队/部队-普通建筑保持圆形推挤口径不变
+                if e1.id <= 6 and getattr(e1, 'persistent', False):
+                    self._push_troop_out_of_tower(e2, e1); continue
+                if e2.id <= 6 and getattr(e2, 'persistent', False):
+                    self._push_troop_out_of_tower(e1, e2); continue
                 if e1.position.distance_to(e2.position) < e1.data.collision_radius + e2.data.collision_radius:
                     overlap = e1.data.collision_radius + e2.data.collision_radius - e1.position.distance_to(e2.position)
                     # the direction vector points from e1 to e2
@@ -2909,6 +2985,39 @@ class BattleState:
                     e2.position.y += direction_vector.imag*movement_ratio*overlap
                     e1.position.x += -direction_vector.real * (1-movement_ratio)*overlap
                     e1.position.y += -direction_vector.imag * (1-movement_ratio)*overlap
+
+    def _push_troop_out_of_tower(self, troop, tower):
+        """部队与存活塔矩形重叠 → 沿最近点法线推出矩形外（部队吃全部位移）。
+
+        空军-塔本不在同一碰撞组（塔 is_air_unit=0 只进地面组），无需特判。"""
+        if not troop.is_alive or not tower.is_alive: return
+        for tower_pos, hw, hh, _pid in self.arena.towers:
+            if tower_pos.x != tower.position.x or tower_pos.y != tower.position.y:
+                continue
+            mr = troop.data.collision_radius
+            # 圆(AABB扩展) vs 矩形：到矩形最近点距离 < mr → 沿最近点法线推出
+            cx, cy = tower_pos.x, tower_pos.y
+            px, py = troop.position.x, troop.position.y
+            qx = max(cx-hw, min(px, cx+hw))
+            qy = max(cy-hh, min(py, cy+hh))
+            dx, dy = px-qx, py-qy
+            d2 = dx*dx + dy*dy
+            if d2 >= mr*mr:
+                continue   # 不重叠
+            if d2 > 1e-9:
+                d = math.sqrt(d2)
+                push = (mr - d) / d
+                troop.position.x += dx*push
+                troop.position.y += dy*push
+            else:
+                # 圆心在矩形内：沿最小穿透轴推出
+                ox = hw - abs(px-cx) + mr
+                oy = hh - abs(py-cy) + mr
+                if ox <= oy:
+                    troop.position.x = cx + (hw+mr) if px >= cx else cx - (hw+mr)
+                else:
+                    troop.position.y = cy + (hh+mr) if py >= cy else cy - (hh+mr)
+            return
 
     def on_death(self, entity):
         if entity.name == 'King_PrincessTowers':

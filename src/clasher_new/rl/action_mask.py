@@ -384,6 +384,9 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position,
         return True
     if battle.is_position_occupied_by_building(pos, 0.0):
         return False
+    # 王塔身后 1 格宽禁建筑（与 battle.deploy_card 同源，塔矩形几何 2026-09-09）
+    if card_info.type == "building" and battle.arena.is_behind_king(pos, player_id):
+        return False
     if player_id == 0:
         if pos.y <= 1.0 and (pos.x <= 6.0 or pos.x > 12.0):
             return False

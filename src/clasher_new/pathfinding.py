@@ -1,6 +1,7 @@
 from pathlib import Path
 import math
 from core import Position
+from arena import TileGrid
 
 grid_path = Path(__file__).with_name('tilemap_lane_grid.txt')
 with grid_path.open('r', encoding='utf-8') as f:
@@ -53,13 +54,30 @@ class EntityPathfinder:
         radius = self.target.data.collision_radius + self.entity.data.range
         # The first step is to calculate some viable cells that is in attack position.
 
+        # 塔矩形（2026-09-09）：目标边缘 = 矩形边而非中心圆，可攻击格判定改为
+        # 「格心到塔矩形距离 < range+0.375」（与 Entity.edge_distance_from 同口径；
+        # 矩形半径已含在边里，不再加 target.collision_radius）。
+        _tower_rect = None
+        if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) <= 6 \
+                and self.battle_state is not None:
+            for tpos, hw, hh, _pid in self.battle_state.arena.towers:
+                if tpos.x == self.target.position.x and tpos.y == self.target.position.y:
+                    _tower_rect = (tpos.x, tpos.y, hw, hh)
+                    break
         target_cell = position_to_cell(self.target_position)
         scan_radius = math.ceil(radius*2) + 1
         for x in range(target_cell[0]-scan_radius, target_cell[0]+scan_radius):
             for y in range(target_cell[1]-scan_radius, target_cell[1]+scan_radius):
-                distance = cell_to_position((x, y)).distance_to(self.target_position)
+                pos = cell_to_position((x, y))
+                if _tower_rect is not None:
+                    distance = TileGrid.dist_to_rect(pos.x, pos.y, *_tower_rect)
+                    if distance < self.entity.data.range + 0.375 and \
+                            self.battle.ground_walkable(pos, self.entity.data.collision_radius):
+                        self.goals.add((x, y))
+                    continue
+                distance = pos.distance_to(self.target_position)
                 # I added 0.375 to radius so that short-ranged troops like lumberjack can reach the tower instead of leering to the side
-                if distance < radius+0.375 and self.battle.ground_walkable(cell_to_position((x, y)), self.entity.data.collision_radius):
+                if distance < radius+0.375 and self.battle.ground_walkable(pos, self.entity.data.collision_radius):
                     self.goals.add((x, y))
         # The second step is to filter goals, only keep the closest one.
         self.goals = {min(self.goals, key=lambda c: cell_to_position(c).distance_to(self.target_position))}
