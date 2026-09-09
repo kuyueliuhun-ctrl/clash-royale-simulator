@@ -33,6 +33,7 @@
 | `rl_reward_plan_v2.md` | 奖励与计划通道重构 v2（奖励经济预设、法术空砸/裸下/坦克几何闸门） | `rl/config.py` `rl/env_wrapper.py` `rl/action_mask.py` |
 | `rl_plan_design_v1.md` | PlanToken 战术意图扩展设计 v1（57 维/21 意图） | `rl/plan_space.py` `rl/belief_planner.py` `rl/prophet.py` `rl/follower.py` |
 | `mcts_design.md` | 推理时浅 MCTS 设计（UCT+引擎叶推演，预算/对手口径/评估接入） | `rl/mcts.py` `rl/selftest.py`（test_mcts_*） |
+| `question_bank_feasibility.md` | 题库预训练可行性评估（POC 实测：引擎判卷 3 题+checkpoint 答题 EV gap；判卷口径两缺口；三步走路线） | `../scripts/question_bank_poc.py` `simulate_exchange.py` `threat_calc.py` `rl/follower.py` |
 | `../scripts/forensics_response.py` | 9j 响应率取证脚本（防守响应占比/延迟/落点距离，v2 修正坐标口径） | `AGENTS.md` 9j 节（结论存档） |
 
 ## 2. 外置工具（引擎侧确定性服务，2026-09 起步；设计与优先级见 `../AGENTS.md`）
