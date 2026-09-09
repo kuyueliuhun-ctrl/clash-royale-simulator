@@ -21,6 +21,12 @@ class BasicCharacter:
     def on_spawn(self): pass
     def on_tick(self, dt): self.battle_state = self.entity.battle_state
     def on_death(self): pass
+
+    def _hit_by_area(self, target, center, radius):
+        """主目标是否落在以 center 为心的溅射圈内（deal_area_damage 同口径：
+        塔用矩形边缘距离、普通实体中心距）。"""
+        return target.edge_distance_from(center) < radius
+
     def on_attack(self, current_target=None):
         self.entity.last_attack_time = self.battle_state.time  # M4 fortify 脱战判定
         # M4.5 动作链：Berserker 等伤害仅在攻击序列内（data.damage=0）也须结算
@@ -31,6 +37,18 @@ class BasicCharacter:
                 self.battle_state.deal_area_damage(self.entity.player, self.entity.position, self.data.area_damage_radius,
                                                    damage,
                                                    self.data.attack_air, self.data.attack_ground)
+                # —— 溅射圈以自身为中心（deal_area_damage 圆形判定），主目标可能在其
+                # 外（如 MegaKnight 站公主塔边缘：塔边距 1.69 > 溅射半径 1.3）——
+                # 主目标圈外时保底补单体主伤（官方：溅射是附加伤害，单体主伤必中）。
+                if current_target is not None and current_target.is_alive \
+                        and not self._hit_by_area(current_target,
+                                                  self.entity.position,
+                                                  self.entity.data.area_damage_radius):
+                    _is_tower = ('King' in current_target.name
+                                 or 'PrincessTower' in current_target.name)
+                    current_target.take_damage(
+                        damage * (self.entity.data.tower_damage_mult if _is_tower else 1.0),
+                        delayed=True, source=self.entity)
             else:
                 if 'King' in current_target.name or 'PrincessTower' in current_target.name:  # 勘误批8：对塔减伤覆盖公主塔（Miner 25%）
                     current_target.take_damage(damage*self.entity.data.tower_damage_mult, delayed=True, source=self.entity)  # M5：击杀归因

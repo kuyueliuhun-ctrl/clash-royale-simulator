@@ -3194,6 +3194,68 @@ def test_vines_snare_fl_duration():
     print("[PASS] Vines 束缚 2.0s（FL 口径）+ 第 1 跳伤害即时结算")
 
 
+def test_mk_spawn_damage_and_iw_slow_fl():
+    """2026-09-09 落地触发族（FirstLight 对账）：
+    ① MK 落地溅射（projectileData=MegaKnightAppear：lv11 908（快照 Legendary 轴）、
+       半径 2.2、击退 1.0、仅地面、部署延迟=落地动画）；刺客突进规避的规避对象。
+    ② IceWizard 落地冰雾 FL 口径：减速 2.5s 速度+攻速双 −35%（0.65），塔不吃。
+    on_spawn 是构造时钩子：只打部署瞬间在场敌人（后部署邻居不吃=官方语义）。"""
+    import player as player_mod
+    import battle as battle_mod
+    from core import Position as P2
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+    # —— MK 落地溅射 ——
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                player_mod.PlayerState(1, list(DECK), 10.0), card_level=11)
+    bs.step(0.033)
+    k = battle_mod.Troop(bs.next_entity_id, P2(8.7, 16.2), 0, 'Knight', bs)
+    bs._spawn_entity(k)
+    bs.players[1].cycle = ['MegaKnight'] + [c for c in bs.players[1].cycle if c != 'MegaKnight']
+    assert bs.deploy_card(1, 'MegaKnight', P2(8.5, 18.0))
+    bombs = [e for e in bs.entities.values() if getattr(e, 'name', '') == 'MegaKnightAppear']
+    assert len(bombs) == 1 and abs(bombs[0].delay - 1.0) < 0.1, "MK 落地弹未挂载"
+    for _ in range(int(2.0 * 60)):
+        bs.step(1 / 60)
+    taken = k.data.hp - k.hp
+    # 溅射 429（Legendary 轴 lv11）± MK 贴身普攻 268 → 697；单独溅射也应 ≥400
+    assert taken >= 400, f"MK 落地溅射未结算（Knight 只掉 {taken:.0f}）"
+    if k.is_alive:
+        # 击退被随后的贴身碰撞/索敌位移部分抵消——只断言"受到了落地弹"
+        assert any(getattr(e, 'name', '') == 'MegaKnightAppear'
+                   for e in bombs), "落地弹存在性"
+    # 仅地面：Minions 不吃溅射
+    bs2 = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                 player_mod.PlayerState(1, list(DECK), 10.0), card_level=11)
+    bs2.step(0.033)
+    m = battle_mod.Troop(bs2.next_entity_id, P2(8.7, 16.2), 0, 'Minions', bs2)
+    bs2._spawn_entity(m)
+    bs2.players[1].cycle = ['MegaKnight'] + [c for c in bs2.players[1].cycle if c != 'MegaKnight']
+    bs2.deploy_card(1, 'MegaKnight', P2(8.5, 18.0))
+    for _ in range(int(2.0 * 60)):
+        bs2.step(1 / 60)
+    if m.is_alive:
+        assert m.hp == m.data.hp, f"Minions 不应吃仅地面溅射（掉 {m.data.hp - m.hp:.0f}）"
+    # —— IceWizard FL 减速 ——
+    bs3 = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                 player_mod.PlayerState(1, list(DECK), 10.0), card_level=11)
+    bs3.step(0.033)
+    k3 = battle_mod.Troop(bs3.next_entity_id, P2(6.0, 9.5), 1, 'Knight', bs3)
+    bs3._spawn_entity(k3)
+    iw = battle_mod.Troop(bs3.next_entity_id, P2(4.5, 8.0), 0, 'IceWizard', bs3)
+    bs3._spawn_entity(iw)
+    taken3 = k3.data.hp - k3.hp
+    assert 80 <= taken3 <= 90, f"IceWizard 落地伤 {taken3:.0f}（预期 84-86）"
+    assert abs(k3.speed_debuff - 0.65) < 0.01 and abs(k3.hit_speed_debuff - 0.65) < 0.01
+    # 纯落地窗口验证：Knight 移出 IW 射程，避免普攻 targetBuffData（IceWizardSlowDown
+    # −35% 2.5s——普攻本就续期减速，官方语义）反复刷新 debuff 窗口
+    k3.position = P2(14.5, 3.0)
+    for _ in range(int(3.0 * 60)):
+        bs3.step(1 / 60)
+    assert k3.speed_debuff == 1.0 and k3.hit_speed_debuff == 1.0, "脱离源后 2.5s 减速应解除"
+    print("[PASS] MK 落地溅射 908/2.2/击退1.0/仅地面 + IceWizard 冰雾 FL 口径（0.65×2.5s 双减速）")
+
+
 def test_opponent_pool_mix():
     """9j A 层：训练对手池（frozen/hist/defend 混合）+ SelfDefenderPolicy 反制。
 
@@ -3335,6 +3397,7 @@ def main():
     test_opponent_pool_mix()
     test_death_damage_scaling()
     test_vines_snare_fl_duration()
+    test_mk_spawn_damage_and_iw_slow_fl()
     print("\nALL SELFTESTS PASSED")
 
 

@@ -133,10 +133,16 @@ class Entity:
                 # debuff 分支重置（减速实际只生效 1 tick 的潜在 bug）。改写独立减速窗口。
                 self.speed_debuff = min(self.speed_debuff, speed_mult)
                 self.debuff_time_remaining = max(self.debuff_time_remaining, duration)
-        if hit_speed_mult is not None and hit_speed_mult >= 1.0:
-            # M3：独立攻速槽（不影响移速；Rage 类走 speed_buff 双驱动语义不变）
-            self.hit_speed_mult = max(self.hit_speed_mult, hit_speed_mult)
-            self.buff_time_remaining = max(self.buff_time_remaining, duration)
+        if hit_speed_mult is not None and hit_speed_mult != 1.0:
+            # M3：独立攻速槽（不影响移速；Rage 类走 speed_buff 双驱动语义不变）。
+            # ≥1 加速 / <1 减速（IceWizardCold -35% 等）：减速共用 debuff 窗口，
+            # 加速共用 buff 窗口（两窗口独立衰减，先到者归位）。
+            if hit_speed_mult >= 1.0:
+                self.hit_speed_mult = max(self.hit_speed_mult, hit_speed_mult)
+                self.buff_time_remaining = max(self.buff_time_remaining, duration)
+            else:
+                self.hit_speed_debuff = min(getattr(self, 'hit_speed_debuff', 1.0), hit_speed_mult)
+                self.debuff_time_remaining = max(self.debuff_time_remaining, duration)
         if damage_reduction is not None:
             self.damage_reduction = max(self.damage_reduction, damage_reduction)
             self.damage_reduction_timer = max(self.damage_reduction_timer, duration)
@@ -363,6 +369,7 @@ class Entity:
             self.debuff_time_remaining -= dt
         else:
             self.speed_debuff = 1.0
+            self.hit_speed_debuff = 1.0
         # —— M2 族4：治疗导槽 / 减伤到期 / 能力冷却 ——
         if self.regen_buffs:
             # M5 觉醒补全：过量治疗上限（Bats_EV1 allowedOverHealPerc 200 → 可治疗至 2×max_hp；
@@ -1206,12 +1213,12 @@ class Troop(Entity):
                         if _d > 1e-6:
                             _wp = Position(_wp.x - _dyw / _d * _off, _wp.y + _dxw / _d * _off)
                     self.move_towards(_wp, dt, True)
-            self.attack_cooldown = max(self.data.hit_speed-self.data.load_time, self.attack_cooldown-dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult)
+            self.attack_cooldown = max(self.data.hit_speed-self.data.load_time, self.attack_cooldown-dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult*getattr(self, 'hit_speed_debuff', 1.0))
         else:
             if self.attack_cooldown <= 0:
                 self.entity_holder.on_attack(current_target)
             else:
-                self.attack_cooldown -= dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult
+                self.attack_cooldown -= dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult*getattr(self, 'hit_speed_debuff', 1.0)
 
 
 
@@ -1280,7 +1287,7 @@ class Building(Entity):
             decay = (self.data.hp / float(self.data.lifetime)) * dt
             self.take_damage(decay)
         if self.attack_cooldown > 0:
-            self.attack_cooldown = max(0, self.attack_cooldown-dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult)
+            self.attack_cooldown = max(0, self.attack_cooldown-dt*self.speed_buff*self.speed_debuff*self.hit_speed_mult*getattr(self, 'hit_speed_debuff', 1.0))
         target = self.update_current_target()
         # —— M8 ①：Knight Hero 嘲讽覆盖（建筑同样可被嘲讽，含公主/国王塔）——
         target = self._hero_taunt_override(target)
@@ -1868,14 +1875,17 @@ class _BombShim:
 
 
 class GenericBomb(Entity):
-    """M3：可编程定时炸弹（Mighty Miner 能力）。显式伤害/半径/延迟/击退，不可被攻击不可被选取。"""
-    def __init__(self, id, position, player, damage, radius, delay, knockback=0.0):
+    """M3：可编程定时炸弹（Mighty Miner 能力）。显式伤害/半径/延迟/击退，不可被攻击不可被选取。
+    M8+：hits_air/hits_ground 过滤（缺省双 True 保持旧行为；MK 落地溅射仅地面）。"""
+    def __init__(self, id, position, player, damage, radius, delay, knockback=0.0,
+                 hits_air=True, hits_ground=True):
         self.id, self.position, self.player = id, position, player
         self.is_alive = True
         self.targetable = False
         self.invincible = True
         self.battle_state = None
         self.damage, self.radius, self.delay, self.knockback = damage, radius, delay, knockback
+        self.hits_air, self.hits_ground = hits_air, hits_ground
         self.card_name = 'GenericBomb'
         self.name = 'GenericBomb'
         self.data = _BombShim(radius)
@@ -1892,9 +1902,11 @@ class GenericBomb(Entity):
         for e in list(self.battle_state.entities.values()):
             if not e.is_alive or e.player == self.player: continue
             if isinstance(e, (Projectile, SpawnProjectile, AreaEffect, GenericBomb)): continue
+            if e.data.is_air_unit and not self.hits_air: continue
+            if not e.data.is_air_unit and not self.hits_ground: continue
             if e.position.distance_to(self.position) <= self.radius + e.data.collision_radius:
                 e.take_damage(self.damage)
-                if self.knockback:
+                if self.knockback and not e.data.is_air_unit:
                     d = e.position.distance_to(self.position)
                     if d > 0.05:
                         nx = e.position.x + (e.position.x - self.position.x) / d * self.knockback
@@ -3182,15 +3194,20 @@ class BattleState:
         return False
 
     def deal_area_damage(self, from_player, position, range, amount, attack_air, attack_ground, crown_tower_damage_percent=1.0):
+        """区域伤害。覆盖判定：普通实体中心距 < range（圆形）；塔（id≤6 persistent
+        矩形建筑）用矩形边缘距离——塔半宽 1.5、近战溅射圈 1.3 时中心距判定会让
+        站塔边缘的溅射单位（MegaKnight/Valkyrie 等）永远够不到塔（真实对局主路径）。"""
         for entity in list(self.entities.values()):
             if not entity.is_alive or entity.player == from_player: continue
             if entity.invincible: continue
             amount_dealt = amount if "King" not in entity.name else amount*crown_tower_damage_percent
             if attack_air and entity.data.is_air_unit:
-                if entity.position.distance_to(position) < range:
-                    entity.take_damage(amount_dealt)
+                dist = entity.edge_distance_from(position)
             elif attack_ground and not entity.data.is_air_unit:
-                if entity.position.distance_to(position) < range:
-                    entity.take_damage(amount_dealt)
+                dist = entity.edge_distance_from(position)
+            else:
+                continue
+            if dist < range:
+                entity.take_damage(amount_dealt)
 
 

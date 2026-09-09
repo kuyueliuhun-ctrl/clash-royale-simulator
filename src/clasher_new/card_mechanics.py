@@ -173,15 +173,31 @@ class GiantSkeleton(BasicCharacter):
         self.battle_state._spawn_entity(bomb)
 
 class IceWizard(BasicCharacter):
+    """落地冰雾（gamedata spawnAreaObjectData=IceWizardCold / FL AEO.IceWizardCold）：
+    伤害 33×等级（Common 轴 lv11=84）、半径 3.0、对空对地、对塔 0%（crownTowerDamagePercent=-100）、
+    减速 2.5s（FL BUFF.IceWizardCold：speedMultiplier=-35 → 快照 -35 → 速度 0.65×；
+    FL 逻辑层另带 HitSpeedMultiplier=-35 —— buffData.hitSpeedMultiplier 消费为攻速减速）。
+    此前口径错误（1.0s 无攻速减速）已按 FL 修正；塔不吃伤害也不吃减速。"""
     def on_spawn(self):
+        from battle import Building, Troop
         spawn_data = self.entity.data.spawn_data
-        for entity in list(self.entity.battle_state.entities.values()):
-            if not entity.is_alive or entity.player == self.entity.player: continue
-            if not entity.position.distance_to(self.entity.position) < spawn_data['radius']/1000 + entity.data.collision_radius:
+        e = self.entity
+        bs = e.battle_state
+        radius = spawn_data['radius'] / 1000
+        bf = spawn_data.get('buffData') or {}
+        slow = 1.0 + (bf.get('speedMultiplier') or 0) / 100.0
+        slow_hs = 1.0 + (bf.get('hitSpeedMultiplier') or 0) / 100.0
+        duration = (bf.get('buffTime') or spawn_data.get('buffTime') or 2500) / 1000.0
+        dmg_mult = 1.0 + (spawn_data.get('crownTowerDamagePercent') or 0) / 100.0
+        for entity in list(bs.entities.values()):
+            if not entity.is_alive or entity.player == e.player: continue
+            if not entity.position.distance_to(e.position) < radius + entity.data.collision_radius:
                 continue
-            entity.take_damage(spawn_data['damage'])
-            entity.speed_debuff = min(1 + spawn_data['buffData']['speedMultiplier'] / 100, entity.speed_debuff)
-            entity.debuff_time_remaining = spawn_data['buffTime']/1000
+            is_tower = isinstance(entity, Building) and entity.id <= 6
+            if not is_tower:
+                entity.take_damage(spawn_data['damage'] * level_scale(e.level))
+            if not isinstance(entity, Building):
+                entity.apply_buff(speed_mult=slow, hit_speed_mult=slow_hs, duration=duration)
 
 class Miner(BasicCharacter):
     def __init__(self, entity):
@@ -492,6 +508,12 @@ class BossBandit(_HeroBase):
 
 class MegaKnight(BasicCharacter):
     """觉醒超级骑士（MegaKnight_EV1）。普通形态 evo=None → 行为与基础完全一致。
+    · 落地溅射（卡面顶层 projectileData=MegaKnightAppear：伤168/半径2.2/击退1.0格/
+      仅地面/对塔全额；FirstLight PROJECTILE.MegaKnightAppear 同值）——部署延迟
+      （deployTime 1s=落地动画）结束时结算，GenericBomb 延时弹挂载。
+      等级轴：projectiles 表 MegaKnightAppear 行 damage_per_level（Common 轴
+      lv1=355...lv11=908，含快照轴整体缩放），与 TowerPrincessProjectile 同消费模式。
+      这就是「刺客突进规避落地伤害」技巧的规避对象。
     · 冲刺跳（baseData：dashDamage 210 / dashMinRange 3500 / dashMaxRange 5000，lv1 基准）：
       目标在 3.5~5.0 格且不在近战范围时跳跃贴脸，落地对 areaDamageRadius(1.3) 内地面敌人
       造成 dashDamage×等级缩放；跳跃视为一次攻击（进入攻击冷却）。
@@ -502,6 +524,26 @@ class MegaKnight(BasicCharacter):
     def __init__(self, entity):
         super().__init__(entity)
         self.dash_cd = 0.0
+        self._spawn_bomb_laid = False
+
+    def on_spawn(self):
+        # 落地溅射：延迟 = 部署动画（deploy_delay_remaining 首帧扣减前即调用本钩子，
+        # 直接用 data.deploy_time）；GenericBomb 首帧 update 仍会再等 delay 秒。
+        e = self.entity
+        if self._spawn_bomb_laid or e.battle_state is None: return
+        self._spawn_bomb_laid = True
+        from battle import GenericBomb
+        from card_utils import projectiles, _value_at_level
+        prj = projectiles.get('MegaKnightAppear') or {}
+        dmg = _value_at_level(prj.get('damage_per_level') or [], prj.get('rarity') or 'Common',
+                              e.level, prj.get('damage') or 168)
+        bomb = GenericBomb(e.battle_state.next_entity_id, Position(e.position.x, e.position.y),
+                           e.player, damage=dmg, radius=(prj.get('radius') or 2200) / 1000.0,
+                           delay=max(e.data.deploy_time, 0.1), knockback=(prj.get('pushback') or 1000) / 1000.0,
+                           hits_air=bool(prj.get('aoe_to_air', False)),
+                           hits_ground=bool(prj.get('aoe_to_ground', True)))
+        bomb.name = 'MegaKnightAppear'
+        e.battle_state._spawn_entity(bomb)
 
     def on_tick(self, dt):
         super().on_tick(dt)
