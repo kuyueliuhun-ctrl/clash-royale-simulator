@@ -93,7 +93,10 @@ def observe(battle, player_id: int = 0) -> dict:
         if each.name not in ENTITY_NAMES:
             continue
         entity_id = ENTITY_NAMES.index(each.name)
-        card_type = CARD_TYPES.index(_TYPE_ALIAS.get(each.data.type, each.data.type))
+        _t = _TYPE_ALIAS.get(each.data.type, each.data.type)
+        # 兜底：数据行缺 tidType 时 type 为空串（新合成卡漏 tidType 不再崩观测），
+        # 折叠进 character（与"未知类型当普通部队"同语义）。
+        card_type = CARD_TYPES.index(_t) if _t in CARD_TYPES else CARD_TYPES.index("character")
         is_opponent = each.player != player_id  # 己方单位统一标为 0
         d = each.data
         # 垫片实体（AreaEffect/SpawnProjectile/GenericBomb 的 data 垫片）只提供

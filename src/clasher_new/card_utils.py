@@ -20,12 +20,16 @@ with open('cards_stats_projectile.json', encoding='utf-8') as f:
 data = data['items']['spells']
 card_data = {each['name']: each for each in data}
 
-card_data['Golemite'] = {'name': 'Golemite', 'summonCharacterData':card_data['Golem']['summonCharacterData']['deathSpawnCharacterData']}
+# 合成亡语衍生卡：deathSpawnCharacterData 行没有 tidType（它们是角色行不是卡行），
+# Card.type 解析成空串——词表 v2 后这些实体会进观测（CARD_TYPES.index('') 崩）。
+# 补上正确的 tidType：全是部队角色（Golemite/LavaPups/Barbarian）。
+card_data['Golemite'] = {'name': 'Golemite', 'tidType': 'TID_TYPE_CHARACTER',
+                         'summonCharacterData':card_data['Golem']['summonCharacterData']['deathSpawnCharacterData']}
 
 lava_pups = card_data['LavaHound']['summonCharacterData']['deathSpawnCharacterData']
 barbarian = card_data['BattleRam']['summonCharacterData']['deathSpawnCharacterData']
-card_data['LavaPups'] = {'name': 'LavaPups', 'summonCharacterData':lava_pups} | lava_pups
-card_data['Barbarian'] = {'name': 'Barbarian', 'summonCharacterData': barbarian} | barbarian
+card_data['LavaPups'] = {'name': 'LavaPups', 'tidType': 'TID_TYPE_CHARACTER', 'summonCharacterData':lava_pups} | lava_pups
+card_data['Barbarian'] = {'name': 'Barbarian', 'tidType': 'TID_TYPE_CHARACTER', 'summonCharacterData': barbarian} | barbarian
 
 # The king tower is not defined in `gamedata.json`, have to hard code it here.
 king_tower_stats = {
