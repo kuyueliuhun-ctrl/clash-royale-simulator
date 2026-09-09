@@ -990,9 +990,12 @@ def test_league_replays():
 
     pool = build_card_pool()
     lg = League(seed=0)
-    # 9j：belief token 追加事件通道后 71 维（2×8+2+5+3×16）——策略维度须与
-    # BeliefInference.encode 输出一致（旧 23 会在 act 时 mat1/mat2 形状失配）
-    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=71)
+    # 9j：belief token 尾部含事件通道——策略维度须与 BeliefInference.encode 输出一致
+    #（旧硬编码 71 在词表 v2 扩容后失配；从 DEFAULT_SOLO_DECK 动态推导）
+    from rl.belief import belief_token_dim
+    from rl import train_solo
+    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM,
+                          belief_dim=belief_token_dim(list(train_solo.DEFAULT_SOLO_DECK)))
     lg.add_agent("main", kind="main", policy=main)
     lg.add_agent("random_deck", kind="baseline",
                  policy=ScriptedPolicy(mode="random", pool=pool, seed=1))
@@ -3003,27 +3006,28 @@ def test_opp_event_token():
     assert abs(tok0[-OPP_EVENT_K * OPP_EVENT_DIM:]).sum() == 0, "无事件应为全零尾"
 
     obs = {"time": np.array([30.5], dtype=np.float32)}
+    EV = OPP_EVENT_K * OPP_EVENT_DIM
     b.update(obs, [{"card": "Giant", "x": 8.5, "y": 14.5}])
-    row = b.encode(obs)[-48:].reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
+    row = b.encode(obs)[-EV:].reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
     gi = ENTITY_NAMES.index("Giant")
     assert row[gi] == 1.0, "Giant onehot 缺失"
     assert abs(row[NE] - 8.5 / 17) < 1e-6 and abs(row[NE + 1] - 14.5 / 31) < 1e-6
     assert row[NE + 2] == 0.0, "最新事件 Δt 应为 0"
     # 陈旧度：35.0 时 Δt=4.5；40.5 时 clamp 到 1.0
-    row2 = b.encode({"time": np.array([35.0], dtype=np.float32)})[-48:] \
+    row2 = b.encode({"time": np.array([35.0], dtype=np.float32)})[-EV:] \
         .reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
     assert abs(row2[NE + 2] - 0.45) < 1e-6, row2[NE + 2]
-    row3 = b.encode({"time": np.array([40.5], dtype=np.float32)})[-48:] \
+    row3 = b.encode({"time": np.array([40.5], dtype=np.float32)})[-EV:] \
         .reshape(OPP_EVENT_K, OPP_EVENT_DIM)[-1]
     assert abs(row3[NE + 2] - 1.0) < 1e-6, "Δt 必须 clamp 到 1.0"
     # reset 清空；显式 encode(opp_played) 不与 update 重复入账
     b.reset()
-    assert abs(b.encode(None, None)[-48:]).sum() == 0
+    assert abs(b.encode(None, None)[-EV:]).sum() == 0
     b2 = BeliefInference(opp_deck=deck)
     t = b2.encode(obs, [{"card": "Fireball", "x": 9.0, "y": 16.0}])
     fi = ENTITY_NAMES.index("Fireball")
-    assert sum(1 for r in t[-48:].reshape(OPP_EVENT_K, OPP_EVENT_DIM) if r[fi] == 1.0) == 1
-    # 旧 checkpoint 兼容：23 维 → 71 维尾部零
+    assert sum(1 for r in t[-EV:].reshape(OPP_EVENT_K, OPP_EVENT_DIM) if r[fi] == 1.0) == 1
+    # 旧 checkpoint 兼容：23 维 → 当前维度尾部零
     import torch, tempfile
     from rl.follower import FollowerPolicy, load_checkpoint
     pol_old = FollowerPolicy(hidden=128, plan_dim=57, belief_dim=23)
@@ -3033,7 +3037,7 @@ def test_opp_event_token():
         pol_new = load_checkpoint(f.name, belief_dim=belief_token_dim(deck))
     w = pol_new.belief_mlp[0].weight
     assert int((w.abs().sum(dim=0) > 0).sum()) == 23, "事件通道列必须从零开始"
-    print(f"[PASS] 事件通道：token {len(tok0)} 维（23+3×16），Δt 陈旧度/零拷贝兼容/reset 全过")
+    print(f"[PASS] 事件通道：token {len(tok0)} 维（2×8+2+5+3×{NE}），Δt 陈旧度/零拷贝兼容/reset 全过")
 
 
 def test_crossed_river_defend_plan():
@@ -3147,7 +3151,9 @@ def test_opponent_pool_mix():
             shutil.copy(src, os.path.join(td, "economy", os.path.basename(src)))
         cfg = TrainConfig.resolve("economy")
         cfg.out_dir = td
-        frozen_pol = FollowerPolicy(hidden=128, plan_dim=PLAN_DIM, belief_dim=71)
+        from rl.belief import belief_token_dim
+        frozen_pol = FollowerPolicy(hidden=128, plan_dim=PLAN_DIM,
+                                    belief_dim=belief_token_dim(list(env.deck1)))
         frozen_side = FollowerOpponent(frozen_pol, env,
                                        belief=BeliefInference(opp_deck=env.deck1),
                                        deterministic=True)

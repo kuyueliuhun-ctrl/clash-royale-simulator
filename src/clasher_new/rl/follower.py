@@ -70,6 +70,9 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
     尾部新字段从零开始学（与 PlanToken 尾部追加布局一致）。
     9k（B 层事件通道）：belief_mlp.0.weight 同样处理 —— 旧 belief token（23 维，
     无事件通道）加载后前 23 维语义不变，尾部事件维度从零学。
+    词表 v2（2026-09-09）：ENTITY_NAMES 13→177，entity_emb 行数变化 —— 旧行
+    （前 13 位序冻结）逐行拷贝、新行从零学；obs 的 hand/next_card 编码同序扩展，
+    旧卡 id 语义不变。
     """
     data = torch.load(path, map_location="cpu")
     if isinstance(data, dict) and "state_dict" in data:
@@ -97,6 +100,12 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
             # 9k：事件通道尾部追加（同 plan_mlp 模式）
             tv.zero_()
             tv[:, :v.shape[1]].copy_(v)
+        elif k == "entity_emb.weight" and v.dim() == 2 and v.shape[0] <= tv.shape[0] \
+                and v.shape[1] == tv.shape[1]:
+            # 词表 v2：embedding 行追加（前 13 位序冻结 → 旧行语义不变；新行从零学，
+            # 不残留随机初始化——与 plan/belief 尾零兼容同一纪律）
+            tv.zero_()
+            tv[:v.shape[0], :].copy_(v)
         elif k in ("plan_mlp.0.bias", "belief_mlp.0.bias"):
             tv.copy_(v)
         # 其余形状不匹配（结构大改）→ 保持新初始化，不静默崩

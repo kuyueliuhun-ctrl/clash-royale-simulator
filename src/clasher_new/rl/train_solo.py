@@ -43,9 +43,12 @@ from rl.run_league import (resolve_device, _bundle_cards, LeagueGameRecorder,
                            timeout_winner, overtime_open)
 from rl.replay import save_league_replays
 
-#: 固定卡组（原版默认 8 卡）：双方镜像使用同一副。
-DEFAULT_SOLO_DECK = ["Knight", "MiniPekka", "Arrows", "Minions",
-                     "Musketeer", "Fireball", "Giant", "Archer"]
+#: 固定卡组（连弩 2.9，2026-09-09 用户切换）：双方镜像使用同一副。
+#: 原版 8 卡（Knight/MiniPekka/...）"几乎没有实战价值"——Xbow 核心的自闭阵地
+#: archetype 才有真实战术结构（阵地/法术解场/循环防守）。与 FOUR_DECK_SET 的
+#: X弩同族（IceWizard 位置相同），docs/four_decks_manual.md。
+DEFAULT_SOLO_DECK = ["Xbow", "Tesla", "Skeletons", "IceWizard",
+                     "Archer", "Knight", "Log", "Fireball"]
 
 
 def resolve_deck_set(deck_set: str):
