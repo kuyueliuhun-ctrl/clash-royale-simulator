@@ -3108,6 +3108,92 @@ def test_crossed_river_defend_plan():
           "spell_trade 优先级保持；未过河不误触发")
 
 
+def test_death_damage_scaling():
+    """2026-09-09 亡语等级缩放 + IceGolemite 死亡减速圈（FirstLight 对账）：
+    ① death_damage lv1 基准（gamedata summonCharacterData）× 1.1^(lv-1)——
+       IceGolemite 33→84-86 / Golem 88→225-228 / Golemite 39→99-101
+       （FL 投影 2.56×截断精确值 84/225/99；引擎统一幂次口径 ±1.4%）；
+    ② 冰人死亡 spawn DeathSlowZone：亡语伤害秒杀同级小骷髅（81 血 < 84），
+       存活单位吃减速 0.65×2s（FreezeIceGolemite 半径 2 格/空地双打）。"""
+    from card_utils import Card
+    import player as player_mod
+    import battle as battle_mod
+    from core import Position as P2
+    ig = Card('IceGolemite')
+    if not (84 <= ig.death_damage <= 87):
+        raise AssertionError(f"IceGolemite death_damage lv11 = {ig.death_damage}, expect 84-86")
+    go = Card('Golem')
+    if not (225 <= go.death_damage <= 229):
+        raise AssertionError(f"Golem death_damage lv11 = {go.death_damage}, expect 225-228")
+    ge = Card('Golemite')
+    if not (99 <= ge.death_damage <= 102):
+        raise AssertionError(f"Golemite death_damage lv11 = {ge.death_damage}, expect 99-101")
+    if abs(getattr(ig, 'death_area_effect_radius', 0) - 2.0) > 1e-6:
+        raise AssertionError("IceGolemite death AEF radius != 2.0")
+    if abs(getattr(ig, 'death_area_effect_slow', 1.0) - 0.65) > 1e-6:
+        raise AssertionError(f"death AEF slow = {ig.death_area_effect_slow}, expect 0.65 (-35%)")
+    if abs(getattr(ig, 'death_area_effect_duration', 0) - 2.0) > 1e-6:
+        raise AssertionError("death AEF duration != 2.0s")
+    # 战斗级：死亡 → 伤害+减速圈生效
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                player_mod.PlayerState(1, list(DECK), 10.0))
+    bs.step(0.033)
+    ig_e = battle_mod.Troop(bs.next_entity_id, P2(5.0, 20.0), 1, 'IceGolemite', bs)
+    bs._spawn_entity(ig_e)
+    sk = battle_mod.Troop(bs.next_entity_id, P2(5.5, 20.5), 0, 'Skeletons', bs)
+    bs._spawn_entity(sk)
+    kn = battle_mod.Troop(bs.next_entity_id, P2(4.5, 20.5), 0, 'Knight', bs)
+    bs._spawn_entity(kn)
+    ig_e.take_damage(99999)
+    bs.step(0.033)
+    if sk.is_alive or sk.hp > 0:
+        raise AssertionError("IceGolemite 亡语应秒杀同级小骷髅（81 血 < 84 亡语伤）")
+    if not kn.is_alive:
+        raise AssertionError("Knight 不应被亡语 84 伤打死")
+    if abs(kn.speed_debuff - 0.65) > 1e-6:
+        raise AssertionError(f"Knight speed_debuff = {kn.speed_debuff}, expect 0.65")
+    if abs(kn.debuff_time_remaining - 2.0) > 0.2:
+        raise AssertionError(f"Knight 减速时长 = {kn.debuff_time_remaining}, expect ≈2.0")
+    zones = [e for e in bs.entities.values() if type(e).__name__ == 'DeathSlowZone']
+    if len(zones) != 1:
+        raise AssertionError(f"DeathSlowZone ×{len(zones)}, expect 1")
+    print("[PASS] 亡语等级缩放（IG 84-86/Golem 225-228/Golemite 99-101）+ 冰人死亡减速圈"
+          "（秒杀小骷髅 / Knight 吃 0.65×2s）")
+
+
+def test_vines_snare_fl_duration():
+    """2026-09-09 Vines 束缚口径（FirstLight 优先）：束缚 2.0s（EXT SpawnTime=2000，
+    原 gamedata buffData 2500ms 为旧值）；总伤等效 306（153×2 跳 = FL DPS 153/s×2s）。"""
+    from card_utils import Card
+    import player as player_mod
+    import battle as battle_mod
+    from core import Position as P2
+    v = Card('Vines')
+    aeo = v.data.get('areaEffectObjectData') or {}
+    if int(aeo.get('ticks') or 0) != 2:
+        raise AssertionError("Vines ticks != 2")
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                player_mod.PlayerState(1, list(DECK), 10.0))
+    bs.step(0.033)
+    tgt = battle_mod.Troop(bs.next_entity_id, P2(8.0, 10.0), 0, 'Knight', bs)
+    bs._spawn_entity(tgt)
+    from battle import VinesSnareZone
+    z = VinesSnareZone(bs.next_entity_id, P2(8.0, 10.5), 1, bs,
+                       radius=2.5, lifetime=2.0, damage=153, hits=2,
+                       crown_pct=0.25, snare_duration=2.0)
+    bs._spawn_entity(z)
+    bs.step(0.033)
+    if abs(tgt.freeze_timer - 2.0) > 0.05:
+        raise AssertionError(f"Vines 束缚 freeze_timer = {tgt.freeze_timer}, expect 2.0")
+    if tgt.hp >= tgt.data.hp:
+        raise AssertionError("Vines 第 1 跳伤害未结算")
+    print("[PASS] Vines 束缚 2.0s（FL 口径）+ 第 1 跳伤害即时结算")
+
+
 def test_opponent_pool_mix():
     """9j A 层：训练对手池（frozen/hist/defend 混合）+ SelfDefenderPolicy 反制。
 
@@ -3247,6 +3333,8 @@ def main():
     test_opp_event_token()
     test_crossed_river_defend_plan()
     test_opponent_pool_mix()
+    test_death_damage_scaling()
+    test_vines_snare_fl_duration()
     print("\nALL SELFTESTS PASSED")
 
 

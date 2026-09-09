@@ -278,6 +278,9 @@ class Card:
         self.death_spawn_data = self.data['summonCharacterData'].get('deathSpawnCharacterData', {})
         self.death_area_effect = self.data['summonCharacterData'].get('deathAreaEffectData', {})
         self.death_damage = self.data['summonCharacterData'].get('deathDamage', 0)
+        self._death_damage0 = self.death_damage  # set_level 缩放基准（lv1 原始值）
+        self.death_damage_radius = (self.data['summonCharacterData'].get('deathDamageRadius')
+                                    or 2.0)
 
         self.jump_height = self.data['summonCharacterData'].get('jumpHeight', 0)
         self.jump_speed = self.data['summonCharacterData'].get('jumpSpeed', 0) / 60
@@ -415,6 +418,27 @@ class Card:
             for _st in self.attack_seq_raw:
                 _d = _st.get('damage')
                 self.attack_seq_damages.append((_d * _scale) if _d else None)
+
+        # 亡语伤害按等级缩放（FirstLight card_logic 投影对账：IceGolemite 33→84 /
+        # Golem 88→225 / Golemite 39→99，Common 轴 lv11=base×2.56 截断）。
+        # 数据口径：lv1 基准取 gamedata summonCharacterData.deathDamage（快照
+        # characters 表 death_damage 字段是另一采集口径且不同源，勿用作基准——
+        # Golemite 62 vs 39 / IceGolemite 40 vs 33）。缩放与 derived_curve 同口径
+        # 用 1.1^(lv-1)（lv11 偏 FL 精确投影 +1.4%，引擎内无表数值统一如此）。
+        if self.death_damage:
+            self.death_damage = round(self._death_damage0 * (1.1 ** (level - 1)))
+        if self.death_area_effect:
+            _dae = self.death_area_effect
+            self.death_area_effect_radius = (_dae.get('radius') or 0) / 1000
+            _db = _dae.get('buffData') or {}
+            self.death_area_effect_buff = _db.get('name')
+            _sm = _db.get('speedMultiplier') or 0
+            self.death_area_effect_slow = (100 + _sm) / 100.0 if _sm else None
+            self.death_area_effect_duration = (_dae.get('buffTime') or _db.get('buffTime') or 0) / 1000
+            self.death_area_effect_life = (_dae.get('lifeDuration') or 0) / 1000
+            self.death_area_effect_only_enemies = bool(_dae.get('onlyEnemies'))
+            self.death_area_effect_air = bool(_dae.get('hitsAir'))
+            self.death_area_effect_ground = bool(_dae.get('hitsGround'))
 
         return level
 

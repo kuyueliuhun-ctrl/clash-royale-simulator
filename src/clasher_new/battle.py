@@ -551,11 +551,27 @@ class Entity:
         if self.hp <= 0 and self.is_alive:
             self.die()
             if self.data.death_damage:
-                # I assume that all death damage deals attack to both air and ground troops.
-                # The game data file hasn't specified what's the radius of the death damage,
-                # so here I just set it to 1 tile
-                self.battle_state.deal_area_damage(self.player, self.position, 1.0+self.data.collision_radius, self.data.death_damage,
+                # 亡语伤害：半径取 deathDamageRadius（gamedata 各行统一 2000ms=2 格；
+                # FirstLight CHARACTER 行同值），此前硬编码 1 格 + collision_radius
+                self.battle_state.deal_area_damage(self.player, self.position,
+                                                   getattr(self.data, 'death_damage_radius', None) or 2.0,
+                                                   self.data.death_damage,
                                                    attack_air=True, attack_ground=True)
+                # —— IceGolemite 亡语减速圈（gamedata deathAreaEffectData：
+                # FreezeIceGolemite 半径 2 格/空地双打/减速 -35% 2s；FirstLight
+                # AEO.FreezeIceGolemite 同口径。此前该字段从未被消费）——
+                _dae = getattr(self.data, 'death_area_effect', None)
+                if _dae:
+                    self.battle_state._spawn_entity(DeathSlowZone(
+                        self.battle_state.next_entity_id, self.position, self.player,
+                        radius=getattr(self.data, 'death_area_effect_radius', 2.0),
+                        lifetime=max(getattr(self.data, 'death_area_effect_life', 1.0), 0.1),
+                        slow=getattr(self.data, 'death_area_effect_slow', None),
+                        buff_duration=getattr(self.data, 'death_area_effect_duration', 2.0),
+                        only_enemies=getattr(self.data, 'death_area_effect_only_enemies', True),
+                        hits_air=getattr(self.data, 'death_area_effect_air', True),
+                        hits_ground=getattr(self.data, 'death_area_effect_ground', True),
+                        level=self.level))
         # —— 勘误批3：受击后钩子（ElectroGiant Zap Pack 反射等；不短路伤害）——
         if self.is_alive and hasattr(self.entity_holder, 'on_damaged'):
             self.entity_holder.on_damaged(amount, source)
@@ -2049,13 +2065,14 @@ class VinesSnareZone(Entity):
     """【M7】Vines 藤蔓束缚领域（gamedata Vines.areaEffectObjectData 驱动）。
     投掷物落地生成 → 锁定半径内 HP 最高的 multipleTargets=3 个敌人（targetHighestHp）
     → 每目标至多 ticks=2 跳伤害（lv11 每跳 153, Epic 轴; 对王塔类 crownTowerDamagePercent=25%）
-    → 命中目标立即束缚（Vines_Trap_Snare：2.5s 不可移动/攻击, apply_buff(stun) 语义）
+    → 命中目标立即束缚（Vines_Trap_Snare：2.0s 不可移动/攻击, apply_buff(stun) 语义；
+      2026-09-09 用户定稿 FirstLight 优先：EXT.Vines_Trap_Snare_* SpawnTime=2000ms，
+      原 gamedata buffData 2500ms 为快照旧值）
     → 空中单位被拽落（groundsAirUnits：flying 临时关闭, 落地时长=束缚时长, 期间可被地面单位攻击）。
-    ⚠️ 口径冲突记录：属性表领域持续 lifeDuration=2s vs 卡面束缚 2.5s——领域存在 2s、
-    束缚 buff 2.5s（两跳伤害只在领域存续期间结算, 束缚可越出领域 0.5s）。
+    伤害结构与 FL 等效：本引擎 153×2 跳 = FL 卡面 DPS 153/s × 2s = 306 总伤（lv11）。
     刻意不走 Entity.__init__（同 EvoEffectZone：无卡牌身份, 避免同名机制类钩子）。"""
     def __init__(self, id, position, player, battle_state, radius, lifetime, damage,
-                 hits=2, crown_pct=0.25, snare_duration=2.5, max_targets=3,
+                 hits=2, crown_pct=0.25, snare_duration=2.0, max_targets=3,
                  grounds_air=True, level=11, label='Vines_AeO'):
         self.id, self.position, self.player = id, position, player
         self.battle_state = battle_state
@@ -2092,7 +2109,7 @@ class VinesSnareZone(Entity):
         targets.sort(key=lambda x: (x.hp + x.shield_health), reverse=True)
         locked = targets[:self.max_targets]
         for t in locked:
-            # 束缚：2.5s 不可移动/攻击（Vines_Trap_Snare；分档 Small..XXLarge 待 L4, 统一档）
+            # 束缚：2.0s 不可移动/攻击（Vines_Trap_Snare FL SpawnTime=2000；分档 Small..XXLarge 待 L4, 统一档）
             t.apply_buff(stun=self.snare_duration)
             # 拽落：空中单位临时落地, 落地时长=束缚时长, 期间可被地面单位攻击
             if self.grounds_air and getattr(t.data, 'is_air_unit', False) and isinstance(t, Troop):
@@ -2137,11 +2154,54 @@ class VinesSnareZone(Entity):
                 'shield_max_hp': 0, 'shield_hp': 0, 'collision_radius': self.radius}
 
 
+class DeathSlowZone(EvoEffectZone):
+    """亡语减速圈（gamedata deathAreaEffectData 驱动，首个消费者 IceGolemite
+    FreezeIceGolemite：半径 2 格、空地双打、命中减速 -35% 2s；FirstLight
+    AEO.FreezeIceGolemite 同口径）。单脉冲瞬时圈：进入即上减速，寿命到即散。"""
+
+    def __init__(self, id, position, player, radius, lifetime, slow, buff_duration,
+                 only_enemies=True, hits_air=True, hits_ground=True, level=11,
+                 label='FreezeIceGolemite'):
+        super().__init__(id, position, player, None, radius=radius, lifetime=lifetime,
+                         dps=0.0, tick=0.5, slow=slow, level=level, label=label)
+        self.player = player
+        self.battle_state = None      # spawn 前置 None；_spawn_entity 后由外部赋值
+        self.buff_duration = buff_duration
+        self.only_enemies = only_enemies
+        self.hits_air, self.hits_ground = hits_air, hits_ground
+        self.applied = False
+
+    def update(self, dt):
+        if not self.is_alive: return
+        if not self.applied:
+            self.applied = True       # 单次瞬时：落地帧即结算（同 AreaEffect one-shot 语义）
+            bs = self.battle_state
+            if bs is not None:
+                for e in list(bs.entities.values()):
+                    if not e.is_alive or e is self: continue
+                    if self.only_enemies and e.player == self.player: continue
+                    if isinstance(e, (Projectile, SpawnProjectile, AreaEffect, EvoEffectZone,
+                                      EvoZapZone, VinesSnareZone, GenericBomb,
+                                      TimedExplosive, DeathSlowZone)): continue
+                    if e.data.is_air_unit and not self.hits_air: continue
+                    if not e.data.is_air_unit and not self.hits_ground: continue
+                    if e.position.distance_to(self.position) > self.radius + e.data.collision_radius: continue
+                    if self.slow and hasattr(e, 'apply_buff'):
+                        e.apply_buff(speed_mult=self.slow, duration=self.buff_duration)
+        self.lifetime -= dt
+        if self.lifetime <= 0:
+            self.is_alive = False
+
+
 def spawn_vines_zone(bs, projectile, impact):
     """【M7】Vines 弹道落地 → 束缚领域。数据全量取自 gamedata
     Vines.areaEffectObjectData（radius/lifeDuration/ticks/multipleTargets/targetHighestHp/
     groundsAirUnits/crownTowerDamagePercent/buffData.snareDurationMs）；
-    伤害用弹道已按战斗卡牌等级解析的 per-hit 伤害（projectiles 行 Epic 轴 lv11=153）。"""
+    伤害用弹道已按战斗卡牌等级解析的 per-hit 伤害（projectiles 行 Epic 轴 lv11=153）。
+    2026-09-09 用户定稿（FirstLight 数据优先）：束缚时长取 FL EXT.Vines_Trap_Snare_*
+    SpawnTime=2000ms（gamedata buffData 2500ms 为快照旧值）；伤害结构等效不动——
+    本引擎 153×2 跳 = FL 卡面 DPS 153/s × 2s = 306 总伤（lv11），DOT 毒杀线
+    （烟花 119/公主 102/吹箭手 52 血全在覆盖内）一致。"""
     aeo = (Card('Vines').data.get('areaEffectObjectData') or {})
     bf = aeo.get('buffData') or {}
     zone = VinesSnareZone(
@@ -2151,7 +2211,7 @@ def spawn_vines_zone(bs, projectile, impact):
         damage=projectile._damage(),
         hits=int(aeo.get('ticks') or 2),
         crown_pct=(aeo.get('crownTowerDamagePercent') or 25) / 100,
-        snare_duration=(bf.get('snareDurationMs') or 2500) / 1000,
+        snare_duration=2.0,   # FL EXT.Vines_Trap_Snare_* SpawnTime=2000（原 gamedata 2500）
         max_targets=int(aeo.get('multipleTargets') or 3),
         grounds_air=bool(aeo.get('groundsAirUnits')),
         level=Card.default_level,
