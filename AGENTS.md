@@ -261,6 +261,27 @@ PPO，速猪专精模型上过名人堂。可借鉴的是**卡组口径的三表
   页面文件充足时 spawn worker 是数量级收益。注：本轮 winrate 大幅爬升是 defend 对手
   从默认 8 卡换成四卡组所致（对手变强，对照基线同步变强，*不能*与旧曲线直读对比）；
   行为取证待做。
+  **10d 结论追溯失效（2026-09-09 词表 v2 发现）**：当时观测词表 ENTITY_NAMES 只有
+  原版 8 卡的 13 个名字——四卡组对手的 HogRider/Golem/Xbow/BattleRam 等实体**全部
+  不进 grid 观测、手牌编码 0**，defend 对手对模型近乎隐形（只剩掩码/血量变化的间接
+  痕迹）。"四卡组逼出对牌行为"在 10d 并不成立，1.000 曲线含大量 vs 隐形对手的水分。
+  econ_10d 的"对手变强"实为"对手出牌合法但模型看不见"。
+- **词表 v2 + 连弩镜像卡组（2026-09-09，提交 d71dfc9，用户：原版 8 卡无实战价值）**：
+  - **ENTITY_NAMES 13→177**（全卡池实体名 dump：部署+死亡刷出+法术包装器+弹射物；
+    加手牌卡名与实体名两套的实测差集 Clone/Log/Snowball/Graveyard/Lightning 等 13 个
+    ——手牌编码用卡名 "Snowball"、场上包装器叫 "SnowballSpell"）。**旧 13 位序冻结**
+    （前缀语义保留），entity_emb 行兼容分支进 load_checkpoint（旧行拷贝/新行从零，
+    真实 100k ckpt 验证逐位保留）。
+  - **belief token 事件 one-hot 自动扩容**：8 卡卡组 71→563 维（OPP_EVENT_DIM=
+    len(ENTITY_NAMES)+3），belief_mlp 尾零兼容前 71 列语义不变。
+  - **CARD_TYPES 不扩**：引擎还有 area_effect/projectile/bomb 三个 data.type
+    （垫片实体），类型折叠进 "spell"（one_hot num_classes=4 不动 → CNN 权重兼容）；
+    垫片缺的攻击/移动物理字段改 getattr 补零读取（新垫片漏补不再崩观测）。
+  - **DEFAULT_SOLO_DECK → 连弩 2.9**（Xbow/Tesla/Skeletons/IceWizard/Archer/Knight/
+    Log/Fireball，与 FOUR_DECK_SET X弩同族）。
+  - **economy_10e 20k 测试 run**（warm-start ungated 100k，deck-set four）已启动；
+    教训：**economy 预设 eval_workers=0（串行）**，10d 的 16 是当时显式传的——
+    忘传则每次评估 857s（串行）vs ~240s（16 worker），长 run 必带 --eval-workers 16。
 
 ### 外置工具（2026-09-06 起步，用户确认的路线）
 
