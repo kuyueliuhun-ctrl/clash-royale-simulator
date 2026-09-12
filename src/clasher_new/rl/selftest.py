@@ -4517,6 +4517,20 @@ def test_ppo_multi_epoch_minibatch():
     assert abs(sq["ratio_mean"] - 1.0) < 1e-5, sq
     assert sq["clip_frac"] == 0.0, sq
 
+    # ⑦ EV 口径哨兵（同日发现的第 3 个测量陷阱）：对外报出的 `explained_variance`
+    # 必须是**更新前**的预测（旧实现天然如此：单次 forward 之后才 backward），
+    # 末轮 in-sample 值另存 `explained_variance_insample`。
+    # 实测背景：fprime_20k 末点训练 EV=+0.41，同权重在 50 局独立 rollout 上
+    # EV_global=−0.0255 —— 差别几乎全来自"在那批上刚训过 12 步"。
+    pol_e = copy.deepcopy(pol)
+    te = PPOTrainer(pol_e, lr=1e-2, n_epochs=8, minibatch_size=4, shuffle=True)
+    se = te.update(trans)
+    assert se["explained_variance"] == te.last_ev_pre, (se, te.last_ev_pre)
+    assert se["explained_variance_insample"] > se["explained_variance"], (
+        "8 轮同批更新后 in-sample EV 必须高于更新前 EV（否则口径没分开）", se)
+    # 旧分支不开这个键（保持旧 stats 结构）
+    assert "explained_variance_insample" not in s0, s0
+
     print(f"[PASS] F' PPO 更新预算：默认 1 次梯度步（ratio≡1/clip≡0，旧行为逐位保留）、"
           f"4 轮×小批 4 = {sm['grad_steps']} 次梯度步（划分可复现）、"
           f"同批 vraw {s0['value_loss_raw']:.3f}→{sm['value_loss_raw']:.3f}、"

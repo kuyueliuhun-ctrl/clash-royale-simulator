@@ -135,6 +135,8 @@ class PPOTrainer:
         #: 旧口径"各更新批 EV 取均值"因批=128 连续帧、相邻帧 corr(R)≈0.99，
         #: 批内 Var(R) 仅为全局 0.32 倍 → 把 EV 放大约 3 倍（−0.58 vs −1.74）。
         self.last_ev_pairs = None
+        #: F'：**更新前**整批预测算出的 EV（对外报出的口径，与历史 run 可比）。
+        self.last_ev_pre = None
 
     @staticmethod
     def explained_variance(values, returns):
@@ -255,8 +257,30 @@ class PPOTrainer:
                         "ppo_minibatch": n})
             self.last_ev_pairs = pack["ev_pairs"]
         else:
+            # —— EV 口径（2026-09-12，F' 首跑发现的口径陷阱，重要）——
+            # 必须用**更新前**的预测算 EV：旧实现天然如此（单次 forward 之后才 backward）。
+            # F' 若沿用"末轮预测"，读到的是**刚在这 128 帧上训过 12 步**的 in-sample 值
+            # ——实测 fprime_20k 末点训练 EV=+0.41，而同权重在 50 局独立 rollout 上
+            # EV_global=−0.0255；受控实验同批 EV：更新前 +0.011 / 更新后 +0.042 /
+            # **更新后换一条独立 rollout −0.384**。跨版本比较会因此系统性虚高，
+            # 并把"记住这 128 帧"误读成"critic 学会了"。
+            # 代价：每次 update 多一次整批 no_grad 前向（≈1/16 的更新开销）。
+            with torch.no_grad():
+                v_pre, _, _ = self.policy.evaluate_batch(
+                    [t["obs"] for t in transitions],
+                    [t["belief"] for t in transitions],
+                    [t["plan"] for t in transitions],
+                    [t["bundle"] for t in transitions],
+                    [t["masks"] for t in transitions],
+                    [t.get("init_hidden") for t in transitions])
+                self.last_ev_pairs = (v_pre.squeeze(-1).cpu().numpy(), rets_np)
+                self.last_ev_pre = self.explained_variance(
+                    v_pre.squeeze(-1).cpu().numpy(), rets_np)
             p_gnorm, v_gnorm, out = self._update_epochs(
                 transitions, advs, rets_np, coef, v_scale, diag_on)
+            # 对外只报更新前口径（与全部历史 run 可比）；末轮 in-sample 值另存对照
+            out["explained_variance_insample"] = out["explained_variance"]
+            out["explained_variance"] = self.last_ev_pre
         out.update({"adv_mean": float(adv_raw.mean()),
                     "adv_std": float(adv_raw.std()),
                     "value_scale": float(v_scale),

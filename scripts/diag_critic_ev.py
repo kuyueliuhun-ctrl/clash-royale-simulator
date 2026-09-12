@@ -230,32 +230,66 @@ def _probe_ev(pred, r):
     return float(1.0 - ((pred - r) ** 2).mean() / var)
 
 
-def lin_probe(X, y, seed=0, test_frac=0.2):
-    """post-LN enc → return 的线性可预测性上界（留出法 R2）。"""
+def _grouped_split(groups, seed=0, test_frac=0.2):
+    """按**组**（局）留出：测试组的帧一条都不出现在训练集里。
+
+    为什么必须有这个口径：本数据相邻帧 `corr(R_t,R_{t+1})≈0.99`，
+    逐帧随机留出会让测试帧的邻居落在训练集 => R2 被时间泄漏抬高。
+    """
+    rng = np.random.RandomState(seed)
+    gs = np.unique(groups)
+    if len(gs) < 2:
+        return None
+    perm = rng.permutation(len(gs))
+    n_test = max(1, int(len(gs) * test_frac))
+    test_g = set(gs[perm[:n_test]].tolist())
+    mask = np.array([g in test_g for g in groups])
+    return np.where(~mask)[0], np.where(mask)[0]
+
+
+def lin_probe(X, y, seed=0, test_frac=0.2, groups=None):
+    """post-LN enc → return 的线性可预测性上界（留出法 R2）。
+
+    `groups` 非空 → 按局分组留出（无时间泄漏）；None → 逐帧随机留出（旧口径）。
+    """
     rng = np.random.RandomState(seed)
     n = len(y)
-    idx = rng.permutation(n)
-    n_test = max(1, int(n * test_frac))
-    tr, te = idx[n_test:], idx[:n_test]
+    if groups is not None:
+        sp = _grouped_split(groups, seed=seed, test_frac=test_frac)
+        if sp is None:
+            return float("nan"), 0, 0
+        tr, te = sp
+    else:
+        idx = rng.permutation(n)
+        n_test = max(1, int(n * test_frac))
+        tr, te = idx[n_test:], idx[:n_test]
     Xtr = np.column_stack([X[tr], np.ones(len(tr))])
     w, *_ = np.linalg.lstsq(Xtr, y[tr], rcond=None)
     pred = np.column_stack([X[te], np.ones(len(te))]) @ w
     return _probe_ev(pred, y[te]), len(tr), len(te)
 
 
-def mlp_probe(X, y, seed=0, hidden=64, iters=400, lr=1e-3, test_frac=0.2):
+def mlp_probe(X, y, seed=0, hidden=64, iters=400, lr=1e-3, test_frac=0.2,
+              groups=None):
     """post-LN enc → return 的非线性可预测性上界（小 MLP 留出 R2）。
 
     判别逻辑：线性≈0 而 MLP>0 → 关系非线性（critic 含非线性 head 应能学，
     学不到则偏训练侧）；两者都≈0 → 该表征下标签不可预测（偏训练侧数据）。
+    `groups` 非空 → 按局分组留出（无时间泄漏）；None → 逐帧随机留出（旧口径）。
     """
     import torch
     import torch.nn as nn
     rng = np.random.RandomState(seed)
     n = len(y)
-    idx = rng.permutation(n)
-    n_test = max(1, int(n * test_frac))
-    tr, te = idx[n_test:], idx[:n_test]
+    if groups is not None:
+        sp = _grouped_split(groups, seed=seed, test_frac=test_frac)
+        if sp is None:
+            return float("nan"), 0, 0
+        tr, te = sp
+    else:
+        idx = rng.permutation(n)
+        n_test = max(1, int(n * test_frac))
+        tr, te = idx[n_test:], idx[:n_test]
     Xt = torch.tensor(X[tr], dtype=torch.float32)
     yt = torch.tensor(y[tr], dtype=torch.float32).unsqueeze(1)
     Xe = torch.tensor(X[te], dtype=torch.float32)
@@ -611,6 +645,16 @@ def main():
         print(f"线性探针  test R2 = {le:+.4f}   (train {ntr} / test {nte} 帧)", flush=True)
         me, _, _ = mlp_probe(X, R)
         print(f"MLP 探针  test R2 = {me:+.4f}   (enc dim={X.shape[1]})", flush=True)
+        # —— 2026-09-12 新增：**按局分组**留出（诊断时间泄漏）——
+        # 逐帧随机留出在本数据集上是无效的：相邻帧 corr(R_t,R_{t+1})≈0.99，
+        # 测试帧的"邻居"几乎必然在训练集里 => R2 被时间泄漏抬高。
+        # 分组口径 = 训练局/测试局完全不重叠，才是"跨局面泛化"的可预测性。
+        leg, ntrg, nteg = lin_probe(X, R, groups=EP)
+        meg, _, _ = mlp_probe(X, R, groups=EP)
+        print(f"[按局分组留出] 线性 R2 = {leg:+.4f}  MLP R2 = {meg:+.4f}"
+              f"   (train {ntrg} / test {nteg} 帧, {len(np.unique(EP))} 局)", flush=True)
+        print(f"  => 逐帧 R2 - 分组 R2 = MLP {me - meg:+.4f} / 线性 {le - leg:+.4f}"
+              "（该差就是时间泄漏的量级）", flush=True)
         print(f"critic 对照 EV_global = {ev(V, R):+.4f}（critic 对同一批帧的解释力）",
               flush=True)
         print("解读：探针≈critic => 标签在该表征下就不可预测（偏训练侧数据）；"

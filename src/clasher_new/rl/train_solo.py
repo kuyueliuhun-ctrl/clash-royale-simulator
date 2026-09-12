@@ -1494,9 +1494,14 @@ def run_solo(cfg, resume=False, record_replays=True):
                         f" v/p={_pv:.2f} scale={stats['value_scale']:.4g}")
             # 注意：单步日志里的 EVb 是**批内口径**（128 连续帧，因批内低方差被放大
             # ~3 倍），只用于实时观察趋势；判读用评估行的池化 EV（v3 P0-B）。
+            # F'（2026-09-12）：EVb 现在是**更新前**口径（与历史可比）；
+            # EVin 是末轮 in-sample 口径（在那批上训过 12 步后的读数），
+            # 两者的差就是"过拟合到本批"的量。
+            _ev_in = stats.get("explained_variance_insample")
+            _ev_in_s = f" EVin={_ev_in:+.3f}" if _ev_in is not None else ""
             print(f"[solo step {step}] policy={stats['policy_loss']:.4f} "
                   f"value={stats['value_loss']:.4f} vraw={stats['value_loss_raw']:.2f} "
-                  f"EVb={stats['explained_variance']:+.3f} "
+                  f"EVb={stats['explained_variance']:+.3f}{_ev_in_s} "
                   f"entropy={stats['entropy']:.4f} "
                   f"| deploy={100.0 * n_play / len(batch):.1f}% bundle={avg_size:.2f} "
                   f"ratio={stats['ratio_mean']:.3f} clip={100.0 * stats['clip_frac']:.1f}% "
