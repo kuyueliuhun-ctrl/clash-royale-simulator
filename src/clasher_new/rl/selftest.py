@@ -4420,6 +4420,97 @@ def test_value_independent_encoder():
           f"策略 logprob 不受影响、元数据/告警/诊断口径正常")
 
 
+def test_ppo_multi_epoch_minibatch():
+    """F'（2026-09-12）：真正的 PPO 更新预算（多轮 × 打乱 × 小批）。
+
+    背景：旧 `PPOTrainer.update()` = 1 次 forward / 1 次 backward / 1 次 `opt.step`，
+    而 `train_solo` 喂进来的是同一局连续 128 帧（相邻帧回报相关 ≈0.99）⇒ 20k 步
+    只有 156 次梯度步、每次梯度目标几乎相同 ⇒ 四种价值架构的 EV 全部 ≤0，而同一
+    表征的 MLP 探针 R² 有 0.24~0.42（"表征有信息、critic 吸收不了"）。
+
+    本测试断言（每条都可证伪）：
+    ① **默认参数 = 旧行为**：1 次梯度步、ratio≡1、clip≡0、adv 统计不变；
+    ② `grad_steps == epochs × ceil(n/mb)`，且 `trainer.grad_steps` 累计正确；
+    ③ **每轮每个样本恰好被访问一次**（`_plan_batches` 是划分不是抽样），
+       打乱后顺序确实变了（seeded RNG 可复现）；
+    ④ **多轮真的更拟合**：同一批数据上 `value_loss_raw` 必须比旧单 pass 更低
+       （若相等 ⇒ 多轮的梯度步没生效，这正是要防的"改了参数但没接线"）；
+    ⑤ ratio 离开 1.000（这是 F' 的**期望**行为，AGENTS 的"ratio≡1.000 是结构性"
+       只对 n_epochs=1 成立）。
+    """
+    import copy
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    from rl.ppo import PPOTrainer
+
+    env = RLEnv(opponent=None, seed=0)
+    obs, _ = env.reset()
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0)
+    tok = belief.encode(obs, None)
+    plan = np.zeros(PLAN_DIM, dtype=np.float32)
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=len(tok))
+    trans = _tiny_rollout_transitions(pol, env, belief, tok, plan, n=12)
+    n = len(trans)
+
+    # ① 默认 = 旧行为（兼容性红线：run_league/flow_league/train_follower 共用本类）
+    pol_ref = copy.deepcopy(pol)
+    t0 = PPOTrainer(pol_ref, lr=1e-3)
+    assert (t0.n_epochs, t0.minibatch_size, t0.shuffle) == (1, 0, False)
+    s0 = t0.update(trans)
+    assert s0["grad_steps"] == 1 and t0.grad_steps == 1, s0   # 恒 1 次梯度步
+    assert abs(s0["ratio_mean"] - 1.0) < 1e-5 and s0["clip_frac"] == 0.0, s0
+    assert all(np.isfinite(v) for v in s0.values()), s0
+    with torch.no_grad():
+        w0 = [p.detach().clone() for p in pol_ref.parameters()]
+
+    # ③ `_plan_batches` 是划分（不是抽样），且打乱可复现
+    tm = PPOTrainer(copy.deepcopy(pol), lr=1e-2, n_epochs=4, minibatch_size=4,
+                    shuffle=True)
+    seen = []
+    for _ in range(3):
+        bs = tm._plan_batches(n)
+        assert sum(len(b) for b in bs) == n, [len(b) for b in bs]
+        flat = np.concatenate(bs)
+        assert sorted(flat.tolist()) == list(range(n)), flat    # 每样本恰好一次
+        seen.append(flat.tolist())
+    assert any(o != list(range(n)) for o in seen), "shuffle=True 但顺序恒为原序"
+    t_same = PPOTrainer(copy.deepcopy(pol), lr=1e-2, n_epochs=4, minibatch_size=4,
+                        shuffle=True)
+    assert [np.concatenate(t_same._plan_batches(n)).tolist()
+            for _ in range(3)] == seen, "同 seed 的打乱不可复现"
+
+    # ②/④/⑤ 多轮多批：梯度步数 = 轮数 × 批数；同行数据拟合更深；ratio 离开 1
+    pol_m = copy.deepcopy(pol)
+    tm2 = PPOTrainer(pol_m, lr=1e-2, n_epochs=4, minibatch_size=4, shuffle=True,
+                     seed=7)
+    sm = tm2.update(trans)      # 注意：与 tm 用同一 seed，但 tm 只调了 _plan_batches
+    assert sm["grad_steps"] == 4 * 3, sm          # 4 轮 × ceil(12/4)=3 批
+    assert tm2.grad_steps == 12, tm2.grad_steps
+    assert abs(sm["adv_mean"] - s0["adv_mean"]) < 1e-6, (sm["adv_mean"], s0["adv_mean"])
+    assert sm["value_loss_raw"] < s0["value_loss_raw"], (sm, s0)
+    assert abs(sm["ratio_mean"] - 1.0) > 1e-4 or sm["clip_frac"] > 0.0, sm
+    assert sm["ppo_epochs"] == 4 and sm["ppo_minibatch"] == 4, sm
+    assert len(tm2.last_ev_pairs[0]) == n, tm2.last_ev_pairs   # 末轮每帧一次预测
+    with torch.no_grad():
+        d_multi = sum(float(((a - b) ** 2).sum())
+                      for a, b in zip(pol_m.parameters(), pol.parameters()))
+    assert d_multi > 0.0, d_multi
+
+    # 单轮打乱（n_epochs=1）+ 指定 minibatch：ratio 仍应≈1（结构性的 on-policy）
+    t1 = PPOTrainer(copy.deepcopy(pol), lr=1e-3, n_epochs=1, minibatch_size=4,
+                    shuffle=True)
+    s1 = t1.update(trans)
+    assert s1["grad_steps"] == 3, s1
+
+    print(f"[PASS] F' PPO 更新预算：默认 1 次梯度步（ratio≡1/clip≡0，旧行为逐位保留）、"
+          f"4 轮×小批 4 = {sm['grad_steps']} 次梯度步（划分可复现）、"
+          f"同批 vraw {s0['value_loss_raw']:.3f}→{sm['value_loss_raw']:.3f}、"
+          f"ratio {sm['ratio_mean']:.4f} clip={100.0 * sm['clip_frac']:.1f}%")
+
+
 
 def test_solo_rand_anchor():
     """E1（2026-09-12，v3 §3.8.4 取证后）：固定随机锚点的确定性与警报线。
@@ -4557,6 +4648,7 @@ def main():
     test_enc_layernorm_gru_vitality()
     test_value_bypass()
     test_value_independent_encoder()
+    test_ppo_multi_epoch_minibatch()
     test_stall_settlement_margin()
     print("\nALL SELFTESTS PASSED")
 

@@ -1270,6 +1270,17 @@ def main():
     ap.add_argument("--no-value-independent", action="store_true",
                     help="关闭 E'（独立价值编码器 + MLP 头）：回共享 trunk value 通路，"
                          "架构消融用（economy 预设默认开；优先级 independent > bypass）")
+    # —— F'（2026-09-12）：真正的 PPO 更新预算（多轮 × 打乱 × 小批）——
+    ap.add_argument("--ppo-epochs", type=int, default=None,
+                    help="F'：同一份 rollout 上重复几轮更新（默认 1 = 旧行为；建议 4~8）。"
+                         "旧实现每次 update 只有 1 次 opt.step ⇒ 20k 步仅 156 次梯度步，"
+                         "critic（任何架构）都学不动（见 docs/rl_training_fix_plan_v3.md §3.11.1）")
+    ap.add_argument("--ppo-minibatch", type=int, default=None,
+                    help="F'：每轮切成多大的小批（0=整批/旧行为；建议 32~64）。"
+                         "旧实现喂进来的是同一局连续 128 帧（corr(R_t,R_t+1)≈0.99），"
+                         "小批+打乱才打破批内同质性")
+    ap.add_argument("--ppo-shuffle", action="store_true",
+                    help="F'：每轮打乱样本顺序（默认关，配合 --ppo-epochs/--ppo-minibatch 用）")
     args = ap.parse_args()
     # 自动续训为默认：无 --fresh 时 resume=True（断点缺失/不存在时各入口会自行从头并提示）
     resume = not args.fresh
@@ -1289,10 +1300,13 @@ def main():
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
               "deck_set",
               "solo_copy_every", "eval_workers",
-              "gae_lambda", "ent_coef", "adv_norm", "value_norm", "diagnose_every"):
+              "gae_lambda", "ent_coef", "adv_norm", "value_norm", "diagnose_every",
+              "ppo_epochs", "ppo_minibatch"):
         v = getattr(args, k)
         if v is not None:
             overrides[k] = v
+    if args.ppo_shuffle:
+        overrides["ppo_shuffle"] = True
     if args.hist_seed_dir:
         overrides["hist_seed_dirs"] = list(args.hist_seed_dir)
     if args.stall_draw_margin is not None:

@@ -140,6 +140,18 @@ class TrainConfig:
     # 塔血裁定是标签噪声候选（早停局占 28~40%，其中皇冠相同的细差裁定噪声最大）。
     # 仅改训练侧标签（eval 仍用真实 CR 规则 timeout_winner，保证评估口径可对比）。
     stall_draw_margin: float = 0.05
+    # —— F′（2026-09-12）：真正的 PPO 更新预算 ——
+    # 旧实现 `PPOTrainer.update()` = **1 次 forward / 1 次 backward / 1 次 opt.step**，
+    # 而喂进来的批是**同一局连续 128 帧**（corr(R_t,R_{t+1})≈0.99）⇒ 20k 步只有
+    # 156 次梯度步、每次梯度目标几乎相同 ⇒ 价值头（四种架构都试过）EV 全部 ≤0，
+    # 而同一表征的 MLP 探针 R² 有 0.24~0.42（"表征有信息、critic 吸收不了"）。
+    # 依据：docs/rl_training_fix_plan_v3.md §3.11.1、docs/critic_probe_experiment_2026-09-12.md。
+    # 默认值 = 旧行为（1 轮、整批、不打乱）；显式开启才切到多轮小批分支。
+    # 开启后 ratio 会离开 1.000、clip_frac >0 —— 正常且期望（AGENTS 的
+    # "ratio≡1.000 是结构性的"只对 n_epochs=1 成立）。
+    ppo_epochs: int = 1
+    ppo_minibatch: int = 0        # 0 = 整批（不切）
+    ppo_shuffle: bool = False     # 每轮是否打乱样本顺序
     # —— 数据 / 运行时 ——
     decks_path: str = None      # 三分类卡组 JSON（缺省自动探测）
     # solo 镜像卡组选择："default"=原版 8 卡镜像；"four"=四种卡组对手池

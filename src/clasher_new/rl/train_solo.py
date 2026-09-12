@@ -1053,6 +1053,21 @@ def run_solo(cfg, resume=False, record_replays=True):
     # 真实 GRU 活力需要 rollout 帧，只能在评估点测（check_vitality + vitality_warns 落盘）。
     for _w in _diag.check_policy_architecture(main):
         _print_safe(f"[solo] ⚠️ 启动前检查未通过: {_w}")
+    # F'（2026-09-12）resume 脚枪：config.json 不参与 resume 解析，续训必须重传
+    # --ppo-epochs/--ppo-minibatch/--ppo-shuffle，否则静默退回"1 次梯度步/更新"。
+    if rs and rs.get("ppo_epochs") is not None:
+        _old_budget = (int(rs.get("ppo_epochs", 1)),
+                       int(rs.get("ppo_minibatch", 0)),
+                       bool(rs.get("ppo_shuffle", False)))
+        _new_budget = (int(cfg.ppo_epochs), int(cfg.ppo_minibatch),
+                       bool(cfg.ppo_shuffle))
+        if _old_budget != _new_budget:
+            _print_safe(
+                f"[solo] ⚠️ PPO 更新预算与断点记录不一致：断点 "
+                f"epochs={_old_budget[0]} minibatch={_old_budget[1]} "
+                f"shuffle={_old_budget[2]} / 本次 epochs={_new_budget[0]} "
+                f"minibatch={_new_budget[1]} shuffle={_new_budget[2]} —— "
+                f"续训请重传同样的 --ppo-* 参数（不同预算混跑 = 两个实验拼在一起）")
     opp = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM, belief_dim=belief_dim,
                          value_bypass=cfg.value_bypass,
                          value_independent=cfg.value_independent)
@@ -1062,7 +1077,17 @@ def run_solo(cfg, resume=False, record_replays=True):
     ppo = PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
                      clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
                      max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm,
-                     value_norm=cfg.value_norm, diagnose_every=cfg.diagnose_every)
+                     value_norm=cfg.value_norm, diagnose_every=cfg.diagnose_every,
+                     n_epochs=cfg.ppo_epochs, minibatch_size=cfg.ppo_minibatch,
+                     shuffle=cfg.ppo_shuffle, seed=cfg.seed)
+    _n_mb = (cfg.ppo_minibatch if cfg.ppo_minibatch > 0
+             else max(1, cfg.update_interval))
+    print(f"[solo] PPO 更新预算: epochs={cfg.ppo_epochs} "
+          f"minibatch={_n_mb} shuffle={bool(cfg.ppo_shuffle)} "
+          f"⇒ 每 {cfg.update_interval} 帧 "
+          f"{cfg.ppo_epochs * max(1, -(-cfg.update_interval // _n_mb))} 次梯度步"
+          f"{'（旧行为：1 次）' if cfg.ppo_epochs <= 1 and not cfg.ppo_shuffle and cfg.ppo_minibatch <= 0 else ''}",
+          flush=True)
     if rs and rs.get("ret_scaler"):
         # 回报尺度统计随 run_state 落盘/恢复：续训不重置（否则缩放因子从头爬）。
         ppo.ret_scaler = ReturnScaler.from_dict(rs.get("ret_scaler"))
@@ -1274,6 +1299,12 @@ def run_solo(cfg, resume=False, record_replays=True):
                        "solo_opt": cfg.solo_opt_path(),
                        "config": cfg.name, "device": device,
                        "value_norm": cfg.value_norm, "adv_norm": cfg.adv_norm,
+                       # F'（2026-09-12）：PPO 更新预算写进 run_state —— config.json 不
+                       # 参与 resume 解析，续训时忘记重传 --ppo-epochs/--ppo-minibatch
+                       # 会静默退回旧行为（1 次梯度步/更新），这是本轮最贵的脚枪。
+                       "ppo_epochs": int(cfg.ppo_epochs),
+                       "ppo_minibatch": int(cfg.ppo_minibatch),
+                       "ppo_shuffle": bool(cfg.ppo_shuffle),
                        "ret_scaler": ppo.ret_scaler.to_dict()}, f)
 
     # 训练开始先跑一次评估（WebUI 立即有真实数据）；resume 时不重跑起始评估
@@ -1454,6 +1485,7 @@ def run_solo(cfg, resume=False, record_replays=True):
                   f"entropy={stats['entropy']:.4f} "
                   f"| deploy={100.0 * n_play / len(batch):.1f}% bundle={avg_size:.2f} "
                   f"ratio={stats['ratio_mean']:.3f} clip={100.0 * stats['clip_frac']:.1f}% "
+                  f"gs={stats.get('grad_steps', 0)} "
                   f"adv={stats['adv_mean']:+.3f}±{stats['adv_std']:.3f} "
                   f"gnorm={stats['grad_norm']:.2f}{diag} n={len(batch)}", flush=True)
 
