@@ -32,7 +32,7 @@ from card_utils import Card
 from player import PlayerState
 from rl.action_bundle import ActionBundle, SubAction, sub_position
 from rl.action_mask import GRID_H, GRID_W, K_MAX, legal_cells, validate_bundle
-from rl.env_wrapper import _TOWER_HP_ANCHOR, _phase_weights
+from rl.env_wrapper import _phase_weights
 
 
 # ---------------------------------------------------------------------------
@@ -61,13 +61,39 @@ class MCTSConfig:
 # 值函数（与训练奖励 economy 口径同构）
 # ---------------------------------------------------------------------------
 
-def _tower_total(player: PlayerState) -> float:
-    return player.king_tower_hp + player.left_tower_hp + player.right_tower_hp
+#: 每塔 lv11 满血锚（与 env_wrapper._per_tower_norm_dmg 同源：King 4824 / Princess 3052）
+_TOWER_HP_ANCHORS = [4824.0, 3052.0, 3052.0]
 
 
-def _norm_hp_delta(hp_old: float, hp_new: float) -> float:
-    """塔血变化归一化到 lv11 锚（与 normalize_tower_dmg 同口径）。"""
-    return (hp_old - hp_new) * (_TOWER_HP_ANCHOR / max(hp_old, 1.0)) if hp_old > 0 else 0.0
+def _tower_premium_loss(player: PlayerState) -> float:
+    """逐塔累计塔损（差异化定价，存量视角）：Σ ∫₀^dmg mult(x) dx × (锚/max_i)。
+
+    与 compute_reward 的 per-tower 归一化同源：低血塔单位血价值凹形溢价、
+    王塔两公主塔存活×king_gate（≈0）。存量视角没有"伤害发生血线"历史，按
+    "从满血累计掉 D 比例"积分：mult(残血比例 x)=1+k(1−x)² 的解析积分 =
+    D + k(D − D² + D³/3)——**把塔打爆（D=1）的累计价值 ≥ 停在残血**，
+    与"斩杀最值钱"一致（否则已破塔 mult(0)=1 会被低估，test_mcts_basic 回归抓出）。
+    返回正 = 我方累计塔损（node_value 里 me 侧取负、op 侧取正）。
+    """
+    hps = [player.king_tower_hp, player.left_tower_hp, player.right_tower_hp]
+    princesses_alive = int(hps[1] > 0.0) + int(hps[2] > 0.0)
+    from rl.env_wrapper import DEFAULT_TOWER_PREMIUM_K, DEFAULT_KING_GATE
+    k = DEFAULT_TOWER_PREMIUM_K
+    total = 0.0
+    for i in range(3):
+        m_i = _TOWER_HP_ANCHORS[i]
+        dmg_i = m_i - hps[i]
+        if dmg_i <= 0.0:
+            continue
+        D = dmg_i / m_i   # 累计损比例 0..1
+        # 王塔贬值：两公主塔存活时全损价值 ×king_gate（不参与积分缩放，直接乘总账）
+        gate = 1.0
+        if i == 0 and princesses_alive >= 2:
+            gate = DEFAULT_KING_GATE
+        # 积分 ∫₀^D (1 + k(1−x)²) dx = D + k(D − D² + D³/3)
+        premium_loss = D + k * (D - D * D + D * D * D / 3.0)
+        total += dmg_i * premium_loss * gate
+    return total
 
 
 def node_value(battle, player_id: int, cfg: MCTSConfig) -> float:
@@ -78,15 +104,17 @@ def node_value(battle, player_id: int, cfg: MCTSConfig) -> float:
 
     塔血存量差相对开局锚（≈满血）计：v = 我方累计损；敌损为正贡献。
     权重与训练奖励同源（tower_dmg_opp/self 两段相位，self 侧 1.2× 不对称），
-    塔损先归一化到 lv11 锚再乘权重（×1000 抬回数值尺度，仅影响 UCT 分母尺度）。
+    塔损先按**每塔**归一化到各自 lv11 锚再乘权重（×1000 抬回数值尺度，仅影响 UCT 分母尺度）；
+    塔血差异化定价（tower_value_mult）：低血塔单位血价值凹形溢价、王塔两公主塔存活≈0，
+    与训练奖励 compute_reward 的 per-tower 分支同源。
     皇冠差直接按 crown_weight 计（破塔 = 大额里程碑，与训练奖励一致）。
     资源账：手牌圣水差 × edw（叶推演双方不再部署，Φ 的部署份额项为 0）。
     """
     rw = cfg.reward
     tw_opp, tw_self, edw = _phase_weights(rw, battle.time)
     me, op = battle.players[player_id], battle.players[1 - player_id]
-    v_me = _norm_hp_delta(_TOWER_HP_ANCHOR, _tower_total(me))   # 我方累计塔损（正=损）
-    v_op = _norm_hp_delta(_TOWER_HP_ANCHOR, _tower_total(op))   # 敌方累计塔损
+    v_me = _tower_premium_loss(me)   # 我方累计塔损（正=损）
+    v_op = _tower_premium_loss(op)   # 敌方累计塔损
     # 权重直接用训练奖励原值（0.001/塔血 vs 0.5/费——量纲自洽：前段 1费=500塔血），
     # 不得额外缩放（曾用 ×1000 抬尺度导致塔伤/费差量纲失配，空砸被误判正 EV）。
     val = tw_opp * v_op - tw_self * v_me

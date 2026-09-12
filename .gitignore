@@ -52,3 +52,7 @@ ideas/
 0631.pdf
 tmp_*.py
 *.bak_*
+
+# ============ AI 助手工具遗留（不入库）============
+.workbuddy/
+.zcode/

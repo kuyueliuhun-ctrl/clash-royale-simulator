@@ -5,6 +5,59 @@
 
 ---
 
+## 环境：Python 已迁到 E 盘（2026-09-12，用户删除了 C 盘 Python）
+
+- **基础解释器**：`E:\Python313\python.exe`（3.13.12，pip 25.3；安装包保留在
+  `E:\python-install\python-3.13.12-amd64.exe`，安装日志同目录）。
+  原 C 盘 `C:\Users\枯月流魂\AppData\Local\Programs\Python\Python313` **已被用户删除**，
+  venv shim 报 `did not find executable at 'C:\Users\????\...'` 就是这个原因。
+- **`.venv` 修复方式（教训）**：WSL 直接调 `/mnt/e/Python313/python.exe -m venv <win路径>`
+  是**无效 no-op**（互操作层参数改写，venv 没跑或跑错地方，exit 0 且 cfg 不变）。
+  必须经 Windows 侧执行：
+  `cmd.exe /c "E:\Python313\python.exe -m venv --upgrade E:\clash-royale-simulator-main\.venv"`
+  （`--upgrade` 只重建 Scripts/pyvenv.cfg，**保留 site-packages，无需重装 torch**）。
+- **pip 缓存**：`E:\Python313\pip-cache`，经 `E:\Python313\pip.ini`
+  （`[global] cache-dir`）+ 用户环境变量 `PIP_CONFIG_FILE=E:\Python313\pip.ini` 全局生效。
+- 验证口径：`.venv/Scripts/python.exe -c "import torch; torch.cuda.is_available()"` 为 True。
+
+---
+
+## ⚠️ 全局操作约定：训练期"性能异常"先归因外部，暂停等人工（2026-09-11）
+
+**当前阶段，训练过程中任何"看起来像性能问题"的现象——多数是因为外部问题，而不是本项目的性能 bug。**
+
+遇到这类现象（吞吐骤降、子进程批量崩溃、内存/页面文件报错、spawn 失败、评估卡死、
+进程莫名退出等）：
+
+> **暂停训练，保留现场（日志 / 报错原文 / 进程状态），等人类操作后再继续。**
+> 不要自动降级、不要为了"绕开"它去改代码或下调配置、不要把猜测写进注释。
+
+**为什么（实证，成因未定）**：2026-09-11 `ab_valnorm_20k` 训练中，`--eval-workers 16` 多次触发
+`WinError 1455「页面文件太小」`（加载 `torch\lib\cufft64_12.dll` 时失败）→ worker 启动即崩
+（第一次全部崩、第二次只崩 1 个）→ **静默降级串行**（eval 从 ~1min 变成 ~8min）。
+当时的处置是把它当成"页面文件不够"，把默认并行度下调到 10 并写进代码注释。
+**事后复核时，成因其实未定**，正反两面证据都有：
+
+- 支持"外部干扰"：故障与宿主 shell shim 报错同时发生（`dirname: command not found` /
+  `cd: null directory`）；丢弃小 run（`_tmp_worker16`）复测 16 并行 **0 报错、全跑通**。
+- 支持"真实 commit 压力"：实测**提交上限 47.3GB / 空闲 20.6GB**，而 16 个 CUDA-torch
+  worker ≈ 16×1.3GB ≈ **20.8GB，正好压在空闲 commit 边界上**；训练进程自身还占 ~2GB。
+  这也解释了"小 run 通过、真 run 失败"——复测时训练进程很小，余量充足。
+- **empirically 安全的档位是 12**（9k eval 周期实测 167s，未降级）。
+
+**处置约定**：遇到就按上面的规则**暂停、留证、等人类**，不要自己下调配置或改注释。
+历史上已经吃过一次亏：当时直接判成"页面文件不够"→ 默认降到 10 并写进注释 →
+后续会话会照抄这条错误结论。**宁可把成因写成"未定"，也不要写一个自信的错答案。**
+
+**推论（同等对待）**：
+- 现象出现时，先问"是不是宿主 / 杀软 / 磁盘 / 别的进程干的"，再问"是不是代码干的"；
+- **静默降级是危险设计**——它把故障伪装成"只是慢"，会让归因错误长期不被发现。
+  暂不改动该机制，但**判读任何性能数字前，先确认本次有没有发生降级**；
+- 本文件里的性能基准（引擎 18,931 battle-steps/s、训练循环 ~14 步/s 等）若与实测严重不符，
+  **优先按外部干扰解释**，先复测再下结论。
+
+---
+
 ## 游戏 AI 工具使用：先例与接入方案（2026-09-06 探索 + 评估定稿）
 
 ### 背景结论
@@ -418,3 +471,497 @@ SpellModule/循环规划器降格为冷启动脚手架，评估头成熟后接�
   - 前段砸塔 16%，净 EV 约 −1.79/次（tower_dmg_opp 0.001 × 206 − edw 0.5 × 4 费），惩罚数值已足够但欠训练未吸收；
   - **63% 的砸塔发生在"法术是手里唯一打得起的牌"时**（手牌重建法：8! 枚举初始牌序 + 槽位/圣水流水双重校验），机制 = 全高费手牌 + 最便宜卡是 3 费法术 + "一够费就出牌"习惯 + 空砸闸门把落点限制到塔，四者叠加；
   - 干预方向：前段法术对塔 EV 闸门（`伤害×30% < edw×费用` 时塔格非法，双倍期放行），把账面惩罚升级为硬约束。
+
+---
+
+## `ab_valnorm_20k` 20k 步验证跑：四条跨会话必须记住的结论（2026-09-11）
+
+完整判读见 `docs/ab_valnorm_20k_verdict_2026-09-11.md`；run 目录 `src/clasher_new/runs/ab_valnorm_20k/`。
+
+### ① `step` = 决策帧，不是更新次数 —— 别再高估训练进度
+
+`train_solo.py:1064` 每轮循环只做一次 `env.step`（`:1104`），**1 step = 1 个决策帧**；
+PPO 每收满 `update_interval=128` 帧才更新一次（`:1150`）。所以：
+
+- **20k 步 ≈ 156 次更新 ≈ 55~80 局自对弈**（`max_ep_steps=360`，实测均局 250~360 帧）；
+- 100k 步（9j）≈ 280 局；对标 Atari PPO 的 10M~50M 帧，**本项目 20k 只有其 1/500~1/2500**。
+- **推论**：任何"跑 N 万步看提升"的实验，先换算成局数；"20k 步没提升"在样本量上就是必然。
+
+### ② `ratio ≡ 1.000` / `clip_frac ≡ 0%` 是结构性的 —— 该判据作废
+
+rollout 与更新共用同一份权重、`n_epochs=1`、`lr=3e-4`、梯度裁到 0.5 → ratio 偏离只有 1e-3。
+（`rl/ppo.py` 模块 docstring `:12-22` 已写明。）审计计划 v1 的 G1 里"ratio 离开 1.000"
+**永远不会触发**，应替换为 **`explained_variance`（EV）**。
+
+### ③ 新发现：critic 的解释方差 ≈ 0（本轮唯一的新结构性问题）
+
+`ReturnScaler` 终态 `count=19840 mean=1.588 m2=2559652` → 回报方差 **129.0**、std **11.36**；
+而 `vraw`（未缩放 MSE）中位 ≈130、末值 203 → **EV = 1 − MSE/Var ≈ 0（末值 −0.57）**。
+即价值网络对回报的解释力**等于"恒定预测均值"**。
+
+- 所以 P0-1 的 `value_norm=running` 只解决了**梯度配比**（`v/p` 2.43 → 0.60~0.95，达标），
+  **没有也不可能解决 critic 拟合失败**。两者是独立的病，别指望调 `vf_coef`；
+- 旁证：优势均值系统性偏正（`adv=+13.978±2.884`，收益 std 仅 11）→ critic 系统性低估回报。
+- **下一步取证**：加 `explained_variance` 诊断；再判断"回报是否可从状态预测"——
+  若镜像自对弈使状态-胜负近乎独立，价值头就不是调参问题，**必须提高非镜像对手占比**
+  （当前对手池 frozen 仍占 70%）。
+
+### ④ 门禁阈值口径错位 —— `gates.json` 现在会 PASS/FAIL，但阈值没有意义
+
+`config.py:150` 的注释说"engagement_rate 9k_ft 实测 10.5% → 阈值 9.5"，那个 10.5 来自
+一次性脚本 `scripts/forensics_response.py`；而训练内建指标（`train_solo.py:349`）对
+**同一批 9k_ft 权重**实测是 **28.3 / 34.0 / 38.1**（step 0 的 main/baseline0/baseline_prev 三连测）。
+**差约 3 倍。** 在重标定之前不要把 gates.json 的 PASS 当结论。
+
+### 附：本次自校准的噪声地板（40 局）
+
+step 0 时 main = baseline0 = baseline_prev **权重完全相同**，却测出
+胜率 **0.625 / 0.525 / 0.600**、接敌率 **28.3 / 34.0 / 38.1** →
+**胜率 1σ ≈ 0.078（与上报 SE 吻合）、接敌率 1σ ≈ ±5pp**。
+以后判读行为指标，先用这条地板过滤波动。
+
+### 附：结果指标（20k 步净变化为零，供后续对照）
+
+| step | main（镜像，结构性≈0.5） | vs `baseline0` | vs `baseline_prev` |
+|---|---|---|---|
+| 0 | 0.625 | 0.525 | 0.600 |
+| 8000 | 0.550 | **0.850** | 0.700 |
+| 12000 | 0.525 | 0.450 | 0.500 |
+| 16000 | 0.625 | 0.625 | 0.475 |
+| 20000 | 0.450 | 0.525 | 0.500 |
+
+行为病理未改善：`elixir_avg` 全程 1.57~2.26（**依然不会攒费**）、`deploy_per_game` 末段反降至 19.7。
+`WinError 1455` 本次复现 2 次、1 次 eval 降级串行（成因仍按"全局操作约定"记为未定）。
+
+---
+
+## 计划 v2 落地 + `prod_200k_valnorm_ev` 长跑（2026-09-11）
+
+计划 v2 = `docs/rl_training_fix_plan_v2.md`，是 v1 的**修订版**（v1 结构仍有效）。
+本次改了 6 处，每条都有 20k 判读的实测依据——**后续会话不要再改回去**：
+
+| # | 改动 | 依据 |
+|---|---|---|
+| 1 | **G1 判据 `ratio` 离开 1.000 → 删除**，换成 **`explained_variance ≥ 0.2`** | `ppo.py` 单轮 on-policy + n_epochs=1 ⇒ `ratio≡1.000` 是**结构性恒等**，判据永不触发（判读 §3.1） |
+| 2 | 新增 **`PPOTrainer.explained_variance`** 诊断 + stats 字段 + 日志 `EV=` | `value_loss` 被 `s²` 除过、跨版本不可比；EV 无量纲，是"critic 是否在学"的唯一干净判据（判读 §3.2） |
+| 3 | 行为门禁**绝对阈值 → 相对本 run 首个评估点**（`{"rel":">=","frac":0.5}`；baseline 存 `gates.json`、首点只建基线不判定） | 阈值 9.5 来自一次性脚本，训练内建指标对**同一批 9k_ft 权重**实测 28.3~38.1，差约 3 倍 ⇒ PASS/FAIL 语义是假的（判读 §5） |
+| 4 | 预算口径 **`step` → 局数**，history 新增 `cum_games` | `step` = 决策帧；20k 步 ≈ 156 次 PPO 更新 ≈ 55~80 局（判读 §2） |
+| 5 | 对手池 **`frozen 0.7/hist 0.2/defend 0.1` → `0.5/0.3/0.2`**（`config.DEFAULT_OPP_MIX` + `TrainConfig.opp_mix`） | critic EV≈0 的怀疑之一 = 镜像自对弈对称性使"状态→胜负"不可预测；提高非镜像对手占比给 critic 可学信号 |
+| 6 | 主循环改成 **先评估、后同步冻结副本** | 旧顺序（同步→评估）在两步长整除时使评估对手恒为**刚同步的 main 自己** ⇒ main 曲线恒镜像、期望 0.5、结构性无信息（判读 §4） |
+
+**兼容性红线**：`rl/ppo.py` 被 `run_league`/`flow_league`/`train_follower`/`train_prophet`
+共用 ⇒ 函数默认仍是旧行为（`value_norm="none"`、`diagnose_every=0`），新能力只经
+`TrainConfig` 显式开启。`economy` 预设的 `value_norm` 已设为 `"running"`（dataclass 默认不动）。
+
+**`prod_200k_valnorm_ev` 启动配置（照抄即可复现）**：
+
+```bash
+python rl/run_league.py --mode solo --config economy --config-name prod_200k_valnorm_ev --fresh \
+  --total-steps 200000 --steps-per-eval 10000 --n-eval-games 40 --eval-workers 16 --device cuda \
+  --value-norm running --adv-norm scale --diagnose-every 10 \
+  --main-init runs/economy_9k_ft/solo_main.pt \
+  --hist-seed-dir runs/economy_9k_ft --hist-seed-dir runs/economy_9j
+```
+日志 `docs/train_prod_200k.log`，产物 `src/clasher_new/runs/prod_200k_valnorm_ev/`。
+实测吞吐 **26.2 步/s**、eval≈205s/点（16 worker 未被降级）⇒ **总墙钟 ≈3.2 h**。
+
+**判读口径（跑完照此读）**：主判据 = `EV`（≥0.2 → critic 可救，继续堆量；持续 ≈0 或为负 →
+停堆量，转 P1-2 奖励 / P1-4 偏置，或把价值头从共享 trunk 拆出）；次判据 = 对照曲线
+vs `baseline0`/`baseline_prev` 的净漂移 **≥2σ（≈0.16）**；行为指标只读 `gates.json` 的
+**相对退化**报警。**不判** main 曲线与单点胜率。
+
+**首批实测（启动 ~5 分钟）**：`EV` 为 **负值**（-2.4 ~ -10.3），即价值网络**比"恒定预测批均值"
+还差**（比 20k 判读里推断的"≈0"更严重）。`vraw` 仍 10~150、`v/p=0.50`。
+`gates.json` 基线自动标定为 `engagement 28.3 / ghost 24.7`，**与 20k 跑 step-0 完全一致**
+⇒ 相对门禁的口径自校准生效（这两个数就是以后判读行为指标的地板）。
+
+## ⚠️ 负 EV 的真根因：GRU 输入饱和（2026-09-11，**推翻 v2 §4 的病因判断**）
+
+`prod_200k_valnorm_ev` 跑到 step ~54k 时 EV 仍全负，据此做取证（报告
+`docs/value_channel_saturation_diagnosis_2026-09-11.md`，计划 `docs/rl_training_fix_plan_v3.md`）。
+
+**跨会话必须记住的结论：**
+
+1. **critic 恒为常数，不是"学得差"**。743 帧 rollout 里 value 输出 std=0.028 而
+   回报 R std=5.50；`EV_global = −0.5817` 与"恒定预测器"恒等式
+   `−bias²/Var(R) = −0.584` **精确吻合**。所以负 EV 是**结构性**的，不是调参能救的。
+2. **根因 = GRU 输入饱和**：`enc = relu(enc_fc(fused))` 的 L2 范数 ≈533
+   （CNN 输出 `grid_feat` 常数分量 ≈468、跨帧 std 仅 1.06）→ `GRUCell` 的 tanh
+   候选饱和 `n(abs_mean)=0.994` → 隐状态 h 跨帧 std **2.6e-5**（数值恒定）。
+   对照实验：把 enc 归一化后 h 跨帧 std 立刻回到 **0.116**（差 4~5 个数量级）。
+3. **影响面超出 critic**：`slot_head(h)`/`cell_head(h)` 同样吃常数 h ⇒ 策略的状态
+   依赖**只剩手工 `BeliefPlanner` 的 plan 偏置**，神经网络在策略里基本开环。
+   这解释了为什么"行为有爬坡但 winrate 不动"。
+4. **病理是系统性的**：economy_9k_ft / 9j / 10e / ab_valnorm_20k / prod_200k
+   五个 ckpt 的 `GRU n(abs)` 全 ≥0.98。**没有任何一个 run 的 GRU 是活的。**
+5. **EV 判据本身也被测量口径污染**：训练用"128 连续帧/批"算 EV，而相邻帧
+   `corr(R_t,R_{t+1})=0.990`、批内 Var(R) 仅为全局 0.32 倍 ⇒ 该口径把 EV
+   **放大约 3 倍**（实测 −0.58 → −1.74）。dashboard 上那个 EV 是"批内 EV 均值"。
+6. **v2 §4 的分支判断（奖励尺度 / 价值头结构）病因判错**，在 GRU 修好前不要再按
+   它去调奖励或拆价值头。v3 的 P0-A 是 `follower.py` 的 `enc_ln = nn.LayerNorm(hidden)`
+   （enc 后归一化），**旧 ckpt 不可续训，必须 --fresh**。
+
+**待验证（不得当成已知）**：归一化后 critic 的实际上限（EV 能到多少）——
+留出法线性探针在 10 局样本下三组全为负，样本量不足，**不能**据此宣称修好就能达标。
+
+**诊断脚本（已入库，复用即可）**：`scripts/diag_critic_ev.py`（5 种 EV 口径）、
+`scripts/diag_value_head.py`（h/enc 方差 + GRU 门）、`scripts/diag_encoder_scale.py`
+（fused 分量尺度）、`scripts/diag_gru_ablation.py`（归一化对照实验）。
+
+### v3 实施记录（2026-09-11 当日已落地）
+
+1. **P0-A 已改**：`rl/follower.py` 新增 `self.enc_ln = nn.LayerNorm(hidden)`，
+   `_encode` / `_encode_batch` 返回 `self.enc_ln(relu(enc_fc(fused)))`。
+   随机初始化下实测 enc 范数 7.98（原 533 是**训练后**的量级漂移）；
+   把 `enc_fc` ×300 仍被 LN 吸收（范数 8.00、h_std 0.21 不变）。
+2. **P0-B 已改**：`rl/train_solo.py` EV 改**池化口径**（评估窗口内累积逐帧
+   `(v,R)` 合并算一次），保留 `explained_variance_batched`（随机打乱分批）作对照；
+   单步日志的 `EVb` 明确标注为批内口径（放大 ~3 倍，只看趋势）。
+   `rl/ppo.py` 增 `PPOTrainer.last_ev_pairs` 承载逐帧 `(v,R)`。
+3. **P0-B/C 已改**：新增 `rl/diagnostics.py`（`gru_vitality` / `check_vitality`，
+   门槛 `h_std>0.05` 且 `n_abs<0.9`）。评估行与 dashboard 落 `h_std`/`gru_n_abs`/
+   `value_std`；`train_solo` 主循环维护最近 96 帧供探针（纯前向，不推进 env）。
+4. **回归测试**：`rl/selftest.py::test_enc_layernorm_gru_vitality`。
+   负对照用 `enc_fc×300` + `enc_ln=Identity` 复现饱和（enc 203、|n| 0.978），
+   **不**用裸随机网络（裸随机网络 enc 范数仅 ~0.5，不复现）。
+5. ⚠️ **不要用 `main_init` 续训 v3**：旧 ckpt 无 `enc_ln` 键，加载后 LN 是默认
+   1/0（未学过），且旧权重是饱和态下学的 → 验证跑必须 `--fresh`。
+   （`load_checkpoint` 对缺失键保持新初始化，不会报错，属静默陷阱。）
+
+### 5k 验证跑判读 + 分支判定（2026-09-11，计划 v3 §3.6）
+
+run `src/clasher_new/runs/fix_gru_ln_5k/`（13 局、2 个评估点、日志 `docs/train_fix_gru_ln_5k.log`）：
+
+| 指标 | 饱和态基线 | 门槛（v3 §2） | @2500 | @5000 |
+|---|---|---|---|---|
+| GRU n(abs_mean) | 0.994 | <0.9 | **0.456** | **0.552** |
+| h 跨帧 std | 2.6e-5 | >0.05 | 0.184 | **0.0446**（末点又跌破） |
+| value_std | ~0.001 | — | 0.361 | 0.167 |
+| EV（池化口径） | −0.58 | >0 且上升 | −0.238 | **−0.0595**（4× 缩减，未过零） |
+
+1. **根因修复生效**：`n_abs` 0.994→0.46/0.55、`h_std` 提升 3~4 个数量级 ⇒ v3 §0 的病因链
+   （enc 未归一化 → tanh 饱和 → h 冻结 → critic 常数）已被切断。
+2. **EV 未过期，5k 判不了分支**：单调上升但 13 局/2 点无法区分"卡住"与"仍在爬"。
+   **本轮不执行 v2 §4 的高侵入项**（拆价值头 / 改奖励 / P1-4 偏置）——v2 原文要求的是
+   "EV ≈0 **且** 多样性提高后行为指标改善"的**联合**信号，而本轮行为指标反而退化
+   （engagement 35.6→7.9、ghost 3.6→17.9），且退化可由下一条的对手池偏离解释。
+   先补测量、恢复配比，再跑 20k 定论（协议见 v3 §3.6.4）。
+3. **测量缺口（本轮最该记住的教训）**：v3 §2 验收表第 3 行 `value_std / 批内 R std > 0.3`
+   的**分母 `r_std` 全仓根本没有实现**（`rl/diagnostics.py` 写着"调用方另测"，而调用方
+   `train_solo` 没测）⇒ **该门槛自始至终不可判读**，P0-B-2 声称的 3 项指标实际只落地 2 项。
+   已补：`eval_and_write` 从 `last_ev_pairs`（**未缩放**量纲，与 value_head 原始输出同尺度）
+   算 `r_std`（池化）/`r_std_batch`（128 帧批内 std 再平均）→ `value_std_ratio`，
+   评估行 + dashboard 新列 + `THRESHOLDS["value_std_ratio"]=0.3` 告警。
+   **教训：写进验收表的指标，必须确认分母真的存在；"调用方另测"= 没人测。**
+4. **对手池偏离（5k 的混杂变量）**：未传 `--hist-seed-dir` ⇒ hist 槽为空 ⇒ 自动退化为
+   frozen **0.714** / defend **0.286**（`_OpponentPool._ensure_hist`），偏离 v2 §5 的
+   0.5/0.3/0.2。`opp_mix` **没有 CLI flag** ⇒ `--hist-seed-dir`（可 append 多次）是恢复
+   文档配比的**唯一**受支持途径。注意 hist ckpt 是 pre-v3 的，会带默认 LN 出场（行为与其
+   记录 elo 有偏），PFSP 按胜负重权。
+5. **编码崩溃（新发现，非 v3 引入，会真崩训练）**：GBK 控制台/重定向管道下
+   `print("⚠️ ...")` 抛 `UnicodeEncodeError` → 被 `except Exception` 吞掉 →
+   **except 处理器里的 `{e!r}` 又内嵌同一不可编码字符 → 二次抛错、直接崩**
+   （`test_solo_resume` 与 `test_opponent_pool_mix` 实际复现，后者崩在对手池加载）。
+   已修：`rl/run_league.py::_force_utf8_stdout`（stdout/stderr → UTF-8+replace）、
+   `rl/diagnostics.print_safe`（逐条 print 兜底，`follower`/`train_solo` 共用）、
+   `train_solo` except 里的 repr 转 ASCII。
+   **教训：catch-all except 里再 print 同一个异常对象 = 二次抛错路径。**
+6. **P0-C 已落地，但要说清范围**：`check_policy_architecture` 只做**静态**护栏
+   （`enc_ln` 缺失 / 被 `nn.Identity` 替换）；启动时一帧都没有，**测不了** h_std/n_abs，
+   真实活力仍在评估点测，且告警已落盘 `stats["vitality_warns"]`（旧实现只 print → 事后
+   无法在 state/dashboard 追溯）。v3 §1 的 `h_std>0.02` 是笔误，统一为 **0.05**（与 §2/
+   代码一致；0.02 仅作 dashboard 黄带）。
+7. 顺手护栏：`follower.load_checkpoint` 对缺 `enc_ln.*` 的旧 ckpt 显式告警（原先
+   `load_state_dict(target)` 形状恒匹配 → 完全静默）；`_probe["ev_pairs"]` 加 20 万帧上界
+   （`--steps-per-eval 0` 时原先无界增长）。
+
+### 20k 验证跑判读（2026-09-11，`fix_gru_ln_20k`，计划 v3 §3.7）
+
+run `src/clasher_new/runs/fix_gru_ln_20k/`（62 局、8 个 EV 点、训练循环 2096.9s、
+**0 降级 / 0 Traceback**；`opp_mix` 已恢复 0.5/0.3/0.2，hist ckpts=12）。
+
+| step | 胜率 | EV(池化) | h_std | n_abs | v/R std |
+|---|---|---|---|---|---|
+| 2500 | 0.388 | −0.0734 | 0.0531 | 0.493 | 0.0225 |
+| 5000 | 0.400 | −0.4183 | 0.0320 | 0.446 | 0.0036 |
+| 10000 | 0.200 | −0.0360 | 0.0356 | 0.468 | 0.0068 |
+| 15000 | 0.475 | −0.0758 | 0.0364 | 0.499 | 0.0063 |
+| 20000 | 0.463 | **−0.0079** | 0.0381 | 0.533 | 0.0114 |
+
+1. **饱和修复成立且稳定（本轮最重要的确认）**：`n_abs` **8/8 点 < 0.9**（0.446~0.535，对照
+   修复前 0.994）；`diag_value_head.py` 实测 GRU 门 `z=0.471 / r=0.494 / |n|=0.525`（健康）；
+   `enc_ln` 生效且未被绕过（`||W||=11.31`、γ≈0.707，post-LN `||enc||≡11.386`）；
+   **pre-LN `||enc||=115.6`，对照修复前 533（降 4.6×）⇒ "`enc_fc` 被重新拉大"不成立。**
+2. **但 critic 仍是有效的"常数预测器"**：新增的 `value_std_ratio` **0/8 达标**
+   （0.0035~0.0225 vs 门槛 0.3）= value_head 输出波动只有回报波动的 **0.4%~2.3%**；
+   EV **0/8 过零**（max −0.0079 末点），前 4 点均值 −0.154 → 后 4 点 −0.084（略升，噪声内）；
+   `diag_critic_ev.py`（24 局/7179 帧）：`v std=0.124` vs `R std=9.747`、`RMSE 10.38 ≈ std(R)`、
+   `corr(v,R)=−0.008`、**回归斜率 R~v = −0.603（负）**、`corr(局均 v, 局均 R)=+0.223`（n=24 下
+   1σ≈0.22 → **不显著，不得宣称"信息在 h 里"或"不在 h 里"**）。
+3. **新状态（v3 §3 分支表之外）：饱和已修、GRU 已活，但 encoder 给 GRU 的输入跨帧几乎不变。**
+   实测 post-LN `enc` 跨帧每维 std `mean=0.00424 / median=0.00043`；**融合层尺度失衡**：
+   `grid_feat` 范数 **101.0** / 跨帧 std **0.43**（占 fused 102.99 的 98%，几乎不变化），
+   而真正在变的 `scalar` 17.6/std **6.97**、`hand_feat` 6.4/std 0.50、`plan_f` 1.65/0.199、
+   `belief_f` 0.65/0.104 被稀释 **16×~156×**。
+4. **行为**：`gates.json ok=false`，唯一失败项是 ghost_rate（3.6→**14.8** > 7.2）；
+   engagement 35.6→**24.5 ≥ 17.8 PASS**（5k 跑该项 7.9 FAIL，恢复配比后转正）。
+   胜率 0.20~0.60、末 0.463（1σ=0.078，无净漂移）。对照组剧烈振荡
+   （vs `baseline_prev` 0.625→0.087→0.700→0.200→0.900→0.188→…，远超 1σ）⇒ **自对弈 cycling 指纹**。
+5. **下一步候选（未执行，需拍板）**：**A（首选，§1 P0-A 备选）** `grid_feat` / 逐分量加归一化
+   再 fused（单变量、直击测到的失衡；改架构 ⇒ 必须 `--fresh`）；**B** 先把 EV/探针样本量做够
+   （24 局不足以区分 A 与"状态本就不预测胜负"）；**C（v2 §4 拆价值头/改奖励）本轮证据不支持**
+   （enc 未拉大、GRU 未饱和、EV 后段略升，且 v2 §4 的联合前提只部分成立）。
+6. **教训（测试纪律）**：`test_eval_solo_parallel` 断言串行≡并行**逐位相等**，但它依赖进程内
+   累积状态 —— 我按自定义顺序批量跑测试时它 FAIL（mean_reward 4.095 vs 4.171），
+   单独跑 1~2 次全 PASS，**官方 `rl/selftest.py` 全量 100% PASS**。
+   ⇒ 判读"是不是我改坏了"的正确姿势是**跑官方全量**，不是自定义批次的顺序结果。
+   另：该断言的存在意味着**一旦 eval 静默降级串行，统计量与并行点不再逐位可比**
+   （本轮未发生降级，0 次）。
+
+### P0-A 备选 A（`grid_ln`）落地 + 20k 验证判读（2026-09-12，计划 v3 §3.8）
+
+用户拍板走 A。`rl/follower.py` 新增 `self.grid_ln = nn.LayerNorm(cnn_out)`，`_encode`/
+`_encode_batch` 在 `self.cnn(x)` 后立即归一化（只上 grid_feat 单变量；不动 scalar/plan/belief，
+理由见 §3.8 头注）。`check_policy_architecture`/`load_checkpoint` 告警同步覆盖 `grid_ln`。
+官方全量 selftest 100% PASS。
+
+run `src/clasher_new/runs/fix_gru_ln_norm_20k/`（59 局、8 评估点、训练循环 2709.3s、
+0 降级/0 Traceback；同 seed、同协议，唯一变量 = `grid_ln`）。
+
+1. **尺度修复达成（机制层）**：`grid_feat` 范数 101→**5.87**（占 fused 98%→29%）、fused
+   跨帧 std 1.64→**7.52**、pre-LN enc 115.6→**4.46**、post-LN enc 每维跨帧 std
+   0.0042→**0.0215**（5×）、value_head 输出 std 0.079→**0.156**（2×）。grid_ln γ≈0.707 正常。
+2. **critic 从"偏置大的常数"变"对中的常数"，仍未拟合**：EV_global **−0.134→−0.0051**
+   （与 `−bias²/Var(R)` 吻合：bias −3.56→−0.56）；但 RMSE 8.74 ≈ std(R) 8.72、
+   `value_std_ratio` 仍 **0/8 达标**（0.014~0.031，门槛 0.3）、局均 corr(v,R) +0.223→**−0.209**
+   （n=24 不显著但符号翻转）。⇒ **修好的是对中，不是拟合。**
+3. **`n_abs` 单调上升 0.461→0.745（门槛 0.9）**：此时输入已归一化（post-LN ‖enc‖≡11.47），
+   饱和压力来自 **GRU 自身权重/h 增长**（h 范数 6.72→8.99），**不是输入量级** ⇒ enc_ln+grid_ln
+   只修输入侧、没约束 GRU 内部漂移，20k 内 <0.9 但外推 100k 会再超标 ⇒ **修复耐久性存疑**。
+4. **`vs baseline0` 崩塌（本轮最大红旗）**：step 5000 起对训练起点随机策略 **0.05~0.125**
+   （v1 同期 0.28~0.6），同时打冻结副本 0.85、打上一评估点 0.80 ⇒ **非传递性/cycling 指纹**；
+   v1 无此现象，与 grid_ln 相关联出现。行为门禁全绿（engagement 48.7/ghost 0.4）但相对基线
+   口径被自身起点定标，**抵消不了对随机对手的崩塌**。**main vs 冻结副本 0.85 不能当"变强"证据。**
+5. **下一步候选（需拍板）**：**A′（首选，零改动）** 取证 cycling——加跑 vs 新随机策略 100 局
+   + 对 `runs/fix_gru_ln_norm_20k/replays/` 做早停/节奏取证，区分"绝对变弱/早停裁定/真循环"；
+   **B′** 修 GRU 耐久（门/权重正则或 h 范数约束，再 --fresh 一轮 20k）；**C′** 价值头结构
+   （v2 §4，须在 A′ 排除 cycling 后）；**D′** 直接堆量 100k+（成本最高、两个异常未解释，风险最大）。
+   **不把 0.85 当进步、不因 EV≈0 宣称修好、不在 A′ 前改奖励/拆价值头。**
+
+### A′ 取证结论：cycling 确凿、绝对强度 ≈ 随机（2026-09-12，计划 v3 §3.8.4）
+
+工具 `scripts/_forensics_cycling.py`（三对阵 ×100 局，`runs/fix_gru_ln_norm_20k/`）：
+
+| 对阵（main 侧） | 胜率 | 疑似早停 |
+|---|---|---|
+| main@20000 vs 冻结副本（run 回放 n=40） | 0.850 | 3/40 (7.5%) |
+| main@20000 vs **baseline0**（起点随机） | **0.130** (10/84/6) | **28/100 (28%)** |
+| main@20000 vs **全新随机** | **0.505** (50/49/1) | 2/100 (2%) |
+| baseline0 vs 全新随机（sanity） | 0.340 | **40/100 (40%)** |
+
+1. **`vs baseline0` 崩塌真实**（100 局 0.130），**但绝对强度≈随机**（vs 全新随机 0.505）。
+2. **RPS 三角确凿**：全新随机 > baseline0 > main@20000 ≈ 全新随机 ⇒ **自对弈策略循环**。
+   run 内自引用指标（打冻结 0.85 / 打上一评估点 0.80 / 行为门禁全绿）**全部失真**。
+3. **僵局早停裁定是主要混淆因素**：涉及 baseline0 的对局早停 28~40%、帧数 min≈100
+   （远低于 360），大量对局 `_stall_probe` 早停 + `timeout_winner` 塔血裁定，方差大。
+4. **推论**：cycling 未解决前，堆量（D′）与价值头（C′）都无意义——critic 学的是循环内
+   伪标签。**下一个动作必须是给自对弈加外部锚点**（评估侧锚点门禁 和/或 训练侧对手/奖励
+   改造），否则内部指标（EV/行为门禁/对照曲线）不可信。
+5. 遗留：main vs `SelfDefenderPolicy` 外部锚点对阵未跑（需自定义评估循环绕过
+   `FollowerOpponent` 包装，留作可选取证）。
+
+### E1 落地：固定随机锚点（绝对强度门禁，2026-09-12，计划 v3 §3.8.5）
+
+用户拍板 E1（评估侧锚点）。`rl/train_solo.py`：每评估点追加第三组对照
+`vs baseline_rand`（固定种子 99999 的随机策略，固定评估种子 90000 重打同 40 局；
+`RAND_ANCHOR_WARN_FLOOR=0.35` 报警线，只报警不阻断；构造时保存/恢复 torch RNG 不扰动
+训练）。selftest `test_solo_rand_anchor`，官方全量 100% PASS。
+
+**短验证（`main@20000` vs 固定随机锚点 ×40×2）**：0.15 / 0.15（逐位一致，deterministic）。
+与 §3.8.4 互证：3 个随机对手 2 个把 main 打到 **0.13~0.15**、1 个打平 0.505 ⇒
+胜率高度依赖"抽到哪个随机权重"，cycling/"绝对强度≈随机"坐实；**"打冻结副本 0.85"是
+自引用失真**。未来任何 run 的 `_controls_history` 都有绝对强度列可逐点读。
+
+### E2 落地：固定随机锚点进训练对手池（2026-09-12，计划 v3 §3.9，用户拍板）
+
+E1 只测量、E2 动手：锚点从评估侧对照升级为**训练分布第 4 槽 `rand_anchor`**，
+打破自对弈 RPS 循环漂移。
+
+- **配比**：`DEFAULT_OPP_MIX`/`_OPP_MIX` → `{frozen 0.4, hist 0.3, defend 0.2, rand_anchor 0.1}`
+  （frozen 让 0.1 给锚点，仍主力）。
+- **共用构造**：`train_solo._make_rand_anchor(cfg, belief_dim, device)`（RNG 保存/恢复 +
+  `RAND_ANCHOR_SEED`）⇒ **E1 评估侧 `baseline_rand` 与 E2 训练侧锚点逐位一致**。
+- **训练侧锚点**：`_OpponentPool` 构造 `FollowerOpponent(锚点策略, deterministic=True)`
+  （镜像卡组，永不参与训练/同步/PFSP）；`sample()` hist→defend→rand_anchor→frozen。
+- **附带修复（无 hist 退化归一化缺陷）**：旧实现无 hist 时 `r<hist+defend` 未受 hist
+  保护 ⇒ 实测 defend **0.78**/frozen 0.22 而打印宣称 0.286/0.714。现按剩余概率归一化
+  （frozen 0.571/defend 0.286/rand 0.143，与打印一致）。**5k 判读里引用的"0.714/0.286"
+  是打印值不是采样值，别再照抄。**
+- **兼容**：旧式三槽 mix（无 rand_anchor 键）rand 概率 0、行为不变。
+- **selftest**：`test_opponent_pool_rand_anchor`（分布/权重一致性/兼容/归一化修复）。
+- **验证**：`e2_rand_anchor_20k`（--fresh，20k，2500/点，40 局，worker 12，hist 补种×2）。
+  判读：vs baseline0 不再崩塌（对照 run 0.05~0.125）、vs baseline_rand 末点 >0.35、
+  EV/value_std_ratio 趋势、n_abs 顺带观测。
+
+### E2 20k 判读：干预无效，cycling 未破（2026-09-12，计划 v3 §3.9.3）
+
+`e2_rand_anchor_20k`（59 局/9 点/3419s/0 降级）：**训练侧固定随机锚点 0.1 未能锚定
+自对弈动力学**——
+
+- `vs baseline_rand` 末点 **0.050**（E1 门禁从 5k 起全程警报；对照 run 的 E1 短验证 0.15）；
+  `vs baseline0` 末点 **0.075**（对照 0.125）⇒ **绝对强度崩溃依旧**；
+- 对照组仍剧烈振荡、17500 点非传递（main 0.25 但 vs baseline0 0.725 / vs baseline_rand
+  0.85）⇒ **RPS 循环仍在转**；
+- critic 依旧常数（EV 0/8 过零、v/R 0.008~0.032 < 0.3）；
+- n_abs 峰值 0.696、末点 0.596（对照单调升 0.745）——本轮未恶化，顺带观测不算 E2 功劳。
+- **机制推断（非结论）**：59 局里锚点仅 ~6 局，联合梯度压不住 90% 自对弈漂移；锚点
+  强度≈随机，20k 样本学不会针对它。**10% 弱锚点不足以打破 cycling。**
+- **下一步候选（需拍板）**：E2′（锚点占比 0.1→0.3 或多锚点）/ B′（GRU 耐久，本轮可降级）/
+  C′D′ 依旧无意义（critic 未拟合+cycling 未破）；或转更根本的对手模型/奖励结构（高侵入）。
+- 时长 3419s vs 对照 2709s 差异含 **eval-workers 12 vs 16**，不归因 E2；速度分解见
+  `docs/train_speed_benchmark_2026-09-12.md`。
+
+### critic 可预测性探针：信息在表征里、critic 没吸收（2026-09-12，实验文档见
+`docs/critic_probe_experiment_2026-09-12.md`）
+
+`diag_critic_ev.py --probe`（post-LN enc → GAE return，留出 20%，线性 OLS + 小 MLP）
+两个 ckpt 各 50 局，跨 run 一致：**线性探针 R2≈0.10~0.11、MLP≈0.24~0.31、critic EV≤0
+（−0.22/−0.001）** ⇒ ①表征里有非线性可预测信息（监督式可达 24~31%），critic 完全没
+吸收；②~70%+ 回报方差在 enc 里不可预测（标签噪声/自对弈对称性，训练侧数据责任）。
+**首次定量分离：程序侧/优化侧"没吸收" + 训练侧数据"不可预测"并存。**
+Caveat：3 局初值 MLP 0.83 是过拟合假象；enc 是压缩特征，上界是下界性；
+探针是监督回归、critic 是 TD 联合训练，不可直接等比。
+下一步候选：**A 监督微调 value_head**（判别优化 vs 结构，最快）/ B 100k 长跑 / C 数据侧改善。
+
+### 实验 A + B′：监督微调判别最终结论——结构够用、主因在训练过程（2026-09-12）
+
+**A**（`docs/ft_e2.log`，50 局/20012 帧）：全路径监督 4 epoch，test EV −0.139→+0.054
+（epoch 3 峰值 +0.128，epoch 4 过拟合回落）。**B′**（`docs/ft_bp.log`，同 ckpt 另一次
+rollout 20803 帧，`--finetune --bypass` 同跑同 split）run 内对照：
+
+| 通路（trunk 可训度） | 监督后 test EV |
+|---|---|
+| lin-joint（**无 GRU**，trunk 训） | **+0.2936** |
+| 全路径（带 GRU）——A 复测 | **+0.2174**（1 epoch 提前停） |
+| lin-frozen / mlp-frozen（enc 冻结） | ~0.00（失速：未标准化 enc 在 lr3e-4 下连均值都拟合不了） |
+
+**结论（修订 A 初判）**：①**"critic 结构吸收不了"被否定**——同一带 GRU 网络监督配方下
+test EV 可达 +0.22（A 的 +0.054 是坏轨迹+过拟合回落，非稳定上限）；②**GRU 非主导瓶颈**，
+净损耗仅 ~0.08（+0.29 vs +0.22）；③主导因素 = **trunk 可训性**：enc 冻结时新鲜头学不动，
+trunk 一可训即 0.22~0.29（超探针上界 0.242）；④**主因回到训练过程侧**：on-policy PPO
+联合训练 EV≤0 vs 监督同网络 0.22，差距在训练过程（TD 自举/GAE 标签噪声/trunk 梯度冲突）。
+⚠️ **教训：同 ckpt 同 seed 两次 rollout 帧数不同（20012 vs 20803，GPU 非确定性）⇒ 跨 run
+数字不可直接比，判读只用 run 内对照**。次级发现：价值头直连 enc（bypass）是低成本可试
+架构改进；数据侧（early-stop 裁定噪声）仍独立。工具：`diag_critic_ev.py --bypass`（三变体）。
+
+### B′/C′ 落地：value 直连 enc（`value_bypass`）+ 早停裁定降噪（`stall_draw_margin`）（2026-09-12）
+
+用户拍板「先 B′ 落地，随后 C′」。**已落地 + 官方全量 selftest 94 项 100% PASS + 冒烟通过**；
+20k 验证跑 `byp_cprime_20k` 进行中（日志 `docs/train_byp_cprime_20k.log`）。
+
+- **B′（架构）**：`FollowerPolicy(..., value_bypass=)` —— True 时 `value = value_head(enc)`
+  （**跳过 GRU**），策略头 slot/cell 仍吃 GRU 隐状态；5 处 value 计算点全改
+  （act / act_parallel / evaluate / evaluate_batch / value）。ckpt 元数据带该标志，
+  不一致时**告警**（旧 ckpt 语义错位 ⇒ 须 `--fresh`）。`TrainConfig.value_bypass=False`
+  （dataclass 默认=旧行为，兼容 train_follower/BC 等入口）；**economy 预设 True**；
+  CLI `--no-value-bypass`（消融）。标志传播：train_solo（main/opp/baseline*/eval worker）、
+  run_league::_build_league、flow_league、league 快照。
+- **C′（数据侧）**：`settle_stall`（run_league.py，纯函数 `settle_stall_from_counts` 可单测）——
+  早停局皇冠不同或塔血%差 ≥ `stall_draw_margin`(=0.05) → 决定性 ±胜负；皇冠相同且差 < margin
+  → **记平局=失败**（去掉掷硬币级胜负标签，保留反躺平信号）。**只改训练侧**（eval 仍用
+  `timeout_winner` 真实 CR 规则 ⇒ 评估口径与历史可比）；CLI `--stall-draw-margin`（0=旧行为）。
+  history 新增 `stall_games`/`stall_close_draws` **量化 C′ 实际生效比例**（冒烟 7 局：2 早停/0 降级）。
+- **判读口径**见 v3 计划 §3.10.3：主判据 EV 池化过零/上升 + `value_std_ratio`（对照
+  `fix_gru_ln_norm_20k`：EV −0.0051、ratio 0/8）。⚠️ 本轮同时带 B′+C′ 两改动；若
+  `stall_close_draws` 占比高，须另跑 `--stall-draw-margin 0` 消融分离贡献。
+
+**⚠️ 落地副作用（2026-09-12，同类第二次）**：B′ 改 value 通路后，两个诊断探头仍**硬编码**
+`value_head(hidden)` —— `rl/diagnostics.py::gru_vitality` 的 `value_std`（→ `value_std_ratio`）
+与 `scripts/diag_value_head.py`；对 bypass 模型测的不是被训练的量。已修（bypass → `value_head(enc)`）
++ 回归护栏（`test_value_bypass` 断言 `gru_vitality` 的 value_std == std(value_head(enc))）。
+**教训：架构变更后必须全仓搜"硬编码的前向通路"**（上次是"验收表分母没人测"，这次是"探头测旧通路"）。
+`byp_cprime_20k` 进程加载的是旧模块 ⇒ 该 run 的 `vstd/rstd` 列无效（**EV 列有效**，来自真实
+rollout）；评估点存了 `solo_main_<step>.pt`，跑完用修复版脚本离线重算真值。
+
+### 20k 判读：B′ 未改善 critic、表征可预测性反升到 0.42、C′ 训练侧几乎不触发（2026-09-12）
+
+run `runs/byp_cprime_20k`（65 局、8 点、训练循环 1993.4s、0 降级/0 Traceback；
+economy 预设 = bypass + `stall_draw_margin=0.05`）。日志 `docs/train_byp_cprime_20k.log`。
+
+- **① B′ 无效**：EV **0/8 过零**（最好 −0.0044，参照 `fix_gru_ln_norm_20k` 最好 −0.0051）
+  ——同级。诊断（50 局）：`v std=0.025` vs `R std=13.71`（0.18%）、`EV_global=−0.0060`、
+  RMSE≈std(R)；离线真实 `value_std=0.0221` → ratio 0.0017~0.0036（门槛 0.3，比参照更低）
+  ⇒ **仍是常数预测器**。⇒ **value 通路的接线（GRU vs enc）不是瓶颈**。
+- **② 表征可预测性反升（最重要）**：同批帧 **MLP 探针 R² = +0.4246**（线性 +0.1355）
+  ——高于此前 ckpt（+0.242/+0.306），**迄今最高**。"信息在 enc（42%）vs critic 吸收≈0"
+  落差最大；结合监督实验（同网络 value-only 可达 0.22~0.29）⇒ **瓶颈在 on-policy PPO
+  联合训练的价值吸收/优化动力学**（共享 trunk 梯度冲突 / TD 目标噪声），**非表征、非接线**。
+- **③ C′ 训练侧几乎不触发（修正假设）**：65 局早停仅 2 局（3%），被降级 1 局（1.5%）。
+  审计的"28~40%"是 **eval 侧随机对手**局（不进训练标签）⇒ C′ 对训练标签影响≈无；
+  本轮可近似按 **B′ 单变量**判读。
+- **④ 行为**：未复现 `fix_gru_ln_norm_20k` 的 `vs baseline0` 崩塌（全程 0.33~0.50）与
+  baseline_rand 崩塌（≥0.31）；但 `vs baseline_prev` 仍振荡（0.89→0.40）⇒ **cycling 仍在**。
+- **下一步候选**：**E′（首选）给价值通路独立 encoder**（v2 §4 项，现有三条证据支撑；
+  可证伪预测：EV 应到 0.2+）；F′ aux value loss；G′ 回到对手/数据侧（cycling）。
+  **`value_bypass` 默认值**：证据不支持收益 ⇒ 可选回退预设 False（保留 flag 做对照基线）。
+
+### E′ 落地：独立价值编码器 + 非线性价值头（2026-09-12，用户拍板）
+
+**依据**：① MLP 探针 `enc→return` **R²=0.4246** vs 线性仅 **0.1355** ⇒ 价值信息主要是
+非线性的，`value_head=nn.Linear(hidden,1)` **先天上限 ~0.13**（bypass 纯线性吃 enc 必然≈0）；
+② 监督同网络可达 EV 0.22~0.29 而 on-policy 联合训练 ≈0；③ bypass（只换接线）无效
+⇒ 需给价值通路**自己的参数与容量**。
+
+**改动**：`FollowerPolicy(..., value_independent=)` → `value_enc_fc` + `value_enc_ln` +
+`value_head_mlp`（hidden→max(32,hidden/2)→1）；`_encode_parts`/`_encode_batch_parts` 暴露
+`fused`；**统一入口 `_value_from(enc,h,fused)`（independent > bypass > shared）**，
+act/act_parallel/evaluate/evaluate_batch/value/diagnostics/诊断脚本全走它（防"探头硬编码旧通路"
+复发）；`TrainConfig.value_independent`（默认 False）+ **economy 预设 True**；CLI
+`--no-value-independent`；ckpt 元数据 + 一致性检查覆盖两个标志；传播到 train_solo
+（含 **rand_anchor**）/run_league/flow_league/league 快照。
+
+**⚠️ 踩坑（当场修复）**：`_make_rand_anchor` 漏传架构标志 → 作为 control 的 `opp_model`
+进 `eval_solo_parallel`，worker 按 cfg 建网后 `load_state_dict(opp_sd)` **键集不匹配** →
+**每周期 worker 启动失败 + 静默降级串行**（冒烟日志 `Missing key(s): value_enc_fc/value_head_mlp`）。
+**教训：架构标志必须传播到所有经 eval worker 做 state_dict 往返的构造点；判读前先 grep
+日志的 Traceback/降级行**（静默降级会把 bug 伪装成"只是慢"）。
+
+**验证**：官方全量 selftest PASS（含新 `test_value_independent_encoder`：通路一致性、
+与共享通路不同、**策略 logprob 不受影响**、元数据/告警/诊断口径）；冒烟 1500~2000 步
+0 Traceback/0 降级。**20k 跑 `eind_20k`**（日志 `docs/train_eind_20k.log`）。
+**可证伪预测：EV 应到 0.2+**（对照 `byp_cprime_20k` 最好 −0.0044）；若不升 ⇒ 转 F′
+（aux value loss / 更高 vf_coef / 更长价值训练 = 瓶颈在梯度与目标，不在容量）。
+
+### E′ 20k 判读：预测被证伪 ⇒ 根因是"优化预算 + 批次构成"，不是架构（2026-09-12）
+
+run `runs/eind_20k`（65 局、8 点、训练循环 3717.1s、0 降级/0 Traceback；economy = independent）。
+**EV 0/8 过零**（最好 −0.004，与 bypass −0.0044、grid_ln −0.0051 同级）；离线真值
+`value_std=0.0067`（独立 MLP 头）→ ratio ≈0.0005 ⇒ **仍是常数预测器**。对照曲线
+`baseline0` 0.46→0.975(@15k)、`baseline_rand` 0.625→0.925(@10k)（绝对强度有爬升），但
+`baseline_prev` 0.10↔1.0 ⇒ **cycling 仍在**。
+
+**⚠️ 本轮决定性发现（代码级）——瓶颈不在架构**：
+- `PPOTrainer.update()`（`ppo.py:199-259`）= **1 forward + 1 backward + 1 opt.step**，
+  **无 n_epochs / 无 minibatch / 无 shuffle**；
+- `train_solo` 每步取 `transitions[:batch_size]` = **同一局连续 128 帧**（`train_solo.py:1385`）；
+- ⇒ **20k 步 = 156 次梯度步**，每步目标≈"局段均值"（批内 Var(R)=全局 0.32×、
+  `corr(R_t,R_{t+1})=0.99`）⇒ 价值头（共享/线性、bypass、独立 MLP 头都试过）**不可能拟合**。
+- 三条独立证据互证：监督微调 **65k 逐帧随机步 → EV 0.22~0.29**（≈400×）；MLP 探针
+  `enc→return` **0.24→0.31→0.42** 而 critic 吸收 ≈0；**B′(接线) + E′(参数独立+非线性头)
+  两轮架构干预全部无效**。
+
+**F′ 设计（下一步，需拍板）**：把更新做成真正的 PPO —— `n_epochs`(4~8) × **shuffle** ×
+**minibatch**(32~64) 多轮随机小批更新 ⇒ 价值头梯度步 ×4~8 且打破"连续帧同质批"。
+**可证伪预测：EV 20k 内 >0 并上升**。⚠️ `n_epochs>1` 后 `ratio` 离开 1.000、
+clip 生效 —— AGENTS §②"ratio≡1.000 是结构性"**只对 n_epochs=1 成立**。
+
+**⚠️ 三次"架构标志未传播"事故**：新增构造参数必须传播到**所有做 state_dict 往返的构造点**——
+本轮连踩 `_make_rand_anchor`（→ eval worker 键集不匹配 → **静默降级串行**）、
+`_OpponentPool._ensure_hist`（hist ckpt 可能是新架构）、四个 `diag_*.py` 镜像对手。
+**纪律：新增架构参数时 `grep load_state_dict` 全仓核对。**
+
+**E′ 诊断补齐（50 局，`docs/diag_ev_eind_20k.log`）**：`v std=0.007` vs `R std=7.30`（0.1%）、
+`EV_global=−0.0356`；探针 线性 R²=+0.041 / **MLP R²=+0.236**。**四 ckpt 总表**（同口径）：
+e2（共享GRU+线性）MLP 0.242 / norm(grid_ln) 0.306 / byp(bypass) **0.425** / eind(独立+MLP) 0.236，
+而 EV 全部 ≤0（−0.219/−0.001/−0.006/−0.036）⇒ **表征含 24~42% 可预测信息、四种价值架构
+吸收都 ≈0** —— 与"156 次梯度步"的机理一致：不是架构问题，是优化预算/批次问题。

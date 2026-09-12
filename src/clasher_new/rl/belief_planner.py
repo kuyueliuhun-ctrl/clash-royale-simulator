@@ -259,20 +259,48 @@ def _spell_cast_value(battle, player_id, card_name):
     - pure_tower = 最优落点仍然"只罩对手塔"（无任何部队/建筑受益）——与 9h 对塔
       EV 闸门同口径，作 spell_finish 前段否决信号。
     无伤害/无目标/异常时返回 (0.0, 0.0, False)。标定缓存使重复调用近零成本。
+
+    塔血差异化定价（2026-09-10）：tower_value 按目标塔**残血**加权——低血塔单位血
+    价值凹形溢价（tower_value_mult）、王塔两公主塔存活时≈0，与训练奖励 per-tower
+    分支同源（否则 planner 对"斩杀低血塔"的估值系统性低估）。
     """
     try:
         from spell_module import best_cast, get_spell_profile, TOWER_HP_PER_ELIXIR
+        from rl.env_wrapper import tower_value_mult
         prof = get_spell_profile(card_name, getattr(battle, "card_level", None))
         if not prof.get("deals_damage"):
             return 0.0, 0.0, False
         _pos, ev, score = best_cast(battle, player_id, card_name, grid=2.0)
         if ev is None:
             return 0.0, 0.0, False
+        # 塔目标残血加权：tower_value = Σ(dmg_i × mult_i) / 500
+        # mult_i 用该塔当前血/满血锚（King 4824 / Princess 3052）+ 王塔贬值闸门
+        tower_value = 0.0
         pure_tower = (ev["tower_damage_total"] > 0.0
                       and ev["troop_damage_total"] <= 0.0
                       and all(t["kind"] == "tower" for t in ev["targets"]))
+        for t in ev["targets"]:
+            if t["kind"] != "tower" or t["damage"] <= 0.0:
+                continue
+            ent = battle.entities.get(t["id"])
+            if ent is None:
+                mult = 1.0
+            else:
+                name = getattr(ent, "name", "")
+                king = name == "KingTower"
+                max_hp = 4824.0 if king else 3052.0
+                hp = float(ent.hp)
+                ratio = (hp / max_hp) if max_hp > 0 else 0.0
+                # 王塔贬值闸门的公主塔存活数 = 目标塔所属方（id 1/2/5=P1、3/4/6=P0）
+                tid = t["id"]
+                owner_pid = 1 if tid in (1, 2, 5) else 0
+                pp = battle.players[owner_pid]
+                alive = int(pp.left_tower_hp > 0.0) + int(pp.right_tower_hp > 0.0)
+                mult = tower_value_mult(ratio, king=king, princesses_alive=alive)
+            tower_value += t["damage"] * mult
+        tower_value = tower_value / TOWER_HP_PER_ELIXIR
         return (float(score),
-                float(ev["tower_damage_total"]) / TOWER_HP_PER_ELIXIR,
+                float(tower_value),
                 bool(pure_tower))
     except Exception:
         return 0.0, 0.0, False

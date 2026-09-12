@@ -1,140 +1,189 @@
-# Clash Royale Simulator 
+# 皇室战争模拟器 · 强化学习训练闭环
 
-[English Version](./readme_en.md)
+[English Version](./readme_en.md) ｜ 项目介绍视频：https://www.bilibili.com/video/BV1n3uZ6WE5P/
 
-项目完整介绍视频：https://www.bilibili.com/video/BV1n3uZ6WE5P/
+> **这个仓库是什么**：一个自建的《皇室战争》**确定性模拟器**，以及搭建在它之上的一整套**强化学习训练闭环**。
+> 模拟器当世界模型，用来绕开"训练 AI 却收集不到经验"这个瓶颈；仓库的重心是**把 AI 训起来**，模拟器是它的地基。
 
-众所周知，想让一个AI学会怎样玩好一款游戏，必须让它收集大量的经验。对皇室战争这款游戏来说，经验收集是人机开发和训练的一个巨大瓶颈，哪怕是掌握内部战斗引擎接口的supercell员工，也没有办法加速引擎来更快的收集经验（Learning to Play Imperfect-Information Games by Imitating an Oracle Planner, arXiv:2012.12186）。
+## 与上游的关系
 
-而我的仓库则依赖于自建的完整模拟器逻辑，来弥补目前所有AI训练的经验收集瓶颈。这个模拟器读取准确的游戏数值，复现了原始游戏引擎的A*搜索寻路逻辑，卡牌交互基本准确。这数千行代码全由我一人编写，无AI Agent辅助。经过不断的优化，目前的模拟器性能可以做到1.1秒左右跑完180秒的对局，在我的M4芯片上实现大概150倍的加速。在一个一般般的CPU上，大概也能做到70~90倍相对于真实时间的加速。
+本项目 fork 自开源模拟器 [Jason-XII/clash-royale-simulator](https://github.com/Jason-XII/clash-royale-simulator)。
+**模拟器引擎的最初实现（A\* 寻路、索敌、卡牌交互、游戏数值复刻）来自上游作者**，在此明确致谢。
 
-在模拟器基础之上，为了方便所有人使用我的模拟器进行AI的研究，我还搭建了一个强化学习环境，可以通过Stable-Baselines3即插即用进行训练，目前使用基于CNN的网络架构，模型能够稳定的学习和进步。
+但本仓库已经远不止"上游的一个补丁"：
+
+- 卡牌覆盖从最初的 47 张扩展到 **122 张可实现卡**（含觉醒、精英 / Hero 机制），数值快照 148 条；
+- **从零搭建了完整的 RL 训练闭环**（`src/clasher_new/rl/`，37 个模块、约 1.7 万行），上游没有这部分；
+- 引入引擎侧外置工具、推理时浅 MCTS、以及一套**取证驱动的行为诊断方法学**。
+
+换句话说：**上游贡献了"游戏"，本仓库贡献了"让 AI 学会玩这款游戏"。** 下面的内容以本仓库的增量为主线。
+
+## 为什么需要它
+
+想让 AI 学会玩好一款游戏，必须让它收集海量经验。对《皇室战争》来说，经验收集是人机和训练的最大瓶颈——哪怕掌握内部战斗引擎接口的 Supercell 员工，也没法加速引擎来更快地收集经验（*Learning to Play Imperfect-Information Games by Imitating an Oracle Planner*, arXiv:2012.12186）。
+
+本仓库的答案是**自建完整模拟器**：读取准确的游戏数值，复现原引擎的 A\* 寻路与卡牌交互，把一个 180 秒的对局压缩到 **1.1 秒左右**跑完（上游在 M4 上约 150×，普通 CPU 约 70–90×）。**模拟器的上限就是这个项目的上限。**
+
+在模拟器之上，还有一套强化学习环境与训练闭环，用来真的把模型练出来。
 
 ## 效果展示
 
 ![demo](./demo2.gif)
 
-上图为模拟器界面与游戏实际效果的对比。我记录了真实游戏里的下牌时间，然后输入到模拟器中进行模拟，在前三十秒的对局中，卡牌交互是完全准确的。
+上图为模拟器界面与游戏实际效果的对比：把真实对局里的下牌时间输入模拟器，前 30 秒的卡牌交互完全一致。
 
-## 安装
+## 项目亮点（本仓库的增量）
 
-在终端中运行下面的命令：
-```bash
-git clone https://github.com/Jason-XII/clash-royale-simulator.git
-cd clash-royale-simulator
-pip install pygame fastcore numpy stable-baselines3 tensorboard frida --user --no-cache-dir
+### 1. 完整 RL 训练闭环（`src/clasher_new/rl/`）
+
+上游只有 `environment.py` / `train.py` 两个文件；本仓库把它扩展成了一个可长期维护的训练系统：
+
+- **同刻多卡动作**：一个决策步 = 一个 `ActionBundle`（`K_MAX=4`），同 tick 可同时出多张牌 + 英雄技能；提交前**整包原子校验**（手牌解析 / Mirror 语义 / 圣水推演 / 技能就绪），任一非法即拒绝整包。
+- **掩码与提交共用坐标契约**：`SubAction(x, y)` 一律是玩家本地坐标，掩码层与提交层共用 `sub_position`，杜绝镜像坐标分裂。
+- **信念推断**：对手 8 卡循环队列用 **O(1) 数学锁定**（第 4 张起手牌集合可精确 0/1 推出，避开 40320 种牌序的全量枚举），前 3 张与异常观测才走粒子滤波，再叠一层 GRU 序列编码与**对手出牌事件通道**。
+- **计划通道 `PlanToken`**：57 维战术计划 token、21 个宏观意图，作为特征注入策略（不进动作空间）。
+- **三种训练模式**（`start_rl.bat` 统一入口）：
+  - `solo` —— 单人自对弈（固定卡组镜像 + 周期冻结副本 + 对手池）；
+  - `run` —— 联赛（同时维护 5 个流派卡组模型 + main PPO，PFSP 采样）；
+  - `flow` —— 全配对分流派联赛（6 个可训练 PPO，卡组池两两全配对，一次训练 148,800 局）。
+- **推理时浅 MCTS**（`rl/mcts.py`）：UCT + 引擎确定性叶推演，候选动作复用 `legal_cells`/`validate_bundle`（与提交路径同源），策略 logits 作先验截断。零训练风险，用来量"搜索能赚多少"。
+
+### 2. 引擎侧外置工具（确定性估值服务，不进动作空间）
+
+把领域知识放在引擎侧、网络只管高层选择（借鉴 AlphaStar / TStarBot 谱系）：
+
+| 工具 | 文件 | 用途 |
+|---|---|---|
+| 塔伤威胁计算器 | `src/clasher_new/threat_calc.py` | 现存部队"不管"情况下的塔损预估 |
+| 交换模拟器 | `src/clasher_new/simulate_exchange.py` | "现在打出这张牌"的反事实推演 |
+| 法术知识模块 | `src/clasher_new/spell_module.py` | 法术引擎标定档案 + 落点估值 |
+
+### 3. 取证驱动的行为诊断
+
+本项目不只看胜率，而是**用 replay 逐帧证据定位"模型为什么学不会某件事"**，再针对性修机制。几个真实案例：
+
+- **法术砸塔病理** → 加前段对塔 EV 硬闸门，前段砸塔率 54% → 26%；
+- **防守"追尾"** → 按威胁深度分派的拦截几何，接敌率 7.4% → 10.5%；
+- **攒费链死锁** → 定位到"先有血牛才准攒、先攒满才准沉底"的鸡生蛋结构，改为两阶段状态机。
+
+### 4. 训练基础设施
+
+跨进程并行 worker（绕开 GIL 吃满多核）、断点续训、命名配置 + 奖惩机制、Web 仪表盘（Elo/胜率曲线 + 回放播放器）、人机对战采集（供模仿学习）。
+
+## 快速开始
+
+### 环境准备
+
+```bat
+:: 首次：创建 .venv 并安装 torch(CPU) / gymnasium / stable-baselines3 / tqdm
+start_training.bat --setup
+
+:: 有 NVIDIA GPU（CUDA 13 / cu130）：
+start_training.bat --setup-cuda
 ```
 
-## 局域网联机
+模拟器的可视化窗口还需要 `pygame`：`pip install pygame`。
 
-本模拟器支持局域网联机功能，也就是说，你可以和你的朋友在局域网内联机进行对战。我开发这个功能只是为了快速测试卡牌的效果，并不是实现了一个皇室战争服务器。联机步骤如下：
+### 自检
 
-1. 找到本机在局域网的IP地址。在Windows系统上运行`ipconfig`，在MacOS系统上运行`ifconfig | grep inet`即可得到本机的IP地址，通常以192.168开头。
-2. 在`src/clasher_new/server.py`的最后找到存放ip地址的位置，把它替换为你自己的IP地址。然后运行。
-3. 在两台电脑上同时运行`src/clasher_new/client_side/client.py`，选择卡组后，输入刚才的IP地址即可连接。
-4. 两个客户端都连接后，游戏会自动开始。
+```bash
+cd src/clasher_new
+../.venv/Scripts/python.exe rl/selftest.py     # 全链路自检 + 回归测试
+```
+
+### 运行模拟器 / 观看对局
+
+```bash
+python src/clasher_new/new_visualization.py    # 打开 pygame 可视化窗口跑一局
+```
+
+### 启动训练
+
+```bat
+:: 交互式向导（选模式 / 配置 / 步数 / 是否开仪表盘）
+start_rl.bat
+
+:: 直接指定：solo 自对弈（默认 economy 经济配置）
+start_rl.bat --mode solo --config economy
+
+:: 联赛（5 个流派卡组模型 + main）
+start_rl.bat --mode run --config aggressive
+
+:: 全配对分流派联赛（6 模型，规模最大）
+start_rl.bat --mode flow --config economy
+```
+
+训练产物按命名配置落在 `src/clasher_new/runs/<name>/`（checkpoint / 优化器 / 状态 json / 回放），训练中自动打开网页仪表盘（默认 8090 端口）。
+
+> 完整的模块表、每种模式的命令、消融与评估协议见 **[`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md)**。
+
+### 局域网联机（模拟器自带的测试功能）
+
+1. 查本机局域网 IP（Windows `ipconfig` / macOS `ifconfig | grep inet`，通常 `192.168.` 开头）。
+2. 在 `src/clasher_new/server.py` 末尾填入该 IP 并运行。
+3. 两台电脑分别运行 `src/clasher_new/client_side/client.py`，选卡组、填 IP 连接。
+4. 双方都连上后自动开局。
 
 ## 项目结构
 
-如果你也对训练皇室战争的AI模型非常感兴趣，那么我强烈建议你去认真阅读我这个仓库的代码。模拟器的代码总量应该两千行左右，而模型训练的代码则有约500行代码（我没统计过，纯个人感觉）。比如说，你想知道寻路机制是怎么实现的？我的模拟器是怎么处理索敌的？我的AI模型架构是什么，RL环境的观测空间和动作空间是什么？
-
-我这个项目绝大部分的代码都是自己一行一行敲出来的，如果你想针对某个bug提出修改方案，或者增加模拟器的功能，提出的PR中不能有明显的AI痕迹。 
-
-模拟器的实现：
-
 ```plaintext
-短而且逻辑简单，定义一些常用的类供模拟器使用
-arena.py
-core.py
-player.py
-card_utils.py
+src/clasher_new/
+├── arena.py / core.py / player.py / card_utils.py       # 基础数据结构
+├── battle.py / card_mechanics.py / pathfinding*.py      # 战斗引擎 / 卡牌逻辑 / 寻路
+├── new_visualization.py                                 # pygame 可视化（模拟器入口）
+├── server.py / client_side/client.py                    # 局域网联机
+├── evolutions.py / evo_2025_data.py / elite17_data.py   # 觉醒 / 精英 / Hero 机制
+├── threat_calc.py / simulate_exchange.py / spell_module.py   # 引擎侧外置工具
+└── rl/                                                  # ★ RL 训练闭环（37 模块）
+    ├── env_wrapper.py / action_bundle.py / action_mask.py    # 环境 / 动作包 / 掩码
+    ├── observation.py / belief.py / bayes_filter.py          # 观测 / 信念推断
+    ├── belief_planner.py / prophet.py / plan_space.py        # 计划通道 / 特权先知
+    ├── follower.py / ppo.py / workers.py                     # 策略网络 / PPO / 并行 worker
+    ├── train_solo.py / run_league.py / flow_league.py        # 三种训练模式
+    ├── league.py / pfsp.py / elo.py / evaluate.py            # 联赛 / 采样 / 评测
+    ├── config.py / decks.py / opponents.py / overtime.py     # 配置 / 卡组 / 对手 / 加时
+    ├── dashboard.py / replay.py / human_play.py / mcts.py    # 仪表盘 / 回放 / 人机 / MCTS
+    └── README.md · selftest.py                               # 导读 · 回归测试
 
-核心的战斗引擎、寻路机制和卡牌逻辑实现
-battle.py
-card_mechanics.py
-new_visualization.py
-pathfinding.py
-pathfinding_heap.py
-
-联机对战
-server.py
-client_side/client.py
+start_rl.bat          # 训练统一启动器（solo / run / flow + 仪表盘）
+start_training.bat    # 环境安装 + 启动训练
+docs/                 # 224 个文件：策划/规格/报告 + 原始采集证据
+AGENTS.md             # ★ 跨会话决策与方案存档（改方案前先读）
 ```
 
-RL环境和训练代码：
-```plaintext
-environment.py          # 旧版单卡 RL 环境入口
-rl/                     # 完整训练闭环：同刻多卡动作包 / 信念推断 / 规划师 / PPO / 联赛（模块表见 rl/README.md）
-start_rl.bat            # 训练统一启动器（solo / run / flow 三模式 + 网页仪表盘）
-```
+## 模拟器覆盖
 
-引擎侧外置工具（供规划器/分析调用，不进动作空间）：
-```plaintext
-threat_calc.py          # ① 塔伤威胁计算器：现存部队"不管"的塔损预估
-simulate_exchange.py    # ② 交换模拟器：打出某张牌的反事实推演
-spell_module.py         # ③ 法术知识模块：引擎标定档案 + 落点估值
-```
+- 官方数值快照 **148 条**（含 4 座塔）；批量冒烟全部通过（`scripts/batch_smoke.py`，报告见 `docs/batch_smoke_report.json`）。
+- 其中 **122 张为 `implemented`**（机制接入 + 数值验证），另有 2 张 `needs_review`、14 张活动临时卡、6 张变体（默认排除）。
+- 已覆盖 **觉醒（Evolution）** 与 **精英 / Hero** 机制。
+- 寻路与原游戏一致，大部分角色数值与游戏相同。
 
-文档与源码的完整索引（每篇策划/规格文档对应哪些源文件、原始采集数据的命名约定）见 [docs/README.md](./docs/README.md)。
+完整覆盖矩阵与逐卡状态见 **[`docs/card_coverage.md`](docs/card_coverage.md)**。
 
-## 模拟器特性
+## 训练现状与已知问题
 
-模拟器现已覆盖 148 张卡的数值快照（含觉醒 42+7 张、精英/Hero 机制），全卡可通过批量冒烟（`scripts/batch_smoke.py`，报告见 `docs/batch_smoke_report.json`），覆盖进度见 `docs/card_coverage.md`。模拟器有着和原游戏一致的寻路算法，大部分角色有和游戏相同的数值。
+当前模型处在**行为质量爬坡期**：响应率、接敌率等行为指标在改善，但胜率长期处在平台期；已定位到若干机制层问题（评论家损失主导更新、指标分辨率不足、部分意图冷启动不可达等），完整取证与整改计划见：
 
-最早实现的 47 张基础卡名称如下：
+- [`docs/training_audit_2026-09-11.md`](docs/training_audit_2026-09-11.md) —— 训练体系审计（训练问题 / 评判指标 / 步数预算 / 参数量）；
+- [`docs/rl_training_fix_plan_v1.md`](docs/rl_training_fix_plan_v1.md) —— 整改计划（P0→P2 + 门禁 + 单变量 A/B 协议）。
 
-- Knight
-- Giant
-- Archers
-- Goblins
-- Pekka
-- MiniPekka
-- Minions
-- Skeletons
-- SkeletonArmy
-- Balloon
-- Witch
-- Barbarians
-- Golem
-- Valkyrie
-- Bomber
-- Musketeer
-- BabyDragon
-- Prince
-- Wizard
-- SpearGoblins
-- GiantSkeleton
-- HogRider
-- MinionHorde
-- RoyalGiant
-- Princess
-- ThreeMusketeers (Not the newest version though)
-- BlowdartGoblin (Before nerf)
-- AngryBarbarians (English name: Elite Barbarians)
-- Bats
-- DartBarrell (English name: Flying Machine)
-- RoyalHogs
-- Cannon
-- Xbow
-- IceWizard
-- SkeletonWarriors
-- DarkPrince
-- LavaHound
-- IceSpirits
-- FireSpirits
-- Miner
-- Sparky
-- Bowler
-- Rage
-- RageBarbarian (English name: Lumberjack)
-- BattleRam
-- Fireball
-- Arrows
+## 文档导航
 
-## 帮个忙吧
+| 想做什么 | 去哪 |
+|---|---|
+| 理解模拟器 / 跑起来 | 本文件 |
+| 启动训练 | `start_rl.bat`、`start_training.bat` |
+| RL 算法代码导读 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
+| 跨会话方案决策（改方案前**先读**） | [`AGENTS.md`](AGENTS.md) |
+| 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |
+| 自检 / 回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
 
-不知不觉从项目开始开发到现在，已经过去半年了，我已经数不清有多少时间花在上面了。然而，这个项目的上限基本取决于模拟器的上限，我一人无力准确实现皇室122张卡牌的所有逻辑，如果你愿意帮我实现一两张牌，我将会非常高兴。
+## 参与
 
-我的B站用户名是`jasonmoonw`，如果你想联系我，给我发私信就好了。我的discord用户名是jasoncoder_47308。
+模拟器是这个项目的天花板：**我一人无力把 122 张卡的所有交互都做到完全准确**。如果你愿意帮忙实现一两张牌、修正某个机制，或者改进训练算法，非常欢迎提 Issue / PR。
 
-给我的项目点个star吧！
+如果这个项目对你有帮助，点个 star 吧。
+
+---
+
+**致谢**：模拟器引擎源自开源项目 [Jason-XII/clash-royale-simulator](https://github.com/Jason-XII/clash-royale-simulator)；经验收集瓶颈与 oracle planner 的论述参考 arXiv:2012.12186。

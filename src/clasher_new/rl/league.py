@@ -73,7 +73,9 @@ class League:
         self._ckpt_counter[agent_id] = n + 1
         new_id = f"{agent_id}_ckpt{n}"
         snap = FollowerPolicy(hidden=policy.hidden_dim, plan_dim=policy.plan_dim,
-                              belief_dim=policy.belief_dim)
+                              belief_dim=policy.belief_dim,
+                              value_bypass=bool(getattr(policy, "value_bypass", False)),
+                              value_independent=bool(getattr(policy, "value_independent", False)))
         snap.load_state_dict(policy.state_dict())
         snap.eval()
         for p in snap.parameters():
@@ -89,7 +91,9 @@ class League:
         from rl.follower import FollowerPolicy
         new_id = f"{agent_id}_ckpt"
         snap = FollowerPolicy(hidden=policy.hidden_dim, plan_dim=policy.plan_dim,
-                              belief_dim=policy.belief_dim)
+                              belief_dim=policy.belief_dim,
+                              value_bypass=bool(getattr(policy, "value_bypass", False)),
+                              value_independent=bool(getattr(policy, "value_independent", False)))
         snap.load_state_dict(policy.state_dict())
         snap.eval()
         for p in snap.parameters():

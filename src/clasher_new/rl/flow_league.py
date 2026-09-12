@@ -127,10 +127,13 @@ def build_flow_models(cfg, device, belief_dim):
     trainers = {}
     for mid in FLOW_MODEL_IDS:
         if mid == "main" and cfg.main_init:
-            pol = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim)
+            pol = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
+                                  value_bypass=cfg.value_bypass,
+                                  value_independent=cfg.value_independent)
         else:
             pol = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
-                                 belief_dim=belief_dim)
+                                 belief_dim=belief_dim, value_bypass=cfg.value_bypass,
+                                 value_independent=cfg.value_independent)
         pol.to_device(device)
         models[mid] = pol
         trainers[mid] = PPOTrainer(pol, lr=cfg.lr, gamma=cfg.gamma,
@@ -205,6 +208,11 @@ def _hp_state(p):
     return (p.king_tower_hp + p.left_tower_hp + p.right_tower_hp,
             3 - p.get_crown_count(),
             p.elixir)
+
+
+def _tower_state(p):
+    """三塔血量 [king, left, right]（塔血差异化定价 per-tower 镜像输入）。"""
+    return [p.king_tower_hp, p.left_tower_hp, p.right_tower_hp]
 
 
 def new_ep_buf():
@@ -282,12 +290,16 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
         a_played = _bundle_cards(bundle, obs)
         old0 = _hp_state(env.battle.players[0])
         old1 = _hp_state(env.battle.players[1])
+        old0t = _tower_state(env.battle.players[0])
+        old1t = _tower_state(env.battle.players[1])
         v_before = [float(env._active_v[0]), float(env._active_v[1])]
         env.reward_weights = rw_a          # 按模型奖惩：reward0 用 A 的权重
         obs2, reward0, term, trunc, info = env.step(bundle)
         tr1 = opp.take_last_step()
         new0 = _hp_state(env.battle.players[0])
         new1 = _hp_state(env.battle.players[1])
+        new0t = _tower_state(env.battle.players[0])
+        new1t = _tower_state(env.battle.players[1])
         winner = env.battle.winner if env.battle.game_over else None
         # player-1 视角 reward：交换 blue/red、winner 翻转（invalid 视为 0），用 B 的权重
         # v2：与 RLEnv.step 同口径——两段价格 + 资源账 V（份额在 env 内维护）
@@ -311,6 +323,10 @@ def _play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps,
             invalid_count=0,
             blue_hps_max=getattr(env, "_red_hps_max", None),
             red_hps_max=getattr(env, "_blue_hps_max", None),
+            blue_towers_old=old1t, red_towers_old=old0t,
+            blue_towers_new=new1t, red_towers_new=new0t,
+            blue_towers_max=getattr(env, "_red_towers_max", None),
+            red_towers_max=getattr(env, "_blue_towers_max", None),
             game_over=env.battle.game_over)
         # player-0 侧 transition
         ep_a["obs"].append(obs); ep_a["belief"].append(belief_tok)

@@ -10,6 +10,10 @@
   EpisodeReplay（含 hidden）与 BC 样本，落盘 ``--play-out`` 供 train_belief / BC 训练；
 - 扫描 ``<state 同目录>/replays/league_<step>.pkl`` 联赛录像，列出最近回放；
 - 浏览器内 Canvas 播放器回放单局（纯前端自绘，无外部 CDN 依赖，离线可用）；
+- **卡牌使用统计**（``/api/cardstats``）：按卡组/模型汇总实际出牌 —— 行=卡牌、列=模型，
+  单元格为出牌次数（热力配色）+ 占该模型总出牌的比例；统计范围可选当前打开的回放 /
+  最近 N 个 / 全部。数据口径：对手侧取帧的 ``opp_played``（所有录像都有），我方侧取帧的
+  ``cards``（新录像；旧录像无 → 该侧显示 0 并提示"部分覆盖"）；
 - ``/api/state`` 每 3 秒轮询刷新，``/api/sweep`` / ``/api/solo`` 同频，``/api/replays`` 每 5 秒。
 
 用法：
@@ -309,6 +313,192 @@ def load_replay_payload(replays_dir, filename, game_idx=None):
     }
 
 
+# ---------------------------------------------------------------------------
+# 卡牌使用统计（各卡组/模型的实际出牌）
+# ---------------------------------------------------------------------------
+# 数据口径：
+# - 对手侧（player-1）：帧里的 ``opp_played`` 已带卡名，**所有录像**都能统计；
+# - 我方侧（player-0）：新录像帧的 ``cards``（record 时解析的手牌卡名），旧录像没有；
+# - 卡组构成：新录像 ``meta["decks"]``（双方本局实际卡组）。
+# 联赛双方轮流当先手（side0），因此每个模型都会有一半对局以 player-1 身份出现 ——
+# 即便对旧录像，"每个模型打了哪些牌"依然可统计（只是每局只覆盖一侧）。
+
+#: 单文件卡牌统计缓存：{path: ((mtime_ts, size), stats)}，切换统计范围时免重复反序列化
+_CARD_STATS_CACHE = {}
+
+
+def _agent_label(mid):
+    """模型 id → 友好名（对齐 Elo 面板；frozen_copy 视作 main 的冻结副本）。"""
+    if mid == "frozen_copy":
+        return "main（冻结副本）"
+    return MODEL_LABELS.get(mid, mid)
+
+
+def _other_side_id(meta):
+    """由 meta.pair / meta.side0 推出 player-1 一侧的模型 id（opp_played 的归属）。"""
+    pair = [str(x) for x in (meta.get("pair") or [])]
+    if len(pair) < 2:
+        return None
+    side0 = meta.get("side0")
+    if side0 == pair[0]:
+        return pair[1]
+    if side0 == pair[1]:
+        return pair[0]
+    return pair[1]
+
+
+def _new_agent(mid):
+    return {"model": mid, "label": _agent_label(mid), "games": 0, "plays": 0,
+            "cards": {}, "deck_cards": {}, "n_decks": 0}
+
+
+def _stat_file_cards(path):
+    """统计单个回放文件里"每个模型打了哪些牌"。带 (mtime,size) 缓存。"""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    key = (st.st_mtime, st.st_size)
+    hit = _CARD_STATS_CACHE.get(path)
+    if hit and hit[0] == key:
+        return hit[1]
+    try:
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+    except Exception:
+        return None
+    games = data["games"] if isinstance(data, dict) else data
+    if not isinstance(games, list):
+        return None
+
+    agents = {}
+    n_games = side0_games = side1_games = 0
+
+    def _agent(mid):
+        return agents.setdefault(mid, _new_agent(mid))
+
+    for g in games:
+        meta = g.get("meta") or {}
+        pair = list(meta.get("pair") or [])
+        side0_id = meta.get("side0") or (pair[0] if pair else None)
+        side1_id = _other_side_id(meta)
+        n_games += 1
+        seen0 = seen1 = False
+        for fr in (g.get("frames") or []):
+            # 对手侧：opp_played（结构化 [{card,x,y}]，含卡名）
+            if side1_id:
+                for p in (fr.get("opp_played") or []):
+                    c = p.get("card") if isinstance(p, dict) else None
+                    if not c or c == "__ability__":
+                        continue
+                    a = _agent(side1_id)
+                    a["cards"][c] = a["cards"].get(c, 0) + 1
+                    a["plays"] += 1
+                    seen1 = True
+            # 我方侧：cards（新录像才有）
+            if side0_id:
+                for c in (fr.get("cards") or []):
+                    if not c:
+                        continue
+                    a = _agent(side0_id)
+                    a["cards"][c] = a["cards"].get(c, 0) + 1
+                    a["plays"] += 1
+                    seen0 = True
+        if side0_id:
+            _agent(side0_id)["games"] += 1
+        if side1_id:
+            _agent(side1_id)["games"] += 1
+        side0_games += 1 if seen0 else 0
+        side1_games += 1 if seen1 else 0
+        # 卡组构成：meta.decks = [deck0, deck1]（新录像）
+        decks = meta.get("decks")
+        if isinstance(decks, list) and len(decks) == 2:
+            for mid, deck in ((side0_id, decks[0]), (side1_id, decks[1])):
+                if not mid:
+                    continue
+                a = _agent(mid)
+                a["n_decks"] += 1
+                for c in (deck or []):
+                    a["deck_cards"][c] = a["deck_cards"].get(c, 0) + 1
+
+    stats = {"n_games": n_games, "side0_games": side0_games,
+             "side1_games": side1_games, "agents": agents}
+    _CARD_STATS_CACHE[path] = (key, stats)
+    return stats
+
+
+def build_card_stats_payload(replays_dir, filename=None, n_files=3):
+    """汇总回放的卡牌使用统计。
+
+    filename 给定 → 只统计该文件；否则汇总最近 n_files 个（n_files<=0 = 全部）。
+    """
+    if not replays_dir or not os.path.isdir(replays_dir):
+        return {"ok": False, "error": "未找到回放目录", "replays_dir": replays_dir or ""}
+    if filename:
+        if "/" in filename or "\\" in filename or ".." in filename:
+            return {"ok": False, "error": "非法回放文件名"}
+        if not os.path.isfile(os.path.join(replays_dir, filename)):
+            return {"ok": False, "error": f"回放文件不存在: {filename}"}
+        files = [filename]
+    else:
+        limit = n_files if (n_files and n_files > 0) else 10 ** 9
+        files = [r["file"] for r in scan_replays(replays_dir, limit=limit)]
+
+    agents = {}
+    n_games = side0_games = side1_games = 0
+    used = []
+    for fn in files:
+        st = _stat_file_cards(os.path.join(replays_dir, fn))
+        if not st:
+            continue
+        used.append(fn)
+        n_games += st["n_games"]
+        side0_games += st["side0_games"]
+        side1_games += st["side1_games"]
+        for mid, a in st["agents"].items():
+            tgt = agents.setdefault(mid, _new_agent(mid))
+            tgt["games"] += a["games"]
+            tgt["plays"] += a["plays"]
+            tgt["n_decks"] += a["n_decks"]
+            for c, v in a["cards"].items():
+                tgt["cards"][c] = tgt["cards"].get(c, 0) + v
+            for c, v in a["deck_cards"].items():
+                tgt["deck_cards"][c] = tgt["deck_cards"].get(c, 0) + v
+
+    out = []
+    for mid, a in agents.items():
+        total = a["plays"]
+        top = sorted(a["cards"].items(), key=lambda kv: (-kv[1], kv[0]))
+        out.append({
+            "model": mid,
+            "label": a["label"],
+            "games": a["games"],
+            "plays": total,
+            "n_distinct": len(a["cards"]),
+            "per_game": round(total / a["games"], 2) if a["games"] else 0.0,
+            "cards": a["cards"],
+            "top": [{"card": c, "n": v,
+                     "share": round(v / total, 4) if total else 0.0} for c, v in top],
+            "deck_cards": a["deck_cards"],
+            "n_decks": a["n_decks"],
+        })
+    out.sort(key=lambda x: -x["plays"])
+    return {
+        "ok": True,
+        "files": used,
+        "n_games": n_games,
+        "agents": out,
+        "coverage": {
+            "side0_games": side0_games,
+            "side1_games": side1_games,
+            "n_games": n_games,
+            # 旧录像只有对手侧可统计 → 前端据此提示"部分覆盖"
+            "partial": side0_games < n_games,
+        },
+        "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    }
+
+
 def make_demo_replays(replays_dir, n_games=2, n_frames=40):
     """生成演示用联赛录像（合成帧），便于 --demo 直接预览回放播放器。"""
     import random
@@ -449,6 +639,21 @@ _HTML = r"""<!DOCTYPE html>
   .btn.sm { padding:3px 10px; }
   .badge { font-size:11px; padding:1px 8px; border-radius:999px; }
   .badge.w0 { background:#1d4ed8; } .badge.w1 { background:#991b1b; } .badge.wd { background:#334155; }
+  /* —— 卡牌使用统计 —— */
+  .stats-agents { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .stats-agent { background:#0f172a; border:1px solid #334155; border-radius:8px;
+                 padding:8px 11px; font-size:12px; }
+  .stats-agent b { color:#e2e8f0; }
+  .stats-agent .m { color:#94a3b8; }
+  .stats-scroll { max-height:460px; overflow:auto; border:1px solid #334155; border-radius:8px; }
+  table.cards { font-size:12px; }
+  table.cards th { position:sticky; top:0; background:#1e293b; z-index:1; }
+  table.cards td, table.cards th { padding:5px 8px; white-space:nowrap;
+                                   border-bottom:1px solid #26334a; }
+  table.cards td.card-name { font-family:ui-monospace,Consolas,monospace; color:#cbd5e1; }
+  table.cards td.num, table.cards th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .cellbar { display:inline-block; height:10px; border-radius:3px; background:#60a5fa;
+             vertical-align:middle; margin-right:6px; }
   .player-grid { display:grid; grid-template-columns: minmax(280px, 420px) 1fr; gap:18px; }
   @media (max-width: 900px) { .player-grid { grid-template-columns: 1fr; } }
   .arena-wrap canvas { width:100%; height:auto; max-height:74vh; background:#0b3d2e;
@@ -510,7 +715,12 @@ _HTML = r"""<!DOCTYPE html>
       <p id="soloDeck" class="sub"></p>
       <p class="sub" style="margin:10px 0 6px">评估（最新在上）：</p>
       <table>
-        <thead><tr><th>步数</th><th>胜/负/平</th><th>胜率 ±SE</th><th>mean_reward</th></tr></thead>
+        <thead><tr><th>步数</th><th>胜/负/平</th><th>胜率 ±SE</th><th>mean_reward</th>
+        <th>接敌%</th><th>单边堆牌%</th><th>防守投入%</th><th>响应延迟</th><th>deploy/局</th><th>平均圣水</th>
+        <th title="critic 对回报的解释方差 EV（池化口径）：≥0.2 才算价值头在有效学习；≈0 等于只会预测均值；持续为负说明比常数预测还差">critic EV</th>
+        <th title="GRU 隐状态跨帧 std（逐维后取均值）：健康 >0.05；≤0.02 说明隐状态被冻成常数（v3 根因：enc 未归一化导致 tanh 候选饱和）">h 跨帧 std</th>
+        <th title="GRU 候选 tanh 的 |·| 均值：饱和时 →1.0；健康 <0.9。与 h 跨帧 std 一起判 GRU 是否解冻">GRU n(abs)</th>
+        <th title="value_head 输出 std ÷ 批内回报 std（v3 §2 验收第 3 行）：>0.3 说明 critic 输出波动与回报同量级；≈0 说明价值头输出近似常数">value/R std</th></tr></thead>
         <tbody id="soloTable"></tbody>
       </table>
     </div>
@@ -555,6 +765,24 @@ _HTML = r"""<!DOCTYPE html>
     </table>
     <p id="gamesEmpty" class="sub"></p>
   </div>
+</section>
+
+<section class="card" id="statsCard" style="display:none">
+  <h2>卡牌使用统计（各卡组 / 模型的实际出牌）
+    <span class="sub" id="statsSub"></span>
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <select id="statsScope" class="btn">
+        <option value="3" selected>最近 3 个回放</option>
+        <option value="10">最近 10 个回放</option>
+        <option value="0">全部回放</option>
+        <option value="file">当前打开的回放</option>
+      </select>
+      <button class="btn" id="statsReload">刷新</button>
+    </span>
+  </h2>
+  <div class="stats-agents" id="statsAgents"></div>
+  <div class="stats-scroll"><table class="cards" id="statsTable"></table></div>
+  <p class="sub" id="statsNote" style="margin-top:10px"></p>
 </section>
 
 <section class="card" id="playerCard" style="display:none">
@@ -959,8 +1187,32 @@ function renderSolo(){
   document.getElementById("soloTable").innerHTML = rows.map(h =>
     `<tr><td>${h.step.toLocaleString()}</td><td>${h.wins}W / ${h.losses}L / ${h.draws}D</td>` +
     `<td><b>${(h.winrate * 100).toFixed(1)}%</b> ±${(h.winrate_se * 100).toFixed(1)}</td>` +
-    `<td>${h.mean_reward.toFixed(3)}</td></tr>`).join("") ||
-    '<tr><td colspan="4">等待首次评估…</td></tr>';
+    `<td>${h.mean_reward.toFixed(3)}</td>` +
+    `<td>${h.engagement_rate === undefined ? "–" : h.engagement_rate.toFixed(0) + "%"}</td>` +
+    `<td>${h.unilateral_rate === undefined ? "–" : h.unilateral_rate.toFixed(0) + "%"}</td>` +
+    `<td>${h.defense_invest_rate === undefined ? "–" : h.defense_invest_rate.toFixed(0) + "%"}</td>` +
+    `<td>${h.response_latency_med === undefined || h.response_latency_med === null ? "–" : h.response_latency_med.toFixed(1) + "s"}</td>` +
+    `<td>${h.deploy_per_game === undefined ? "–" : h.deploy_per_game.toFixed(1)}</td>` +
+    `<td>${h.elixir_avg === undefined ? "–" : h.elixir_avg.toFixed(1)}</td>` +
+    (() => {
+      // EV：≥0.2 绿 / 0~0.2 黄 / <0 红
+      const ev = h.explained_variance;
+      const evTd = (ev === undefined || ev === null) ? "<td>–</td>"
+        : `<td style="color:${ev >= 0.2 ? "#4ade80" : (ev >= 0 ? "#fbbf24" : "#f87171")};font-weight:600">${ev.toFixed(3)}</td>`;
+      // GRU 活力（v3）：h 跨帧 std 健康 >0.05、GRU n(abs) 健康 <0.9
+      const hs = h.h_std;
+      const hsTd = (hs === undefined || hs === null) ? "<td>–</td>"
+        : `<td style="color:${hs > 0.05 ? "#4ade80" : (hs > 0.02 ? "#fbbf24" : "#f87171")};font-weight:600">${hs.toExponential(1)}</td>`;
+      const na = h.gru_n_abs;
+      const naTd = (na === undefined || na === null) ? "<td>–</td>"
+        : `<td style="color:${na < 0.9 ? "#4ade80" : (na < 0.97 ? "#fbbf24" : "#f87171")};font-weight:600">${na.toFixed(3)}</td>`;
+      // v3 §2 第 3 行：value_head 输出 std / 批内 R std（>0.3 绿 / >0.1 黄 / 否则红）
+      const vr = h.value_std_ratio;
+      const vrTd = (vr === undefined || vr === null) ? "<td>–</td>"
+        : `<td style="color:${vr > 0.3 ? "#4ade80" : (vr > 0.1 ? "#fbbf24" : "#f87171")};font-weight:600">${vr.toFixed(3)}</td>`;
+      return evTd + hsTd + naTd + vrTd + "</tr>";
+    })()).join("") ||
+    '<tr><td colspan="14">等待首次评估…</td></tr>';
   drawSoloChart();
 }
 
@@ -1198,6 +1450,8 @@ async function openReplay(file){
   renderGamesPanel();
   document.getElementById("gamesPanel").style.display = "block";
   document.getElementById("gamesPanel").scrollIntoView({behavior:"smooth"});
+  // 统计范围若为"当前打开的回放"，打开新文件后同步刷新
+  if (document.getElementById("statsScope").value === "file") loadCardStats("file");
 }
 
 function renderGamesPanel(){
@@ -1418,6 +1672,29 @@ function interpEntities(fromEnts, toEnts, p){
   return out;
 }
 
+// 实体名显示：内部英文名 → 友好中文名（2026-09-10）。
+// 滚木/滚筒引擎侧已改为"凭空出现在部署点"（无 LogProjectile 第一段），此处映射
+// 兼容旧 replay 里残留的 LogProjectile 与新 replay 的 LogProjectileRolling。
+function displayName(name, kind){
+  const M = {
+    "LogProjectileRolling": "滚木", "LogProjectile": "滚木",
+    "BarbLogProjectileRolling": "滚筒", "BarbLogProjectile": "滚筒",
+    "ArrowsSpell": "箭雨", "ArcherArrow": "箭",
+    "TowerPrincessProjectile": "塔箭", "KingProjectile": "王塔箭",
+    "FirecrackerExplosion": "爆裂",
+    "ArrowsSpellDeco": "箭雨", "FireballSpell": "火球", "RocketSpell": "火箭",
+    "GoblinBarrelSpell": "飞桶", "xbow_projectile": "连弩箭",
+    "TowerCannonball": "炮塔弹", "MortarProjectile": "迫击炮弹",
+    "MusketeerProjectile": "火枪弹", "BabyDragonProjectile": "龙焰",
+    "WitchProjectile": "女巫弹", "PrincessProjectile": "公主弹",
+    "SpearGoblinProjectile": "投矛", "RoyalGiantProjectile": "巨炮弹",
+    "BombTowerProjectile": "炸弹塔弹", "MinionSpit": "小骷髅弹",
+  };
+  const n = M[name];
+  if (n) return n;
+  return name;
+}
+
 function drawInterp(from, to, p){
   drawInterpOn(document.getElementById("arena"), from, to, p);
 }
@@ -1478,32 +1755,28 @@ function drawInterpOn(canvas, from, to, p){
       : (tw.player === 0 ? (tw.x < 9 ? towerMax.l0 : towerMax.r0)
                           : (tw.x < 9 ? towerMax.l1 : towerMax.r1));
     const frac = mx > 0 ? Math.max(0, Math.min(1, tw.hp / mx)) : 0;
-    const r = (tw.king ? 0.62 : 0.50) * scale;
+    // 塔 = 方形（2026-09-10 用户口径：圆形换方形、不显示血量数字）；
+    // 方形内按血量比例填充颜色（高血绿/中黄/低血红），塔破画灰×
+    const s = (tw.king ? 0.62 : 0.50) * scale;
     const col = tw.player === 0 ? "#3b82f6" : "#ef4444";
-    ctx.beginPath();
-    ctx.arc(X(tw.x), Y(tw.y), r, 0, 7);
+    const bx = X(tw.x) - s, by = Y(tw.y) - s, bs = s * 2;
     ctx.fillStyle = "rgba(15,23,42,0.55)";
-    ctx.fill();
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.fillRect(bx, by, bs, bs);
     if (frac > 0){
-      ctx.beginPath();
-      ctx.arc(X(tw.x), Y(tw.y), Math.max(1, r - 3), -Math.PI / 2,
-              -Math.PI / 2 + frac * 2 * Math.PI);
-      ctx.strokeStyle = frac > 0.5 ? "#22c55e" : (frac > 0.25 ? "#eab308" : "#ef4444");
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      ctx.fillStyle = frac > 0.5 ? "#22c55e" : (frac > 0.25 ? "#eab308" : "#ef4444");
+      // 血条：方形内底部按比例填充（宽度 = 血量比例）
+      ctx.fillRect(bx + 2, by + bs - 5, (bs - 4) * frac, 3);
     } else {
       ctx.strokeStyle = "#475569";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(X(tw.x) - r / 2, Y(tw.y) - r / 2);
-      ctx.lineTo(X(tw.x) + r / 2, Y(tw.y) + r / 2);
-      ctx.moveTo(X(tw.x) + r / 2, Y(tw.y) - r / 2);
-      ctx.lineTo(X(tw.x) - r / 2, Y(tw.y) + r / 2);
+      ctx.moveTo(bx, by); ctx.lineTo(bx + bs, by + bs);
+      ctx.moveTo(bx + bs, by); ctx.lineTo(bx, by + bs);
       ctx.stroke();
     }
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx, by, bs, bs);
   });
 
   // 实体（pygame 风格：部队实心圆+名字+血条 / Building 中央 HP / Projectile 空心 / 效果淡出）
@@ -1534,8 +1807,12 @@ function drawInterpOn(canvas, from, to, p){
       ctx.fillStyle = e.shield > 0 ? "#a78bfa" : "#22c55e";
       ctx.fillRect(X(e.x) - bw / 2, Y(e.y) - r - 7, bw * frac, bh);
     }
-    ctx.fillStyle = "#e2e8f0"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(e.name, X(e.x), Y(e.y) - r - 9);
+    // 实体名：内部名→中文（displayName）；弹射物/特效用浅色小字淡出不喧宾夺主
+    const isFx = (e.kind === "projectile" || e.kind === "effect");
+    ctx.fillStyle = isFx ? "rgba(226,232,240,0.55)" : "#e2e8f0";
+    ctx.font = isFx ? "8px sans-serif" : "9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(displayName(e.name, e.kind), X(e.x), Y(e.y) - r - 9);
     if (e.kind === "building"){
       ctx.fillStyle = "#fff";
       ctx.fillText(Math.round(e.hp), X(e.x), Y(e.y) + 3);
@@ -1574,6 +1851,117 @@ function drawElixir(ctx, W, H, side, val, color, label){
   ctx.fillText(label + " " + val.toFixed(1), side === 0 ? x : W - 8, y - 3);
 }
 
+/* ---- 卡牌使用统计（各卡组/模型的实际出牌） ---- */
+
+let cardStats = null;
+let cardStatsLoaded = false;
+
+function escHtml(s){
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function statColor(frac){
+  const a = 0.10 + 0.72 * Math.max(0, Math.min(1, frac));
+  return "rgba(37,99,235," + a.toFixed(3) + ")";
+}
+
+async function loadCardStats(scopeOverride){
+  const sel = document.getElementById("statsScope");
+  const scope = (scopeOverride !== undefined) ? scopeOverride : sel.value;
+  let url = "/api/cardstats?_t=" + Date.now();
+  if (scope === "file"){
+    if (curReplay && curReplay.file) url += "&file=" + encodeURIComponent(curReplay.file);
+    else url += "&files=3";   // 还没打开过回放 → 退回最近 3 个
+  } else {
+    url += "&files=" + encodeURIComponent(scope);
+  }
+  document.getElementById("statsSub").textContent = "加载中…";
+  let data = null;
+  try{
+    const r = await fetch(url, {cache:"no-store"});
+    data = await r.json();
+  }catch(e){ data = {ok:false, error:String(e)}; }
+  cardStats = data;
+  cardStatsLoaded = true;
+  renderCardStats();
+}
+
+function renderCardStats(){
+  const d = cardStats;
+  const card = document.getElementById("statsCard");
+  const sub = document.getElementById("statsSub");
+  const agentsEl = document.getElementById("statsAgents");
+  const table = document.getElementById("statsTable");
+  const note = document.getElementById("statsNote");
+  if (!d || !d.ok){
+    if (d && d.error && d.error.indexOf("回放目录") >= 0){ card.style.display = "none"; return; }
+    card.style.display = "block";
+    sub.textContent = "";
+    agentsEl.innerHTML = "";
+    table.innerHTML = "";
+    note.textContent = (d && d.error) ? ("统计失败：" + d.error) : "暂无统计";
+    return;
+  }
+  card.style.display = "block";
+  sub.textContent = `${d.files.length} 个回放 · ${d.n_games} 局 · ${d.agents.length} 个模型`;
+
+  if (!d.agents.length){
+    agentsEl.innerHTML = "";
+    table.innerHTML = "";
+    note.textContent = "该范围内的回放里没有可统计的出牌记录。";
+    return;
+  }
+
+  // 概览：每个模型（卡组）的出战局数 / 出牌数 / 卡种数
+  agentsEl.innerHTML = d.agents.map(a =>
+    `<div class="stats-agent"><b>${escHtml(a.label)}</b>
+      <span class="m">· ${a.games} 局 · 出牌 ${a.plays}（${a.per_game}/局）· ${a.n_distinct} 种卡</span>
+    </div>`).join("");
+
+  // 矩阵：行 = 卡牌（按总出牌次数降序），列 = 模型；单元格 = 次数 + 占该模型的百分比
+  const totals = {};
+  d.agents.forEach(a => {
+    for (const c in a.cards) totals[c] = (totals[c] || 0) + a.cards[c];
+  });
+  const cards = Object.keys(totals).sort((x, y) => totals[y] - totals[x] || x.localeCompare(y));
+  const colMax = {};
+  d.agents.forEach(a => {
+    let mx = 1;
+    for (const c in a.cards) if (a.cards[c] > mx) mx = a.cards[c];
+    colMax[a.model] = mx;
+  });
+
+  let html = "<thead><tr><th>卡牌</th><th class='num'>总计</th>" +
+    d.agents.map(a =>
+      `<th class="num">${escHtml(a.label)}<br>` +
+      `<span style="font-weight:400;color:#94a3b8">${a.games} 局</span></th>`).join("") +
+    "</tr></thead><tbody>";
+  for (const c of cards){
+    html += `<tr><td class="card-name">${escHtml(c)}</td><td class="num">${totals[c]}</td>`;
+    for (const a of d.agents){
+      const n = a.cards[c] || 0;
+      if (!n){ html += `<td class="num" style="color:#475569">·</td>`; continue; }
+      const frac = n / (colMax[a.model] || 1);
+      const pct = a.plays ? (n / a.plays * 100) : 0;
+      html += `<td class="num" style="background:${statColor(frac)}">` +
+              `<span class="cellbar" style="width:${Math.round(frac * 36)}px"></span>` +
+              `${n} <span style="color:#cbd5e1">${pct.toFixed(1)}%</span></td>`;
+    }
+    html += "</tr>";
+  }
+  table.innerHTML = html + "</tbody>";
+
+  const cov = d.coverage || {};
+  if (cov.partial){
+    note.textContent = `注：共 ${cov.n_games} 局，其中 ${cov.n_games - cov.side0_games} 局为旧录像` +
+      `（未记录我方出牌），这些局只统计到对手侧；新录像起双方都会被记录。`;
+  } else {
+    note.textContent = "双侧完整统计：每次出牌都归属到对应卡组/模型。百分比 = 该卡占该模型总出牌数的比例。";
+  }
+}
+
 /* ---- 事件绑定 + 启动 ---- */
 
 document.getElementById("btnPlay").onclick = togglePlay;
@@ -1584,6 +1972,8 @@ document.getElementById("closePlayer").onclick = () => {
   document.getElementById("playerCard").style.display = "none";
 };
 document.getElementById("reloadReplays").onclick = refreshReplays;
+document.getElementById("statsReload").onclick = () => loadCardStats();
+document.getElementById("statsScope").onchange = () => loadCardStats();
 document.getElementById("speedSel").onchange = e => { speed = parseFloat(e.target.value); };
 document.getElementById("scrub").oninput = e => {
   stopPlay();
@@ -1595,6 +1985,7 @@ refresh();
 setInterval(refresh, 3000);
 refreshReplays();
 setInterval(refreshReplays, 5000);
+loadCardStats();
 </script>
 </body>
 </html>
@@ -1688,6 +2079,14 @@ class Handler(BaseHTTPRequestHandler):
             game = qs.get("game")
             gi = int(game[0]) if game and game[0].isdigit() else None
             payload = load_replay_payload(self.replays_dir, file, gi)
+            self._send(200, json.dumps(payload).encode("utf-8"),
+                       "application/json; charset=utf-8")
+        elif route == "/api/cardstats":
+            # 卡牌使用统计：?file=xxx 单文件；?files=N 最近 N 个（N<=0 = 全部）；缺省最近 3 个
+            file = (qs.get("file") or [""])[0] or None
+            nf = qs.get("files")
+            n_files = int(nf[0]) if nf and nf[0].lstrip("-").isdigit() else 3
+            payload = build_card_stats_payload(self.replays_dir, file, n_files)
             self._send(200, json.dumps(payload).encode("utf-8"),
                        "application/json; charset=utf-8")
         elif route == "/favicon.ico":

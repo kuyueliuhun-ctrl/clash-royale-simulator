@@ -52,6 +52,9 @@ _DEFAULT_REWARD = {
     "elixir_diff_weight": 0.5,     # v2 资源账 edw 前段（t<120：费贵，教珍惜圣水）
     "elixir_diff_late": 0.1,       # v2 双倍期 edw（t≥120：费贱，亏费换塔血可接受）
     "unit_dmg_k": 0.0005,          # v2 单位受伤 shaping（客观伤害：敌方单位每掉 1 血 → 我方 +k）
+    "tower_premium_k": 2.0,        # 塔血差异化定价：凹形溢价强度（残血塔单位血价值
+                                   # ×(1+k×(1−ratio)²)），双向对称（与 config 同步）
+    "king_gate": 0.05,             # 两公主塔都存活时王塔单位血价值系数（≈0，王塔贬值）
 }
 
 #: 塔血参考（真实游戏，lv11）：**国王塔对所有人恒定 4824**；四种公主塔血量各不相同。
@@ -86,6 +89,78 @@ _TOWER_HP_ANCHOR = tower_total_hp(TOWER_TROOP_HP_LV11["PrincessTower"], KING_TOW
 PHASE_SWITCH_S = 120.0
 
 
+#: —— 塔血差异化定价（low-tower premium，2026-09-10 用户定稿）——
+#: 塔的单位血价值随残血上升：凹形溢价 w×(1 + k×(1−ratio)²)，双向对称（打敌方低血塔
+#: 奖励涨、我方低血塔挨打惩罚同曲线放大）；国王塔在两座公主塔都存活时价值≈0（×king_gate）。
+#: 同一机制必须与 MCTS 值函数（mcts.node_value）和 belief_planner 法术估值同源——
+#: 搜索/规划器与训练奖励量纲失配会重蹈 AGENTS.md 9h/MCTS 教训。
+DEFAULT_TOWER_PREMIUM_K = 2.0     # 凹形溢价强度（残血塔最多 ×(1+k)=3 倍单位血价值）
+DEFAULT_KING_GATE = 0.05          # 两公主塔存活时王塔单位血价值系数（≈0）
+
+
+def tower_value_mult(hp_ratio: float, *, king: bool, princesses_alive: int,
+                     k: float = DEFAULT_TOWER_PREMIUM_K,
+                     king_gate: float = DEFAULT_KING_GATE) -> float:
+    """单位血价值倍数：凹形溢价 + 王塔贬值闸门。
+
+    hp_ratio = 当前血/满血（0..1，塔破后按 0 计）；princesses_alive = 存活公主塔数
+    （调用方用 PlayerState.left/right_tower_hp>0 数出，或实体 is_alive）。
+    返回 0..(1+k)；全满血 + 非王塔 = 1.0（旧行为逐位不变）。
+    凹形（二次）：中高血量几乎不涨价、残血塔暴涨——模型学"斩杀残血塔"而非"乱放塔血买卖"。
+    王塔闸门：两公主塔都存活 → 王塔单位血价值×king_gate（未激活王塔不反击≈无价值）；
+    任一座公主塔被破后恢复全价。塔已破（ratio<=0）→ 返回 1.0（无边际伤害，倍数无意义）。
+    """
+    if hp_ratio <= 0.0:
+        return 1.0
+    base = 1.0 + k * (1.0 - hp_ratio) ** 2
+    if king and princesses_alive >= 2:
+        base *= king_gate
+    return base
+
+
+def tower_premium_k(rw) -> float:
+    """从奖励字典取溢价强度（缺省 2.0；经 reward_to_env 透传可调）。"""
+    return float(rw.get("tower_premium_k", DEFAULT_TOWER_PREMIUM_K))
+
+
+def _princesses_alive(hp_ratio_king, hp_ratio_left, hp_ratio_right) -> int:
+    """存活公主塔数（血比例 >0 = 未破）。"""
+    return int(hp_ratio_left > 0.0) + int(hp_ratio_right > 0.0)
+
+
+def _per_tower_norm_dmg(dmg_list, old_list, new_list, max_list, *, king, k, king_gate):
+    """per-tower 塔血差 → 差异化后按 lv11 锚归一化的加权伤害（正=塔掉血）。
+
+    dmg_list: 三塔 [king, left, right] 的 旧血−新血 差（正=掉血）；
+    old_list/new_list: 三塔事件前后残血；max_list: 三塔满血基准。
+    每塔：delta × mult(旧血线/满血) × (该塔 lv11 锚 / max_i)——"同一比例事件跨等级
+    同奖励"在**每塔各自**口径下成立（King 锚 4824、Princess 锚 3052）。
+    残血比例取**伤害发生时的旧血线** old/max：斩杀残血塔（old 低 → mult 高）最值钱；
+    若取 new/max（事件后），破塔帧 new=0 → mult=1.0 会把"斩杀"这个最该值钱的动作
+    低估成满血价（test_mcts_basic 4b 实测 kill<wait 回归抓出）。返回三塔加权伤害和。
+    """
+    anchors = [KING_TOWER_HP_LV11, TOWER_TROOP_HP_LV11["PrincessTower"],
+               TOWER_TROOP_HP_LV11["PrincessTower"]]
+    total = 0.0
+    princesses_alive = _princesses_alive(
+        new_list[0] / max_list[0] if max_list[0] > 0 else 0.0,
+        new_list[1] / max_list[1] if max_list[1] > 0 else 0.0,
+        new_list[2] / max_list[2] if max_list[2] > 0 else 0.0)
+    for i in range(3):
+        dmg_i = dmg_list[i]
+        if dmg_i <= 0.0:
+            continue
+        m_i = max_list[i]
+        if m_i <= 0.0:
+            continue
+        hp_ratio = old_list[i] / m_i   # 伤害发生时的旧血线（斩杀残血塔最值钱）
+        mult = tower_value_mult(hp_ratio, king=(i == 0),
+                                princesses_alive=princesses_alive,
+                                k=k, king_gate=king_gate)
+        total += dmg_i * mult * (anchors[i] / m_i)
+    return total
+
+
 def _phase_weights(rw, battle_time):
     """返回 (tower_opp, tower_self, edw_coef)：120s 切换的两段离散权重。
 
@@ -108,7 +183,10 @@ def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
                    my_elixir_before, opp_elixir_before, my_elixir_after, opp_elixir_after,
                    my_v_before=0.0, opp_v_before=0.0, my_v_after=0.0, opp_v_after=0.0,
                    winner, invalid_count, blue_hps_max=None, red_hps_max=None,
-                   game_over=False, draw_penalty=None):
+                   game_over=False, draw_penalty=None,
+                   blue_towers_old=None, red_towers_old=None,
+                   blue_towers_new=None, red_towers_new=None,
+                   blue_towers_max=None, red_towers_max=None):
     """逐决策帧奖励（RLEnv.step 与 selftest 共用）。
 
     全部新开关关闭（normalize_tower_dmg=False、elixir_diff_weight=0）时与旧公式逐位一致。
@@ -122,17 +200,41 @@ def compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new,
     winner: None=未终局/平局；0=我方胜；其它=负。invalid_count: 非法动作次数。
     game_over: 对局是否已结束（平局判负需要它，避免把进行中的普通步当失败罚）。
     draw_penalty: 平局惩罚（缺省取 rw["draw_penalty"]，再缺省与 lose_penalty 相同）。
+
+    **塔血差异化定价（2026-09-10）**：传 per-tower 参数（blue/red_towers_old/new/max，
+    每元素 [king, left, right]）时启用——低血塔单位血价值按 tower_value_mult 凹形溢价
+    （双向对称：打敌方低血塔奖励涨、我方低血塔挨打惩罚同曲线放大）、王塔两公主塔存活时
+    价值≈0。per-tower 参数**全缺省（None）时完全走旧聚合口径，逐位不变**（旧调用点兼容）。
     """
     rw = dict(_DEFAULT_REWARD, **(rw or {}))
     if draw_penalty is None:
         draw_penalty = rw.get("draw_penalty", rw["lose_penalty"])
     blue_dmg = blue_hps_old - blue_hps_new
     red_dmg = red_hps_old - red_hps_new
+    # 塔血差异化定价分支：**逐侧**独立判定——该侧 per-tower 参数齐了才用 per-tower
+    # （低血塔溢价 + 王塔贬值），否则回落该侧的聚合归一化（缺省逐位不变，兼容旧调用点）。
+    k_prem = tower_premium_k(rw)
     if rw.get("normalize_tower_dmg"):
-        if blue_hps_max:
-            blue_dmg = blue_dmg * (_TOWER_HP_ANCHOR / blue_hps_max)
-        if red_hps_max:
+        if (red_towers_old is not None and red_towers_new is not None
+                and red_towers_max is not None):
+            red_dmg = _per_tower_norm_dmg(
+                [red_towers_old[0] - red_towers_new[0],
+                 red_towers_old[1] - red_towers_new[1],
+                 red_towers_old[2] - red_towers_new[2]],
+                red_towers_old, red_towers_new, red_towers_max,
+                king=True, k=k_prem, king_gate=rw.get("king_gate", DEFAULT_KING_GATE))
+        elif red_hps_max:
             red_dmg = red_dmg * (_TOWER_HP_ANCHOR / red_hps_max)
+        if (blue_towers_old is not None and blue_towers_new is not None
+                and blue_towers_max is not None):
+            blue_dmg = _per_tower_norm_dmg(
+                [blue_towers_old[0] - blue_towers_new[0],
+                 blue_towers_old[1] - blue_towers_new[1],
+                 blue_towers_old[2] - blue_towers_new[2]],
+                blue_towers_old, blue_towers_new, blue_towers_max,
+                king=True, k=k_prem, king_gate=rw.get("king_gate", DEFAULT_KING_GATE))
+        elif blue_hps_max:
+            blue_dmg = blue_dmg * (_TOWER_HP_ANCHOR / blue_hps_max)
     reward = (
         rw["crown_weight"] * (red_left_old - red_left_new)
         - rw.get("crown_lose_weight", rw["crown_weight"]) * (blue_left_old - blue_left_new)
@@ -262,12 +364,15 @@ class RLEnv(gym.Env):
         # 与卡牌数据不符；不同步会导致每局第一步出现"塔血暴涨"的假奖励，等级越高越严重）。
         self.battle.update_player_hp()
         # 塔血归一化的本局基准：reset 时三塔全满，记录初始总塔血（economy 机制用）
+        # 与每塔满血数组（塔血差异化定价 per-tower 分母）
         self._blue_hps_max = (self.battle.players[0].king_tower_hp
                               + self.battle.players[0].left_tower_hp
                               + self.battle.players[0].right_tower_hp)
         self._red_hps_max = (self.battle.players[1].king_tower_hp
                              + self.battle.players[1].left_tower_hp
                              + self.battle.players[1].right_tower_hp)
+        self._blue_towers_max = self._tower_snapshot(self.battle.players[0])
+        self._red_towers_max = self._tower_snapshot(self.battle.players[1])
         # 清空掩码缓存（P0-3）：新对局的 tick/手牌/建筑都不再匹配旧指纹
         self._mask_fp = None
         self._mask_cells = None
@@ -485,6 +590,11 @@ class RLEnv(gym.Env):
             for eid in dead:
                 self._active_v[pid] -= shares.pop(eid)
 
+    @staticmethod
+    def _tower_snapshot(p) -> list:
+        """三塔血量快照 [king, left, right]（塔血差异化定价的 per-tower 输入）。"""
+        return [p.king_tower_hp, p.left_tower_hp, p.right_tower_hp]
+
     def step(self, action_bundle: ActionBundle):
         if not isinstance(action_bundle, ActionBundle):
             raise TypeError(f"step 需要 ActionBundle，收到 {type(action_bundle)}")
@@ -492,6 +602,8 @@ class RLEnv(gym.Env):
         p0, p1 = self.battle.players
         blue_hps_old = p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
         red_hps_old = p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp
+        blue_towers_old = self._tower_snapshot(p0)
+        red_towers_old = self._tower_snapshot(p1)
         blue_left_old = 3 - p0.get_crown_count()
         red_left_old = 3 - p1.get_crown_count()
         my_elixir_before = p0.elixir
@@ -550,6 +662,8 @@ class RLEnv(gym.Env):
 
         blue_hps_new = p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
         red_hps_new = p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp
+        blue_towers_new = self._tower_snapshot(p0)
+        red_towers_new = self._tower_snapshot(p1)
         blue_left_new = 3 - p0.get_crown_count()
         red_left_new = 3 - p1.get_crown_count()
 
@@ -575,6 +689,10 @@ class RLEnv(gym.Env):
             invalid_count=invalid_count,
             blue_hps_max=getattr(self, "_blue_hps_max", None),
             red_hps_max=getattr(self, "_red_hps_max", None),
+            blue_towers_old=blue_towers_old, red_towers_old=red_towers_old,
+            blue_towers_new=blue_towers_new, red_towers_new=red_towers_new,
+            blue_towers_max=getattr(self, "_blue_towers_max", None),
+            red_towers_max=getattr(self, "_red_towers_max", None),
             game_over=self.battle.game_over,
         )
 

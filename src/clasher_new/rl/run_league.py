@@ -108,17 +108,30 @@ def resolve_device(device: str) -> str:
 class LeagueGameRecorder:
     """逐局录像采集器：把每个决策步压缩成轻量帧，供每 2000 步联赛录像。"""
 
-    def __init__(self, a_id, b_id, side0, max_steps, steps=None):
+    def __init__(self, a_id, b_id, side0, max_steps, steps=None, decks=None):
         self.meta = {"pair": [a_id, b_id], "side0": side0, "max_steps": max_steps}
         # steps = [a_step, b_step]：双方模型各自所在训练步（None = 无步数概念，
         # 如脚本对手）。dashboard 对局列表据此显示 "main@2000 vs main@0" 这类对阵。
         if steps is not None:
             self.meta["steps"] = [int(s) if s is not None else None for s in steps]
+        # decks = (deck0, deck1)：双方本局实际卡组（卡名列表）。dashboard 的卡牌使用
+        # 统计据此还原"这一局双方各带了什么"，也是卡组构成统计的数据源。
+        if decks is not None:
+            self.set_decks(decks[0], decks[1])
         self.frames = []
         self.winner = None
 
-    def record(self, env, bundle, reward, info):
-        self.frames.append(battle_snapshot(env.battle, bundle, reward, info))
+    def set_decks(self, deck0, deck1):
+        """记录本局双方实际卡组（play_pair 复用 env 时在 reset 之后才可知）。"""
+        self.meta["decks"] = [list(deck0), list(deck1)]
+
+    def record(self, env, bundle, reward, info, cards=None):
+        frame = battle_snapshot(env.battle, bundle, reward, info)
+        # cards = 本步我方（player-0）实际打出的卡名。opp_played 已含对手卡名，本字段
+        # 补齐我方一侧 → dashboard 卡牌使用统计可做双侧完整。旧录像无此字段。
+        if cards:
+            frame["cards"] = list(cards)
+        self.frames.append(frame)
 
     def done(self, winner):
         self.winner = winner
@@ -197,6 +210,45 @@ def timeout_winner(battle, hp_tiebreak=None):
     return None
 
 
+def settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05):
+    """C'（2026-09-12）早停局低置信裁定降噪（纯函数，可单测）。
+
+    与 timeout_winner 同口径，但给"皇冠相同"的塔血%细差加置信门槛：
+    - 皇冠不同 → 决定性，照常返回 0/1；
+    - 皇冠相同且塔血%差 ≥ margin → 决定性，返回 0/1；
+    - 皇冠相同且塔血%差 < margin（掷硬币级裁定）→ None（记平局，调用方按
+      平局=失败惩罚），**不再按细差判胜负**。
+
+    依据：docs/critic_probe_experiment_2026-09-12.md 实验 3 —— 早停局占比
+    28~40%，其中皇冠相同的塔血%细差裁定标签噪声最大（早停把未定局的胜负
+    提前裁定，细差方向近乎随机）。仅用于**训练侧**结算降噪；eval 仍用
+    timeout_winner（真实 CR 规则），保证评估口径与历史可对比。
+    """
+    if lost1 > lost0:
+        return 0
+    if lost0 > lost1:
+        return 1
+    if min_pct0 is None or min_pct1 is None:
+        return None
+    if min_pct0 > min_pct1 + margin:
+        return 0
+    if min_pct1 > min_pct0 + margin:
+        return 1
+    return None
+
+
+def settle_stall(battle, margin=0.05):
+    """早停局结算（C'）：包装 settle_stall_from_counts + timeout_winner 的塔血口径。"""
+    if battle is None:
+        return None
+    p0, p1 = battle.players
+    lost0 = int(p0.get_crown_count())
+    lost1 = int(p1.get_crown_count())
+    m0 = _min_alive_tower_pct(battle, 0)
+    m1 = _min_alive_tower_pct(battle, 1)
+    return settle_stall_from_counts(lost0, lost1, m0, m1, margin)
+
+
 def _stall_probe(env, last_hp, stall_count):
     """僵局探针：每 STALL_WINDOW 步调用一次。
 
@@ -225,6 +277,8 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
         return _run_side0_scripted(env, policy, max_steps, recorder, reset_seed=reset_seed)
     obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
     belief.reset(env.deck1)
+    if recorder is not None:
+        recorder.set_decks(env.deck0, env.deck1)   # reset 后才会重采样出本局实际卡组
     hidden = None
     done = False
     steps = 0
@@ -243,7 +297,7 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
         agent_played = _bundle_cards(bundle, obs)
         obs, reward, term, trunc, info = env.step(bundle)
         if recorder is not None:
-            recorder.record(env, bundle, reward, info)
+            recorder.record(env, bundle, reward, info, cards=agent_played)
         if opp_side is not None:
             opp_side.observe_opponent_played(agent_played)
         belief.update(obs, info.get("opp_played"))
@@ -258,6 +312,8 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
 
 def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None):
     obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
+    if recorder is not None:
+        recorder.set_decks(env.deck0, env.deck1)   # reset 后才会重采样出本局实际卡组
     done = False
     steps = 0
     stall_count = 0
@@ -272,7 +328,7 @@ def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=No
         agent_played = _bundle_cards(bundle, obs)
         obs, reward, term, trunc, info = env.step(bundle)
         if recorder is not None:
-            recorder.record(env, bundle, reward, info)
+            recorder.record(env, bundle, reward, info, cards=agent_played)
         if opp_side is not None:
             opp_side.observe_opponent_played(agent_played)
         done = term or trunc
@@ -294,14 +350,29 @@ def _bundle_cards(bundle, obs):
     return out
 
 
+def _deck_factory_of(policy):
+    """脚本策略的"每局换卡组"工厂：pool（随机 8 张）或 deck_pool（整套抽取）→ deck()；
+    其余（含普通策略）→ None = 用固定卡组。
+
+    历史 bug（2026-09-11 由 dashboard 卡牌使用统计取证暴露）：旧写法只判 ``policy.pool``，
+    漏掉 deck_pool → push/counter/lockdown/all_decks 四个三分类卡组模型实际一直打
+    DEFAULT_DECK 的固定 8 卡，200 副天梯卡组从未生效。
+    """
+    if isinstance(policy, ScriptedPolicy) and (policy.pool or policy.deck_pool):
+        return policy.deck
+    return None
+
+
 def _make_opp(policy, env, deck):
     """把 policy 包成 player-1 对手；None = 内置随机（固定卡组）。"""
     if policy is None:
+        env.deck1_factory = None
         return None
     if isinstance(policy, ScriptedPolicy):
         policy.env = env
-        env.deck1_factory = policy.deck if policy.pool else None
+        env.deck1_factory = _deck_factory_of(policy)
         return policy
+    env.deck1_factory = None    # 非脚本对手：显式清空，避免上一对的卡组工厂残留
     return FollowerOpponent(policy, env,
                             belief=BeliefInference(opp_deck=list(deck), n_particles=128, seed=0))
 
@@ -312,8 +383,8 @@ def _prepare_env(env, side0_pol, side1_pol, deck0_prior=None):
     deck0_prior: FollowerOpponent 信念先验卡组（缺省 env.deck0；play_pair 复用 env 时
     传构造时的初始卡组快照，与旧"每局新建 env"语义一致）。
     """
-    if isinstance(side0_pol, ScriptedPolicy):
-        env.deck0_factory = side0_pol.deck if side0_pol.pool else None
+    # 显式赋值：非脚本策略 → None（否则会沿用上一对留下的卡组工厂，卡组跨 pair 泄漏）
+    env.deck0_factory = _deck_factory_of(side0_pol)
     env.opponent = _make_opp(side1_pol, env,
                              deck0_prior if deck0_prior is not None else env.deck0)
     return env
@@ -589,7 +660,7 @@ def _sample_opponent_for(league, env, seed):
         env.opponent = None
     elif isinstance(op.policy, ScriptedPolicy):
         op.policy.env = env
-        env.deck1_factory = op.policy.deck if op.policy.pool else None
+        env.deck1_factory = _deck_factory_of(op.policy)
         env.opponent = op.policy
     else:
         env.deck1_factory = None
@@ -605,9 +676,13 @@ def _build_league(cfg, device, resume):
     """
     env = _make_env(cfg, cfg.seed)
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
-    main = (load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim) if cfg.main_init
+    main = (load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
+                            value_bypass=cfg.value_bypass,
+                            value_independent=cfg.value_independent) if cfg.main_init
             else FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
-                                belief_dim=len(belief.encode(None, None))))
+                                belief_dim=len(belief.encode(None, None)),
+                                value_bypass=cfg.value_bypass,
+                                value_independent=cfg.value_independent))
     main.to_device(device)
     league = League(seed=cfg.seed)
     start_step, ppo, main = _restore(league, cfg, main, device, resume)
@@ -1074,7 +1149,24 @@ def run_league(cfg: TrainConfig, resume=False, record_replays=True):
     return _run_single(cfg, resume=resume, record_replays=record_replays)
 
 
+def _force_utf8_stdout():
+    """把 stdout/stderr 切到 UTF-8 + errors='replace'。
+
+    训练日志含中文/emoji（如 GRU 活力告警的 ⚠️）。Windows 控制台默认 cp936，
+    管道/重定向时 Python 用 locale 编码 → `print` 抛 UnicodeEncodeError；
+    更坏的是它会被 `eval_and_write` 的 `except Exception` 吃掉后**再次**在
+    except 处理器里抛（`{e!r}` 内嵌不可编码字符），直接崩掉训练
+    （2026-09-11 由 test_solo_resume 实际复现）。这里统一兜底。
+    """
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 def main():
+    _force_utf8_stdout()
     ap = argparse.ArgumentParser(description="联赛主循环：命名配置 + 奖惩机制 + 断点续训 + CUDA")
     ap.add_argument("--mode", choices=["eval", "run", "flow", "solo",
                                        "flow-sweep-stream", "flow-sweep-games5"],
@@ -1158,8 +1250,26 @@ def main():
                     help="熵系数覆盖（默认 0.01；冷启动试探可临时调高）")
     ap.add_argument("--adv-norm", type=str, choices=["batch", "scale", "none"], default=None,
                     help="advantage 归一化：batch=整批中心化(旧) / scale=只除std / none=原始")
+    ap.add_argument("--value-norm", type=str, choices=["none", "running"], default=None,
+                    help="价值通道量纲：none=旧行为（价值损失不缩放）/ running=按回报运行 "
+                         "std 缩放（v_loss/=s²，修 value_loss 压倒策略项，见 rl/ppo.py）")
+    ap.add_argument("--diagnose-every", type=int, default=None,
+                    help="梯度成分诊断采样间隔（每 N 次 update 打印 p_gnorm/v_gnorm；"
+                         "0=关闭。用于证实/证伪'评论家主导更新'）")
+    ap.add_argument("--hist-seed-dir", action="append", default=None,
+                    help="热启动 run 的对手池补种目录（可多次）。本目录无 solo_main_*.pt 时"
+                         "从这些目录抽 hist ckpt，修对手池退化为 frozen+defend 的问题")
     ap.add_argument("--no-train-stall-stop", action="store_true",
                     help="solo：关闭训练环僵局早停（默认开；关=旧行为拖满 max_ep_steps）")
+    ap.add_argument("--stall-draw-margin", type=float, default=None,
+                    help="C'（2026-09-12）早停低置信裁定降噪：皇冠相同时，塔血%%细差 < 该阈值"
+                         "记平局=失败（去掉掷硬币级胜负标签）；0=退化为旧行为（细差也判胜负）")
+    ap.add_argument("--no-value-bypass", action="store_true",
+                    help="关闭 B'（value 直连 enc，跳过 GRU）：回旧 GRU value 通路，"
+                         "架构消融用（economy 预设默认开）")
+    ap.add_argument("--no-value-independent", action="store_true",
+                    help="关闭 E'（独立价值编码器 + MLP 头）：回共享 trunk value 通路，"
+                         "架构消融用（economy 预设默认开；优先级 independent > bypass）")
     args = ap.parse_args()
     # 自动续训为默认：无 --fresh 时 resume=True（断点缺失/不存在时各入口会自行从头并提示）
     resume = not args.fresh
@@ -1179,16 +1289,24 @@ def main():
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
               "deck_set",
               "solo_copy_every", "eval_workers",
-              "gae_lambda", "ent_coef", "adv_norm"):
+              "gae_lambda", "ent_coef", "adv_norm", "value_norm", "diagnose_every"):
         v = getattr(args, k)
         if v is not None:
             overrides[k] = v
+    if args.hist_seed_dir:
+        overrides["hist_seed_dirs"] = list(args.hist_seed_dir)
+    if args.stall_draw_margin is not None:
+        overrides["stall_draw_margin"] = float(args.stall_draw_margin)
+    if args.no_value_bypass:
+        overrides["value_bypass"] = False
+    if args.no_value_independent:
+        overrides["value_independent"] = False
+    if args.no_train_stall_stop:
+        overrides["train_stall_stop"] = False
     if args.keep_snapshot:
         overrides["keep_snapshot"] = True
     if args.only_vs_main:
         overrides["only_vs_main"] = True
-    if args.no_train_stall_stop:
-        overrides["train_stall_stop"] = False
     if args.out_dir is not None:
         overrides["out_dir"] = args.out_dir
     if args.config_name:

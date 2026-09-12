@@ -59,11 +59,18 @@ def save_checkpoint(policy, path):
         "plan_dim": int(policy.plan_dim),
         "belief_dim": int(policy.belief_dim),
         "hidden_dim": int(policy.hidden_dim),
+        "value_bypass": bool(getattr(policy, "value_bypass", False)),
+        "value_independent": bool(getattr(policy, "value_independent", False)),
     }, path)
 
 
-def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
+def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
+                    value_bypass=None, value_independent=None):
     """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。
+
+    value_bypass（2026-09-12，实验 B′）/ value_independent（E′）：元数据携带架构标志；
+    显式传入（训练侧 cfg）且与元数据不一致时告警——旧 ckpt 加载进新架构 = value
+    语义错位，须 --fresh（同 enc_ln/grid_ln 纪律）。
 
     v1 兼容扩展（Phase 2 结构先行）：旧 checkpoint 的 plan_dim（如 21）< 请求维度（如 57）时，
     plan_mlp 首层权重**前 pd_old 列**拷贝、尾部补零 —— 旧权重对前 21 维语义不变，
@@ -83,7 +90,20 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
     pd = int(plan_dim or md.get("plan_dim") or PLAN_DIM)
     bd = int(belief_dim or md.get("belief_dim") or BELIEF_DIM)
     hd = int(hidden_dim or md.get("hidden_dim") or 128)
-    policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd)
+    vb_meta = bool(md.get("value_bypass", False))
+    if value_bypass is not None and bool(value_bypass) != vb_meta:
+        from rl.diagnostics import print_safe   # 惰性 import，避免模块级依赖
+        print_safe(f"[follower] ⚠️ {path} value_bypass 元数据={vb_meta} 与请求 "
+                   f"{bool(value_bypass)} 不一致：value 通路语义错位，续训须 --fresh")
+    vb = bool(value_bypass) if value_bypass is not None else vb_meta
+    vi_meta = bool(md.get("value_independent", False))
+    if value_independent is not None and bool(value_independent) != vi_meta:
+        from rl.diagnostics import print_safe
+        print_safe(f"[follower] ⚠️ {path} value_independent 元数据={vi_meta} 与请求 "
+                   f"{bool(value_independent)} 不一致：价值编码器结构不同，续训须 --fresh")
+    vi = bool(value_independent) if value_independent is not None else vi_meta
+    policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd,
+                            value_bypass=vb, value_independent=vi)
     target = policy.state_dict()
     for k, v in sd_src.items():
         if k not in target:
@@ -111,13 +131,50 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None):
         # 其余形状不匹配（结构大改）→ 保持新初始化，不静默崩
     policy.load_state_dict(target)
     policy.eval()
+    # v3 P0-A 护栏（2026-09-11）：`enc_ln` 是 v3 新增键。旧 ckpt 缺该键时，
+    # `load_state_dict(target)` 用新网络的 LayerNorm 默认仿射 (weight=1,bias=0) ——
+    # 不是 no-op，而是"正常归一化但仿射从未训练"，而 trunk 权重仍是**饱和态**下学的
+    # ⇒ 该 ckpt 不能用于续训（v3 §1 要求 `--fresh`），只能当对照基线/对手池。
+    # 原先这条路径完全静默（target 由新网络构造，形状恒匹配，不报错）——见 v3 §3.5 注 5。
+    # v3 归一化键护栏（2026-09-11）：`enc_ln`（P0-A）与 `grid_ln`（P0-A 备选）都是
+    # 新增键。旧 ckpt 缺该键时 `load_state_dict(target)` 用新网络的 LayerNorm 默认
+    # 仿射 (weight=1,bias=0) —— 不是 no-op，而是"正常归一化但仿射从未训练"，而 trunk
+    # 权重仍是**旧量级**下学的 ⇒ 该 ckpt 不能用于续训（要求 `--fresh`），只能当对照
+    # 基线/对手池。原先这条路径完全静默（target 由新网络构造，形状恒匹配，不报错）。
+    _missing_ln = [k for k in ("enc_ln", "grid_ln") if not any(
+        _k.startswith(k + ".") for _k in sd_src)]
+    if _missing_ln:
+        from rl.diagnostics import print_safe   # 惰性 import，避免模块级依赖
+        print_safe(f"[follower] ⚠️ {path} 缺 {'/'.join(_missing_ln)}.*（旧架构）："
+                   "LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），"
+                   "只能当对照基线/对手池")
     return policy
 
 
 class FollowerPolicy(nn.Module):
     def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY,
-                 stop_logit_bias=-1.0):
+                 stop_logit_bias=-1.0, value_bypass=False, value_independent=False):
         """stop_logit_bias：新初始化时给 STOP logit 的偏置（负数=初始更愿意出牌）。
+
+        value_bypass（2026-09-12，实验 B′ 落地）：True 时 value 头直连 post-LN enc
+        （`value_head(enc)`），**跳过 GRU**（策略头 slot/cell 仍走 GRU 隐状态）。
+        依据：`docs/critic_probe_experiment_2026-09-12.md` 实验 B′ —— 同监督配方下
+        无 GRU 通路 test EV +0.294 vs 带 GRU +0.217，GRU 净损耗 ~0.08 EV。
+        仅影响 value 计算；GRU 隐状态仍由 act/rollout 推进（策略状态依赖不变）。
+        旧 ckpt（value_bypass=False 训练）加载进 True 网络 = 语义错位，须 --fresh；
+        load_checkpoint 读元数据并在显式覆盖不一致时告警。
+
+        value_independent（2026-09-12，实验 E′）：**独立价值编码器 + 非线性价值头**。
+        `value = value_head_mlp(value_enc_ln(relu(value_enc_fc(fused))))`——价值通路有
+        自己的融合层/归一化/头，**只吃 value 梯度，不与策略共享参数**（感知前端
+        CNN/entity_emb 仍共享）。依据（三条）：
+          ① MLP 探针 `post-LN enc → return` R²=+0.42 vs 线性 +0.135
+             ⇒ enc 里的价值信息**主要是非线性的**，单个 `nn.Linear` 头有先天上限；
+          ② 监督实验（同网络 value-only 目标）可达 EV +0.22~0.29，而 on-policy 联合
+             训练 EV≈0（`byp_cprime_20k`）⇒ 差距在"价值吸收"而不是表征；
+          ③ bypass（只换接线、仍共享/线性）无效 ⇒ 需要给价值通路自己的容量与梯度。
+        **优先级 independent > bypass > shared**（independent 时 value 不走 GRU）。
+        架构变更 ⇒ 须 `--fresh`；ckpt 元数据记录该标志。
 
         纯 RL 冷启动修复：随机初始化下模型天然容易吸附 STOP（手牌合法项少时
         STOP 几乎恒合法）；把 STOP logit 压低让初始 P(出牌)≈0.7-0.8，
@@ -129,6 +186,8 @@ class FollowerPolicy(nn.Module):
         self.hidden_dim = hidden
         self.plan_dim = plan_dim
         self.belief_dim = belief_dim
+        self.value_bypass = bool(value_bypass)
+        self.value_independent = bool(value_independent)
 
         self.entity_emb = nn.Embedding(num_entity, 8)
         cnn_in = (GRID_C - 1) + 8 + 4  # 14 rest + 8 embed + card_type onehot(4)
@@ -149,11 +208,45 @@ class FollowerPolicy(nn.Module):
         self.belief_mlp = nn.Sequential(nn.Linear(belief_dim, 64), nn.ReLU())
         enc_dim = cnn_out + hand_dim + scalar_dim + 64 + 64
         self.enc_fc = nn.Linear(enc_dim, hidden)
+        # v3 P0-A（2026-09-11）：enc 后归一化。旧版 enc 无归一化，L2 范数 ≈533
+        # （CNN 输出的常数分量 ≈468、跨帧 std 仅 1.06）→ GRUCell 的 tanh 候选饱和
+        # （|n|≈0.994）→ 隐状态 h 跨帧 std ≈2.6e-5（数值恒定）→ value_head 恒输出
+        # 常数、EV 恒负，且 slot_head/cell_head 同样失去状态依赖（策略网络基本开环）。
+        # 取证见 docs/value_channel_saturation_diagnosis_2026-09-11.md。
+        # ⚠️ 架构变更：旧 ckpt（无 enc_ln 键）可加载（权重保持 LN 默认 1/0）但
+        # **不可续训**，重训须 --fresh。
+        self.enc_ln = nn.LayerNorm(hidden)
+        # v3 P0-A 备选（2026-09-11，第二轮）：**CNN 输出独立归一化**。
+        # `enc_ln` 只切断了"量级压死 tanh"这条通路（n(abs) 0.994→0.46/0.55 已验证），
+        # 但 20k 跑实测暴露出**融合层尺度失衡**（`runs/fix_gru_ln_20k/`，
+        # 取证 `docs/rl_training_fix_plan_v3.md` §3.7）：
+        #   grid_feat ‖·‖=101.0 跨帧 std=0.426（占 fused 102.99 的 98%，几乎恒定）
+        #   vs scalar 17.6/std 6.97、hand 6.4/0.50、plan 1.65/0.199、belief 0.65/0.104
+        # ⇒ 用某一维归一化把各分量的"每元素尺度"拉到同一量级，模型才不必先用
+        #   若干千步把 grid 权重压下去才能听见 scalar/hand/plan/belief。
+        # 归一化**不能凭空创造信息**（grid 的跨帧相对变化 0.4% 不变），它修的是
+        # **条件数 + 直流分量主导**——是否够用由下一次 20k 的 `value_std_ratio` 判定。
+        # 只上 grid_feat（计划 §1 原文"给 CNN 输出加独立归一化"）：它是被测到的元凶
+        # （98% 范数占比）。**不动 scalar**（只有 3 个语义通道 elixir/time/next_card，
+        # LN 会强加 sum≈0 的跨通道约束、把不同的物理量耦合起来），也不动
+        # plan_f/belief_f（已被各自的 MLP+ReLU 产出，量级小但不是"压死"方）。
+        # ⚠️ 架构变更：本次之前的 ckpt（无 `grid_ln.*`）不可续训，重训须 --fresh。
+        self.grid_ln = nn.LayerNorm(cnn_out)
         self.gru_cell = nn.GRUCell(hidden, hidden)
 
         self.slot_head = nn.Linear(hidden, NUM_SLOT_OPTIONS)     # 出牌槽位 + ABILITY + STOP
         self.cell_head = nn.Linear(hidden, GRID_H * GRID_W)
         self.value_head = nn.Linear(hidden, 1)
+        # E'（2026-09-12）：独立价值编码器 + 非线性头（详见 __init__ docstring 的三条依据）。
+        # 只吃 value 梯度：`value_enc_fc` / `value_enc_ln` / `value_head_mlp` 不在策略
+        # 前向里出现；感知前端（cnn / entity_emb / plan_mlp / belief_mlp）仍共享，
+        # 若要进一步隔离可再拆 CNN（本轮不做，保持单变量 = "价值通路有自己的参数与头"）。
+        if self.value_independent:
+            self.value_enc_fc = nn.Linear(enc_dim, hidden)
+            self.value_enc_ln = nn.LayerNorm(hidden)
+            _vm = max(32, hidden // 2)
+            self.value_head_mlp = nn.Sequential(
+                nn.Linear(hidden, _vm), nn.ReLU(), nn.Linear(_vm, 1))
         self.sub_emb = nn.Linear(NUM_SLOT_OPTIONS + 2, hidden)   # option onehot + (x/18, y/32)
 
         # 纯 RL 冷启动：初始压低 STOP logit（新随机初始化生效；load_checkpoint 会覆盖）
@@ -172,7 +265,9 @@ class FollowerPolicy(nn.Module):
         self.to(device)
         return self
 
-    def _encode(self, obs, belief_token, plan_token):
+    def _encode_parts(self, obs, belief_token, plan_token):
+        """返回 `(fused, enc)`：fused 是融合特征（E′ 独立价值编码器的输入），
+        enc 是共享编码器输出（策略 GRU / value 的既有输入）。"""
         grid = torch.as_tensor(obs["grid"], dtype=torch.float32).unsqueeze(0).to(self.device)
         hand = torch.as_tensor(obs["hand"], dtype=torch.long).unsqueeze(0).to(self.device)
         elixir = torch.as_tensor(obs["elixir"], dtype=torch.float32).unsqueeze(0).to(self.device)
@@ -187,6 +282,7 @@ class FollowerPolicy(nn.Module):
         x = torch.cat([rest, card_vecs, card_type_oh], dim=-1)      # (1,32,18,C)
         x = x.permute(0, 3, 1, 2)
         grid_feat = self.cnn(x)                                     # (1,cnn_out)
+        grid_feat = self.grid_ln(grid_feat)                         # v3 P0-A 备选：分量归一化
 
         hand_feat = self.entity_emb(hand).reshape(1, -1)            # (1,40)
         scalar = torch.cat([elixir, time, next_card], dim=1)        # (1,3)
@@ -197,7 +293,25 @@ class FollowerPolicy(nn.Module):
         belief_f = self.belief_mlp(belief_v)
 
         fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)
-        return torch.relu(self.enc_fc(fused))                        # (1,hidden)
+        # v3 P0-A：enc 后 LayerNorm（防 GRU tanh 候选饱和，见 __init__ 注释）
+        enc = self.enc_ln(torch.relu(self.enc_fc(fused)))            # (1,hidden)
+        return fused, enc
+
+    def _encode(self, obs, belief_token, plan_token):
+        return self._encode_parts(obs, belief_token, plan_token)[1]
+
+    def _value_from(self, enc, h, fused):
+        """按当前 value 架构算 value（**唯一实现**，act/evaluate/diagnostics 共用）。
+
+        优先级：independent（自己的编码器+MLP 头）> bypass（线性头吃 enc）> shared
+        （线性头吃 GRU 隐状态 h）。返回 tensor（单条 (1,1) / 批量 (N,1) 皆可）。
+        """
+        if self.value_independent:
+            v = self.value_enc_ln(torch.relu(self.value_enc_fc(fused)))
+            return self.value_head_mlp(v)
+        if self.value_bypass:
+            return self.value_head(enc)
+        return self.value_head(h)
 
     def _slot_mask_tensor(self, mask):
         """把 mask 转成 (NUM_SLOT_OPTIONS,) 的合法选项掩码。
@@ -280,11 +394,8 @@ class FollowerPolicy(nn.Module):
     def _sub_update(self, h, option_idx, x=0.0, y=0.0):
         return self.gru_cell(self.sub_emb(self._sub_vec(option_idx, x, y)), h)
 
-    def _encode_batch(self, obs_list, belief_list, plan_list):
-        """批量编码：N 个观测一次前向（CNN / embedding / MLP 全部批量化）。
-
-        与 _encode 数值逐位一致（batch 维 = N），供 act_parallel / evaluate_batch 使用。
-        """
+    def _encode_batch_parts(self, obs_list, belief_list, plan_list):
+        """批量编码：返回 `(fused, enc)`（N 个观测一次前向）。"""
         N = len(obs_list)
         grid = torch.stack([torch.as_tensor(o["grid"], dtype=torch.float32) for o in obs_list]).to(self.device)
         hand = torch.stack([torch.as_tensor(o["hand"], dtype=torch.long) for o in obs_list]).to(self.device)
@@ -301,6 +412,7 @@ class FollowerPolicy(nn.Module):
         x = torch.cat([rest, card_vecs, card_type_oh], dim=-1)      # (N,32,18,C)
         x = x.permute(0, 3, 1, 2)
         grid_feat = self.cnn(x)                                     # (N,cnn_out)
+        grid_feat = self.grid_ln(grid_feat)                         # v3 P0-A 备选：分量归一化
 
         hand_feat = self.entity_emb(hand).reshape(N, -1)            # (N,40)
         scalar = torch.cat([elixir, time_, next_card], dim=1)       # (N,3)
@@ -311,7 +423,12 @@ class FollowerPolicy(nn.Module):
         belief_f = self.belief_mlp(belief_v)
 
         fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)
-        return torch.relu(self.enc_fc(fused))                        # (N,hidden)
+        # v3 P0-A：enc 后 LayerNorm（与 _encode 同口径，保证单条/批量数值一致）
+        enc = self.enc_ln(torch.relu(self.enc_fc(fused)))            # (N,hidden)
+        return fused, enc
+
+    def _encode_batch(self, obs_list, belief_list, plan_list):
+        return self._encode_batch_parts(obs_list, belief_list, plan_list)[1]
 
     def act(self, obs, belief_token, plan_token, get_mask, hidden=None, deterministic=False):
         """在线动作生成：返回 (ActionBundle, logprob, value, hidden, masks)。
@@ -320,11 +437,11 @@ class FollowerPolicy(nn.Module):
         - 全程 no_grad、返回的 hidden 已 detach（P1-24），不跨决策步构建计算图。
         """
         with torch.no_grad():
-            enc = self._encode(obs, belief_token, plan_token)
+            fused, enc = self._encode_parts(obs, belief_token, plan_token)
             if hidden is None:
                 hidden = torch.zeros(1, self.hidden_dim, device=self.device)
             h = self.gru_cell(enc, hidden.detach())
-            value = float(self.value_head(h).item())
+            value = float(self._value_from(enc, h, fused).item())
 
             bundle = ActionBundle()
             logprob = 0.0
@@ -398,7 +515,7 @@ class FollowerPolicy(nn.Module):
         """
         N = len(obs_list)
         with torch.no_grad():
-            enc = self._encode_batch(obs_list, belief_list, plan_list)   # (N,hidden)
+            fused, enc = self._encode_batch_parts(obs_list, belief_list, plan_list)   # (N,hidden)
             if hidden_list is None:
                 h = self.gru_cell(enc, torch.zeros(N, self.hidden_dim, device=self.device))
             else:
@@ -407,7 +524,7 @@ class FollowerPolicy(nn.Module):
                      else torch.zeros(self.hidden_dim, device=self.device))
                     for hid in hidden_list])
                 h = self.gru_cell(enc, h0.detach())
-            values = self.value_head(h)[:, 0].tolist()
+            values = self._value_from(enc, h, fused)[:, 0].tolist()
 
             bundles = [ActionBundle() for _ in range(N)]
             partials = [ActionBundle() for _ in range(N)]
@@ -499,13 +616,13 @@ class FollowerPolicy(nn.Module):
         返回 (logprobs (B,), values (B,1), entropies (B,))。
         """
         B = len(obs_list)
-        enc = self._encode_batch(obs_list, belief_list, plan_list)     # (B,hidden)
+        fused, enc = self._encode_batch_parts(obs_list, belief_list, plan_list)   # (B,hidden)
         h_rows = []
         for i in range(B):
             base = (hidden_list[i] if hidden_list is not None and hidden_list[i] is not None
                     else torch.zeros(1, self.hidden_dim, device=self.device))
             h_rows.append(self.gru_cell(enc[i:i + 1], base.detach()))
-        value = self.value_head(torch.cat(h_rows, dim=0))               # (B,1)
+        value = self._value_from(enc, torch.cat(h_rows, dim=0), fused)   # (B,1)
 
         lengths = [len(b.sub_actions) for b in bundle_list]
         max_len = max(lengths) if lengths else 0
@@ -587,11 +704,11 @@ class FollowerPolicy(nn.Module):
     def value(self, obs, belief_token, plan_token, hidden=None) -> float:
         """只算当前状态的 value（不采样动作），用于截断 episode 的 GAE bootstrap（P1-7）。"""
         with torch.no_grad():
-            enc = self._encode(obs, belief_token, plan_token)
+            fused, enc = self._encode_parts(obs, belief_token, plan_token)
             if hidden is None:
                 hidden = torch.zeros(1, self.hidden_dim, device=self.device)
             h = self.gru_cell(enc, hidden.detach())
-            return float(self.value_head(h).item())
+            return float(self._value_from(enc, h, fused).item())
 
     def evaluate(self, obs, belief_token, plan_token, bundle, masks, hidden=None):
         """可微重放给定 bundle（使用 rollout 时记录的掩码/隐状态）。
@@ -599,11 +716,12 @@ class FollowerPolicy(nn.Module):
         返回 (logprob, value, hidden, entropy)：
         - entropy 为所有 decoder 步分布熵之和（真实熵，非 -lp，P0-2）。
         """
-        enc = self._encode(obs, belief_token, plan_token)
+        fused, enc = self._encode_parts(obs, belief_token, plan_token)
         if hidden is None:
             hidden = torch.zeros(1, self.hidden_dim, device=self.device)
         h = self.gru_cell(enc, hidden.detach())
-        value = self.value_head(h)
+        # B'/E'：value 走统一入口（independent 用自己的编码器；bypass 直连 enc；否则 h）
+        value = self._value_from(enc, h, fused)
 
         logprob = 0.0
         entropy = 0.0

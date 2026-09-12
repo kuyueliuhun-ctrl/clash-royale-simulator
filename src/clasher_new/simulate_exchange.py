@@ -113,6 +113,13 @@ def script_defender(sim, defender_id):
     cy = sum(t.position.y for t in threats) / len(threats)
     towers = [sim.entities[tid] for tid in _PRINCESS[defender_id]
               if sim.entities[tid].is_alive]
+    if not towers:
+        # 两座公主塔都已破（长跑中模型变强后 defend 对手常见盘面）：回退到存活塔
+        # （含王塔）选最近的——防守参考塔缺位时脚本不能崩（曾 ValueError: min empty）。
+        towers = [sim.entities[tid] for tid in _TOWER_IDS[defender_id]
+                  if sim.entities[tid].is_alive]
+    if not towers:
+        return []   # 塔全破（含王塔）无防守参考 → 放弃本帧防守
     tower = min(towers, key=lambda t: (t.position.x - cx) ** 2 + (t.position.y - cy) ** 2)
     dx, dy = cx - tower.position.x, cy - tower.position.y
     norm = (dx * dx + dy * dy) ** 0.5 or 1.0

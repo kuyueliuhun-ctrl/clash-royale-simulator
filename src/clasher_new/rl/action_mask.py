@@ -165,6 +165,9 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     3. 落点罩得到对手存活公主塔（王塔血量随公主塔联动，只以公主塔判定落点）；
     4. 落点半径内**无**对手非塔目标（部队/建筑）——有即放行；
     5. `对塔伤折费 < edw×费用`：标定对塔伤 / 500 < edw×卡费（前段经济账）。
+       **塔血差异化定价（2026-09-10）**：对塔伤按罩到的存活公主塔的残血加权
+       （低血塔单位血价值凹形溢价）——残血斩杀落点在更低的血线上自动合法
+       （与 belief_planner 的 tower_value 同源；满血塔行为不变）。
     """
     if battle.time >= 120.0:
         return False
@@ -180,14 +183,15 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     # 不重复判王塔； princess 全破后纯砸王塔同样按条件 3-5 判）
     opp = 1 - player_id
     hits_princess = False
+    opp_alive_princess = 0
     for tid in ((1, 2) if opp == 1 else (3, 4)):
         tw = battle.entities.get(tid)
         if tw is None or not tw.is_alive:
             continue
+        opp_alive_princess += 1
         col = getattr(tw.data, "collision_radius", 0.0) or 0.0
         if pos.distance_to(tw.position) <= radius + col + 1e-9:
             hits_princess = True
-            break
     if not hits_princess:
         return False
     if _spell_covers_non_tower(battle, player_id, pos, radius):
@@ -195,7 +199,24 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     cost = card_info.elixir if card_info is not None else Card(card_name).elixir
     if cost <= 0:
         return False
-    return dmg / TOWER_HP_PER_ELIXIR_EARLY < SPELL_EV_EDW * cost - 1e-9
+    # 残血加权：罩到的公主塔取**最残**（残血塔边际价值最高 → mult 最大）；未罩到的
+    # 存活公主塔也计入"存活数"（王塔贬值闸门只关心公主塔是否都活着，与落点无关）
+    from rl.env_wrapper import tower_value_mult  # 惰性 import，避免循环依赖
+    best_mult = 1.0
+    for tid in ((1, 2) if opp == 1 else (3, 4)):
+        tw = battle.entities.get(tid)
+        if tw is None or not tw.is_alive:
+            continue
+        col = getattr(tw.data, "collision_radius", 0.0) or 0.0
+        if pos.distance_to(tw.position) > radius + col + 1e-9:
+            continue
+        hp = float(tw.hp)
+        ratio = hp / 3052.0 if hp > 0.0 else 0.0
+        mult = tower_value_mult(ratio, king=False,
+                                princesses_alive=opp_alive_princess)
+        best_mult = max(best_mult, mult)   # 最残塔 = mult 最大
+    dmg_eff = dmg * best_mult
+    return dmg_eff / TOWER_HP_PER_ELIXIR_EARLY < SPELL_EV_EDW * cost - 1e-9
 
 
 #: —— 8h 不裸下：圣水无优势时禁止“单独放高承诺进攻单位”（用户口径）——

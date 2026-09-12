@@ -1157,6 +1157,14 @@ class Troop(Entity):
         # We use A* search for all cases to pathfind towards the target.
         # The case is even the same with ground troops and air troops.
 
+        # —— 勘误：超骑冲刺跳滞空期间，位移由 on_tick 直线推进，跳过常规寻路/跳河
+        # （空中仍可被索敌/受击，不无敌）。
+        # 2026-09-10 修正：_mk_jump 挂在 entity_holder（MegaKnight 机制类）上而非实体，
+        # 旧 `getattr(self,'_mk_jump')` 永远取不到 → 起跳预备/空中被 A* 双重位移覆盖
+        # （prep 阶段位置不该动却在走，air 阶段与线性插值叠加导致跳变）。——
+        if getattr(self.entity_holder, '_mk_jump', None) is not None:
+            return
+
         # Move towards target if out of attack range
         if (not self.in_attack_range(current_target)) or self.jumping_across_river:
             has_jump_ability = self.data.jump_speed and self.on_both_sides_of_river(current_target) and self.near_river() and self.in_sight_range(current_target)
@@ -1559,7 +1567,10 @@ class Projectile(Entity):
                     self.damage_dealt.append(each)
                     # now knockback
                     direction_vector = complex(each.position.x-self.position.x, each.position.y-self.position.y)
-                    direction_vector /= abs(direction_vector)
+                    _nv = abs(direction_vector)
+                    if _nv <= 1e-9:
+                        continue   # 目标与滚动弹同格：击退方向为零向量，跳过（防除零崩溃）
+                    direction_vector /= _nv
                     direction_vector *= self.proj.pushback
                     if isinstance(each, Troop):
                         new_x = each.position.x + direction_vector.real
@@ -1662,7 +1673,11 @@ class SpawnProjectile(Projectile):
         self.damage_override = None
         self.damage_dealt = []
         self.pending_damage = []
-        self.rolling = False
+        # 滚动弹（LogProjectileRolling/BarbLogProjectileRolling）应直接滚动而非飞行：
+        # 与 Projectile.__init__ 的 rolling=bool(roll_range) 同口径。但**不能**对一切
+        # projectile_range>0 的二段弹开滚动——FirecrackerExplosion 等是"飞到落点爆炸"
+        # 不是滚动（实测开滚动会走滚动分支 → _chain 递归 → direction_vector 除零崩溃）。
+        self.rolling = proj_wrapper.name in ("LogProjectileRolling", "BarbLogProjectileRolling")
         self.jumping_across_river = False
         self.path = []
         self.shield_health = 0
@@ -2562,6 +2577,12 @@ class BattleState:
         return (int(position.x), int(position.y)) in river_tiles
 
     def ensure_walkability(self, entity):
+        # —— 超骑冲刺跳空中：位置由 on_tick 线性插值决定，空中可飞越河道，
+        # 不应被河道夹取弹回河岸（2026-09-10 实测：air 阶段过河 y 被夹到 14.6/17.4）。
+        # 非 Troop 实体（GenericBomb 等）无 entity_holder，跳过。——
+        if getattr(entity, 'entity_holder', None) is not None \
+                and getattr(entity.entity_holder, '_mk_jump', None) is not None:
+            return
         if entity.jumping_across_river and self.in_river(entity.position): return
         if isinstance(entity, Building) or isinstance(entity, Projectile): return
         if isinstance(entity, (SpawnProjectile, AreaEffect, GenericBomb)): return  # M2/M3：静态效果实体不参与走位修正
@@ -2728,7 +2749,15 @@ class BattleState:
             p.play_card(card_name)
 
     def spawn_projectile_chain(self, projectile_name, position, player, direction):
-        """M1 弹道生成链：按名称从数值表构建二段弹（FirecrackerProjectile→FirecrackerExplosion）"""
+        """M1 弹道生成链：按名称从数值表构建二段弹（FirecrackerProjectile→FirecrackerExplosion）。
+
+        滚木/野蛮人滚筒（LogProjectileRolling/BarbLogProjectileRolling，含 BarbLog Hero
+        二次滚）只能**垂直河道沿纵轴（y 轴）向前滚**（用户口径 2026-09-10：蓝方 +y、红方 −y，
+        永不斜向）——direction 传入的是"国王塔→落点连线"（斜的），必须强制纵轴化。
+        """
+        if projectile_name in ("LogProjectileRolling", "BarbLogProjectileRolling"):
+            # 纵深方向：蓝方（下半场）滚向 +y（对方），红方滚向 −y
+            direction = (0.0, 1.0) if player == 0 else (0.0, -1.0)
         row = projectiles.get(projectile_name)
         if not row: return
         wrapper = projectile_from_row(row)
@@ -2910,6 +2939,26 @@ class BattleState:
                 return True
 
         if card_info.type == 'spell' and card_info.projectiles:
+            # —— 滚木/野蛮人滚筒：凭空出现在部署点，沿 y 轴纵深滚动（用户口径 2026-09-10）——
+            # 不走"国王塔发射→飞行→落点→滚动"链路（LogProjectile 不应存在），直接从
+            # 部署点生成滚动弹（SpawnProjectile.rolling=True → 直接滚动，不飞）。
+            if card_name in ('Log', 'BarbLog'):
+                roll_name = ('LogProjectileRolling' if card_name == 'Log'
+                             else 'BarbLogProjectileRolling')
+                self.spawn_projectile_chain(roll_name, Position(position.x, position.y),
+                                            player_id, None)
+                # —— M8 ⑮：BarbLog Hero——桶滚出后开「二次滚」按钮窗（Rowdy Reroll，单次）；
+                # 二次滚沿 y 轴方向重滚（与首次滚动一致，不再用"国王塔→落点"斜向）
+                if card_name == 'BarbLog' and card_name in _p.hero_slots:
+                    from elite17_data import HERO_ABILITIES
+                    _ab = HERO_ABILITIES['BarbLog']
+                    self.hero_windows[player_id] = {
+                        'until': self.time + _ab['window'], 'used': False, 'card': 'BarbLog',
+                        'origin': Position(position.x, position.y),
+                        'dir': (0.0, 1.0) if player_id == 0 else (0.0, -1.0),
+                        'effect': _barb_log_reroll_effect}
+                self._finish_deploy(player_id, card_name, _from_mirror)
+                return True
             initial_position = self.arena.BLUE_KING_TOWER if player_id == 0 else self.arena.RED_KING_TOWER
 
             target = BlankEntity(position)
@@ -3034,7 +3083,12 @@ class BattleState:
 
     def resolve_collisions(self):
         entities_alive = [each for each in self.entities.values() if each.is_alive and (isinstance(each, Troop) or isinstance(each, Building))]
-        ground_troops = combinations([each for each in entities_alive if not each.data.is_air_unit], 2)
+        # —— 超骑冲刺跳（_mk_jump 进行中）单位在空中，位置由 on_tick 线性插值决定，
+        # 不参与地面碰撞推挤（否则与河岸/塔碰撞会把插值轨迹撞歪，2026-09-10 实测
+        # air 阶段出现 y 反向跳变）。——
+        ground_troops = combinations([each for each in entities_alive
+                                      if not each.data.is_air_unit
+                                      and getattr(each.entity_holder, '_mk_jump', None) is None], 2)
         flying_troops = combinations([each for each in entities_alive if each.data.is_air_unit], 2)
         for troop in (ground_troops, flying_troops):
             for e1, e2 in troop:

@@ -51,6 +51,9 @@ DEFAULT_REWARD = {
                                    # lv11 下 1 圣水 ≈ 0.5/0.001 = 500 塔血的前段锚）
     "elixir_diff_late": 0.1,       # v2 双倍期 edw（t≥120：费贱，亏费换塔血可接受）
     "unit_dmg_k": 0.0005,          # v2 单位受伤 shaping（敌方单位每掉 1 血 → 我方 +k）
+    "tower_premium_k": 2.0,        # 塔血差异化定价：凹形溢价强度（残血塔单位血价值
+                                   # ×(1+k×(1−ratio)²)），双向对称；经 reward_to_env 透传
+    "king_gate": 0.05,             # 两公主塔都存活时王塔单位血价值系数（≈0，王塔贬值）
 }
 
 #: 按流派模型的奖惩覆盖（在所选预设之上按模型 id 覆盖；flow 联赛 6 模型用）。
@@ -65,6 +68,22 @@ MODEL_REWARD_OVERRIDES = {
     "lockdown_flow": {"elixir_diff_weight": 0.05},# 自闭：压到≈0，鼓励"费差换塔血"（1圣水≈50血）
 }
 
+#: solo 训练对手池配比（frozen / hist / defend / rand_anchor）。
+#: 2026-09-11 判读整改（P1-1b）：frozen 0.7 → 0.5，hist 0.2 → 0.3，defend 0.1 → 0.2。
+#: 依据：20k 验证跑测出 **critic 的 explained_variance ≈ 0**（价值网络对回报的解释力
+#: 等于"恒定预测均值"）。怀疑之一 = **镜像自对弈的对称性**使"状态→胜负"近乎不可预测
+#: （对手 70% 是自己的冻结副本，任何战术都无差别地被镜像抵消）。提高非镜像对手占比
+#: 是给 critic 制造可学习信号的最直接手段；frozen 仍占多数，保持自对弈稳定性。
+#: 2026-09-12（E2，v3 §3.9）：再加第四槽 **rand_anchor**（固定随机锚点，frozen 0.5 → 0.4）。
+#: 依据：A′ 取证坐实自对弈 RPS 循环（main 打冻结副本 0.85 / 打起点随机 0.13 / 打全新
+#: 随机 0.505；`scripts/_forensics_cycling.py`）——自对弈无外部锚点时策略会在"只赢近亲"
+#: 的循环里漂移。把固定随机锚点（权重种子 RAND_ANCHOR_SEED，deterministic 决策）放进
+#: **训练分布**：每局 10% 打锚点，"输给固定外部基准"成为可见负样本，打破循环漂移。
+#: 锚点永不参与训练/同步/PFSP，与 E1 评估侧锚点同权重。
+#: 兼容：旧式三槽 dict（无 rand_anchor 键）仍合法，rand_anchor 概率为 0。
+#: 想回旧行为：``opp_mix={"frozen":0.7,"hist":0.2,"defend":0.1}``。
+DEFAULT_OPP_MIX = {"frozen": 0.4, "hist": 0.3, "defend": 0.2, "rand_anchor": 0.1}
+
 
 @dataclass
 class TrainConfig:
@@ -78,9 +97,10 @@ class TrainConfig:
     lr: float = 3e-4
     hidden_dim: int = 128
     seed: int = 0
-    n_eval_games: int = 16    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
-                              # N=16→SE≈39（±80 移动≈2σ，可区分学习信号）；评估开销与 N 成正比，
-                              # 40→16 是降噪地板与训练速度的折中（评估量 ÷2.5）
+    n_eval_games: int = 40    # 每对评估局数。统计契约：轮内聚合估计 SE≈347.5/√(5N)（main 5 对）
+                              # N=16→2σ≈±0.25（检测 100 Elo 要 48 局/对、检测 5% 胜率要 ~800 局）
+                              # → 2026-09-11 审计整改：16→40（2σ≈±0.16），配合 steps_per_eval
+                              # 4000→8000 抵消墙钟；评估开销与 N 成正比，嫌慢用 --n-eval-games 覆盖。
     max_ep_steps: int = 360       # 常规时间 180s（360 步）的截断上限；180s 皇冠相同 → 自动进入
                                   # 加时窗口（overtime_open 延长到最多 300s=600 步，先破塔者胜；
                                   # 到 300s 仍无人破塔 → 按平局=失败结算，不再按塔血提前判胜）
@@ -98,10 +118,28 @@ class TrainConfig:
     # advantage 归一化：batch=整批中心化（旧默认）/ scale=只除以批 std /
     # none=原始。躺平局批内大量零优势帧被中心化抬成伪正优势（推高 STOP），
     # scale 保留原始符号只缩放幅度。
-    adv_norm: str = "batch"
+    # 2026-09-11 审计整改：默认 batch → scale（PPOTrainer 的函数默认仍是 batch，
+    # 所以只影响走 TrainConfig 的训练入口；显式 --adv-norm batch 可逐位回旧行为）。
+    adv_norm: str = "scale"
+    # —— 价值通道量纲（2026-09-11 审计整改，P0-1）——
+    # none=旧行为（价值损失不缩放）；running=按回报运行 std 缩放价值损失
+    # （v_loss /= s²），修"value_loss 量纲压倒策略项"（实测 gnorm 中位 6.8e3
+    # vs 裁剪阈值 0.5、value_loss 中位 ~48）。详见 rl/ppo.py 模块 docstring。
+    value_norm: str = "none"
+    # 梯度成分诊断采样间隔（每次 update 计数；>0 时每 N 次打印 p_gnorm/v_gnorm，
+    # 用于证实/证伪"评论家主导更新"。0=关闭。开销 = 每 N 次多两次反传）。
+    diagnose_every: int = 10
     # solo 训练环僵局早停判平（与 eval 同语义：连续 100 步双方塔血零变化 → 判平）。
     # 否则躺平要拖满 max_ep_steps 才在 360 帧末罚一次 −10，(γλ)^k 视野内完全不可见。
     train_stall_stop: bool = True
+    # —— C'（2026-09-12）早停低置信裁定降噪 ——
+    # 早停（stall）局按 timeout_winner 结算时：皇冠不同 → 决定性，照常 ±胜负；
+    # 皇冠相同 → 若"双方存活塔最低血量百分比差" < 该阈值，视为掷硬币级裁定，
+    # 不再按塔血%细差判胜负，统一记平局惩罚（平局=失败，保留反躺平信号）。
+    # 依据：docs/critic_probe_experiment_2026-09-12.md 实验 3 —— timeout_winner
+    # 塔血裁定是标签噪声候选（早停局占 28~40%，其中皇冠相同的细差裁定噪声最大）。
+    # 仅改训练侧标签（eval 仍用真实 CR 规则 timeout_winner，保证评估口径可对比）。
+    stall_draw_margin: float = 0.05
     # —— 数据 / 运行时 ——
     decks_path: str = None      # 三分类卡组 JSON（缺省自动探测）
     # solo 镜像卡组选择："default"=原版 8 卡镜像；"four"=四种卡组对手池
@@ -109,6 +147,11 @@ class TrainConfig:
     # "list:Card1,..."=显式镜像卡组（逗号分隔 8 张引擎卡名）。
     deck_set: str = "default"
     main_init: str = None       # BC 预训练 / 旧检查点
+    # 热启动 run 的对手池补种（P1-1，2026-09-11）：本目录首轮训练时
+    # solo_main_<step>.pt 池为空 → _OPP_MIX 的 hist 槽退化（实测 9k_ft 日志
+    # "frozen=0.875/defend=0.125"，PFSP 历史槽从未生效）。指到旧 run 目录
+    # （可多个）后，hist 槽从这些目录里均匀抽 ckpt，恢复 70/20/10。
+    hist_seed_dirs: list = None
     device: str = "auto"        # cpu / cuda / auto（=cuda 可用则 cuda）
     only_vs_main: bool = False
     keep_snapshot: bool = False
@@ -116,10 +159,48 @@ class TrainConfig:
     # —— solo 自对弈（--mode solo，无联赛；原版 train.py 思路）——
     solo_copy_every: int = 2000   # 冻结副本同步间隔（步）：每 N 步把 main 权重拷给对手
     # —— 评估并行（eval_solo/play_pair 用进程池绕开 GIL；0 = 串行旧行为）——
-    eval_workers: int = 0         # >1 时评估 spawn N 个进程并行打局（每 worker 独立 env+信念，
-                                  # 主进程汇总；战斗模拟是纯 Python，跨进程才真正吃满多核）
+    # 2026-09-11 审计整改：默认 0 → min(16, cpu_count())（16 核机器即 16，与
+    # start_rl.bat 的 EVAL_WORKERS=16 一致）。实测 9k eval 周期（主+2 对照 × 16 局、
+    # worker=12）167s；战斗模拟是纯 Python，跨进程才吃满多核。
+    # ⚠️ worker=16 有已知的间歇性失败：加载 torch\lib\cufft64_12.dll 时
+    # `WinError 1455「页面文件太小」`→ 部分/全部 worker 启动即崩 → **静默降级串行**
+    # （eval ~1min → ~8min，结果等价只是慢）。**成因未定**（见 AGENTS.md 全局操作约定）：
+    # 本机提交上限 47.3GB / 空闲 20.6GB，16 个 CUDA-torch worker ≈20.8GB 正好压在边界；
+    # 但也有与宿主 shell 故障同时发生的旁证。遇到时按 AGENTS.md 的约定**暂停等人类**，
+    # 不要自己猜着改。empirically 安全档位是 --eval-workers 12。
+    eval_workers: int = field(default_factory=lambda: min(16, os.cpu_count() or 1))
+    # —— 行为指标门禁（P0-2b，2026-09-11 判读整改）——**先只报警不阻断** ——
+    # 阈值语义（除绝对值外有两种写法）：
+    #   1) 数字       → 绝对阈值（旧行为）。op 推断：名字以 `_max` 结尾或名为
+    #                   `ghost_rate` 用 `<=`，其余用 `>=`；
+    #   2) {"rel":">=","frac":0.5} → **相对本 run 首个评估点**的比值门禁
+    #                   （不低于起点的 50% / 不高于起点的 200%）。
+    # 为什么改相对门禁：20k 验证跑证实**绝对阈值标定错了口径**——阈值 9.5 来自一次性
+    # 取证脚本（9k_ft=10.5%），而训练内建指标对同一批 9k_ft 权重实测 28.3~38.1，
+    # 差约 3 倍 → PASS/FAIL 语义是假的。相对自身起点则口径漂移自免疫。
+    # 首个评估点（eval@0）只建基线不判定；baseline 存进 gates.json，续训沿用。
+    gates: dict = field(default_factory=lambda: {
+        "engagement_rate": {"rel": ">=", "frac": 0.5},
+        "ghost_rate": {"rel": "<=", "frac": 2.0},
+    })
+    # solo 训练对手池配比（P1-1b + E2）：frozen/hist/defend/rand_anchor，缺省见 DEFAULT_OPP_MIX。
+    opp_mix: dict = field(default_factory=lambda: dict(DEFAULT_OPP_MIX))
+    # —— 价值通路架构（B'，2026-09-12）——
+    # True = value_head 直连 post-LN enc（跳过 GRU），策略头仍走 GRU 隐状态。
+    # 依据：实验 B' 监督对照 无 GRU +0.294 vs 带 GRU +0.217（docs/critic_probe_experiment...md）。
+    # ⚠️ 架构变更：旧 ckpt（value_bypass=False 训练）不可续训到 True，须 --fresh
+    #（load_checkpoint 读元数据，不一致时告警）。
+    value_bypass: bool = False
     # —— 奖惩机制（每配置一套，见 DEFAULT_REWARD 注释）——
     reward: dict = field(default_factory=lambda: dict(DEFAULT_REWARD))
+    # —— E'（2026-09-12）：独立价值编码器 + 非线性价值头 ——
+    # True = 价值通路用自己的 `value_enc_fc`/`value_enc_ln`/`value_head_mlp`
+    # （只吃 value 梯度、不与策略共享参数），优先级 independent > bypass > shared。
+    # 依据：MLP 探针 `enc → return` R²=+0.42（线性仅 +0.135 ⇒ 单个 nn.Linear 头有
+    # 先天上限）+ 监督同网络可达 EV 0.22~0.29 而 on-policy 联合训练 ≈0
+    # + bypass（只换接线）无效 ⇒ 给价值通路自己的容量与梯度。
+    # ⚠️ 架构变更：须 `--fresh`（ckpt 元数据带该标志，不一致时告警）。
+    value_independent: bool = False
 
     # ---- 路径（全部落在 out_dir/<name>/ 下）----
     def folder(self):
@@ -144,6 +225,10 @@ class TrainConfig:
 
     def run_state_path(self):
         return os.path.join(self.folder(), "run_state.json")
+
+    def gates_path(self):
+        """行为指标门禁报告（P0-2）：每周期评估后覆盖写。"""
+        return os.path.join(self.folder(), "gates.json")
 
     def config_path(self):
         return os.path.join(self.folder(), "config.json")
@@ -227,6 +312,17 @@ class TrainConfig:
                         "elixir_diff_weight": 0.5},
                 gae_lambda=0.99,     # 纯RL冷启动：γλ=0.947→0.987，优势半衰期 13→53 帧
                                      # （终端±10 与 60-150 帧的出牌因果进入 GAE 视野）
+                steps_per_eval=8000,  # 2026-09-11 审计整改：n_eval_games 16→40 后
+                                     # 评估单次成本 ×2.5，频率减半抵消回来（单位步数的
+                                     # 评估墙钟不变，曲线点更少但每点更可信）
+                value_norm="running",  # 2026-09-11 判读整改：把审计验证过的价值通道
+                                     # 修复设为训练预设默认（v/p 2.43→0.6~0.95）。
+                                     # dataclass 默认仍是 "none"（= 旧行为），只影响
+                                     # 走本预设的训练入口；--value-norm none 可回退。
+                value_bypass=True,   # B'（2026-09-12）落地：value 直连 enc 跳过 GRU
+                                     #（实验 B'：+0.294 vs +0.217）。架构变更 ⇒ 须 --fresh。
+                value_independent=True,  # E'（2026-09-12）：独立价值编码器 + MLP 头
+                                     # （优先级 independent > bypass）。架构变更 ⇒ 须 --fresh。
                 only_vs_main=True),   # 联赛模式评估只测 main（15 对→5 对，评估量再 ÷3）；solo 不受影响
             "fast": cls(
                 name="fast", description="小步快跑（冒烟/设备验证用）",

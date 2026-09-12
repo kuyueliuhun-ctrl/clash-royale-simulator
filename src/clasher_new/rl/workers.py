@@ -59,7 +59,9 @@ def _apply_opponent(env, spec):
                              deck_pool=spec.get("deck_pool"),
                              seed=spec.get("seed", 0))
         pol.env = env
-        env.deck1_factory = pol.deck if pol.pool else None
+        # pool（随机 8 张）或 deck_pool（整套抽取）→ 每局换卡组；其余用固定卡组。
+        # 旧写法只判 pol.pool，漏掉 deck_pool（三分类/全 200 卡组），与 run_league 同源 bug。
+        env.deck1_factory = pol.deck if (pol.pool or pol.deck_pool) else None
         env.opponent = pol
     else:
         env.deck1_factory = None

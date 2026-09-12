@@ -35,10 +35,11 @@
 | `flow_league.py` | **全配对分流派联赛（`--mode flow`）**：6 个**可训练 PPO**（main/推进/防反/自闭/全量/随机）卡组池两两全配对，每对数据只喂该对双方模型（对内流式），双侧轨迹收集 + 镜像奖励；一次训练 148,800 局 |
 | `decks.py` | **三分类卡组加载器**：读取 `docs/leaderboard_decks_classified.json`（200 副天梯卡组，推进流 60 / 防守反击流 120 / 自闭流 20），RoyaleAPI 卡名 → 引擎卡名映射 + 兜底补位 |
 | `opponents.py` | 脚本策略 `ScriptedPolicy`：random / heuristic / **卡组完全随机**（每局从 139 张引擎卡池重采样 8 张）/ **deck_pool 随机抽整副卡组**（三分类/全 200 模型用）；**`SelfDefenderPolicy`**（9j：script_defender 反制 + 低频缓出的真防守对手，A 层对手池组件） |
-| `dashboard.py` | **训练网页 UI**：Elo-训练次数 曲线仪表盘 + **最近训练回放列表 / Canvas 播放器**（纯 Canvas 自绘、离线可用、3s 轮询 `/api/state`、5s 轮询 `/api/replays`） |
+| `dashboard.py` | **训练网页 UI**：Elo-训练次数 曲线仪表盘 + **最近训练回放列表 / Canvas 播放器**（纯 Canvas 自绘、离线可用、3s 轮询 `/api/state`、5s 轮询 `/api/replays`）+ **卡牌使用统计**（`/api/cardstats`：行=卡牌、列=卡组/模型，单元格=出牌次数+占该模型比例；范围可选当前文件/最近 N 个/全部；对手侧取 `opp_played`、我方侧取帧 `cards`，旧录像自动降级并标注部分覆盖） |
 | `evaluate.py` | 评测：Win/Lose/Draw、Bundle 合法率、Next-Card Acc/Brier/ECE、消融、`--belief-only` 协议；消融含 **逐意图采纳探针**（region 吻合率 + save_ace hold 服从率，full vs plan-off Δ） |
 | `selftest.py` | 全链路自检 + 评审回归测试（P0-1..P0-6、P1-4/5/9/18/21） |
-| `train_solo.py` | 单人自对弈训练（无联赛机制）：main vs **对手池**（9j：frozen 副本 70% + 历史 checkpoint PFSP 20% + 真防守脚本 10%，修"单边堆牌/换家"meta）、命名配置、断点续训、并行评估（crash 检测 + 静默 worker 回退） |
+| `train_solo.py` | 单人自对弈训练（无联赛机制）：main vs **对手池**（v2 §5 + E2 配比 **frozen 0.4 / hist PFSP 0.3 / defend 0.2 / rand_anchor 0.1**；`opp_mix` 无 CLI flag ⇒ 用 `--hist-seed-dir`（可多次）给 hist 槽补种，否则自动退化并归一化）、命名配置、断点续训、并行评估（crash 检测 + 静默 worker 回退）；评估行落 **EV（池化口径）/`h_std`/`gru_n_abs`/`value_std`/`value_std_ratio`**（v3 P0-B）；每评估点三组对照 `baseline0`/`baseline_prev`/`baseline_rand`（**E1 固定随机锚点**=绝对强度门禁；**E2** 把同权重锚点放进训练对手池第 4 槽，打破自对弈 RPS 循环，v3 §3.9） |
+| `diagnostics.py` | **训练期诊断探针（v3 P0-B/C）**：`gru_vitality`（h 跨帧 std / GRU 候选饱和 \|n\| / value_head 输出 std）、`check_vitality`（门槛 `h_std>0.05`、`n_abs<0.9`、`value_std_ratio>0.3`）、`check_policy_architecture`（启动前静态护栏：`enc_ln` 缺失/被 Identity 替换）、`print_safe`（cp936 控制台 emoji 编码兜底）。背景与取证见 `docs/value_channel_saturation_diagnosis_2026-09-11.md` |
 | `overtime.py` | 加时（突然死亡）窗口判定：[180,300) 皇冠平进入加时，最迟 300s 按最低塔血裁决；纯逻辑零依赖 |
 | `export_replay.py` | 对局 replay 导出（含特权隐藏状态标签），供信念监督训练 / BC |
 | `human_play.py` | 人机对战 + 人类出牌采集（dashboard `--play` 集成，BC 素材来源） |

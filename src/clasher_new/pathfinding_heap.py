@@ -49,39 +49,61 @@ class EntityPathfinder:
         gx, gy = self.goal
         return 10 * max(abs(x - gx), abs(y - gy))
 
+    def _target_footprint_radius(self):
+        """目标占用半径：塔=矩形半宽/半高较大者（_tower_rect），其余=圆形碰撞半径。
+
+        扫描窗需要覆盖目标足迹 + 射程；塔矩形（王塔半宽 2.0）可能大于圆形碰撞
+        半径（王塔 data 仍 1.0），直接取矩形半轴更稳。"""
+        rect = getattr(self.target, '_tower_rect', 0)
+        if rect == 0:
+            self.target._bind_tower_rect()
+            rect = getattr(self.target, '_tower_rect', 0)
+        if rect is not None:
+            return max(rect[2], rect[3])
+        return self.target.data.collision_radius
+
     def calculate(self):
         self.goals = set()
 
-        radius = self.target.data.collision_radius + self.entity.data.range
-        # The first step is to calculate some viable cells that is in attack position.
-
+        # —— 目标格按「到目标边缘的距离」生成（edge-based，2026-09-10 用户机制定稿）——
+        # 真实 CR 寻路不是「到目标中心的最短路径」，而是每步朝目标边缘最近点走：
+        #   · 左桥部署的单位过桥后靠左、右桥靠右（车道保持），不是全部吸向目标中心正对；
+        #   · 目标塔被毁转向王塔时平滑偏移约 1 格，而非走到塔前才猛拐；
+        # edge_distance_from 已统一口径：塔=矩形边缘、部队/建筑=圆形边缘，
+        # 与 in_attack_range 的索敌射程一致（edge_dist ≤ range）。——
+        edge_radius = self.entity.data.range
         target_cell = position_to_cell(self.target_position)
-        scan_radius = math.ceil(radius*2) + 1
+        scan_radius = math.ceil((self._target_footprint_radius() + edge_radius) * 2) + 2
         for x in range(target_cell[0]-scan_radius, target_cell[0]+scan_radius):
             for y in range(target_cell[1]-scan_radius, target_cell[1]+scan_radius):
-                distance = cell_to_position((x, y)).distance_to(self.target_position)
-                # I added 0.375 to radius so that short-ranged troops like lumberjack can reach the tower instead of leering to the side
-                if distance < radius+0.375 and self.battle.pathfind_ground_walkable(cell_to_position((x, y)), self.entity.data.collision_radius):
+                pos = cell_to_position((x, y))
+                edge_dist = self.target.edge_distance_from(pos)
+                # 0.375 裕量让短射程部队够得着塔（原注释语义保留：lumberjack 能打到塔
+                # 而不是在侧边徘徊）
+                if edge_dist < edge_radius + 0.375 and self.battle.pathfind_ground_walkable(pos, self.entity.data.collision_radius):
                     self.goals.add((x, y))
         if not self.goals:
             # 兜底：range=0 近战对建筑时，攻击半径(碰撞半径)内无可达格
             # （塔足迹 + mover 半径把目标周围全堵死）。退而求其次找全扫描区内
-            # 距离目标最近的可达格；全无则直接以目标格为目标（由 in_attack_range 碰撞半径判定攻击时机）。
+            # 到目标边缘最近的可达格；全无则直接以目标格为目标（由 in_attack_range 碰撞半径判定攻击时机）。
             best, best_d = None, float('inf')
             for x in range(target_cell[0]-scan_radius, target_cell[0]+scan_radius):
                 for y in range(target_cell[1]-scan_radius, target_cell[1]+scan_radius):
                     pos = cell_to_position((x, y))
                     if not self.battle.pathfind_ground_walkable(pos, self.entity.data.collision_radius):
                         continue
-                    d = pos.distance_to(self.target_position)
+                    d = self.target.edge_distance_from(pos)
                     if d < best_d:
                         best, best_d = (x, y), d
             if best is not None:
                 self.goals.add(best)
             else:
                 self.goals.add(target_cell)
-        # The second step is to filter goals, only keep the closest one.
-        self.goal = min(self.goals, key=lambda c: cell_to_position(c).distance_to(self.target_position)+cell_to_position(c).distance_to(self.start_position))
+        # —— 择优：目标格=「到目标边缘最近 + 到起点最近」——
+        # 边缘距离对所有候选基本相等（都在射程环上），实际起主导的是「离起点最近」：
+        # 单位从自己一侧接近目标边缘 → 车道保持（左桥来的靠左、右桥来的靠右），
+        # 而不是全部吸向目标中心正对的全局最短路径。——
+        self.goal = min(self.goals, key=lambda c: self.target.edge_distance_from(cell_to_position(c)) + cell_to_position(c).distance_to(self.start_position))
 
         g = {}
         f = {}
@@ -111,7 +133,11 @@ class EntityPathfinder:
                 if tile_char == 'W':
                     tile_cost = 800 if not self.entity.data.is_air_unit else 7
                 elif tile_char == '.':
-                    tile_cost = 8
+                    # 桥面代价与半场地面一致（5）：真实 CR 桥 3 格宽，三车道过桥
+                    # 代价相同，单位保持部署时的横向车道（2026-09-10 用户机制：
+                    # 桥头左侧的单位上桥后靠左、右侧靠右，寻路按边缘最近贪心）。
+                    # 旧值 8 让 A* 把单位吸向更便宜的桥中央地面格，抹平车道。
+                    tile_cost = 5
                 else:
                     tile_cost = 5
                 if nx != px and ny != py:

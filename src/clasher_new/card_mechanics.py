@@ -525,6 +525,10 @@ class MegaKnight(BasicCharacter):
         super().__init__(entity)
         self.dash_cd = 0.0
         self._spawn_bomb_laid = False
+        # —— 冲刺跳滞空状态：起跳→空中直线位移→落地结算溅射。空中不无敌（仍被索敌/受击），
+        # 只是位移改沿起跳点→落点直线（用户口径 2026-09-09：超骑起跳不无敌，空中仍然会被打）。——
+        self._mk_jump = None      # {x0,y0,x1,y1,timer,dmg,dur,landed}
+        self._mk_jump_landed = False
 
     def on_spawn(self):
         # 落地溅射：延迟 = 部署动画（deploy_delay_remaining 首帧扣减前即调用本钩子，
@@ -549,25 +553,79 @@ class MegaKnight(BasicCharacter):
         super().on_tick(dt)
         e = self.entity
         self.dash_cd = max(0.0, self.dash_cd - dt)
+        # —— 冲刺跳两阶段推进：起跳预备（原地蓄力, 不无敌可被打）→ 空中直线位移 → 落地溅射。
+        # 总时长（预备+空中）= 1.7s（用户观察 2026-09-09：真实游戏超骑起跳到落地约 2 秒，
+        # 引擎取 1.7s 预备+空中）。——
+        if self._mk_jump is not None:
+            j = self._mk_jump
+            j['timer'] -= dt
+            if j['phase'] == 'prep':
+                # 起跳预备：原地蓄力（位置不动），计时结束进入空中
+                if j['timer'] <= 0:
+                    j['phase'] = 'air'
+                    j['timer'] = j['air_dur']
+            elif j['phase'] == 'air':
+                if j['timer'] > 0:
+                    t = 1.0 - j['timer'] / j['air_dur']
+                    e.position.x = j['x0'] + (j['x1'] - j['x0']) * t
+                    e.position.y = j['y0'] + (j['y1'] - j['y0']) * t
+                else:
+                    # 落地：落到目标落点 + 溅射
+                    e.position.x, e.position.y = j['x1'], j['y1']
+                    e.battle_state.deal_area_damage(e.player, Position(j['x1'], j['y1']),
+                                                    e.data.area_damage_radius or 1.3,
+                                                    j['dmg'], False, True)
+                    e.attack_cooldown = e.data.hit_speed
+                    self.dash_cd = e.data.hit_speed
+                    self._mk_jump = None
+                    self._mk_jump_landed = True
+            return
+        # —— 勘误：普通超骑也有冲刺跳（基础机制, 非觉醒专属）——
+        # gamedata 卡面 summonCharacterData 自带 dashDamage/dashMinRange/dashMaxRange
+        # （dashFilter=filter_mega_knight_jump_evolution → 仅地面目标）。
+        # 觉醒形态可在 evo 里覆盖这些字段（dashFollowUpMin/MaxRange 等）。
+        scd = getattr(e.data, 'data', {}) or {}
+        scd = scd.get('summonCharacterData') or {} if isinstance(scd, dict) else {}
         evo = getattr(e, 'evo', None) or {}
-        if not evo.get('dashDamage'): return
+        dash_dmg = evo.get('dashDamage') or scd.get('dashDamage')
+        if not dash_dmg: return
         if self.dash_cd > 0 or e.deploy_delay_remaining > 0: return
-        t = e.battle_state.entities.get(e.target_id) if e.target_id else None
+        # —— 起跳目标：边缘距离（center − 双方碰撞半径）最近的地面敌人，不受索敌视距限制。
+        # 真实游戏口径（2026-09-10 用户观察）：MK 对进入起跳距离的目标「放置即起跳」——
+        # 例如桥头 MK 与刚部署的中场刺客，刺客还在部署动画/前摇（deploy_delay_remaining>0）
+        # 且超出普通 5.5 格索敌视距时，MK 依然立刻起跳扑过去。
+        # 实现：逐实体扫 中心距−MK碰撞−目标碰撞 最近者（与塔射程 battle.py edge 口径一致），
+        # 跳过视距门槛（起跳距离是「跳得到」的物理判定，不依赖普通索敌）。——
+        t = None
+        best_edge = 1e9
+        from battle import Building, Troop as _Troop
+        for ent in list(e.battle_state.entities.values()):
+            if not isinstance(ent, (_Troop, Building)): continue
+            if not ent.is_alive or ent.player == e.player or not ent.targetable: continue
+            if ent.data.is_air_unit: continue
+            ed = e.position.distance_to(ent.position) - e.data.collision_radius \
+                - getattr(ent.data, 'collision_radius', 0)
+            if ed < best_edge:
+                best_edge = ed
+                t = ent
         if t is None or not t.is_alive or t.data.is_air_unit: return
         d = e.position.distance_to(t.position)
         if e.in_attack_range(t): return
-        lo = (evo.get('dashMinRange') or 3500) / 1000
-        hi = (evo.get('dashMaxRange') or 5000) / 1000
-        if not (lo <= d <= hi): return
-        # 冲刺跳：位移贴脸 + 落地 AoE 伤害（areaDamageRadius 1.3）
+        lo = (evo.get('dashMinRange') or scd.get('dashMinRange') or 3500) / 1000
+        hi = (evo.get('dashMaxRange') or scd.get('dashMaxRange') or 5000) / 1000
+        if not (lo <= best_edge <= hi): return
+        # 冲刺跳：起跳预备（原地 0.5s 蓄力）→ 空中直线位移 → 落地溅射（areaDamageRadius 1.3）。
+        # 总时长（预备+空中）= 1.7s（用户观察：真实超骑起跳到落地约 2 秒）。
         n = max(d, 0.1)
-        e.position = Position(t.position.x + (e.position.x - t.position.x) / n * 0.6,
-                              t.position.y + (e.position.y - t.position.y) / n * 0.6)
-        dmg = evo['dashDamage'] * level_scale(e.level)
-        e.battle_state.deal_area_damage(e.player, t.position, e.data.area_damage_radius or 1.3,
-                                        dmg, False, True)
-        e.attack_cooldown = e.data.hit_speed
-        self.dash_cd = e.data.hit_speed
+        jx = t.position.x + (e.position.x - t.position.x) / n * 0.6
+        jy = t.position.y + (e.position.y - t.position.y) / n * 0.6
+        prep = 0.5
+        air_dur = max(1.7 - prep, 0.3)   # 空中 = 总 1.7s − 预备 0.5s = 1.2s
+        self._mk_jump = {'x0': e.position.x, 'y0': e.position.y,
+                         'x1': jx, 'y1': jy, 'dmg': dash_dmg * level_scale(e.level),
+                         'phase': 'prep', 'prep_dur': prep,
+                         'air_dur': air_dur, 'timer': prep}
+        self._mk_jump_landed = False
 
     def on_attack(self, current_target=None):
         super().on_attack(current_target)
@@ -671,6 +729,7 @@ class Assassin(BasicCharacter):
         super().__init__(entity)
         entity._dash_active = False
         entity._dash_target_id = None
+        entity._dash_invincible_timer = 0.0   # 冲刺无敌剩余时长（用户口径 2026-09-09：0.8s 全程无敌）
 
     def _nearest_enemy(self, exclude_id=None):
         e = self.entity
@@ -686,15 +745,31 @@ class Assassin(BasicCharacter):
     def on_tick(self, dt):
         super().on_tick(dt)
         e = self.entity
-        if not e.is_alive or e._dash_active:
+        if not e.is_alive:
+            return
+        # 冲刺无敌 0.8s 计时：每帧推进（冲刺已结束后仍走完剩余无敌，对应「冲刺全程无敌」）
+        if e._dash_invincible_timer > 0:
+            e._dash_invincible_timer = max(0.0, e._dash_invincible_timer - dt)
+            if e._dash_invincible_timer <= 0:
+                e.invincible = False
+        if e._dash_active:
             return
         if e.deploy_delay_remaining > 0:
             return
         # 未突进：检测触发窗口（正常攻击蓄力/移动不受影响, 由 Troop.update 常规逻辑处理）
-        tgt, dist = self._nearest_enemy()
-        if tgt is not None and self.DASH_MIN <= dist <= self.DASH_MAX:
-            e._dash_active = True
-            e._dash_target_id = tgt.id
+        # 触发窗口用中心距离（与 MK 起跳距离同口径：dashMin/MaxRange 是「跳/冲得到」的
+        # 物理判定，按中心点量）。若用边缘距离（−碰撞半径），MK 落地贴脸时窗口会被
+        # 碰撞半径吃掉而打不开，突进永远触发不了（2026-09-10 用户技巧实测）。——
+        tgt, _ = self._nearest_enemy()
+        if tgt is not None:
+            d_center = tgt.position.distance_to(e.position)
+            if self.DASH_MIN <= d_center <= self.DASH_MAX:
+                e._dash_active = True
+                e._dash_target_id = tgt.id
+                # —— 用户口径 2026-09-09：冲刺前摇即进入无敌状态，持续 0.8s（Boss Bandit 同款
+                # Dash Time 0.8s / invulnerable while dashing）——
+                e.invincible = True
+                e._dash_invincible_timer = 0.8
 
     def dash_tick(self, dt):
         """突进推进（由 Troop.update 在常规索敌/移动之前直调, bypass 冰冻/眩晕与 A*）。"""
@@ -718,7 +793,7 @@ class Assassin(BasicCharacter):
         dist = tgt.position.distance_to(e.position)
         reach = getattr(tgt.data, 'collision_radius', 0) + e.data.collision_radius
         if dist <= max(reach, 0.3):
-            # 抵达：突进伤害（高于普攻）+ 普攻冷却
+            # 抵达：突进伤害（高于普攻）+ 普攻冷却（无敌由 0.8s 计时器走完, 不在此解除）
             dmg = (e.data.data.get('summonCharacterData') or {}).get('dashDamage', 0) * level_scale(e.level)
             tgt.take_damage(dmg, delayed=True, source=e)
             e.attack_cooldown = e.data.hit_speed

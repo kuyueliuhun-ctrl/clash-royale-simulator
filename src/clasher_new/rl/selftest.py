@@ -1096,6 +1096,110 @@ def test_dashboard_replays():
     print("[PASS] 仪表盘回放：列表扫描 + 对局加载 + 单局帧 + 非法名防护 + demo + 页面元素")
 
 
+def test_deck_pool_factory():
+    """卡组工厂：deck_pool（三分类 / 全 200 卡组）必须逐局生效，且跨 pair 清空。
+
+    历史 bug：`env.deck{0,1}_factory = pol.deck if pol.pool else None` 只判 pool，
+    漏掉 deck_pool → push/counter/lockdown/all_decks 一直打 DEFAULT_DECK 固定 8 卡。
+    """
+    from rl.run_league import _deck_factory_of, _prepare_env
+    from rl.opponents import ScriptedPolicy
+    from rl.env_wrapper import RLEnv
+
+    d1 = {"cards": ["Giant", "Musketeer", "Fireball", "Arrows",
+                    "Minions", "Archer", "Knight", "MiniPekka"]}
+    d2 = {"cards": ["Xbow", "Arrows", "Knight", "Skeletons",
+                    "IceSpirits", "Goblins", "Tesla", "Fireball"]}
+    pol_deckpool = ScriptedPolicy(mode="random", deck_pool=[d1, d2], seed=1)
+    pol_pool = ScriptedPolicy(mode="random", pool=["Giant", "Archer"], seed=2)
+    pol_none = ScriptedPolicy(mode="random", seed=3)
+
+    assert _deck_factory_of(pol_deckpool) is not None, "deck_pool 策略必须产出每局卡组工厂"
+    assert _deck_factory_of(pol_pool) is not None, "pool 策略必须产出每局卡组工厂"
+    assert _deck_factory_of(pol_none) is None and _deck_factory_of(None) is None
+
+    env = RLEnv(opponent=None, seed=0)
+    env.deck0_factory = pol_deckpool.deck          # 模拟上一 pair 残留的工厂
+    _prepare_env(env, None, pol_none, None)
+    assert env.deck0_factory is None and env.deck1_factory is None, "卡组工厂必须跨 pair 清空"
+
+    env2 = RLEnv(opponent=None, seed=0)
+    _prepare_env(env2, pol_deckpool, pol_none, None)
+    seen = set()
+    for i in range(12):
+        env2.reset(seed=i)
+        seen.add(tuple(sorted(env2.deck0)))
+    assert len(seen) == 2, f"deck_pool 应逐局抽整套卡组（2 副），实得 {len(seen)} 种"
+
+    print("[PASS] 卡组工厂：deck_pool 逐局生效 + pool 生效 + 跨 pair 清空")
+
+
+def test_dashboard_card_stats():
+    """仪表盘卡牌使用统计：双侧归属（opp_played / cards）+ 旧录像降级 + 汇总 + 防护。"""
+    import tempfile
+    import rl.dashboard as dash
+    from rl.replay import save_league_replays
+
+    def frame(**kw):
+        base = {"t": 0.5, "bundle": [], "reward": 0.0, "opp_played": [],
+                "towers0": [1.0, 1.0, 1.0], "towers1": [1.0, 1.0, 1.0],
+                "elixir0": 5.0, "elixir1": 5.0, "crown0": 0, "crown1": 0, "entities": []}
+        base.update(kw)
+        return base
+
+    d = tempfile.mkdtemp()
+    # ① 旧录像：只有 opp_played（player-1 侧），无 frame["cards"] / meta["decks"]
+    old = [
+        {"meta": {"pair": ["main", "push_flow"], "side0": "main", "max_steps": 10},
+         "winner": 1,
+         "frames": [frame(opp_played=[{"card": "Giant", "x": 1, "y": 2}]),
+                    frame(opp_played=[{"card": "Giant", "x": 1, "y": 2},
+                                      {"card": "Fireball", "x": 3, "y": 4},
+                                      {"card": "__ability__", "x": None, "y": None}])]},
+        {"meta": {"pair": ["main", "push_flow"], "side0": "push_flow", "max_steps": 10},
+         "winner": 0,
+         "frames": [frame(opp_played=[{"card": "Archer", "x": 1, "y": 2}])]},
+    ]
+    save_league_replays(old, os.path.join(d, "league_0.pkl"))
+    p = dash.build_card_stats_payload(d, "league_0.pkl")
+    assert p["ok"] and p["n_games"] == 2, p
+    by = {a["model"]: a for a in p["agents"]}
+    # 第 1 局 side0=main → 对手侧 = push_flow；第 2 局 side0=push_flow → 对手侧 = main
+    assert by["push_flow"]["cards"] == {"Giant": 2, "Fireball": 1}, by["push_flow"]["cards"]
+    assert by["main"]["cards"] == {"Archer": 1}, by["main"]["cards"]
+    assert "__ability__" not in by["push_flow"]["cards"], "技能哨兵不应计入卡牌统计"
+    assert by["push_flow"]["plays"] == 3 and by["main"]["plays"] == 1
+    assert p["coverage"]["partial"] is True, "旧录像我方侧无记录 → 应标记部分覆盖"
+
+    # ② 新录像：frame["cards"]（我方）+ meta["decks"]（双方卡组）
+    new = [{"meta": {"pair": ["main", "push_flow"], "side0": "main", "max_steps": 10,
+                     "decks": [["Giant", "Archer"], ["Xbow", "Arrows"]]},
+            "winner": 0,
+            "frames": [frame(cards=["Giant", "Archer"],
+                             opp_played=[{"card": "Xbow", "x": 1, "y": 2}])]}]
+    save_league_replays(new, os.path.join(d, "league_1000.pkl"))
+    p2 = dash.build_card_stats_payload(d, "league_1000.pkl")
+    by2 = {a["model"]: a for a in p2["agents"]}
+    assert by2["main"]["cards"] == {"Giant": 1, "Archer": 1}, by2["main"]["cards"]
+    assert by2["push_flow"]["cards"] == {"Xbow": 1}, by2["push_flow"]["cards"]
+    assert by2["main"]["deck_cards"] == {"Giant": 1, "Archer": 1}, by2["main"]["deck_cards"]
+    assert by2["push_flow"]["deck_cards"] == {"Xbow": 1, "Arrows": 1}
+    assert p2["coverage"]["partial"] is False, "新录像双侧都有记录 → 不应标 partial"
+
+    # ③ 多文件汇总（n_files=0 → 全部）+ 非法输入防护
+    pall = dash.build_card_stats_payload(d, None, 0)
+    assert pall["ok"] and pall["n_games"] == 3 and len(pall["files"]) == 2, pall.get("files")
+    assert dash.build_card_stats_payload(d, "../evil.pkl")["ok"] is False
+    assert dash.build_card_stats_payload(d, "missing.pkl")["ok"] is False
+    assert dash.build_card_stats_payload(os.path.join(d, "nope"))["ok"] is False
+
+    # ④ 页面元素（防回归）
+    for token in ("卡牌使用统计", "/api/cardstats", "statsScope", "loadCardStats"):
+        assert token in dash._HTML, f"页面缺少 {token}"
+
+    print("[PASS] 仪表盘卡牌使用统计：双侧归属 + 旧录像降级 + 汇总 + 防护 + 页面元素")
+
+
 def test_battle_clone_fix():
     """克隆法术克隆冰法（on_spawn 访问 battle_state）不再崩溃（battle.py:1400 修复）。"""
     from rl.env_wrapper import RLEnv
@@ -3194,6 +3298,133 @@ def test_vines_snare_fl_duration():
     print("[PASS] Vines 束缚 2.0s（FL 口径）+ 第 1 跳伤害即时结算")
 
 
+def test_log_rolling_direction():
+    """2026-09-10 滚木/野蛮人滚筒滚动口径（用户定稿）：
+
+    ① 滚木（Log）与野蛮人滚筒（BarbLog）**凭空出现在部署点**，不走"国王塔发射→飞行→
+       落点→滚动"链路——部署后立即只有滚动弹（LogProjectileRolling/BarbLogProjectileRolling），
+       **不存在第一段 LogProjectile/BarbLogProjectile**；
+    ② 滚动方向只能**垂直河道沿纵轴（y 轴）纵深滚**：蓝方 +y、红方 −y，x 恒定（永不斜向）；
+    ③ Firecracker 爆裂弹不受影响（二段弹仍"飞到落点爆炸"不滚动，防 rolling 改动误伤回归）。"""
+    import player as player_mod
+    import battle as battle_mod
+    from core import Position as P2
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'Log', 'Skeletons']
+
+    def trace(name, pid, pos, nsteps=300):
+        bs = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK), 10.0),
+                                    player_mod.PlayerState(1, list(DECK), 10.0),
+                                    card_level=11)
+        bs.update_player_hp()
+        p = bs.players[pid]
+        p.cycle = [name] + [c for c in p.cycle if c != name]
+        p.elixir = 10.0
+        assert bs.deploy_card(pid, name, P2(*pos)), f"{name} 部署失败"
+        spawned = [e.name for e in bs.entities.values() if e.id > 6]
+        pts = []
+        for _ in range(nsteps):
+            bs.step(1 / 60)
+            for e in bs.entities.values():
+                if e.is_alive and e.name in ("LogProjectileRolling", "BarbLogProjectileRolling"):
+                    pts.append((round(e.position.x, 2), round(e.position.y, 2)))
+        return spawned, pts
+
+    # ①+② 蓝方 Log 斜落点：凭空出现滚动弹、无第一段、x 恒定、y 递增
+    sp, pts = trace('Log', 0, (14.0, 19.0))
+    assert "LogProjectile" not in sp, f"LogProjectile 不应存在（凭空出现）: {sp}"
+    assert "LogProjectileRolling" in sp, f"应直接生成滚动弹: {sp}"
+    assert pts and len({p[0] for p in pts}) == 1, f"x 应恒定（纯纵向）: {pts[:3]}"
+    assert pts[0][1] < pts[-1][1], f"蓝方应滚向 +y: {pts[0]}→{pts[-1]}"
+    # ② 蓝方左落点
+    sp, pts = trace('Log', 0, (5.0, 19.0))
+    assert pts and len({p[0] for p in pts}) == 1 and pts[0][1] < pts[-1][1]
+    # ② 红方落点：滚向 −y
+    sp, pts = trace('Log', 1, (5.0, 23.0))
+    assert pts and pts[0][1] > pts[-1][1], f"红方应滚向 -y: {pts[0]}→{pts[-1]}"
+    # ② BarbLog：凭空出现 + 纯纵向
+    sp, pts = trace('BarbLog', 0, (14.0, 9.0))
+    assert "BarbLogProjectile" not in sp and "BarbLogProjectileRolling" in sp, sp
+    assert pts and len({p[0] for p in pts}) == 1 and pts[0][1] < pts[-1][1]
+
+    # ③ Firecracker 爆裂弹不误伤：部署不崩、爆裂弹出现（走"飞到落点爆炸"而非滚动）
+    DECK_F = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+              'Minions', 'Firecracker', 'Skeletons']
+    bs = battle_mod.BattleState(player_mod.PlayerState(0, list(DECK_F), 10.0),
+                                player_mod.PlayerState(1, list(DECK_F), 10.0), card_level=11)
+    bs.update_player_hp()
+    p0 = bs.players[0]
+    p0.cycle = ['Firecracker'] + [c for c in p0.cycle if c != 'Firecracker']
+    p0.elixir = 10.0
+    assert bs.deploy_card(0, 'Firecracker', P2(8.5, 10.0))
+    expl_seen = False
+    for _ in range(900):
+        bs.step(1 / 60)
+        if any(e.name == 'FirecrackerExplosion' and e.is_alive
+               for e in bs.entities.values()):
+            expl_seen = True
+    assert expl_seen, "Firecracker 爆裂弹应正常出现（不误伤）"
+    print("[PASS] 滚木/滚筒：凭空出现无第一段、纯纵向滚动（蓝+y/红−y/x恒定）、Firecracker 不误伤")
+
+
+def test_behavioral_metrics():
+    """行为指标（2026-09-10 用户：胜率镜像自对弈自我对冲，用行为质量替代）：
+
+    合成游戏帧验证各指标判定：
+    ① 防守投入率：敌过河帧有 deploy → defense_invest_rate>0；
+    ② 接敌率：部署点在后续 8s 内出现敌我 troop 同框 → engagement_rate>0；
+    ③ 拦截率：落点在敌→我塔路径 4 格内 → intercept_rate>0；
+    ④ 单边堆牌 vs 响应：无对手出牌时 deploy → unilateral；对手出牌后 5s 内 → response；
+    ⑤ 组波率：同帧 ≥2 张 deploy → bundle_multi_rate>0；
+    ⑥ 圣水均值/deploy 每局/塔血差。"""
+    from rl.train_solo import behavioral_metrics
+
+    # 构造合成回放：2 局
+    def frame(t, bundle, entities, opp_played=None, towers0=None, towers1=None,
+              elixir0=5.0):
+        return {"t": t, "bundle": bundle, "entities": entities,
+                "opp_played": opp_played,
+                "towers0": towers0 or [4824, 3052, 3052],
+                "towers1": towers1 or [4824, 3052, 3052],
+                "elixir0": elixir0}
+
+    # 实体条目 [name, x, y, hp, player, kind, ...]
+    def troop(x, y, pl):
+        return ["Knight", x, y, 100, pl, "troop", 100, 0, 0, 0.5]
+
+    # 局1：t=1 敌 Giant 过河(y=10)，t=1.5 我方部署 Knight(10,11) 拦截 → 应接敌+拦截
+    g1 = {"meta": {}, "winner": 0, "frames": [
+        frame(0.5, [], [troop(9, 20, 1)]),
+        frame(1.0, [], [troop(9, 10, 1)]),                       # 敌过河（y<16）
+        frame(1.5, [("deploy", 1, 9, 10)], [troop(9, 10, 1), troop(10, 11, 0)], opp_played=[{"card": "Giant"}]),
+        frame(2.0, [], [troop(9, 10, 1), troop(10, 11, 0)]),     # 同框 → 接敌
+        frame(2.5, [], [troop(9, 10, 1), troop(10, 11, 0)]),
+    ]}
+    # 局2：t=0.5 我方无对手出牌时 deploy Knight（单边堆牌）；t=2 对手出牌后 1s 内响应部署
+    g2 = {"meta": {}, "winner": 1, "frames": [
+        frame(0.5, [("deploy", 1, 8, 12)], [troop(8, 12, 0)]),             # 单边（无对手出牌）
+        frame(1.0, [], [troop(8, 12, 0)]),
+        frame(2.0, [], [troop(9, 18, 1)], opp_played=[{"card": "Knight"}]),
+        frame(2.5, [("deploy", 1, 9, 13), ("deploy", 2, 10, 13)],
+              [troop(9, 18, 1), troop(9, 13, 0), troop(10, 13, 0)]),       # 响应 + 组波(2张)
+        frame(3.0, [], [troop(9, 13, 0), troop(10, 13, 0)]),
+    ]}
+    m = behavioral_metrics([g1, g2])
+    assert m["defense_invest_rate"] > 0, f"防守投入率应>0: {m}"
+    assert m["engagement_rate"] > 0, f"接敌率应>0: {m}"
+    assert m["intercept_rate"] > 0, f"拦截率应>0: {m}"
+    assert m["unilateral_rate"] > 0, f"单边堆牌率应>0: {m}"
+    assert m["bundle_multi_rate"] > 0, f"组波率应>0: {m}"
+    assert m["deploy_per_game"] >= 1.0, f"每局deploy应≥1: {m}"
+    assert m["elixir_avg"] > 0, f"圣水均值应>0: {m}"
+    assert m["response_latency_med"] is not None, f"响应延迟应有值: {m}"
+    # 空输入 → 空 dict
+    assert behavioral_metrics([]) == {}, "空回放应返回空"
+    print(f"[PASS] 行为指标：防守投入={m['defense_invest_rate']}% 接敌={m['engagement_rate']}% "
+          f"拦截={m['intercept_rate']}% 单边={m['unilateral_rate']}% 组波={m['bundle_multi_rate']}% "
+          f"deploy/局={m['deploy_per_game']} 圣水={m['elixir_avg']} 延迟={m['response_latency_med']}s")
+
+
 def test_mk_spawn_damage_and_iw_slow_fl():
     """2026-09-09 落地触发族（FirstLight 对账）：
     ① MK 落地溅射（projectileData=MegaKnightAppear：lv11 908（快照 Legendary 轴）、
@@ -3256,6 +3487,187 @@ def test_mk_spawn_damage_and_iw_slow_fl():
     print("[PASS] MK 落地溅射 908/2.2/击退1.0/仅地面 + IceWizard 冰雾 FL 口径（0.65×2.5s 双减速）")
 
 
+def test_tower_value_mult():
+    """塔血差异化定价曲线（2026-09-10）：凹形溢价 + 王塔贬值闸门。
+
+    验证：满血=1.0（旧行为不变）、凹形单调递增、中点=1.5（凹形>线性中点）、
+    王塔两公主塔存活≈0（×0.05）、一公主塔破后全价、塔破无边际伤害返回 1.0。"""
+    from rl.env_wrapper import tower_value_mult
+
+    # 凹形单调递增（公主塔，两公主塔存活）
+    vals = [tower_value_mult(r, king=False, princesses_alive=2)
+            for r in (1.0, 0.75, 0.5, 0.25, 0.05)]
+    assert vals[0] == 1.0, f"满血应=1.0（旧行为不变）: {vals[0]}"
+    assert all(vals[i] < vals[i + 1] for i in range(len(vals) - 1)), \
+        f"溢价应随残血单调递增: {vals}"
+    # 凹形：中点 0.5 → 1 + 2×(0.5)² = 1.5（线性凹形为 1.25 → 凹形更陡）
+    assert abs(vals[2] - 1.5) < 1e-9, f"中点应=1.5（凹形）: {vals[2]}"
+    # 残血上限：5% → 1 + 2×0.9025 = 2.805
+    assert abs(vals[4] - 2.805) < 1e-9, f"5%血应=2.805: {vals[4]}"
+
+    # 王塔贬值：两公主塔存活 → ×0.05（含满血）
+    assert abs(tower_value_mult(1.0, king=True, princesses_alive=2) - 0.05) < 1e-9
+    assert abs(tower_value_mult(0.5, king=True, princesses_alive=2) - 0.075) < 1e-9
+    # 一公主塔破 → 王塔恢复全价（凹形）
+    assert abs(tower_value_mult(0.5, king=True, princesses_alive=1) - 1.5) < 1e-9
+    # 塔破（ratio≤0）→ 1.0（无边际伤害，倍数无意义）
+    assert tower_value_mult(0.0, king=True, princesses_alive=0) == 1.0
+    assert tower_value_mult(0.0, king=False, princesses_alive=1) == 1.0
+
+    # 凹形强度可调（k=1：中点 1.25）
+    assert abs(tower_value_mult(0.5, king=False, princesses_alive=2, k=1.0) - 1.25) < 1e-9
+    print("[PASS] 塔血溢价曲线：凹形单调递增、满血=1.0、中点1.5、王塔两公主存活×0.05/一破恢复全价")
+
+
+def test_reward_tower_premium():
+    """塔血差异化定价接入 compute_reward（2026-09-10）：
+
+    ① 同 500 血伤害打敌方 30% 血公主塔 vs 满血塔 → 低血塔掉血更值钱（溢价）；
+    ② 双向对称：我方 30% 血公主塔挨打惩罚同步放大（负数更大）；
+    ③ 王塔贬值：两公主塔存活时打王塔价值≈0（×0.05）、一破后全价；
+    ④ 旧调用（无 per-tower）逐位不变。"""
+    from rl.env_wrapper import compute_reward
+    from rl.config import TrainConfig, reward_to_env
+
+    std = reward_to_env(TrainConfig.resolve("economy"))
+    base = dict(
+        blue_hps_old=10928.0, red_hps_old=10928.0,
+        blue_hps_new=10928.0, red_hps_new=10928.0,
+        blue_left_old=3, red_left_old=3, blue_left_new=3, red_left_new=3,
+        my_elixir_before=5.0, opp_elixir_before=5.0,
+        my_elixir_after=5.0, opp_elixir_after=5.0,
+        winner=None, invalid_count=0,
+        blue_hps_max=10928.0, red_hps_max=10928.0)
+
+    # ④ 旧调用无 per-tower → 逐位不变（0 事件 = 0 奖励）
+    assert abs(compute_reward(std, **base)) < 1e-12, "旧调用应逐位不变"
+
+    def r_hit_red(dmg, start_frac):
+        red_old = [4824, 3052, 3052 * start_frac]
+        red_new = [4824, 3052, max(0.0, 3052 * start_frac - dmg)]
+        return compute_reward(std, **dict(
+            base,
+            red_hps_old=sum(red_old), red_hps_new=sum(red_new),
+            red_towers_old=red_old, red_towers_new=red_new,
+            red_towers_max=[4824, 3052, 3052]))
+
+    def r_hit_blue(dmg, start_frac):
+        blue_old = [4824, 3052, 3052 * start_frac]
+        blue_new = [4824, 3052, max(0.0, 3052 * start_frac - dmg)]
+        return compute_reward(std, **dict(
+            base,
+            blue_hps_old=sum(blue_old), blue_hps_new=sum(blue_new),
+            blue_towers_old=blue_old, blue_towers_new=blue_new,
+            blue_towers_max=[4824, 3052, 3052]))
+
+    # ① 打敌方：低血塔掉血更值钱
+    r_full = r_hit_red(500.0, 1.0)
+    r_low = r_hit_red(500.0, 0.3)
+    assert r_low > r_full, f"低血塔掉血应更值钱: {r_low} vs {r_full}"
+    # ② 我方挨打：低血塔惩罚更大（双向对称）
+    b_full = r_hit_blue(500.0, 1.0)
+    b_low = r_hit_blue(500.0, 0.3)
+    assert b_low < b_full, f"我方低血塔挨打惩罚应更大: {b_low} vs {b_full}"
+    # 溢价幅度一致（进攻/防守同一曲线）
+    assert abs((r_low / r_full) - (b_low / b_full)) < 1e-6, \
+        f"双向溢价应同曲线: {r_low/r_full} vs {b_low/b_full}"
+
+    # ③ 王塔贬值：两公主塔存活时打王塔≈0，一破后全价
+    def r_hit_king(dmg, alive_left, alive_right):
+        red_old = [4824, 3052 * alive_left, 3052 * alive_right]
+        red_new = [max(0.0, 4824 - dmg), 3052 * alive_left, 3052 * alive_right]
+        return compute_reward(std, **dict(
+            base,
+            red_hps_old=sum(red_old), red_hps_new=sum(red_new),
+            red_towers_old=red_old, red_towers_new=red_new,
+            red_towers_max=[4824, 3052, 3052]))
+
+    k_gated = r_hit_king(500.0, 1, 1)
+    k_open = r_hit_king(500.0, 0, 1)
+    assert k_open > k_gated, f"公主塔存活时王塔应贬值: {k_open} vs {k_gated}"
+    assert abs(k_open / k_gated - 20.0) < 1e-6, \
+        f"王塔贬值应精确 ×0.05（1/20）: {k_open/k_gated}"
+    print(f"[PASS] 塔血溢价接入 compute_reward：打敌方 500 血满血塔={r_full:.3f}/"
+          f"30%塔={r_low:.3f}（{r_low/r_full:.2f}×）、我方挨打对称、"
+          f"王塔贬值 {k_open/k_gated:.0f}×、旧调用逐位不变")
+
+
+def test_reward_tower_premium_rlenv_flow():
+    """塔血差异化定价经 RLEnv.step 真实链路生效 + MCTS 值函数同源（2026-09-10）。
+
+    验证：① RLEnv 打磨敌方 30% 血塔的累计奖励 > 打磨满血塔（真实 step 链路，
+    env 内 _blue_towers_max 已每塔记录）；② MCTS node_value 对敌方残血塔估值更高、
+    王塔两公主存活时残血不推高值、一破后推高——与训练奖励同源。"""
+    import numpy as np
+    from rl.env_wrapper import RLEnv, DEFAULT_DECK
+    from rl.action_bundle import ActionBundle
+    from rl.config import TrainConfig, reward_to_env
+
+    cfg = TrainConfig.resolve("economy")
+
+    # ① RLEnv.step 链路：把敌方右公主塔打到残血，累计几帧塔损奖励
+    def env_total_loss_with(start_frac):
+        env = RLEnv(opponent=lambda obs: ActionBundle.noop(), seed=0,
+                    reward_weights=reward_to_env(cfg),
+                    deck0=DEFAULT_DECK, deck1=DEFAULT_DECK)
+        env.reset(seed=0)
+        p1 = env.battle.players[1]
+        p1.right_tower_hp = 3052 * start_frac
+        # 同步实体 HP（battle 内以实体为准）
+        env.battle.update_player_hp()
+        # 连续 noop 5 帧（正常推进，无人工掉血）→ 累计奖励为 0（无塔损事件）
+        tot = 0.0
+        for _ in range(5):
+            _, r, term, _, _ = env.step(ActionBundle.noop())
+            tot += r
+            if term:
+                break
+        return tot
+
+    # 无塔损事件 → 0（这条主要验证 RLEnv 传参不崩 + 每塔 max 记录）
+    t_full = env_total_loss_with(1.0)
+    assert abs(t_full) < 1e-6, f"无塔损 noop 累计应≈0: {t_full}"
+    # 塔血每塔 max 数组已记录
+    env = RLEnv(opponent=lambda obs: ActionBundle.noop(), seed=0,
+                reward_weights=reward_to_env(cfg),
+                deck0=DEFAULT_DECK, deck1=DEFAULT_DECK)
+    env.reset(seed=0)
+    assert env._blue_towers_max == [4824, 3052, 3052] and \
+        env._red_towers_max == [4824, 3052, 3052], "reset 应记录每塔满血"
+
+    # ② MCTS node_value 同源
+    from rl.mcts import MCTSConfig, node_value
+    import battle as battle_mod
+    import player as player_mod
+
+    DECK = ['Knight', 'Arrows', 'Fireball', 'Musketeer', 'Giant',
+            'Minions', 'MiniPekka', 'Skeletons']
+    mcfg = MCTSConfig()
+
+    def mk_bs(**tower_overrides):
+        bs = battle_mod.BattleState(
+            player_mod.PlayerState(0, list(DECK), 5.0),
+            player_mod.PlayerState(1, list(DECK), 5.0), card_level=11)
+        bs.update_player_hp()
+        p1 = bs.players[1]
+        for k, v in tower_overrides.items():
+            setattr(p1, k, v)
+        return bs
+
+    v0 = node_value(mk_bs(), 0, mcfg)
+    assert abs(v0) < 1e-9, f"满血 vs 满血应≈0: {v0}"
+    # 敌方残血公主塔 → 我方值推高
+    v_low = node_value(mk_bs(left_tower_hp=3052 * 0.3), 0, mcfg)
+    assert v_low > v0, f"敌方残血塔应推高我方值: {v_low}"
+    # 王塔：两公主塔存活时残血不值钱；一破后值钱
+    v_king_gated = node_value(mk_bs(king_tower_hp=4824 * 0.5), 0, mcfg)
+    v_king_open = node_value(mk_bs(king_tower_hp=4824 * 0.5, left_tower_hp=0.0), 0, mcfg)
+    assert v_king_open > v_king_gated, \
+        f"公主塔存活时王塔残血不应推高值: {v_king_open} vs {v_king_gated}"
+    print(f"[PASS] 塔血溢价 RLEnv.step 链路 + MCTS 同源：RLEnv 每塔 max 记录、"
+          f"noop 累计≈0、MCTS 敌残血塔推高({v_low:.2f})、王塔闸门生效")
+
+
 def test_opponent_pool_mix():
     """9j A 层：训练对手池（frozen/hist/defend 混合）+ SelfDefenderPolicy 反制。
 
@@ -3313,21 +3725,753 @@ def test_opponent_pool_mix():
         assert len(pool.hist_paths) == 3
         kinds = Counter()
         hist_ids = set()
-        for _ in range(400):
+        N = 2000
+        for _ in range(N):
             kind, side, hid = pool.sample()
             kinds[kind] += 1
             if kind == "hist":
                 hist_ids.add(hid)
                 assert side is not None
-        assert 40 <= kinds["hist"] <= 120, kinds      # 名义 20%
-        assert 20 <= kinds["defend"] <= 80, kinds     # 名义 10%
+        # 期望用池自己的配比（cfg.opp_mix / _OPP_MIX，P1-1b 后为 0.5/0.3/0.2），±35% 容差
+        mix = pool.mix
+        for k in ("hist", "defend"):
+            exp = N * float(mix[k])
+            assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, mix)
         assert len(hist_ids) == 3, hist_ids
         pool.record(1)                                 # 败局回填不崩
-    print(f"[PASS] 对手池：分布 {dict(kinds)} ≈ 0.7/0.2/0.1；hist 旧 ckpt 加载+PFSP 回填；"
-          f"SelfDefender 面对过河威胁出合法反制")
+    print(f"[PASS] 对手池：分布 {dict(kinds)}（名义 {pool.mix}，N={N}）；"
+          f"hist 旧 ckpt 加载+PFSP 回填；SelfDefender 面对过河威胁出合法反制")
+
+
+def _tiny_rollout_transitions(pol, env, belief, tok, plan, n=4):
+    """构造 n 条最小 transition（adv 正负交替、回报带 3.0 的离散度）。"""
+    trans, hidden, obs = [], None, None
+    obs, _ = env.reset()
+    belief.reset(env.deck1)
+    for i in range(n):
+        ih = hidden
+        bundle, lp, val, hidden, masks = pol.act(
+            obs, tok, plan, env.get_action_mask, hidden=hidden, deterministic=False)
+        obs2, r, term, trunc, info = env.step(bundle)
+        sgn = 1.0 if i % 2 else -1.0
+        trans.append({"obs": obs, "belief": tok, "plan": plan, "bundle": bundle,
+                      "old_logprob": lp, "adv": sgn,
+                      "returns": float(val) + 3.0 * sgn,
+                      "masks": masks, "init_hidden": ih})
+        belief.update(obs2, info.get("opp_played"))
+        obs = obs2
+    return trans
+
+
+def test_value_channel_norm_and_gnorm_split():
+    """P0-1（2026-09-11 审计整改）：价值通道量纲 + 梯度成分诊断。
+
+    三条断言各自可证伪：
+    ① value_norm="none" 时 v_loss 逐位等于外部复算的原始 MSE（关开关 = 旧实现），
+       且 stats 全有限、不含 p_gnorm/v_gnorm 键（旧测试的 isfinite 断言不受影响）；
+    ② 单轮 on-policy 重放 ratio≡1.0（结构性事实，不是"策略没在动"）；
+    ③ 诊断真的能分辨"谁在推动更新"——把 value_head 放大 1000× 后 v_gnorm 必须
+       应声抬升两个数量级（否则诊断函数是假的）。
+    """
+    import copy
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    from rl.ppo import PPOTrainer, ReturnScaler
+
+    env = RLEnv(opponent=None, seed=0)
+    obs, _ = env.reset()
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0)
+    tok = belief.encode(obs, None)
+    plan = np.zeros(PLAN_DIM, dtype=np.float32)
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=len(tok))
+    trans = _tiny_rollout_transitions(pol, env, belief, tok, plan)
+    n = len(trans)
+
+    # ① none = 旧行为
+    pol_a, pol_ref = copy.deepcopy(pol), copy.deepcopy(pol)
+    s0 = PPOTrainer(pol_a, lr=1e-3).update(trans)
+    assert all(np.isfinite(v) for v in s0.values()), s0
+    assert "p_gnorm" not in s0 and "v_gnorm" not in s0, s0
+    assert s0["value_scale"] == 1.0, s0
+    assert abs(s0["value_loss"] - s0["value_loss_raw"]) < 1e-9, s0
+    with torch.no_grad():
+        _, val_ref, _ = pol_ref.evaluate_batch(
+            [t["obs"] for t in trans], [t["belief"] for t in trans],
+            [t["plan"] for t in trans], [t["bundle"] for t in trans],
+            [t["masks"] for t in trans], [t["init_hidden"] for t in trans])
+        rets_ref = torch.tensor([t["returns"] for t in trans], dtype=torch.float32)
+        raw_expect = float(((val_ref.squeeze(-1) - rets_ref) ** 2).sum().item()) / n
+    assert abs(raw_expect - s0["value_loss_raw"]) < 1e-4, (raw_expect, s0)
+    # ①b explained_variance（P0-1c）：定义性行为 + 与外部按定义复算一致
+    _ev = PPOTrainer.explained_variance
+    _R = np.array([1.0, 2.0, 3.0, 4.0])
+    assert abs(_ev(_R, _R) - 1.0) < 1e-9, _ev(_R, _R)          # 完美预测
+    assert abs(_ev(np.full(4, _R.mean()), _R)) < 1e-9          # 常数=批均值 → 0
+    assert _ev(np.zeros(4), _R) < 0.0                          # 比常数差
+    assert _ev([1.0], [1.0]) == 0.0                            # 单点不可判读
+    assert _ev([0.0, 0.0], [3.0, 3.0]) == 0.0                  # 方差退化 → 0，不抛错
+    assert _ev([1.0, 2.0], [1.0, 2.0, 3.0]) == 0.0             # 长度不匹配 → 0
+    ev_expect = 1.0 - raw_expect / float(np.var([t["returns"] for t in trans]))
+    assert abs(ev_expect - s0["explained_variance"]) < 1e-6, (ev_expect, s0)
+    # ② 单轮 on-policy 重放：ratio 恒 1、clip 恒 0（结构性）
+    # 容差说明（2026-09-11，grid_ln 落地时暴露）：`ratio = exp(lp_new − old)` 里
+    # lp_new 来自批量前向、old 来自 rollout 逐步前向，两条路径的浮点求和顺序不同，
+    # 偏差下限就是 **float32 的一个 ULP（ε≈1.19e-7）**。实测偏差 1.19e-7 = 0.998 ULP
+    # ⇒ 原先写的 1e-9（= ε/119）是**物理上不可达**的，之前只是碰巧舍入成 0 才通过。
+    # 这里放宽到 1e-5（仍比"策略真的动了"的量级 ~1e-3 紧 100 倍，见 ppo.py:12-22）。
+    assert abs(s0["ratio_mean"] - 1.0) < 1e-5 and s0["clip_frac"] == 0.0, s0
+
+    # ③ running：v_loss = raw / s²，诊断可测
+    pol_b = copy.deepcopy(pol)
+    p1 = PPOTrainer(pol_b, lr=1e-3, value_norm="running", diagnose_every=1)
+    s1 = p1.update(trans)
+    assert "p_gnorm" in s1 and isinstance(s1["v_gnorm"], float), s1
+    assert s1["value_scale"] > 0.0, s1
+    assert abs(s1["value_loss"] * s1["value_scale"] ** 2 - s1["value_loss_raw"]) < 1e-3, s1
+
+    pol_c = copy.deepcopy(pol)
+    with torch.no_grad():
+        pol_c.value_head.weight.mul_(1000.0)
+        pol_c.value_head.bias.mul_(1000.0)
+    s2 = PPOTrainer(pol_c, lr=1e-3, diagnose_every=1).update(trans)
+    assert s2["v_gnorm"] > 100.0 * s1["v_gnorm"], (s2["v_gnorm"], s1["v_gnorm"])
+
+    # ④ 诊断每 N 次才跑（默认关：diagnose_every=0 → 无键）
+    s3 = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=0).update(trans)
+    assert "p_gnorm" not in s3, s3
+
+    # ⑤ ReturnScaler 随 ckpt 存取一致（续训不重置）
+    sc = ReturnScaler.from_dict(p1.ret_scaler.to_dict())
+    assert sc.count == n and abs(sc.mean - p1.ret_scaler.mean) < 1e-12 \
+        and abs(sc.std() - p1.ret_scaler.std()) < 1e-12, (sc.to_dict(), p1.ret_scaler.to_dict())
+    assert ReturnScaler.from_dict(None).count == 0
+    print(f"[PASS] 价值通道：none 逐位=原始MSE（raw={raw_expect:.4f}）、ratio≡1 结构性、"
+          f"running scale={s1['value_scale']:.3f}（{s1['value_loss']:.3f}/{s1['value_loss_raw']:.3f}）、"
+          f"v_gnorm 随 value_head ×1000 抬升 {s2['v_gnorm'] / max(1e-12, s1['v_gnorm']):.0f}×、"
+          f"scaler 存取一致")
+
+
+def test_history_dedup_and_gates():
+    """P0-2：history 按 step 去重（10e 双 step:0）+ 行为指标门禁先只报警不阻断。"""
+    import json
+    import tempfile
+    from rl.train_solo import (_dedup_history, _check_gates, behavioral_metrics)
+    from rl.config import TrainConfig
+
+    # 去重：同 step 覆盖旧点
+    h = [{"step": 0, "winrate": 0.1}, {"step": 2000, "winrate": 0.2}]
+    h[:] = _dedup_history(h, 0)
+    h.append({"step": 0, "winrate": 0.9})
+    assert [x["step"] for x in h] == [2000, 0] and h[1]["winrate"] == 0.9, h
+    assert _dedup_history([{"step": 0}, {"step": 0}], 0) == [], "同 step 全清"
+    assert _dedup_history([{"step": 5}], 7) == [{"step": 5}], "不同 step 不动"
+
+    with tempfile.TemporaryDirectory() as td:
+        cfg = TrainConfig(name="g", out_dir=td)
+        p = os.path.join(td, "g", "gates.json")
+        # P0-2b：相对门禁 —— 首个评估点只建基线、不判定（口径由自身起点定标，
+        # 修的是"绝对阈值 9.5 与内建指标实测 28.3~38.1 差 3 倍 → PASS/FAIL 是假的"）
+        rep0 = _check_gates({"step": 0, "engagement_rate": 30.0, "ghost_rate": 24.0}, cfg, p)
+        assert rep0["ok"] is True and rep0["checks"] == [], rep0
+        assert abs(json.load(open(p, encoding="utf-8"))["baseline"]["engagement_rate"]
+                   - 30.0) < 1e-9, rep0
+        # 相对起点退化：engagement < 50%×30=15；ghost > 200%×24=48 → 报警不抛异常
+        rep = _check_gates({"step": 8000, "engagement_rate": 3.0, "ghost_rate": 90.0}, cfg, p)
+        assert rep["ok"] is False and len(rep["checks"]) == 2, rep
+        assert json.load(open(p, encoding="utf-8"))["ok"] is False
+        # 达标 → ok=True；且 baseline 不随评估点漂移（续训语义）
+        rep2 = _check_gates({"step": 8000, "engagement_rate": 30.0, "ghost_rate": 24.0}, cfg, p)
+        assert rep2["ok"] is True and rep2["baseline"]["engagement_rate"] == 30.0, rep2
+        # 绝对阈值写法仍兼容（旧行为）；阈值可关；缺失指标不误判
+        cfg.gates = {"engagement_rate": 9.5}
+        assert _check_gates({"step": 1}, cfg, None)["checks"] == [], "无该指标 → 不检查"
+        cfg.gates = {}
+        assert _check_gates({"step": 1}, cfg, None)["ok"] is True
+
+    # ghost_rate 确实进了行为指标（门禁依赖它）
+    games = [{"meta": {}, "winner": 0, "frames": [
+        {"t": 0.0, "bundle": [("deploy", 1, 8, 30), ("deploy", 2, 9, 10)],
+         "entities": [], "towers0": [4824, 3052, 3052], "towers1": [4824, 3052, 3052],
+         "elixir0": 5.0}]}]
+    bm = behavioral_metrics(games)
+    assert bm.get("ghost_rate") == 50.0, bm
+    print("[PASS] P0-2：history 按 step 去重；门禁越界报警/达标通过/阈值可关且不中断训练；"
+          f"ghost_rate={bm['ghost_rate']}")
+
+
+def test_opponent_pool_mix_multi_dir():
+    """P1-1：本 run 目录无 ckpt 时从 --hist-seed-dir 补种，对手池恢复 hist 槽。"""
+    import tempfile
+    from collections import Counter
+    from rl.train_solo import _OpponentPool, _collect_hist_ckpts
+    from rl.config import TrainConfig
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy, save_checkpoint
+    from rl.train_follower import FollowerOpponent
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+
+    with tempfile.TemporaryDirectory() as td:
+        cur = os.path.join(td, "cur")        # 本 run 目录：**无** ckpt（首轮训练）
+        seed = os.path.join(td, "seed")      # 旧 run 目录
+        os.makedirs(cur)
+        os.makedirs(seed)
+        # 收集器：本目录空 → 无补种为空、有补种为补齐；本目录优先
+        assert _collect_hist_ckpts(cur, max_n=12) == []
+        env = RLEnv(opponent=None, seed=0, card_level=11)
+        env.reset(seed=0)
+        bd = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
+                                 seed=0).encode(None, None))
+        pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+        for s in (0, 1000, 2000, 3000):
+            save_checkpoint(pol, os.path.join(seed, f"solo_main_{s}.pt"))
+        got = _collect_hist_ckpts(cur, max_n=12, extra_dirs=[seed])
+        assert len(got) == 4 and all(seed == os.path.dirname(g) for g in got), got
+
+        cfg = TrainConfig(name="cur", out_dir=td, hidden_dim=32)
+        opp = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+        side = FollowerOpponent(opp, env, belief=BeliefInference(
+            opp_deck=env.deck1, n_particles=128, seed=0), deterministic=True)
+        # 无补种目录 → hist 槽仍为空（这正是热启动退化形态）
+        pool_no = _OpponentPool(cfg, env, side, random.Random(0), "cpu",
+                                hist_seed_dirs=None)
+        assert pool_no.hist_paths == [], pool_no.hist_paths
+        # 有补种目录 → hist 槽亮起
+        pool2 = _OpponentPool(cfg, env, side, random.Random(0), "cpu",
+                              hist_seed_dirs=[seed])
+        assert len(pool2.hist_paths) == 4, pool2.hist_paths
+        kinds = Counter(pool2.sample()[0] for _ in range(200))
+        assert kinds["hist"] > 0, kinds
+
+        # 本目录（cur）后来有了 ckpt → 优先，不再补种
+        for s in (0, 500):
+            save_checkpoint(pol, os.path.join(cur, f"solo_main_{s}.pt"))
+        near = _collect_hist_ckpts(cur, max_n=2, extra_dirs=[seed])
+        assert len(near) == 2 and all(cur == os.path.dirname(g) for g in near), near
+        pool = _OpponentPool(cfg, env, side, random.Random(0), "cpu",
+                             hist_seed_dirs=[seed])
+        # 本目录 2 个排在前面，其余由补种目录补齐到 max_n（12）
+        assert len(pool.hist_paths) == 6, pool.hist_paths
+        assert all(cur == os.path.dirname(g) for g in pool.hist_paths[:2]), pool.hist_paths
+        print(f"[PASS] P1-1：本目录空时补种 hist={len(pool2.hist_paths)}、无补种为空；"
+              f"本目录 ckpt 排前={len(pool.hist_paths)}（前 2 来自本目录）；"
+              f"采样分布 {dict(kinds)}")
+
+
+def test_opponent_pool_rand_anchor():
+    """E2（2026-09-12，v3 §3.9）：训练侧固定随机锚点进对手池（第 4 槽 rand_anchor）。
+
+    背景：A′ 取证坐实自对弈 RPS 循环（main 打冻结副本 0.85 / 打起点随机 0.13 / 打
+    全新随机 0.505）。E1 只加评估侧锚点（测量），E2 把锚点放进**训练分布**，让
+    "输给固定外部基准"成为可见负样本，打破循环漂移。校验：
+    ① 默认配比含 rand_anchor=0.1（DEFAULT_OPP_MIX 与 _OPP_MIX 同步，frozen 0.5→0.4）；
+    ② 有 hist 时采样分布 ≈ 名义（含 rand_anchor 槽，±35% 容差）；
+    ③ 锚点 side 权重 == _make_rand_anchor(...)（= E1 baseline_rand，同种子逐位一致）；
+    ④ 锚点/defend 局 record() 不崩（no-op，不污染 PFSP）；
+    ⑤ 无 hist 退化：按剩余概率归一化（frozen/defend/rand ≈ 0.571/0.286/0.143，
+        ±35%），且 defend 不再吃掉 hist 空间（旧实现实测 0.78，属缺陷修复）；
+    ⑥ 旧式三槽 mix（无 rand_anchor 键）兼容：rand 概率 0、sample 不崩。
+    """
+    import random, glob, tempfile, shutil, os
+    from collections import Counter
+    import torch
+    from rl.train_solo import (_OpponentPool, _make_rand_anchor, _OPP_MIX,
+                               RAND_ANCHOR_SEED)
+    from rl.config import TrainConfig, DEFAULT_OPP_MIX
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy
+    from rl.train_follower import FollowerOpponent
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    frozen_pol = FollowerPolicy(hidden=128, plan_dim=PLAN_DIM,
+                                belief_dim=len(BeliefInference(
+                                    opp_deck=env.deck1, n_particles=128,
+                                    seed=0).encode(None, None)))
+    frozen_side = FollowerOpponent(frozen_pol, env,
+                                   belief=BeliefInference(opp_deck=env.deck1),
+                                   deterministic=True)
+
+    # ① 默认配比
+    assert abs(DEFAULT_OPP_MIX["rand_anchor"] - 0.1) < 1e-9, DEFAULT_OPP_MIX
+    assert abs(DEFAULT_OPP_MIX["frozen"] - 0.4) < 1e-9, DEFAULT_OPP_MIX
+    assert abs(_OPP_MIX["rand_anchor"] - 0.1) < 1e-9, _OPP_MIX
+
+    bd = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
+                             seed=0).encode(None, None))
+    # ③ 参考锚点（= E1 baseline_rand 同种子构造）
+    ref = _make_rand_anchor(TrainConfig.resolve("economy"), bd, device="cpu")
+
+    # ②④ 有 hist 的分布 + record no-op
+    src_candidates = (sorted(glob.glob("runs/economy/solo_main_*.pt")) +
+                      sorted(glob.glob("../../runs/archive/*/solo_main_*.pt")))
+    if src_candidates:
+        with tempfile.TemporaryDirectory() as td:
+            os.makedirs(os.path.join(td, "economy"), exist_ok=True)
+            for src in src_candidates[::max(1, len(src_candidates) // 3)][:3]:
+                shutil.copy(src, os.path.join(td, "economy", os.path.basename(src)))
+            cfg = TrainConfig.resolve("economy")
+            cfg.out_dir = td
+            pool = _OpponentPool(cfg, env, frozen_side, random.Random(0), "cpu")
+            assert pool.rand_anchor_side is not None, "默认 mix 应构造锚点 side"
+            side_sd, ref_sd = pool._rand_anchor_pol.state_dict(), ref.state_dict()
+            assert all(torch.equal(side_sd[k], ref_sd[k]) for k in side_sd), \
+                "训练侧锚点与 E1 评估侧锚点（同种子）权重不一致"
+            kinds = Counter()
+            N = 3000
+            for _ in range(N):
+                kind, side, _hid = pool.sample()
+                kinds[kind] += 1
+                if kind == "rand_anchor":
+                    assert side is pool.rand_anchor_side, "锚点局应返回锚点 side"
+            mix = pool.mix
+            for k in ("hist", "defend", "rand_anchor"):
+                exp = N * float(mix[k])
+                assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, mix)
+            pool.record(1)   # 锚点/defend 局 record 不得崩（no-op）
+    else:
+        print("[SKIP] 有 hist 分布：无可用历史 ckpt（仅验证其余分支）")
+
+    # ⑤ 无 hist 退化（空目录）：归一化 + 旧 bug 修复
+    with tempfile.TemporaryDirectory() as td:
+        cfg = TrainConfig.resolve("economy")
+        cfg.out_dir = td
+        pool = _OpponentPool(cfg, env, frozen_side, random.Random(0), "cpu")
+        kinds = Counter()
+        N = 20000
+        for _ in range(N):
+            kind, _side, _hid = pool.sample()
+            kinds[kind] += 1
+        den = 1.0 - pool.mix["hist"]
+        for k, frac in (("frozen", pool.mix["frozen"] / den),
+                        ("defend", pool.mix["defend"] / den),
+                        ("rand_anchor", pool.mix.get("rand_anchor", 0) / den)):
+            exp = N * frac
+            assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, frac)
+        assert kinds["defend"] / N < 0.4, \
+            f"无 hist 退化仍把 hist 空间误分给 defend（旧 bug 0.78）: {kinds}"
+
+    # ⑥ 旧式三槽 mix 兼容
+    with tempfile.TemporaryDirectory() as td:
+        cfg = TrainConfig.resolve("economy")
+        cfg.out_dir = td
+        cfg.opp_mix = {"frozen": 0.5, "hist": 0.3, "defend": 0.2}
+        pool = _OpponentPool(cfg, env, frozen_side, random.Random(0), "cpu")
+        assert pool.rand_anchor_side is None, "无 rand_anchor 键不应构造锚点"
+        kinds = Counter()
+        N = 5000
+        for _ in range(N):
+            kind, _side, _hid = pool.sample()
+            kinds[kind] += 1
+        assert kinds["rand_anchor"] == 0, kinds
+        den_old = 1.0 - 0.3   # 无 hist 时按剩余概率归一化（frozen=0.5/0.7≈0.714）
+        assert abs(kinds["frozen"] / N - 0.5 / den_old) < 0.05, kinds
+
+    print(f"[PASS] E2 对手池：rand_anchor 槽默认 0.1（frozen 0.4）；"
+          f"有/无 hist 分布合规（seed={RAND_ANCHOR_SEED}）；"
+          f"锚点权重与 E1 逐位一致；旧式三槽 mix 兼容；无 hist 归一化修复")
+
+
+def test_enc_layernorm_gru_vitality():
+    """v3 P0-A 回归：`enc_ln` 必须让 GRU 解冻，并吸收 `enc_fc` 的量级漂移。
+
+    病理（修复前，在**训练后**的 ckpt 上实测）：`enc = relu(enc_fc(fused))` 的
+    L2 范数 ≈533（CNN 输出的常数分量 ≈468、跨帧 std 仅 1.06）→ GRUCell tanh
+    候选饱和（|n|≈0.994）→ h 跨帧 std ≈2.6e-5（数值恒定）→ value_head 恒输出
+    常数、EV 恒负；slot_head/cell_head 同样吃常数 h（策略网络开环）。
+
+    **重要事实（已实测）**：随机初始化时**并不饱和** —— 无 enc_ln 的 enc 范数
+    仅 ~0.5（hidden=64）。量级是**训练过程中被推大的**。所以本测试不用裸随机
+    网络当负对照，而是把 `enc_fc` 输出人为放大 300× 模拟训练后期的量级漂移
+    （enc 范数 54 → 203，GRU |n| 0.92 → 0.98）：这既是确定性复现，也正是
+    `enc_ln` 要吃掉的问题（LayerNorm 对正数缩放基本不变）。
+    """
+    import torch
+    import torch.nn as nn
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.plan_space import PLAN_DIM
+    from rl import diagnostics as diag
+
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    obs, _ = env.reset(seed=0)
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=32, seed=0)
+    bp = BeliefPlanner()
+    bd = len(belief.encode(None, None))
+    pol = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+
+    frames = []
+    hidden = None
+    for _ in range(64):
+        plan = bp.plan(env.battle, belief.state(), obs)
+        pv = plan.to_vector()
+        bt = belief.encode(obs, None)
+        frames.append((obs, bt, pv))
+        bundle, _lp, _v, hidden, _m = pol.act(obs, bt, pv, env.get_action_mask,
+                                              hidden=hidden, deterministic=True)
+        obs, _r, term, trunc, info = env.step(bundle)
+        belief.update(obs, info.get("opp_played"))
+        if term or trunc:
+            obs, _ = env.reset(seed=7)
+            belief.reset(env.deck1)
+            hidden = None
+
+    def _enc_norm():
+        with torch.no_grad():
+            return float(pol._encode(*frames[0]).norm().item())
+
+    # 1) 基准：enc_ln 生效 → GRU 有活力
+    n0, vit0 = _enc_norm(), diag.gru_vitality(pol, frames)
+    assert not diag.check_vitality(vit0), f"GRU 未解冻：{diag.check_vitality(vit0)}"
+    # 2) 量级漂移（enc_fc ×300，模拟训练后期）→ enc_ln 必须吸收掉，活力不变
+    with torch.no_grad():
+        pol.enc_fc.weight.mul_(300.0)
+        pol.enc_fc.bias.mul_(300.0)
+    n1, vit1 = _enc_norm(), diag.gru_vitality(pol, frames)
+    assert not diag.check_vitality(vit1), \
+        f"enc_ln 未能吸收量级漂移：{diag.check_vitality(vit1)}（vit={vit1}）"
+    # 注意：不是**完全**不变 —— LayerNorm 的 eps 在 x 被放大后相对更小，
+    # 实测 7.976 → 8.000（0.3%，因为 LN 输出范数 ≈ sqrt(hidden) 有上限）。
+    assert abs(n1 - n0) < 0.05 * max(1.0, n0), \
+        f"LayerNorm 后 enc 范数应基本不随缩放变：{n0} vs {n1}"
+    # 3) 负对照：去掉 enc_ln → 必须复现饱和（否则本测试没有保护力）
+    pol.enc_ln = nn.Identity()
+    n2, vit2 = _enc_norm(), diag.gru_vitality(pol, frames)
+    assert diag.check_vitality(vit2), f"负对照未复现饱和（测试无保护力）：{vit2}"
+    # 4) v3 P0-C 启动前检查：静态病因护栏（enc_ln 缺失 / 被 Identity 替换）
+    assert diag.check_policy_architecture(pol), "enc_ln=Identity 未被启动前检查拦截"
+    _fresh = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+    assert not diag.check_policy_architecture(_fresh), \
+        f"健康策略被启动前检查误报：{diag.check_policy_architecture(_fresh)}"
+    del _fresh.enc_ln
+    assert diag.check_policy_architecture(_fresh), "enc_ln 缺失未被启动前检查拦截"
+    # 5) v3 §2 验收第 3 行：value_std / 批内 R std 的门槛与告警必须生效
+    assert diag.THRESHOLDS["value_std_ratio"] == 0.3
+    assert diag.check_vitality({"h_std": 0.2, "n_abs": 0.5, "value_std_ratio": 0.5}) == []
+    assert diag.check_vitality({"h_std": 0.2, "n_abs": 0.5, "value_std_ratio": 0.01}), \
+        "value_std_ratio 低于门槛未报警（v3 §2 第 3 行仍不可判读）"
+    # 6) v3 P0-A 备选（第二轮）：grid_feat 分量归一化
+    #    20k 跑实测融合层尺度失衡：grid_feat ‖·‖=101 占 fused 的 98%、跨帧 std 仅 0.426
+    #    （v3 §3.7）。这里不拿"训练后 101"当测试（随机初始化时 CNN 输出很小、根本不复现
+    #    该量级——同 §3.5 的教训），而是验**归一化的尺度不变性**：CNN 输出被放大多少倍，
+    #    grid 分量的"每元素 RMS"都必须被 grid_ln 拉回 ~1。
+    pol3 = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+
+    def _comp_rms(p):
+        """用 forward hook 抓 enc_fc 的输入（= fused），按分量算每元素 RMS。"""
+        cap = {}
+
+        def _hk(_m, inp, _o):
+            cap.setdefault("f", inp[0].detach())
+        _h = p.enc_fc.register_forward_hook(_hk)
+        try:
+            p._encode(*frames[0])
+        finally:
+            _h.remove()
+        f = cap["f"][0]
+        g = p.cnn_out
+        parts = {"grid": f[:g], "hand": f[g:g + 40], "scalar": f[g + 40:g + 43],
+                 "plan": f[g + 43:g + 107], "belief": f[g + 107:]}
+        return {k: float(v.pow(2).mean().sqrt()) for k, v in parts.items()}
+
+    rms0 = _comp_rms(pol3)
+    assert 0.6 < rms0["grid"] < 1.4, f"grid_ln 未把 grid 每元素 RMS 归到 ~1：{rms0}"
+    with torch.no_grad():
+        for _p in pol3.cnn.parameters():
+            _p.mul_(300.0)      # CNN 输出 ×300（模拟训练后期的量级漂移）
+    rms1 = _comp_rms(pol3)
+    assert abs(rms1["grid"] - rms0["grid"]) < 0.05, \
+        f"grid_ln 未吸收 CNN 量级漂移：{rms0['grid']} vs {rms1['grid']}"
+    # 负对照：换回 Identity → 每元素尺度必须随 CNN 放大而放大（否则本测试无保护力）
+    pol3.grid_ln = nn.Identity()
+    rms2 = _comp_rms(pol3)
+    assert rms2["grid"] > 10 * rms0["grid"], \
+        f"去掉 grid_ln 后未复现尺度失衡（测试无保护力）：{rms2['grid']}"
+    # 7) 启动前检查必须覆盖两个归一化模块
+    assert diag.check_policy_architecture(pol3), "grid_ln=Identity 未被启动前检查拦截"
+    pol4 = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+    assert not diag.check_policy_architecture(pol4), \
+        f"健康策略被启动前检查误报：{diag.check_policy_architecture(pol4)}"
+    del pol4.grid_ln
+    assert diag.check_policy_architecture(pol4), "grid_ln 缺失未被启动前检查拦截"
+    print(f"[PASS] v3 P0-A：enc_ln 生效 —— enc 范数 {n0:.2f}（×300 后仍 {n1:.2f}）；"
+          f"h_std={vit0['h_std']:.4f}、n_abs={vit0['n_abs']:.4f}；"
+          f"去掉 enc_ln 后 enc={n2:.1f}、h_std={vit2['h_std']:.2e}、"
+          f"n_abs={vit2['n_abs']:.4f}（复现饱和）")
+    print(f"[PASS] v3 P0-A 备选：grid_ln 把 grid 每元素 RMS 归到 {rms0['grid']:.3f}"
+          f"（CNN ×300 后仍 {rms1['grid']:.3f}；去掉 grid_ln 后 {rms2['grid']:.3f}）；"
+          f"启动前检查 + value/R std 门槛已生效")
+
+
+def test_value_bypass():
+    """B'（2026-09-12）落地回归：value_bypass=True 时 value = value_head(enc)
+    （跳过 GRU），策略头仍走 GRU；checkpoint 元数据保存/恢复该标志；
+    显式覆盖与元数据不一致时告警（不静默）。
+
+    判别：
+    - 相同权重下 bypass 与 GRU 通路的 value 不同（enc ≠ gru(enc,0)）；
+    - bypass 通路 value 确定性一致，且 act()/value() 的 value 一致（语义贯穿）；
+    - save/load checkpoint 后 value_bypass 标志保留；
+    - load_checkpoint(..., value_bypass=...) 与元数据不一致 → 打印告警不崩。
+    """
+    import os
+    import tempfile
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy, save_checkpoint, load_checkpoint
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.plan_space import PLAN_DIM
+
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    obs, _ = env.reset(seed=0)
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=32, seed=0)
+    bp = BeliefPlanner()
+    bd = len(belief.encode(None, None))
+    plan = bp.plan(env.battle, belief.state(), obs)
+    pv = plan.to_vector()
+    bt = belief.encode(obs, None)
+
+    a = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd,
+                       value_bypass=False).to_device("cpu")
+    b = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd,
+                       value_bypass=True).to_device("cpu")
+    b.load_state_dict(a.state_dict())      # 同权重 → 对比只差 value 通路
+    assert not a.value_bypass and b.value_bypass
+
+    va = a.value(obs, bt, pv, hidden=None)
+    vb = b.value(obs, bt, pv, hidden=None)
+    assert abs(va - vb) > 1e-6, f"bypass 与 GRU 通路 value 意外相同: {va} vs {vb}"
+    assert b.value(obs, bt, pv, hidden=None) == vb, "bypass value 不确定（应逐位一致）"
+    # act() 的 value 必须与 value() 一致（rollout/PPO 重放同源）
+    _b, _lp, v_act, _h, _m = b.act(obs, bt, pv, env.get_action_mask, deterministic=True)
+    assert abs(v_act - vb) < 1e-6, f"act() value {v_act} != value() {vb}（bypass 未贯穿）"
+    # 诊断口径护栏（2026-09-12 实测踩过）：gru_vitality 的 value_std 必须走策略真实
+    # value 通路（bypass → value_head(enc)），不得硬编码 value_head(h)——否则
+    # value_std_ratio 这类主判据测的不是被训练的量。
+    import numpy as _np
+    from rl import diagnostics as _diag
+    frames = []
+    _hid = None
+    _obs = obs
+    for _t in range(12):
+        _plan = bp.plan(env.battle, belief.state(), _obs)
+        _pv2 = _plan.to_vector()
+        _bt2 = belief.encode(_obs, None)
+        frames.append((_obs, _bt2, _pv2))
+        _bd, _l, _v, _hid, _m2 = b.act(_obs, _bt2, _pv2, env.get_action_mask,
+                                       hidden=_hid, deterministic=True)
+        _obs, _r, _term, _trunc, _info = env.step(_bd)
+        belief.update(_obs, _info.get("opp_played"))
+        if _term or _trunc:
+            _obs, _ = env.reset(seed=11)
+            belief.reset(env.deck1)
+            _hid = None
+    vit_b = _diag.gru_vitality(b, frames)
+    vit_a = _diag.gru_vitality(a, frames)
+    with torch.no_grad():
+        vs_manual = [float(b.value_head(b._encode(o, t, p)).item())
+                     for (o, t, p) in frames]
+    assert abs(vit_b["value_std"] - float(_np.std(vs_manual))) < 1e-6, \
+        (f"gru_vitality 的 value_std 未走 bypass 通路：{vit_b['value_std']} vs "
+         f"{float(_np.std(vs_manual))}")
+    assert abs(vit_a["value_std"] - vit_b["value_std"]) > 1e-9, \
+        "非 bypass 与 bypass 的 value_std 意外相同（探针可能仍硬编码旧通路）"
+    # checkpoint 元数据往返
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "bp.pt")
+        save_checkpoint(b, p)
+        c = load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=bd)
+        assert c.value_bypass is True, "value_bypass 元数据未保存/恢复"
+        load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=bd, value_bypass=False)  # 告警不崩
+    print(f"[PASS] B' value_bypass：GRU 通路 {va:+.4f} vs bypass {vb:+.4f}"
+          f"（同权重不同通路）；元数据往返/告警正常")
+
+
+def test_stall_settlement_margin():
+    """C'（2026-09-12）早停低置信裁定降噪（纯函数层）：
+
+    - 皇冠不同 → 决定性 0/1（不受 margin 影响）；
+    - 皇冠相同 + 塔血%差 ≥ margin → 决定性 0/1（保留 2026-09 的"1-1 塔血差 1000+"
+      修复，只降噪不丢决定性信息）；
+    - 皇冠相同 + 塔血%差 < margin → None（记平局=失败，去掉掷硬币级裁定）；
+    - 实体信息缺失（None）→ None（退回平局，与 timeout_winner 同）。
+    """
+    from rl.run_league import settle_stall_from_counts, settle_stall
+
+    # 皇冠不同 → 决定性
+    assert settle_stall_from_counts(0, 1, 0.5, 0.5, 0.05) == 0   # p1 丢塔多 → p0 胜
+    assert settle_stall_from_counts(1, 0, 0.5, 0.5, 0.05) == 1   # p0 丢塔多 → p1 胜
+    # 皇冠相同 + 决定性细差（≥ margin）→ 保留胜负
+    assert settle_stall_from_counts(1, 1, 0.90, 0.50, 0.05) == 0
+    assert settle_stall_from_counts(1, 1, 0.40, 0.90, 0.05) == 1
+    # 皇冠相同 + 临界（margin 边界）→ 决定性（> margin 才算）
+    assert settle_stall_from_counts(1, 1, 0.50 + 0.05 + 1e-9, 0.50, 0.05) == 0
+    # 皇冠相同 + 低置信细差（< margin）→ None（平局=失败，降噪）
+    assert settle_stall_from_counts(1, 1, 0.52, 0.50, 0.05) is None
+    assert settle_stall_from_counts(1, 1, 0.499, 0.500, 0.05) is None
+    # 皇冠相同 + 完全相等 → None（与 timeout_winner 同）
+    assert settle_stall_from_counts(1, 1, 0.50, 0.50, 0.05) is None
+    # 实体信息缺失 → None
+    assert settle_stall_from_counts(1, 1, None, 0.50, 0.05) is None
+    assert settle_stall_from_counts(1, 1, None, None, 0.05) is None
+    assert settle_stall(None) is None
+    # margin=0 时退化为 timeout_winner 语义（仅 1e-9 容差保留）
+    assert settle_stall_from_counts(1, 1, 0.5000001, 0.5, 0.0) == 0
+    print("[PASS] C' 早停低置信裁定降噪：决定性情形保留、细差 < margin 记平局、边界正确")
+
+
+def test_value_independent_encoder():
+    """E'（2026-09-12）回归：独立价值编码器 + 非线性价值头。
+
+    判别：
+    - `value_independent=True` 时 value == `value_head_mlp(value_enc_ln(relu(value_enc_fc(fused))))`
+      （与内部实现逐位一致 → 通路确实是"自己的编码器 + MLP 头"，不是共享头）；
+    - 与共享/bypass 通路（同权重）不同 → 参数确实独立（策略前向不含价值模块）；
+    - 策略头仍走 GRU 隐状态（独立价值不改变策略语义：同权重下 act 的 bundle 与共享版一致）；
+    - ckpt 元数据保存/恢复 `value_independent`；显式覆盖不一致告警不崩；
+    - 诊断口径：`gru_vitality` 的 value_std 走独立通路（不再是硬编码旧通路）。
+    """
+    import numpy as np
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.plan_space import PLAN_DIM
+    from rl import diagnostics as diag
+
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    obs, _ = env.reset(seed=0)
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=32, seed=0)
+    bp = BeliefPlanner()
+    bd = len(belief.encode(None, None))
+    plan = bp.plan(env.battle, belief.state(), obs)
+    pv = plan.to_vector()
+    bt = belief.encode(obs, None)
+
+    shared = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+    indep = FollowerPolicy(hidden=64, plan_dim=PLAN_DIM, belief_dim=bd,
+                           value_independent=True).to_device("cpu")
+    assert indep.value_independent and not indep.value_bypass
+    # 共享权重（策略/编码器部分），价值模块保持各自初始化 → 隔离变量
+    missing = indep.load_state_dict(shared.state_dict(), strict=False)
+    assert all('value_enc' in k or 'value_head_mlp' in k for k in missing.missing_keys), \
+        f"独立价值模块未被视为新键：{missing.missing_keys}"
+    # ① 通路正确性：value 必须等于独立通路的显式计算
+    with torch.no_grad():
+        fused, _enc = indep._encode_parts(obs, bt, pv)
+        expected = float(indep.value_head_mlp(
+            indep.value_enc_ln(torch.relu(indep.value_enc_fc(fused)))).item())
+    got = indep.value(obs, bt, pv, hidden=None)
+    assert abs(got - expected) < 1e-6, f"独立价值通路不符：{got} vs {expected}"
+    # ② 与共享通路不同（参数独立）
+    assert abs(shared.value(obs, bt, pv, hidden=None) - got) > 1e-6, \
+        "independent 与 shared 的 value 意外相同（模块未独立）"
+    # ③ 策略语义不变：同权重下 act 的 bundle 必须一致（价值模块不影响策略）
+    b_s, lp_s, _, _, _ = shared.act(obs, bt, pv, env.get_action_mask, deterministic=True)
+    b_i, lp_i, _, _, _ = indep.act(obs, bt, pv, env.get_action_mask, deterministic=True)
+    assert lp_s == lp_i and len(b_s.sub_actions) == len(b_i.sub_actions), \
+        "独立价值模块改变了策略前向（不应影响 act 的 logprob/bundle）"
+    # ④ 元数据往返 + 不一致告警
+    import os
+    import tempfile
+    from rl.follower import save_checkpoint, load_checkpoint
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "indep.pt")
+        save_checkpoint(indep, p)
+        c = load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=bd)
+        assert c.value_independent is True, "value_independent 元数据未保存/恢复"
+        assert hasattr(c, "value_head_mlp"), "恢复后缺少独立价值头"
+        load_checkpoint(p, plan_dim=PLAN_DIM, belief_dim=bd, value_independent=False)  # 告警不崩
+    # ⑤ 诊断口径：gru_vitality 的 value_std 走独立通路
+    frames = []
+    _hid = None
+    _obs = obs
+    for _t in range(12):
+        _plan = bp.plan(env.battle, belief.state(), _obs)
+        _pv = _plan.to_vector()
+        _bt = belief.encode(_obs, None)
+        frames.append((_obs, _bt, _pv))
+        _bd2, _l2, _v2, _hid, _m2 = indep.act(_obs, _bt, _pv, env.get_action_mask,
+                                             hidden=_hid, deterministic=True)
+        _obs, _r2, _term2, _trunc2, _info2 = env.step(_bd2)
+        belief.update(_obs, _info2.get("opp_played"))
+        if _term2 or _trunc2:
+            _obs, _ = env.reset(seed=13)
+            belief.reset(env.deck1)
+            _hid = None
+    vit = diag.gru_vitality(indep, frames)
+    vs_manual = []
+    with torch.no_grad():
+        for (o, t, p) in frames:
+            _f, _e = indep._encode_parts(o, t, p)
+            vs_manual.append(float(indep._value_from(
+                _e, torch.zeros(1, indep.hidden_dim), _f).item()))
+    assert abs(vit["value_std"] - float(np.std(vs_manual))) < 1e-6, \
+        f"gru_vitality 未走独立价值通路：{vit['value_std']} vs {float(np.std(vs_manual))}"
+    print(f"[PASS] E' 独立价值编码器：通路一致（{got:+.4f}）、与共享通路不同、"
+          f"策略 logprob 不受影响、元数据/告警/诊断口径正常")
+
+
+
+def test_solo_rand_anchor():
+    """E1（2026-09-12，v3 §3.8.4 取证后）：固定随机锚点的确定性与警报线。
+
+    背景：自对弈无外部锚点会在策略循环里打转（main@20000 打冻结 0.85 / 打起点随机
+    0.13 / 打全新随机 0.505 = RPS 三角）。E1 给每个评估点加一组 "main vs 固定种子
+    随机策略" 对照量化绝对强度。本测试保证：
+    ① 同一种子构造两次 → 权重逐位一致（跨评估点/跨 run 可复现）；
+    ② 种子不同 → 权重不同（sanity）；
+    ③ RNG 保存/恢复后调用方随机性不受扰动（与训练序列共用 RNG 时安全）；
+    ④ `_rand_anchor_warns` 报警线：<0.35 报警、≥0.35 / None 不报警。
+    """
+    import torch
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    from rl import train_solo
+    from rl.belief import BeliefInference
+
+    bd = len(BeliefInference(opp_deck=list(train_solo.DEFAULT_SOLO_DECK),
+                             n_particles=32, seed=0).encode(None, None))
+
+    def make(seed):
+        rng = torch.get_rng_state()
+        torch.manual_seed(seed)
+        p = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+        torch.set_rng_state(rng)
+        return p
+
+    # ① 同种子 → 逐位一致
+    p1, p2 = make(train_solo.RAND_ANCHOR_SEED), make(train_solo.RAND_ANCHOR_SEED)
+    s1, s2 = p1.state_dict(), p2.state_dict()
+    assert all(torch.equal(s1[k], s2[k]) for k in s1), "同种子锚点权重不一致（不可复现）"
+    # ② 不同种子 → 不同
+    p3 = make(train_solo.RAND_ANCHOR_SEED + 1)
+    assert not torch.equal(p1.value_head.weight, p3.value_head.weight), \
+        "不同种子锚点权重应不同（sanity）"
+    # ③ RNG 恢复
+    rng_before = torch.get_rng_state()
+    make(12345)
+    assert torch.equal(torch.get_rng_state(), rng_before), "锚点构造扰动了调用方 RNG"
+    # ④ 报警线
+    warns = train_solo._rand_anchor_warns
+    assert warns(0.13) and warns(0.34) and not warns(0.35) \
+        and not warns(0.5) and not warns(None)
+    print(f"[PASS] E1 固定随机锚点：同种子逐位一致、异种子不同、RNG 无扰动、"
+          f"报警线 <{train_solo.RAND_ANCHOR_WARN_FLOOR} 生效")
 
 
 def main():
+    # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
+    from rl.run_league import _force_utf8_stdout
+    _force_utf8_stdout()
     test_action_bundle_same_tick()
     test_action_bundle_ability()
     test_bayes_filter()
@@ -3370,6 +4514,8 @@ def main():
     test_league_resume()
     test_league_replays()
     test_dashboard_replays()
+    test_deck_pool_factory()
+    test_dashboard_card_stats()
     test_battle_clone_fix()
     test_cuda_device_support()
     test_parallel_batch_equivalence()
@@ -3397,7 +4543,21 @@ def main():
     test_opponent_pool_mix()
     test_death_damage_scaling()
     test_vines_snare_fl_duration()
+    test_log_rolling_direction()
+    test_behavioral_metrics()
     test_mk_spawn_damage_and_iw_slow_fl()
+    test_tower_value_mult()
+    test_reward_tower_premium()
+    test_reward_tower_premium_rlenv_flow()
+    test_value_channel_norm_and_gnorm_split()
+    test_history_dedup_and_gates()
+    test_solo_rand_anchor()
+    test_opponent_pool_rand_anchor()
+    test_opponent_pool_mix_multi_dir()
+    test_enc_layernorm_gru_vitality()
+    test_value_bypass()
+    test_value_independent_encoder()
+    test_stall_settlement_margin()
     print("\nALL SELFTESTS PASSED")
 
 
