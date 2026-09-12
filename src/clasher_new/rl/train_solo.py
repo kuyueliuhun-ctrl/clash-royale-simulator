@@ -1213,6 +1213,17 @@ def run_solo(cfg, resume=False, record_replays=True):
             _r_chunks = [float(np.asarray(rs_all[idx]).std()) for idx in _splits]
             stats["r_std_batch"] = (
                 round(float(np.mean(_r_chunks)), 6) if _r_chunks else None)
+            # 2026-09-12 口径修正（F' 首跑发现）：门槛「value_std / R std > 0.3」的
+            # **分子必须与分母同窗口**。旧实现分子 value_std 来自 GRU 探针的**最近 96
+            # 帧**、分母 r_std_batch 来自 **整个评估窗口** 的回报 ⇒ 两个样本集，
+            # 比值不可判读（fprime_20k @2500 实测 value_std_ratio=0.0006 却 EV=+0.10，
+            # 而 EV>0 数学上要求 critic 不是常数 —— 两个数不可能同时为真）。
+            # 正确口径：直接用 last_ev_pairs（未缩放 value_head 输出）自身的 std。
+            # 探针口径的 value_std 保留（它是 GRU 活力的指标，另一个用途），
+            # 比值另存 value_std_ratio_probe 以免旧口径被误用。
+            stats["value_std_ev"] = round(float(vs_all.std()), 6)
+            stats["value_std_ratio"] = round(
+                float(vs_all.std() / (rs_all.std() + 1e-12)), 4)
         else:
             stats["explained_variance"] = None
             stats["explained_variance_batched"] = None
@@ -1229,12 +1240,16 @@ def run_solo(cfg, resume=False, record_replays=True):
                                ("value_std", "value_std")):
                 _val = _vit.get(_src)
                 stats[_dst] = round(float(_val), 6) if _val is not None else None
-            # v3 §2 第 3 行：value_head 输出 std / 批内 R std（分母来自上面的窗口口径）
+            # 探针口径的比值另存（**跨窗口、不可判读**，仅留档对照——见上面 2026-09-12
+            # 口径修正：分母来自评估窗口、分子来自最近 96 帧，两个样本集）。
             _vs, _rsb = stats.get("value_std"), stats.get("r_std_batch")
             if _vs is not None and _rsb:
-                stats["value_std_ratio"] = round(float(_vs) / float(_rsb), 4)
+                stats["value_std_ratio_probe"] = round(float(_vs) / float(_rsb), 4)
+            # 空缓冲（eval@0，尚未跑过训练步）不算不达标，只静默跳过。
+            # 门槛用的 value_std_ratio 是**修正后的同窗口口径**（ev_pairs），
+            # 不是上面那个跨窗口的 _probe 比值。
+            if stats.get("value_std_ratio") is not None:
                 _vit["value_std_ratio"] = stats["value_std_ratio"]
-            # 空缓冲（eval@0，尚未跑过训练步）不算不达标，只静默跳过
             _warns = _diag.check_vitality(_vit) if _vit else []
             # P0-C：告警落盘（旧实现只 print → 事后无法在 state/dashboard 追溯）
             stats["vitality_warns"] = _warns
