@@ -655,6 +655,44 @@ def main():
               f"   (train {ntrg} / test {nteg} 帧, {len(np.unique(EP))} 局)", flush=True)
         print(f"  => 逐帧 R2 - 分组 R2 = MLP {me - meg:+.4f} / 线性 {le - leg:+.4f}"
               "（该差就是时间泄漏的量级）", flush=True)
+
+        # —— 2026-09-12：**换标签**再探（都按局分组留出）——
+        # 问题：跨局不可预测到底是"表征不行"还是"逐帧 GAE 回报本身就是帧级噪声主导"。
+        # 终局帧的 R 恰等于终局奖励（终止步 next_val=0 => R_T = r_T），故"局结果"
+        # 可从 R 中取出：每局最后一个**终局**帧的 R 作该局结果，广播到该局所有帧。
+        # 若它的分组 R2 明显为正 => 状态能预测局结果、只是预测不了帧级回报
+        # => critic 该换标签（G' 候选）。
+        _last_idx = {}
+        for _i, (_g, _t) in enumerate(zip(EP, TERM)):
+            if _t:
+                _last_idx[int(_g)] = _i
+        if _last_idx:
+            _out = np.zeros(len(R), dtype=np.float64)
+            _has = np.zeros(len(R), dtype=bool)
+            for _i, _g in enumerate(EP):
+                _j = _last_idx.get(int(_g))
+                if _j is not None:
+                    _out[_i] = R[_j]
+                    _has[_i] = True
+            if _has.sum() > 100:
+                _Xo, _Ro, _Eo = X[_has], _out[_has], EP[_has]
+                _lo, _, _ = lin_probe(_Xo, _Ro, groups=_Eo)
+                _mo, _, _ = mlp_probe(_Xo, _Ro, groups=_Eo)
+                _mo_f, _, _ = mlp_probe(_Xo, _Ro)
+                print(f"[换标签：局结果广播] 分组 线性 R2 = {_lo:+.4f} / "
+                      f"MLP R2 = {_mo:+.4f}（逐帧口径 MLP = {_mo_f:+.4f}；"
+                      f"{len(np.unique(_Eo))} 局有终局帧 / 共 {len(np.unique(EP))} 局）",
+                      flush=True)
+            # 另一候选标签：局均回报（对每局所有帧广播局均值）
+            _ug = np.unique(EP)
+            _gm_all = np.asarray([R[EP == g].mean() for g in _ug])
+            _m2v = np.zeros(len(R), dtype=np.float64)
+            for _k, _g in enumerate(_ug):
+                _m2v[EP == _g] = _gm_all[_k]
+            _lm, _, _ = lin_probe(X, _m2v, groups=EP)
+            _mm, _, _ = mlp_probe(X, _m2v, groups=EP)
+            print(f"[换标签：局均回报广播] 分组 线性 R2 = {_lm:+.4f} / "
+                  f"MLP R2 = {_mm:+.4f}", flush=True)
         print(f"critic 对照 EV_global = {ev(V, R):+.4f}（critic 对同一批帧的解释力）",
               flush=True)
         print("解读：探针≈critic => 标签在该表征下就不可预测（偏训练侧数据）；"
