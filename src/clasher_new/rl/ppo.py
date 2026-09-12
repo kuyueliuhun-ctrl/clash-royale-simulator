@@ -389,6 +389,7 @@ class PPOTrainer:
             n_batches = len(batches)
             ev_v, ev_r = [], []
             r_acc, c_acc = 0.0, 0.0
+            w_ep = 0          # 本轮样本数（ratio/clip 必须除本轮，不能除全部轮次）
             for bi, idx in enumerate(batches):
                 pack = self._loss_pass(transitions, idx, advs, rets_np,
                                        coef, v_scale, reduction="mean")
@@ -403,6 +404,7 @@ class PPOTrainer:
                 w_tot += m
                 r_acc += pack["ratio_mean"] * m
                 c_acc += pack["clip_frac"] * m
+                w_ep += m
                 if ep == self.n_epochs - 1:
                     gnorm_sum += pack["grad_norm"]
                     gnorm_cnt += 1
@@ -413,8 +415,8 @@ class PPOTrainer:
                 ev_r = np.concatenate(ev_r) if ev_r else np.zeros(0, dtype=np.float32)
                 self.last_ev_pairs = (ev_v, ev_r)
                 ev_last = self.explained_variance(ev_v, ev_r)
-                ratio_last = r_acc / max(1, w_tot)
-                clip_last = c_acc / max(1, w_tot)
+                ratio_last = r_acc / max(1, w_ep)
+                clip_last = c_acc / max(1, w_ep)
         w = max(1, w_tot)
         out = {k: v / w for k, v in agg.items()}
         out["ratio_mean"] = ratio_last

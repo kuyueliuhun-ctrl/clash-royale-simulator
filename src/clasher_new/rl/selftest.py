@@ -4505,6 +4505,18 @@ def test_ppo_multi_epoch_minibatch():
     s1 = t1.update(trans)
     assert s1["grad_steps"] == 3, s1
 
+    # ⑥ 回归哨兵（F' 落地时抓到的第一个真 bug，2026-09-12）：ratio/clip 的**聚合**
+    # 必须只除**末轮**的样本数。当时写成"末轮累加 / 全部轮次累加"，4 轮跑出
+    # ratio_mean=0.2479（≈1/4）而逐小批其实全是 0.99 —— 一个"看起来像策略崩了"
+    # 的假警报。这里用 **lr=0.0**（参数逐位不动）做最锐的哨兵：ratio 只该有
+    # "批量前向 vs 逐步前向"的 float32 ULP 级偏差（实测 ~1.2e-7），
+    # 误除全部轮次时会读出 ≈1/n_epochs≈0.25（比容差大 2.5 万倍）。
+    tq = PPOTrainer(copy.deepcopy(pol), lr=0.0, n_epochs=4, minibatch_size=4,
+                    shuffle=True)
+    sq = tq.update(trans)
+    assert abs(sq["ratio_mean"] - 1.0) < 1e-5, sq
+    assert sq["clip_frac"] == 0.0, sq
+
     print(f"[PASS] F' PPO 更新预算：默认 1 次梯度步（ratio≡1/clip≡0，旧行为逐位保留）、"
           f"4 轮×小批 4 = {sm['grad_steps']} 次梯度步（划分可复现）、"
           f"同批 vraw {s0['value_loss_raw']:.3f}→{sm['value_loss_raw']:.3f}、"
