@@ -82,7 +82,16 @@ MODEL_REWARD_OVERRIDES = {
 #: 锚点永不参与训练/同步/PFSP，与 E1 评估侧锚点同权重。
 #: 兼容：旧式三槽 dict（无 rand_anchor 键）仍合法，rand_anchor 概率为 0。
 #: 想回旧行为：``opp_mix={"frozen":0.7,"hist":0.2,"defend":0.1}``。
-DEFAULT_OPP_MIX = {"frozen": 0.4, "hist": 0.3, "defend": 0.2, "rand_anchor": 0.1}
+#:
+#: 2026-09-13（D1，`docs/cycling_league_plan_2026-09-13.md`）：**frozen 0.4 → 0.1、
+#: hist 0.3 → 0.6**，rand_anchor 剂量刻意不变（E2 已测过 0.1 无效，留作 D2 剂量-反应）。
+#: 依据：① A′ 取证 + 本轮 F′ 复跑判读证明"末点崩塌"是 **cycling 相位**，而 `frozen`
+#: 是唯一与当前策略**同步演化**的对手（每 2000 步同步）= RPS 锁步的载体；
+#: ② 代码侦察发现 `hist_paths` 只在 `__init__` 扫一次 ⇒ `--fresh` 启动时全是外部旧 ckpt，
+#: **本 run 自己的历史快照从未进池**（"历史联赛"名不副实）——D1 同时给 hist 池加
+#: 动态刷新（`_OpponentPool.refresh_hist`）+ PFSP 门禁（`alpha` 0.05→0.20、
+#: 易胜对手 ×0.2 降权，见 `rl/pfsp.py`）。
+DEFAULT_OPP_MIX = {"frozen": 0.1, "hist": 0.6, "defend": 0.2, "rand_anchor": 0.1}
 
 
 @dataclass

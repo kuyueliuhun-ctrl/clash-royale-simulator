@@ -3998,8 +3998,11 @@ def test_opponent_pool_rand_anchor():
 
     # ① 默认配比
     assert abs(DEFAULT_OPP_MIX["rand_anchor"] - 0.1) < 1e-9, DEFAULT_OPP_MIX
-    assert abs(DEFAULT_OPP_MIX["frozen"] - 0.4) < 1e-9, DEFAULT_OPP_MIX
+    # D1（2026-09-13）：frozen 0.4 → 0.1、hist 0.3 → 0.6（去镜像化，见 cycling_league_plan）
+    assert abs(DEFAULT_OPP_MIX["frozen"] - 0.1) < 1e-9, DEFAULT_OPP_MIX
+    assert abs(DEFAULT_OPP_MIX["hist"] - 0.6) < 1e-9, DEFAULT_OPP_MIX
     assert abs(_OPP_MIX["rand_anchor"] - 0.1) < 1e-9, _OPP_MIX
+    assert dict(_OPP_MIX) == dict(DEFAULT_OPP_MIX), (_OPP_MIX, DEFAULT_OPP_MIX)
 
     bd = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                              seed=0).encode(None, None))
@@ -4052,8 +4055,12 @@ def test_opponent_pool_rand_anchor():
                         ("rand_anchor", pool.mix.get("rand_anchor", 0) / den)):
             exp = N * frac
             assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, frac)
-        assert kinds["defend"] / N < 0.4, \
-            f"无 hist 退化仍把 hist 空间误分给 defend（旧 bug 0.78）: {kinds}"
+        # 旧 bug 的指纹：hist 的概率空间被误分给 defend（实测 0.78，而宣称 0.286）。
+        # D1 后名义退化分布 = frozen 0.25 / defend 0.50 / rand_anchor 0.25（hist 0.6 退出后
+        # 按剩余槽位归一化）；旧的"吃掉 hist"实现会给出 defend 0.80 ⇒ 用 ±0.08 精确钉住
+        # 正确口径（比旧的绝对阈值 0.4 更强，且不再依赖 mix 的具体数值）。
+        assert abs(kinds["defend"] / N - pool.mix["defend"] / den) < 0.08, \
+            f"无 hist 退化把 hist 空间误分给 defend（旧 bug 实测 0.78）: {kinds}"
 
     # ⑥ 旧式三槽 mix 兼容
     with tempfile.TemporaryDirectory() as td:
@@ -4071,9 +4078,109 @@ def test_opponent_pool_rand_anchor():
         den_old = 1.0 - 0.3   # 无 hist 时按剩余概率归一化（frozen=0.5/0.7≈0.714）
         assert abs(kinds["frozen"] / N - 0.5 / den_old) < 0.05, kinds
 
-    print(f"[PASS] E2 对手池：rand_anchor 槽默认 0.1（frozen 0.4）；"
+    print(f"[PASS] E2 对手池：rand_anchor 槽默认 0.1（D1 后 frozen 0.1 / hist 0.6）；"
           f"有/无 hist 分布合规（seed={RAND_ANCHOR_SEED}）；"
           f"锚点权重与 E1 逐位一致；旧式三槽 mix 兼容；无 hist 归一化修复")
+
+
+def test_pfsp_gate_and_dynamic_hist():
+    """D1（2026-09-13，`docs/cycling_league_plan_2026-09-13.md`）回归。
+
+    三件必须可证伪的事：
+    ① **`rl/pfsp.py` 默认参数 = 旧行为逐位等价**（新参数都是 opt-in，兼容红线）；
+    ② `alpha`/门禁真的按语义生效（α=0.2 一局把 EMA 0.5→0.6；EMA 胜率 > gate_hi 的
+       ckpt 权重 ×gate_penalty；参数非法要报错）；
+    ③ `_OpponentPool` 走 D1 参数、且 `refresh_hist()` 把**本 run 新写的快照**纳入池，
+       同时**已入池 ckpt 的 PFSP id 保持不变**（旧实现用 `hist_<下标>`，池一增长就张冠李戴）。
+    """
+    import tempfile
+    from collections import Counter
+    from rl.pfsp import PFSP
+    from rl.train_solo import (_OpponentPool, _PFSP_ALPHA, _PFSP_GATE_HI,
+                               _PFSP_GATE_PENALTY)
+    from rl.config import TrainConfig, DEFAULT_OPP_MIX
+    from rl.env_wrapper import RLEnv
+    from rl.follower import FollowerPolicy, save_checkpoint
+    from rl.train_follower import FollowerOpponent
+    from rl.belief import BeliefInference
+    from rl.plan_space import PLAN_DIM
+
+    # ①② PFSP 语义（纯函数，不碰环境）
+    base = PFSP(beta=1.0, seed=0)                       # 旧行为
+    d1 = PFSP(beta=1.0, seed=0, alpha=_PFSP_ALPHA,
+              gate_hi=_PFSP_GATE_HI, gate_penalty=_PFSP_GATE_PENALTY)
+    ops = ["hard", "easy", "fresh"]
+    base.update_winrate("m", "hard", 0.0)               # 全败 → 高权重
+    base.update_winrate("m", "easy", 1.0)               # 全胜 → 低权重
+    d1.update_winrate("m", "hard", 0.0)
+    d1.update_winrate("m", "easy", 1.0)
+    wb, wd = base.weights("m", ops), d1.weights("m", ops)
+    # 旧行为（alpha=0.05）：0.5→0.475（全败）、0.5→0.525（全胜）；未采样 = 1.0
+    assert np.allclose(wb, [0.525, 0.475, 1.0]), wb
+    assert abs(wb[2] - 1.0) < 1e-12, wb                          # 未采样 = 乐观先验
+    assert abs(wd[0] - 0.6) < 1e-9, wd                           # 0.2 新息：0.5→0.4
+    # easy：EMA 0.5→0.6 < gate_hi=0.85 ⇒ 门禁尚未触发
+    assert abs(wd[1] - 0.4) < 1e-9, wd
+    assert abs(wd[2] - 1.0) < 1e-12, wd
+    for _ in range(6):
+        d1.update_winrate("m", "easy", 1.0)
+    wr_easy = d1.winrates[("m", "easy")]
+    assert wr_easy > _PFSP_GATE_HI, wr_easy
+    wd2 = d1.weights("m", ops)
+    assert abs(wd2[1] - (1.0 - wr_easy) ** 1.0 * _PFSP_GATE_PENALTY) < 1e-9, (wd2, wr_easy)
+    assert wd2[1] < (1.0 - wr_easy), "门禁必须真的降权"
+    # 未采样对手不受门禁影响（乐观先验保持探索）
+    assert abs(wd2[2] - 1.0) < 1e-12, wd2
+    # 参数校验
+    for bad in (dict(alpha=0.0), dict(alpha=1.5), dict(gate_penalty=1.5),
+                dict(gate_penalty=-0.1), dict(beta=-1.0)):
+        try:
+            PFSP(**bad)
+            raise AssertionError(f"非法参数未报错: {bad}")
+        except ValueError:
+            pass
+
+    # ③ 对手池接线 + 动态刷新
+    env = RLEnv(opponent=None, seed=0, card_level=11)
+    env.reset(seed=0)
+    bd = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
+                             seed=0).encode(None, None))
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+    with tempfile.TemporaryDirectory() as td:
+        cur, seed = os.path.join(td, "cur"), os.path.join(td, "seed")
+        os.makedirs(cur)
+        os.makedirs(seed)
+        for s in (0, 1000):
+            save_checkpoint(pol, os.path.join(seed, f"solo_main_{s}.pt"))
+        cfg = TrainConfig(name="cur", out_dir=td, hidden_dim=32)
+        opp = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+        side = FollowerOpponent(opp, env, belief=BeliefInference(
+            opp_deck=env.deck1, n_particles=128, seed=0), deterministic=True)
+        pool = _OpponentPool(cfg, env, side, random.Random(0), "cpu",
+                             hist_seed_dirs=[seed])
+        assert pool.mix == dict(DEFAULT_OPP_MIX), pool.mix
+        assert abs(pool.pfsp_alpha - _PFSP_ALPHA) < 1e-12, pool.pfsp_alpha
+        assert abs(pool._pfsp.gate_hi - _PFSP_GATE_HI) < 1e-12
+        assert abs(pool._pfsp.gate_penalty - _PFSP_GATE_PENALTY) < 1e-12
+        assert len(pool.hist_paths) == 2, pool.hist_paths
+        ids_before = dict(pool._hist_id)
+        kinds = Counter(pool.sample()[0] for _ in range(3000))
+        for k in ("hist", "defend", "rand_anchor", "frozen"):
+            exp = 3000 * float(pool.mix[k])
+            assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, pool.mix)
+
+        # 本 run 后来写出快照 → refresh_hist 必须纳入，且旧 id 不变
+        save_checkpoint(pol, os.path.join(cur, "solo_main_2000.pt"))
+        added = pool.refresh_hist(2000)
+        assert added == 1, added
+        assert os.path.join(cur, "solo_main_2000.pt") in pool.hist_paths, pool.hist_paths
+        assert all(pool._hist_id[p] == i for p, i in ids_before.items()), "旧 ckpt 的 id 变了"
+        assert pool.kind_counts["hist"] >= 1, pool.kind_counts
+        # 反向验证：旧实现（hist_<下标>）会在这里给出不同的 id 映射
+        assert pool._hist_id[os.path.join(cur, "solo_main_2000.pt")].startswith("hist_cur_")
+        print(f"[PASS] D1：PFSP 默认=旧行为、门禁降权（EMA {wr_easy:.3f} > "
+              f"{_PFSP_GATE_HI} → ×{_PFSP_GATE_PENALTY}）、池走 α={pool.pfsp_alpha}、"
+              f"refresh_hist 新增 {added} 且旧 id 稳定、分布 {dict(kinds)}")
 
 
 def test_enc_layernorm_gru_vitality():
@@ -4671,6 +4778,7 @@ def main():
     test_solo_rand_anchor()
     test_opponent_pool_rand_anchor()
     test_opponent_pool_mix_multi_dir()
+    test_pfsp_gate_and_dynamic_hist()
     test_enc_layernorm_gru_vitality()
     test_value_bypass()
     test_value_independent_encoder()

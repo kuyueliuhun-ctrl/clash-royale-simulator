@@ -1,0 +1,42 @@
+[solo] 单人自对弈 配置 'smoke_d1' -> runs\smoke_d1 (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=10, n_eval_games=4, eval_workers=4, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 2000 步重扫本 run 目录）
+[solo] eval@0: 胜率 1.000±0.000 (4W/0L/0D, 4局) mean_reward=26.503 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.250±0.216 (1W/3L/0D)
+[solo]   vs baseline_prev: 胜率 0.000±0.000 (0W/4L/0D)
+[solo]   vs baseline_rand: 胜率 0.500±0.250 (2W/2L/0D)
+[solo] 启动耗时分解: torch+CUDA init=0.0s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=1.1s | eval@0 4局=51.3s (并行worker=4) | 合计(A→B)=52.5s
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 n=128
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 n=128
+[solo step 699] policy=-0.0179 value=0.0805 vraw=10.62 EVb=-0.621 EVin=-0.081 entropy=0.7896 | deploy=11.7% bundle=0.12 ratio=1.032 clip=14.1% gs=16 adv=+10.856±19.709 gnorm=1.35 n=128
+[solo step 700] policy=0.0675 value=0.0063 vraw=0.80 EVb=-0.289 EVin=-0.235 entropy=0.4913 | deploy=7.8% bundle=0.08 ratio=0.974 clip=6.2% gs=16 adv=-6.404±2.931 gnorm=0.55 n=128
+[solo step 701] policy=0.0772 value=0.0136 vraw=1.88 EVb=-1.830 EVin=-1.282 entropy=0.6917 | deploy=10.9% bundle=0.11 ratio=0.939 clip=16.4% gs=16 adv=-12.150±4.822 gnorm=0.31 n=128
+[solo step 1059] policy=0.0209 value=0.0023 vraw=0.29 EVb=-0.839 EVin=+0.124 entropy=0.7810 | deploy=10.9% bundle=0.12 ratio=0.968 clip=14.1% gs=16 adv=-4.254±6.088 gnorm=0.19 n=128
+[solo step 1060] policy=-0.0746 value=0.0042 vraw=0.45 EVb=-2.935 EVin=-1.111 entropy=0.4449 | deploy=7.0% bundle=0.07 ratio=1.046 clip=10.2% gs=16 adv=+4.393±1.865 gnorm=0.20 n=128
+[solo step 1061] policy=-0.0881 value=0.0280 vraw=2.82 EVb=-6.658 EVin=-3.860 entropy=0.7895 | deploy=12.5% bundle=0.12 ratio=1.053 clip=11.7% gs=16 adv=+11.601±4.119 gnorm=1.03 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1221] policy=-0.0463 value=0.0032 vraw=0.29 EVb=-10.235 EVin=-0.050 entropy=0.6848 | deploy=10.9% bundle=0.11 ratio=1.055 clip=11.7% gs=16 adv=+4.964±3.396 gnorm=0.12 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_100000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1465] policy=-0.0254 value=0.0014 vraw=0.12 EVb=-12.318 EVin=+0.038 entropy=0.5396 | deploy=8.6% bundle=0.09 ratio=1.026 clip=10.9% gs=16 adv=+2.607±3.282 gnorm=0.03 | p_gnorm=0.5841 v_gnorm=0.1034 v/p=0.18 scale=9.051 n=128
+[solo step 1466] policy=-0.0258 value=0.0150 vraw=1.20 EVb=-3.635 EVin=-0.130 entropy=0.4390 | deploy=7.0% bundle=0.07 ratio=1.012 clip=4.7% gs=16 adv=+4.463±5.453 gnorm=0.43 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1827] policy=-0.0209 value=0.0355 vraw=3.06 EVb=-2.619 EVin=-0.093 entropy=0.6043 | deploy=8.6% bundle=0.09 ratio=1.011 clip=5.5% gs=16 adv=+6.798±10.332 gnorm=0.86 n=128
+[solo step 1828] policy=0.0735 value=0.0101 vraw=0.80 EVb=-18.146 EVin=-2.038 entropy=0.5047 | deploy=7.8% bundle=0.08 ratio=0.972 clip=7.0% gs=16 adv=-3.228±1.355 gnorm=1.05 n=128
+[solo step 1829] policy=0.0880 value=0.0037 vraw=0.28 EVb=-1.665 EVin=+0.003 entropy=0.8480 | deploy=12.5% bundle=0.12 ratio=0.928 clip=19.5% gs=16 adv=-6.697±2.296 gnorm=1.16 n=128
+[solo] 冻结副本已同步 @step 2000
+[solo] 对手池刷新 @step 2000: hist ckpts=12（本目录 1，新增 3） | 累计对手局 {'defend': 2, 'hist': 4}
+[solo step 2186] policy=0.0299 value=0.0057 vraw=0.42 EVb=-0.549 EVin=-0.049 entropy=0.6473 | deploy=9.4% bundle=0.10 ratio=0.961 clip=10.9% gs=16 adv=-5.515±5.709 gnorm=0.23 n=128
+[solo step 2187] policy=0.0453 value=0.0107 vraw=0.82 EVb=-1.185 EVin=-0.043 entropy=0.4372 | deploy=7.0% bundle=0.07 ratio=0.972 clip=9.4% gs=16 adv=-6.736±4.571 gnorm=0.17 n=128
+[solo step 2188] policy=0.1351 value=0.0221 vraw=1.97 EVb=-13.973 EVin=-3.126 entropy=0.8774 | deploy=14.1% bundle=0.14 ratio=0.940 clip=14.1% gs=16 adv=-14.538±3.313 gnorm=1.15 n=128
+[solo step 2359] policy=-0.0347 value=0.0703 vraw=6.22 EVb=-0.265 EVin=-1.047 entropy=0.5853 | deploy=9.4% bundle=0.09 ratio=1.022 clip=7.0% gs=16 adv=+11.110±10.072 gnorm=1.34 n=128
+[solo] ⚠️ GRU 活力不达标 @step 2400: h 跨帧 std=4.68e-02 ≤ 0.05（隐状态被冻住，GRU 未解冻）
+[gate] WARN @step 2400: engagement_rate=0.000 不满足 >= 3.400（50%×起点(6.8)；只报警，不中断训练）
+[solo] eval@2400: 胜率 0.500±0.250 (2W/2L/0D, 4局) mean_reward=-2.221 EV=0.3813（池化） EVb=0.3766 h_std=4.68e-02 n_abs=0.514056 vstd/rstd=0.5026 累计局数=8
+[solo]   vs baseline0: 胜率 0.250±0.216 (1W/3L/0D)
+[solo]   vs baseline_prev: 胜率 0.250±0.216 (1W/3L/0D)
+[solo]   vs baseline_rand: 胜率 0.250±0.216 (1W/3L/0D)
+[solo] ⚠️ 绝对强度警报 @step 2400: vs 固定随机锚点 胜率=0.250 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] 训练循环耗时 137.0s
+[done] solo 'smoke_d1' 完成，产物在 runs\smoke_d1 （solo_state.json 供 dashboard --solo 读取）

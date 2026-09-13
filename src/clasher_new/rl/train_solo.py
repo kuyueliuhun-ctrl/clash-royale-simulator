@@ -135,13 +135,23 @@ _SOLO_PROPHET_PROB = 0.3
 #   hist    历史 checkpoint PFSP 采样（自博弈多样性，会惩罚过时策略的漏洞）；
 #   defend  真防守脚本（SelfDefenderPolicy：script_defender 反制 + 低频缓出）——
 #           单边推进在它面前讨不到便宜 → 单边策略直接亏塔损奖励。
-#: 训练局对手构成：frozen 0.4 / hist 0.3 / defend 0.2 / rand_anchor 0.1
-#: （E2，2026-09-12：rand_anchor = 固定随机锚点进训练分布，打破自对弈 RPS 循环；
-#:  frozen 仍是主力避免 curriculum 断裂）
-_OPP_MIX = {"frozen": 0.4, "hist": 0.3, "defend": 0.2, "rand_anchor": 0.1}
+#: 训练局对手构成：frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1
+#: （E2，2026-09-12：rand_anchor = 固定随机锚点进训练分布，打破自对弈 RPS 循环）
+#: （D1，2026-09-13，`docs/cycling_league_plan_2026-09-13.md`：frozen 0.4→0.1、
+#:  hist 0.3→0.6。理由：`frozen` 是唯一与当前策略**同步演化**的对手（每 2000 步同步）
+#:  = RPS 锁步的载体；hist 是慢变的历史分布，追逐它拿不到"只赢近亲"的快钱。
+#:  rand_anchor 剂量**刻意不变**（E2 已测 0.1 无效 ⇒ 留给 D2 做剂量-反应）。
+#:  注意：配置真源是 `config.DEFAULT_OPP_MIX`，本常量只是 cfg 缺失时的兜底，两处须同步。）
+_OPP_MIX = {"frozen": 0.1, "hist": 0.6, "defend": 0.2, "rand_anchor": 0.1}
 #: hist 采样池：从磁盘 checkpoint 目录收集 solo_main_<step>.pt（最多保留 12 个，
 #: 按步数均匀抽样——几百个文件全加载内存吃不消）
 _HIST_POOL_MAX = 12
+#: D1：PFSP 门禁参数（训练侧显式传入；`rl/pfsp.py` 的默认值仍是旧行为）。
+#: alpha 0.05→0.20：20k run ≈64 局、hist 12 ckpt ⇒ 每 ckpt ≈1.5 局，旧 EMA 几乎不动。
+#: gate：EMA 胜率 > 0.85 的 ckpt（"已能碾压的旧自己"）权重 ×0.2，把预算让给有信息量的对手。
+_PFSP_ALPHA = 0.20
+_PFSP_GATE_HI = 0.85
+_PFSP_GATE_PENALTY = 0.2
 
 
 def solo_env(cfg, seed, deck0=None, deck1=None):
@@ -342,13 +352,22 @@ class _OpponentPool:
         self.mix = dict(getattr(cfg, "opp_mix", None) or _OPP_MIX)
         self.hist_seed_dirs = seed_dirs
         self.hist_paths = _collect_hist_ckpts(cfg.folder(), extra_dirs=seed_dirs)
-        self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11)
-        self._hist_id = {p: f"hist_{i}" for i, p in enumerate(self.hist_paths)}
+        # D1：PFSP 门禁参数（缺省参数 = 旧行为；训练侧显式开启，见 _PFSP_* 常量）
+        self.pfsp_alpha = float(getattr(cfg, "pfsp_alpha", None) or _PFSP_ALPHA)
+        self.pfsp_gate_hi = float(getattr(cfg, "pfsp_gate_hi", None) or _PFSP_GATE_HI)
+        self.pfsp_gate_penalty = float(getattr(cfg, "pfsp_gate_penalty", None)
+                                       or _PFSP_GATE_PENALTY)
+        self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11, alpha=self.pfsp_alpha,
+                           gate_hi=self.pfsp_gate_hi,
+                           gate_penalty=self.pfsp_gate_penalty)
+        self._reindex_hist()
         self._hist_policy = None             # 惰性建（需要 belief_dim/hidden_dim）
         self._hist_side = None
         self._loaded_path = None
         self._last_kind = None
         self._last_hist_id = None
+        #: D1：本 run 累计各对手类型的局数（判读用的"实际配比"指纹）。
+        self.kind_counts = {}
         # E2：训练侧固定随机锚点（权重与 E1 baseline_rand 逐位一致）。
         # belief_dim 口径与 _ensure_hist 相同（opp_deck=env.deck1, n_particles=128）。
         self.rand_anchor_side = None
@@ -376,6 +395,43 @@ class _OpponentPool:
                   f"退化为 frozen={self.mix['frozen']/_den:.3f} "
                   f"/ defend={self.mix['defend']/_den:.3f} "
                   f"/ rand_anchor={_ra/_den:.3f}", flush=True)
+        print(f"[solo] PFSP 门禁（D1）: alpha={self.pfsp_alpha} "
+              f"gate_hi={self.pfsp_gate_hi} gate_penalty={self.pfsp_gate_penalty}"
+              f"（hist 池每 {getattr(cfg, 'solo_copy_every', 0)} 步重扫本 run 目录）",
+              flush=True)
+
+    def _reindex_hist(self):
+        """D1：把 hist 池映射到**稳定 id**（父目录名 + 文件名），供 PFSP 统计跨刷新保留。
+
+        旧实现用 `hist_<下标>` —— 池一旦动态增长（新快照进池），下标与 ckpt 的对应关系
+        就会错位，PFSP 胜率会被张冠李戴。用文件名做 id 则在刷新前后指向同一个 ckpt。
+        """
+        self._hist_id = {
+            p: "hist_" + os.path.basename(os.path.dirname(p)) + "_"
+               + os.path.basename(p)[len("solo_main_"):-len(".pt")]
+            for p in self.hist_paths}
+
+    def refresh_hist(self, step=None):
+        """D1：重扫磁盘，把本 run 自己的新快照纳入 hist 池（原来只在 __init__ 扫一次，
+        `--fresh` 时本目录为空 ⇒ 整个 run 的 hist 槽全是外部旧 ckpt）。
+
+        返回新增 ckpt 数。父目录优先、上限 _HIST_POOL_MAX 的选择逻辑在
+        `_collect_hist_ckpts` 内（本目录 ckpt 排前）。
+        """
+        old = set(self.hist_paths)
+        paths = _collect_hist_ckpts(self.cfg.folder(), extra_dirs=self.hist_seed_dirs)
+        added = [p for p in paths if p not in old]
+        if not added and len(paths) == len(self.hist_paths):
+            return 0
+        self.hist_paths = paths
+        self._reindex_hist()
+        own = sum(1 for p in paths
+                  if os.path.dirname(p) == os.path.abspath(self.cfg.folder())
+                  or os.path.dirname(p) == self.cfg.folder())
+        _print_safe(f"[solo] 对手池刷新 @step {step}: hist ckpts={len(paths)}"
+                    f"（本目录 {own}，新增 {len(added)}）"
+                    f" | 累计对手局 {dict(sorted(self.kind_counts.items()))}")
+        return len(added)
 
     def sample(self):
         """为本局选对手：返回 (kind, opponent, hist_id_or_None)。
@@ -385,6 +441,11 @@ class _OpponentPool:
         缺陷：无 hist 时 `r < hist+defend` 未受 hist 保护，把 hist 空间误分给 defend
         （实测空目录 defend 0.78 / frozen 0.22，而打印宣称 0.286/0.714）。
         """
+        kind, side, hid = self._sample_kind()
+        self.kind_counts[kind] = self.kind_counts.get(kind, 0) + 1
+        return kind, side, hid
+
+    def _sample_kind(self):
         r = self.rng.random()
         mix = self.mix
         r_anchor = float(mix.get("rand_anchor", 0) or 0)
@@ -1528,6 +1589,10 @@ def run_solo(cfg, resume=False, record_replays=True):
             _sync_frozen_copy(main, opp)
             frozen_step = step
             print(f"[solo] 冻结副本已同步 @step {step}", flush=True)
+            # D1：同步冻结副本的同时重扫本 run 目录 —— 让"历史自身"进 hist 联赛池
+            # （原来只在 __init__ 扫一次，--fresh 时本目录为空 ⇒ 全程只用外部旧 ckpt）。
+            if opp_pool is not None:
+                opp_pool.refresh_hist(step)
 
     print(f"[solo] 训练循环耗时 {time.monotonic() - _t0:.1f}s", flush=True)
     save_checkpoint(main, cfg.solo_main_path())
