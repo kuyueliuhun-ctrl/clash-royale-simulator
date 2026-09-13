@@ -147,8 +147,9 @@ src/clasher_new/
 
 start_rl.bat          # 训练统一启动器（solo / run / flow + 仪表盘）
 start_training.bat    # 环境安装 + 启动训练
-docs/                 # 224 个文件：策划/规格/报告 + 原始采集证据
-AGENTS.md             # ★ 跨会话决策与方案存档（改方案前先读）
+docs/                 # 314 个条目（41 个 .md）：策划/规格/报告 + 原始采集证据
+AGENTS.md             # ★ 红线与结论索引（改方案前先读；历史全文在 docs/agents_archive_2026-09.md）
+docs/plan_master.md   # ★ 所有计划的整合视图（现状 / 优先级 / 判据设计）
 ```
 
 ## 模拟器覆盖
@@ -160,12 +161,32 @@ AGENTS.md             # ★ 跨会话决策与方案存档（改方案前先读�
 
 完整覆盖矩阵与逐卡状态见 **[`docs/card_coverage.md`](docs/card_coverage.md)**。
 
-## 训练现状与已知问题
+## 训练现状与已知问题（2026-09-13）
 
-当前模型处在**行为质量爬坡期**：响应率、接敌率等行为指标在改善，但胜率长期处在平台期；已定位到若干机制层问题（评论家损失主导更新、指标分辨率不足、部分意图冷启动不可达等），完整取证与整改计划见：
+**一句话**：模拟器与训练闭环已经跑通，**"训练不崩"已解决**（对手分布改造 D1 生效并扛住 4× 训练量），
+**"能不能变强"未解决**（上限没动、价值网络仍未拟合），行为质量在爬坡但"不会攒费"的病理没修完。
 
-- [`docs/training_audit_2026-09-11.md`](docs/training_audit_2026-09-11.md) —— 训练体系审计（训练问题 / 评判指标 / 步数预算 / 参数量）；
-- [`docs/rl_training_fix_plan_v1.md`](docs/rl_training_fix_plan_v1.md) —— 整改计划（P0→P2 + 门禁 + 单变量 A/B 协议）。
+| 方向 | 状态 | 结论 |
+|---|---|---|
+| 训练不崩 | ✅ 已解决 | D1（对手分布去镜像化 + 动态历史自身联赛 + PFSP 门禁）：20k 三跑最差锚点 **0.125/0.200/0.250** vs 无干预 **0.000/0.000/0.025**（区间不相交）；100k 长跑 **P1 通过** |
+| 能否变强（上限） | ❌ 未解决 | 100k 的最差锚点 0.237 **落在 20k 区间 [0.125,0.250] 内** ⇒ 与 20k 无统计差别；cycling 仍在转 |
+| 价值网络（critic） | ⛔ 已闭合 | 根因（GRU 输入饱和）已修且 100k 耐久，但 EV 仍 ≈0/负、`vstd/rstd` ≈0.001；**加量（100k）与四代架构都没救回来** ⇒ 停止投入 |
+| 训练量 | ❌ 被否证 | 20k ≈ 55~80 局、100k ≈ 374 局，对标 Atari PPO 的 10M~50M 帧只有 1/500~1/2500 ⇒ "20k 没提升"在样本量上就是必然 |
+| 测量与评估口径 | ✅ 已解决 | EV 口径三修、固定随机锚点仪器、相对门禁、**评估节奏 C 方案**（密锚点 + 稀全块）；并立下"判据基线必须脚本复算"的纪律 |
+| 行为质量 | ⚠️ 部分 | 防守响应率 38%→**62%**、接敌率 7.4%→**10.5%**、单边堆牌 46%→9.5%；但**攒费链死锁已定位、修复未实现** |
+
+**判读方法学（本项目的特点）**：不看单个胜率数字，而是 **replay 逐帧取证 + 预注册判据 + 脚手架化判读工具**。
+判读脚本已入库：`scripts/judge_anchor_blocks.py`（锚点分块判据，基线由磁盘复算）、
+`scripts/summarize_solo_run.py`（长 run 诊断汇总）、`scripts/diag_*.py`（critic/表征诊断）。
+
+**去哪看细节**：
+
+- [`docs/plan_master.md`](docs/plan_master.md) —— **所有计划的整合视图**（哪条路走通了 / 被否证 / 未决 + 优先级与判据设计）
+- [`AGENTS.md`](AGENTS.md) —— **红线与结论索引**（改方案/写计划前必读，编号可引用：R1-R12 / C1-C10 / X1-X9 / O1-O5）
+- [`docs/d1_long_100k_verdict_2026-09-13.md`](docs/d1_long_100k_verdict_2026-09-13.md) —— 最近一次长跑判读
+- [`docs/training_audit_2026-09-11.md`](docs/training_audit_2026-09-11.md) —— 训练体系审计（四问）
+- [`docs/rl_training_fix_plan_v3.md`](docs/rl_training_fix_plan_v3.md) —— **当前生效**的整改计划（v1/v2 已被它修订或推翻）
+- [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) —— 历史决策全文存档（过程细节/推理链）
 
 ## 文档导航
 
@@ -174,9 +195,12 @@ AGENTS.md             # ★ 跨会话决策与方案存档（改方案前先读�
 | 理解模拟器 / 跑起来 | 本文件 |
 | 启动训练 | `start_rl.bat`、`start_training.bat` |
 | RL 算法代码导读 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
-| 跨会话方案决策（改方案前**先读**） | [`AGENTS.md`](AGENTS.md) |
+| **所有计划的整合视图**（现状 / 优先级 / 判据设计） | [`docs/plan_master.md`](docs/plan_master.md) |
+| 跨会话红线与决策索引（改方案前**先读**） | [`AGENTS.md`](AGENTS.md) |
+| 历史决策全文（过程细节） | [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) |
 | 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |
-| 自检 / 回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
+| 自检 / 回归 | `src/clasher_new/rl/selftest.py`（97 项）、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
+| 判读 / 诊断工具 | `scripts/judge_anchor_blocks.py`、`scripts/summarize_solo_run.py`、`scripts/diag_*.py` |
 
 ## 参与
 

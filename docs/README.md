@@ -10,14 +10,18 @@
 | 理解模拟器/跑起来 | 根目录 `README.md`（中文）/ `readme_en.md` |
 | 启动训练 | `start_rl.bat`（solo/run/flow 三模式 + 仪表盘）、`start_training.bat` |
 | 训练算法代码导读 | `src/clasher_new/rl/README.md`（模块表 + 训练入口命令） |
-| 跨会话方案决策（先读这个再动方案） | 根目录 `AGENTS.md` |
+| **所有计划的整合视图**（哪条路走通了/被否证/未决 + 优先级与判据设计） | `plan_master.md` |
+| 跨会话红线与结论索引（先读这个再动方案） | 根目录 `AGENTS.md`（编号可引用：R/C/X/O） |
+| 历史决策全文（过程细节与推理链） | `agents_archive_2026-09.md` |
 | 自检/回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m1..m6*.py`、`scripts/batch_smoke.py` |
 
 ## 1. Curated 文档（策划/规格/报告，已定稿可引用）
 
 | 文档 | 内容 | 关联源文件/数据 |
 |---|---|---|
-| `../AGENTS.md` | **项目决策存档**：AI 工具谱系、LLM 顾问机制、MCTS 路线、外置工具①②③④、条件威胁评估、行为病理诊断 | `threat_calc.py` `simulate_exchange.py` `spell_module.py` `rl/plan_space.py` `rl/pfsp.py` |
+| `../AGENTS.md` | **红线与结论索引**（2026-09-13 重构）：12 条红线（R）+ 10 条已确证（C）+ 9 条已否证（X）+ 5 条未决（O）+ 计划台账 + run 台账；条目编号可引用 | 全部 `rl/` 与 `scripts/`；过程细节见 `agents_archive_2026-09.md` |
+| `plan_master.md` | **计划总纲（所有计划的整合视图）**：决策地图（8 个方向的通/否/未决）、阶段结论、13 份计划的谱系台账、**当前优先级 P0-P4（含判据设计要点与成本）**、纪律清单 | `rl_training_fix_plan_v1/v2/v3.md`、`rl_review_fix_plan.md`、`rl_reward_plan_v2.md`、`rl_plan_design_v1.md`、`ai_training_plan.md`、`P0-mechanics-plan.md`、`mcts_design.md` |
+| `agents_archive_2026-09.md` | **历史决策全文存档**（旧 `AGENTS.md` 逐字冻结，100,068 B，sha1 见文头）：含全部过程叙述、证据链、逐点判读表与已过期中间结论 | 只读；新结论写 `../AGENTS.md` |
 | `P0-mechanics-plan.md` | P0 游戏机制全面补全计划（族1-8）与进度 | `battle.py` `card_mechanics.py`；回归 `scripts/test_m2.py` `scripts/batch_smoke.py` |
 | `card_coverage.md` | 卡牌覆盖矩阵（148 条快照、75 张 implemented 口径） | `card_utils.py` `gamedata.json` `cards_stats_*.json`；`scripts/coverage.py`；`card_registry.json` `batch_smoke_report.json` |
 | `review_needed.md` | 人工评审队列（L1 结论与剩余未知） | 同上 |
@@ -70,6 +74,7 @@
 | `_evo_*.txt` / `_<卡名>_evo.txt` | 觉醒卡页 | `evo_2025_new7.md`、`evo_hook_gap_matrix.md` |
 | `_fandom_b06_*` | 批次6 原始页 + wikitext | 勘误批报告 |
 | `.cdp*.js` | CDP 抓取/解析脚本（页面级临时件） | `_elite_fandom_report.md` |
+| `_digest_v3_for_master_plan.md`、`_digest_three_plans.md`、`_digest_five_plans_2026-09-13.md`、`_five_reports_merged_2026-09-13.md` | 2026-09-13 计划整合时**并行子智能体产出的原始 digest**（各自读一组计划文档后的结构化压缩），只读证据 | `plan_master.md` §6（出处） |
 | `re/fandom_check/`、`re/fandom_stats/`（在 `.gitignore` 的 `re/` 内，不入库） | 批次校验报告与结构化 JSON | 勘误批/觉醒批 |
 
 ## 4. 数据文件（docs/ 下，curated 可引用）
