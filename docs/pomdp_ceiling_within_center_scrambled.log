@@ -1,0 +1,13 @@
+=== POMDP ceiling probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames=30000 device=cuda ===
+[target] 目标已改为局内中心化回报（y−ȳ_ep）
+[scramble-X] 已按『局内位置相同、跨局置换』打散状态（时钟保留）
+[split] train=20278 val=4629 test=8075 (episodes 90/22/37)
+[var] Var(R)=58.1736  between(局均值)=0.0000 within(局内)=58.1736  within/total=1.0000
+[critic] EV_pooled=-0.0003  EV_within=+0.0000  EV_within_raw=-0.0003  std(V)/std(R)=0.0000
+[critic] EV_win128_med=-0.8325 (n=186)
+[fit] set=A dim=6887（原始 8648，丢弃训练集零方差列 1761）
+       ridge a=1e+08    val_EV=-0.0000 val_EV_within=-0.0000 | EV_pooled=+0.0001 EV_within=+0.0001 EV_within_raw=+0.0001 win128=-0.6181076978944409
+       mlp   val_EV=-0.0057 val_EV_within=-0.0055 | EV_pooled=+0.0046 EV_within=+0.0047 EV_within_raw=+0.0046 win128=-0.669270427756595
+[fit] set=C dim=6940（原始 9211，丢弃训练集零方差列 2271）
+       ridge a=1e+08    val_EV=-0.0000 val_EV_within=-0.0000 | EV_pooled=+0.0001 EV_within=+0.0001 EV_within_raw=+0.0001 win128=-0.6182490490104502
+       mlp   val_EV=-0.0071 val_EV_within=-0.0068 | EV_pooled=+0.0071 EV_within=+0.0073 EV_within_raw=+0.0071 win128=-0.684293419576803

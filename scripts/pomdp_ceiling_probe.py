@@ -241,6 +241,32 @@ def var_decomp(y, ep):
     return tot, between, within / max(1.0, wsum)
 
 
+def scramble_rows_by_clock(X, ep, seed=0):
+    """修订 5 证伪对照用的行置换：同一『局内位置 k』内跨局换行。
+
+    置换后每帧的特征来自**另一局**、但**同一个局内位置**⇒ 时钟信息完全保留、
+    状态信息被打散。若真实目标上的 `EV_within` 在这种输入下不塌，说明模型用的
+    不是状态，而是某种与局无关的公共结构（那 V3 的增益就不能解读为状态级信号）。
+    """
+    X = np.asarray(X)
+    rng = np.random.default_rng(int(seed) + 707)
+    k = np.zeros(len(ep), dtype=np.int64)
+    for e in np.unique(ep):
+        idx = np.where(ep == e)[0]
+        k[idx] = np.arange(len(idx))
+    perm = np.arange(len(ep))
+    for kk in np.unique(k):
+        idx = np.where(k == kk)[0]
+        if len(idx) < 2:
+            continue
+        r = rng.permutation(len(idx))
+        # 保证不落在自己那一行（roll by 1 on the shuffled order）
+        tgt = idx[r]
+        tgt = np.roll(tgt, 1)
+        perm[idx] = tgt
+    return X[perm]
+
+
 def load_npz(path):
     """从 `--save-npz` 落盘的逐帧数据离线重建 (X, y, v, ep)，免重跑 rollout。"""
     z = np.load(path)
@@ -406,6 +432,10 @@ def main():
                          "连它也做不到 EV_within≥0.15 ⇒ 估计器不合格，实验作废")
     ap.add_argument("--tag", default=None, help="输出 JSON 名后缀（多口径并存）")
     ap.add_argument("--sets", default="A,C,B", help="要拟合的特征集（逗号分隔）")
+    ap.add_argument("--scramble-x", action="store_true",
+                    help="修订 5 的**证伪对照**：把每个特征集的行按『局内位置 k 相同、"
+                         "但来自不同局』置换（状态对不上、时钟对得上）。若真实目标的 "
+                         "EV_within 不塌 ⇒ V3 的增益不是来自『状态』")
     a = ap.parse_args()
 
     cfg = TrainConfig.resolve("economy")
@@ -451,6 +481,11 @@ def main():
         y = yc
         print("[target] 目标已改为局内中心化回报（y−ȳ_ep）", flush=True)
 
+    # ---- 修订 5：证伪对照（打散状态、保留时钟）----
+    if a.scramble_x:
+        X = {k: scramble_rows_by_clock(v, ep, seed=a.seed) for k, v in X.items()}
+        print("[scramble-X] 已按『局内位置相同、跨局置换』打散状态（时钟保留）", flush=True)
+
     # ---- 闸门 G1/G3 ----
     n_ep = int(ep.max()) + 1
     ok_g1 = (len(y) >= 30000 and n_ep >= 60)
@@ -486,6 +521,7 @@ def main():
            "episodes": int(n_ep), "seed": a.seed,
            "select": a.select, "center_target": bool(a.center_target),
            "positive_control": bool(a.positive_control),
+           "scramble_x": bool(a.scramble_x),
            "source_npz": a.npz,
            "var_real_total": tot_real, "var_real_between": bet_real,
            "var_real_within": wit_real,
