@@ -11,6 +11,7 @@
 | 启动训练 | `start_rl.bat`（solo/run/flow 三模式 + 仪表盘）、`start_training.bat` |
 | 训练算法代码导读 | `src/clasher_new/rl/README.md`（模块表 + 训练入口命令） |
 | **所有计划的整合视图**（哪条路走通了/被否证/未决 + 优先级与判据设计） | `plan_master.md` |
+| **当前问题的归因**（critic 为何塌成常数 / 上限为何不动 / 判别性实验与预注册要素） | `d1_long_100k_cause_analysis_2026-09-13.md` |
 | 跨会话红线与结论索引（先读这个再动方案） | 根目录 `AGENTS.md`（编号可引用：R/C/X/O） |
 | 历史决策全文（过程细节与推理链） | `agents_archive_2026-09.md` |
 | 自检/回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m1..m6*.py`、`scripts/batch_smoke.py` |
@@ -21,6 +22,8 @@
 |---|---|---|
 | `../AGENTS.md` | **红线与结论索引**（2026-09-13 重构）：12 条红线（R）+ 10 条已确证（C）+ 9 条已否证（X）+ 5 条未决（O）+ 计划台账 + run 台账；条目编号可引用 | 全部 `rl/` 与 `scripts/`；过程细节见 `agents_archive_2026-09.md` |
 | `plan_master.md` | **计划总纲（所有计划的整合视图）**：决策地图（8 个方向的通/否/未决）、阶段结论、13 份计划的谱系台账、**当前优先级 P0-P4（含判据设计要点与成本）**、纪律清单 | `rl_training_fix_plan_v1/v2/v3.md`、`rl_review_fix_plan.md`、`rl_reward_plan_v2.md`、`rl_plan_design_v1.md`、`ai_training_plan.md`、`P0-mechanics-plan.md`、`mcts_design.md` |
+| `d1_long_100k_cause_analysis_2026-09-13.md` | **当前问题归因（2026-09-13）**：价值分支参数级指纹（35k→100k 的 22~24/27 窗口位移**恰为 0** ⇒ 价值函数=常数）、第一性原因（末端 LayerNorm ⇒ 可表达方差 0.14 vs 目标 std 12.11 ⇒ 自举失败 ⇒ ReLU 死亡锁死）、上限不动的策略侧成因（相对目标 + RPS）、**新否证 X10**（锚点每点重抽 40 局）、**新红线 R14**、3 处对上游报告的口径更正、4 条判别性实验 | `runs/d1_long_100k/`（41 ckpt + replays）、`rl/follower.py`、`rl/ppo.py`、`rl/env_wrapper.py`、`rl/train_solo.py` |
+| `report_d1_long_100k_structured_2026-09-13.md` | 上述归因的**结构化取证全文**（6 路并行子任务 + 评审归并，41 KB）：训练信号预算基数、critic 目标与归一化、对手漂移时间尺度、行为病理、奖励分解、仪器偏差；含 4 处子任务截断披露 | 只读证据（原始行号与数字） |
 | `agents_archive_2026-09.md` | **历史决策全文存档**（旧 `AGENTS.md` 逐字冻结，100,068 B，sha1 见文头）：含全部过程叙述、证据链、逐点判读表与已过期中间结论 | 只读；新结论写 `../AGENTS.md` |
 | `P0-mechanics-plan.md` | P0 游戏机制全面补全计划（族1-8）与进度 | `battle.py` `card_mechanics.py`；回归 `scripts/test_m2.py` `scripts/batch_smoke.py` |
 | `card_coverage.md` | 卡牌覆盖矩阵（148 条快照、75 张 implemented 口径） | `card_utils.py` `gamedata.json` `cards_stats_*.json`；`scripts/coverage.py`；`card_registry.json` `batch_smoke_report.json` |
