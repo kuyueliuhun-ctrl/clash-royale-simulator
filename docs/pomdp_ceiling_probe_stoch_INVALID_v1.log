@@ -1,0 +1,26 @@
+=== POMDP ceiling probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames=33000 device=cuda ===
+  [rollout] ep=10 frames=2147 112.5s
+  [rollout] ep=20 frames=4646 274.0s
+  [rollout] ep=30 frames=7156 410.5s
+  [rollout] ep=40 frames=9079 516.2s
+  [rollout] ep=50 frames=11336 638.7s
+  [rollout] ep=60 frames=13323 740.1s
+  [rollout] ep=70 frames=15484 848.8s
+  [rollout] ep=80 frames=17387 942.1s
+  [rollout] ep=90 frames=19790 1054.8s
+  [rollout] ep=100 frames=21603 1137.5s
+  [rollout] ep=110 frames=24123 1254.6s
+  [rollout] ep=120 frames=26872 1399.3s
+  [rollout] ep=130 frames=29047 1518.7s
+  [rollout] ep=140 frames=31448 1653.8s
+[rollout] mode=stoch frames=32969 episodes=147 ep_len mean=224.3 wall=1738.4s (19.0 frames/s)
+[split] train=19850 val=5044 test=8075 (episodes 88/22/37)
+[var] Var(R)=206.0916  between(局均值)=174.2224 within(局内)=58.3215  within/total=0.2830
+[critic] EV_pooled=-0.0170  EV_within=+0.0000  EV_within_raw=-2.5937  std(V)/std(R)=0.0000
+[critic] EV_win128_med=-4.5516 (n=183)
+[fit] set=A dim=8648
+       ridge a=10     EV_pooled=-17.3921 EV_within=-62.8153 EV_within_raw=-64.5790 win128=-6.90873748548078
+       mlp   EV_pooled=-26.2298 EV_within=-94.0874 EV_within_raw=-96.0910 win128=-8.737754756333517
+[fit] set=C dim=9211
+       ridge a=10     EV_pooled=-15.6361 EV_within=-56.5059 EV_within_raw=-58.3179 win128=-7.618324046356728
+       mlp   EV_pooled=-15.9143 EV_within=-57.4468 EV_within_raw=-59.3098 win128=-8.076571159004272
