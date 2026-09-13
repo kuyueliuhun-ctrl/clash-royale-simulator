@@ -373,6 +373,10 @@ class RLEnv(gym.Env):
                              + self.battle.players[1].right_tower_hp)
         self._blue_towers_max = self._tower_snapshot(self.battle.players[0])
         self._red_towers_max = self._tower_snapshot(self.battle.players[1])
+        # G'-fix（2026-09-12）：把本局满血三塔写给观测层，用于「塔血标量」归一化
+        # （observation.observe 读 battle.tower_max_hp；缺失退回 lv11 锚）。
+        self.battle.tower_max_hp = {0: list(self._blue_towers_max),
+                                    1: list(self._red_towers_max)}
         # 清空掩码缓存（P0-3）：新对局的 tick/手牌/建筑都不再匹配旧指纹
         self._mask_fp = None
         self._mask_cells = None

@@ -120,6 +120,14 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
             # 9k：事件通道尾部追加（同 plan_mlp 模式）
             tv.zero_()
             tv[:, :v.shape[1]].copy_(v)
+        elif k in ("enc_fc.weight", "value_enc_fc.weight") and v.dim() == 2 \
+                and v.shape[1] <= tv.shape[1] and v.shape[0] == tv.shape[0]:
+            # G'-fix（2026-09-12）：fused 尾部追加 9 维塔血/皇冠/圣水差标量。
+            # 旧 ckpt 的 fused 列序 = [grid|hand|scalar|plan|belief] 是**前缀**，
+            # 新列排在最后 ⇒ 前 v.shape[1] 列语义不变（尾零学）。
+            # 反过来的方向（旧网络吃新 ckpt）会被判为结构大改：保持新初始化。
+            tv.zero_()
+            tv[:, :v.shape[1]].copy_(v)
         elif k == "entity_emb.weight" and v.dim() == 2 and v.shape[0] <= tv.shape[0] \
                 and v.shape[1] == tv.shape[1]:
             # 词表 v2：embedding 行追加（前 13 位序冻结 → 旧行语义不变；新行从零学，
@@ -204,9 +212,16 @@ class FollowerPolicy(nn.Module):
 
         hand_dim = 5 * 8
         scalar_dim = 3  # elixir + time + next_card（归一化）
+        # G'-fix（2026-09-12）：双方塔血 6 + 皇冠 2 + 圣水差 1 = 9 维显式标量。
+        # **必须追加在 fused 的尾部**（plan_f/belief_f 之后）——这样旧 ckpt 的
+        # `enc_fc.weight` 前列语义不变，load_checkpoint 可走"前列拷贝+尾零"兼容。
+        # 依据：G′ 三层对照实测 `enc → 塔血差` 按局分组 R² = −0.03
+        # （同一 enc → time = +0.9999），而 slot_head/cell_head 只吃 h
+        # ⇒ 决策通路没有可靠的塔血输入（docs/rl_training_fix_plan_v3.md §3.13）。
+        self.tower_dim = 9
         self.plan_mlp = nn.Sequential(nn.Linear(plan_dim, 64), nn.ReLU())
         self.belief_mlp = nn.Sequential(nn.Linear(belief_dim, 64), nn.ReLU())
-        enc_dim = cnn_out + hand_dim + scalar_dim + 64 + 64
+        enc_dim = cnn_out + hand_dim + scalar_dim + 64 + 64 + self.tower_dim
         self.enc_fc = nn.Linear(enc_dim, hidden)
         # v3 P0-A（2026-09-11）：enc 后归一化。旧版 enc 无归一化，L2 范数 ≈533
         # （CNN 输出的常数分量 ≈468、跨帧 std 仅 1.06）→ GRUCell 的 tanh 候选饱和
@@ -286,16 +301,37 @@ class FollowerPolicy(nn.Module):
 
         hand_feat = self.entity_emb(hand).reshape(1, -1)            # (1,40)
         scalar = torch.cat([elixir, time, next_card], dim=1)        # (1,3)
+        tower_s = self._tower_state_tensor(obs).unsqueeze(0)        # (1,9) G'-fix
 
         plan_v = torch.as_tensor(plan_token, dtype=torch.float32).unsqueeze(0).to(self.device)
         belief_v = torch.as_tensor(belief_token, dtype=torch.float32).unsqueeze(0).to(self.device)
         plan_f = self.plan_mlp(plan_v)
         belief_f = self.belief_mlp(belief_v)
 
-        fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)
+        fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f,
+                           tower_s], dim=1)                          # tail: tower_state
         # v3 P0-A：enc 后 LayerNorm（防 GRU tanh 候选饱和，见 __init__ 注释）
         enc = self.enc_ln(torch.relu(self.enc_fc(fused)))            # (1,hidden)
         return fused, enc
+
+    def _tower_state_tensor(self, obs):
+        """G'-fix：9 维塔血/皇冠/圣水差标量 → 定长 tensor（缺键补零，旧 obs 兼容）。
+
+        `observation.observe` 已产出 `tower_state`；这里做**尺寸兜底**：旧进程/
+        旧录像回放的 obs 字典可能没有该键（或长度不符），此时补零——与
+        `entity_emb`/`belief_mlp` 的"尾零兼容"同一纪律：宁可少信息，不可崩观测。
+        """
+        v = obs.get("tower_state") if hasattr(obs, "get") else None
+        if v is None:
+            return torch.zeros(self.tower_dim, dtype=torch.float32, device=self.device)
+        t = torch.as_tensor(v, dtype=torch.float32).reshape(-1)
+        if int(t.numel()) == int(self.tower_dim):
+            return t.to(self.device)
+        out = torch.zeros(self.tower_dim, dtype=torch.float32)
+        n = min(int(self.tower_dim), int(t.numel()))
+        if n:
+            out[:n] = t[:n]
+        return out.to(self.device)
 
     def _encode(self, obs, belief_token, plan_token):
         return self._encode_parts(obs, belief_token, plan_token)[1]
@@ -416,13 +452,16 @@ class FollowerPolicy(nn.Module):
 
         hand_feat = self.entity_emb(hand).reshape(N, -1)            # (N,40)
         scalar = torch.cat([elixir, time_, next_card], dim=1)       # (N,3)
+        tower_s = torch.stack([self._tower_state_tensor(o) for o in obs_list]
+                              ).to(self.device)                     # (N,9) G'-fix
 
         plan_v = torch.stack([torch.as_tensor(p, dtype=torch.float32) for p in plan_list]).to(self.device)
         belief_v = torch.stack([torch.as_tensor(b, dtype=torch.float32) for b in belief_list]).to(self.device)
         plan_f = self.plan_mlp(plan_v)
         belief_f = self.belief_mlp(belief_v)
 
-        fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)
+        fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f,
+                           tower_s], dim=1)                          # tail: tower_state
         # v3 P0-A：enc 后 LayerNorm（与 _encode 同口径，保证单条/批量数值一致）
         enc = self.enc_ln(torch.relu(self.enc_fc(fused)))            # (N,hidden)
         return fused, enc

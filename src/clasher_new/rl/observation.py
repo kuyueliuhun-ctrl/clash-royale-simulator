@@ -13,6 +13,15 @@ if _PARENT not in sys.path:
 
 import numpy as np
 
+#: G'-fix：塔血标量的归一化兜底锚（lv11）。正常情况下用 `battle.tower_max_hp`
+#: （reset 时由 `rl/env_wrapper` 按本局等级写入），缺失时才退回这里。
+_KING_HP_LV11 = 4824.0
+_PRINCESS_HP_LV11 = 3052.0
+
+
+def _clip01(v):
+    return float(min(1.0, max(0.0, float(v))))
+
 # 词表 v2（2026-09-09，连弩镜像卡组切换）：原 13 名只覆盖原版 8 卡的实体/包装器，
 # 换镜像卡组（Xbow/Tesla/Log）或四卡组对手（HogRider/Golem...）时全部观测隐形
 # （grid 里直接丢弃、手牌编码 0）。扩容为全卡池实体名 dump（部署+死亡刷出+法术
@@ -135,12 +144,43 @@ def observe(battle, player_id: int = 0) -> dict:
         dtype=np.int32,
     )
     next_card = ENTITY_NAMES.index(p.cycle[4]) if p.cycle[4] in ENTITY_NAMES else 0
+    # —— G'-fix（2026-09-12）：双方塔血/皇冠/圣水差 做成**显式标量** ——
+    # 背景（G′ 三层对照，docs/rl_training_fix_plan_v3.md §3.13）：塔血此前只以
+    # grid 每格通道（log hp / hp%）存在，经 CNN→grid_ln→enc_fc→relu→enc_ln→GRU
+    # 之后**线性不可解码**（`enc → 塔血差` 按局分组 R² = −0.03，而同一 enc →
+    # time = +0.9999），且所有策略头（slot_head/cell_head）只吃 h
+    # ⇒ 决策通路没有可靠的塔血输入。归一化：塔血用**本局满血**
+    # （`battle.tower_max_hp`，reset 时由 env_wrapper 写入；缺失退回 lv11 锚），
+    # 皇冠 /3，圣水差 /10 —— 全部落在 [0,1] 附近。
+    _other = battle.players[1 - player_id]
+    _tmax = getattr(battle, "tower_max_hp", None)
+    _mine_max = _tmax.get(player_id) if isinstance(_tmax, dict) else None
+    _opp_max = _tmax.get(1 - player_id) if isinstance(_tmax, dict) else None
+    if not _mine_max:
+        _mine_max = [_KING_HP_LV11, _PRINCESS_HP_LV11, _PRINCESS_HP_LV11]
+    if not _opp_max:
+        _opp_max = [_KING_HP_LV11, _PRINCESS_HP_LV11, _PRINCESS_HP_LV11]
+    _mine = (p.king_tower_hp, p.left_tower_hp, p.right_tower_hp)
+    _theirs = (_other.king_tower_hp, _other.left_tower_hp, _other.right_tower_hp)
+    tower_state = np.array([
+        _clip01(_mine[0] / max(1e-6, float(_mine_max[0]))),
+        _clip01(_mine[1] / max(1e-6, float(_mine_max[1]))),
+        _clip01(_mine[2] / max(1e-6, float(_mine_max[2]))),
+        _clip01(_theirs[0] / max(1e-6, float(_opp_max[0]))),
+        _clip01(_theirs[1] / max(1e-6, float(_opp_max[1]))),
+        _clip01(_theirs[2] / max(1e-6, float(_opp_max[2]))),
+        float(p.get_crown_count()) / 3.0,
+        float(_other.get_crown_count()) / 3.0,
+        (float(p.elixir) - float(_other.elixir)) / 10.0,
+    ], dtype=np.float32)
     return {
         "grid": obs,
         "hand": hand,
         "elixir": np.array([p.elixir], dtype=np.float32),
         "next_card": np.array([next_card], dtype=np.int32),
         "time": np.array([battle.time], dtype=np.float32),
+        #: G'-fix：9 维塔血/皇冠/圣水差标量（**tail 追加**，旧 ckpt 列序不变）
+        "tower_state": tower_state,
     }
 
 

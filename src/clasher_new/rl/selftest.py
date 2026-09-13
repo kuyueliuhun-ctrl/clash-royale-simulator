@@ -4538,6 +4538,77 @@ def test_ppo_multi_epoch_minibatch():
 
 
 
+def test_tower_state_observation():
+    """G'-fix（2026-09-12）：双方塔血/皇冠/圣水差做成显式 scalar 通道。
+
+    背景（v3 §3.13）：塔血此前只以 grid 每格通道存在，经 CNN→grid_ln→enc_fc→
+    relu→enc_ln→GRU 后**线性不可解码**（按局分组探针 `enc → 塔血差` R²=−0.03，
+    同一 enc → time=+0.9999），而所有策略头只吃 h ⇒ 决策通路没有可靠塔血输入。
+
+    断言（每条都可证伪）：
+    ① 观测字典含 `tower_state`，9 维、语义正确（满血→1、破塔→0、圣水差带符号）；
+    ② 该 9 维**原样出现在 `fused` 的尾部**（列序追加而非插入 ⇒ 旧 ckpt 前列表义不变）；
+    ③ 只改塔血/皇冠不改其余观测 → `enc` 必须变（信息真的接进 trunk，不是摆设）；
+    ④ 旧 obs（无 `tower_state` 键）不崩：补零且 shape 不变（尾零兼容纪律）。
+    """
+    import copy
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+
+    env = RLEnv(opponent=None, seed=3)
+    obs, _ = env.reset()
+    assert "tower_state" in obs, sorted(obs.keys())
+    ts = np.asarray(obs["tower_state"], dtype=np.float32)
+    assert ts.shape == (9,), ts.shape
+    assert np.allclose(ts[:6], 1.0), ts          # 开局三塔双方满血
+    assert np.allclose(ts[6:8], 0.0), ts         # 皇冠 0/0
+    assert abs(float(ts[8])) < 1e-6, ts          # 圣水差 0
+
+    # 破一座塔（直接改 PlayerState，只动塔血）+ 掉血 + 圣水差 → 语义仍然正确
+    env.battle.players[1].left_tower_hp = 0.0
+    env.battle.players[0].king_tower_hp *= 0.5
+    env.battle.players[0].elixir = 7.0
+    env.battle.players[1].elixir = 2.0
+    o2 = env.observe(0)
+    t2 = np.asarray(o2["tower_state"], dtype=np.float32)
+    assert abs(float(t2[0]) - 0.5) < 1e-5, t2    # 我方王塔半血
+    assert abs(float(t2[4]) - 0.0) < 1e-6, t2    # 敌方左塔破
+    assert abs(float(t2[7]) - 1.0 / 3.0) < 1e-6, t2   # 敌方 1 皇冠
+    assert abs(float(t2[8]) - 0.5) < 1e-5, t2    # (7-2)/10
+
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0)
+    tok = belief.encode(o2, None)
+    plan = np.zeros(PLAN_DIM, dtype=np.float32)
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=len(tok))
+    assert pol.tower_dim == 9, pol.tower_dim
+    fused, enc = pol._encode_parts(o2, tok, plan)
+    # ② 尾部 9 列 == tower_state
+    assert fused.shape[1] > 9
+    assert torch.allclose(fused[0, -9:].cpu(), torch.as_tensor(t2), atol=1e-6), \
+        (fused[0, -9:], t2)
+
+    # ③ 只改塔血 → enc 必须变
+    o3 = copy.deepcopy(o2)
+    o3["tower_state"] = t2.copy()
+    o3["tower_state"][0] = 0.25
+    with torch.no_grad():
+        _, enc3 = pol._encode_parts(o3, tok, plan)
+    assert not torch.allclose(enc, enc3, atol=1e-7), "塔血没进 enc（接线失败）"
+
+    # ④ 旧 obs（无该键）不崩、补零
+    o4 = {k: v for k, v in o2.items() if k != "tower_state"}
+    fused4, enc4 = pol._encode_parts(o4, tok, plan)
+    assert fused4.shape == fused.shape, (fused4.shape, fused.shape)
+    assert float(fused4[0, -9:].detach().abs().sum()) == 0.0, fused4[0, -9:]
+
+    print(f"[PASS] G'-fix 塔血标量：obs 9 维语义正确（王塔{t2[0]:.2f}/敌左塔{t2[4]:.1f}/"
+          f"敌冠{t2[7]:.2f}/费差{t2[8]:+.2f}）、fused 尾部接线一致、"
+          f"改塔血 enc 必变、旧 obs 尾零兼容")
+
+
 def test_solo_rand_anchor():
     """E1（2026-09-12，v3 §3.8.4 取证后）：固定随机锚点的确定性与警报线。
 
@@ -4675,6 +4746,7 @@ def main():
     test_value_bypass()
     test_value_independent_encoder()
     test_ppo_multi_epoch_minibatch()
+    test_tower_state_observation()
     test_stall_settlement_margin()
     print("\nALL SELFTESTS PASSED")
 
