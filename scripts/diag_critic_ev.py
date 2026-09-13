@@ -43,6 +43,11 @@ from rl.belief_planner import BeliefPlanner  # noqa: E402
 from rl.prophet import ProphetPlanner  # noqa: E402
 from rl.plan_space import PLAN_DIM  # noqa: E402
 from rl.follower import FollowerPolicy, load_checkpoint  # noqa: E402
+from rl.env_wrapper import (KING_TOWER_HP_LV11,  # noqa: E402
+                            TOWER_TROOP_HP_LV11)
+_TOWER_HP_ANCHOR_K = KING_TOWER_HP_LV11
+_TOWER_HP_ANCHOR_P = float(TOWER_TROOP_HP_LV11['PrincessTower'])
+_TOWER_HP_ANCHOR_ALL = 2.0 * _TOWER_HP_ANCHOR_P + _TOWER_HP_ANCHOR_K
 from rl.ppo import PPOTrainer  # noqa: E402
 from rl.train_follower import FollowerOpponent  # noqa: E402
 from rl.run_league import timeout_winner, overtime_open, _stall_probe, STALL_WINDOW, settle_stall  # noqa: E402
@@ -66,7 +71,8 @@ def load_run_cfg(run_dir):
 
 
 def rollout(cfg, main, n_games, seed, device, max_frames=400000,
-            collect_features=False, collect_supervised=False):
+            collect_features=False, collect_supervised=False,
+            collect_raw=False):
     """与训练同口径 rollout：返回逐帧数组。
 
     collect_features=True 时额外收集每帧的 post-LN enc（GRU 输入，
@@ -95,6 +101,7 @@ def rollout(cfg, main, n_games, seed, device, max_frames=400000,
 
     V, R, EP, STEP_IDX, TERM, TRUNC, EPID = [], [], [], [], [], [], []
     X = [] if collect_features else None
+    RAW = [] if collect_raw else None
     S = ({"obs": [], "tok": [], "plan": [], "hid": [], "R": [], "ep": []}
          if collect_supervised else None)
     ep_meta = []
@@ -129,6 +136,26 @@ def rollout(cfg, main, n_games, seed, device, max_frames=400000,
                 with torch.no_grad():
                     X.append(main._encode(obs, tok, plan_vec).detach().cpu()
                              .numpy().reshape(-1))
+            if collect_raw:
+                # G'（2026-09-12）：可观测原始状态标量（无表征、无网络）。
+                # 直接读 `battle.players`：塔血/皇冠/圣水/时间 都是 `observation.py`
+                # 已经喂给策略的量（该 sim 无敌方战争迷雾：`opp_elixir`/`opp_towers`
+                # 都在 obs 字典里），所以这不是特权信息。
+                # 注意：塔血用 lv11 锚归一化（所有 economy run 都是 card_level=11）。
+                _b = env.battle
+                _p0, _p1 = _b.players
+                _mt = (_p0.king_tower_hp, _p0.left_tower_hp, _p0.right_tower_hp)
+                _ot = (_p1.king_tower_hp, _p1.left_tower_hp, _p1.right_tower_hp)
+                RAW.append(np.array([
+                    _mt[0] / _TOWER_HP_ANCHOR_K, _mt[1] / _TOWER_HP_ANCHOR_P,
+                    _mt[2] / _TOWER_HP_ANCHOR_P,
+                    _ot[0] / _TOWER_HP_ANCHOR_K, _ot[1] / _TOWER_HP_ANCHOR_P,
+                    _ot[2] / _TOWER_HP_ANCHOR_P,
+                    float(_p0.get_crown_count()), float(_p1.get_crown_count()),
+                    float(_p0.elixir) / 10.0, float(_p1.elixir) / 10.0,
+                    float(_b.time) / 180.0,
+                    (sum(_mt) - sum(_ot)) / _TOWER_HP_ANCHOR_ALL,
+                ], dtype=np.float64))
             if collect_supervised:
                 ep_s_obs.append(obs)
                 ep_s_tok.append(tok)
@@ -190,9 +217,113 @@ def rollout(cfg, main, n_games, seed, device, max_frames=400000,
         if total > max_frames:
             break
     X_arr = np.asarray(X, np.float64) if X is not None else None
+    RAW_arr = np.asarray(RAW, np.float64) if RAW is not None else None
     return (np.asarray(V, np.float64), np.asarray(R, np.float64),
             np.asarray(EP, np.int64), np.asarray(STEP_IDX, np.int64),
-            np.asarray(TERM, bool), np.asarray(TRUNC, bool), ep_meta, X_arr, S)
+            np.asarray(TERM, bool), np.asarray(TRUNC, bool), ep_meta, X_arr, S,
+            RAW_arr)
+
+
+
+#: G' 三层可预测性对照（2026-09-12）。原始标量的列名（与 rollout 里构造顺序一致）。
+RAW_FEATURE_NAMES = [
+    "my_king_hp", "my_left_hp", "my_right_hp",
+    "opp_king_hp", "opp_left_hp", "opp_right_hp",
+    "my_crown", "opp_crown", "my_elixir", "opp_elixir",
+    "time", "hp_diff",
+]
+
+
+def _outcome_target(R, EP, TERM):
+    """局结果标签：每局**最后一个终局帧**的 R（终止步 next_val=0 => R_T = 终局奖励），
+    广播到该局所有帧。返回 (target, mask)。"""
+    last = {}
+    for i, (g, t) in enumerate(zip(EP, TERM)):
+        if t:
+            last[int(g)] = i
+    tgt = np.zeros(len(R), dtype=np.float64)
+    mask = np.zeros(len(R), dtype=bool)
+    for i, g in enumerate(EP):
+        j = last.get(int(g))
+        if j is not None:
+            tgt[i] = R[j]
+            mask[i] = True
+    return tgt, mask
+
+
+def _three_layer_predictability(X, RAW, R, EP, TERM, STEP_IDX):
+    """G'：同一批帧、同一**按局分组**留出口径，换特征层与标签。
+
+    三层特征：① 原始可观测标量（塔血/圣水/时间/皇冠）② post-LN enc ③ 两者拼接。
+    三个标签：逐帧 GAE 回报 R_t / 局结果广播（终局帧 R）/ 局均回报广播。
+    外加**打乱局标签**的噪声地板（分组口径下 R² 的随机水平）。
+    """
+    print("\n=== G' 三层可预测性对照（全部按**局分组**留出 20%）===", flush=True)
+    print("特征列: " + ", ".join(RAW_FEATURE_NAMES), flush=True)
+    print(f"帧数={len(R)} 局数={len(np.unique(EP))}", flush=True)
+
+    out_t, out_m = _outcome_target(R, EP, TERM)
+    ug = np.unique(EP)
+    gm = np.asarray([R[EP == g].mean() for g in ug])
+    mean_t = np.zeros(len(R), dtype=np.float64)
+    for k, g in enumerate(ug):
+        mean_t[EP == g] = gm[k]
+
+    # 局终皇冠差（从 RAW 的 my_crown/opp_crown 列取终局帧）——比终局奖励更干净的局结果
+    _last = {}
+    for i, (g, t) in enumerate(zip(EP, TERM)):
+        if t:
+            _last[int(g)] = i
+    crown_t = np.zeros(len(R), dtype=np.float64)
+    crown_m = np.zeros(len(R), dtype=bool)
+    for i, g in enumerate(EP):
+        j = _last.get(int(g))
+        if j is not None:
+            crown_t[i] = float(RAW[j, 7] - RAW[j, 6])   # opp_crown - my_crown
+            crown_m[i] = True
+
+    feats = [("raw", RAW)]
+    if X is not None and len(X) == len(R):
+        feats.append(("enc", X))
+        feats.append(("raw+enc", np.concatenate([RAW, X], axis=1)))
+
+    targets = [("frame_R", R, np.ones(len(R), dtype=bool)),
+               ("outcome", out_t, out_m),
+               ("ep_mean", mean_t, np.ones(len(R), dtype=bool)),
+               ("crown_diff", crown_t, crown_m),
+               # —— 功效对照（planted signal）：目标本身是 raw 特征的确定性函数。
+               # 分组口径下若这两行不是 ≈+1，说明"分组留出 + 10 局测试集"这套
+               # 测量本身没有功效，前面的负 R2 就不能解读为"不可预测"。
+               ("CTRL:time", RAW[:, 10], np.ones(len(R), dtype=bool)),
+               ("CTRL:hp_diff", RAW[:, 11], np.ones(len(R), dtype=bool))]
+
+    print(f"{'特征':<10}{'标签':<10}{'线性R2(分组)':>14}{'MLP R2(分组)':>14}"
+          f"{'MLP R2(逐帧泄漏口径)':>22}", flush=True)
+    for fname, F in feats:
+        for tname, y, mask in targets:
+            if mask.sum() < 100:
+                continue
+            Fm, ym, Em = F[mask], y[mask], EP[mask]
+            le, _, _ = lin_probe(Fm, ym, groups=Em)
+            me, _, _ = mlp_probe(Fm, ym, groups=Em)
+            lf, _, _ = mlp_probe(Fm, ym)
+            print(f"{fname:<10}{tname:<10}{le:>+14.4f}{me:>+14.4f}{lf:>+22.4f}",
+                  flush=True)
+
+    # 噪声地板：把**局标签**在局之间打乱后重测（保持每局帧数不变）
+    print("\n[噪声地板] 局标签随机置换后重测（分组口径）:", flush=True)
+    rng = np.random.RandomState(0)
+    perm = rng.permutation(len(ug))
+    gmap = {int(g): float(gm[perm[k]]) for k, g in enumerate(ug)}
+    sh_t = np.asarray([gmap[int(g)] for g in EP])
+    for fname, F in feats:
+        le, _, _ = lin_probe(F, sh_t, groups=EP)
+        me, _, _ = mlp_probe(F, sh_t, groups=EP)
+        print(f"  {fname:<10} 线性 {le:+.4f}  MLP {me:+.4f}", flush=True)
+
+    print("\n解读：① raw 能、② enc 不能 => 瓶颈在表征/观测编码（改 CNN/编码）；"
+          "① 也不能（且低于噪声地板）=> 局结果本身不可从状态预测，critic 工作应停。",
+          flush=True)
 
 
 def ev(v, r):
@@ -545,6 +676,11 @@ def main():
     ap.add_argument("--save-npz", default="")
     ap.add_argument("--probe", action="store_true",
                     help="训练线性/MLP 可预测性探针（post-LN enc -> GAE return）")
+    ap.add_argument("--predict", action="store_true",
+                    help="G'（2026-09-12）三层可预测性对照："
+                         "① 原始可观测状态标量（塔血/圣水/时间/皇冠）"
+                         "② post-LN enc  ③ 两者拼接，对同一批标签（逐帧回报/局结果/"
+                         "局均回报）都按**局分组**留出，并给打乱标签的噪声地板")
     ap.add_argument("--finetune", action="store_true",
                     help="critic 监督微调判别：用 (obs,tok,plan,hidden)->GAE return 监督"
                          "训练 value 通路，看 EV 能否升到探针水平")
@@ -569,9 +705,10 @@ def main():
     main_pol.train()  # 与训练一致（dropout/BN 若有）
     print(f"[diag] loaded {args.ckpt}", flush=True)
 
-    V, R, EP, SI, TERM, TRUNC, meta, X, S = rollout(
+    V, R, EP, SI, TERM, TRUNC, meta, X, S, RAW = rollout(
         cfg, main_pol, args.games, args.seed, device,
-        collect_features=args.probe, collect_supervised=(args.finetune or args.bypass))
+        collect_features=args.probe, collect_supervised=(args.finetune or args.bypass),
+        collect_raw=args.predict)
     n = len(R)
     print(f"\n[diag] 帧数={n}  局数={len(meta)}  "
           f"平均局长={n/max(1,len(meta)):.1f}", flush=True)
@@ -698,6 +835,9 @@ def main():
         print("解读：探针≈critic => 标签在该表征下就不可预测（偏训练侧数据）；"
               "探针>>critic => 信息在表征里但网络没吸收（偏程序侧/训练侧优化）",
               flush=True)
+
+    if args.predict and RAW is not None and len(RAW) == len(R):
+        _three_layer_predictability(X, RAW, R, EP, TERM, SI)
 
     if args.bypass:
         _bypass_gru(args, main_pol, S, R, device)
