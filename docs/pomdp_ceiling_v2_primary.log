@@ -1,0 +1,22 @@
+=== POMDP ceiling probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames=30000 device=cuda ===
+[target] 目标已改为局内中心化回报（y−ȳ_ep）
+[split] train=20278 val=4629 test=8075 (episodes 90/22/37)
+[var] Var(R)=58.1736  between(局均值)=0.0000 within(局内)=58.1736  within/total=1.0000
+[critic] EV_pooled=-0.0003  EV_within=+0.0000  EV_within_raw=-0.0003  std(V)/std(R)=0.0000
+[critic] EV_win128_med=-0.8325 (n=186)
+[fit] set=A dim=6826（原始 8648，丢弃训练集零方差列 1822）
+       ridge a=10000    val_EV=+0.1552 val_EV_within=+0.2052 | EV_pooled=+0.2564 EV_within=+0.2999 EV_within_raw=+0.2564 win128=-0.6330831799050373
+       mlp   val_EV=+0.0382 val_EV_within=+0.0868 | EV_pooled=+0.1446 EV_within=+0.1816 EV_within_raw=+0.1446 win128=-0.7456238088630984
+[fit] set=C dim=6879（原始 9211，丢弃训练集零方差列 2332）
+       ridge a=10000    val_EV=+0.1526 val_EV_within=+0.1976 | EV_pooled=+0.2594 EV_within=+0.3032 EV_within_raw=+0.2594 win128=-0.6205288053220479
+       mlp   val_EV=+0.0239 val_EV_within=+0.0741 | EV_pooled=+0.1383 EV_within=+0.1855 EV_within_raw=+0.1383 win128=-0.8446769977292506
+[fit] set=B dim=6851（原始 8673，丢弃训练集零方差列 1822）
+       ridge a=10000    val_EV=+0.1695 val_EV_within=+0.2165 | EV_pooled=+0.2538 EV_within=+0.3007 EV_within_raw=+0.2538 win128=-0.6116775276688396
+       mlp   val_EV=+0.0646 val_EV_within=+0.1083 | EV_pooled=+0.1519 EV_within=+0.1966 EV_within_raw=+0.1519 win128=-0.7907858337894126
+
+=== 判据（照预注册 §3 读）===
+  EV_within  A=0.18155027692863276 C=0.18546665308770596 B=0.19656529004802922  (ΔB−C=0.01109863696032326)
+  critic EV_within=0.0  gate G1=True G3=True critic<=0.05=True
+  估计器闸 estimator_ok=True  val_EVs=[0.1552, 0.0382, 0.1526, 0.0239, 0.1695, 0.0646]
+  VERDICT = P3_H_LEARN
+[out] E:\clash-royale-simulator-main\docs\pomdp_ceiling_probe_stoch_v2_primary.json

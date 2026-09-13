@@ -1,0 +1,18 @@
+=== POMDP ceiling probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames=30000 device=cpu ===
+[control G5] 阳性对照目标已构造：局内方差=58.1736、局间方差=166.7500（与真实回报一致）；信号 = 8 个真实特征列的非线性函数 ⇒ 局内信号**必然存在且可学**
+[target] 目标已改为局内中心化回报（y−ȳ_ep）
+[split] train=20278 val=4629 test=8075 (episodes 90/22/37)
+[var] Var(R)=58.1736  between(局均值)=0.0000 within(局内)=58.1736  within/total=1.0000
+[critic] EV_pooled=-0.0003  EV_within=+0.0000  EV_within_raw=-0.0003  std(V)/std(R)=0.0000
+[critic] EV_win128_med=-0.0092 (n=186)
+[fit] set=A dim=6826（原始 8648，丢弃训练集零方差列 1822）
+       ridge a=1000     val_EV=+0.6001 val_EV_within=+0.6246 | EV_pooled=+0.7280 EV_within=+0.7545 EV_within_raw=+0.7280 win128=0.0903353693288651
+       mlp   val_EV=+0.6401 val_EV_within=+0.6619 | EV_pooled=+0.6431 EV_within=+0.6707 EV_within_raw=+0.6431 win128=0.3238334788909411
+
+=== 判据（照预注册 §3 读）===
+  EV_within  A=0.6707100875750901 C=None B=None  (ΔB−C=None)
+  critic EV_within=0.0  gate G1=True G3=True critic<=0.05=True
+  估计器闸 estimator_ok=True  val_EVs=[0.6001, 0.6401]
+  G5 阳性对照（目标里必然有局内信号）: best EV_within=0.6707  通过=True
+  VERDICT = GATE_FAIL
+[out] E:\clash-royale-simulator-main\docs\pomdp_ceiling_probe_stoch_v2_poscontrol.json

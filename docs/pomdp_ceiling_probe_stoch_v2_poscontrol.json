@@ -1,0 +1,135 @@
+{
+  "ckpt": "runs/critic_inert_probe_20k/solo_main_20000.pt",
+  "mode": "stoch",
+  "frames": 32982,
+  "episodes": 149,
+  "seed": 7,
+  "select": "within",
+  "center_target": true,
+  "positive_control": true,
+  "scramble_x": false,
+  "scramble_y": false,
+  "source_npz": "runs/_probe_cache_ceiling_stoch.npz",
+  "var_real_total": 203.20485836653828,
+  "var_real_between": 166.7500495700467,
+  "var_real_within": 58.17363094564339,
+  "control_spec": {
+    "cols": [
+      2175,
+      3030,
+      1665,
+      5055,
+      8641,
+      3570,
+      1260,
+      8640
+    ],
+    "within_var": 58.17363094564339,
+    "between_var": 166.7500495700467,
+    "realized_var": 264.56873661067976
+  },
+  "gate_g1_frames_episodes": true,
+  "gate_g3_finite": true,
+  "var_total": 58.17363094564337,
+  "var_between": 4.397935167769332e-30,
+  "var_within": 58.17363094564336,
+  "critic": {
+    "EV_pooled": -0.0003493004467345351,
+    "EV_within": 0.0,
+    "EV_within_raw": -0.0003493004467345351,
+    "EV_win128_med": -0.00919412956919674,
+    "vstd_rstd": 0.0
+  },
+  "sets": {
+    "A": {
+      "dim_raw": 8648,
+      "dim": 6826,
+      "ridge": {
+        "alpha": 1000.0,
+        "val_sel": 0.6246306210625563,
+        "val_EV": 0.6001334523851923,
+        "val_EV_within": 0.6246306210625563,
+        "EV_pooled": 0.7280022537843457,
+        "EV_within": 0.754530346933737,
+        "EV_within_raw": 0.7280022537843457,
+        "EV_win128_med": 0.0903353693288651
+      },
+      "mlp": {
+        "EV_pooled": {
+          "mean": 0.6430895459056455,
+          "all": [
+            0.7096259559351552,
+            0.6513265557301782,
+            0.5683161260516032
+          ]
+        },
+        "EV_within": {
+          "mean": 0.6707100875750901,
+          "all": [
+            0.7302210477361756,
+            0.6698823657982714,
+            0.6120268491908234
+          ]
+        },
+        "EV_within_raw": {
+          "mean": 0.6430895459056455,
+          "all": [
+            0.7096259559351552,
+            0.6513265557301782,
+            0.5683161260516032
+          ]
+        },
+        "EV_win128_med": {
+          "mean": 0.3238334788909411,
+          "all": [
+            0.36291990658565043,
+            0.30846950868588374,
+            0.30011102140128904
+          ]
+        },
+        "val_EV": {
+          "mean": 0.640133279205522,
+          "all": [
+            0.6951975275870315,
+            0.6017498463122926,
+            0.6234524637172421
+          ]
+        },
+        "val_EV_within": {
+          "mean": 0.6619446008066273,
+          "all": [
+            0.7156283879813197,
+            0.6229342152799127,
+            0.6472711991586497
+          ]
+        },
+        "val_sel": {
+          "mean": 0.6619446008066273,
+          "all": [
+            0.7156283879813197,
+            0.6229342152799127,
+            0.6472711991586497
+          ]
+        }
+      }
+    }
+  },
+  "criteria": {
+    "EV_within_A": 0.6707100875750901,
+    "EV_within_C": null,
+    "EV_within_B": null,
+    "delta_B_minus_C": null,
+    "critic_EV_within": 0.0,
+    "gate_g1": true,
+    "gate_g3": true,
+    "gate_estimator_ok": true,
+    "estimator_val_EVs": [
+      0.6001334523851923,
+      0.640133279205522
+    ],
+    "gate_g5_positive_control": true,
+    "control_EV_within_best": 0.6707100875750901,
+    "gate_critic_le_0.05": true,
+    "verdict": "GATE_FAIL"
+  }
+}
