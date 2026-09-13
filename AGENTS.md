@@ -16,7 +16,7 @@
 
 | # | 红线 | 详情 |
 |---|---|---|
-| **R1** | **训练期"性能异常"先归因外部，暂停留证等人类** | 吞吐骤降 / 子进程批量崩 / 页面文件报错（历史指纹 **`WinError 1455`**，加载 `torch\lib\cufft64_12.dll` 失败）/ spawn 失败 / 评估卡死 / 进程莫名退出 ⇒ **不自动降级、不为绕开它改代码或下调配置、不把猜测写进注释**。成因未定就写"未定"。判读任何性能数字前先确认本次有没有发生降级（静默降级会把故障伪装成"只是慢"）。经验安全档位 `--eval-workers 12`；16 有 commit 压力风险（实测提交上限 47.3GB / 空闲 20.6GB，16×CUDA-torch≈20.8GB）。**比较两个 run 的耗时前先确认 `eval-workers` 档位**（E2 3419s vs 对照 2709s 的差里含 12 vs 16，不得归因于被比较的改动）。 |
+| **R1** | **训练期"性能异常"先归因外部，暂停留证等人类** | 吞吐骤降 / 子进程批量崩 / 页面文件报错（历史指纹 **`WinError 1455`**，加载 `torch\lib\cufft64_12.dll` 失败）/ spawn 失败 / 评估卡死 / 进程莫名退出 ⇒ **不自动降级、不为绕开它改代码或下调配置、不把猜测写进注释**。成因未定就写"未定"。判读任何性能数字前先确认本次有没有发生降级（静默降级会把故障伪装成"只是慢"）。经验安全档位 `--eval-workers 12`；16 有 commit 压力风险（实测提交上限 47.3GB / 空闲 20.6GB，16×CUDA-torch≈20.8GB）。**比较两个 run 的耗时前先确认 `eval-workers` 档位**（E2 3419s vs 对照 2709s 的差里含 12 vs 16，不得归因于被比较的改动）。**⚠️ 2026-09-13 新指纹**：`[eval] 并行评估 worker 失败，降级串行: RuntimeError('DefaultCPUAllocator: not enough memory: you tried to allocate 539136 bytes')`（**worker 内建策略就 OOM，连 0.5 MB 都拿不到**）⇒ 代码按设计降级串行 ⇒ 串行 eval 在 `.to(device)` 处 **`torch.AcceleratorError: CUDA error: unknown error`**（后者成因**未定**）。**该事件当天实测空闲提交仅 10.68 GB（标定 12 档时是 20.6 GB）⇒ "12 = 安全"可能已过期**；因此**长跑开跑前先量 `wmic OS get FreeVirtualMemory`**，并清理**孤儿 spawn worker**（父进程已死的 `--multiprocessing-fork` 进程，实测 3 个占 1.2 GB）。留证 `docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`。 |
 | **R2** | **训练语义兼容红线** | `rl/ppo.py` 被 `run_league` / `flow_league` / `train_follower` / `train_prophet` **共用** ⇒ **函数默认参数必须恒等于旧行为**，新能力只经 `TrainConfig` 显式开启（`value_norm="none"` + `vf_coef=0.5` + `adv_norm="batch"` = 逐位回旧）。 |
 | **R3** | **单变量 + 预注册** | 一次只改一个变量；**判据必须在跑之前写死**（含判定分支、失败分支），跑完照单读，不许现编。 |
 | **R4** | **阈值判据的基线列必须脚本复算，禁止手抄** | 本会话连错三次（F′ 末4均值手抄 0.400 实际 0.588；C2 基线 1/3 实际 2/3；预注册写"每块 9 点(9,8,8,8,8)"而脚本按序号实切 (9,9,9,9,5)；把无 hist 退化时的**打印配比** 0.714/0.286 当采样配比——打印值≠采样值，实际是 0.571/0.286/0.143）。工具：`scripts/judge_anchor_blocks.py --groups`。**判据的力量必须来自设计**（区间不重叠 / 多跑聚合 / 机制指纹），不能来自对单跑或手算数字的信任。 |
@@ -164,7 +164,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 |---|---|---|
 | **C1** | **负 EV 的根因是 GRU 输入饱和**（不是奖励尺度、不是价值头结构） | `enc=relu(enc_fc(fused))` 范数 **533**（`grid_feat` 常分量 468、跨帧 std 1.06）→ GRU tanh 候选饱和 `n_abs=0.994` → h 跨帧 std **2.6e-5** → critic 恒常数，`EV_global −0.5817` 与恒等式 `−bias²/Var(R)=−0.584` 吻合。修复 = `enc_ln`（follower.py）。诊断 `docs/value_channel_saturation_diagnosis_2026-09-11.md`。 |
 | **C2** | **饱和修复在 100k 尺度耐久**（v3 的正面确认） | 100k 全程 `h_std` 0.067→0.095（>0.05）、`n_abs` 0.667→0.826（<0.9）；100k 结构下无一个点越过门槛。证据 `docs/d1_long_100k_verdict_2026-09-13.md` §4。 |
-| **C3** | **但 critic 仍不拟合，且加训练量救不了** | EV 仅前两点为正（+0.234/+0.385），其后 **9/11 点 ≈0 或负**；`vstd/rstd` 30k 后长期 **≈0.001**（比 20k 的 0.0035~0.0225 更差）；run 自身 8 次 vitality 告警。⇒ **"加量救 critic"被 100k 直接否证**（【否证 X4】）。 |
+| **C3** | **但 critic 仍不拟合，且加训练量救不了** | EV 仅前两点为正（+0.234/+0.385），其后 **9/11 点 ≈0 或负**；`vstd/rstd` 30k 后长期 **≈0.001**；run 自身 8 次 vitality 告警。⇒ **"加量救 critic"被 100k 直接否证**（【否证 X4】）。**⚠️ 2026-09-13 更正**：本条原来引用的 20k 基线"0.0035~0.0225"是**错的**——脚本复算 3 个 20k 基线末点为 **0.2473 / 0.0041 / 0.1648**（R4 类，禁止再手抄）；**方向不变**（100k 的 ≈0.001 仍低一个数量级）。另：`_r2` 的 critic **在 20k 之内就死了**（12500 起 0.0007~0.0084），而 r1/r3 到 20k 仍活 ⇒ 塌缩是**双稳态吸收态**，不是步数的确定性函数。 |
 | **C4** | **自对弈 cycling 确凿** | RPS 三角：main 打冻结副本 0.85 / 打训练起点 0.13 / 打全新随机 0.505；锚点长期低位甚至整段 0.000；对照曲线相邻点可差 0.6+。取证 `scripts/_forensics_cycling.py`。 |
 | **C5** | **D1（对手分布去镜像化 + 动态历史自身联赛 + PFSP 门禁）消除"整段输给随机策略"的相位** | 20k 三跑最差锚点 **0.125/0.200/0.250** vs 无干预 **0.000/0.000/0.025**（区间不重叠，Welch t≈4.9）；机制指纹：镜像自对弈 40%→**6.6%/13%/~13%**、本 run 快照 1→9 进池。`docs/d1_league_20k_verdict_2026-09-13.md`。 |
 | **C6** | **D1 的防崩在 4× 训练量（100k，≈374 局）下成立** | P1 块 worst **0.388/0.475/0.275/0.237/0.525**（mean 0.380、min 0.237）vs 无变化组 [0.000,0.025]；与 D1 20k 区间 [0.125,0.250] 比 **min 0.237 落在其中 ⇒ 无统计差别**（不退化，也没证明改善）。`docs/d1_long_100k_verdict_2026-09-13.md`。 |
@@ -197,7 +197,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | # | 未决问题 | 现状 | 候选下一步（含判据设计要点） |
 |---|---|---|---|
 | **O1** | **上限 / 绝对强度**没动 | D1 20k 与 100k 在最差锚点上无差别；次判据（块中位数末−首）口径敏感（+0.125 或 +0.062）⇒ 按预注册**不判决** | ①**D2 = `rand_anchor` 0.1→0.3**（剂量-反应，单变量）；②若要判"上限"，先设计比"滚动均值"更稳的统计量（建议：**块内中位数 + 多跑聚合**，且基线脚本复算）；③注意**固定随机锚点目前是唯一能测绝对强度的仪器**——run 内自引用指标（打冻结副本/打上一评估点）全部失真（§3 判读禁则） |
-| **O2** | **critic 拟合** | **机制已定位（2026-09-13）**：不是"训练过程未解"，而是**价值头隐藏层对几乎全部帧输出恒零**（`value_enc_fc`/`mlp0`/`mlp2.weight` 在 35k→100k 的 22~24/27 个窗口里**位移恰为 0**＝梯度精确为零，而 `mlp2.bias` 每窗都动）⇒ 价值函数 = 常数。第一性原因：价值编码器末端 `LayerNorm` 把近常数输入归一化 ⇒ 价值头可表达跨帧方差 ≈0.14，而目标 std≈12.11 ⇒ 差 60~600 倍 ⇒ 自举失败 ⇒ ReLU 逐个死亡锁死（吸收态）。**已排除**"梯度小/被 `1/s²` 压制"（Adam 对常数缩放不敏感；唯一非零梯度的 bias 跑满速）。见【红线 R14】+ `docs/d1_long_100k_cause_analysis_2026-09-13.md` | ①**先做最便宜的惰性检验**：把优势换成纯 REINFORCE+运行均值基线，若 20k 末点差 <0.11 即证明"critic 当前贡献≈0"；②再做单变量修复（去掉末端 LN **或** 目标归一化 `R/s` 后输出 `×s`），先决是加存活率/输出方差探针；③**不要再靠加量**（X4），④不要再"换一代价值头架构"（X3 四代全败，且四代都在同一形态上打转） |
+| **O2** | **critic 拟合** | **机制已定位（2026-09-13）**：不是"训练过程未解"，而是**价值头隐藏层对几乎全部帧输出恒零**（`value_enc_fc`/`mlp0`/`mlp2.weight` 在 35k→100k 的 22~24/27 个窗口里**位移恰为 0**＝梯度精确为零，而 `mlp2.bias` 每窗都动）⇒ 价值函数 = 常数。第一性原因：价值编码器末端 `LayerNorm` 把近常数输入归一化 ⇒ 价值头可表达跨帧方差 ≈0.14，而目标 std≈12.11 ⇒ 差 60~600 倍 ⇒ 自举失败 ⇒ ReLU 逐个死亡锁死（吸收态，**双稳态**：r2 在 20k 内就死、r1/r3 到 20k 仍活）。**已排除**"梯度小/被 `1/s²` 压制"。见【红线 R14】+ `docs/d1_long_100k_cause_analysis_2026-09-13.md` | **惰性检验已做（2026-09-13，Layer 1）**：**P1 成立 ⇒ critic 惰性**——`grad_cos` 中位 **0.9973**、`resid_frac_norm` 中位 **0.0415**、`grad_norm_ratio` 中位 0.994（145 个诊断更新）；**且该 run 的 critic 并没有塌**（末点 EV +0.30、`vstd/rstd` 0.53）⇒ **惰性不是塌缩的副产品**。⇒ **"修 critic"的预期收益上界 = 让更新方向偏移几个百分点**（GAE 里 V 只经相邻帧差分进入优势 + `adv_norm="scale"` 把"好基线应缩小优势幅度"这条通道归一化掉）。⇒ 建议：**⑤ 不再修 critic**；若要抢救，唯一的机制候选是**先证伪 `adv_norm="scale"` 是那一刀**（单变量 `scale`→`none`/`batch`，需预注册）。判读 `docs/critic_inertia_verdict_2026-09-13.md`（含 2 处文档数字更正）。 |
 | **O3** | **行为病理未修完** | `elixir_avg` 仍低（不会攒费）；`setup_wait` 冷启动死锁已定位但**两阶段状态机未实现**；单边堆牌末点 100% | 攒费链重构（不依赖血牛在手的窗口条件）+ 观测/plan 通道配合；判据用 gate 相对退化 + 接敌率 |
 | **O4** | 训练期 cycling 只"防崩"未"破除" | D1 让最差锚点不再归零，但 RPS 循环仍在（对照曲线大幅摆动） | D2 剂量；或提高 `_HIST_POOL_MAX`（12→24，长 run 的自身联赛更密）；或课程式提高 `defend` 权重 |
 | **O5** | 同 seed 不可复现（机制未定） | 前 435 步逐位一致后 1e-4 漂移；`PYTHONHASHSEED=0` + 单线程 BLAS 无效（嫌疑 CUDA 非确定算子） | 属**方法学**问题：当前靠"多跑聚合 + 大效应判据"绕过；若要定位，需逐算子确定性差分（未做） |
@@ -240,6 +240,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `e2_rand_anchor_20k` | 训练侧弱锚点 10% **未破 cycling** | `docs/train_e2_rand_anchor_20k.log` |
 | `d1_league_20k{,_r2,_r3}` | **防崩有效**（最差锚点区间不相交）；上限未证明；两处预注册标定错误自披露 | `docs/d1_league_20k_verdict_2026-09-13.md` |
 | `d1_long_100k` | **P1 PASS**（防崩在 4× 量级成立）、与 20k 无统计差别、上限仍未解决、加量救不了 critic | `docs/d1_long_100k_verdict_2026-09-13.md` + `docs/diag_d1_long_100k.md` |
+| `critic_inert_probe_20k`（惰性检验 Layer 1） | **P1 成立 ⇒ critic 惰性**：`grad_cos` 中位 **0.9973**、`resid_norm` 中位 **0.0415**（145 点）；**该 run 的 critic 没塌**（EV +0.30、`vstd/rstd` 0.53）⇒ 惰性不是塌缩的副产品；分布尾巴 34% 点 <0.99、3% 反向。顺带查出 2 处文档数字错误（20k `vstd/rstd` 基线、塌缩双稳态） | `docs/critic_inertia_verdict_2026-09-13.md`、预注册 `docs/critic_inertia_prereg_2026-09-13.md`、判读脚本 `scripts/judge_critic_inertia.py`、日志 `docs/train_critic_inert_probe_20k.log` |
 
 ---
 
@@ -251,6 +252,8 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | **所有计划的整合视图**（主线 / 已确证 / 已否证 / 未决 / 优先级） | [`docs/plan_master.md`](docs/plan_master.md) |
 | **当前问题的归因**（critic 为何塌成常数 / 上限为何不动 / 判别性实验） | [`docs/d1_long_100k_cause_analysis_2026-09-13.md`](docs/d1_long_100k_cause_analysis_2026-09-13.md) |
 | 该归因的结构化取证全文（6 路并行 + 评审，含 3 处已更正的口径错误） | [`docs/report_d1_long_100k_structured_2026-09-13.md`](docs/report_d1_long_100k_structured_2026-09-13.md) |
+| **critic 惰性检验**（预注册 / 判读 / 判读脚本） | [`docs/critic_inertia_prereg_2026-09-13.md`](docs/critic_inertia_prereg_2026-09-13.md)、[`docs/critic_inertia_verdict_2026-09-13.md`](docs/critic_inertia_verdict_2026-09-13.md)、`scripts/judge_critic_inertia.py` |
+| R1 事件留证（`cudaErrorUnknown` / 宿主提交压力 / 孤儿 worker） | [`docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`](docs/r1_incident_2026-09-13_layer1_cuda_unknown.md) |
 | 本文件的过程细节与历史推理链 | [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) |
 | 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |
 | RL 代码导读与训练入口 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |

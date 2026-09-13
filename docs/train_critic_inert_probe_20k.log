@@ -1,0 +1,359 @@
+[solo] 单人自对弈 配置 'critic_inert_probe_20k' -> runs\critic_inert_probe_20k (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=1, n_eval_games=40, eval_workers=12, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 2000 步重扫本 run 目录）
+[solo] critic 惰性检验: probe=True critic_baseline=value（c = ret_scaler.mean 的运行均值基线；见 docs/critic_inertia_prereg_2026-09-13.md）
+[solo] eval@0: 胜率 0.600±0.077 (24W/16L/0D, 40局) mean_reward=0.922 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.463±0.079 (18W/21L/1D)
+[solo]   vs baseline_prev: 胜率 0.400±0.077 (16W/24L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.076 (25W/15L/0D)
+[solo] 启动耗时分解: torch+CUDA init=0.0s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=1.4s | eval@0 40局=238.4s (并行worker=12) | 合计(A→B)=239.8s
+[solo] 评估节奏: 全点每 20000 步（2 个，含 eval@0）/ 轻量锚点每 2500 步（7 个，只跑 baseline_rand + 落盘）
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 339] corr=0.9992 resid=0.0482 resid_norm=0.0402 lvl_shift=0.2265 level_gap=0.1140 grad_cos=+0.9998 gnorm_ratio=0.947
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 | p_gnorm=3.247 v_gnorm=47.36 v/p=14.58 scale=1.486 n=128
+[solo advinert 340] corr=1.0000 resid=0.0084 resid_norm=0.0051 lvl_shift=0.0194 level_gap=0.1140 grad_cos=+1.0000 gnorm_ratio=0.994
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 | p_gnorm=0.9404 v_gnorm=2.558 v/p=2.72 scale=6.53 n=128
+[solo advinert 699] corr=1.0000 resid=0.0246 resid_norm=0.0075 lvl_shift=0.0339 level_gap=1.4664 grad_cos=+0.9995 gnorm_ratio=0.990
+[solo step 699] policy=-0.0179 value=0.0805 vraw=10.62 EVb=-0.621 EVin=-0.081 entropy=0.7896 | deploy=11.7% bundle=0.12 ratio=1.032 clip=14.1% gs=16 adv=+10.856±19.709 gnorm=1.35 | p_gnorm=0.279 v_gnorm=0.7056 v/p=2.53 scale=11.49 n=128
+[solo advinert 700] corr=0.9999 resid=0.0135 resid_norm=0.0130 lvl_shift=0.3742 level_gap=3.9609 grad_cos=+1.0000 gnorm_ratio=0.881
+[solo step 700] policy=0.0675 value=0.0063 vraw=0.80 EVb=-0.289 EVin=-0.235 entropy=0.4913 | deploy=7.8% bundle=0.08 ratio=0.974 clip=6.2% gs=16 adv=-6.404±2.931 gnorm=0.55 | p_gnorm=0.6644 v_gnorm=1.056 v/p=1.59 scale=11.23 n=128
+[solo advinert 701] corr=0.9980 resid=0.0657 resid_norm=0.0639 lvl_shift=0.2786 level_gap=3.9609 grad_cos=+1.0000 gnorm_ratio=0.928
+[solo step 701] policy=0.0772 value=0.0136 vraw=1.88 EVb=-1.830 EVin=-1.282 entropy=0.6915 | deploy=10.9% bundle=0.11 ratio=0.939 clip=16.4% gs=16 adv=-12.150±4.822 gnorm=0.31 | p_gnorm=1.898 v_gnorm=0.4174 v/p=0.22 scale=11.77 n=128
+[solo advinert 1099] corr=0.9953 resid=0.1481 resid_norm=0.0970 lvl_shift=0.2214 level_gap=5.2049 grad_cos=+0.9893 gnorm_ratio=0.883
+[solo step 1099] policy=0.0175 value=0.0026 vraw=0.32 EVb=-0.524 EVin=+0.158 entropy=0.7837 | deploy=10.9% bundle=0.12 ratio=0.972 clip=15.6% gs=16 adv=-3.809±6.459 gnorm=0.14 | p_gnorm=0.4298 v_gnorm=0.09551 v/p=0.22 scale=11.12 n=128
+[solo advinert 1100] corr=0.9989 resid=0.0501 resid_norm=0.0471 lvl_shift=0.9173 level_gap=6.2687 grad_cos=+0.8086 gnorm_ratio=1.073
+[solo step 1100] policy=-0.0281 value=0.0011 vraw=0.12 EVb=-0.548 EVin=-0.027 entropy=0.4306 | deploy=7.0% bundle=0.07 ratio=1.021 clip=8.6% gs=16 adv=+1.564±1.763 gnorm=0.11 | p_gnorm=0.6189 v_gnorm=0.1825 v/p=0.29 scale=10.4 n=128
+[solo advinert 1101] corr=0.9991 resid=0.1614 resid_norm=0.0429 lvl_shift=0.5102 level_gap=6.2687 grad_cos=+0.9955 gnorm_ratio=1.203
+[solo step 1101] policy=-0.0815 value=0.0121 vraw=1.17 EVb=-5.199 EVin=-2.688 entropy=0.7692 | deploy=12.5% bundle=0.12 ratio=1.047 clip=13.3% gs=16 adv=+7.716±3.002 gnorm=0.54 | p_gnorm=1.354 v_gnorm=0.5464 v/p=0.40 scale=9.835 n=128
+[solo advinert 1256] corr=0.9992 resid=0.1345 resid_norm=0.0390 lvl_shift=0.1701 level_gap=4.5829 grad_cos=+0.9860 gnorm_ratio=1.092
+[solo step 1256] policy=-0.0101 value=0.0625 vraw=6.92 EVb=-0.164 EVin=+0.065 entropy=0.7841 | deploy=12.5% bundle=0.12 ratio=1.018 clip=5.5% gs=16 adv=+5.249±16.189 gnorm=1.19 | p_gnorm=0.5541 v_gnorm=0.5217 v/p=0.94 scale=10.52 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 1680] corr=0.9996 resid=0.0462 resid_norm=0.0286 lvl_shift=0.0627 level_gap=1.7959 grad_cos=+0.9996 gnorm_ratio=0.951
+[solo step 1680] policy=0.0569 value=0.0821 vraw=11.71 EVb=-2.550 EVin=-2.472 entropy=0.4877 | deploy=7.8% bundle=0.08 ratio=0.986 clip=5.5% gs=16 adv=-17.155±9.381 gnorm=0.56 | p_gnorm=0.665 v_gnorm=1.929 v/p=2.90 scale=11.94 n=128
+[solo advinert 1681] corr=0.9980 resid=0.0638 resid_norm=0.0633 lvl_shift=0.3103 level_gap=0.0560 grad_cos=+1.0000 gnorm_ratio=3.367
+[solo step 1681] policy=-0.0031 value=0.0038 vraw=0.49 EVb=-6.461 EVin=-6.658 entropy=0.4791 | deploy=7.8% bundle=0.08 ratio=1.003 clip=8.6% gs=16 adv=+0.123±1.373 gnorm=0.17 | p_gnorm=0.06477 v_gnorm=0.1276 v/p=1.97 scale=11.4 n=128
+[solo advinert 1682] corr=0.9999 resid=0.0373 resid_norm=0.0150 lvl_shift=0.0592 level_gap=0.0560 grad_cos=+0.9995 gnorm_ratio=0.970
+[solo step 1682] policy=0.0078 value=0.0042 vraw=0.51 EVb=-2.113 EVin=-1.418 entropy=0.5812 | deploy=9.4% bundle=0.09 ratio=0.992 clip=9.4% gs=16 adv=-0.686±2.616 gnorm=0.18 | p_gnorm=0.8531 v_gnorm=0.1222 v/p=0.14 scale=10.94 n=128
+[solo advinert 1683] corr=1.0000 resid=0.0264 resid_norm=0.0035 lvl_shift=0.0019 level_gap=0.0560 grad_cos=+1.0000 gnorm_ratio=1.000
+[solo step 1683] policy=0.0506 value=0.0275 vraw=3.32 EVb=-1.076 EVin=-0.949 entropy=0.9093 | deploy=14.8% bundle=0.15 ratio=0.940 clip=17.2% gs=16 adv=-11.874±7.179 gnorm=0.46 | p_gnorm=1.271 v_gnorm=0.3415 v/p=0.27 scale=10.99 n=128
+[solo advinert 1972] corr=0.9998 resid=0.0542 resid_norm=0.0178 lvl_shift=0.0587 level_gap=1.9782 grad_cos=+0.9666 gnorm_ratio=1.279
+[solo step 1972] policy=0.0088 value=0.0138 vraw=1.61 EVb=-0.176 EVin=+0.021 entropy=0.5710 | deploy=8.6% bundle=0.09 ratio=1.002 clip=4.7% gs=16 adv=-2.522±8.978 gnorm=0.13 | p_gnorm=0.07243 v_gnorm=0.1945 v/p=2.69 scale=10.82 n=128
+[solo advinert 1973] corr=0.9982 resid=0.1126 resid_norm=0.0601 lvl_shift=0.3369 level_gap=2.2529 grad_cos=+0.9961 gnorm_ratio=1.762
+[solo step 1973] policy=-0.0452 value=0.0056 vraw=0.61 EVb=-1.307 EVin=-1.483 entropy=0.4130 | deploy=7.0% bundle=0.07 ratio=1.046 clip=6.2% gs=16 adv=+3.192±2.227 gnorm=0.17 | p_gnorm=0.2176 v_gnorm=0.4163 v/p=1.91 scale=10.47 n=128
+[solo] 冻结副本已同步 @step 2000
+[solo] 对手池刷新 @step 2000: hist ckpts=12（本目录 1，新增 3） | 累计对手局 {'defend': 2, 'frozen': 2, 'hist': 2}
+[follower] ⚠️ runs/economy_9j\solo_main_100000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 2160] corr=0.9994 resid=0.1032 resid_norm=0.0337 lvl_shift=0.1383 level_gap=1.5756 grad_cos=+0.9813 gnorm_ratio=0.991
+[solo step 2160] policy=0.0022 value=0.0178 vraw=1.90 EVb=-0.139 EVin=-0.028 entropy=0.7717 | deploy=11.7% bundle=0.12 ratio=1.006 clip=13.3% gs=16 adv=-0.662±8.174 gnorm=0.13 | p_gnorm=0.4823 v_gnorm=0.0827 v/p=0.17 scale=10.33 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 2365] corr=1.0000 resid=0.0313 resid_norm=0.0084 lvl_shift=0.0137 level_gap=1.0888 grad_cos=+1.0000 gnorm_ratio=0.994
+[solo step 2365] policy=0.0672 value=0.0950 vraw=11.74 EVb=-4.647 EVin=-4.370 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=0.971 clip=8.6% gs=16 adv=-17.652±8.153 gnorm=0.90 | p_gnorm=0.9311 v_gnorm=0.4968 v/p=0.53 scale=11.12 n=128
+[solo step 2366] policy=-0.0307 value=0.0397 vraw=4.95 EVb=-1.036 EVin=-1.161 entropy=0.4269 | deploy=7.0% bundle=0.07 ratio=1.005 clip=10.2% gs=16 adv=+8.354±8.522 gnorm=0.49 | p_gnorm=0 v_gnorm=0.4429 v/p=442889717219.79 scale=11.17 n=128
+[solo] anchor@2500: vs baseline_rand 胜率 0.550±0.079 (22W/18L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 2811] corr=1.0000 resid=0.0196 resid_norm=0.0022 lvl_shift=0.0218 level_gap=0.8230 grad_cos=+0.9993 gnorm_ratio=1.014
+[solo step 2811] policy=-0.0264 value=0.0442 vraw=5.62 EVb=-0.637 EVin=-0.634 entropy=0.4803 | deploy=7.0% bundle=0.08 ratio=1.021 clip=3.1% gs=16 adv=+8.394±10.032 gnorm=0.26 | p_gnorm=0.3091 v_gnorm=0.4293 v/p=1.39 scale=11.27 n=128
+[solo advinert 2812] corr=1.0000 resid=0.0037 resid_norm=0.0034 lvl_shift=0.1139 level_gap=0.8921 grad_cos=+0.9955 gnorm_ratio=0.915
+[solo step 2812] policy=0.0134 value=0.0015 vraw=0.18 EVb=-1.213 EVin=-0.687 entropy=0.4196 | deploy=7.0% bundle=0.07 ratio=1.006 clip=7.8% gs=16 adv=-0.815±1.862 gnorm=0.04 | p_gnorm=0.2644 v_gnorm=0.04803 v/p=0.18 scale=11 n=128
+[solo advinert 2813] corr=0.9997 resid=0.0297 resid_norm=0.0232 lvl_shift=0.1824 level_gap=0.8921 grad_cos=+0.9999 gnorm_ratio=0.956
+[solo step 2813] policy=0.0946 value=0.0050 vraw=0.58 EVb=-13.619 EVin=-13.597 entropy=0.7881 | deploy=13.3% bundle=0.13 ratio=0.947 clip=13.3% gs=16 adv=-3.446±1.116 gnorm=0.42 | p_gnorm=1.655 v_gnorm=0.1224 v/p=0.07 scale=10.78 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 3259] corr=1.0000 resid=0.0401 resid_norm=0.0083 lvl_shift=0.0171 level_gap=0.8655 grad_cos=+1.0000 gnorm_ratio=0.994
+[solo step 3259] policy=0.0769 value=0.0413 vraw=4.89 EVb=-6.454 EVin=-6.466 entropy=1.0942 | deploy=15.6% bundle=0.18 ratio=0.945 clip=14.8% gs=16 adv=-11.139±4.464 gnorm=0.90 | p_gnorm=1.069 v_gnorm=0.3364 v/p=0.31 scale=10.88 n=128
+[solo advinert 3260] corr=1.0000 resid=0.0012 resid_norm=0.0010 lvl_shift=0.0246 level_gap=0.3256 grad_cos=+1.0000 gnorm_ratio=0.973
+[solo step 3260] policy=0.0068 value=0.0023 vraw=0.26 EVb=-0.264 EVin=-0.001 entropy=0.4471 | deploy=7.8% bundle=0.08 ratio=1.001 clip=6.2% gs=16 adv=-0.631±2.896 gnorm=0.07 | p_gnorm=0.2424 v_gnorm=0.02422 v/p=0.10 scale=10.66 n=128
+[solo advinert 3261] corr=1.0000 resid=0.0017 resid_norm=0.0016 lvl_shift=0.0228 level_gap=0.3256 grad_cos=+0.9999 gnorm_ratio=0.991
+[solo step 3261] policy=0.0389 value=0.0098 vraw=1.09 EVb=-1.739 EVin=-1.208 entropy=0.5015 | deploy=8.6% bundle=0.09 ratio=0.969 clip=10.2% gs=16 adv=-4.950±3.916 gnorm=0.24 | p_gnorm=0.5435 v_gnorm=0.2515 v/p=0.46 scale=10.5 n=128
+[solo advinert 3262] corr=1.0000 resid=0.0030 resid_norm=0.0013 lvl_shift=0.0141 level_gap=0.3256 grad_cos=+1.0000 gnorm_ratio=0.993
+[solo step 3262] policy=0.0269 value=0.0303 vraw=3.35 EVb=-0.667 EVin=-0.525 entropy=0.8622 | deploy=14.1% bundle=0.14 ratio=0.944 clip=18.8% gs=16 adv=-7.088±8.297 gnorm=0.51 | p_gnorm=1.242 v_gnorm=0.3367 v/p=0.27 scale=10.51 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 3625] corr=1.0000 resid=0.0129 resid_norm=0.0096 lvl_shift=0.0069 level_gap=0.3902 grad_cos=+1.0000 gnorm_ratio=0.997
+[solo step 3625] policy=0.0237 value=0.0452 vraw=5.10 EVb=-0.667 EVin=-0.447 entropy=0.7462 | deploy=11.7% bundle=0.12 ratio=0.972 clip=14.1% gs=16 adv=-8.399±10.944 gnorm=0.65 | p_gnorm=1.083 v_gnorm=0.4924 v/p=0.45 scale=10.62 n=128
+[solo advinert 3626] corr=1.0000 resid=0.0073 resid_norm=0.0071 lvl_shift=0.0709 level_gap=0.4437 grad_cos=+1.0000 gnorm_ratio=0.977
+[solo step 3626] policy=0.0602 value=0.0013 vraw=0.14 EVb=-7.794 EVin=-0.481 entropy=0.3911 | deploy=7.0% bundle=0.07 ratio=0.972 clip=7.0% gs=16 adv=-3.003±1.547 gnorm=0.32 | p_gnorm=1.326 v_gnorm=0.1933 v/p=0.15 scale=10.44 n=128
+[solo advinert 3627] corr=1.0000 resid=0.0145 resid_norm=0.0029 lvl_shift=0.0284 level_gap=0.4437 grad_cos=+1.0000 gnorm_ratio=0.990
+[solo step 3627] policy=0.0616 value=0.0098 vraw=1.05 EVb=-5.118 EVin=-1.232 entropy=0.6675 | deploy=12.5% bundle=0.12 ratio=0.943 clip=13.3% gs=16 adv=-7.151±3.587 gnorm=0.49 | p_gnorm=1.28 v_gnorm=0.5187 v/p=0.41 scale=10.36 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 3715] corr=0.9998 resid=0.0436 resid_norm=0.0205 lvl_shift=0.0483 level_gap=2.2712 grad_cos=+1.0000 gnorm_ratio=1.051
+[solo step 3715] policy=-0.0204 value=0.1625 vraw=20.07 EVb=-0.275 EVin=-0.407 entropy=0.6144 | deploy=10.2% bundle=0.11 ratio=1.012 clip=9.4% gs=16 adv=+14.240±22.280 gnorm=1.12 | p_gnorm=0.3547 v_gnorm=1.525 v/p=4.30 scale=11.11 n=128
+[solo] 冻结副本已同步 @step 4000
+[solo] 对手池刷新 @step 4000: hist ckpts=12（本目录 2，新增 2） | 累计对手局 {'defend': 2, 'frozen': 2, 'hist': 8}
+[solo advinert 4086] corr=0.9995 resid=0.1095 resid_norm=0.0309 lvl_shift=0.0067 level_gap=1.2082 grad_cos=+0.9996 gnorm_ratio=0.949
+[solo step 4086] policy=-0.0167 value=0.0035 vraw=0.41 EVb=-0.231 EVin=-0.000 entropy=0.4740 | deploy=7.8% bundle=0.09 ratio=1.030 clip=6.2% gs=16 adv=+2.017±3.810 gnorm=0.03 | p_gnorm=0.2527 v_gnorm=0.1867 v/p=0.74 scale=10.95 n=128
+[solo advinert 4087] corr=0.9996 resid=0.0425 resid_norm=0.0272 lvl_shift=0.0916 level_gap=1.1781 grad_cos=+1.0000 gnorm_ratio=1.045
+[solo step 4087] policy=-0.0497 value=0.0011 vraw=0.13 EVb=-0.806 EVin=+0.021 entropy=0.4567 | deploy=8.6% bundle=0.09 ratio=1.045 clip=8.6% gs=16 adv=+3.214±2.040 gnorm=0.03 | p_gnorm=0.9935 v_gnorm=0.07335 v/p=0.07 scale=10.78 n=128
+[solo advinert 4334] corr=0.9997 resid=0.0439 resid_norm=0.0260 lvl_shift=0.0157 level_gap=1.2627 grad_cos=+0.9997 gnorm_ratio=1.004
+[solo step 4334] policy=-0.0516 value=0.0608 vraw=7.60 EVb=-2.431 EVin=-0.695 entropy=0.8377 | deploy=14.8% bundle=0.15 ratio=1.057 clip=10.9% gs=16 adv=+18.360±11.225 gnorm=1.18 | p_gnorm=0.5835 v_gnorm=1.653 v/p=2.83 scale=11.18 n=128
+[solo step 4335] policy=-0.0640 value=0.0077 vraw=0.97 EVb=-5.157 EVin=-0.009 entropy=0.4316 | deploy=7.8% bundle=0.08 ratio=1.040 clip=7.0% gs=16 adv=+10.380±5.103 gnorm=0.23 | p_gnorm=0 v_gnorm=0.4486 v/p=448552482847.61 scale=11.24 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 4720] corr=0.9977 resid=0.0709 resid_norm=0.0672 lvl_shift=0.2216 level_gap=3.5818 grad_cos=+0.9958 gnorm_ratio=0.922
+[solo step 4720] policy=-0.0634 value=0.0219 vraw=2.99 EVb=-12.422 EVin=-0.820 entropy=0.4907 | deploy=7.8% bundle=0.09 ratio=1.029 clip=5.5% gs=16 adv=+18.470±9.171 gnorm=1.13 | p_gnorm=0.7549 v_gnorm=1.384 v/p=1.83 scale=11.69 n=128
+[solo advinert 4721] corr=0.9958 resid=0.1008 resid_norm=0.0921 lvl_shift=2.4316 level_gap=11.7242 grad_cos=+1.0000 gnorm_ratio=4.138
+[solo step 4721] policy=0.0717 value=0.0131 vraw=1.77 EVb=-62.102 EVin=-21.796 entropy=0.4115 | deploy=7.8% bundle=0.08 ratio=0.976 clip=7.0% gs=16 adv=-2.730±1.178 gnorm=1.01 | p_gnorm=0.8008 v_gnorm=1.567 v/p=1.96 scale=11.61 n=128
+[solo advinert 4722] corr=0.9728 resid=0.2608 resid_norm=0.2334 lvl_shift=1.8854 level_gap=11.7242 grad_cos=+0.8455 gnorm_ratio=0.465
+[solo step 4722] policy=-0.0173 value=0.0010 vraw=0.14 EVb=-62.197 EVin=+0.033 entropy=0.4434 | deploy=8.6% bundle=0.09 ratio=1.022 clip=7.0% gs=16 adv=+0.885±1.631 gnorm=0.06 | p_gnorm=0.636 v_gnorm=0.1309 v/p=0.21 scale=11.61 n=128
+[solo] anchor@5000: vs baseline_rand 胜率 0.675±0.074 (27W/13L/0D, 40局)
+[solo advinert 5053] corr=0.9828 resid=0.3554 resid_norm=0.1854 lvl_shift=0.5250 level_gap=11.7088 grad_cos=+0.9716 gnorm_ratio=0.835
+[solo step 5053] policy=-0.0442 value=0.0068 vraw=0.96 EVb=-16.835 EVin=-0.027 entropy=0.8407 | deploy=14.8% bundle=0.16 ratio=1.053 clip=14.8% gs=16 adv=+6.682±4.816 gnorm=0.41 | p_gnorm=0.614 v_gnorm=0.882 v/p=1.44 scale=11.82 n=128
+[solo advinert 5054] corr=0.9830 resid=0.2148 resid_norm=0.1843 lvl_shift=2.3521 level_gap=11.6081 grad_cos=-1.0000 gnorm_ratio=2.065
+[solo step 5054] policy=0.0279 value=0.0051 vraw=0.70 EVb=-96.709 EVin=-2.853 entropy=0.3998 | deploy=7.8% bundle=0.08 ratio=0.985 clip=7.0% gs=16 adv=-0.953±1.052 gnorm=0.33 | p_gnorm=0.4168 v_gnorm=1.096 v/p=2.63 scale=11.77 n=128
+[solo advinert 5055] corr=0.9992 resid=0.1783 resid_norm=0.0400 lvl_shift=0.5985 level_gap=11.6081 grad_cos=+0.9927 gnorm_ratio=0.772
+[solo step 5055] policy=-0.0319 value=0.0111 vraw=1.57 EVb=-12.735 EVin=-0.272 entropy=0.4381 | deploy=8.6% bundle=0.09 ratio=1.034 clip=7.8% gs=16 adv=+5.004±4.963 gnorm=0.74 | p_gnorm=0.8522 v_gnorm=0.9087 v/p=1.07 scale=11.92 n=128
+[solo advinert 5337] corr=0.9829 resid=0.3233 resid_norm=0.1852 lvl_shift=0.3197 level_gap=12.4616 grad_cos=+0.9982 gnorm_ratio=0.913
+[solo step 5337] policy=-0.0261 value=0.0115 vraw=1.70 EVb=-8.533 EVin=+0.075 entropy=0.8340 | deploy=12.5% bundle=0.15 ratio=1.034 clip=8.6% gs=16 adv=+6.323±7.659 gnorm=0.35 | p_gnorm=1.2 v_gnorm=1.049 v/p=0.87 scale=12.16 n=128
+[solo advinert 5338] corr=0.9983 resid=0.1798 resid_norm=0.0575 lvl_shift=0.5860 level_gap=13.2146 grad_cos=+0.9867 gnorm_ratio=0.614
+[solo step 5338] policy=-0.0550 value=0.0040 vraw=0.62 EVb=-27.254 EVin=+0.062 entropy=0.3535 | deploy=7.0% bundle=0.07 ratio=1.036 clip=6.2% gs=16 adv=+7.219±4.137 gnorm=0.24 | p_gnorm=0.3529 v_gnorm=0.4901 v/p=1.39 scale=12.42 n=128
+[solo advinert 5521] corr=0.9713 resid=0.3427 resid_norm=0.2394 lvl_shift=0.7512 level_gap=15.2252 grad_cos=+0.9447 gnorm_ratio=0.717
+[solo step 5521] policy=-0.0433 value=0.0016 vraw=0.26 EVb=-77.327 EVin=+0.288 entropy=0.5752 | deploy=10.2% bundle=0.11 ratio=1.037 clip=8.6% gs=16 adv=+7.411±5.376 gnorm=0.43 | p_gnorm=0.5074 v_gnorm=0.4189 v/p=0.83 scale=12.74 n=128
+[solo advinert 5522] corr=0.8342 resid=1.0069 resid_norm=0.5759 lvl_shift=3.4884 level_gap=19.6484 grad_cos=-1.0000 gnorm_ratio=0.345
+[solo step 5522] policy=-0.0005 value=0.0054 vraw=0.91 EVb=-22.518 EVin=-0.148 entropy=0.3861 | deploy=7.8% bundle=0.08 ratio=1.005 clip=5.5% gs=16 adv=+0.085±5.078 gnorm=0.22 | p_gnorm=0.1955 v_gnorm=0.5999 v/p=3.07 scale=12.94 n=128
+[solo advinert 5653] corr=0.7610 resid=0.6852 resid_norm=0.6914 lvl_shift=3.1010 level_gap=18.4305 grad_cos=+0.6852 gnorm_ratio=13.045
+[solo step 5653] policy=0.0797 value=0.0072 vraw=1.20 EVb=-20.124 EVin=+0.057 entropy=0.4671 | deploy=7.8% bundle=0.09 ratio=0.971 clip=7.8% gs=16 adv=-7.991±3.101 gnorm=0.40 | p_gnorm=1.158 v_gnorm=1.6 v/p=1.38 scale=12.89 n=128
+[solo] 冻结副本已同步 @step 6000
+[solo] 对手池刷新 @step 6000: hist ckpts=12（本目录 3，新增 1） | 累计对手局 {'defend': 4, 'frozen': 2, 'hist': 11, 'rand_anchor': 2}
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 6012] corr=-0.4251 resid=2.8115 resid_norm=1.6882 lvl_shift=1.0737 level_gap=12.0380 grad_cos=+0.5111 gnorm_ratio=1.427
+[solo step 6012] policy=0.0188 value=0.0009 vraw=0.15 EVb=-76.705 EVin=-0.846 entropy=0.5045 | deploy=9.4% bundle=0.09 ratio=0.975 clip=6.2% gs=16 adv=-2.756±4.478 gnorm=0.13 | p_gnorm=0.4259 v_gnorm=0.2839 v/p=0.67 scale=12.8 n=128
+[solo advinert 6013] corr=0.9880 resid=0.2751 resid_norm=0.1550 lvl_shift=1.0725 level_gap=11.0204 grad_cos=-0.1287 gnorm_ratio=1.957
+[solo step 6013] policy=0.0020 value=0.0010 vraw=0.17 EVb=-36.416 EVin=+0.184 entropy=0.3693 | deploy=7.0% bundle=0.07 ratio=0.997 clip=6.2% gs=16 adv=-0.141±1.993 gnorm=0.15 | p_gnorm=0.2632 v_gnorm=0.2928 v/p=1.11 scale=12.76 n=128
+[solo advinert 6338] corr=0.7239 resid=0.6925 resid_norm=0.7431 lvl_shift=1.5692 level_gap=11.0161 grad_cos=+0.8510 gnorm_ratio=0.443
+[solo step 6338] policy=-0.0161 value=0.0018 vraw=0.29 EVb=-35.451 EVin=+0.195 entropy=0.8851 | deploy=15.6% bundle=0.16 ratio=1.006 clip=13.3% gs=16 adv=+1.451±2.878 gnorm=0.24 | p_gnorm=0.4269 v_gnorm=0.3194 v/p=0.75 scale=12.79 n=128
+[solo advinert 6339] corr=0.9960 resid=0.1506 resid_norm=0.0893 lvl_shift=0.9889 level_gap=10.9289 grad_cos=+0.7416 gnorm_ratio=0.370
+[solo step 6339] policy=-0.0113 value=0.0006 vraw=0.10 EVb=-55.701 EVin=+0.379 entropy=0.4239 | deploy=7.8% bundle=0.08 ratio=1.017 clip=7.8% gs=16 adv=+0.600±1.703 gnorm=0.12 | p_gnorm=0.3289 v_gnorm=0.1891 v/p=0.58 scale=12.74 n=128
+[solo advinert 6340] corr=0.9935 resid=0.2181 resid_norm=0.1142 lvl_shift=0.3915 level_gap=10.9289 grad_cos=+1.0000 gnorm_ratio=0.762
+[solo step 6340] policy=-0.0674 value=0.0105 vraw=1.77 EVb=-31.181 EVin=-0.417 entropy=0.4456 | deploy=8.6% bundle=0.09 ratio=1.032 clip=7.8% gs=16 adv=+9.071±4.235 gnorm=0.72 | p_gnorm=0.6003 v_gnorm=1.546 v/p=2.58 scale=12.94 n=128
+[solo advinert 6580] corr=0.9904 resid=0.2600 resid_norm=0.1388 lvl_shift=0.4790 level_gap=13.8402 grad_cos=+0.8752 gnorm_ratio=0.880
+[solo step 6580] policy=-0.0083 value=0.0064 vraw=1.09 EVb=-9.389 EVin=+0.576 entropy=0.6775 | deploy=11.7% bundle=0.12 ratio=1.016 clip=8.6% gs=16 adv=+2.432±9.382 gnorm=0.42 | p_gnorm=0.515 v_gnorm=0.2514 v/p=0.49 scale=13.04 n=128
+[solo advinert 6581] corr=0.9782 resid=0.7982 resid_norm=0.2089 lvl_shift=0.9313 level_gap=16.7515 grad_cos=+0.9914 gnorm_ratio=1.421
+[solo step 6581] policy=0.0912 value=0.0083 vraw=1.39 EVb=-8.811 EVin=-0.406 entropy=0.3535 | deploy=7.0% bundle=0.07 ratio=0.978 clip=7.0% gs=16 adv=-11.822±4.021 gnorm=0.47 | p_gnorm=1.554 v_gnorm=1.649 v/p=1.06 scale=12.94 n=128
+[solo advinert 6676] corr=0.9905 resid=0.5494 resid_norm=0.1380 lvl_shift=0.4420 level_gap=7.7087 grad_cos=+0.9817 gnorm_ratio=1.300
+[solo step 6676] policy=0.0054 value=0.0237 vraw=3.96 EVb=-1.091 EVin=-0.035 entropy=0.4930 | deploy=8.6% bundle=0.09 ratio=1.007 clip=7.0% gs=16 adv=-3.150±17.649 gnorm=0.44 | p_gnorm=0.9331 v_gnorm=0.4516 v/p=0.48 scale=12.92 n=128
+[solo advinert 6843] corr=0.9997 resid=0.0266 resid_norm=0.0256 lvl_shift=0.1149 level_gap=4.4963 grad_cos=+1.0000 gnorm_ratio=1.113
+[solo step 6843] policy=0.0359 value=0.0930 vraw=16.00 EVb=-0.275 EVin=-0.718 entropy=0.3830 | deploy=7.8% bundle=0.08 ratio=0.989 clip=1.6% gs=16 adv=-18.759±16.226 gnorm=1.14 | p_gnorm=0.154 v_gnorm=2.165 v/p=14.06 scale=13.12 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 7065] corr=0.9995 resid=0.1846 resid_norm=0.0317 lvl_shift=0.1446 level_gap=3.5837 grad_cos=+0.9992 gnorm_ratio=0.932
+[solo step 7065] policy=0.0423 value=0.0593 vraw=10.57 EVb=-1.448 EVin=-1.439 entropy=0.4436 | deploy=8.6% bundle=0.09 ratio=0.977 clip=7.0% gs=16 adv=-20.405±14.954 gnorm=0.35 | p_gnorm=0.8863 v_gnorm=1.163 v/p=1.31 scale=13.35 n=128
+[solo advinert 7066] corr=0.9988 resid=0.0571 resid_norm=0.0484 lvl_shift=0.1405 level_gap=2.6103 grad_cos=+0.9992 gnorm_ratio=0.936
+[solo step 7066] policy=0.0659 value=0.0219 vraw=3.93 EVb=-2.549 EVin=-2.047 entropy=0.3071 | deploy=7.0% bundle=0.07 ratio=0.968 clip=7.0% gs=16 adv=-13.323±6.247 gnorm=0.39 | p_gnorm=1.108 v_gnorm=0.2427 v/p=0.22 scale=13.42 n=128
+[solo advinert 7417] corr=0.9999 resid=0.0348 resid_norm=0.0112 lvl_shift=0.1525 level_gap=5.8616 grad_cos=+0.9997 gnorm_ratio=0.602
+[solo step 7417] policy=0.0235 value=0.0168 vraw=3.03 EVb=-0.923 EVin=-0.465 entropy=0.4275 | deploy=8.6% bundle=0.09 ratio=0.969 clip=9.4% gs=16 adv=-7.230±9.555 gnorm=0.29 | p_gnorm=0.09354 v_gnorm=0.2248 v/p=2.40 scale=13.45 n=128
+[solo advinert 7418] corr=0.9992 resid=0.0613 resid_norm=0.0395 lvl_shift=0.5125 level_gap=6.5365 grad_cos=+0.8864 gnorm_ratio=0.864
+[solo step 7418] policy=0.0077 value=0.0032 vraw=0.58 EVb=-0.430 EVin=-0.042 entropy=0.3325 | deploy=7.8% bundle=0.08 ratio=1.001 clip=8.6% gs=16 adv=-1.101±4.251 gnorm=0.06 | p_gnorm=0.5165 v_gnorm=0.01649 v/p=0.03 scale=13.38 n=128
+[solo] anchor@7500: vs baseline_rand 胜率 0.700±0.072 (28W/12L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 7711] corr=0.9965 resid=0.1898 resid_norm=0.0833 lvl_shift=0.2116 level_gap=6.6614 grad_cos=+0.9987 gnorm_ratio=1.086
+[solo step 7711] policy=-0.0738 value=0.0742 vraw=13.30 EVb=-4.778 EVin=-5.472 entropy=0.9257 | deploy=14.8% bundle=0.18 ratio=1.074 clip=11.7% gs=16 adv=+17.844±7.595 gnorm=1.06 | p_gnorm=1.104 v_gnorm=1.191 v/p=1.08 scale=13.39 n=128
+[solo step 7712] policy=-0.0136 value=0.0043 vraw=0.77 EVb=-0.087 EVin=-0.007 entropy=0.3026 | deploy=7.0% bundle=0.07 ratio=1.002 clip=4.7% gs=16 adv=+2.134±4.934 gnorm=0.13 | p_gnorm=0 v_gnorm=0.005321 v/p=5320565854.98 scale=13.31 n=128
+[solo advinert 7713] corr=0.9992 resid=0.1261 resid_norm=0.0390 lvl_shift=0.3988 level_gap=8.1360 grad_cos=+0.6008 gnorm_ratio=0.845
+[solo step 7713] policy=-0.0276 value=0.0186 vraw=3.26 EVb=-0.322 EVin=-0.265 entropy=0.3376 | deploy=8.6% bundle=0.09 ratio=1.018 clip=7.8% gs=16 adv=+7.828±8.909 gnorm=0.29 | p_gnorm=0.2518 v_gnorm=0.2057 v/p=0.82 scale=13.25 n=128
+[solo advinert 7915] corr=0.9833 resid=0.4383 resid_norm=0.1826 lvl_shift=0.2828 level_gap=5.5930 grad_cos=+0.9859 gnorm_ratio=0.925
+[solo step 7915] policy=-0.0694 value=0.0457 vraw=7.99 EVb=-6.785 EVin=-5.858 entropy=0.6433 | deploy=11.7% bundle=0.14 ratio=1.055 clip=8.6% gs=16 adv=+15.818±7.196 gnorm=0.51 | p_gnorm=0.6424 v_gnorm=0.2303 v/p=0.36 scale=13.23 n=128
+[solo] 冻结副本已同步 @step 8000
+[solo] 对手池刷新 @step 8000: hist ckpts=12（本目录 4，新增 1） | 累计对手局 {'defend': 4, 'frozen': 6, 'hist': 16, 'rand_anchor': 2}
+[solo advinert 8143] corr=0.9986 resid=0.1475 resid_norm=0.0537 lvl_shift=0.1082 level_gap=4.7946 grad_cos=+0.9970 gnorm_ratio=1.043
+[solo step 8143] policy=-0.0668 value=0.0468 vraw=8.21 EVb=-5.092 EVin=-1.331 entropy=0.3247 | deploy=7.8% bundle=0.09 ratio=1.023 clip=5.5% gs=16 adv=+17.169±7.999 gnorm=2.04 | p_gnorm=0.5682 v_gnorm=0.3612 v/p=0.64 scale=13.25 n=128
+[solo advinert 8144] corr=0.9996 resid=0.0579 resid_norm=0.0277 lvl_shift=0.2884 level_gap=4.4201 grad_cos=+1.0000 gnorm_ratio=0.162
+[solo step 8144] policy=-0.0257 value=0.0074 vraw=1.28 EVb=-0.957 EVin=+0.103 entropy=0.2594 | deploy=7.8% bundle=0.08 ratio=1.000 clip=2.3% gs=16 adv=+4.322±5.234 gnorm=0.41 | p_gnorm=0.01842 v_gnorm=1.274 v/p=69.18 scale=13.16 n=128
+[solo advinert 8357] corr=0.9975 resid=0.1694 resid_norm=0.0701 lvl_shift=0.0695 level_gap=2.7685 grad_cos=+0.9528 gnorm_ratio=1.037
+[solo step 8357] policy=-0.0408 value=0.0135 vraw=2.33 EVb=-3.519 EVin=+0.140 entropy=0.2916 | deploy=7.0% bundle=0.08 ratio=1.014 clip=3.9% gs=16 adv=+12.424±9.570 gnorm=0.27 | p_gnorm=0.5294 v_gnorm=1.067 v/p=2.01 scale=13.14 n=128
+[solo advinert 8358] corr=0.9967 resid=0.0899 resid_norm=0.0815 lvl_shift=0.0345 level_gap=0.3547 grad_cos=+1.0000 gnorm_ratio=1.092
+[solo step 8358] policy=-0.0257 value=0.0066 vraw=1.13 EVb=-3.553 EVin=-0.018 entropy=0.2268 | deploy=7.0% bundle=0.07 ratio=1.012 clip=2.3% gs=16 adv=+4.193±5.141 gnorm=0.37 | p_gnorm=0.3855 v_gnorm=0.842 v/p=2.18 scale=13.07 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 8770] corr=0.9931 resid=0.1547 resid_norm=0.1173 lvl_shift=0.0504 level_gap=3.3275 grad_cos=+1.0000 gnorm_ratio=1.325
+[solo step 8770] policy=-0.0236 value=0.0039 vraw=0.67 EVb=-5.410 EVin=+0.207 entropy=0.3574 | deploy=10.2% bundle=0.10 ratio=1.016 clip=3.9% gs=16 adv=+4.037±5.481 gnorm=0.22 | p_gnorm=0.01977 v_gnorm=0.2704 v/p=13.68 scale=13.01 n=128
+[solo step 8771] policy=0.0048 value=0.0018 vraw=0.29 EVb=-30.888 EVin=-0.473 entropy=0.1956 | deploy=7.0% bundle=0.07 ratio=0.995 clip=2.3% gs=16 adv=-0.280±1.811 gnorm=0.15 | p_gnorm=0 v_gnorm=0.6146 v/p=614598429150.31 scale=12.92 n=128
+[solo advinert 8772] corr=0.9961 resid=0.3117 resid_norm=0.0882 lvl_shift=0.3898 level_gap=4.4028 grad_cos=+0.9997 gnorm_ratio=0.840
+[solo step 8772] policy=-0.0465 value=0.0020 vraw=0.33 EVb=-49.440 EVin=+0.204 entropy=0.3769 | deploy=13.3% bundle=0.13 ratio=1.038 clip=7.8% gs=16 adv=+2.329±1.572 gnorm=0.36 | p_gnorm=0.7972 v_gnorm=0.4973 v/p=0.62 scale=12.86 n=128
+[solo advinert 9067] corr=0.9973 resid=0.2349 resid_norm=0.0733 lvl_shift=0.2271 level_gap=5.1411 grad_cos=+0.9813 gnorm_ratio=0.934
+[solo step 9067] policy=-0.0018 value=0.0078 vraw=1.29 EVb=-1.626 EVin=+0.662 entropy=0.3678 | deploy=12.5% bundle=0.12 ratio=1.005 clip=7.0% gs=16 adv=+0.415±8.098 gnorm=0.44 | p_gnorm=0.4754 v_gnorm=0.2734 v/p=0.58 scale=12.83 n=128
+[solo advinert 9068] corr=0.9939 resid=0.1123 resid_norm=0.1105 lvl_shift=0.3041 level_gap=5.8566 grad_cos=+0.9994 gnorm_ratio=1.043
+[solo step 9068] policy=0.0449 value=0.0053 vraw=0.87 EVb=-1.273 EVin=-0.234 entropy=0.2091 | deploy=7.0% bundle=0.07 ratio=0.995 clip=3.1% gs=16 adv=-6.579±4.556 gnorm=0.26 | p_gnorm=0.7087 v_gnorm=0.6738 v/p=0.95 scale=12.75 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 9473] corr=0.9973 resid=0.2888 resid_norm=0.0737 lvl_shift=0.1667 level_gap=4.8402 grad_cos=+1.0000 gnorm_ratio=0.481
+[solo step 9473] policy=0.0578 value=0.0668 vraw=11.09 EVb=-1.719 EVin=-1.847 entropy=0.5604 | deploy=11.7% bundle=0.12 ratio=0.962 clip=10.2% gs=16 adv=-23.199±12.287 gnorm=0.54 | p_gnorm=0.05097 v_gnorm=3.302 v/p=64.79 scale=12.89 n=128
+[solo advinert 9474] corr=0.9998 resid=0.0213 resid_norm=0.0207 lvl_shift=0.3480 level_gap=0.4359 grad_cos=+0.9736 gnorm_ratio=0.864
+[solo step 9474] policy=0.0280 value=0.0080 vraw=1.32 EVb=-0.179 EVin=-0.064 entropy=0.4027 | deploy=7.0% bundle=0.07 ratio=0.987 clip=7.0% gs=16 adv=-5.304±5.825 gnorm=0.07 | p_gnorm=0.4399 v_gnorm=0.07295 v/p=0.17 scale=12.85 n=128
+[solo advinert 9475] corr=0.9967 resid=0.1612 resid_norm=0.0813 lvl_shift=0.6375 level_gap=0.4359 grad_cos=+1.0000 gnorm_ratio=1.177
+[solo step 9475] policy=-0.0605 value=0.0318 vraw=5.20 EVb=-9.301 EVin=-9.048 entropy=0.4576 | deploy=9.4% bundle=0.09 ratio=1.023 clip=5.5% gs=16 adv=+5.554±2.874 gnorm=0.52 | p_gnorm=0.4574 v_gnorm=0.4396 v/p=0.96 scale=12.79 n=128
+[solo advinert 9617] corr=0.9502 resid=0.3333 resid_norm=0.3155 lvl_shift=0.1800 level_gap=0.5178 grad_cos=+0.9977 gnorm_ratio=0.970
+[solo step 9617] policy=-0.1168 value=0.1501 vraw=25.30 EVb=-22.143 EVin=-20.804 entropy=0.7716 | deploy=16.4% bundle=0.16 ratio=1.054 clip=11.7% gs=16 adv=+17.648±4.779 gnorm=0.90 | p_gnorm=1.762 v_gnorm=0.5414 v/p=0.31 scale=12.98 n=128
+[solo advinert 9618] corr=0.9981 resid=0.1085 resid_norm=0.0616 lvl_shift=0.1729 level_gap=5.6733 grad_cos=+1.0000 gnorm_ratio=0.930
+[solo step 9618] policy=0.0777 value=0.0659 vraw=11.48 EVb=-6.328 EVin=-6.506 entropy=0.2711 | deploy=7.0% bundle=0.07 ratio=0.982 clip=4.7% gs=16 adv=-17.490±6.997 gnorm=0.37 | p_gnorm=1.232 v_gnorm=0.1121 v/p=0.09 scale=13.2 n=128
+[solo advinert 9977] corr=0.9998 resid=0.1089 resid_norm=0.0178 lvl_shift=0.1332 level_gap=5.3466 grad_cos=+0.9972 gnorm_ratio=0.968
+[solo step 9977] policy=0.0052 value=0.0199 vraw=3.47 EVb=-0.050 EVin=-0.032 entropy=0.4814 | deploy=8.6% bundle=0.09 ratio=1.005 clip=7.0% gs=16 adv=-1.825±10.263 gnorm=0.07 | p_gnorm=0.7664 v_gnorm=0.02383 v/p=0.03 scale=13.19 n=128
+[solo advinert 9978] corr=0.9984 resid=0.0963 resid_norm=0.0565 lvl_shift=0.6739 level_gap=5.3065 grad_cos=+0.9008 gnorm_ratio=1.260
+[solo step 9978] policy=-0.0483 value=0.0031 vraw=0.53 EVb=-3.452 EVin=-2.327 entropy=0.3925 | deploy=7.8% bundle=0.08 ratio=1.036 clip=7.8% gs=16 adv=+3.434±2.254 gnorm=0.07 | p_gnorm=0.6002 v_gnorm=0.01984 v/p=0.03 scale=13.11 n=128
+[solo] anchor@10000: vs baseline_rand 胜率 0.725±0.071 (29W/11L/0D, 40局)
+[solo] 冻结副本已同步 @step 10000
+[solo] 对手池刷新 @step 10000: hist ckpts=12（本目录 5，新增 1） | 累计对手局 {'defend': 6, 'frozen': 7, 'hist': 20, 'rand_anchor': 2}
+[solo advinert 10353] corr=0.9960 resid=0.2087 resid_norm=0.0895 lvl_shift=0.2099 level_gap=5.2977 grad_cos=+0.9985 gnorm_ratio=1.075
+[solo step 10353] policy=-0.0725 value=0.0399 vraw=6.83 EVb=-5.924 EVin=-5.256 entropy=0.8045 | deploy=14.8% bundle=0.16 ratio=1.051 clip=10.9% gs=16 adv=+13.551±5.910 gnorm=0.87 | p_gnorm=1.356 v_gnorm=0.08455 v/p=0.06 scale=13.08 n=128
+[solo advinert 10354] corr=0.9993 resid=0.0388 resid_norm=0.0384 lvl_shift=1.2171 level_gap=5.1932 grad_cos=+0.4704 gnorm_ratio=2.427
+[solo step 10354] policy=-0.0200 value=0.0003 vraw=0.05 EVb=-2.443 EVin=-0.391 entropy=0.3652 | deploy=7.0% bundle=0.07 ratio=1.013 clip=7.0% gs=16 adv=+0.667±1.055 gnorm=0.11 | p_gnorm=0.6263 v_gnorm=0.004538 v/p=0.01 scale=13 n=128
+[solo advinert 10355] corr=0.9940 resid=0.1587 resid_norm=0.1100 lvl_shift=0.9391 level_gap=5.1932 grad_cos=+0.9966 gnorm_ratio=1.353
+[solo step 10355] policy=-0.0773 value=0.0031 vraw=0.52 EVb=-9.489 EVin=-6.037 entropy=0.4627 | deploy=8.6% bundle=0.09 ratio=1.050 clip=11.7% gs=16 adv=+3.769±1.530 gnorm=0.13 | p_gnorm=1.44 v_gnorm=0.02187 v/p=0.02 scale=12.93 n=128
+[solo advinert 10722] corr=0.9986 resid=0.2507 resid_norm=0.0537 lvl_shift=0.2027 level_gap=5.1961 grad_cos=+0.9975 gnorm_ratio=1.093
+[solo step 10722] policy=-0.0643 value=0.0284 vraw=4.71 EVb=-5.034 EVin=-4.204 entropy=0.7979 | deploy=14.8% bundle=0.15 ratio=1.057 clip=10.9% gs=16 adv=+11.045±5.383 gnorm=0.57 | p_gnorm=1.202 v_gnorm=0.05926 v/p=0.05 scale=12.88 n=128
+[solo advinert 10723] corr=0.9997 resid=0.0324 resid_norm=0.0257 lvl_shift=0.8318 level_gap=5.2138 grad_cos=+0.6480 gnorm_ratio=0.962
+[solo step 10723] policy=-0.0204 value=0.0007 vraw=0.11 EVb=-1.727 EVin=-0.423 entropy=0.4058 | deploy=7.8% bundle=0.08 ratio=1.005 clip=8.6% gs=16 adv=+1.037±1.585 gnorm=0.23 | p_gnorm=0.5251 v_gnorm=0.006267 v/p=0.01 scale=12.81 n=128
+[solo step 10724] policy=-0.0761 value=0.0037 vraw=0.60 EVb=-8.237 EVin=-5.875 entropy=0.4345 | deploy=8.6% bundle=0.09 ratio=1.025 clip=6.2% gs=16 adv=+4.072±1.677 gnorm=0.70 | p_gnorm=0 v_gnorm=0.02538 v/p=25382274391.56 scale=12.73 n=128
+[solo advinert 10988] corr=0.9985 resid=0.1589 resid_norm=0.0549 lvl_shift=0.2467 level_gap=5.2131 grad_cos=+0.9777 gnorm_ratio=1.039
+[solo step 10988] policy=-0.0325 value=0.0291 vraw=4.68 EVb=-1.308 EVin=-1.077 entropy=0.7453 | deploy=14.1% bundle=0.15 ratio=1.028 clip=13.3% gs=16 adv=+8.825±8.499 gnorm=0.20 | p_gnorm=0.3945 v_gnorm=0.0645 v/p=0.16 scale=12.69 n=128
+[solo advinert 10989] corr=0.9993 resid=0.0477 resid_norm=0.0363 lvl_shift=0.2549 level_gap=5.2112 grad_cos=+0.9998 gnorm_ratio=0.925
+[solo step 10989] policy=0.0899 value=0.0404 vraw=6.61 EVb=-7.794 EVin=-8.314 entropy=0.3587 | deploy=7.0% bundle=0.07 ratio=0.984 clip=7.8% gs=16 adv=-13.735±4.765 gnorm=0.83 | p_gnorm=2.034 v_gnorm=0.08587 v/p=0.04 scale=12.8 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 11336] corr=0.9996 resid=0.1139 resid_norm=0.0281 lvl_shift=0.0809 level_gap=5.1780 grad_cos=+0.9998 gnorm_ratio=0.977
+[solo step 11336] policy=0.0617 value=0.0723 vraw=12.18 EVb=-3.664 EVin=-3.897 entropy=0.5401 | deploy=9.4% bundle=0.10 ratio=0.987 clip=7.0% gs=16 adv=-17.614±8.921 gnorm=0.88 | p_gnorm=1.277 v_gnorm=0.1016 v/p=0.08 scale=12.99 n=128
+[solo advinert 11337] corr=0.9997 resid=0.0421 resid_norm=0.0249 lvl_shift=0.6794 level_gap=5.0266 grad_cos=+0.9999 gnorm_ratio=0.830
+[solo step 11337] policy=0.1166 value=0.0068 vraw=1.14 EVb=-12.758 EVin=-13.898 entropy=0.3839 | deploy=7.8% bundle=0.08 ratio=0.980 clip=4.7% gs=16 adv=-5.840±1.564 gnorm=0.93 | p_gnorm=1.514 v_gnorm=0.03397 v/p=0.02 scale=12.96 n=128
+[solo advinert 11338] corr=0.9958 resid=0.1049 resid_norm=0.0918 lvl_shift=0.3014 level_gap=5.0266 grad_cos=+1.0000 gnorm_ratio=0.916
+[solo step 11338] policy=0.1445 value=0.0444 vraw=7.58 EVb=-20.565 EVin=-21.773 entropy=0.4679 | deploy=9.4% bundle=0.09 ratio=0.971 clip=10.9% gs=16 adv=-15.236±3.262 gnorm=0.91 | p_gnorm=2.633 v_gnorm=0.09205 v/p=0.03 scale=13.06 n=128
+[solo advinert 11696] corr=0.9997 resid=0.1015 resid_norm=0.0258 lvl_shift=0.0577 level_gap=4.7519 grad_cos=+0.9998 gnorm_ratio=0.986
+[solo step 11696] policy=0.0382 value=0.0712 vraw=12.46 EVb=-1.414 EVin=-1.544 entropy=0.6903 | deploy=11.7% bundle=0.12 ratio=0.960 clip=14.1% gs=16 adv=-15.570±12.528 gnorm=0.23 | p_gnorm=1.085 v_gnorm=0.08186 v/p=0.08 scale=13.23 n=128
+[solo advinert 11697] corr=0.9998 resid=0.0195 resid_norm=0.0187 lvl_shift=0.2920 level_gap=4.4305 grad_cos=+0.9964 gnorm_ratio=0.896
+[solo step 11697] policy=0.0433 value=0.0095 vraw=1.65 EVb=-1.715 EVin=-1.944 entropy=0.3580 | deploy=7.0% bundle=0.07 ratio=0.974 clip=6.2% gs=16 adv=-5.922±4.239 gnorm=0.20 | p_gnorm=1.229 v_gnorm=0.02893 v/p=0.02 scale=13.2 n=128
+[solo advinert 11698] corr=0.9974 resid=0.1958 resid_norm=0.0727 lvl_shift=0.7196 level_gap=4.4305 grad_cos=+0.8582 gnorm_ratio=0.625
+[solo step 11698] policy=0.0258 value=0.0010 vraw=0.17 EVb=-1.025 EVin=-0.692 entropy=0.5997 | deploy=11.7% bundle=0.12 ratio=0.955 clip=12.5% gs=16 adv=-1.529±1.818 gnorm=0.32 | p_gnorm=0.4377 v_gnorm=0.005775 v/p=0.01 scale=13.14 n=128
+[solo] 冻结副本已同步 @step 12000
+[solo advinert 12120] corr=0.9981 resid=0.2447 resid_norm=0.0611 lvl_shift=0.2014 level_gap=4.1823 grad_cos=+0.9960 gnorm_ratio=0.807
+[solo step 12120] policy=0.0200 value=0.0042 vraw=0.72 EVb=-0.341 EVin=-0.426 entropy=0.6109 | deploy=11.7% bundle=0.12 ratio=0.975 clip=7.8% gs=16 adv=-2.635±4.031 gnorm=0.05 | p_gnorm=0.3171 v_gnorm=0.007478 v/p=0.02 scale=13.1 n=128
+[solo advinert 12121] corr=0.9989 resid=0.0491 resid_norm=0.0473 lvl_shift=1.1317 level_gap=4.0476 grad_cos=+0.2171 gnorm_ratio=2.638
+[solo step 12121] policy=-0.0141 value=0.0002 vraw=0.03 EVb=-4.083 EVin=-0.197 entropy=0.3711 | deploy=7.8% bundle=0.08 ratio=1.019 clip=7.0% gs=16 adv=+0.404±0.917 gnorm=0.07 | p_gnorm=0.4147 v_gnorm=0.001318 v/p=0.00 scale=13.03 n=128
+[solo advinert 12122] corr=1.0000 resid=0.0299 resid_norm=0.0083 lvl_shift=0.1523 level_gap=4.0476 grad_cos=+0.9990 gnorm_ratio=0.944
+[solo step 12122] policy=0.0313 value=0.0221 vraw=3.77 EVb=-0.851 EVin=-1.038 entropy=0.6532 | deploy=13.3% bundle=0.13 ratio=0.950 clip=16.4% gs=16 adv=-7.838±7.690 gnorm=0.41 | p_gnorm=1.344 v_gnorm=0.04669 v/p=0.03 scale=13.04 n=128
+[solo] anchor@12500: vs baseline_rand 胜率 0.512±0.079 (16W/15L/9D, 40局)
+[solo advinert 12512] corr=0.9996 resid=0.1027 resid_norm=0.0280 lvl_shift=0.0972 level_gap=3.9698 grad_cos=+1.0000 gnorm_ratio=0.938
+[solo step 12512] policy=0.0369 value=0.0368 vraw=6.31 EVb=-1.271 EVin=-1.467 entropy=0.6587 | deploy=13.3% bundle=0.13 ratio=0.927 clip=15.6% gs=16 adv=-10.962±9.048 gnorm=0.07 | p_gnorm=0.4171 v_gnorm=0.06116 v/p=0.15 scale=13.1 n=128
+[solo advinert 12513] corr=0.9994 resid=0.0368 resid_norm=0.0340 lvl_shift=0.9273 level_gap=3.8158 grad_cos=-0.8430 gnorm_ratio=0.788
+[solo step 12513] policy=-0.0239 value=0.0003 vraw=0.05 EVb=-2.363 EVin=-0.608 entropy=0.3259 | deploy=7.0% bundle=0.07 ratio=1.020 clip=3.9% gs=16 adv=+0.803±1.041 gnorm=0.12 | p_gnorm=0.2415 v_gnorm=0.004481 v/p=0.02 scale=13.03 n=128
+[solo advinert 12514] corr=0.9991 resid=0.1080 resid_norm=0.0429 lvl_shift=0.5601 level_gap=3.8158 grad_cos=+0.9937 gnorm_ratio=1.364
+[solo step 12514] policy=-0.0457 value=0.0024 vraw=0.41 EVb=-3.573 EVin=-2.134 entropy=0.4939 | deploy=10.9% bundle=0.11 ratio=1.034 clip=9.4% gs=16 adv=+2.977±2.044 gnorm=0.26 | p_gnorm=1.457 v_gnorm=0.01977 v/p=0.01 scale=12.97 n=128
+[solo advinert 12744] corr=0.9997 resid=0.1423 resid_norm=0.0225 lvl_shift=0.1484 level_gap=3.7655 grad_cos=+0.9974 gnorm_ratio=1.065
+[solo step 12744] policy=-0.0467 value=0.0286 vraw=4.78 EVb=-2.672 EVin=-2.185 entropy=0.8276 | deploy=14.1% bundle=0.16 ratio=1.053 clip=10.9% gs=16 adv=+10.241±6.927 gnorm=0.41 | p_gnorm=1.016 v_gnorm=0.06476 v/p=0.06 scale=12.93 n=128
+[solo advinert 12745] corr=0.9867 resid=0.1741 resid_norm=0.1628 lvl_shift=0.8336 level_gap=3.6319 grad_cos=+0.9783 gnorm_ratio=1.598
+[solo step 12745] policy=-0.0505 value=0.0018 vraw=0.29 EVb=-4.157 EVin=-2.565 entropy=0.3559 | deploy=7.8% bundle=0.08 ratio=1.033 clip=7.0% gs=16 adv=+2.601±1.619 gnorm=0.23 | p_gnorm=1.487 v_gnorm=0.01392 v/p=0.01 scale=12.87 n=128
+[solo advinert 13025] corr=0.9950 resid=0.2993 resid_norm=0.0999 lvl_shift=0.2664 level_gap=3.6552 grad_cos=+0.9154 gnorm_ratio=0.966
+[solo step 13025] policy=-0.0380 value=0.0074 vraw=1.22 EVb=-2.169 EVin=-1.446 entropy=0.7760 | deploy=9.4% bundle=0.14 ratio=1.024 clip=7.0% gs=16 adv=+4.815±4.001 gnorm=0.05 | p_gnorm=0.21 v_gnorm=0.02574 v/p=0.12 scale=12.81 n=128
+[solo advinert 13026] corr=0.9965 resid=0.0994 resid_norm=0.0832 lvl_shift=0.5644 level_gap=3.6808 grad_cos=+0.9225 gnorm_ratio=1.357
+[solo step 13026] policy=-0.0442 value=0.0025 vraw=0.41 EVb=-2.646 EVin=-1.970 entropy=0.3132 | deploy=7.0% bundle=0.07 ratio=1.026 clip=6.2% gs=16 adv=+2.958±2.104 gnorm=0.04 | p_gnorm=0.6225 v_gnorm=0.01695 v/p=0.03 scale=12.75 n=128
+[solo advinert 13495] corr=0.9924 resid=0.3390 resid_norm=0.1234 lvl_shift=0.2723 level_gap=3.6801 grad_cos=+0.9890 gnorm_ratio=1.160
+[solo step 13495] policy=-0.0515 value=0.0084 vraw=1.35 EVb=-3.893 EVin=-2.670 entropy=0.7433 | deploy=10.9% bundle=0.14 ratio=1.027 clip=7.8% gs=16 adv=+5.616±3.435 gnorm=0.28 | p_gnorm=0.8323 v_gnorm=0.02929 v/p=0.04 scale=12.69 n=128
+[solo advinert 13496] corr=1.0000 resid=0.0091 resid_norm=0.0074 lvl_shift=0.6550 level_gap=3.6785 grad_cos=+0.9837 gnorm_ratio=1.312
+[solo step 13496] policy=-0.0448 value=0.0011 vraw=0.17 EVb=-3.538 EVin=-2.041 entropy=0.3351 | deploy=7.8% bundle=0.08 ratio=1.016 clip=3.9% gs=16 adv=+1.905±1.330 gnorm=0.58 | p_gnorm=0.7448 v_gnorm=0.01109 v/p=0.01 scale=12.63 n=128
+[solo advinert 13497] corr=0.9991 resid=0.0524 resid_norm=0.0428 lvl_shift=0.8220 level_gap=3.6785 grad_cos=+1.0000 gnorm_ratio=3.658
+[solo step 13497] policy=-0.0132 value=0.0003 vraw=0.05 EVb=-1.799 EVin=-0.166 entropy=0.4453 | deploy=10.9% bundle=0.11 ratio=1.013 clip=10.2% gs=16 adv=+0.488±1.181 gnorm=0.05 | p_gnorm=0.2453 v_gnorm=0.003084 v/p=0.01 scale=12.58 n=128
+[solo advinert 13498] corr=0.9997 resid=0.1107 resid_norm=0.0240 lvl_shift=0.3787 level_gap=3.6785 grad_cos=+0.9819 gnorm_ratio=1.312
+[solo step 13498] policy=-0.0390 value=0.0058 vraw=0.91 EVb=-2.414 EVin=-1.526 entropy=0.6049 | deploy=14.8% bundle=0.15 ratio=1.037 clip=10.9% gs=16 adv=+4.205±3.398 gnorm=0.58 | p_gnorm=0.6709 v_gnorm=0.0318 v/p=0.05 scale=12.52 n=128
+[solo advinert 13855] corr=0.9997 resid=0.1768 resid_norm=0.0225 lvl_shift=0.0869 level_gap=3.6589 grad_cos=+0.9962 gnorm_ratio=1.082
+[solo step 13855] policy=-0.0366 value=0.0220 vraw=3.43 EVb=-1.526 EVin=-1.341 entropy=0.4199 | deploy=10.2% bundle=0.10 ratio=1.029 clip=8.6% gs=16 adv=+7.939±6.854 gnorm=0.24 | p_gnorm=0.4391 v_gnorm=0.04234 v/p=0.10 scale=12.49 n=128
+[solo advinert 13856] corr=0.9986 resid=0.0581 resid_norm=0.0523 lvl_shift=0.6255 level_gap=3.6464 grad_cos=+0.9929 gnorm_ratio=1.253
+[solo step 13856] policy=-0.0819 value=0.0037 vraw=0.58 EVb=-8.582 EVin=-6.907 entropy=0.3005 | deploy=7.8% bundle=0.08 ratio=1.009 clip=2.3% gs=16 adv=+4.021±1.527 gnorm=1.15 | p_gnorm=1.058 v_gnorm=0.02335 v/p=0.02 scale=12.43 n=128
+[solo advinert 13857] corr=0.9893 resid=0.1670 resid_norm=0.1462 lvl_shift=0.5077 level_gap=3.6464 grad_cos=+0.9973 gnorm_ratio=1.078
+[solo step 13857] policy=-0.0676 value=0.0100 vraw=1.53 EVb=-6.080 EVin=-4.601 entropy=0.5515 | deploy=13.3% bundle=0.13 ratio=1.061 clip=9.4% gs=16 adv=+6.344±2.953 gnorm=0.67 | p_gnorm=1.368 v_gnorm=0.04471 v/p=0.03 scale=12.38 n=128
+[solo] 冻结副本已同步 @step 14000
+[solo] 对手池刷新 @step 14000: hist ckpts=12（本目录 6，新增 1） | 累计对手局 {'defend': 9, 'frozen': 9, 'hist': 26, 'rand_anchor': 2}
+[solo advinert 14097] corr=0.9976 resid=0.2304 resid_norm=0.0693 lvl_shift=0.2699 level_gap=3.6925 grad_cos=+0.9143 gnorm_ratio=2.165
+[solo step 14097] policy=-0.0206 value=0.0061 vraw=0.93 EVb=-0.773 EVin=-0.435 entropy=0.4182 | deploy=8.6% bundle=0.09 ratio=1.008 clip=2.3% gs=16 adv=+3.011±4.559 gnorm=0.46 | p_gnorm=0.1571 v_gnorm=0.01319 v/p=0.08 scale=12.33 n=128
+[solo advinert 14098] corr=0.9968 resid=0.2991 resid_norm=0.0797 lvl_shift=0.7521 level_gap=3.7043 grad_cos=+0.9280 gnorm_ratio=1.183
+[solo step 14098] policy=-0.0361 value=0.0029 vraw=0.44 EVb=-1.791 EVin=-1.307 entropy=0.2968 | deploy=7.8% bundle=0.08 ratio=1.016 clip=5.5% gs=16 adv=+2.836±2.477 gnorm=0.51 | p_gnorm=0.9212 v_gnorm=0.01959 v/p=0.02 scale=12.28 n=128
+[solo advinert 14456] corr=0.9698 resid=0.5283 resid_norm=0.2456 lvl_shift=0.2511 level_gap=3.6867 grad_cos=+0.9550 gnorm_ratio=1.065
+[solo step 14456] policy=-0.0421 value=0.0022 vraw=0.32 EVb=-3.237 EVin=-1.784 entropy=0.3529 | deploy=7.8% bundle=0.09 ratio=1.035 clip=4.7% gs=16 adv=+2.571±1.924 gnorm=0.22 | p_gnorm=0.7119 v_gnorm=0.01471 v/p=0.02 scale=12.22 n=128
+[solo advinert 14457] corr=0.9989 resid=0.0482 resid_norm=0.0477 lvl_shift=0.3683 level_gap=3.6852 grad_cos=+0.9947 gnorm_ratio=1.182
+[solo step 14457] policy=-0.0657 value=0.0107 vraw=1.58 EVb=-4.927 EVin=-4.329 entropy=0.2641 | deploy=7.8% bundle=0.08 ratio=1.021 clip=6.2% gs=16 adv=+6.411±3.079 gnorm=0.14 | p_gnorm=0.8517 v_gnorm=0.04026 v/p=0.05 scale=12.17 n=128
+[solo advinert 14685] corr=0.9581 resid=0.5995 resid_norm=0.2895 lvl_shift=0.2553 level_gap=3.6862 grad_cos=+0.9955 gnorm_ratio=1.057
+[solo step 14685] policy=-0.1013 value=0.0077 vraw=1.14 EVb=-13.726 EVin=-10.434 entropy=0.5741 | deploy=14.8% bundle=0.15 ratio=1.038 clip=10.2% gs=16 adv=+5.770±1.785 gnorm=1.86 | p_gnorm=1.896 v_gnorm=0.03993 v/p=0.02 scale=12.12 n=128
+[solo advinert 14686] corr=0.9978 resid=0.0702 resid_norm=0.0668 lvl_shift=0.4035 level_gap=3.6938 grad_cos=+0.8694 gnorm_ratio=1.214
+[solo step 14686] policy=-0.0489 value=0.0069 vraw=1.00 EVb=-3.212 EVin=-2.427 entropy=0.2708 | deploy=7.8% bundle=0.08 ratio=1.020 clip=4.7% gs=16 adv=+4.764±3.054 gnorm=0.32 | p_gnorm=0.3779 v_gnorm=0.02952 v/p=0.08 scale=12.07 n=128
+[solo advinert 14892] corr=0.9998 resid=0.0772 resid_norm=0.0215 lvl_shift=0.1223 level_gap=3.7006 grad_cos=+0.9961 gnorm_ratio=1.055
+[solo step 14892] policy=-0.0327 value=0.0568 vraw=8.31 EVb=-1.156 EVin=-1.065 entropy=0.3426 | deploy=7.0% bundle=0.08 ratio=1.029 clip=7.0% gs=16 adv=+11.718±11.346 gnorm=0.18 | p_gnorm=0.3306 v_gnorm=0.09473 v/p=0.29 scale=12.09 n=128
+[solo advinert 14893] corr=0.9974 resid=0.0901 resid_norm=0.0727 lvl_shift=0.2340 level_gap=3.7150 grad_cos=+0.9996 gnorm_ratio=0.939
+[solo step 14893] policy=0.0840 value=0.0308 vraw=4.53 EVb=-6.768 EVin=-7.193 entropy=0.2725 | deploy=7.8% bundle=0.08 ratio=0.988 clip=3.9% gs=16 adv=-11.269±4.205 gnorm=0.98 | p_gnorm=1.554 v_gnorm=0.07915 v/p=0.05 scale=12.12 n=128
+[solo] anchor@15000: vs baseline_rand 胜率 0.388±0.077 (10W/19L/11D, 40局)
+[solo step 15369] policy=0.0201 value=0.0405 vraw=6.00 EVb=-0.397 EVin=-0.425 entropy=0.3378 | deploy=8.6% bundle=0.09 ratio=0.992 clip=3.9% gs=16 adv=-7.567±11.600 gnorm=0.06 | p_gnorm=0 v_gnorm=0.04227 v/p=42274810371.11 scale=12.16 n=128
+[solo advinert 15370] corr=0.9999 resid=0.0175 resid_norm=0.0171 lvl_shift=0.7112 level_gap=3.6450 grad_cos=+0.9042 gnorm_ratio=0.630
+[solo step 15370] policy=0.0081 value=0.0004 vraw=0.05 EVb=-0.353 EVin=-0.068 entropy=0.2594 | deploy=7.8% bundle=0.08 ratio=0.997 clip=4.7% gs=16 adv=-0.336±1.258 gnorm=0.26 | p_gnorm=0.4439 v_gnorm=0.001039 v/p=0.00 scale=12.12 n=128
+[solo advinert 15371] corr=0.9998 resid=0.0617 resid_norm=0.0208 lvl_shift=0.4634 level_gap=3.6450 grad_cos=+0.9976 gnorm_ratio=1.273
+[solo step 15371] policy=-0.0614 value=0.0041 vraw=0.60 EVb=-5.742 EVin=-3.780 entropy=0.4375 | deploy=13.3% bundle=0.13 ratio=1.057 clip=12.5% gs=16 adv=+3.890±2.005 gnorm=0.27 | p_gnorm=0.9505 v_gnorm=0.02961 v/p=0.03 scale=12.07 n=128
+[solo advinert 15372] corr=0.9996 resid=0.2097 resid_norm=0.0288 lvl_shift=0.1085 level_gap=3.6450 grad_cos=+0.9999 gnorm_ratio=1.037
+[solo step 15372] policy=-0.0935 value=0.0275 vraw=3.99 EVb=-10.043 EVin=-8.967 entropy=0.4852 | deploy=14.8% bundle=0.15 ratio=1.013 clip=9.4% gs=16 adv=+10.713±3.579 gnorm=1.44 | p_gnorm=1.494 v_gnorm=0.07503 v/p=0.05 scale=12.04 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 15681] corr=0.9983 resid=0.1353 resid_norm=0.0577 lvl_shift=0.3546 level_gap=3.5847 grad_cos=+0.9367 gnorm_ratio=0.535
+[solo step 15681] policy=0.0040 value=0.0025 vraw=0.36 EVb=-1.050 EVin=-0.020 entropy=0.7581 | deploy=10.2% bundle=0.16 ratio=0.980 clip=4.7% gs=16 adv=-0.471±3.363 gnorm=0.08 | p_gnorm=0.1936 v_gnorm=0.003753 v/p=0.02 scale=12 n=128
+[solo advinert 15682] corr=0.9975 resid=0.1452 resid_norm=0.0701 lvl_shift=0.4946 level_gap=3.5833 grad_cos=+0.9999 gnorm_ratio=0.808
+[solo step 15682] policy=0.0509 value=0.0026 vraw=0.38 EVb=-2.244 EVin=-2.667 entropy=0.2433 | deploy=7.8% bundle=0.08 ratio=0.984 clip=3.1% gs=16 adv=-2.956±1.810 gnorm=0.70 | p_gnorm=0.7391 v_gnorm=0.02088 v/p=0.03 scale=11.97 n=128
+[solo] 冻结副本已同步 @step 16000
+[solo] 对手池刷新 @step 16000: hist ckpts=12（本目录 7，新增 1） | 累计对手局 {'defend': 10, 'frozen': 9, 'hist': 30, 'rand_anchor': 3}
+[solo advinert 16044] corr=0.9992 resid=0.1771 resid_norm=0.0400 lvl_shift=0.1960 level_gap=3.5348 grad_cos=+1.0000 gnorm_ratio=0.903
+[solo step 16044] policy=0.0194 value=0.0066 vraw=0.94 EVb=-0.429 EVin=-0.374 entropy=0.6024 | deploy=13.3% bundle=0.15 ratio=0.987 clip=3.9% gs=16 adv=-2.864±4.680 gnorm=0.57 | p_gnorm=1.341 v_gnorm=0.02201 v/p=0.02 scale=11.94 n=128
+[solo step 16045] policy=-0.0312 value=0.0007 vraw=0.10 EVb=-1.708 EVin=-0.999 entropy=0.2276 | deploy=7.0% bundle=0.07 ratio=1.009 clip=7.0% gs=16 adv=+1.254±1.257 gnorm=0.14 | p_gnorm=0 v_gnorm=0.00994 v/p=9940363284.98 scale=11.89 n=128
+[solo advinert 16046] corr=0.9998 resid=0.1210 resid_norm=0.0200 lvl_shift=0.2728 level_gap=3.4959 grad_cos=+0.9962 gnorm_ratio=1.181
+[solo step 16046] policy=-0.0614 value=0.0140 vraw=1.97 EVb=-4.792 EVin=-4.043 entropy=0.4189 | deploy=12.5% bundle=0.12 ratio=1.005 clip=3.1% gs=16 adv=+7.112±3.537 gnorm=1.21 | p_gnorm=0.6442 v_gnorm=0.03721 v/p=0.06 scale=11.85 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 16233] corr=0.9998 resid=0.0604 resid_norm=0.0195 lvl_shift=0.1461 level_gap=3.4672 grad_cos=+0.9922 gnorm_ratio=0.989
+[solo step 16233] policy=0.0086 value=0.0475 vraw=6.71 EVb=-0.082 EVin=-0.081 entropy=0.6277 | deploy=10.9% bundle=0.14 ratio=0.988 clip=10.9% gs=16 adv=-4.018±14.095 gnorm=0.27 | p_gnorm=0.5768 v_gnorm=0.01371 v/p=0.02 scale=11.89 n=128
+[solo advinert 16647] corr=0.9998 resid=0.0742 resid_norm=0.0180 lvl_shift=0.0891 level_gap=3.4417 grad_cos=+0.8622 gnorm_ratio=0.619
+[solo step 16647] policy=0.0400 value=0.0575 vraw=8.23 EVb=-1.572 EVin=-1.637 entropy=0.2757 | deploy=7.0% bundle=0.07 ratio=0.995 clip=3.1% gs=16 adv=-12.794±9.995 gnorm=0.34 | p_gnorm=0.02418 v_gnorm=0.07794 v/p=3.22 scale=11.96 n=128
+[solo step 16648] policy=-0.0354 value=0.0007 vraw=0.10 EVb=-2.248 EVin=-1.313 entropy=0.2618 | deploy=7.8% bundle=0.08 ratio=0.998 clip=0.0% gs=16 adv=+1.344±1.183 gnorm=0.50 | p_gnorm=0 v_gnorm=0.01047 v/p=10474192122.55 scale=11.92 n=128
+[solo advinert 16649] corr=0.9987 resid=0.0796 resid_norm=0.0510 lvl_shift=0.6357 level_gap=3.3966 grad_cos=+0.8918 gnorm_ratio=1.468
+[solo step 16649] policy=-0.0448 value=0.0015 vraw=0.22 EVb=-3.149 EVin=-2.057 entropy=0.3195 | deploy=10.2% bundle=0.10 ratio=1.008 clip=1.6% gs=16 adv=+2.151±1.508 gnorm=0.96 | p_gnorm=0.8091 v_gnorm=0.01417 v/p=0.02 scale=11.87 n=128
+[solo advinert 16650] corr=0.9999 resid=0.1768 resid_norm=0.0167 lvl_shift=0.1740 level_gap=3.3966 grad_cos=+0.9996 gnorm_ratio=1.077
+[solo step 16650] policy=-0.0772 value=0.0251 vraw=3.53 EVb=-7.162 EVin=-6.027 entropy=0.4648 | deploy=14.8% bundle=0.15 ratio=1.034 clip=7.8% gs=16 adv=+9.828±4.006 gnorm=1.23 | p_gnorm=1.025 v_gnorm=0.06944 v/p=0.07 scale=11.85 n=128
+[solo advinert 17007] corr=0.9999 resid=0.0159 resid_norm=0.0109 lvl_shift=0.4580 level_gap=3.3039 grad_cos=+0.9705 gnorm_ratio=1.279
+[solo step 17007] policy=-0.0112 value=0.0008 vraw=0.11 EVb=-0.631 EVin=-0.124 entropy=0.3103 | deploy=8.6% bundle=0.09 ratio=1.002 clip=3.1% gs=16 adv=+0.637±1.805 gnorm=0.22 | p_gnorm=0.505 v_gnorm=0.004507 v/p=0.01 scale=11.8 n=128
+[solo advinert 17008] corr=0.9998 resid=0.0672 resid_norm=0.0211 lvl_shift=0.4181 level_gap=3.3039 grad_cos=+0.9990 gnorm_ratio=1.187
+[solo step 17008] policy=-0.0322 value=0.0026 vraw=0.36 EVb=-1.684 EVin=-1.050 entropy=0.2308 | deploy=7.8% bundle=0.08 ratio=1.009 clip=3.1% gs=16 adv=+2.447±2.385 gnorm=0.35 | p_gnorm=0.8778 v_gnorm=0.01819 v/p=0.02 scale=11.76 n=128
+[solo advinert 17179] corr=0.9992 resid=0.1344 resid_norm=0.0391 lvl_shift=0.1452 level_gap=3.2982 grad_cos=+0.9998 gnorm_ratio=1.045
+[solo step 17179] policy=-0.0643 value=0.0347 vraw=4.79 EVb=-4.783 EVin=-4.245 entropy=0.4280 | deploy=13.3% bundle=0.13 ratio=1.023 clip=6.2% gs=16 adv=+11.147±5.409 gnorm=0.94 | p_gnorm=1.34 v_gnorm=0.07561 v/p=0.06 scale=11.75 n=128
+[solo advinert 17180] corr=0.9785 resid=0.3057 resid_norm=0.2073 lvl_shift=0.5708 level_gap=3.2732 grad_cos=+0.9998 gnorm_ratio=1.403
+[solo step 17180] policy=-0.0892 value=0.0068 vraw=0.93 EVb=-9.516 EVin=-8.090 entropy=0.2289 | deploy=7.8% bundle=0.08 ratio=1.017 clip=3.1% gs=16 adv=+5.149±1.808 gnorm=0.92 | p_gnorm=1.21 v_gnorm=0.03569 v/p=0.03 scale=11.7 n=128
+[solo] anchor@17500: vs baseline_rand 胜率 0.362±0.076 (6W/17L/17D, 40局)
+[solo advinert 17538] corr=0.9941 resid=0.2540 resid_norm=0.1088 lvl_shift=0.3998 level_gap=3.3288 grad_cos=+0.9258 gnorm_ratio=0.471
+[solo step 17538] policy=0.0032 value=0.0031 vraw=0.43 EVb=-0.110 EVin=-0.011 entropy=0.2930 | deploy=7.8% bundle=0.09 ratio=0.983 clip=4.7% gs=16 adv=-0.381±3.679 gnorm=0.24 | p_gnorm=0.08626 v_gnorm=0.00918 v/p=0.11 scale=11.67 n=128
+[solo advinert 17539] corr=0.9994 resid=0.0478 resid_norm=0.0334 lvl_shift=0.2968 level_gap=3.3379 grad_cos=+0.9996 gnorm_ratio=0.918
+[solo step 17539] policy=0.0993 value=0.0153 vraw=2.08 EVb=-9.552 EVin=-10.258 entropy=0.1976 | deploy=7.0% bundle=0.07 ratio=0.986 clip=3.9% gs=16 adv=-7.783±2.430 gnorm=0.51 | p_gnorm=1.588 v_gnorm=0.05749 v/p=0.04 scale=11.67 n=128
+[solo advinert 17690] corr=0.9846 resid=0.2420 resid_norm=0.1758 lvl_shift=0.1414 level_gap=3.3328 grad_cos=+0.9999 gnorm_ratio=0.961
+[solo step 17690] policy=0.1145 value=0.0137 vraw=1.87 EVb=-11.746 EVin=-13.400 entropy=0.5364 | deploy=14.8% bundle=0.16 ratio=0.988 clip=5.5% gs=16 adv=-7.463±2.038 gnorm=1.57 | p_gnorm=2.386 v_gnorm=0.05751 v/p=0.02 scale=11.66 n=128
+[solo advinert 17691] corr=0.9964 resid=0.0903 resid_norm=0.0849 lvl_shift=0.2265 level_gap=3.2297 grad_cos=+1.0000 gnorm_ratio=0.952
+[solo step 17691] policy=0.1031 value=0.0630 vraw=8.68 EVb=-10.439 EVin=-10.839 entropy=0.2270 | deploy=7.0% bundle=0.07 ratio=0.995 clip=2.3% gs=16 adv=-15.950±4.842 gnorm=1.28 | p_gnorm=1.767 v_gnorm=0.1109 v/p=0.06 scale=11.74 n=128
+[solo] 冻结副本已同步 @step 18000
+[solo] 对手池刷新 @step 18000: hist ckpts=12（本目录 8，新增 2） | 累计对手局 {'defend': 13, 'frozen': 9, 'hist': 33, 'rand_anchor': 4}
+[solo advinert 18149] corr=0.9999 resid=0.0838 resid_norm=0.0118 lvl_shift=0.0422 level_gap=3.0511 grad_cos=+0.9931 gnorm_ratio=0.845
+[solo step 18149] policy=0.0250 value=0.0279 vraw=3.85 EVb=-0.608 EVin=-0.655 entropy=0.3552 | deploy=9.4% bundle=0.09 ratio=0.986 clip=3.9% gs=16 adv=-6.987±8.630 gnorm=0.16 | p_gnorm=0.062 v_gnorm=0.04108 v/p=0.66 scale=11.75 n=128
+[solo advinert 18150] corr=1.0000 resid=0.0065 resid_norm=0.0042 lvl_shift=0.1634 level_gap=3.0219 grad_cos=+0.9953 gnorm_ratio=1.066
+[solo step 18150] policy=-0.0127 value=0.0057 vraw=0.78 EVb=-0.277 EVin=-0.165 entropy=0.2295 | deploy=7.0% bundle=0.07 ratio=1.009 clip=3.9% gs=16 adv=+1.874±4.633 gnorm=0.33 | p_gnorm=0.6354 v_gnorm=0.01302 v/p=0.02 scale=11.71 n=128
+[solo advinert 18151] corr=0.9994 resid=0.0447 resid_norm=0.0360 lvl_shift=0.2366 level_gap=3.0219 grad_cos=+0.9989 gnorm_ratio=1.136
+[solo step 18151] policy=-0.0662 value=0.0166 vraw=2.27 EVb=-5.365 EVin=-4.444 entropy=0.5154 | deploy=14.8% bundle=0.15 ratio=1.024 clip=5.5% gs=16 adv=+7.695±3.653 gnorm=1.33 | p_gnorm=0.8728 v_gnorm=0.06199 v/p=0.07 scale=11.68 n=128
+[solo advinert 18322] corr=0.9997 resid=0.0607 resid_norm=0.0230 lvl_shift=0.0856 level_gap=3.0112 grad_cos=+1.0000 gnorm_ratio=1.036
+[solo step 18322] policy=-0.0497 value=0.0907 vraw=12.49 EVb=-2.604 EVin=-2.449 entropy=0.5328 | deploy=13.3% bundle=0.14 ratio=1.025 clip=7.8% gs=16 adv=+16.844±10.760 gnorm=0.56 | p_gnorm=0.4978 v_gnorm=0.1141 v/p=0.23 scale=11.74 n=128
+[solo step 18323] policy=-0.0437 value=0.0549 vraw=7.58 EVb=-2.050 EVin=-1.915 entropy=0.2381 | deploy=7.8% bundle=0.08 ratio=1.026 clip=4.7% gs=16 adv=+12.638±9.121 gnorm=0.26 | p_gnorm=0 v_gnorm=0.07773 v/p=77731446589.61 scale=11.75 n=128
+[solo advinert 18604] corr=0.9998 resid=0.0788 resid_norm=0.0203 lvl_shift=0.1361 level_gap=3.1188 grad_cos=+0.8436 gnorm_ratio=0.627
+[solo step 18604] policy=-0.0063 value=0.0126 vraw=1.73 EVb=-0.087 EVin=-0.040 entropy=0.2714 | deploy=7.0% bundle=0.08 ratio=0.995 clip=2.3% gs=16 adv=+1.461±7.311 gnorm=0.04 | p_gnorm=0.09567 v_gnorm=0.007293 v/p=0.08 scale=11.72 n=128
+[solo advinert 18605] corr=0.9956 resid=0.1517 resid_norm=0.0942 lvl_shift=0.3856 level_gap=3.1304 grad_cos=+1.0000 gnorm_ratio=0.858
+[solo step 18605] policy=0.0615 value=0.0048 vraw=0.65 EVb=-3.462 EVin=-3.933 entropy=0.2049 | deploy=7.8% bundle=0.08 ratio=0.985 clip=1.6% gs=16 adv=-4.075±2.058 gnorm=0.56 | p_gnorm=0.9374 v_gnorm=0.03024 v/p=0.03 scale=11.7 n=128
+[solo advinert 18766] corr=0.9995 resid=0.0760 resid_norm=0.0310 lvl_shift=0.2317 level_gap=3.0815 grad_cos=+0.9797 gnorm_ratio=0.920
+[solo step 18766] policy=-0.0194 value=0.0206 vraw=2.81 EVb=-0.576 EVin=-0.377 entropy=0.5586 | deploy=10.9% bundle=0.14 ratio=1.101 clip=8.6% gs=16 adv=+4.966±8.078 gnorm=0.23 | p_gnorm=0.5876 v_gnorm=0.0321 v/p=0.05 scale=11.68 n=128
+[solo advinert 18978] corr=0.9998 resid=0.0644 resid_norm=0.0177 lvl_shift=0.1026 level_gap=3.0690 grad_cos=+0.9993 gnorm_ratio=1.011
+[solo step 18978] policy=-0.0227 value=0.0498 vraw=6.80 EVb=-0.606 EVin=-0.518 entropy=0.4856 | deploy=8.6% bundle=0.12 ratio=1.005 clip=8.6% gs=16 adv=+8.623±11.970 gnorm=0.06 | p_gnorm=0.4223 v_gnorm=0.05947 v/p=0.14 scale=11.69 n=128
+[solo advinert 18979] corr=0.9951 resid=0.1733 resid_norm=0.0990 lvl_shift=0.4092 level_gap=3.0751 grad_cos=+1.0000 gnorm_ratio=0.848
+[solo step 18979] policy=0.0563 value=0.0038 vraw=0.52 EVb=-2.860 EVin=-3.214 entropy=0.1728 | deploy=7.0% bundle=0.07 ratio=0.996 clip=5.5% gs=16 adv=-3.556±1.988 gnorm=0.46 | p_gnorm=0.6792 v_gnorm=0.02103 v/p=0.03 scale=11.66 n=128
+[solo advinert 19249] corr=0.9989 resid=0.1317 resid_norm=0.0462 lvl_shift=0.2193 level_gap=3.0629 grad_cos=+0.9968 gnorm_ratio=0.929
+[solo step 19249] policy=-0.0013 value=0.0056 vraw=0.76 EVb=-0.124 EVin=-0.002 entropy=0.3124 | deploy=8.6% bundle=0.09 ratio=1.016 clip=3.9% gs=16 adv=+0.209±4.910 gnorm=0.33 | p_gnorm=0.5857 v_gnorm=0.004164 v/p=0.01 scale=11.63 n=128
+[solo advinert 19250] corr=0.9793 resid=0.2964 resid_norm=0.2036 lvl_shift=0.7289 level_gap=3.0603 grad_cos=+1.0000 gnorm_ratio=1.308
+[solo step 19250] policy=-0.0846 value=0.0035 vraw=0.47 EVb=-8.899 EVin=-7.224 entropy=0.1955 | deploy=7.8% bundle=0.08 ratio=1.021 clip=5.5% gs=16 adv=+3.631±1.351 gnorm=0.51 | p_gnorm=1.163 v_gnorm=0.02923 v/p=0.03 scale=11.6 n=128
+[solo advinert 19723] corr=0.9946 resid=0.3682 resid_norm=0.1038 lvl_shift=0.2364 level_gap=3.0488 grad_cos=+0.9752 gnorm_ratio=1.389
+[solo step 19723] policy=-0.0269 value=0.0040 vraw=0.54 EVb=-0.989 EVin=-0.745 entropy=0.2985 | deploy=10.2% bundle=0.10 ratio=1.004 clip=3.9% gs=16 adv=+2.721±3.150 gnorm=0.26 | p_gnorm=0.3116 v_gnorm=0.0239 v/p=0.08 scale=11.56 n=128
+[solo advinert 19724] corr=0.9998 resid=0.0206 resid_norm=0.0175 lvl_shift=0.7701 level_gap=3.0441 grad_cos=+1.0000 gnorm_ratio=1.473
+[solo step 19724] policy=-0.0971 value=0.0022 vraw=0.29 EVb=-11.856 EVin=-9.604 entropy=0.1874 | deploy=7.8% bundle=0.08 ratio=1.003 clip=0.0% gs=16 adv=+2.907±0.937 gnorm=1.37 | p_gnorm=0.5879 v_gnorm=0.0225 v/p=0.04 scale=11.52 n=128
+[solo advinert 19725] corr=0.9999 resid=0.0458 resid_norm=0.0115 lvl_shift=0.3093 level_gap=3.0441 grad_cos=+0.9997 gnorm_ratio=1.111
+[solo step 19725] policy=-0.0749 value=0.0084 vraw=1.11 EVb=-7.248 EVin=-5.638 entropy=0.3174 | deploy=13.3% bundle=0.13 ratio=1.025 clip=4.7% gs=16 adv=+5.507±2.317 gnorm=0.57 | p_gnorm=1.334 v_gnorm=0.04143 v/p=0.03 scale=11.49 n=128
+[solo advinert 19726] corr=0.9974 resid=0.2109 resid_norm=0.0727 lvl_shift=0.0088 level_gap=3.0441 grad_cos=+0.9999 gnorm_ratio=1.015
+[solo step 19726] policy=-0.1147 value=0.0318 vraw=4.19 EVb=-14.883 EVin=-13.309 entropy=0.3574 | deploy=14.8% bundle=0.15 ratio=1.026 clip=8.6% gs=16 adv=+11.172±3.060 gnorm=1.69 | p_gnorm=0.542 v_gnorm=0.08257 v/p=0.15 scale=11.47 n=128
+[solo] eval@20000: 胜率 0.775±0.066 (31W/9L/0D, 40局) mean_reward=12.657 EV=0.3003（池化） EVb=0.2936 h_std=9.71e-02 n_abs=0.81439 vstd/rstd=0.5323 累计局数=66
+[solo]   vs baseline0: 胜率 0.487±0.079 (17W/18L/5D)
+[solo]   vs baseline_prev: 胜率 0.450±0.079 (16W/20L/4D)
+[solo]   vs baseline_rand: 胜率 0.388±0.077 (11W/20L/9D)
+[solo] 冻结副本已同步 @step 20000
+[solo] 对手池刷新 @step 20000: hist ckpts=12（本目录 9，新增 2） | 累计对手局 {'defend': 16, 'frozen': 9, 'hist': 36, 'rand_anchor': 5}
+[solo] 训练循环耗时 1650.3s
+[done] solo 'critic_inert_probe_20k' 完成，产物在 runs\critic_inert_probe_20k （solo_state.json 供 dashboard --solo 读取）

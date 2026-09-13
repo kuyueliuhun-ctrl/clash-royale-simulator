@@ -12,6 +12,8 @@
 | 训练算法代码导读 | `src/clasher_new/rl/README.md`（模块表 + 训练入口命令） |
 | **所有计划的整合视图**（哪条路走通了/被否证/未决 + 优先级与判据设计） | `plan_master.md` |
 | **当前问题的归因**（critic 为何塌成常数 / 上限为何不动 / 判别性实验与预注册要素） | `d1_long_100k_cause_analysis_2026-09-13.md` |
+| **critic 惰性检验**（预注册 + 判读） | `critic_inertia_prereg_2026-09-13.md`、`critic_inertia_verdict_2026-09-13.md`（判读脚本 `../scripts/judge_critic_inertia.py`） |
+| R1 事件留证（`cudaErrorUnknown` / 宿主提交压力 / 孤儿 worker） | `r1_incident_2026-09-13_layer1_cuda_unknown.md` |
 | 跨会话红线与结论索引（先读这个再动方案） | 根目录 `AGENTS.md`（编号可引用：R/C/X/O） |
 | 历史决策全文（过程细节与推理链） | `agents_archive_2026-09.md` |
 | 自检/回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m1..m6*.py`、`scripts/batch_smoke.py` |
