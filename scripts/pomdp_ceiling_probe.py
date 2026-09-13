@@ -241,6 +241,23 @@ def var_decomp(y, ep):
     return tot, between, within / max(1.0, wsum)
 
 
+def clock_perm(n, ep, seed=0):
+    """按『局内位置 k 相同、但来自不同局』构造行置换（跨局配对打散用）。"""
+    rng = np.random.default_rng(int(seed) + 707)
+    k = np.zeros(n, dtype=np.int64)
+    for e in np.unique(ep):
+        idx = np.where(ep == e)[0]
+        k[idx] = np.arange(len(idx))
+    perm = np.arange(n)
+    for kk in np.unique(k):
+        idx = np.where(k == kk)[0]
+        if len(idx) < 2:
+            continue
+        tgt = idx[rng.permutation(len(idx))]
+        perm[idx] = np.roll(tgt, 1)   # roll 保证不落在自己那一行
+    return perm
+
+
 def scramble_rows_by_clock(X, ep, seed=0):
     """修订 5 证伪对照用的行置换：同一『局内位置 k』内跨局换行。
 
@@ -248,23 +265,20 @@ def scramble_rows_by_clock(X, ep, seed=0):
     状态信息被打散。若真实目标上的 `EV_within` 在这种输入下不塌，说明模型用的
     不是状态，而是某种与局无关的公共结构（那 V3 的增益就不能解读为状态级信号）。
     """
-    X = np.asarray(X)
-    rng = np.random.default_rng(int(seed) + 707)
-    k = np.zeros(len(ep), dtype=np.int64)
-    for e in np.unique(ep):
-        idx = np.where(ep == e)[0]
-        k[idx] = np.arange(len(idx))
-    perm = np.arange(len(ep))
-    for kk in np.unique(k):
-        idx = np.where(k == kk)[0]
-        if len(idx) < 2:
-            continue
-        r = rng.permutation(len(idx))
-        # 保证不落在自己那一行（roll by 1 on the shuffled order）
-        tgt = idx[r]
-        tgt = np.roll(tgt, 1)
-        perm[idx] = tgt
-    return X[perm]
+    return np.asarray(X)[clock_perm(len(ep), ep, seed)]
+
+
+def scramble_target_by_clock(y, ep, seed=0):
+    """下一轮预注册的**阴性对照**：把**目标**按同样的置换打散。
+
+    与 `scramble_rows_by_clock` 破坏的是同一条配对（状态↔回报），但作用在目标侧：
+    目标的**边缘分布**、**局内位置结构**、**局内/局间分解**全部逐值保留，
+    只有"哪一帧的特征对上哪个回报"被随机化。
+    ⇒ 一个只能用状态做预测的估计器在这个靶子上**必须**给出 ≈0；
+    若它仍能拿到正 `EV_within`，说明估计器在用与配对无关的公共结构。
+    """
+    return np.asarray(y)[clock_perm(len(y), ep, seed + 909)]
+
 
 
 def load_npz(path):
@@ -436,6 +450,13 @@ def main():
                     help="修订 5 的**证伪对照**：把每个特征集的行按『局内位置 k 相同、"
                          "但来自不同局』置换（状态对不上、时钟对得上）。若真实目标的 "
                          "EV_within 不塌 ⇒ V3 的增益不是来自『状态』")
+    ap.add_argument("--scramble-y", action="store_true",
+                    help="下一轮预注册的**阴性对照**：把**目标**做同样的置换"
+                         "（保留边缘分布/时钟结构，只破坏状态↔回报配对）。"
+                         "合格估计器在此必须给 ≈0")
+    ap.add_argument("--clock-baseline", action="store_true",
+                    help="时钟基线对照：特征集换成**只有『局内第几帧』一个特征**"
+                         "（其余流程不变）⇒ 量出『时间剖面』能解释多少局内方差")
     a = ap.parse_args()
 
     cfg = TrainConfig.resolve("economy")
@@ -480,6 +501,22 @@ def main():
             yc[m] -= yc[m].mean()
         y = yc
         print("[target] 目标已改为局内中心化回报（y−ȳ_ep）", flush=True)
+    if a.scramble_y:
+        # 注意顺序：先中心化再打散 ⇒ 打散后每局拿到的是**别的局的整条中心化序列**，
+        # 边缘分布/时钟结构逐值保留（见 scramble_target_by_clock 的 docstring）。
+        y = scramble_target_by_clock(y, ep, seed=a.seed)
+        print("[scramble-Y] 目标已按同一置换打散（阴性对照：状态↔回报配对被破坏）",
+              flush=True)
+
+    # ---- 时钟基线对照（只给"局内第几帧"一个特征）----
+    if a.clock_baseline:
+        kk = np.zeros(len(ep), dtype=np.float32)
+        for e in np.unique(ep):
+            idx = np.where(ep == e)[0]
+            kk[idx] = np.arange(len(idx))
+        X = {"A": kk.reshape(-1, 1)}
+        a.sets = "A"
+        print("[clock-baseline] 特征集已替换为单一『局内第几帧』特征", flush=True)
 
     # ---- 修订 5：证伪对照（打散状态、保留时钟）----
     if a.scramble_x:
@@ -521,7 +558,7 @@ def main():
            "episodes": int(n_ep), "seed": a.seed,
            "select": a.select, "center_target": bool(a.center_target),
            "positive_control": bool(a.positive_control),
-           "scramble_x": bool(a.scramble_x),
+           "scramble_x": bool(a.scramble_x), "scramble_y": bool(a.scramble_y),
            "source_npz": a.npz,
            "var_real_total": tot_real, "var_real_between": bet_real,
            "var_real_within": wit_real,
