@@ -1,0 +1,245 @@
+[solo] 单人自对弈 配置 'fprime_ev_20k' -> runs\fprime_ev_20k (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=10, n_eval_games=40, eval_workers=12, opp_mix={'frozen': 0.4, 'hist': 0.3, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.4/hist=0.3/defend=0.2/rand_anchor=0.1
+[solo] eval@0: 胜率 0.600±0.077 (24W/16L/0D, 40局) mean_reward=0.922 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.463±0.079 (18W/21L/1D)
+[solo]   vs baseline_prev: 胜率 0.400±0.077 (16W/24L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.076 (25W/15L/0D)
+[solo] 启动耗时分解: torch+CUDA init=0.0s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=1.2s | eval@0 40局=225.5s (并行worker=12) | 合计(A→B)=226.7s
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 n=128
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 n=128
+[solo step 435] policy=-0.0079 value=0.0793 vraw=17.27 EVb=-0.153 EVin=+0.051 entropy=0.7894 | deploy=11.7% bundle=0.12 ratio=1.030 clip=14.1% gs=16 adv=+6.146±26.137 gnorm=1.47 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 756] policy=0.0211 value=0.0363 vraw=9.89 EVb=-0.202 EVin=-0.172 entropy=0.5821 | deploy=8.6% bundle=0.09 ratio=1.002 clip=6.2% gs=16 adv=-11.288±16.487 gnorm=0.16 n=128
+[solo step 757] policy=-0.0642 value=0.0098 vraw=2.16 EVb=-19.961 EVin=-17.330 entropy=0.4523 | deploy=7.0% bundle=0.07 ratio=1.041 clip=7.8% gs=16 adv=+3.146±1.554 gnorm=0.38 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1116] policy=-0.0519 value=0.0377 vraw=7.64 EVb=-5.739 EVin=-4.514 entropy=0.8330 | deploy=12.5% bundle=0.12 ratio=1.041 clip=10.2% gs=16 adv=+9.768±5.930 gnorm=1.32 n=128
+[solo step 1117] policy=-0.0193 value=0.0037 vraw=0.65 EVb=-0.721 EVin=-0.079 entropy=0.4666 | deploy=7.0% bundle=0.07 ratio=1.018 clip=7.8% gs=16 adv=+2.621±4.300 gnorm=0.28 n=128
+[solo step 1118] policy=0.0619 value=0.0061 vraw=1.02 EVb=-3.371 EVin=-5.431 entropy=0.6162 | deploy=9.4% bundle=0.09 ratio=0.975 clip=5.5% gs=16 adv=-4.059±2.022 gnorm=0.44 n=128
+[solo step 1387] policy=-0.0375 value=0.0262 vraw=4.13 EVb=-2.018 EVin=-1.283 entropy=0.9336 | deploy=14.1% bundle=0.14 ratio=1.032 clip=7.8% gs=16 adv=+9.104±7.591 gnorm=0.95 n=128
+[solo step 1388] policy=-0.0826 value=0.0218 vraw=3.18 EVb=-8.589 EVin=-5.407 entropy=0.4825 | deploy=7.8% bundle=0.08 ratio=1.032 clip=7.0% gs=16 adv=+10.174±3.862 gnorm=0.69 | p_gnorm=1.56 v_gnorm=0.4006 v/p=0.26 scale=12.07 n=128
+[solo step 1669] policy=-0.0580 value=0.0673 vraw=10.23 EVb=-4.381 EVin=-2.889 entropy=0.8316 | deploy=10.2% bundle=0.13 ratio=1.037 clip=7.8% gs=16 adv=+17.263±9.378 gnorm=1.06 n=128
+[solo step 1670] policy=0.0353 value=0.0026 vraw=0.37 EVb=-0.862 EVin=-3.536 entropy=0.4729 | deploy=7.8% bundle=0.08 ratio=0.979 clip=5.5% gs=16 adv=-1.812±1.594 gnorm=0.34 n=128
+[solo step 1671] policy=0.0893 value=0.0108 vraw=1.52 EVb=-3.423 EVin=-8.445 entropy=0.5826 | deploy=9.4% bundle=0.09 ratio=0.965 clip=8.6% gs=16 adv=-6.070±2.095 gnorm=0.97 n=128
+[solo] 冻结副本已同步 @step 2000
+[solo step 2033] policy=-0.0362 value=0.0039 vraw=0.51 EVb=-4.263 EVin=-1.283 entropy=0.5710 | deploy=8.6% bundle=0.09 ratio=1.034 clip=7.8% gs=16 adv=+2.987±2.603 gnorm=0.44 n=128
+[solo step 2034] policy=-0.0540 value=0.0026 vraw=0.32 EVb=-8.086 EVin=-1.209 entropy=0.4881 | deploy=7.8% bundle=0.08 ratio=1.036 clip=10.9% gs=16 adv=+3.335±1.958 gnorm=0.18 n=128
+[solo step 2321] policy=-0.0468 value=0.0260 vraw=3.11 EVb=-4.026 EVin=-1.360 entropy=0.9731 | deploy=15.6% bundle=0.16 ratio=1.063 clip=14.8% gs=16 adv=+9.487±6.378 gnorm=0.89 n=128
+[solo step 2322] policy=-0.0653 value=0.0105 vraw=1.20 EVb=-9.409 EVin=-1.765 entropy=0.4806 | deploy=7.0% bundle=0.07 ratio=1.030 clip=6.2% gs=16 adv=+7.172±3.458 gnorm=1.31 n=128
+[solo step 2323] policy=-0.1333 value=0.0460 vraw=5.38 EVb=-26.706 EVin=-9.856 entropy=0.6195 | deploy=9.4% bundle=0.09 ratio=1.046 clip=7.0% gs=16 adv=+16.049±3.800 gnorm=2.90 n=128
+[solo] ⚠️ GRU 活力不达标 @step 2500: value/R std=0.182 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 2500: engagement_rate=4.800 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@2500: 胜率 0.250±0.069 (10W/30L/0D, 40局) mean_reward=-28.476 EV=-0.0413（池化） EVb=-0.0568 h_std=5.20e-02 n_abs=0.656115 vstd/rstd=0.1817 累计局数=8
+[solo]   vs baseline0: 胜率 0.175±0.060 (7W/33L/0D)
+[solo]   vs baseline_prev: 胜率 0.175±0.060 (7W/33L/0D)
+[solo]   vs baseline_rand: 胜率 0.125±0.052 (5W/35L/0D)
+[solo] ⚠️ 绝对强度警报 @step 2500: vs 固定随机锚点 胜率=0.125 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo step 2921] policy=-0.0134 value=0.0143 vraw=1.63 EVb=-2.454 EVin=-0.042 entropy=0.6520 | deploy=8.6% bundle=0.09 ratio=1.027 clip=7.0% gs=16 adv=+3.381±8.322 gnorm=0.28 n=128
+[solo step 2922] policy=0.0687 value=0.0075 vraw=0.81 EVb=-10.395 EVin=-9.476 entropy=0.5320 | deploy=7.8% bundle=0.08 ratio=0.986 clip=4.7% gs=16 adv=-3.263±1.477 gnorm=1.26 | p_gnorm=0.876 v_gnorm=1.002 v/p=1.14 scale=10.43 n=128
+[solo step 2923] policy=0.0278 value=0.0018 vraw=0.19 EVb=-15.945 EVin=-0.192 entropy=0.9332 | deploy=14.8% bundle=0.15 ratio=0.968 clip=9.4% gs=16 adv=-1.581±1.739 gnorm=0.23 n=128
+[solo step 2924] policy=0.0086 value=0.0005 vraw=0.05 EVb=-130.857 EVin=-1.743 entropy=0.9693 | deploy=14.8% bundle=0.15 ratio=0.980 clip=11.7% gs=16 adv=-0.199±0.725 gnorm=0.40 n=128
+[solo step 3345] policy=-0.0090 value=0.0026 vraw=0.25 EVb=-12.730 EVin=+0.073 entropy=1.6977 | deploy=20.3% bundle=0.25 ratio=1.040 clip=22.7% gs=16 adv=+0.636±2.379 gnorm=0.40 n=128
+[solo step 3346] policy=0.0380 value=0.0065 vraw=0.60 EVb=-2.277 EVin=-1.212 entropy=0.4988 | deploy=7.0% bundle=0.07 ratio=0.996 clip=6.2% gs=16 adv=-3.065±2.510 gnorm=0.69 n=128
+[solo step 3347] policy=-0.0606 value=0.0279 vraw=2.53 EVb=-13.262 EVin=-3.489 entropy=0.6822 | deploy=10.2% bundle=0.10 ratio=1.030 clip=3.1% gs=16 adv=+7.581±3.951 gnorm=1.71 n=128
+[solo step 3348] policy=-0.0807 value=0.0513 vraw=4.81 EVb=-15.119 EVin=-3.975 entropy=1.0821 | deploy=14.8% bundle=0.15 ratio=1.070 clip=30.5% gs=16 adv=+12.931±5.220 gnorm=2.75 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_100000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 3688] policy=-0.0009 value=0.0176 vraw=1.62 EVb=-1.760 EVin=+0.026 entropy=0.7161 | deploy=9.4% bundle=0.09 ratio=0.982 clip=11.7% gs=16 adv=+0.241±8.096 gnorm=0.46 n=128
+[solo step 3689] policy=0.0685 value=0.0317 vraw=2.90 EVb=-0.165 EVin=-3.493 entropy=0.5791 | deploy=7.8% bundle=0.08 ratio=0.965 clip=13.3% gs=16 adv=-9.150±4.175 gnorm=2.08 n=128
+[solo] 冻结副本已同步 @step 4000
+[solo step 4060] policy=0.0559 value=0.1663 vraw=18.38 EVb=-1.415 EVin=-2.602 entropy=1.0383 | deploy=12.5% bundle=0.13 ratio=0.946 clip=9.4% gs=16 adv=-23.804±12.884 gnorm=3.01 n=128
+[solo step 4061] policy=0.0448 value=0.0016 vraw=0.17 EVb=-8.758 EVin=-1.038 entropy=0.5216 | deploy=7.0% bundle=0.07 ratio=0.934 clip=17.2% gs=16 adv=-2.459±1.669 gnorm=0.26 | p_gnorm=1.453 v_gnorm=0.08189 v/p=0.06 scale=10.35 n=128
+[solo step 4062] policy=0.0364 value=0.0022 vraw=0.23 EVb=-19.557 EVin=-1.673 entropy=0.5802 | deploy=8.6% bundle=0.09 ratio=0.979 clip=5.5% gs=16 adv=-1.656±1.424 gnorm=0.65 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 4660] policy=-0.0261 value=0.0218 vraw=2.22 EVb=-3.360 EVin=-0.597 entropy=0.9533 | deploy=13.3% bundle=0.14 ratio=1.039 clip=15.6% gs=16 adv=+4.078±4.974 gnorm=0.94 n=128
+[solo step 4661] policy=0.0273 value=0.0037 vraw=0.37 EVb=-6.556 EVin=-4.819 entropy=0.4901 | deploy=7.8% bundle=0.08 ratio=1.003 clip=8.6% gs=16 adv=-1.163±1.329 gnorm=0.57 n=128
+[solo step 4662] policy=0.0127 value=0.0009 vraw=0.09 EVb=-21.579 EVin=-1.248 entropy=0.6247 | deploy=10.2% bundle=0.10 ratio=0.999 clip=11.7% gs=16 adv=-0.373±0.930 gnorm=0.49 n=128
+[solo step 4663] policy=-0.0562 value=0.0000 vraw=0.00 EVb=-263.418 EVin=-0.418 entropy=0.9429 | deploy=14.1% bundle=0.14 ratio=1.062 clip=12.5% gs=16 adv=+0.597±0.339 gnorm=0.90 n=128
+[solo step 4664] policy=-0.0771 value=0.0029 vraw=0.26 EVb=-43.178 EVin=-3.232 entropy=1.1929 | deploy=18.8% bundle=0.19 ratio=1.080 clip=17.2% gs=16 adv=+3.107±1.289 gnorm=1.46 n=128
+[solo] ⚠️ GRU 活力不达标 @step 5000: value/R std=0.232 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@5000: 胜率 0.725±0.071 (29W/11L/0D, 40局) mean_reward=8.068 EV=0.1025（池化） EVb=0.0964 h_std=5.94e-02 n_abs=0.690244 vstd/rstd=0.2322 累计局数=13
+[solo]   vs baseline0: 胜率 0.275±0.071 (11W/29L/0D)
+[solo]   vs baseline_prev: 胜率 1.000±0.000 (40W/0L/0D)
+[solo]   vs baseline_rand: 胜率 0.425±0.078 (17W/23L/0D)
+[solo step 5008] policy=0.0102 value=0.0092 vraw=0.84 EVb=-0.747 EVin=+0.504 entropy=1.0999 | deploy=13.3% bundle=0.16 ratio=1.026 clip=10.2% gs=16 adv=-1.970±5.726 gnorm=0.74 n=128
+[solo step 5009] policy=0.0887 value=0.0198 vraw=1.85 EVb=-3.317 EVin=-1.333 entropy=0.5034 | deploy=7.8% bundle=0.08 ratio=0.960 clip=12.5% gs=16 adv=-12.375±4.294 gnorm=0.62 n=128
+[solo step 5010] policy=0.0987 value=0.0530 vraw=5.60 EVb=-6.248 EVin=-2.146 entropy=0.8264 | deploy=11.7% bundle=0.12 ratio=0.911 clip=21.9% gs=16 adv=-21.843±6.670 gnorm=1.61 n=128
+[solo step 5430] policy=0.0168 value=0.0134 vraw=1.50 EVb=-3.540 EVin=+0.033 entropy=0.6073 | deploy=8.6% bundle=0.09 ratio=0.955 clip=10.9% gs=16 adv=-6.084±10.673 gnorm=0.27 | p_gnorm=0.1528 v_gnorm=0.8089 v/p=5.29 scale=10.58 n=128
+[solo step 5431] policy=-0.0158 value=0.0154 vraw=1.74 EVb=-0.897 EVin=-0.130 entropy=0.4395 | deploy=7.0% bundle=0.07 ratio=1.014 clip=8.6% gs=16 adv=+2.825±5.723 gnorm=0.23 n=128
+[solo step 5432] policy=-0.1258 value=0.0554 vraw=6.19 EVb=-6.183 EVin=-4.563 entropy=1.0218 | deploy=15.6% bundle=0.16 ratio=1.110 clip=19.5% gs=16 adv=+19.719±5.019 gnorm=1.65 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 5790] policy=-0.0273 value=0.0538 vraw=6.10 EVb=-0.972 EVin=-0.023 entropy=0.8167 | deploy=11.7% bundle=0.12 ratio=1.044 clip=9.4% gs=16 adv=+14.055±16.639 gnorm=0.97 n=128
+[solo step 5791] policy=-0.0352 value=0.0049 vraw=0.54 EVb=-2.279 EVin=+0.034 entropy=0.4001 | deploy=6.2% bundle=0.06 ratio=1.039 clip=5.5% gs=16 adv=+3.942±3.538 gnorm=0.28 n=128
+[solo step 5792] policy=-0.0211 value=0.0024 vraw=0.26 EVb=-2.285 EVin=-0.041 entropy=0.8612 | deploy=12.5% bundle=0.12 ratio=1.027 clip=8.6% gs=16 adv=+1.902±2.836 gnorm=0.27 n=128
+[solo] 冻结副本已同步 @step 6000
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 6233] policy=-0.0158 value=0.0027 vraw=0.29 EVb=-1.762 EVin=+0.278 entropy=0.6773 | deploy=9.4% bundle=0.10 ratio=1.027 clip=13.3% gs=16 adv=+1.782±3.687 gnorm=0.13 n=128
+[solo step 6234] policy=0.0068 value=0.0013 vraw=0.13 EVb=-2.905 EVin=+0.079 entropy=0.5271 | deploy=7.8% bundle=0.08 ratio=0.996 clip=6.2% gs=16 adv=-0.327±1.484 gnorm=0.19 n=128
+[solo step 6235] policy=-0.0689 value=0.0060 vraw=0.61 EVb=-15.016 EVin=-1.497 entropy=0.8716 | deploy=12.5% bundle=0.12 ratio=1.085 clip=22.7% gs=16 adv=+3.953±1.815 gnorm=0.64 n=128
+[solo step 6577] policy=-0.0445 value=0.0068 vraw=0.69 EVb=-5.371 EVin=+0.287 entropy=0.9543 | deploy=13.3% bundle=0.14 ratio=1.059 clip=9.4% gs=16 adv=+6.727±4.848 gnorm=1.27 n=128
+[solo step 6578] policy=0.0192 value=0.0115 vraw=1.15 EVb=-2.227 EVin=-1.994 entropy=0.5242 | deploy=7.8% bundle=0.08 ratio=0.993 clip=4.7% gs=16 adv=-1.494±2.407 gnorm=0.52 | p_gnorm=0.1708 v_gnorm=1.291 v/p=7.56 scale=9.991 n=128
+[solo step 6579] policy=0.0506 value=0.0485 vraw=4.94 EVb=-0.847 EVin=-1.219 entropy=0.7456 | deploy=10.9% bundle=0.11 ratio=0.965 clip=10.2% gs=16 adv=-12.370±7.694 gnorm=1.02 n=128
+[solo step 6943] policy=0.0241 value=0.0769 vraw=8.23 EVb=-0.507 EVin=-0.573 entropy=0.7474 | deploy=10.9% bundle=0.11 ratio=0.964 clip=11.7% gs=16 adv=-12.008±15.251 gnorm=0.39 n=128
+[solo step 6944] policy=0.0506 value=0.0008 vraw=0.08 EVb=-2.868 EVin=-1.061 entropy=0.4468 | deploy=7.0% bundle=0.07 ratio=0.969 clip=7.8% gs=16 adv=-1.763±1.082 gnorm=0.29 n=128
+[solo step 6945] policy=0.0499 value=0.0187 vraw=1.99 EVb=-2.101 EVin=-2.015 entropy=0.8452 | deploy=13.3% bundle=0.13 ratio=0.941 clip=13.3% gs=16 adv=-7.512±4.560 gnorm=0.79 n=128
+[solo step 7303] policy=0.0108 value=0.0275 vraw=2.95 EVb=-0.135 EVin=-0.090 entropy=0.6573 | deploy=10.2% bundle=0.10 ratio=0.994 clip=10.2% gs=16 adv=-3.618±9.746 gnorm=0.22 n=128
+[solo step 7304] policy=-0.0867 value=0.0221 vraw=2.33 EVb=-7.107 EVin=-8.579 entropy=0.4873 | deploy=7.8% bundle=0.08 ratio=1.041 clip=10.2% gs=16 adv=+7.600±2.761 gnorm=0.63 n=128
+[solo step 7305] policy=-0.1398 value=0.0174 vraw=1.80 EVb=-20.009 EVin=-19.331 entropy=0.8000 | deploy=12.5% bundle=0.12 ratio=1.074 clip=14.1% gs=16 adv=+7.266±1.648 gnorm=1.46 n=128
+[solo step 7470] policy=0.0538 value=0.0546 vraw=5.87 EVb=-3.389 EVin=-2.984 entropy=0.5728 | deploy=8.6% bundle=0.09 ratio=0.980 clip=8.6% gs=16 adv=-11.891±6.846 gnorm=0.68 n=128
+[solo] eval@7500: 胜率 0.163±0.058 (6W/33L/1D, 40局) mean_reward=-25.779 EV=0.3361（池化） EVb=0.3316 h_std=5.56e-02 n_abs=0.669107 vstd/rstd=0.4625 累计局数=21
+[solo]   vs baseline0: 胜率 0.087±0.045 (2W/35L/3D)
+[solo]   vs baseline_prev: 胜率 0.325±0.074 (13W/27L/0D)
+[solo]   vs baseline_rand: 胜率 0.100±0.047 (3W/35L/2D)
+[solo] ⚠️ 绝对强度警报 @step 7500: vs 固定随机锚点 胜率=0.100 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo step 7852] policy=0.0198 value=0.0611 vraw=6.78 EVb=-0.471 EVin=-0.348 entropy=0.7890 | deploy=10.2% bundle=0.12 ratio=1.006 clip=8.6% gs=16 adv=-7.978±12.684 gnorm=0.74 n=128
+[solo step 7853] policy=0.0207 value=0.0038 vraw=0.42 EVb=-0.844 EVin=-0.159 entropy=0.5403 | deploy=7.0% bundle=0.07 ratio=0.946 clip=18.0% gs=16 adv=-2.256±3.328 gnorm=0.19 | p_gnorm=1.883 v_gnorm=0.1631 v/p=0.09 scale=10.49 n=128
+[solo step 7854] policy=0.1425 value=0.0482 vraw=5.48 EVb=-23.120 EVin=-18.448 entropy=0.9050 | deploy=12.5% bundle=0.12 ratio=0.932 clip=13.3% gs=16 adv=-14.020±2.978 gnorm=3.43 n=128
+[solo] 冻结副本已同步 @step 8000
+[solo step 8212] policy=0.0168 value=0.0600 vraw=7.03 EVb=-0.449 EVin=-0.252 entropy=0.7338 | deploy=10.2% bundle=0.11 ratio=0.972 clip=10.2% gs=16 adv=-7.693±13.859 gnorm=0.69 n=128
+[solo step 8213] policy=-0.0781 value=0.0208 vraw=2.40 EVb=-3.930 EVin=-7.400 entropy=0.4988 | deploy=7.8% bundle=0.08 ratio=1.043 clip=9.4% gs=16 adv=+7.465±3.030 gnorm=1.69 n=128
+[solo step 8214] policy=-0.1011 value=0.0206 vraw=2.34 EVb=-7.015 EVin=-11.141 entropy=0.7846 | deploy=12.5% bundle=0.12 ratio=1.091 clip=12.5% gs=16 adv=+7.771±2.441 gnorm=1.74 n=128
+[solo step 8812] policy=-0.0202 value=0.0058 vraw=0.66 EVb=-0.326 EVin=-0.298 entropy=0.6106 | deploy=9.4% bundle=0.09 ratio=1.040 clip=9.4% gs=16 adv=+2.389±3.884 gnorm=0.42 n=128
+[solo step 8813] policy=0.0039 value=0.0004 vraw=0.05 EVb=-5.926 EVin=-0.315 entropy=0.4790 | deploy=7.0% bundle=0.07 ratio=0.993 clip=6.2% gs=16 adv=-0.141±1.102 gnorm=0.22 n=128
+[solo step 8814] policy=-0.0679 value=0.0005 vraw=0.05 EVb=-8.613 EVin=-2.247 entropy=0.9134 | deploy=14.8% bundle=0.15 ratio=1.056 clip=12.5% gs=16 adv=+1.570±0.724 gnorm=1.13 n=128
+[solo step 8815] policy=-0.0685 value=0.0022 vraw=0.23 EVb=-3.639 EVin=-3.037 entropy=0.9803 | deploy=15.6% bundle=0.16 ratio=1.053 clip=9.4% gs=16 adv=+2.946±1.350 gnorm=1.21 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_4000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 9037] policy=-0.0813 value=0.0175 vraw=1.88 EVb=-5.884 EVin=-6.115 entropy=1.2791 | deploy=18.8% bundle=0.20 ratio=1.086 clip=13.3% gs=16 adv=+7.815±3.090 gnorm=2.41 n=128
+[solo step 9038] policy=-0.0929 value=0.0121 vraw=1.28 EVb=-5.913 EVin=-7.576 entropy=0.5227 | deploy=7.8% bundle=0.08 ratio=1.035 clip=8.6% gs=16 adv=+6.366±2.163 gnorm=1.46 | p_gnorm=1.329 v_gnorm=0.4561 v/p=0.34 scale=10.28 n=128
+[solo step 9414] policy=-0.0224 value=0.0703 vraw=7.50 EVb=-0.410 EVin=-0.452 entropy=0.5487 | deploy=7.8% bundle=0.08 ratio=1.013 clip=7.8% gs=16 adv=+9.240±13.002 gnorm=0.69 n=128
+[solo step 9415] policy=0.0667 value=0.0245 vraw=2.64 EVb=-6.127 EVin=-5.380 entropy=0.5714 | deploy=7.0% bundle=0.07 ratio=0.954 clip=9.4% gs=16 adv=-7.893±3.643 gnorm=1.80 n=128
+[solo step 9416] policy=0.0883 value=0.0160 vraw=1.72 EVb=-11.526 EVin=-9.588 entropy=0.7042 | deploy=10.2% bundle=0.10 ratio=0.932 clip=27.3% gs=16 adv=-6.589±2.265 gnorm=0.79 n=128
+[solo step 9562] policy=0.0070 value=0.0598 vraw=6.55 EVb=-0.069 EVin=-0.055 entropy=0.8364 | deploy=12.5% bundle=0.12 ratio=0.969 clip=13.3% gs=16 adv=-3.401±13.889 gnorm=0.42 n=128
+[solo step 9992] policy=-0.0411 value=0.0636 vraw=6.99 EVb=-1.509 EVin=-1.685 entropy=0.5491 | deploy=8.6% bundle=0.09 ratio=1.029 clip=5.5% gs=16 adv=+11.724±8.995 gnorm=0.85 n=128
+[solo step 9993] policy=-0.0253 value=0.0010 vraw=0.11 EVb=-0.932 EVin=-0.319 entropy=0.4919 | deploy=7.8% bundle=0.08 ratio=1.020 clip=7.8% gs=16 adv=+1.301±1.630 gnorm=0.35 n=128
+[solo step 9994] policy=-0.1126 value=0.0081 vraw=0.87 EVb=-10.980 EVin=-10.347 entropy=0.6983 | deploy=10.9% bundle=0.11 ratio=1.049 clip=7.8% gs=16 adv=+5.495±1.552 gnorm=1.45 n=128
+[solo step 9995] policy=-0.0520 value=0.1045 vraw=11.44 EVb=-2.548 EVin=-2.404 entropy=0.9127 | deploy=14.1% bundle=0.14 ratio=1.069 clip=12.5% gs=16 adv=+16.764±10.323 gnorm=1.38 n=128
+[solo] ⚠️ GRU 活力不达标 @step 10000: value/R std=0.065 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 10000: engagement_rate=5.800 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@10000: 胜率 0.550±0.079 (20W/16L/4D, 40局) mean_reward=-1.077 EV=-0.005（池化） EVb=-0.0168 h_std=6.17e-02 n_abs=0.66964 vstd/rstd=0.0654 累计局数=28
+[solo]   vs baseline0: 胜率 0.425±0.078 (17W/23L/0D)
+[solo]   vs baseline_prev: 胜率 0.438±0.078 (16W/21L/3D)
+[solo]   vs baseline_rand: 胜率 0.250±0.069 (10W/30L/0D)
+[solo] ⚠️ 绝对强度警报 @step 10000: vs 固定随机锚点 胜率=0.250 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] 冻结副本已同步 @step 10000
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 10352] policy=-0.0058 value=0.0134 vraw=1.46 EVb=-0.112 EVin=-0.025 entropy=0.5246 | deploy=7.8% bundle=0.09 ratio=0.997 clip=5.5% gs=16 adv=+1.268±6.913 gnorm=0.06 n=128
+[solo step 10353] policy=0.0577 value=0.0095 vraw=1.03 EVb=-3.927 EVin=-3.722 entropy=0.5715 | deploy=7.8% bundle=0.08 ratio=0.963 clip=3.9% gs=16 adv=-4.934±2.632 gnorm=1.21 | p_gnorm=1.346 v_gnorm=0.1965 v/p=0.15 scale=10.4 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 10642] policy=0.0460 value=0.0160 vraw=1.73 EVb=-2.363 EVin=-2.222 entropy=0.9217 | deploy=13.3% bundle=0.14 ratio=0.941 clip=21.9% gs=16 adv=-6.127±4.091 gnorm=0.55 n=128
+[solo step 10643] policy=-0.0678 value=0.0081 vraw=0.86 EVb=-4.821 EVin=-4.904 entropy=0.4739 | deploy=7.8% bundle=0.08 ratio=1.034 clip=7.8% gs=16 adv=+4.640±2.164 gnorm=1.03 n=128
+[solo step 10644] policy=-0.0521 value=0.0498 vraw=5.33 EVb=-2.857 EVin=-2.676 entropy=0.5656 | deploy=8.6% bundle=0.09 ratio=1.044 clip=14.8% gs=16 adv=+11.091±6.774 gnorm=0.63 n=128
+[solo step 10818] policy=0.0203 value=0.0874 vraw=9.63 EVb=-0.467 EVin=-0.430 entropy=0.6408 | deploy=10.2% bundle=0.10 ratio=0.985 clip=4.7% gs=16 adv=-9.628±14.674 gnorm=0.53 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_50000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 10930] policy=0.0168 value=0.0753 vraw=8.48 EVb=-0.329 EVin=-0.292 entropy=0.5740 | deploy=7.8% bundle=0.09 ratio=0.991 clip=11.7% gs=16 adv=-8.062±14.475 gnorm=0.63 n=128
+[solo step 11239] policy=-0.0520 value=0.0113 vraw=1.27 EVb=-3.116 EVin=-2.635 entropy=0.8204 | deploy=9.4% bundle=0.12 ratio=1.041 clip=12.5% gs=16 adv=+5.261±3.225 gnorm=0.30 n=128
+[solo step 11240] policy=-0.1025 value=0.0265 vraw=2.93 EVb=-9.918 EVin=-10.359 entropy=0.4452 | deploy=7.0% bundle=0.07 ratio=1.026 clip=4.7% gs=16 adv=+9.279±2.855 gnorm=1.50 n=128
+[solo step 11614] policy=-0.0488 value=0.0875 vraw=9.82 EVb=-2.469 EVin=-2.270 entropy=0.8622 | deploy=12.5% bundle=0.13 ratio=1.050 clip=10.9% gs=16 adv=+14.982±9.799 gnorm=1.43 n=128
+[solo step 11615] policy=-0.0613 value=0.0010 vraw=0.11 EVb=-5.171 EVin=-2.572 entropy=0.4189 | deploy=7.0% bundle=0.07 ratio=1.036 clip=6.2% gs=16 adv=+1.856±0.956 gnorm=0.52 n=128
+[solo step 11616] policy=-0.0825 value=0.0082 vraw=0.91 EVb=-7.800 EVin=-5.940 entropy=0.6009 | deploy=10.2% bundle=0.10 ratio=1.035 clip=7.0% gs=16 adv=+5.361±2.032 gnorm=0.67 | p_gnorm=1.062 v_gnorm=0.1586 v/p=0.15 scale=10.48 n=128
+[solo step 11806] policy=-0.0429 value=0.0412 vraw=4.52 EVb=-2.174 EVin=-1.794 entropy=0.8172 | deploy=12.5% bundle=0.12 ratio=1.033 clip=8.6% gs=16 adv=+10.041±7.307 gnorm=0.63 n=128
+[solo step 11807] policy=0.0424 value=0.0031 vraw=0.33 EVb=-2.429 EVin=-2.170 entropy=0.4693 | deploy=7.8% bundle=0.08 ratio=0.989 clip=7.0% gs=16 adv=-2.505±1.840 gnorm=0.40 n=128
+[solo] 冻结副本已同步 @step 12000
+[solo step 12102] policy=-0.0180 value=0.0134 vraw=1.45 EVb=-0.478 EVin=-0.299 entropy=0.5488 | deploy=7.8% bundle=0.09 ratio=1.018 clip=6.2% gs=16 adv=+3.336±5.901 gnorm=0.35 n=128
+[solo step 12103] policy=-0.1077 value=0.0614 vraw=6.67 EVb=-12.140 EVin=-11.178 entropy=0.4864 | deploy=7.0% bundle=0.07 ratio=1.052 clip=15.6% gs=16 adv=+14.078±4.174 gnorm=0.88 n=128
+[solo step 12226] policy=-0.0619 value=0.1295 vraw=14.42 EVb=-4.351 EVin=-3.870 entropy=0.8437 | deploy=13.3% bundle=0.13 ratio=1.052 clip=8.6% gs=16 adv=+19.239±9.788 gnorm=1.23 n=128
+[solo] ⚠️ GRU 活力不达标 @step 12500: value/R std=0.027 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 12500: engagement_rate=0.000 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@12500: 胜率 0.912±0.045 (36W/3L/1D, 40局) mean_reward=15.129 EV=-0.1153（池化） EVb=-0.1224 h_std=6.86e-02 n_abs=0.701316 vstd/rstd=0.0266 累计局数=37
+[solo]   vs baseline0: 胜率 0.000±0.000 (0W/40L/0D)
+[solo]   vs baseline_prev: 胜率 0.062±0.038 (2W/37L/1D)
+[solo]   vs baseline_rand: 胜率 0.000±0.000 (0W/40L/0D)
+[solo] ⚠️ 绝对强度警报 @step 12500: vs 固定随机锚点 胜率=0.000 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo step 12748] policy=-0.0300 value=0.0513 vraw=5.73 EVb=-1.059 EVin=-0.911 entropy=0.5403 | deploy=7.8% bundle=0.09 ratio=1.006 clip=3.1% gs=16 adv=+9.368±9.801 gnorm=0.45 n=128
+[solo step 12749] policy=-0.0064 value=0.0002 vraw=0.02 EVb=-3.814 EVin=-0.036 entropy=0.5031 | deploy=7.8% bundle=0.08 ratio=1.006 clip=2.3% gs=16 adv=+0.160±0.771 gnorm=0.58 n=128
+[solo step 12750] policy=-0.0034 value=0.0003 vraw=0.04 EVb=-4.520 EVin=-0.007 entropy=0.6926 | deploy=11.7% bundle=0.12 ratio=1.032 clip=7.0% gs=16 adv=+0.107±1.063 gnorm=0.41 n=128
+[solo step 12751] policy=-0.0702 value=0.0018 vraw=0.20 EVb=-14.678 EVin=-4.890 entropy=0.8820 | deploy=14.8% bundle=0.15 ratio=1.034 clip=5.5% gs=16 adv=+2.324±1.043 gnorm=1.18 n=128
+[solo step 12909] policy=-0.0673 value=0.0071 vraw=0.76 EVb=-7.853 EVin=-4.429 entropy=0.8304 | deploy=12.5% bundle=0.13 ratio=1.041 clip=7.0% gs=16 adv=+4.478±2.118 gnorm=1.47 | p_gnorm=0.8778 v_gnorm=0.04173 v/p=0.05 scale=10.37 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 13182] policy=-0.0569 value=0.0083 vraw=0.88 EVb=-4.920 EVin=-3.172 entropy=0.6026 | deploy=8.6% bundle=0.09 ratio=1.044 clip=10.9% gs=16 adv=+4.680±2.593 gnorm=0.55 n=128
+[solo step 13183] policy=-0.0727 value=0.0295 vraw=3.13 EVb=-6.231 EVin=-5.153 entropy=0.4544 | deploy=7.0% bundle=0.07 ratio=1.022 clip=1.6% gs=16 adv=+9.271±4.018 gnorm=1.29 n=128
+[solo step 13672] policy=-0.1101 value=0.1302 vraw=14.12 EVb=-13.328 EVin=-11.938 entropy=0.6539 | deploy=10.2% bundle=0.10 ratio=1.025 clip=6.2% gs=16 adv=+20.655±5.920 gnorm=1.72 n=128
+[solo step 13673] policy=0.0639 value=0.0034 vraw=0.36 EVb=-3.355 EVin=-5.084 entropy=0.5144 | deploy=6.2% bundle=0.06 ratio=0.965 clip=1.6% gs=16 adv=-2.881±1.391 gnorm=1.84 n=128
+[solo step 13674] policy=-0.0245 value=0.0121 vraw=1.30 EVb=-1.100 EVin=-0.550 entropy=0.7845 | deploy=9.4% bundle=0.09 ratio=0.991 clip=7.0% gs=16 adv=+4.132±5.159 gnorm=0.57 n=128
+[solo step 13675] policy=-0.0819 value=0.0160 vraw=1.70 EVb=-10.080 EVin=-5.920 entropy=0.9703 | deploy=13.3% bundle=0.13 ratio=1.036 clip=20.3% gs=16 adv=+7.219±2.788 gnorm=1.47 n=128
+[solo step 13935] policy=-0.0610 value=0.1055 vraw=11.39 EVb=-4.604 EVin=-3.549 entropy=0.8825 | deploy=14.1% bundle=0.14 ratio=1.042 clip=18.0% gs=16 adv=+17.447±9.019 gnorm=1.63 n=128
+[solo step 13936] policy=-0.0779 value=0.0212 vraw=2.27 EVb=-8.470 EVin=-4.948 entropy=0.5095 | deploy=6.2% bundle=0.06 ratio=1.016 clip=3.9% gs=16 adv=+8.486±3.406 gnorm=1.37 n=128
+[solo] 冻结副本已同步 @step 14000
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 14166] policy=-0.0468 value=0.1331 vraw=14.74 EVb=-2.775 EVin=-1.564 entropy=0.6895 | deploy=9.4% bundle=0.09 ratio=1.012 clip=6.2% gs=16 adv=+19.658±13.159 gnorm=2.35 n=128
+[solo step 14167] policy=0.1131 value=0.0602 vraw=6.69 EVb=-8.713 EVin=-22.584 entropy=0.4942 | deploy=5.5% bundle=0.05 ratio=0.971 clip=0.8% gs=16 adv=-10.817±2.951 gnorm=3.44 | p_gnorm=1.68 v_gnorm=1.935 v/p=1.15 scale=10.54 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 14544] policy=0.0410 value=0.1080 vraw=12.27 EVb=-0.937 EVin=-1.409 entropy=0.7024 | deploy=7.0% bundle=0.08 ratio=0.965 clip=17.2% gs=16 adv=-14.901±11.086 gnorm=1.92 n=128
+[solo step 14545] policy=0.0255 value=0.0018 vraw=0.20 EVb=-5.097 EVin=-1.130 entropy=0.6613 | deploy=7.0% bundle=0.07 ratio=0.917 clip=33.6% gs=16 adv=-1.558±1.784 gnorm=0.58 n=128
+[solo step 14546] policy=-0.0339 value=0.0617 vraw=6.99 EVb=-3.257 EVin=-1.967 entropy=0.7380 | deploy=8.6% bundle=0.09 ratio=1.014 clip=5.5% gs=16 adv=+9.356±8.367 gnorm=1.47 n=128
+[solo step 14811] policy=-0.0216 value=0.0754 vraw=8.66 EVb=-0.950 EVin=-0.347 entropy=0.8049 | deploy=10.2% bundle=0.11 ratio=1.025 clip=6.2% gs=16 adv=+8.606±12.795 gnorm=1.35 n=128
+[solo step 14812] policy=0.1058 value=0.0840 vraw=9.76 EVb=-7.293 EVin=-13.795 entropy=0.4490 | deploy=7.0% bundle=0.07 ratio=0.998 clip=4.7% gs=16 adv=-15.304±4.543 gnorm=2.39 n=128
+[solo] ⚠️ GRU 活力不达标 @step 15000: value/R std=0.139 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 15000: engagement_rate=0.000 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[gate] WARN @step 15000: ghost_rate=44.200 不满足 <= 36.600（200%×起点(18.3)；只报警，不中断训练）
+[solo] eval@15000: 胜率 0.625±0.076 (23W/13L/4D, 40局) mean_reward=1.579 EV=-0.1562（池化） EVb=-0.1692 h_std=7.41e-02 n_abs=0.732126 vstd/rstd=0.1393 累计局数=45
+[solo]   vs baseline0: 胜率 0.000±0.000 (0W/40L/0D)
+[solo]   vs baseline_prev: 胜率 0.537±0.079 (15W/12L/13D)
+[solo]   vs baseline_rand: 胜率 0.000±0.000 (0W/40L/0D)
+[solo] ⚠️ 绝对强度警报 @step 15000: vs 固定随机锚点 胜率=0.000 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[follower] ⚠️ runs/economy_9j\solo_main_50000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 15171] policy=0.0452 value=0.1218 vraw=14.52 EVb=-1.199 EVin=-1.862 entropy=0.6696 | deploy=9.4% bundle=0.09 ratio=0.987 clip=3.1% gs=16 adv=-17.339±11.925 gnorm=1.91 n=128
+[solo step 15172] policy=0.0537 value=0.0067 vraw=0.79 EVb=-0.463 EVin=-1.199 entropy=0.4068 | deploy=6.2% bundle=0.06 ratio=0.980 clip=0.8% gs=16 adv=-5.764±3.325 gnorm=0.92 n=128
+[solo step 15173] policy=0.0810 value=0.0265 vraw=3.14 EVb=-2.863 EVin=-4.433 entropy=0.8694 | deploy=9.4% bundle=0.09 ratio=0.900 clip=29.7% gs=16 adv=-11.613±4.235 gnorm=1.98 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_24000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 15546] policy=0.0306 value=0.0139 vraw=1.64 EVb=-0.325 EVin=-0.793 entropy=0.8727 | deploy=11.7% bundle=0.12 ratio=0.979 clip=17.2% gs=16 adv=-6.287±6.734 gnorm=1.60 n=128
+[solo step 15547] policy=-0.0550 value=0.0047 vraw=0.55 EVb=-7.848 EVin=-3.421 entropy=0.4648 | deploy=7.8% bundle=0.08 ratio=1.003 clip=6.2% gs=16 adv=+3.538±1.994 gnorm=1.18 | p_gnorm=0.9512 v_gnorm=0.2325 v/p=0.24 scale=10.82 n=128
+[solo step 15548] policy=-0.1057 value=0.0169 vraw=1.97 EVb=-18.802 EVin=-11.270 entropy=0.6637 | deploy=10.9% bundle=0.11 ratio=1.033 clip=8.6% gs=16 adv=+7.548±2.254 gnorm=1.81 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 15731] policy=0.0019 value=0.0678 vraw=7.98 EVb=-0.047 EVin=-0.002 entropy=0.6686 | deploy=10.9% bundle=0.11 ratio=1.015 clip=10.9% gs=16 adv=-1.089±15.948 gnorm=0.40 n=128
+[solo] 冻结副本已同步 @step 16000
+[solo step 16028] policy=0.0596 value=0.1377 vraw=16.75 EVb=-3.012 EVin=-3.542 entropy=0.4034 | deploy=7.0% bundle=0.07 ratio=0.989 clip=5.5% gs=16 adv=-20.589±10.802 gnorm=1.44 n=128
+[solo step 16029] policy=-0.0641 value=0.0189 vraw=2.28 EVb=-6.668 EVin=-4.678 entropy=0.4539 | deploy=7.0% bundle=0.07 ratio=1.015 clip=3.9% gs=16 adv=+7.326±3.580 gnorm=0.90 n=128
+[solo step 16030] policy=-0.0975 value=0.0826 vraw=10.10 EVb=-11.952 EVin=-9.640 entropy=0.5121 | deploy=8.6% bundle=0.09 ratio=1.031 clip=6.2% gs=16 adv=+16.845±5.473 gnorm=1.83 n=128
+[solo step 16469] policy=-0.0139 value=0.0357 vraw=4.37 EVb=-0.360 EVin=-0.144 entropy=0.5302 | deploy=7.8% bundle=0.08 ratio=1.018 clip=15.6% gs=16 adv=+4.474±10.951 gnorm=0.40 n=128
+[solo step 16470] policy=0.0707 value=0.0025 vraw=0.31 EVb=-2.845 EVin=-6.765 entropy=0.4208 | deploy=7.0% bundle=0.07 ratio=1.000 clip=2.3% gs=16 adv=-2.553±1.131 gnorm=1.22 n=128
+[solo step 16471] policy=0.0778 value=0.0148 vraw=1.79 EVb=-3.575 EVin=-6.994 entropy=0.9217 | deploy=10.2% bundle=0.12 ratio=0.944 clip=10.9% gs=16 adv=-6.746±2.668 gnorm=2.43 n=128
+[solo step 16666] policy=0.0232 value=0.0472 vraw=5.75 EVb=-0.264 EVin=-0.508 entropy=0.8415 | deploy=11.7% bundle=0.12 ratio=0.997 clip=16.4% gs=16 adv=-7.790±10.926 gnorm=1.49 n=128
+[solo step 16667] policy=-0.0984 value=0.1075 vraw=13.30 EVb=-11.941 EVin=-9.865 entropy=0.4928 | deploy=6.2% bundle=0.06 ratio=1.033 clip=14.1% gs=16 adv=+19.496±6.237 gnorm=2.07 | p_gnorm=3.858 v_gnorm=1.304 v/p=0.34 scale=11.12 n=128
+[solo step 16804] policy=-0.1122 value=0.1063 vraw=13.36 EVb=-15.470 EVin=-12.180 entropy=0.6829 | deploy=7.8% bundle=0.10 ratio=1.036 clip=3.9% gs=16 adv=+20.012±5.633 gnorm=2.50 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_100000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 17136] policy=-0.0195 value=0.0363 vraw=4.56 EVb=-0.707 EVin=-0.342 entropy=0.4714 | deploy=7.0% bundle=0.08 ratio=0.997 clip=3.1% gs=16 adv=+6.517±10.483 gnorm=0.72 n=128
+[solo step 17137] policy=0.0251 value=0.0011 vraw=0.14 EVb=-2.133 EVin=-1.516 entropy=0.5250 | deploy=6.2% bundle=0.07 ratio=0.991 clip=2.3% gs=16 adv=-1.099±1.372 gnorm=0.86 n=128
+[solo step 17495] policy=0.0437 value=0.0113 vraw=1.40 EVb=-0.764 EVin=-2.246 entropy=0.9080 | deploy=11.7% bundle=0.12 ratio=0.940 clip=14.1% gs=16 adv=-5.153±3.533 gnorm=1.35 n=128
+[solo step 17496] policy=-0.0191 value=0.0006 vraw=0.08 EVb=-10.156 EVin=-0.602 entropy=0.5490 | deploy=7.8% bundle=0.08 ratio=0.981 clip=3.1% gs=16 adv=+0.768±1.234 gnorm=0.81 n=128
+[solo step 17497] policy=-0.0396 value=0.0048 vraw=0.58 EVb=-6.133 EVin=-1.642 entropy=0.4730 | deploy=7.8% bundle=0.08 ratio=1.016 clip=4.7% gs=16 adv=+3.317±2.619 gnorm=0.64 n=128
+[solo] ⚠️ GRU 活力不达标 @step 17500: value/R std=0.037 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 17500: engagement_rate=0.000 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@17500: 胜率 0.500±0.079 (15W/15L/10D, 40局) mean_reward=-2.960 EV=-0.0111（池化） EVb=-0.0183 h_std=8.47e-02 n_abs=0.783217 vstd/rstd=0.0366 累计局数=54
+[solo]   vs baseline0: 胜率 0.000±0.000 (0W/40L/0D)
+[solo]   vs baseline_prev: 胜率 0.550±0.079 (15W/11L/14D)
+[solo]   vs baseline_rand: 胜率 0.000±0.000 (0W/40L/0D)
+[solo] ⚠️ 绝对强度警报 @step 17500: vs 固定随机锚点 胜率=0.000 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo step 17723] policy=-0.0522 value=0.0101 vraw=1.23 EVb=-7.818 EVin=-2.560 entropy=0.8855 | deploy=11.7% bundle=0.12 ratio=1.030 clip=7.8% gs=16 adv=+5.473±3.289 gnorm=1.20 n=128
+[solo step 17724] policy=-0.1437 value=0.0390 vraw=4.76 EVb=-32.558 EVin=-19.371 entropy=0.3203 | deploy=6.2% bundle=0.06 ratio=1.003 clip=5.5% gs=16 adv=+12.502±2.694 gnorm=1.84 n=128
+[solo] 冻结副本已同步 @step 18000
+[solo step 18083] policy=-0.0124 value=0.0403 vraw=4.94 EVb=-0.494 EVin=+0.026 entropy=0.4733 | deploy=7.8% bundle=0.08 ratio=1.000 clip=5.5% gs=16 adv=+5.088±12.592 gnorm=0.58 n=128
+[solo step 18084] policy=0.0671 value=0.0159 vraw=1.94 EVb=-1.494 EVin=-0.455 entropy=0.5520 | deploy=7.0% bundle=0.07 ratio=0.934 clip=21.1% gs=16 adv=-7.530±3.419 gnorm=1.41 | p_gnorm=2.11 v_gnorm=1.306 v/p=0.62 scale=11.05 n=128
+[solo step 18085] policy=0.0727 value=0.0032 vraw=0.38 EVb=-0.781 EVin=-0.234 entropy=1.0716 | deploy=9.4% bundle=0.10 ratio=0.910 clip=32.8% gs=16 adv=-4.894±2.165 gnorm=1.61 n=128
+[solo step 18214] policy=-0.0317 value=0.0716 vraw=8.74 EVb=-1.347 EVin=-0.917 entropy=0.7279 | deploy=10.2% bundle=0.10 ratio=0.999 clip=15.6% gs=16 adv=+13.414±13.454 gnorm=0.68 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 18344] policy=-0.1540 value=0.0807 vraw=9.98 EVb=-43.420 EVin=-20.861 entropy=0.5613 | deploy=8.6% bundle=0.09 ratio=1.046 clip=8.6% gs=16 adv=+20.745±4.258 gnorm=2.21 n=128
+[solo step 18594] policy=-0.0042 value=0.0326 vraw=4.04 EVb=-0.519 EVin=+0.012 entropy=0.5999 | deploy=7.8% bundle=0.09 ratio=1.000 clip=7.8% gs=16 adv=+1.666±13.451 gnorm=0.36 n=128
+[solo step 18595] policy=0.0858 value=0.0849 vraw=10.61 EVb=-2.913 EVin=-3.723 entropy=0.5774 | deploy=7.0% bundle=0.07 ratio=0.923 clip=20.3% gs=16 adv=-19.178±6.786 gnorm=1.41 n=128
+[solo step 18776] policy=0.0354 value=0.0468 vraw=5.92 EVb=-1.771 EVin=-0.603 entropy=0.5982 | deploy=8.6% bundle=0.09 ratio=0.947 clip=13.3% gs=16 adv=-14.360±12.215 gnorm=0.81 n=128
+[solo step 19020] policy=0.0041 value=0.0086 vraw=1.09 EVb=-1.188 EVin=-0.398 entropy=0.9183 | deploy=8.6% bundle=0.14 ratio=1.014 clip=10.2% gs=16 adv=-1.140±7.782 gnorm=0.36 n=128
+[solo step 19021] policy=-0.1335 value=0.0592 vraw=7.46 EVb=-7.264 EVin=-8.907 entropy=0.4635 | deploy=7.0% bundle=0.07 ratio=1.040 clip=6.2% gs=16 adv=+18.107±4.286 gnorm=1.33 n=128
+[solo step 19180] policy=-0.0082 value=0.0708 vraw=8.99 EVb=-0.027 EVin=+0.010 entropy=0.5892 | deploy=7.8% bundle=0.09 ratio=1.012 clip=10.9% gs=16 adv=+5.211±19.947 gnorm=0.50 n=128
+[solo step 19425] policy=0.0441 value=0.1172 vraw=15.26 EVb=-1.957 EVin=-1.727 entropy=0.9479 | deploy=9.4% bundle=0.13 ratio=0.975 clip=11.7% gs=16 adv=-17.314±12.059 gnorm=1.29 | p_gnorm=0.9503 v_gnorm=1.018 v/p=1.07 scale=11.41 n=128
+[solo step 19426] policy=-0.1299 value=0.0423 vraw=5.49 EVb=-22.462 EVin=-27.256 entropy=0.4886 | deploy=7.0% bundle=0.07 ratio=1.027 clip=3.9% gs=16 adv=+10.214±2.469 gnorm=2.13 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 19710] policy=-0.0355 value=0.0820 vraw=10.72 EVb=-1.161 EVin=-0.910 entropy=0.5190 | deploy=7.0% bundle=0.08 ratio=1.012 clip=6.2% gs=16 adv=+13.048±11.558 gnorm=0.80 n=128
+[solo step 19711] policy=0.0809 value=0.0493 vraw=6.49 EVb=-8.912 EVin=-11.255 entropy=0.5840 | deploy=7.8% bundle=0.08 ratio=0.971 clip=5.5% gs=16 adv=-10.721±4.095 gnorm=1.84 n=128
+[solo] ⚠️ GRU 活力不达标 @step 20000: value/R std=0.275 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 20000: engagement_rate=0.000 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@20000: 胜率 0.900±0.047 (32W/0L/8D, 40局) mean_reward=32.877 EV=0.139（池化） EVb=0.135 h_std=6.35e-02 n_abs=0.738076 vstd/rstd=0.2747 累计局数=64
+[solo]   vs baseline0: 胜率 0.300±0.072 (12W/28L/0D)
+[solo]   vs baseline_prev: 胜率 0.950±0.035 (37W/1L/2D)
+[solo]   vs baseline_rand: 胜率 0.075±0.042 (3W/37L/0D)
+[solo] ⚠️ 绝对强度警报 @step 20000: vs 固定随机锚点 胜率=0.075 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] 冻结副本已同步 @step 20000
+[solo] 训练循环耗时 2499.8s
+[done] solo 'fprime_ev_20k' 完成，产物在 runs\fprime_ev_20k （solo_state.json 供 dashboard --solo 读取）

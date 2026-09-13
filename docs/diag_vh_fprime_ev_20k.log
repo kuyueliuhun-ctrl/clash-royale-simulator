@@ -1,0 +1,36 @@
+=== 参数范数（按模块）===
+  enc_fc         numel=  349696  ||W||=    9.0858  RMS=0.01536  max|W|=0.1048
+  value_enc_fc   numel=  349696  ||W||=   15.8459  RMS=0.02680  max|W|=0.2997
+  gru_cell       numel=   99072  ||W||=   17.0074  RMS=0.05403  max|W|=0.1489
+  cell_head      numel=   74304  ||W||=   16.0146  RMS=0.05875  max|W|=0.1998
+  cnn            numel=   62944  ||W||=    8.7421  RMS=0.03484  max|W|=0.2069
+  belief_mlp     numel=   36096  ||W||=    5.7886  RMS=0.03047  max|W|=0.3305
+  value_head_mlp numel=    8321  ||W||=    5.8964  RMS=0.06464  max|W|=0.2729
+  grid_ln        numel=    5120  ||W||=   49.8584  RMS=0.69679  max|W|=1.0646
+  plan_mlp       numel=    3776  ||W||=    5.4349  RMS=0.08845  max|W|=0.3077
+  entity_emb     numel=    1416  ||W||=   38.7287  RMS=1.02920  max|W|=4.1015
+  sub_emb        numel=    1152  ||W||=    6.9830  RMS=0.20574  max|W|=0.3982
+  slot_head      numel=     774  ||W||=    1.7596  RMS=0.06325  max|W|=0.9227
+  enc_ln         numel=     256  ||W||=   11.3321  RMS=0.70826  max|W|=1.0384
+  value_enc_ln   numel=     256  ||W||=   11.5843  RMS=0.72402  max|W|=1.1296
+  value_head     numel=     129  ||W||=    0.5951  RMS=0.05240  max|W|=0.0880
+
+=== value_head ===
+  weight: dim=128 ||w||=0.589078 rms=0.052068 max|w|=0.087958
+  bias=0.084758
+
+=== 隐状态 h / 编码 enc / 价值输出（200 帧）===
+  enc 跨帧 每维std: mean=0.01298 median=0.00175 max=0.14057
+  enc ||x|| : mean=11.530 min=11.524 max=11.537
+  h   跨帧 每维std: mean=0.045705 median=0.039932 max=0.129577
+  ||h||: mean=8.7676 min=4.0822 max=8.8667
+  value_head_mlp(value_enc)[E' independent]: mean=0.9596 std=0.087365 min=0.8254 max=1.1981
+  h·w（去 bias）: std=0.031888  （value 中随状态变化的部分）
+
+=== GRU 门（3 个抽样帧）===
+  z(更新门) mean=0.5660  （→1 则 h 冻结不更新）
+  r(重置门) mean=0.4666
+  n(候选)   mean=0.0399 abs_mean=0.7223
+  |z-1| mean=0.434000
+
+[结论] h 跨帧 std≈0 而 enc 跨帧 std 明显>0 → GRU 饱和/冻死；若 enc 也≈0 → 编码器或输入恒定

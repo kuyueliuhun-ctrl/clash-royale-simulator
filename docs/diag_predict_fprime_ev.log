@@ -1,0 +1,126 @@
+[diag] cfg: gamma=0.997 lam=0.99 max_ep=360 stall=True device=cuda
+[diag] loaded runs/fprime_ev_20k/solo_main.pt
+[diag] rollout 0/50 局...
+[diag]   局 0 完成 14.9s (len=360)
+[diag]   局 1 完成 18.3s (len=431)
+[diag]   局 2 完成 16.4s (len=422)
+[diag]   局 3 完成 14.4s (len=360)
+[diag]   局 4 完成 16.0s (len=412)
+[diag]   局 5 完成 17.0s (len=430)
+[diag]   局 6 完成 16.8s (len=409)
+[diag]   局 7 完成 18.3s (len=444)
+[diag]   局 8 完成 14.5s (len=360)
+[diag]   局 9 完成 15.7s (len=360)
+[diag] rollout 10/50 局...
+[diag]   局 10 完成 18.4s (len=422)
+[diag]   局 11 完成 16.2s (len=378)
+[diag]   局 12 完成 14.8s (len=371)
+[diag]   局 13 完成 19.0s (len=485)
+[diag]   局 14 完成 17.1s (len=419)
+[diag]   局 15 完成 14.1s (len=360)
+[diag]   局 16 完成 16.3s (len=389)
+[diag]   局 17 完成 15.0s (len=360)
+[diag]   局 18 完成 14.7s (len=360)
+[diag]   局 19 完成 14.6s (len=360)
+[diag] rollout 20/50 局...
+[diag]   局 20 完成 14.7s (len=360)
+[diag]   局 21 完成 15.2s (len=360)
+[diag]   局 22 完成 16.0s (len=389)
+[diag]   局 23 完成 15.4s (len=360)
+[diag]   局 24 完成 15.1s (len=360)
+[diag]   局 25 完成 20.5s (len=503)
+[diag]   局 26 完成 7.0s (len=183)
+[diag]   局 27 完成 8.5s (len=215)
+[diag]   局 28 完成 15.2s (len=355)
+[diag]   局 29 完成 14.4s (len=360)
+[diag] rollout 30/50 局...
+[diag]   局 30 完成 14.8s (len=360)
+[diag]   局 31 完成 20.3s (len=475)
+[diag]   局 32 完成 15.3s (len=360)
+[diag]   局 33 完成 14.8s (len=360)
+[diag]   局 34 完成 14.8s (len=360)
+[diag]   局 35 完成 15.2s (len=360)
+[diag]   局 36 完成 17.8s (len=412)
+[diag]   局 37 完成 18.9s (len=448)
+[diag]   局 38 完成 8.8s (len=239)
+[diag]   局 39 完成 14.9s (len=360)
+[diag] rollout 40/50 局...
+[diag]   局 40 完成 14.0s (len=360)
+[diag]   局 41 完成 15.5s (len=384)
+[diag]   局 42 完成 20.0s (len=476)
+[diag]   局 43 完成 15.2s (len=371)
+[diag]   局 44 完成 14.7s (len=360)
+[diag]   局 45 完成 14.5s (len=360)
+[diag]   局 46 完成 14.7s (len=360)
+[diag]   局 47 完成 9.1s (len=233)
+[diag]   局 48 完成 14.5s (len=360)
+[diag]   局 49 完成 13.9s (len=360)
+
+[diag] 帧数=18695  局数=50  平均局长=373.9
+[diag] 结果：main(先手视角) win=22 lose=3 draw=25
+
+=== 回报/价值分布 ===
+R: mean=4.462 std=8.126 min=-35.09 max=34.15
+v: mean=1.025 std=0.154 min=0.73 max=1.68
+MSE(v,R)=76.515  Var(R)=66.026  RMSE=8.747
+bias E[v-R]=-3.437  (E[v]=1.025, E[R]=4.462)
+
+=== EV 各口径 ===
+EV_global        = -0.1589
+EV_batch_contig  = -3.0436  (n=146, min=-31.43 max=+0.04)
+EV_batch_shuffle = -0.1745
+EV_episode       = -1.6844  (n=50)
+
+=== 方差结构（解释负 EV 的来源）===
+全局 Var(R)=66.026 (std 8.13)
+批内 Var(R): mean=28.370 (std 5.33) median=10.846
+批内/全局 方差比 ≈ 0.430
+相邻帧 corr(R_t, R_t+1)=0.9893
+
+corr(v,R) 全体 = +0.5394
+corr(v,R) 局内去均值 = +0.6378
+corr(局均 v, 局均 R) 跨局 = +0.1683
+回归 R~v 斜率 = 28.490  (1.0=标准差对齐；<0=方向相反)
+EV_between(局均值层) = -0.4327
+
+=== 可预测性探针（post-LN enc -> GAE return，留出 20%）===
+线性探针  test R2 = +0.3748   (train 14956 / test 3739 帧)
+MLP 探针  test R2 = +0.5030   (enc dim=128)
+[按局分组留出] 线性 R2 = +0.3138  MLP R2 = +0.2433   (train 15004 / test 3691 帧, 50 局)
+  => 逐帧 R2 - 分组 R2 = MLP +0.2597 / 线性 +0.0610（该差就是时间泄漏的量级）
+[换标签：局结果广播] 分组 线性 R2 = -265.1121 / MLP R2 = -0.6509（逐帧口径 MLP = +0.3904；25 局有终局帧 / 共 50 局）
+[换标签：局均回报广播] 分组 线性 R2 = -0.1011 / MLP R2 = -0.2500
+critic 对照 EV_global = -0.1589（critic 对同一批帧的解释力）
+解读：探针≈critic => 标签在该表征下就不可预测（偏训练侧数据）；探针>>critic => 信息在表征里但网络没吸收（偏程序侧/训练侧优化）
+
+=== G' 三层可预测性对照（全部按**局分组**留出 20%）===
+特征列: my_king_hp, my_left_hp, my_right_hp, opp_king_hp, opp_left_hp, opp_right_hp, my_crown, opp_crown, my_elixir, opp_elixir, time, hp_diff
+帧数=18695 局数=50
+特征        标签              线性R2(分组)    MLP R2(分组)        MLP R2(逐帧泄漏口径)
+raw       frame_R          +0.1274       +0.1637               +0.8188
+raw       outcome          -0.4360       -0.2844               +0.7839
+raw       ep_mean          -0.1054       -0.2507               +0.7228
+raw       crown_diff          +nan          +nan               +0.6809
+raw       CTRL:time        +1.0000       +0.9973               +0.9990
+raw       CTRL:hp_diff       +1.0000       +0.9980               +0.9994
+enc       frame_R          +0.3138       +0.2433               +0.5030
+enc       outcome        -265.1121       -0.6509               +0.3904
+enc       ep_mean          -0.1011       -0.2500               +0.2800
+enc       crown_diff          +nan          +nan               +0.7371
+enc       CTRL:time        +0.9997       +0.9992               +0.9994
+enc       CTRL:hp_diff       -0.2091       -0.1675               +0.3034
+raw+enc   frame_R          +0.2351       +0.0848               +0.8180
+raw+enc   outcome         -62.2170       -0.4102               +0.8913
+raw+enc   ep_mean          -0.1453       -0.1964               +0.7479
+raw+enc   crown_diff          +nan          +nan               +0.9427
+raw+enc   CTRL:time        +1.0000       +0.9991               +0.9994
+raw+enc   CTRL:hp_diff       +1.0000       +0.9940               +0.9994
+
+[噪声地板] 局标签随机置换后重测（分组口径）:
+  raw        线性 +0.1062  MLP -1.5525
+  enc        线性 -0.1631  MLP -0.6681
+  raw+enc    线性 -0.0321  MLP -1.3665
+
+解读：① raw 能、② enc 不能 => 瓶颈在表征/观测编码（改 CNN/编码）；① 也不能（且低于噪声地板）=> 局结果本身不可从状态预测，critic 工作应停。
+
+[diag] 原始数据已存 ../../docs/_diag_predict_fprime_ev.npz

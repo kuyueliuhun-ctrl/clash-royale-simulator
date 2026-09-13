@@ -1,0 +1,16 @@
+[solo] 单人自对弈 配置 'repro_a' -> runs\repro_a (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=10, n_eval_games=4, eval_workers=4, opp_mix={'frozen': 0.4, 'hist': 0.3, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.4/hist=0.3/defend=0.2/rand_anchor=0.1
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 n=128
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 n=128
+[solo step 435] policy=-0.0079 value=0.0793 vraw=17.27 EVb=-0.153 EVin=+0.051 entropy=0.7894 | deploy=11.7% bundle=0.12 ratio=1.030 clip=14.1% gs=16 adv=+6.146±26.137 gnorm=1.47 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 756] policy=0.0211 value=0.0363 vraw=9.88 EVb=-0.202 EVin=-0.172 entropy=0.5821 | deploy=8.6% bundle=0.09 ratio=1.003 clip=7.0% gs=16 adv=-11.288±16.487 gnorm=0.16 n=128
+[solo step 757] policy=-0.0643 value=0.0099 vraw=2.17 EVb=-19.952 EVin=-17.633 entropy=0.4526 | deploy=7.0% bundle=0.07 ratio=1.043 clip=7.8% gs=16 adv=+3.148±1.554 gnorm=0.38 n=128
+[solo] ⚠️ GRU 活力不达标 @step 800: value/R std=0.158 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@800: 胜率 0.500±0.250 (2W/2L/0D, 4局) mean_reward=0.883 EV=0.077（池化） EVb=0.0703 h_std=7.01e-02 n_abs=0.43811 vstd/rstd=0.1584 累计局数=3
+[solo]   vs baseline0: 胜率 1.000±0.000 (4W/0L/0D)
+[solo]   vs baseline_prev: 胜率 1.000±0.000 (4W/0L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.242 (2W/1L/1D)
+[solo] 训练循环耗时 78.3s
+[done] solo 'repro_a' 完成，产物在 runs\repro_a （solo_state.json 供 dashboard --solo 读取）
