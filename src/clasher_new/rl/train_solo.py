@@ -1201,7 +1201,41 @@ def run_solo(cfg, resume=False, record_replays=True):
     #            （旧口径"批 EV 求均值"被 128 连续帧的批内低方差放大 ~3 倍）
     #   frames   最近 96 帧 (obs, belief, plan)，供 GRU 活力探针（不推进 env）
     _probe = {"games": 0, "ev_pairs": [], "frames": [],
-              "stall_games": 0, "stall_close_draws": 0}
+              "stall_games": 0, "stall_close_draws": 0, "adv_inert": []}
+
+    # —— critic 惰性检验（2026-09-13；预注册 docs/critic_inertia_prereg_2026-09-13.md）——
+    # `--adv-inert-probe`：**纯测量**。每个诊断更新额外算一份"V≡常数"的优势
+    #   （c = 迄今全部回报的运行均值 ret_scaler.mean，即塌缩后的 critic 收敛到的那个常数），
+    #   报告 corr(adv_real, adv_const)、状态依赖占比、以及策略损失梯度余弦 grad_cos。
+    #   不改变任何被写入梯度的量（默认关 ⇒ 逐位旧行为）。
+    # `--critic-baseline const`：**干预**。把优势里的 V 项整体换成标量 c，其余全不动
+    #   （returns / 价值损失 / 预算 / 对手池 / 奖励都不变）。
+    _adv_probe = bool(getattr(cfg, "adv_inert_probe", False))
+    _critic_const = str(getattr(cfg, "critic_baseline", "value") or "value") == "const"
+    if _critic_const or _adv_probe:
+        print(f"[solo] critic 惰性检验: probe={_adv_probe} critic_baseline="
+              f"{'const' if _critic_const else 'value'}"
+              f"（c = ret_scaler.mean 的运行均值基线；见 docs/critic_inertia_prereg_2026-09-13.md）",
+              flush=True)
+
+    def _gae_pair(rew, val, term, trunc, last_val):
+        """返回 (adv_real, ret_real, adv_const, level_gap)。
+
+        adv_const = 把 V 换成标量 c 后重算的 GAE（`last_value` 同样取 c）；
+        `level_gap` = |mean(V) − c|，用于确认"常数水平是否真的匹配"（预注册判据 P1′）。
+        两个开关都关时不做任何多余计算（保默认路径逐位不变）。
+        """
+        adv_r, ret_r = PPOTrainer.compute_gae(rew, val, term, cfg.gamma,
+                                              cfg.gae_lambda, truncated=trunc,
+                                              last_value=last_val)
+        if not (_adv_probe or _critic_const):
+            return adv_r, ret_r, None, 0.0
+        c = float(ppo.ret_scaler.mean)
+        adv_c, _ = PPOTrainer.compute_gae(rew, [c] * len(rew), term, cfg.gamma,
+                                          cfg.gae_lambda, truncated=trunc,
+                                          last_value=c)
+        gap = abs(float(np.mean(val)) - c) if len(val) else 0.0
+        return adv_r, ret_r, adv_c, gap
 
     def _sync_controls_once():
         if not _controls_ready["synced"]:
@@ -1383,6 +1417,26 @@ def run_solo(cfg, resume=False, record_replays=True):
         save_checkpoint(main, cfg.solo_main_path())
         save_checkpoint(main, cfg.solo_ckpt_path(step))   # 历史版本保留（solo_main_<step>.pt）
         torch.save(ppo.opt.state_dict(), cfg.solo_opt_path())   # 断点续练恢复 Adam
+        # 惰性检验汇总（预注册 §2 的 P1/P2/P3 判据直接读这里的中位数）
+        _adv_inert = None
+        if _probe.get("adv_inert"):
+            def _med(key):
+                _vs = [r[key] for r in _probe["adv_inert"] if r.get(key) is not None]
+                return float(np.median(_vs)) if _vs else None
+            _adv_inert = {
+                "n_updates": len(_probe["adv_inert"]),
+                "n_grad_cos": sum(1 for r in _probe["adv_inert"]
+                                  if r.get("grad_cos") is not None),
+                "corr_median": _med("corr"),
+                "resid_frac_median": _med("resid_frac"),
+                "resid_frac_norm_median": _med("resid_frac_norm"),
+                "level_shift_norm_median": _med("level_shift_norm"),
+                "std_ratio_median": _med("std_ratio"),
+                "level_gap_median": _med("level_gap"),
+                "grad_cos_median": _med("grad_cos"),
+                "grad_norm_ratio_median": _med("grad_norm_ratio"),
+                "critic_baseline": ("const" if _critic_const else "value"),
+            }
         with open(cfg.run_state_path(), "w", encoding="utf-8") as f:
             json.dump({"step": int(step), "solo_ckpt": cfg.solo_main_path(),
                        "solo_opt": cfg.solo_opt_path(),
@@ -1394,6 +1448,7 @@ def run_solo(cfg, resume=False, record_replays=True):
                        "ppo_epochs": int(cfg.ppo_epochs),
                        "ppo_minibatch": int(cfg.ppo_minibatch),
                        "ppo_shuffle": bool(cfg.ppo_shuffle),
+                       "adv_inert": _adv_inert,
                        "ret_scaler": ppo.ret_scaler.to_dict()}, f)
 
     def anchor_point(step):
@@ -1505,15 +1560,16 @@ def run_solo(cfg, resume=False, record_replays=True):
                     _probe["stall_games"] += 1
                     if virt is None:
                         _probe["stall_close_draws"] += 1
-                adv, ret = PPOTrainer.compute_gae(
-                    ep_rew, ep_val, ep_term, cfg.gamma, cfg.gae_lambda,
-                    truncated=ep_trunc, last_value=0.0)
+                adv, ret, adv_c, _gap = _gae_pair(ep_rew, ep_val, ep_term, ep_trunc, 0.0)
                 for i in range(len(ep_rew)):
                     transitions.append({"obs": ep_obs[i], "belief": ep_belief[i],
                                         "plan": ep_plan[i], "bundle": ep_bundle[i],
                                         "old_logprob": ep_lp[i], "adv": float(adv[i]),
                                         "returns": float(ret[i]), "masks": ep_masks[i],
-                                        "init_hidden": ep_init[i]})
+                                        "init_hidden": ep_init[i],
+                                        "adv_const": (None if adv_c is None
+                                                      else float(adv_c[i])),
+                                        "adv_gap": float(_gap)})
                 _last_winner = env.battle.winner
                 _new_episode_reset(_last_winner)
                 if isinstance(env.opponent, FollowerOpponent):
@@ -1564,15 +1620,17 @@ def run_solo(cfg, resume=False, record_replays=True):
                 last_val = main.value(obs, belief_tok, plan_vec, hidden)
             else:
                 last_val = 0.0
-            adv, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma,
-                                              cfg.gae_lambda, truncated=ep_trunc,
-                                              last_value=last_val)
+            adv, ret, adv_c, _gap = _gae_pair(ep_rew, ep_val, ep_term, ep_trunc,
+                                              last_val)
             for i in range(len(ep_rew)):
                 transitions.append({"obs": ep_obs[i], "belief": ep_belief[i],
                                     "plan": ep_plan[i], "bundle": ep_bundle[i],
                                     "old_logprob": ep_lp[i], "adv": float(adv[i]),
                                     "returns": float(ret[i]), "masks": ep_masks[i],
-                                    "init_hidden": ep_init[i]})
+                                    "init_hidden": ep_init[i],
+                                    "adv_const": (None if adv_c is None
+                                                  else float(adv_c[i])),
+                                    "adv_gap": float(_gap)})
             _last_winner = env.battle.winner
             _new_episode_reset(_last_winner)
             if isinstance(env.opponent, FollowerOpponent):
@@ -1584,7 +1642,38 @@ def run_solo(cfg, resume=False, record_replays=True):
             n_play = sum(1 for t in batch
                          if any(sa.kind == "deploy" for sa in t["bundle"].sub_actions))
             avg_size = sum(len(t["bundle"].sub_actions) for t in batch) / max(1, len(batch))
-            stats = ppo.update(batch)
+            # 惰性检验：干预臂把优势的 V 项换成标量 c（其余不动）；测量臂只传替代优势。
+            _adv_alt = None
+            if _critic_const:
+                for t in batch:
+                    if t.get("adv_const") is not None:
+                        t["adv"] = t["adv_const"]
+            elif _adv_probe and all(t.get("adv_const") is not None for t in batch):
+                _adv_alt = [t["adv_const"] for t in batch]
+            stats = ppo.update(batch, adv_alt=_adv_alt)
+            if _adv_alt is not None:
+                _g = ppo.last_adv_inert_grad or {}
+                _rec = {"step": int(step),
+                        "corr": stats.get("adv_inert_corr"),
+                        "resid_frac": stats.get("adv_inert_resid_frac"),
+                        "resid_frac_norm": stats.get("adv_inert_resid_frac_norm"),
+                        "level_shift_norm": stats.get("adv_inert_level_shift_norm"),
+                        "std_ratio": stats.get("adv_inert_std_ratio"),
+                        "mean_real": stats.get("adv_inert_mean_real"),
+                        "mean_alt": stats.get("adv_inert_mean_alt"),
+                        "level_gap": (float(np.mean([t.get("adv_gap", 0.0)
+                                                     for t in batch])) if batch else 0.0),
+                        "grad_cos": _g.get("grad_cos"),
+                        "grad_norm_ratio": _g.get("grad_norm_ratio")}
+                _probe["adv_inert"].append(_rec)
+                if _rec["grad_cos"] is not None:
+                    print(f"[solo advinert {step}] corr={_rec['corr']:.4f} "
+                          f"resid={_rec['resid_frac']:.4f} "
+                          f"resid_norm={_rec['resid_frac_norm']:.4f} "
+                          f"lvl_shift={_rec['level_shift_norm']:.4f} "
+                          f"level_gap={_rec['level_gap']:.4f} "
+                          f"grad_cos={_rec['grad_cos']:+.4f} "
+                          f"gnorm_ratio={_rec['grad_norm_ratio']:.3f}", flush=True)
             transitions = transitions[cfg.batch_size:] if len(transitions) > cfg.batch_size else []
             # v3 P0-B：累积逐帧 (value, return)，评估窗口结束时池化算一次 EV
             if getattr(ppo, "last_ev_pairs", None) is not None:

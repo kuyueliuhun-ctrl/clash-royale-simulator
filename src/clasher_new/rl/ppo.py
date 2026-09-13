@@ -137,6 +137,9 @@ class PPOTrainer:
         self.last_ev_pairs = None
         #: F'：**更新前**整批预测算出的 EV（对外报出的口径，与历史 run 可比）。
         self.last_ev_pre = None
+        #: 2026-09-13 惰性检验：替代优势（V≡常数）的统计与梯度余弦，见 update() 的 adv_alt。
+        self._adv_inert_stats = {}
+        self.last_adv_inert_grad = None
 
     @staticmethod
     def explained_variance(values, returns):
@@ -188,7 +191,7 @@ class PPOTrainer:
         returns = adv + np.asarray(values, dtype=np.float32)
         return adv, returns
 
-    def update(self, transitions, ent_coef=None, adv_norm=None):
+    def update(self, transitions, ent_coef=None, adv_norm=None, adv_alt=None):
         """transitions: list of dicts {obs, belief, plan, bundle, old_logprob,
         adv, returns, masks, init_hidden(可选)}。
 
@@ -199,6 +202,12 @@ class PPOTrainer:
         adv_norm: batch=整批中心化（旧默认）/ scale=只除以批 std（不中心化，
         避免“躺平零优势帧”被批均值抬成伪正优势）/ none=不归一化。
         返回 stats 附带 ratio/clip/raw-adv/梯度范数诊断。
+
+        adv_alt（2026-09-13，critic 惰性检验；**默认 None = 逐位旧行为**）：
+        与 transitions 等长的**替代优势**（同口径：由调用方用 V≡常数 重算 GAE）。
+        给定后**不参与任何被写入梯度的量**，只在诊断命中的更新上多算 1 次前向 + 1 次反传，
+        返回 `adv_inert_*` 统计与 `last_adv_inert_grad`（策略损失对替代优势的梯度余弦）。
+        见 docs/critic_inertia_prereg_2026-09-13.md。
         """
         self.policy.train()
         if not transitions:
@@ -242,10 +251,59 @@ class PPOTrainer:
         legacy = (self.n_epochs <= 1 and not self.shuffle
                   and (self.minibatch_size <= 0 or self.minibatch_size >= n))
         diag_on = bool(self.diagnose_every) and (self.updates % self.diagnose_every == 0)
+        # —— 惰性检验：替代优势的**同一尺度化口径**（与 advs 逐条对应；不改 advs 本身）——
+        advs_alt = None
+        if adv_alt is not None:
+            alt_raw = np.asarray(adv_alt, dtype=np.float32)
+            if alt_raw.shape != adv_raw.shape:
+                raise ValueError(f"adv_alt 形状 {alt_raw.shape} 与批 {adv_raw.shape} 不一致")
+            advs_alt = alt_raw.copy()
+            _std_a = float(advs_alt.std())
+            if mode == "scale":
+                if _std_a > 1e-6:
+                    advs_alt = advs_alt / (_std_a + 1e-8)
+            elif mode == "batch":
+                if _std_a > 1e-6:
+                    advs_alt = (advs_alt - advs_alt.mean()) / (_std_a + 1e-8)
+            # none：原样（与 advs 同分支）
+            _sr, _sa = float(adv_raw.std()), float(alt_raw.std())
+            if _sr > 1e-12 and _sa > 1e-12:
+                _cc = float(np.corrcoef(adv_raw, alt_raw)[0, 1])
+            else:
+                _cc = 1.0
+            # 关键定义（2026-09-13，跑前修订 1）：真正进损失的是**归一化后**的优势
+            # （adv_norm="scale" ⇒ A/σ）。优势整体缩放对梯度是恒等变换，所以
+            # 「critic 的贡献」必须量在归一化向量上，否则会把纯缩放当成贡献。
+            # resid_frac（raw）只作描述：它同时含"形状差"与"尺度差"。
+            _srn = float(advs.std())
+            _san = float(advs_alt.std())
+            if _san > 1e-12:
+                _rn = advs - advs_alt
+                _resid_norm = float(_rn.std() / _san)
+                _level_shift = float(abs(_rn.mean()) / _san)
+            else:
+                _resid_norm = _level_shift = None
+            self._adv_inert_stats = {
+                "adv_inert_corr": _cc,
+                "adv_inert_resid_frac": float(np.std(adv_raw - alt_raw) / max(1e-12, _sa)),
+                "adv_inert_resid_frac_norm": _resid_norm,
+                "adv_inert_level_shift_norm": _level_shift,
+                "adv_inert_std_ratio": _sr / max(1e-12, _sa),
+                "adv_inert_norm_std_ratio": (_srn / _san if _san > 1e-12 else None),
+                "adv_inert_mean_real": float(adv_raw.mean()),
+                "adv_inert_mean_alt": float(alt_raw.mean()),
+            }
+        else:
+            self._adv_inert_stats = {}
+        self.last_adv_inert_grad = None
         if legacy:
             pack = self._loss_pass(transitions, np.arange(n), advs, rets_np,
                                    coef, v_scale, reduction="sum")
-            p_gnorm, v_gnorm = self._apply_grad(pack, diag_on)
+            pack_alt = None
+            if diag_on and advs_alt is not None:
+                pack_alt = self._loss_pass(transitions, np.arange(n), advs_alt, rets_np,
+                                           coef, v_scale, reduction="sum")
+            p_gnorm, v_gnorm = self._apply_grad(pack, diag_on, pack_alt=pack_alt)
             self.grad_steps += 1
             out = pack["stats"]
             out.update({"ratio_mean": pack["ratio_mean"],
@@ -277,7 +335,8 @@ class PPOTrainer:
                 self.last_ev_pre = self.explained_variance(
                     v_pre.squeeze(-1).cpu().numpy(), rets_np)
             p_gnorm, v_gnorm, out = self._update_epochs(
-                transitions, advs, rets_np, coef, v_scale, diag_on)
+                transitions, advs, rets_np, coef, v_scale, diag_on,
+                advs_alt=advs_alt)
             # 对外只报更新前口径（与全部历史 run 可比）；末轮 in-sample 值另存对照
             out["explained_variance_insample"] = out["explained_variance"]
             out["explained_variance"] = self.last_ev_pre
@@ -285,6 +344,10 @@ class PPOTrainer:
                     "adv_std": float(adv_raw.std()),
                     "value_scale": float(v_scale),
                     "n": n})
+        # 惰性检验统计（adv_alt=None 时为空 dict ⇒ 旧 stats 键集不变）
+        if self._adv_inert_stats:
+            out.update(self._adv_inert_stats)
+            out.update(self.last_adv_inert_grad or {})
         # 仅在真的跑了分解时才带这两项——保持 stats 全为有限浮点，
         # 旧测试的 all(np.isfinite(v) for v in stats.values()) 不受影响。
         if p_gnorm is not None:
@@ -343,9 +406,18 @@ class PPOTrainer:
                           "value_loss_raw": float(v_mse.item()) / m,
                           "entropy": float(ent.mean().item())}}
 
-    def _apply_grad(self, pack, diag_on=False):
-        """backward + 梯度诊断 + clip + `opt.step()`（一次梯度步）。"""
+    def _apply_grad(self, pack, diag_on=False, pack_alt=None):
+        """backward + 梯度诊断 + clip + `opt.step()`（一次梯度步）。
+
+        `pack_alt`（可选）：替代优势（V≡常数）在同一 minibatch 上的 loss pack。
+        给定且 diag_on 时，额外算策略损失对它的梯度，写入 `self.last_adv_inert_grad`
+        （`grad_cos` / `grad_norm_ratio`）——**不改变被写入梯度的任何量**。
+        """
         p_gnorm = v_gnorm = None
+        # 注意：这里**不重置** last_adv_inert_grad —— 诊断只在 (ep==0, bi==0) 那一次
+        # 调用上命中，而之后同一次 update 还有 15 次 _apply_grad 调用；早期版本在这里
+        # 每调用一次清一次，把刚算出的 grad_cos 擦掉（端到端 smoke 抓到：日志里
+        # adv_inert 统计正常但 n_grad_cos=0）。重置职责归 update() 开头。
         # —— 梯度成分诊断（P0-1a，可证伪"评论家主导"）——
         # p_loss / vf_coef*v_loss 分别求梯度范数后再走原有合并 backward（多两次
         # 反传，仅诊断时启用）。两者共享参数，范数之比即"谁在推动更新"。
@@ -365,6 +437,20 @@ class PPOTrainer:
                             tot += float((g.detach() ** 2).sum().item())
                     return math.sqrt(tot)
                 p_gnorm, v_gnorm = _norm(gp), _norm(gv)
+                if pack_alt is not None:
+                    ga = torch.autograd.grad(pack_alt["p_loss"], params,
+                                             retain_graph=True, allow_unused=True)
+                    num = na = 0.0
+                    for g1, g2 in zip(gp, ga):
+                        if g1 is None or g2 is None:
+                            continue
+                        num += float((g1.detach() * g2.detach()).sum().item())
+                        na += float((g2.detach() ** 2).sum().item())
+                    na = math.sqrt(na)
+                    if p_gnorm > 0.0 and na > 0.0:
+                        self.last_adv_inert_grad = {
+                            "grad_cos": num / (p_gnorm * na),
+                            "grad_norm_ratio": p_gnorm / na}
             except RuntimeError:
                 p_gnorm = v_gnorm = None
             finally:
@@ -388,7 +474,8 @@ class PPOTrainer:
         return [np.array(order[i:i + self.minibatch_size], dtype=np.int64)
                 for i in range(0, n, self.minibatch_size)]
 
-    def _update_epochs(self, transitions, advs, rets_np, coef, v_scale, diag_on):
+    def _update_epochs(self, transitions, advs, rets_np, coef, v_scale, diag_on,
+                       advs_alt=None):
         """F′ 主循环：`n_epochs` 轮 × 小批 ×（可选）打乱，每小批一次 `opt.step()`。
 
         统计口径（判读时注意）：
@@ -418,7 +505,13 @@ class PPOTrainer:
                 pack = self._loss_pass(transitions, idx, advs, rets_np,
                                        coef, v_scale, reduction="mean")
                 # 梯度分解只在**第一轮的第一个小批**做（否则每步 3 次反传）
-                pg, vg = self._apply_grad(pack, diag_on and ep == 0 and bi == 0)
+                _diag_here = diag_on and ep == 0 and bi == 0
+                pack_alt = None
+                if _diag_here and advs_alt is not None:
+                    # 惰性检验：同一 minibatch 上、同一尺度化口径下的替代优势
+                    pack_alt = self._loss_pass(transitions, idx, advs_alt, rets_np,
+                                               coef, v_scale, reduction="mean")
+                pg, vg = self._apply_grad(pack, _diag_here, pack_alt=pack_alt)
                 if pg is not None:
                     p_gnorm, v_gnorm = pg, vg
                 self.grad_steps += 1

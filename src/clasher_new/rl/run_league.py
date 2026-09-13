@@ -1264,6 +1264,13 @@ def main():
                          "从这些目录抽 hist ckpt，修对手池退化为 frozen+defend 的问题")
     ap.add_argument("--no-train-stall-stop", action="store_true",
                     help="solo：关闭训练环僵局早停（默认开；关=旧行为拖满 max_ep_steps）")
+    ap.add_argument("--adv-inert-probe", action="store_true",
+                    help="critic 惰性检验【纯测量】：每个诊断更新额外算一份 V≡常数 的优势，"
+                         "报告 corr/resid_frac/grad_cos（不改训练行为）。"
+                         "预注册 docs/critic_inertia_prereg_2026-09-13.md")
+    ap.add_argument("--critic-baseline", type=str, choices=["value", "const"], default=None,
+                    help="critic 惰性检验【干预】：value=旧行为；const=把优势里的 V 项换成"
+                         "标量 c（returns/价值损失/预算/奖励全不动）。非推荐配置")
     ap.add_argument("--stall-draw-margin", type=float, default=None,
                     help="C'（2026-09-12）早停低置信裁定降噪：皇冠相同时，塔血%%细差 < 该阈值"
                          "记平局=失败（去掉掷硬币级胜负标签）；0=退化为旧行为（细差也判胜负）")
@@ -1321,6 +1328,10 @@ def main():
         overrides["value_independent"] = False
     if args.no_train_stall_stop:
         overrides["train_stall_stop"] = False
+    if args.adv_inert_probe:
+        overrides["adv_inert_probe"] = True
+    if args.critic_baseline is not None:
+        overrides["critic_baseline"] = args.critic_baseline
     if args.keep_snapshot:
         overrides["keep_snapshot"] = True
     if args.only_vs_main:

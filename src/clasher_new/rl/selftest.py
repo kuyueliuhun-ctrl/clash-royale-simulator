@@ -4768,6 +4768,120 @@ def test_anchor_light_point_state():
           "（step=0/2500/5000 锚点序列）、同 step 幂等")
 
 
+def test_adv_inert_probe_and_const_baseline():
+    """critic 惰性检验（2026-09-13）：`adv_alt` 探针与 `critic_baseline="const"`。
+
+    预注册 `docs/critic_inertia_prereg_2026-09-13.md`。本测试断言（每条可证伪）：
+
+    ① **探针零副作用**：`update(trans, adv_alt=X)` 与 `update(trans)` 训练后的参数
+       **逐位相同** —— 无论 X 是什么、无论 `diagnose_every` 是否命中。这是"纯测量"的
+       唯一可证伪形式（若哪天探针被接进梯度，这条立刻红）。
+    ② **默认路径键集不变**：`adv_alt=None` 时 stats 里不出现 `adv_inert_*` 键，
+       `last_adv_inert_grad is None`（旧入口/旧测试不受影响，R2）。
+    ③ `adv_alt == adv` ⇒ `corr=1.000`、`resid_frac=0`、`grad_cos=+1.000`；
+       `adv_alt == 2·adv` ⇒ 因 `adv_norm="scale"` 各自除以自身 std，
+       **两路优势向量完全相同** ⇒ `grad_cos` 仍 = +1.000（这条同时验证尺度化口径对称）。
+    ④ 故意给一个与真实优势**反序**的 `adv_alt` ⇒ `grad_cos` 显著 < 1（探针有分辨力，
+       不是恒返回 1 的死探针）。
+    ⑤ V≡常数 c 的 GAE 恒等式：`ret_c == adv_c + c`（`compute_gae` 的 returns 定义），
+       且 `c = mean(returns_real)` 时 `adv_c` 与 `adv_real` 的 std 同量级
+       （若差 10× 说明常数基线选错，预注册 P1′ 会拦）。
+    """
+    import copy
+    import torch
+    from rl.env_wrapper import RLEnv
+    from rl.belief import BeliefInference
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    from rl.ppo import PPOTrainer
+
+    env = RLEnv(opponent=None, seed=0)
+    obs, _ = env.reset()
+    belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0)
+    tok = belief.encode(obs, None)
+    plan = np.zeros(PLAN_DIM, dtype=np.float32)
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=len(tok))
+    trans = _tiny_rollout_transitions(pol, env, belief, tok, plan, n=12)
+    real = np.array([t["adv"] for t in trans], dtype=np.float32)
+
+    def _params(p):
+        return [q.detach().clone() for q in p.parameters()]
+
+    # ① 探针零副作用（含 diag 命中与不命中两种）
+    for de in (0, 2):
+        pa, pb = copy.deepcopy(pol), copy.deepcopy(pol)
+        ta = PPOTrainer(pa, lr=1e-3, n_epochs=2, minibatch_size=6, shuffle=True,
+                        diagnose_every=de, seed=5)
+        tb = PPOTrainer(pb, lr=1e-3, n_epochs=2, minibatch_size=6, shuffle=True,
+                        diagnose_every=de, seed=5)
+        sa = ta.update(trans)
+        sb = tb.update(trans, adv_alt=(-real).tolist())
+        for w1, w2 in zip(_params(pa), _params(pb)):
+            assert torch.equal(w1, w2), f"探针改变了参数（diag={de}）"
+        assert abs(sa["adv_mean"] - sb["adv_mean"]) < 1e-7, (sa, sb)
+        assert "adv_inert_corr" not in sa, sa          # ② 默认键集不变
+        assert ta.last_adv_inert_grad is None
+        assert "adv_inert_corr" in sb                  # 探针统计确实产出
+
+    # ③ 同向量 / 同比例向量 ⇒ grad_cos = +1（adv_norm="scale" 下纯缩放 = 恒等变换）
+    #    用**legacy 单 pass**（整批 12 条）测：极小合成批上策略损失对参数的梯度会出现
+    #    精确抵消（实测 minibatch=6 的首批 p_gnorm 恰为 0.0），而 legacy 整批非零 ⇒
+    #    grad_cos 才有定义。多轮小批路径的接线由端到端 smoke 覆盖。
+    for alt, tag in ((real, "same"), (2.0 * real, "scaled")):
+        tc = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=1)
+        sc = tc.update(trans, adv_alt=alt.tolist())
+        assert tc.last_adv_inert_grad is not None, (tag, sc, "legacy 整批梯度应非零")
+        assert sc["p_gnorm"] > 0.0, (tag, sc)
+        assert abs(sc["adv_inert_corr"] - 1.0) < 1e-5, (tag, sc)
+        assert sc["adv_inert_resid_frac_norm"] < 1e-6, (tag, sc)   # 归一化后必须一致
+        gc = tc.last_adv_inert_grad
+        assert abs(gc["grad_cos"] - 1.0) < 1e-4, (tag, gc)
+    # 纯缩放：raw resid/scale 差 2×（描述性），但归一化后为 0 ⇒ 判据必须用 norm 口径
+    ts = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=1)
+    ss = ts.update(trans, adv_alt=(2.0 * real).tolist())
+    assert abs(ss["adv_inert_resid_frac"] - 0.5) < 1e-4, ss
+    assert abs(ss["adv_inert_std_ratio"] - 0.5) < 1e-4, ss
+
+    # ④ 反号优势 ⇒ corr = −1 且 grad_cos = −1（探针有分辨力，不是恒返回 1 的死探针）
+    td = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=1)
+    sd = td.update(trans, adv_alt=(-real).tolist())
+    gd = td.last_adv_inert_grad
+    assert sd["adv_inert_corr"] < -0.99, sd
+    assert gd is not None and gd["grad_cos"] < -0.99, gd
+
+    # ④b 无关优势（固定随机向量）⇒ corr≈0、归一化残差大、grad_cos 明显 < 1
+    #     注意别用 np.roll(±1 交替, 奇数)：那恰好等于取反（该模式周期为 2）。
+    _alt_rand = np.random.default_rng(3).normal(size=len(trans)).astype(np.float32)
+    te = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=1)
+    se = te.update(trans, adv_alt=_alt_rand.tolist())
+    ge = te.last_adv_inert_grad
+    assert abs(se["adv_inert_corr"]) < 0.6, se
+    assert se["adv_inert_resid_frac_norm"] > 0.8, se
+    assert ge is not None and ge["grad_cos"] < 0.9, ge
+
+    # ④c 退化情形不许崩：常数替代优势（归一化后 std=0）→ `resid_frac_norm` 记 None
+    #     （此处 grad_cos 仍有定义：合成批的 ±1 交替使梯度精确抵消，常数向量于是
+    #      表现为 −1 倍方向 —— 这是**合成数据的退化**，不是探针的判据）
+    tf = PPOTrainer(copy.deepcopy(pol), lr=1e-3, diagnose_every=1)
+    sf = tf.update(trans, adv_alt=np.full(len(trans), 0.25, dtype=np.float32).tolist())
+    assert sf["adv_inert_std_ratio"] > 1e6, sf
+    assert sf["adv_inert_resid_frac_norm"] is None, sf
+    assert sf["adv_inert_norm_std_ratio"] is None, sf
+    assert all(v is None or np.isfinite(v) for v in sf.values()), sf
+
+    # ⑤ V≡c 的 GAE 恒等式与量级
+    rew = [t["returns"] - t["adv"] for t in trans]
+    c = float(np.mean([t["returns"] for t in trans]))
+    term = [False] * len(trans)
+    adv_c, ret_c = PPOTrainer.compute_gae(rew, [c] * len(rew), term, 0.997, 0.99,
+                                          truncated=[False] * len(rew), last_value=c)
+    assert np.allclose(ret_c, adv_c + c, atol=1e-4), (ret_c[:3], adv_c[:3])
+    adv_r, _ = PPOTrainer.compute_gae(rew, [0.0] * len(rew), term, 0.997, 0.99,
+                                      truncated=[False] * len(rew), last_value=0.0)
+    assert 0.1 < float(adv_c.std()) / max(1e-9, float(adv_r.std())) < 10.0, \
+        (float(adv_c.std()), float(adv_r.std()))
+
+
 def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
@@ -4861,6 +4975,7 @@ def main():
     test_value_independent_encoder()
     test_ppo_multi_epoch_minibatch()
     test_stall_settlement_margin()
+    test_adv_inert_probe_and_const_baseline()
     print("\nALL SELFTESTS PASSED")
 
 

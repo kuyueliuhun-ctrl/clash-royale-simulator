@@ -1,0 +1,27 @@
+[solo] 单人自对弈 配置 'smoke_adv_inert2' -> runs\smoke_adv_inert2 (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=1, n_eval_games=4, eval_workers=4, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 2000 步重扫本 run 目录）
+[solo] critic 惰性检验: probe=True critic_baseline=value（c = ret_scaler.mean 的运行均值基线；见 docs/critic_inertia_prereg_2026-09-13.md）
+[solo] eval@0: 胜率 1.000±0.000 (4W/0L/0D, 4局) mean_reward=26.503 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.250±0.216 (1W/3L/0D)
+[solo]   vs baseline_prev: 胜率 0.000±0.000 (0W/4L/0D)
+[solo]   vs baseline_rand: 胜率 0.500±0.250 (2W/2L/0D)
+[solo] 启动耗时分解: torch+CUDA init=0.0s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=1.4s | eval@0 4局=66.7s (并行worker=4) | 合计(A→B)=68.1s
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo advinert 339] corr=0.9992 resid=0.0482 resid_norm=0.0402 lvl_shift=0.2265 level_gap=0.1140 grad_cos=+0.9998 gnorm_ratio=0.947
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 | p_gnorm=3.247 v_gnorm=47.36 v/p=14.58 scale=1.486 n=128
+[solo advinert 340] corr=1.0000 resid=0.0084 resid_norm=0.0051 lvl_shift=0.0194 level_gap=0.1140 grad_cos=+1.0000 gnorm_ratio=0.994
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 | p_gnorm=0.9404 v_gnorm=2.558 v/p=2.72 scale=6.53 n=128
+[solo advinert 699] corr=1.0000 resid=0.0246 resid_norm=0.0075 lvl_shift=0.0339 level_gap=1.4664 grad_cos=+0.9995 gnorm_ratio=0.990
+[solo step 699] policy=-0.0179 value=0.0805 vraw=10.62 EVb=-0.621 EVin=-0.081 entropy=0.7896 | deploy=11.7% bundle=0.12 ratio=1.032 clip=14.1% gs=16 adv=+10.856±19.709 gnorm=1.35 | p_gnorm=0.279 v_gnorm=0.7056 v/p=2.53 scale=11.49 n=128
+[solo advinert 700] corr=0.9999 resid=0.0135 resid_norm=0.0130 lvl_shift=0.3742 level_gap=3.9609 grad_cos=+1.0000 gnorm_ratio=0.881
+[solo step 700] policy=0.0675 value=0.0064 vraw=0.80 EVb=-0.289 EVin=-0.235 entropy=0.4913 | deploy=7.8% bundle=0.08 ratio=0.974 clip=6.2% gs=16 adv=-6.404±2.931 gnorm=0.55 | p_gnorm=0.6644 v_gnorm=1.056 v/p=1.59 scale=11.23 n=128
+[solo] ⚠️ GRU 活力不达标 @step 700: h 跨帧 std=3.95e-02 ≤ 0.05（隐状态被冻住，GRU 未解冻） | value/R std=0.196 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 700: engagement_rate=2.900 不满足 >= 3.400（50%×起点(6.8)；只报警，不中断训练）
+[solo] eval@700: 胜率 0.500±0.250 (2W/2L/0D, 4局) mean_reward=-3.688 EV=0.0901（池化） EVb=0.0855 h_std=3.95e-02 n_abs=0.483223 vstd/rstd=0.1961 累计局数=2
+[solo]   vs baseline0: 胜率 0.500±0.250 (2W/2L/0D)
+[solo]   vs baseline_prev: 胜率 0.500±0.250 (2W/2L/0D)
+[solo]   vs baseline_rand: 胜率 0.750±0.216 (3W/1L/0D)
+[solo] 训练循环耗时 94.4s
+[done] solo 'smoke_adv_inert2' 完成，产物在 runs\smoke_adv_inert2 （solo_state.json 供 dashboard --solo 读取）

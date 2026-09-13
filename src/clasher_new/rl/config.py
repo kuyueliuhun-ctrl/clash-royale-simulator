@@ -148,6 +148,16 @@ class TrainConfig:
     # solo 训练环僵局早停判平（与 eval 同语义：连续 100 步双方塔血零变化 → 判平）。
     # 否则躺平要拖满 max_ep_steps 才在 360 帧末罚一次 −10，(γλ)^k 视野内完全不可见。
     train_stall_stop: bool = True
+    # —— critic 惰性检验（2026-09-13；预注册 docs/critic_inertia_prereg_2026-09-13.md）——
+    # adv_inert_probe：**纯测量**开关（默认 False = 逐位旧行为）。开启后每个诊断更新
+    #   额外算一份"V≡常数 c"的优势（c = ret_scaler.mean，即塌缩后的 critic 收敛到的常数），
+    #   报告 corr(adv_real, adv_const)、状态依赖占比、策略损失梯度余弦 grad_cos；
+    #   不改变任何被写入梯度的量，只多 1 次前向 + 1 次反传（每 diagnose_every 次更新一次）。
+    adv_inert_probe: bool = False
+    # critic_baseline：**干预**开关。value = 旧行为（优势用网络 V）；const = 把优势里的
+    #   V 项整体替换为标量 c（returns / 价值损失 / 预算 / 对手池 / 奖励全不动）。
+    #   仅用于"critic 惰性"实验，**不是**推荐配置。
+    critic_baseline: str = "value"
     # —— C'（2026-09-12）早停低置信裁定降噪 ——
     # 早停（stall）局按 timeout_winner 结算时：皇冠不同 → 决定性，照常 ±胜负；
     # 皇冠相同 → 若"双方存活塔最低血量百分比差" < 该阈值，视为掷硬币级裁定，
