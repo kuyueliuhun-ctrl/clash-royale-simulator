@@ -1,0 +1,995 @@
+[solo] 单人自对弈 配置 'd1_long_100k' -> runs\d1_long_100k (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2000, value_norm=running, adv_norm=scale, diagnose_every=10, n_eval_games=40, eval_workers=12, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=4 minibatch=32 shuffle=True ⇒ 每 128 帧 16 次梯度步
+[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft', 'runs/economy_9j']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 2000 步重扫本 run 目录）
+[solo] eval@0: 胜率 0.600±0.077 (24W/16L/0D, 40局) mean_reward=0.922 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.463±0.079 (18W/21L/1D)
+[solo]   vs baseline_prev: 胜率 0.400±0.077 (16W/24L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.076 (25W/15L/0D)
+[solo] 启动耗时分解: torch+CUDA init=0.1s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=1.8s | eval@0 40局=248.4s (并行worker=12) | 合计(A→B)=250.2s
+[solo] 评估节奏: 全点每 10000 步（11 个，含 eval@0）/ 轻量锚点每 2500 步（30 个，只跑 baseline_rand + 落盘）
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 339] policy=-0.0832 value=0.0974 vraw=0.21 EVb=-12.655 EVin=-0.694 entropy=0.5349 | deploy=8.6% bundle=0.09 ratio=1.057 clip=10.2% gs=16 adv=+4.076±1.549 gnorm=5.33 n=128
+[solo step 340] policy=-0.0649 value=0.0942 vraw=4.02 EVb=-4.735 EVin=-1.793 entropy=0.5313 | deploy=8.6% bundle=0.09 ratio=1.035 clip=9.4% gs=16 adv=+13.455±6.550 gnorm=2.47 n=128
+[solo step 699] policy=-0.0179 value=0.0805 vraw=10.62 EVb=-0.621 EVin=-0.081 entropy=0.7896 | deploy=11.7% bundle=0.12 ratio=1.032 clip=14.1% gs=16 adv=+10.856±19.709 gnorm=1.35 n=128
+[solo step 700] policy=0.0675 value=0.0063 vraw=0.80 EVb=-0.289 EVin=-0.235 entropy=0.4913 | deploy=7.8% bundle=0.08 ratio=0.974 clip=6.2% gs=16 adv=-6.404±2.931 gnorm=0.55 n=128
+[solo step 701] policy=0.0772 value=0.0136 vraw=1.88 EVb=-1.830 EVin=-1.289 entropy=0.6914 | deploy=10.9% bundle=0.11 ratio=0.938 clip=16.4% gs=16 adv=-12.150±4.822 gnorm=0.31 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1299] policy=0.0184 value=0.0025 vraw=0.30 EVb=-0.590 EVin=+0.150 entropy=0.7838 | deploy=10.9% bundle=0.12 ratio=0.972 clip=14.8% gs=16 adv=-3.934±6.343 gnorm=0.13 n=128
+[solo step 1300] policy=-0.0113 value=0.0011 vraw=0.12 EVb=-0.606 EVin=+0.061 entropy=0.4286 | deploy=7.0% bundle=0.07 ratio=0.999 clip=7.8% gs=16 adv=+0.679±1.936 gnorm=0.09 n=128
+[solo step 1301] policy=-0.0908 value=0.0016 vraw=0.15 EVb=-6.536 EVin=-0.508 entropy=0.7631 | deploy=12.5% bundle=0.12 ratio=1.047 clip=12.5% gs=16 adv=+3.057±1.066 gnorm=0.68 n=128
+[solo step 1302] policy=-0.1009 value=0.0004 vraw=0.03 EVb=-10.061 EVin=-0.134 entropy=0.9158 | deploy=14.8% bundle=0.15 ratio=1.070 clip=14.1% gs=16 adv=+3.049±0.952 gnorm=0.82 n=128
+[solo step 1303] policy=-0.0791 value=0.0057 vraw=0.44 EVb=-6.250 EVin=-1.190 entropy=1.3041 | deploy=21.1% bundle=0.21 ratio=1.090 clip=14.1% gs=16 adv=+5.880±2.358 gnorm=1.45 | p_gnorm=1.654 v_gnorm=0.2778 v/p=0.17 scale=8.817 n=128
+[solo step 1626] policy=0.0077 value=0.0261 vraw=2.02 EVb=-0.082 EVin=-0.050 entropy=0.6082 | deploy=10.2% bundle=0.10 ratio=0.991 clip=5.5% gs=16 adv=-2.032±8.379 gnorm=0.39 n=128
+[solo step 1627] policy=-0.0475 value=0.0520 vraw=4.21 EVb=-3.263 EVin=-1.559 entropy=0.4651 | deploy=7.8% bundle=0.08 ratio=1.034 clip=6.2% gs=16 adv=+9.927±6.612 gnorm=1.33 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_100000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1738] policy=-0.0370 value=0.0885 vraw=9.02 EVb=-2.266 EVin=-0.701 entropy=0.7649 | deploy=12.5% bundle=0.12 ratio=1.032 clip=11.7% gs=16 adv=+15.493±13.267 gnorm=1.74 n=128
+[solo] 冻结副本已同步 @step 2000
+[solo] 对手池刷新 @step 2000: hist ckpts=12（本目录 1，新增 3） | 累计对手局 {'defend': 2, 'hist': 3}
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 2139] policy=0.0391 value=0.0217 vraw=2.16 EVb=-0.115 EVin=-0.005 entropy=0.4792 | deploy=7.0% bundle=0.08 ratio=0.975 clip=6.2% gs=16 adv=-6.673±5.277 gnorm=0.11 n=128
+[solo step 2140] policy=0.0035 value=0.0194 vraw=1.82 EVb=-40.595 EVin=-34.204 entropy=0.4845 | deploy=7.8% bundle=0.08 ratio=1.000 clip=7.8% gs=16 adv=-0.141±1.158 gnorm=0.20 n=128
+[solo step 2141] policy=-0.0280 value=0.0225 vraw=2.01 EVb=-186.843 EVin=-140.063 entropy=0.7520 | deploy=11.7% bundle=0.12 ratio=1.026 clip=12.5% gs=16 adv=+0.619±0.698 gnorm=0.39 n=128
+[solo step 2498] policy=-0.0427 value=0.0181 vraw=1.54 EVb=-13.877 EVin=-7.538 entropy=0.8383 | deploy=13.3% bundle=0.13 ratio=1.047 clip=14.8% gs=16 adv=+1.964±1.453 gnorm=0.59 n=128
+[solo step 2499] policy=-0.0763 value=0.0070 vraw=0.56 EVb=-8.336 EVin=-1.762 entropy=0.4791 | deploy=7.8% bundle=0.08 ratio=1.037 clip=9.4% gs=16 adv=+5.308±2.185 gnorm=0.66 n=128
+[solo step 2500] policy=-0.0955 value=0.0071 vraw=0.55 EVb=-12.477 EVin=-0.917 entropy=0.7139 | deploy=10.9% bundle=0.11 ratio=1.067 clip=11.7% gs=16 adv=+7.442±2.468 gnorm=1.28 n=128
+[solo] anchor@2500: vs baseline_rand 胜率 0.625±0.076 (25W/15L/0D, 40局)
+[solo step 2852] policy=-0.0392 value=0.0069 vraw=0.52 EVb=-13.046 EVin=+0.022 entropy=0.7853 | deploy=12.5% bundle=0.12 ratio=1.040 clip=9.4% gs=16 adv=+6.909±5.568 gnorm=0.79 | p_gnorm=0.9729 v_gnorm=0.7661 v/p=0.79 scale=8.668 n=128
+[solo step 2853] policy=-0.0521 value=0.0037 vraw=0.27 EVb=-13.138 EVin=+0.227 entropy=0.4460 | deploy=7.0% bundle=0.07 ratio=1.036 clip=9.4% gs=16 adv=+5.181±3.138 gnorm=0.19 n=128
+[solo step 2854] policy=-0.2178 value=0.0291 vraw=2.44 EVb=-91.924 EVin=-8.842 entropy=0.8229 | deploy=12.5% bundle=0.12 ratio=1.059 clip=14.1% gs=16 adv=+16.764±2.448 gnorm=3.77 n=128
+[solo step 3341] policy=-0.0079 value=0.0081 vraw=0.69 EVb=-8.180 EVin=+0.433 entropy=0.6377 | deploy=9.4% bundle=0.10 ratio=1.010 clip=6.2% gs=16 adv=+2.358±9.670 gnorm=0.84 n=128
+[solo step 3342] policy=0.0984 value=0.0064 vraw=0.52 EVb=-35.484 EVin=-0.749 entropy=0.5141 | deploy=7.8% bundle=0.08 ratio=0.965 clip=12.5% gs=16 adv=-5.746±1.805 gnorm=0.71 n=128
+[solo step 3343] policy=0.1019 value=0.0023 vraw=0.18 EVb=-29.522 EVin=-0.283 entropy=0.8579 | deploy=13.3% bundle=0.13 ratio=0.956 clip=12.5% gs=16 adv=-6.233±1.894 gnorm=1.06 n=128
+[solo step 3344] policy=0.0840 value=0.0680 vraw=5.62 EVb=-0.270 EVin=-0.840 entropy=0.9350 | deploy=14.8% bundle=0.15 ratio=0.971 clip=12.5% gs=16 adv=-19.579±7.420 gnorm=2.81 n=128
+[solo step 3610] policy=-0.0041 value=0.0241 vraw=1.97 EVb=-0.378 EVin=+0.044 entropy=0.5672 | deploy=8.6% bundle=0.09 ratio=1.016 clip=7.0% gs=16 adv=+1.387±11.578 gnorm=0.44 n=128
+[solo step 3611] policy=-0.0786 value=0.0797 vraw=6.95 EVb=-7.690 EVin=-2.090 entropy=0.4666 | deploy=7.8% bundle=0.08 ratio=1.033 clip=7.0% gs=16 adv=+18.160±7.278 gnorm=2.22 n=128
+[solo] 冻结副本已同步 @step 4000
+[solo] 对手池刷新 @step 4000: hist ckpts=12（本目录 2，新增 2） | 累计对手局 {'defend': 4, 'frozen': 2, 'hist': 4}
+[solo step 4041] policy=-0.0132 value=0.0242 vraw=2.13 EVb=-3.094 EVin=-0.001 entropy=0.8214 | deploy=10.9% bundle=0.12 ratio=1.015 clip=9.4% gs=16 adv=+4.704±11.381 gnorm=0.71 n=128
+[solo step 4042] policy=-0.0113 value=0.0028 vraw=0.24 EVb=-28.354 EVin=-0.294 entropy=0.4650 | deploy=7.8% bundle=0.08 ratio=0.995 clip=5.5% gs=16 adv=+0.772±2.126 gnorm=0.35 | p_gnorm=0.09943 v_gnorm=0.5235 v/p=5.27 scale=9.251 n=128
+[solo step 4043] policy=0.0134 value=0.0124 vraw=1.04 EVb=-3.033 EVin=-0.101 entropy=0.9171 | deploy=14.8% bundle=0.15 ratio=0.996 clip=14.8% gs=16 adv=-2.214±5.071 gnorm=0.47 n=128
+[solo step 4452] policy=-0.0245 value=0.0440 vraw=3.77 EVb=-3.822 EVin=-0.573 entropy=0.7155 | deploy=11.7% bundle=0.12 ratio=1.027 clip=9.4% gs=16 adv=+6.254±8.120 gnorm=1.44 n=128
+[solo step 4453] policy=0.0964 value=0.0075 vraw=0.63 EVb=-34.193 EVin=-15.486 entropy=0.4831 | deploy=7.8% bundle=0.08 ratio=0.970 clip=9.4% gs=16 adv=-3.355±1.073 gnorm=1.23 n=128
+[solo step 4454] policy=0.0347 value=0.0048 vraw=0.39 EVb=-9.241 EVin=-0.590 entropy=0.7182 | deploy=11.7% bundle=0.12 ratio=0.984 clip=8.6% gs=16 adv=-2.701±2.401 gnorm=0.55 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 4793] policy=-0.0158 value=0.0339 vraw=2.75 EVb=-2.911 EVin=-0.339 entropy=0.8854 | deploy=13.3% bundle=0.14 ratio=1.001 clip=8.6% gs=16 adv=+3.931±7.703 gnorm=1.15 n=128
+[solo step 4794] policy=0.0951 value=0.0114 vraw=0.91 EVb=-6.612 EVin=-11.261 entropy=0.4782 | deploy=7.8% bundle=0.08 ratio=0.977 clip=7.0% gs=16 adv=-4.559±1.496 gnorm=1.51 n=128
+[solo step 4795] policy=-0.0278 value=0.0395 vraw=3.18 EVb=-3.801 EVin=-0.580 entropy=0.5389 | deploy=9.4% bundle=0.09 ratio=1.017 clip=8.6% gs=16 adv=+6.848±7.809 gnorm=1.28 n=128
+[solo] anchor@5000: vs baseline_rand 胜率 0.388±0.077 (12W/21L/7D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 5139] policy=-0.0225 value=0.0875 vraw=7.51 EVb=-2.055 EVin=-0.297 entropy=0.6853 | deploy=10.9% bundle=0.12 ratio=1.026 clip=9.4% gs=16 adv=+9.726±13.776 gnorm=1.64 n=128
+[solo step 5140] policy=-0.0277 value=0.0039 vraw=0.33 EVb=-14.483 EVin=-0.045 entropy=0.4358 | deploy=7.8% bundle=0.08 ratio=1.040 clip=7.0% gs=16 adv=+2.816±3.216 gnorm=0.19 n=128
+[solo step 5141] policy=-0.0847 value=0.0992 vraw=9.34 EVb=-15.987 EVin=-4.164 entropy=0.7023 | deploy=12.5% bundle=0.12 ratio=1.046 clip=10.2% gs=16 adv=+19.697±7.351 gnorm=3.71 | p_gnorm=1.326 v_gnorm=3.592 v/p=2.71 scale=9.702 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 5499] policy=-0.0081 value=0.0157 vraw=1.48 EVb=-5.427 EVin=+0.010 entropy=0.4911 | deploy=7.8% bundle=0.09 ratio=1.005 clip=5.5% gs=16 adv=+2.131±8.507 gnorm=0.25 n=128
+[solo step 5500] policy=0.0664 value=0.0068 vraw=0.62 EVb=-71.096 EVin=-7.406 entropy=0.4282 | deploy=7.8% bundle=0.08 ratio=0.977 clip=6.2% gs=16 adv=-2.933±1.367 gnorm=1.04 n=128
+[solo step 5668] policy=-0.0263 value=0.0066 vraw=0.61 EVb=-25.606 EVin=-0.444 entropy=0.9221 | deploy=15.6% bundle=0.16 ratio=1.041 clip=11.7% gs=16 adv=+2.929±3.545 gnorm=0.61 n=128
+[solo step 5669] policy=-0.0522 value=0.0288 vraw=2.74 EVb=-18.730 EVin=-1.378 entropy=0.3412 | deploy=6.2% bundle=0.06 ratio=1.023 clip=5.5% gs=16 adv=+9.157±5.513 gnorm=1.82 n=128
+[solo] 冻结副本已同步 @step 6000
+[solo] 对手池刷新 @step 6000: hist ckpts=12（本目录 3，新增 1） | 累计对手局 {'defend': 5, 'frozen': 3, 'hist': 8}
+[solo step 6028] policy=0.0021 value=0.0153 vraw=1.45 EVb=-6.408 EVin=-0.069 entropy=0.5193 | deploy=9.4% bundle=0.09 ratio=0.988 clip=9.4% gs=16 adv=-0.605±7.897 gnorm=0.51 n=128
+[solo step 6029] policy=0.1025 value=0.0163 vraw=1.52 EVb=-21.633 EVin=-6.534 entropy=0.3570 | deploy=7.0% bundle=0.07 ratio=0.983 clip=6.2% gs=16 adv=-7.414±2.259 gnorm=1.91 n=128
+[solo step 6030] policy=0.0881 value=0.1756 vraw=17.35 EVb=-0.642 EVin=-5.591 entropy=0.7048 | deploy=13.3% bundle=0.13 ratio=0.968 clip=9.4% gs=16 adv=-25.064±8.808 gnorm=4.75 n=128
+[solo step 6434] policy=0.0184 value=0.0268 vraw=2.63 EVb=-0.969 EVin=-0.145 entropy=0.5245 | deploy=8.6% bundle=0.09 ratio=0.981 clip=4.7% gs=16 adv=-5.594±9.423 gnorm=0.62 n=128
+[solo step 6435] policy=0.0884 value=0.0005 vraw=0.05 EVb=-66.302 EVin=-0.057 entropy=0.4198 | deploy=7.8% bundle=0.08 ratio=0.964 clip=7.8% gs=16 adv=-3.471±1.213 gnorm=0.05 n=128
+[solo step 6436] policy=-0.0137 value=0.0068 vraw=0.64 EVb=-64.650 EVin=-3.798 entropy=0.7984 | deploy=14.8% bundle=0.15 ratio=1.014 clip=10.9% gs=16 adv=+0.773±1.809 gnorm=0.73 | p_gnorm=0.5926 v_gnorm=0.9039 v/p=1.53 scale=9.736 n=128
+[solo step 6653] policy=-0.0089 value=0.0050 vraw=0.47 EVb=-10.892 EVin=+0.005 entropy=0.6125 | deploy=10.2% bundle=0.11 ratio=1.012 clip=9.4% gs=16 adv=+0.816±2.930 gnorm=0.18 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 7013] policy=-0.0571 value=0.0213 vraw=2.00 EVb=-17.968 EVin=-1.606 entropy=0.4364 | deploy=7.8% bundle=0.08 ratio=1.019 clip=7.0% gs=16 adv=+8.592±4.716 gnorm=1.40 n=128
+[solo step 7014] policy=0.0571 value=0.0060 vraw=0.55 EVb=-79.379 EVin=-11.207 entropy=0.4271 | deploy=7.8% bundle=0.08 ratio=0.975 clip=6.2% gs=16 adv=-2.111±1.146 gnorm=0.97 n=128
+[solo step 7015] policy=-0.0395 value=0.0069 vraw=0.63 EVb=-23.022 EVin=-0.548 entropy=0.4647 | deploy=8.6% bundle=0.09 ratio=1.038 clip=7.0% gs=16 adv=+4.328±3.465 gnorm=0.64 n=128
+[solo step 7238] policy=-0.0275 value=0.0155 vraw=1.42 EVb=-9.839 EVin=-0.135 entropy=0.7778 | deploy=14.1% bundle=0.14 ratio=1.044 clip=10.9% gs=16 adv=+5.602±6.512 gnorm=0.63 n=128
+[solo step 7239] policy=-0.0282 value=0.0063 vraw=0.57 EVb=-18.103 EVin=+0.006 entropy=0.4223 | deploy=7.8% bundle=0.08 ratio=1.009 clip=7.8% gs=16 adv=+3.760±4.222 gnorm=0.15 n=128
+[solo] anchor@7500: vs baseline_rand 胜率 0.550±0.079 (22W/18L/0D, 40局)
+[solo step 7545] policy=0.0042 value=0.0277 vraw=2.54 EVb=-3.113 EVin=-0.103 entropy=0.4862 | deploy=7.8% bundle=0.09 ratio=0.999 clip=7.0% gs=16 adv=-1.442±10.076 gnorm=0.80 n=128
+[solo step 7546] policy=0.0018 value=0.0147 vraw=1.35 EVb=-7.515 EVin=-0.018 entropy=0.4166 | deploy=7.8% bundle=0.08 ratio=1.010 clip=6.2% gs=16 adv=-0.427±6.489 gnorm=0.30 n=128
+[solo step 7810] policy=-0.0659 value=0.0250 vraw=2.36 EVb=-45.075 EVin=-3.207 entropy=0.7074 | deploy=11.7% bundle=0.12 ratio=1.047 clip=10.2% gs=16 adv=+7.463±3.593 gnorm=2.02 n=128
+[solo step 7811] policy=-0.0314 value=0.0032 vraw=0.30 EVb=-41.559 EVin=-0.015 entropy=0.3626 | deploy=7.0% bundle=0.07 ratio=1.030 clip=4.7% gs=16 adv=+3.045±3.057 gnorm=0.17 | p_gnorm=0.5835 v_gnorm=0.2815 v/p=0.48 scale=9.716 n=128
+[solo step 7812] policy=-0.0029 value=0.0118 vraw=1.11 EVb=-10.524 EVin=-0.124 entropy=0.4604 | deploy=8.6% bundle=0.09 ratio=1.015 clip=5.5% gs=16 adv=+0.499±5.385 gnorm=0.59 n=128
+[solo] 冻结副本已同步 @step 8000
+[solo] 对手池刷新 @step 8000: hist ckpts=12（本目录 4，新增 1） | 累计对手局 {'defend': 6, 'frozen': 4, 'hist': 11, 'rand_anchor': 3}
+[solo step 8142] policy=-0.0724 value=0.0282 vraw=2.74 EVb=-55.068 EVin=-4.923 entropy=0.5009 | deploy=8.6% bundle=0.09 ratio=1.043 clip=7.8% gs=16 adv=+8.546±3.725 gnorm=2.38 n=128
+[solo step 8143] policy=0.0342 value=0.0038 vraw=0.36 EVb=-76.392 EVin=-1.704 entropy=0.3806 | deploy=7.0% bundle=0.07 ratio=0.982 clip=6.2% gs=16 adv=-2.109±1.905 gnorm=0.74 n=128
+[solo step 8317] policy=0.0102 value=0.0371 vraw=3.59 EVb=-2.206 EVin=-0.008 entropy=0.4674 | deploy=8.6% bundle=0.09 ratio=0.988 clip=3.9% gs=16 adv=-3.461±10.483 gnorm=0.56 n=128
+[solo step 8569] policy=0.0929 value=0.2686 vraw=28.42 EVb=-1.582 EVin=-6.701 entropy=0.4776 | deploy=7.8% bundle=0.09 ratio=0.986 clip=1.6% gs=16 adv=-31.948±10.689 gnorm=5.91 n=128
+[solo step 8570] policy=0.1060 value=0.0026 vraw=0.27 EVb=-27.800 EVin=-0.398 entropy=0.4156 | deploy=7.8% bundle=0.08 ratio=0.961 clip=9.4% gs=16 adv=-6.653±1.936 gnorm=0.23 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 8772] policy=0.0802 value=0.0275 vraw=2.87 EVb=-0.198 EVin=-2.107 entropy=0.4624 | deploy=8.6% bundle=0.09 ratio=0.971 clip=7.0% gs=16 adv=-15.096±5.830 gnorm=1.14 n=128
+[solo step 8773] policy=-0.0073 value=0.0105 vraw=1.09 EVb=-8.312 EVin=-0.890 entropy=0.4171 | deploy=7.8% bundle=0.08 ratio=1.002 clip=6.2% gs=16 adv=+0.952±4.118 gnorm=0.61 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 9003] policy=-0.0076 value=0.0482 vraw=5.01 EVb=-1.056 EVin=-0.024 entropy=0.9933 | deploy=10.2% bundle=0.17 ratio=1.000 clip=10.2% gs=16 adv=+2.575±11.097 gnorm=0.39 n=128
+[solo step 9004] policy=0.2393 value=0.1226 vraw=13.31 EVb=-18.535 EVin=-72.922 entropy=0.3672 | deploy=7.0% bundle=0.07 ratio=0.973 clip=7.0% gs=16 adv=-18.302±2.371 gnorm=3.47 | p_gnorm=2.98 v_gnorm=3.481 v/p=1.17 scale=10.42 n=128
+[solo step 9309] policy=0.0153 value=0.0579 vraw=6.38 EVb=-0.077 EVin=-0.141 entropy=0.5211 | deploy=9.4% bundle=0.09 ratio=0.993 clip=3.9% gs=16 adv=-6.083±12.300 gnorm=0.75 n=128
+[solo step 9310] policy=-0.0657 value=0.0298 vraw=3.26 EVb=-24.046 EVin=-7.092 entropy=0.4102 | deploy=7.8% bundle=0.08 ratio=1.040 clip=7.8% gs=16 adv=+7.330±3.524 gnorm=1.40 n=128
+[solo step 9544] policy=-0.0259 value=0.0574 vraw=6.33 EVb=-2.675 EVin=-0.522 entropy=0.6396 | deploy=11.7% bundle=0.12 ratio=1.022 clip=9.4% gs=16 adv=+8.452±10.331 gnorm=1.39 n=128
+[solo step 9545] policy=0.0879 value=0.0673 vraw=7.56 EVb=-1.130 EVin=-10.635 entropy=0.4031 | deploy=7.8% bundle=0.08 ratio=0.984 clip=3.1% gs=16 adv=-12.721±4.522 gnorm=2.65 n=128
+[follower] ⚠️ runs/economy_9j\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 9995] policy=0.0350 value=0.1288 vraw=15.16 EVb=-0.247 EVin=-1.062 entropy=0.4758 | deploy=7.8% bundle=0.09 ratio=0.989 clip=3.1% gs=16 adv=-15.879±14.115 gnorm=2.23 n=128
+[solo step 9996] policy=0.0199 value=0.0017 vraw=0.19 EVb=-12.696 EVin=-0.142 entropy=0.3699 | deploy=7.0% bundle=0.07 ratio=0.984 clip=7.0% gs=16 adv=-1.530±2.376 gnorm=0.12 n=128
+[solo step 9997] policy=-0.0336 value=0.0063 vraw=0.73 EVb=-35.039 EVin=-3.411 entropy=0.6165 | deploy=11.7% bundle=0.12 ratio=1.046 clip=10.9% gs=16 adv=+2.217±2.105 gnorm=0.57 n=128
+[solo step 9998] policy=-0.1393 value=0.0076 vraw=0.87 EVb=-221.323 EVin=-21.853 entropy=0.7698 | deploy=14.8% bundle=0.15 ratio=1.074 clip=13.3% gs=16 adv=+4.381±0.996 gnorm=0.99 n=128
+[gate] WARN @step 10000: engagement_rate=0.000 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@10000: 胜率 0.550±0.079 (22W/18L/0D, 40局) mean_reward=-1.727 EV=0.2339（池化） EVb=0.2291 h_std=6.74e-02 n_abs=0.666881 vstd/rstd=0.5366 累计局数=32
+[solo]   vs baseline0: 胜率 0.525±0.079 (21W/19L/0D)
+[solo]   vs baseline_prev: 胜率 0.500±0.079 (20W/20L/0D)
+[solo]   vs baseline_rand: 胜率 0.525±0.079 (21W/19L/0D)
+[solo] 冻结副本已同步 @step 10000
+[solo] 对手池刷新 @step 10000: hist ckpts=12（本目录 5，新增 1） | 累计对手局 {'defend': 8, 'frozen': 4, 'hist': 17, 'rand_anchor': 3}
+[solo step 10355] policy=0.0312 value=0.0065 vraw=0.73 EVb=-4.195 EVin=-0.985 entropy=0.5001 | deploy=8.6% bundle=0.09 ratio=0.976 clip=8.6% gs=16 adv=-3.362±3.327 gnorm=0.59 n=128
+[solo step 10356] policy=0.0688 value=0.0170 vraw=1.90 EVb=-0.591 EVin=-3.191 entropy=0.3834 | deploy=7.8% bundle=0.08 ratio=0.970 clip=7.8% gs=16 adv=-7.881±3.537 gnorm=0.94 | p_gnorm=0.2669 v_gnorm=1.275 v/p=4.78 scale=10.58 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 10558] policy=0.0337 value=0.0348 vraw=3.92 EVb=-0.122 EVin=-0.578 entropy=0.9815 | deploy=15.6% bundle=0.18 ratio=0.964 clip=11.7% gs=16 adv=-9.728±8.775 gnorm=0.85 n=128
+[solo step 10559] policy=-0.0494 value=0.0210 vraw=2.34 EVb=-14.121 EVin=-4.366 entropy=0.3733 | deploy=7.8% bundle=0.08 ratio=1.037 clip=6.2% gs=16 adv=+5.768±3.679 gnorm=0.97 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_4000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 10740] policy=-0.0931 value=0.0466 vraw=5.20 EVb=-17.216 EVin=-6.192 entropy=0.4433 | deploy=7.8% bundle=0.09 ratio=1.039 clip=6.2% gs=16 adv=+11.913±4.032 gnorm=1.71 n=128
+[solo step 11100] policy=-0.0574 value=0.0370 vraw=4.13 EVb=-8.967 EVin=-2.149 entropy=0.4237 | deploy=7.8% bundle=0.09 ratio=1.034 clip=7.0% gs=16 adv=+11.906±6.540 gnorm=1.43 n=128
+[solo step 11101] policy=0.0018 value=0.0019 vraw=0.21 EVb=-36.687 EVin=-2.927 entropy=0.3590 | deploy=7.8% bundle=0.08 ratio=1.000 clip=4.7% gs=16 adv=-0.081±1.289 gnorm=0.45 n=128
+[solo step 11102] policy=-0.0442 value=0.0006 vraw=0.06 EVb=-49.493 EVin=-0.024 entropy=0.3804 | deploy=8.6% bundle=0.09 ratio=1.027 clip=7.8% gs=16 adv=+1.952±1.396 gnorm=0.12 n=128
+[solo step 11326] policy=-0.0418 value=0.0071 vraw=0.77 EVb=-18.301 EVin=-1.098 entropy=0.6615 | deploy=13.3% bundle=0.14 ratio=1.041 clip=7.0% gs=16 adv=+5.139±3.822 gnorm=0.89 n=128
+[solo step 11327] policy=-0.0561 value=0.0068 vraw=0.73 EVb=-25.590 EVin=-1.248 entropy=0.3543 | deploy=7.8% bundle=0.08 ratio=1.037 clip=7.0% gs=16 adv=+5.178±2.904 gnorm=0.62 n=128
+[solo step 11562] policy=-0.0320 value=0.0134 vraw=1.43 EVb=-9.773 EVin=-0.383 entropy=0.4605 | deploy=8.6% bundle=0.09 ratio=1.033 clip=6.2% gs=16 adv=+6.022±5.874 gnorm=0.72 n=128
+[solo step 11563] policy=-0.0745 value=0.0112 vraw=1.20 EVb=-33.476 EVin=-1.635 entropy=0.3192 | deploy=7.0% bundle=0.07 ratio=1.026 clip=5.5% gs=16 adv=+8.079±3.414 gnorm=1.04 | p_gnorm=1.076 v_gnorm=1.468 v/p=1.36 scale=10.33 n=128
+[solo step 11821] policy=-0.0086 value=0.0089 vraw=0.95 EVb=-9.095 EVin=-0.002 entropy=0.4275 | deploy=7.8% bundle=0.09 ratio=0.997 clip=4.7% gs=16 adv=+1.953±7.281 gnorm=0.25 n=128
+[solo step 11822] policy=-0.0120 value=0.0040 vraw=0.43 EVb=-21.669 EVin=-0.001 entropy=0.3349 | deploy=7.8% bundle=0.08 ratio=1.003 clip=7.0% gs=16 adv=+1.384±3.696 gnorm=0.08 n=128
+[solo] 冻结副本已同步 @step 12000
+[solo step 12046] policy=-0.0166 value=0.0104 vraw=1.10 EVb=-13.368 EVin=-0.112 entropy=0.4869 | deploy=9.4% bundle=0.10 ratio=1.021 clip=6.2% gs=16 adv=+3.167±6.096 gnorm=0.46 n=128
+[solo step 12047] policy=-0.0226 value=0.0079 vraw=0.83 EVb=-17.775 EVin=-0.034 entropy=0.3411 | deploy=7.8% bundle=0.08 ratio=1.030 clip=6.2% gs=16 adv=+3.499±4.902 gnorm=0.38 n=128
+[solo step 12406] policy=0.0096 value=0.0041 vraw=0.44 EVb=-29.249 EVin=-0.132 entropy=0.3712 | deploy=7.8% bundle=0.08 ratio=0.986 clip=3.9% gs=16 adv=-1.286±4.170 gnorm=0.38 n=128
+[solo step 12407] policy=-0.0224 value=0.0016 vraw=0.17 EVb=-170.795 EVin=-0.806 entropy=0.3434 | deploy=7.8% bundle=0.08 ratio=1.018 clip=7.0% gs=16 adv=+1.139±1.608 gnorm=0.38 n=128
+[solo] anchor@12500: vs baseline_rand 胜率 0.575±0.078 (23W/17L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 12911] policy=-0.0066 value=0.0142 vraw=1.51 EVb=-9.932 EVin=-0.006 entropy=0.7088 | deploy=14.8% bundle=0.15 ratio=1.011 clip=13.3% gs=16 adv=+1.385±6.888 gnorm=0.43 n=128
+[solo step 12912] policy=0.0446 value=0.0064 vraw=0.67 EVb=-59.973 EVin=-2.848 entropy=0.3275 | deploy=7.0% bundle=0.07 ratio=0.986 clip=4.7% gs=16 adv=-3.103±2.154 gnorm=1.01 n=128
+[solo step 12913] policy=0.0726 value=0.0029 vraw=0.30 EVb=-134.301 EVin=-1.814 entropy=0.4342 | deploy=9.4% bundle=0.09 ratio=0.965 clip=9.4% gs=16 adv=-3.378±1.434 gnorm=0.52 n=128
+[solo step 12914] policy=0.0010 value=0.0015 vraw=0.15 EVb=-379.780 EVin=-3.100 entropy=0.6793 | deploy=14.8% bundle=0.15 ratio=0.998 clip=10.2% gs=16 adv=-0.034±1.036 gnorm=0.55 | p_gnorm=0.8715 v_gnorm=0.4644 v/p=0.53 scale=10.22 n=128
+[solo step 13073] policy=0.0085 value=0.0035 vraw=0.37 EVb=-30.810 EVin=+0.039 entropy=0.7919 | deploy=15.6% bundle=0.16 ratio=0.985 clip=11.7% gs=16 adv=-0.819±2.942 gnorm=0.24 n=128
+[solo step 13074] policy=-0.0144 value=0.0113 vraw=1.18 EVb=-12.166 EVin=-0.016 entropy=0.3677 | deploy=7.8% bundle=0.08 ratio=1.017 clip=5.5% gs=16 adv=+2.702±5.974 gnorm=0.29 n=128
+[solo step 13614] policy=-0.0346 value=0.0204 vraw=2.16 EVb=-19.387 EVin=-0.572 entropy=0.6810 | deploy=10.2% bundle=0.12 ratio=1.006 clip=6.2% gs=16 adv=+6.756±6.147 gnorm=1.43 n=128
+[solo step 13615] policy=0.1038 value=0.0122 vraw=1.29 EVb=-212.445 EVin=-28.451 entropy=0.3077 | deploy=7.0% bundle=0.07 ratio=0.967 clip=8.6% gs=16 adv=-3.862±1.149 gnorm=1.76 n=128
+[solo step 13616] policy=0.0464 value=0.0133 vraw=1.39 EVb=-21.274 EVin=-2.011 entropy=0.3971 | deploy=9.4% bundle=0.09 ratio=0.987 clip=7.0% gs=16 adv=-4.978±3.365 gnorm=1.44 n=128
+[solo step 13617] policy=0.0064 value=0.0138 vraw=1.44 EVb=-8.224 EVin=-0.013 entropy=0.6768 | deploy=14.8% bundle=0.15 ratio=1.024 clip=13.3% gs=16 adv=-1.439±6.734 gnorm=0.60 n=128
+[solo step 13846] policy=-0.0027 value=0.0116 vraw=1.22 EVb=-10.581 EVin=+0.012 entropy=0.5497 | deploy=11.7% bundle=0.12 ratio=1.014 clip=10.2% gs=16 adv=+0.409±5.434 gnorm=0.32 n=128
+[solo step 13847] policy=0.1200 value=0.0101 vraw=1.04 EVb=-96.943 EVin=-13.946 entropy=0.3141 | deploy=7.0% bundle=0.07 ratio=0.977 clip=5.5% gs=16 adv=-5.229±1.348 gnorm=1.41 n=128
+[solo] 冻结副本已同步 @step 14000
+[solo] 对手池刷新 @step 14000: hist ckpts=12（本目录 6，新增 1） | 累计对手局 {'defend': 11, 'frozen': 6, 'hist': 26, 'rand_anchor': 3}
+[solo step 14057] policy=0.0686 value=0.0048 vraw=0.49 EVb=-52.571 EVin=-1.902 entropy=0.4199 | deploy=7.0% bundle=0.08 ratio=0.976 clip=7.0% gs=16 adv=-4.468±2.038 gnorm=0.92 n=128
+[solo step 14468] policy=0.0809 value=0.0045 vraw=0.46 EVb=-49.189 EVin=-2.163 entropy=0.4816 | deploy=8.6% bundle=0.09 ratio=0.969 clip=8.6% gs=16 adv=-6.120±2.338 gnorm=0.67 | p_gnorm=0.2707 v_gnorm=1.063 v/p=3.93 scale=10.09 n=128
+[solo step 14469] policy=0.0492 value=0.0009 vraw=0.09 EVb=-248.453 EVin=-2.284 entropy=0.3487 | deploy=7.0% bundle=0.07 ratio=0.975 clip=6.2% gs=16 adv=-1.450±0.911 gnorm=0.31 n=128
+[solo step 14470] policy=0.0042 value=0.0053 vraw=0.53 EVb=-17.098 EVin=-0.056 entropy=0.5155 | deploy=10.2% bundle=0.10 ratio=0.977 clip=11.7% gs=16 adv=-0.550±3.831 gnorm=0.30 n=128
+[solo step 14654] policy=-0.0002 value=0.0155 vraw=1.55 EVb=-5.598 EVin=+0.004 entropy=0.8408 | deploy=15.6% bundle=0.16 ratio=1.002 clip=12.5% gs=16 adv=-0.021±6.978 gnorm=0.44 n=128
+[solo step 14655] policy=0.1315 value=0.1830 vraw=18.84 EVb=-2.498 EVin=-18.479 entropy=0.4028 | deploy=7.8% bundle=0.08 ratio=0.973 clip=7.0% gs=16 adv=-23.298±5.477 gnorm=5.27 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 14875] policy=0.0257 value=0.1678 vraw=17.89 EVb=-0.013 EVin=-0.483 entropy=0.4631 | deploy=7.8% bundle=0.09 ratio=0.991 clip=4.7% gs=16 adv=-15.654±19.282 gnorm=2.65 n=128
+[solo step 14876] policy=-0.0273 value=0.0105 vraw=1.12 EVb=-38.256 EVin=-3.299 entropy=0.4045 | deploy=7.8% bundle=0.08 ratio=1.023 clip=6.2% gs=16 adv=+2.434±2.793 gnorm=0.99 n=128
+[solo] anchor@15000: vs baseline_rand 胜率 0.575±0.078 (23W/17L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 15331] policy=0.0446 value=0.0133 vraw=1.40 EVb=-2.668 EVin=-1.049 entropy=0.4153 | deploy=7.8% bundle=0.08 ratio=0.974 clip=7.8% gs=16 adv=-5.344±3.707 gnorm=0.95 n=128
+[solo step 15332] policy=0.0151 value=0.0046 vraw=0.48 EVb=-7.452 EVin=-0.001 entropy=0.4018 | deploy=7.8% bundle=0.08 ratio=0.987 clip=7.0% gs=16 adv=-1.889±3.845 gnorm=0.10 n=128
+[solo step 15333] policy=0.0627 value=0.0158 vraw=1.65 EVb=-1.363 EVin=-1.569 entropy=0.7396 | deploy=14.1% bundle=0.14 ratio=0.920 clip=18.0% gs=16 adv=-8.552±4.136 gnorm=0.86 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 15775] policy=0.0500 value=0.1376 vraw=15.02 EVb=-0.818 EVin=-1.764 entropy=1.0512 | deploy=14.8% bundle=0.20 ratio=0.940 clip=13.3% gs=16 adv=-22.514±14.039 gnorm=2.18 | p_gnorm=2.862 v_gnorm=3.37 v/p=1.18 scale=10.45 n=128
+[solo step 15776] policy=0.0216 value=0.0022 vraw=0.23 EVb=-38.526 EVin=-3.729 entropy=0.2906 | deploy=7.8% bundle=0.08 ratio=0.969 clip=7.8% gs=16 adv=-0.867±1.243 gnorm=0.28 n=128
+[solo step 15777] policy=0.0111 value=0.0024 vraw=0.26 EVb=-15.295 EVin=-0.503 entropy=0.3535 | deploy=10.2% bundle=0.10 ratio=0.966 clip=7.0% gs=16 adv=-0.631±2.091 gnorm=0.38 n=128
+[solo step 15778] policy=-0.0896 value=0.0116 vraw=1.24 EVb=-67.615 EVin=-8.126 entropy=0.6753 | deploy=14.8% bundle=0.15 ratio=1.074 clip=15.6% gs=16 adv=+5.095±1.730 gnorm=1.14 n=128
+[solo step 15978] policy=-0.0389 value=0.0036 vraw=0.39 EVb=-13.532 EVin=+0.404 entropy=0.5466 | deploy=9.4% bundle=0.09 ratio=1.055 clip=10.2% gs=16 adv=+4.409±3.573 gnorm=0.36 n=128
+[solo] 冻结副本已同步 @step 16000
+[solo] 对手池刷新 @step 16000: hist ckpts=12（本目录 7，新增 1） | 累计对手局 {'defend': 11, 'frozen': 6, 'hist': 33, 'rand_anchor': 3}
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 16123] policy=-0.0036 value=0.0359 vraw=3.82 EVb=-0.807 EVin=+0.264 entropy=0.6138 | deploy=10.2% bundle=0.10 ratio=0.996 clip=7.0% gs=16 adv=+1.377±12.787 gnorm=0.68 n=128
+[solo step 16483] policy=0.0875 value=0.1379 vraw=15.60 EVb=-3.973 EVin=-3.362 entropy=0.4815 | deploy=7.8% bundle=0.08 ratio=0.976 clip=9.4% gs=16 adv=-29.611±10.489 gnorm=1.27 n=128
+[solo step 16484] policy=-0.0920 value=0.0557 vraw=6.25 EVb=-33.395 EVin=-38.310 entropy=0.3918 | deploy=7.0% bundle=0.07 ratio=1.042 clip=7.0% gs=16 adv=+2.668±0.917 gnorm=0.76 n=128
+[solo step 16485] policy=-0.0045 value=0.0516 vraw=5.75 EVb=-31.347 EVin=-24.634 entropy=0.5327 | deploy=9.4% bundle=0.09 ratio=0.979 clip=7.8% gs=16 adv=+0.431±3.104 gnorm=0.81 n=128
+[solo step 16846] policy=0.0394 value=0.0039 vraw=0.43 EVb=-3.829 EVin=+0.854 entropy=0.7720 | deploy=14.1% bundle=0.14 ratio=0.937 clip=14.8% gs=16 adv=-2.435±1.883 gnorm=0.19 n=128
+[solo step 16847] policy=-0.0010 value=0.0011 vraw=0.12 EVb=-9.073 EVin=-2.130 entropy=0.3961 | deploy=7.0% bundle=0.07 ratio=1.006 clip=4.7% gs=16 adv=+0.024±0.854 gnorm=0.10 | p_gnorm=0.2835 v_gnorm=0.9058 v/p=3.19 scale=10.52 n=128
+[solo step 16848] policy=-0.0566 value=0.0234 vraw=2.57 EVb=-5.253 EVin=+0.160 entropy=0.5835 | deploy=10.2% bundle=0.10 ratio=1.037 clip=9.4% gs=16 adv=+9.762±5.446 gnorm=0.26 n=128
+[solo step 17135] policy=-0.0531 value=0.0029 vraw=0.32 EVb=-23.373 EVin=+0.420 entropy=0.7576 | deploy=13.3% bundle=0.13 ratio=1.056 clip=10.2% gs=16 adv=+11.573±6.837 gnorm=0.88 n=128
+[solo step 17136] policy=0.0370 value=0.0200 vraw=2.19 EVb=-3.213 EVin=-0.013 entropy=0.4525 | deploy=7.8% bundle=0.08 ratio=0.988 clip=3.9% gs=16 adv=-5.066±4.268 gnorm=0.43 n=128
+[solo step 17367] policy=-0.0330 value=0.0441 vraw=4.82 EVb=-5.625 EVin=-0.648 entropy=0.5990 | deploy=10.2% bundle=0.10 ratio=1.033 clip=7.0% gs=16 adv=+5.831±5.571 gnorm=1.81 n=128
+[solo step 17368] policy=0.0658 value=0.0770 vraw=8.52 EVb=-1.099 EVin=-6.649 entropy=0.4625 | deploy=7.8% bundle=0.08 ratio=0.978 clip=5.5% gs=16 adv=-12.215±5.741 gnorm=2.17 n=128
+[solo] anchor@17500: vs baseline_rand 胜率 0.450±0.079 (18W/22L/0D, 40局)
+[solo step 17860] policy=0.0395 value=0.1047 vraw=11.97 EVb=-0.693 EVin=-1.084 entropy=0.5381 | deploy=7.8% bundle=0.09 ratio=0.985 clip=3.1% gs=16 adv=-17.882±14.063 gnorm=1.15 n=128
+[solo step 17861] policy=0.0051 value=0.0060 vraw=0.68 EVb=-27.415 EVin=-12.621 entropy=0.4198 | deploy=7.0% bundle=0.07 ratio=0.988 clip=6.2% gs=16 adv=-0.230±1.377 gnorm=0.27 n=128
+[solo step 17862] policy=0.0286 value=0.0077 vraw=0.87 EVb=-43.795 EVin=-14.878 entropy=0.6518 | deploy=10.9% bundle=0.11 ratio=0.965 clip=12.5% gs=16 adv=-1.542±1.641 gnorm=0.39 n=128
+[solo step 17863] policy=0.0632 value=0.0039 vraw=0.44 EVb=-1.251 EVin=-0.048 entropy=0.9287 | deploy=15.6% bundle=0.16 ratio=0.930 clip=16.4% gs=16 adv=-8.648±4.197 gnorm=0.36 n=128
+[solo] 冻结副本已同步 @step 18000
+[solo] 对手池刷新 @step 18000: hist ckpts=12（本目录 8，新增 2） | 累计对手局 {'defend': 13, 'frozen': 7, 'hist': 36, 'rand_anchor': 3}
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 18274] policy=0.0313 value=0.0534 vraw=6.12 EVb=-0.372 EVin=-0.971 entropy=0.7568 | deploy=12.5% bundle=0.12 ratio=0.953 clip=10.2% gs=16 adv=-14.659±14.403 gnorm=0.90 | p_gnorm=0.01249 v_gnorm=1.171 v/p=93.78 scale=10.7 n=128
+[solo step 18275] policy=0.0603 value=0.0007 vraw=0.07 EVb=-4.191 EVin=-0.648 entropy=0.4268 | deploy=7.8% bundle=0.08 ratio=0.961 clip=7.8% gs=16 adv=-2.119±1.090 gnorm=0.06 n=128
+[solo step 18276] policy=-0.0119 value=0.0028 vraw=0.31 EVb=-5.302 EVin=-0.868 entropy=0.6416 | deploy=11.7% bundle=0.12 ratio=1.027 clip=10.2% gs=16 adv=+0.866±2.273 gnorm=0.42 n=128
+[solo step 18634] policy=-0.0397 value=0.0331 vraw=3.76 EVb=-3.238 EVin=-1.405 entropy=1.2454 | deploy=14.8% bundle=0.20 ratio=1.050 clip=13.3% gs=16 adv=+7.941±6.371 gnorm=0.80 n=128
+[solo step 18635] policy=0.0746 value=0.0087 vraw=0.99 EVb=-1.913 EVin=-8.885 entropy=0.4556 | deploy=7.8% bundle=0.08 ratio=0.960 clip=10.2% gs=16 adv=-4.335±1.795 gnorm=0.49 n=128
+[solo step 18636] policy=-0.0201 value=0.0464 vraw=5.27 EVb=-0.848 EVin=-0.298 entropy=0.5956 | deploy=10.2% bundle=0.10 ratio=1.033 clip=9.4% gs=16 adv=+7.265±11.333 gnorm=0.82 n=128
+[solo step 19170] policy=-0.0136 value=0.0267 vraw=3.04 EVb=-0.739 EVin=-0.086 entropy=0.7505 | deploy=11.7% bundle=0.12 ratio=1.025 clip=11.7% gs=16 adv=+4.358±9.814 gnorm=0.48 n=128
+[solo step 19171] policy=0.0297 value=0.0157 vraw=1.79 EVb=-0.170 EVin=-1.172 entropy=0.4347 | deploy=7.8% bundle=0.08 ratio=0.991 clip=7.0% gs=16 adv=-4.802±4.994 gnorm=0.60 n=128
+[solo step 19172] policy=-0.0689 value=0.0032 vraw=0.36 EVb=-23.653 EVin=-3.918 entropy=0.6493 | deploy=10.9% bundle=0.11 ratio=1.049 clip=12.5% gs=16 adv=+3.368±1.539 gnorm=0.73 n=128
+[solo step 19173] policy=0.0832 value=0.0190 vraw=2.16 EVb=-1.974 EVin=-7.529 entropy=0.9001 | deploy=14.8% bundle=0.15 ratio=0.971 clip=15.6% gs=16 adv=-7.480±2.803 gnorm=1.46 n=128
+[solo step 19290] policy=0.1262 value=0.1709 vraw=20.51 EVb=-11.243 EVin=-15.674 entropy=1.2669 | deploy=17.2% bundle=0.20 ratio=0.950 clip=17.2% gs=16 adv=-25.167±6.202 gnorm=2.68 | p_gnorm=3.638 v_gnorm=2.511 v/p=0.69 scale=10.96 n=128
+[solo step 19604] policy=0.0606 value=0.1040 vraw=12.92 EVb=-2.877 EVin=-3.478 entropy=0.4982 | deploy=7.8% bundle=0.09 ratio=0.967 clip=8.6% gs=16 adv=-19.132±9.799 gnorm=1.22 n=128
+[solo step 19605] policy=0.0920 value=0.0265 vraw=3.33 EVb=-5.292 EVin=-5.738 entropy=0.3834 | deploy=7.0% bundle=0.07 ratio=0.975 clip=6.2% gs=16 adv=-11.366±3.841 gnorm=0.73 n=128
+[solo step 19606] policy=0.1188 value=0.0754 vraw=9.78 EVb=-10.762 EVin=-10.383 entropy=0.6147 | deploy=10.9% bundle=0.11 ratio=0.956 clip=11.7% gs=16 adv=-19.807±5.166 gnorm=1.46 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 19964] policy=0.0060 value=0.0239 vraw=3.12 EVb=-0.104 EVin=-0.016 entropy=0.7398 | deploy=9.4% bundle=0.12 ratio=1.005 clip=6.2% gs=16 adv=-2.206±10.964 gnorm=0.29 n=128
+[solo step 19965] policy=-0.0812 value=0.0103 vraw=1.34 EVb=-5.541 EVin=-7.350 entropy=0.3808 | deploy=7.0% bundle=0.07 ratio=1.040 clip=7.8% gs=16 adv=+5.720±2.223 gnorm=0.52 n=128
+[solo] eval@20000: 胜率 0.200±0.063 (8W/32L/0D, 40局) mean_reward=-34.807 EV=0.3846（池化） EVb=0.3815 h_std=7.97e-02 n_abs=0.668142 vstd/rstd=0.5736 累计局数=65
+[solo]   vs baseline0: 胜率 0.375±0.076 (15W/25L/0D)
+[solo]   vs baseline_prev: 胜率 0.450±0.079 (18W/22L/0D)
+[solo]   vs baseline_rand: 胜率 0.600±0.077 (24W/16L/0D)
+[solo] 冻结副本已同步 @step 20000
+[solo] 对手池刷新 @step 20000: hist ckpts=12（本目录 9，新增 2） | 累计对手局 {'defend': 13, 'frozen': 10, 'hist': 39, 'rand_anchor': 3}
+[solo step 20278] policy=-0.0891 value=0.0300 vraw=3.87 EVb=-8.062 EVin=-7.582 entropy=0.9797 | deploy=17.2% bundle=0.17 ratio=1.093 clip=18.0% gs=16 adv=+10.468±3.714 gnorm=0.93 n=128
+[solo step 20279] policy=-0.0348 value=0.0012 vraw=0.15 EVb=-1.251 EVin=-0.599 entropy=0.3815 | deploy=7.0% bundle=0.07 ratio=1.034 clip=6.2% gs=16 adv=+1.881±1.704 gnorm=0.10 n=128
+[solo step 20280] policy=-0.0608 value=0.0278 vraw=3.55 EVb=-3.372 EVin=-3.250 entropy=0.4609 | deploy=8.6% bundle=0.09 ratio=1.027 clip=6.2% gs=16 adv=+10.018±5.147 gnorm=0.64 n=128
+[solo step 20438] policy=-0.0356 value=0.0729 vraw=9.34 EVb=-1.419 EVin=-1.273 entropy=0.6747 | deploy=11.7% bundle=0.12 ratio=1.048 clip=8.6% gs=16 adv=+13.378±11.818 gnorm=0.72 n=128
+[solo step 20653] policy=-0.0150 value=0.0584 vraw=7.51 EVb=-0.256 EVin=-0.210 entropy=0.4721 | deploy=8.6% bundle=0.09 ratio=1.021 clip=8.6% gs=16 adv=+6.688±14.163 gnorm=0.34 | p_gnorm=0.2587 v_gnorm=0.1362 v/p=0.53 scale=11.34 n=128
+[solo step 20654] policy=0.1000 value=0.0490 vraw=6.42 EVb=-10.062 EVin=-10.498 entropy=0.3860 | deploy=7.0% bundle=0.07 ratio=0.972 clip=7.0% gs=16 adv=-13.556±4.226 gnorm=1.18 n=128
+[solo step 20832] policy=-0.0002 value=0.0744 vraw=9.88 EVb=-0.011 EVin=-0.000 entropy=0.4942 | deploy=9.4% bundle=0.09 ratio=1.011 clip=8.6% gs=16 adv=-0.118±17.718 gnorm=0.05 n=128
+[solo step 21192] policy=-0.0439 value=0.0649 vraw=8.61 EVb=-2.016 EVin=-1.918 entropy=0.4477 | deploy=8.6% bundle=0.09 ratio=1.026 clip=6.2% gs=16 adv=+13.470±9.693 gnorm=0.37 n=128
+[solo step 21193] policy=-0.0395 value=0.0010 vraw=0.13 EVb=-3.375 EVin=-1.360 entropy=0.3934 | deploy=7.8% bundle=0.08 ratio=1.028 clip=5.5% gs=16 adv=+1.650±1.319 gnorm=0.29 n=128
+[solo step 21194] policy=-0.0677 value=0.0140 vraw=1.84 EVb=-5.613 EVin=-4.455 entropy=0.5015 | deploy=10.2% bundle=0.10 ratio=1.056 clip=9.4% gs=16 adv=+7.063±3.280 gnorm=0.20 n=128
+[solo step 21412] policy=-0.0009 value=0.0102 vraw=1.34 EVb=-0.162 EVin=-0.000 entropy=0.6749 | deploy=11.7% bundle=0.12 ratio=1.025 clip=10.9% gs=16 adv=+0.127±6.612 gnorm=0.10 n=128
+[solo step 21413] policy=0.0680 value=0.0557 vraw=7.45 EVb=-4.496 EVin=-4.779 entropy=0.3890 | deploy=7.8% bundle=0.08 ratio=0.975 clip=5.5% gs=16 adv=-14.032±6.418 gnorm=0.55 n=128
+[solo step 21602] policy=0.0512 value=0.0668 vraw=9.13 EVb=-2.615 EVin=-2.722 entropy=0.4618 | deploy=8.6% bundle=0.09 ratio=0.971 clip=7.0% gs=16 adv=-14.663±8.851 gnorm=0.40 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 21806] policy=0.0242 value=0.0678 vraw=9.43 EVb=-0.613 EVin=-0.605 entropy=0.4311 | deploy=7.0% bundle=0.08 ratio=0.991 clip=7.0% gs=16 adv=-10.797±13.725 gnorm=0.34 n=128
+[solo step 21807] policy=-0.0815 value=0.0314 vraw=4.35 EVb=-7.170 EVin=-6.861 entropy=0.3779 | deploy=7.0% bundle=0.07 ratio=1.030 clip=7.0% gs=16 adv=+10.886±4.205 gnorm=0.51 | p_gnorm=0.7238 v_gnorm=0.3725 v/p=0.51 scale=11.77 n=128
+[solo] 冻结副本已同步 @step 22000
+[solo step 22166] policy=-0.0292 value=0.0382 vraw=5.28 EVb=-0.970 EVin=-0.846 entropy=0.5163 | deploy=9.4% bundle=0.09 ratio=1.037 clip=6.2% gs=16 adv=+8.809±9.494 gnorm=0.28 n=128
+[solo step 22167] policy=-0.0408 value=0.0027 vraw=0.37 EVb=-2.671 EVin=-1.530 entropy=0.4098 | deploy=7.8% bundle=0.08 ratio=1.040 clip=5.5% gs=16 adv=+2.790±2.159 gnorm=0.18 n=128
+[solo step 22168] policy=-0.0631 value=0.0489 vraw=6.71 EVb=-4.403 EVin=-3.863 entropy=0.7191 | deploy=13.3% bundle=0.13 ratio=1.055 clip=10.9% gs=16 adv=+13.210±6.641 gnorm=0.66 n=128
+[solo step 22453] policy=-0.0214 value=0.0138 vraw=1.88 EVb=-0.699 EVin=-0.454 entropy=0.5010 | deploy=8.6% bundle=0.09 ratio=1.027 clip=9.4% gs=16 adv=+4.387±6.483 gnorm=0.23 n=128
+[solo step 22454] policy=-0.0128 value=0.0060 vraw=0.81 EVb=-0.425 EVin=-0.153 entropy=0.4250 | deploy=7.8% bundle=0.08 ratio=1.021 clip=8.6% gs=16 adv=+1.902±4.745 gnorm=0.04 n=128
+[solo] anchor@22500: vs baseline_rand 胜率 0.475±0.079 (19W/21L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 22813] policy=-0.0240 value=0.0310 vraw=4.22 EVb=-0.752 EVin=-0.561 entropy=0.6558 | deploy=11.7% bundle=0.12 ratio=1.038 clip=7.8% gs=16 adv=+7.006±9.320 gnorm=0.17 n=128
+[solo step 22814] policy=0.0638 value=0.0039 vraw=0.53 EVb=-3.771 EVin=-4.336 entropy=0.3707 | deploy=7.0% bundle=0.07 ratio=0.970 clip=8.6% gs=16 adv=-3.670±1.777 gnorm=0.10 n=128
+[solo step 22815] policy=0.1181 value=0.0195 vraw=2.67 EVb=-12.752 EVin=-14.785 entropy=0.7138 | deploy=13.3% bundle=0.13 ratio=0.963 clip=12.5% gs=16 adv=-8.924±2.326 gnorm=0.91 n=128
+[solo step 23052] policy=-0.0242 value=0.0200 vraw=2.73 EVb=-0.726 EVin=-0.579 entropy=0.5210 | deploy=9.4% bundle=0.09 ratio=1.017 clip=8.6% gs=16 adv=+5.660±7.431 gnorm=0.18 n=128
+[solo step 23053] policy=-0.0923 value=0.0628 vraw=8.56 EVb=-9.229 EVin=-8.517 entropy=0.4216 | deploy=7.8% bundle=0.08 ratio=1.037 clip=7.8% gs=16 adv=+15.670±5.359 gnorm=0.35 | p_gnorm=2.036 v_gnorm=0.3105 v/p=0.15 scale=11.67 n=128
+[solo step 23184] policy=0.0520 value=0.1437 vraw=20.31 EVb=-2.695 EVin=-2.838 entropy=0.4303 | deploy=7.8% bundle=0.08 ratio=0.972 clip=8.6% gs=16 adv=-21.921±13.019 gnorm=0.47 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 23381] policy=0.0665 value=0.0639 vraw=9.19 EVb=-4.382 EVin=-4.629 entropy=0.6366 | deploy=8.6% bundle=0.11 ratio=0.965 clip=10.2% gs=16 adv=-15.574±7.223 gnorm=0.32 n=128
+[solo step 23737] policy=0.0378 value=0.1147 vraw=16.96 EVb=-1.414 EVin=-1.471 entropy=0.4623 | deploy=8.6% bundle=0.09 ratio=0.988 clip=5.5% gs=16 adv=-18.045±14.828 gnorm=0.51 n=128
+[solo step 23738] policy=-0.0308 value=0.0011 vraw=0.16 EVb=-2.300 EVin=-1.095 entropy=0.3607 | deploy=7.0% bundle=0.07 ratio=1.020 clip=7.0% gs=16 adv=+1.536±1.569 gnorm=0.30 n=128
+[solo step 23739] policy=-0.0715 value=0.0256 vraw=3.75 EVb=-5.975 EVin=-5.284 entropy=0.5669 | deploy=10.9% bundle=0.11 ratio=1.036 clip=10.9% gs=16 adv=+9.946±4.366 gnorm=0.53 n=128
+[solo] 冻结副本已同步 @step 24000
+[solo] 对手池刷新 @step 24000: hist ckpts=12（本目录 10，新增 1） | 累计对手局 {'defend': 15, 'frozen': 13, 'hist': 49, 'rand_anchor': 3}
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 24029] policy=-0.0260 value=0.0235 vraw=3.44 EVb=-0.918 EVin=-0.661 entropy=0.6793 | deploy=11.7% bundle=0.12 ratio=1.049 clip=7.0% gs=16 adv=+6.615±8.092 gnorm=0.16 n=128
+[solo step 24030] policy=-0.0730 value=0.0022 vraw=0.31 EVb=-7.546 EVin=-5.127 entropy=0.3505 | deploy=7.0% bundle=0.07 ratio=1.038 clip=7.0% gs=16 adv=+2.951±1.276 gnorm=0.06 n=128
+[solo step 24262] policy=-0.0209 value=0.0097 vraw=1.40 EVb=-0.663 EVin=-0.418 entropy=0.6102 | deploy=11.7% bundle=0.12 ratio=1.019 clip=12.5% gs=16 adv=+3.698±5.652 gnorm=0.20 n=128
+[solo step 24263] policy=0.0905 value=0.0470 vraw=6.90 EVb=-7.989 EVin=-8.488 entropy=0.3407 | deploy=7.0% bundle=0.07 ratio=0.974 clip=7.8% gs=16 adv=-14.040±4.824 gnorm=0.70 n=128
+[solo step 24505] policy=0.0677 value=0.0477 vraw=7.09 EVb=-4.555 EVin=-4.749 entropy=0.3930 | deploy=7.8% bundle=0.08 ratio=0.971 clip=7.0% gs=16 adv=-13.709±6.272 gnorm=0.36 | p_gnorm=0.5952 v_gnorm=0.2351 v/p=0.39 scale=12.19 n=128
+[solo step 24506] policy=0.0863 value=0.0260 vraw=3.89 EVb=-7.374 EVin=-7.632 entropy=0.3565 | deploy=7.8% bundle=0.08 ratio=0.972 clip=7.0% gs=16 adv=-10.572±3.789 gnorm=0.38 n=128
+[solo step 24677] policy=0.0042 value=0.0758 vraw=11.47 EVb=-0.022 EVin=-0.015 entropy=0.4202 | deploy=7.8% bundle=0.09 ratio=1.019 clip=7.0% gs=16 adv=-2.434±19.064 gnorm=0.26 n=128
+[solo] anchor@25000: vs baseline_rand 胜率 0.625±0.076 (25W/15L/0D, 40局)
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 25021] policy=-0.0492 value=0.0793 vraw=12.01 EVb=-2.568 EVin=-2.427 entropy=0.4461 | deploy=7.8% bundle=0.09 ratio=1.029 clip=5.5% gs=16 adv=+16.486±10.560 gnorm=0.46 n=128
+[solo step 25022] policy=-0.0428 value=0.0016 vraw=0.25 EVb=-2.907 EVin=-1.706 entropy=0.3768 | deploy=7.8% bundle=0.08 ratio=1.027 clip=3.9% gs=16 adv=+2.309±1.696 gnorm=0.48 n=128
+[solo step 25023] policy=-0.0868 value=0.0109 vraw=1.64 EVb=-8.681 EVin=-7.250 entropy=0.4191 | deploy=9.4% bundle=0.09 ratio=1.041 clip=9.4% gs=16 adv=+6.891±2.515 gnorm=0.42 n=128
+[solo step 25380] policy=-0.0310 value=0.0343 vraw=5.14 EVb=-1.185 EVin=-0.947 entropy=0.5922 | deploy=11.7% bundle=0.12 ratio=1.037 clip=8.6% gs=16 adv=+9.020±9.241 gnorm=0.34 n=128
+[solo step 25381] policy=-0.0617 value=0.0170 vraw=2.54 EVb=-4.304 EVin=-3.828 entropy=0.3325 | deploy=7.8% bundle=0.08 ratio=1.022 clip=3.9% gs=16 adv=+8.068±4.096 gnorm=0.49 n=128
+[solo step 25382] policy=-0.2333 value=0.0733 vraw=10.92 EVb=-58.233 EVin=-53.903 entropy=0.5185 | deploy=12.5% bundle=0.12 ratio=1.047 clip=13.3% gs=16 adv=+18.592±2.522 gnorm=0.52 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 25821] policy=-0.0705 value=0.1028 vraw=15.37 EVb=-5.522 EVin=-5.040 entropy=0.7120 | deploy=10.9% bundle=0.14 ratio=1.031 clip=7.8% gs=16 adv=+20.298±9.028 gnorm=0.60 n=128
+[solo step 25822] policy=0.0739 value=0.0055 vraw=0.82 EVb=-5.141 EVin=-5.795 entropy=0.2578 | deploy=7.0% bundle=0.07 ratio=0.984 clip=5.5% gs=16 adv=-4.686±1.966 gnorm=0.21 | p_gnorm=1.044 v_gnorm=0.06514 v/p=0.06 scale=12.23 n=128
+[solo step 25823] policy=0.0321 value=0.0079 vraw=1.19 EVb=-0.971 EVin=-1.099 entropy=0.3733 | deploy=9.4% bundle=0.09 ratio=0.978 clip=5.5% gs=16 adv=-4.422±4.254 gnorm=0.13 n=128
+[solo step 25989] policy=0.0157 value=0.0045 vraw=0.67 EVb=-0.363 EVin=-0.279 entropy=0.6239 | deploy=13.3% bundle=0.14 ratio=0.983 clip=13.3% gs=16 adv=-2.142±4.090 gnorm=0.03 n=128
+[solo] 冻结副本已同步 @step 26000
+[solo] 对手池刷新 @step 26000: hist ckpts=12（本目录 11，新增 1） | 累计对手局 {'defend': 16, 'frozen': 14, 'hist': 56, 'rand_anchor': 3}
+[solo step 26344] policy=-0.0567 value=0.0378 vraw=5.62 EVb=-3.487 EVin=-3.211 entropy=0.3228 | deploy=7.0% bundle=0.07 ratio=1.028 clip=7.0% gs=16 adv=+11.707±6.533 gnorm=0.31 n=128
+[solo step 26345] policy=0.1334 value=0.0041 vraw=0.61 EVb=-16.495 EVin=-18.712 entropy=0.3398 | deploy=7.8% bundle=0.08 ratio=0.979 clip=8.6% gs=16 adv=-4.295±0.997 gnorm=0.47 n=128
+[solo step 26346] policy=0.0034 value=0.0073 vraw=1.08 EVb=-0.046 EVin=-0.014 entropy=0.3235 | deploy=7.8% bundle=0.08 ratio=0.986 clip=8.6% gs=16 adv=-0.668±5.842 gnorm=0.13 n=128
+[solo step 26656] policy=0.0350 value=0.0839 vraw=12.67 EVb=-1.121 EVin=-1.241 entropy=0.6367 | deploy=13.3% bundle=0.14 ratio=0.983 clip=10.2% gs=16 adv=-14.975±13.445 gnorm=0.56 n=128
+[solo step 26657] policy=-0.0790 value=0.0184 vraw=2.76 EVb=-7.051 EVin=-6.356 entropy=0.2870 | deploy=7.8% bundle=0.08 ratio=1.021 clip=3.9% gs=16 adv=+8.720±3.464 gnorm=0.78 n=128
+[solo step 26658] policy=-0.0961 value=0.0338 vraw=5.06 EVb=-10.603 EVin=-9.230 entropy=0.3731 | deploy=10.2% bundle=0.10 ratio=1.059 clip=9.4% gs=16 adv=+12.079±3.976 gnorm=0.21 n=128
+[solo step 26877] policy=-0.0013 value=0.0323 vraw=4.85 EVb=-0.043 EVin=-0.001 entropy=0.4211 | deploy=9.4% bundle=0.10 ratio=0.994 clip=4.7% gs=16 adv=+0.530±12.446 gnorm=0.20 n=128
+[solo step 27168] policy=0.0786 value=0.1040 vraw=15.95 EVb=-6.150 EVin=-6.404 entropy=0.3516 | deploy=8.6% bundle=0.09 ratio=0.985 clip=5.5% gs=16 adv=-21.006±8.301 gnorm=0.60 | p_gnorm=1.239 v_gnorm=0.2171 v/p=0.18 scale=12.38 n=128
+[solo step 27169] policy=0.0547 value=0.0062 vraw=0.95 EVb=-2.791 EVin=-3.122 entropy=0.3023 | deploy=7.8% bundle=0.08 ratio=0.978 clip=7.8% gs=16 adv=-4.818±2.712 gnorm=0.14 n=128
+[solo step 27170] policy=0.0778 value=0.0348 vraw=5.37 EVb=-5.817 EVin=-6.170 entropy=0.3545 | deploy=8.6% bundle=0.09 ratio=0.981 clip=4.7% gs=16 adv=-12.196±4.893 gnorm=0.82 n=128
+[solo step 27340] policy=0.0012 value=0.0373 vraw=5.77 EVb=+0.009 EVin=-0.001 entropy=0.4712 | deploy=10.2% bundle=0.10 ratio=0.995 clip=9.4% gs=16 adv=-0.509±13.602 gnorm=0.12 n=128
+[solo] anchor@27500: vs baseline_rand 胜率 0.750±0.069 (30W/10L/0D, 40局)
+[solo step 27540] policy=-0.0604 value=0.0578 vraw=8.93 EVb=-4.007 EVin=-3.669 entropy=0.5999 | deploy=8.6% bundle=0.12 ratio=1.045 clip=6.2% gs=16 adv=+14.990±7.816 gnorm=0.26 n=128
+[solo step 27541] policy=-0.0654 value=0.0400 vraw=6.17 EVb=-4.626 EVin=-4.276 entropy=0.2998 | deploy=7.8% bundle=0.08 ratio=1.024 clip=4.7% gs=16 adv=+12.681±6.113 gnorm=0.47 n=128
+[solo step 27878] policy=-0.0625 value=0.0646 vraw=9.97 EVb=-4.224 EVin=-3.938 entropy=0.4089 | deploy=7.8% bundle=0.09 ratio=1.033 clip=7.0% gs=16 adv=+15.966±8.038 gnorm=0.20 n=128
+[solo step 27879] policy=0.0692 value=0.0195 vraw=3.01 EVb=-4.596 EVin=-4.948 entropy=0.2910 | deploy=7.8% bundle=0.08 ratio=0.981 clip=6.2% gs=16 adv=-8.928±4.027 gnorm=0.45 n=128
+[solo] 冻结副本已同步 @step 28000
+[solo] 对手池刷新 @step 28000: hist ckpts=12（本目录 12，新增 1） | 累计对手局 {'defend': 16, 'frozen': 15, 'hist': 62, 'rand_anchor': 4}
+[solo step 28092] policy=0.0287 value=0.0443 vraw=6.90 EVb=-0.764 EVin=-0.808 entropy=0.3787 | deploy=7.8% bundle=0.09 ratio=1.008 clip=7.8% gs=16 adv=-9.917±11.038 gnorm=0.46 n=128
+[solo step 28093] policy=-0.0462 value=0.0062 vraw=0.97 EVb=-2.577 EVin=-2.140 entropy=0.2935 | deploy=7.8% bundle=0.08 ratio=1.017 clip=7.0% gs=16 adv=+4.582±3.140 gnorm=0.05 n=128
+[solo step 28275] policy=0.0020 value=0.0539 vraw=8.41 EVb=+0.011 EVin=-0.006 entropy=0.5803 | deploy=9.4% bundle=0.12 ratio=0.995 clip=7.0% gs=16 adv=-1.234±16.351 gnorm=0.15 | p_gnorm=0.285 v_gnorm=0.05005 v/p=0.18 scale=12.49 n=128
+[solo step 28519] policy=0.0699 value=0.1001 vraw=15.90 EVb=-4.913 EVin=-5.039 entropy=0.3270 | deploy=7.0% bundle=0.08 ratio=0.994 clip=1.6% gs=16 adv=-20.611±9.177 gnorm=0.81 n=128
+[solo step 28520] policy=-0.0736 value=0.0064 vraw=1.01 EVb=-6.932 EVin=-5.610 entropy=0.3076 | deploy=7.8% bundle=0.08 ratio=1.007 clip=6.2% gs=16 adv=+5.205±2.206 gnorm=0.44 n=128
+[solo step 29119] policy=-0.0419 value=0.0392 vraw=6.19 EVb=-1.984 EVin=-1.774 entropy=0.3849 | deploy=7.8% bundle=0.09 ratio=1.024 clip=5.5% gs=16 adv=+11.245±8.439 gnorm=0.24 n=128
+[solo step 29120] policy=0.0070 value=0.0003 vraw=0.05 EVb=-0.719 EVin=-0.060 entropy=0.2703 | deploy=7.0% bundle=0.07 ratio=0.994 clip=5.5% gs=16 adv=-0.280±1.223 gnorm=0.16 n=128
+[solo step 29121] policy=0.0189 value=0.0004 vraw=0.06 EVb=-2.363 EVin=-0.409 entropy=0.4318 | deploy=10.9% bundle=0.11 ratio=0.990 clip=10.2% gs=16 adv=-0.701±1.130 gnorm=0.16 n=128
+[solo step 29122] policy=0.0842 value=0.0004 vraw=0.06 EVb=-16.971 EVin=-7.605 entropy=0.5744 | deploy=14.8% bundle=0.15 ratio=0.974 clip=12.5% gs=16 adv=-1.275±0.470 gnorm=0.77 n=128
+[solo step 29123] policy=0.0901 value=0.0012 vraw=0.19 EVb=-8.019 EVin=-8.764 entropy=0.7176 | deploy=18.0% bundle=0.18 ratio=0.961 clip=19.5% gs=16 adv=-2.287±0.779 gnorm=0.71 n=128
+[solo step 29260] policy=-0.0177 value=0.0286 vraw=4.46 EVb=-0.377 EVin=-0.309 entropy=0.7161 | deploy=15.6% bundle=0.16 ratio=1.001 clip=9.4% gs=16 adv=+5.812±10.436 gnorm=0.39 n=128
+[solo step 29452] policy=-0.0706 value=0.0642 vraw=10.01 EVb=-5.399 EVin=-5.054 entropy=0.3858 | deploy=8.6% bundle=0.09 ratio=1.026 clip=4.7% gs=16 adv=+16.366±7.275 gnorm=0.49 n=128
+[solo step 29453] policy=-0.1259 value=0.0778 vraw=12.14 EVb=-16.559 EVin=-15.818 entropy=0.2841 | deploy=7.0% bundle=0.07 ratio=1.024 clip=6.2% gs=16 adv=+19.140±4.805 gnorm=0.98 | p_gnorm=2.312 v_gnorm=0.1604 v/p=0.07 scale=12.49 n=128
+[solo] ⚠️ GRU 活力不达标 @step 30000: value/R std=0.013 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 30000: engagement_rate=0.300 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@30000: 胜率 0.575±0.078 (23W/17L/0D, 40局) mean_reward=-0.182 EV=-0.0126（池化） EVb=-0.0221 h_std=8.16e-02 n_abs=0.701374 vstd/rstd=0.0126 累计局数=104
+[solo]   vs baseline0: 胜率 0.250±0.069 (10W/30L/0D)
+[solo]   vs baseline_prev: 胜率 0.525±0.079 (21W/19L/0D)
+[solo]   vs baseline_rand: 胜率 0.550±0.079 (22W/18L/0D)
+[solo] 冻结副本已同步 @step 30000
+[solo] 对手池刷新 @step 30000: hist ckpts=12（本目录 12，新增 1） | 累计对手局 {'defend': 18, 'frozen': 17, 'hist': 65, 'rand_anchor': 4}
+[solo step 30009] policy=-0.0738 value=0.0594 vraw=9.26 EVb=-6.021 EVin=-5.489 entropy=0.4777 | deploy=10.2% bundle=0.10 ratio=1.048 clip=7.0% gs=16 adv=+15.842±6.759 gnorm=0.43 n=128
+[solo step 30010] policy=-0.0154 value=0.0006 vraw=0.10 EVb=-1.354 EVin=-0.223 entropy=0.3132 | deploy=7.8% bundle=0.08 ratio=1.010 clip=6.2% gs=16 adv=+0.784±1.621 gnorm=0.03 n=128
+[solo step 30011] policy=-0.0183 value=0.0006 vraw=0.10 EVb=-1.671 EVin=-0.318 entropy=0.3590 | deploy=8.6% bundle=0.09 ratio=1.012 clip=7.0% gs=16 adv=+0.898±1.555 gnorm=0.35 n=128
+[solo step 30012] policy=-0.0702 value=0.0082 vraw=1.26 EVb=-6.927 EVin=-4.993 entropy=0.6128 | deploy=14.8% bundle=0.15 ratio=1.027 clip=5.5% gs=16 adv=+5.828±2.598 gnorm=1.15 n=128
+[solo step 30321] policy=-0.0265 value=0.0231 vraw=3.55 EVb=-0.944 EVin=-0.712 entropy=0.4469 | deploy=10.9% bundle=0.11 ratio=1.020 clip=5.5% gs=16 adv=+6.891±8.161 gnorm=0.43 n=128
+[solo step 30322] policy=-0.0233 value=0.0005 vraw=0.07 EVb=-2.315 EVin=-0.540 entropy=0.2824 | deploy=7.8% bundle=0.08 ratio=1.008 clip=5.5% gs=16 adv=+0.921±1.247 gnorm=0.22 n=128
+[solo step 30626] policy=-0.0637 value=0.0055 vraw=0.84 EVb=-7.325 EVin=-4.130 entropy=0.6876 | deploy=11.7% bundle=0.14 ratio=1.042 clip=7.8% gs=16 adv=+4.646±2.284 gnorm=0.61 n=128
+[solo step 30627] policy=-0.0613 value=0.0041 vraw=0.62 EVb=-4.923 EVin=-3.816 entropy=0.2929 | deploy=7.8% bundle=0.08 ratio=1.008 clip=4.7% gs=16 adv=+3.980±2.036 gnorm=0.61 n=128
+[solo step 30628] policy=-0.0170 value=0.0172 vraw=2.61 EVb=-0.465 EVin=-0.291 entropy=0.3537 | deploy=9.4% bundle=0.09 ratio=1.016 clip=6.2% gs=16 adv=+4.342±8.035 gnorm=0.34 n=128
+[solo step 30873] policy=-0.0142 value=0.0265 vraw=4.02 EVb=-0.261 EVin=-0.196 entropy=0.4126 | deploy=9.4% bundle=0.09 ratio=1.008 clip=3.1% gs=16 adv=+4.593±10.370 gnorm=0.21 | p_gnorm=0.6551 v_gnorm=0.02688 v/p=0.04 scale=12.32 n=128
+[solo step 30874] policy=-0.0692 value=0.0549 vraw=8.31 EVb=-5.117 EVin=-4.811 entropy=0.2603 | deploy=7.8% bundle=0.08 ratio=1.022 clip=7.0% gs=16 adv=+14.846±6.766 gnorm=0.22 n=128
+[solo step 31099] policy=-0.0449 value=0.0336 vraw=5.09 EVb=-2.363 EVin=-2.074 entropy=0.3731 | deploy=8.6% bundle=0.09 ratio=1.029 clip=6.2% gs=16 adv=+10.484±7.279 gnorm=0.68 n=128
+[solo step 31350] policy=-0.0542 value=0.0239 vraw=3.61 EVb=-3.368 EVin=-2.967 entropy=0.3664 | deploy=8.6% bundle=0.09 ratio=1.010 clip=1.6% gs=16 adv=+9.301±5.395 gnorm=0.59 n=128
+[solo step 31351] policy=0.0271 value=0.0187 vraw=2.82 EVb=-0.652 EVin=-0.761 entropy=0.2017 | deploy=7.0% bundle=0.07 ratio=0.999 clip=3.1% gs=16 adv=-6.238±7.157 gnorm=0.30 n=128
+[solo step 31750] policy=0.0710 value=0.1077 vraw=16.56 EVb=-4.989 EVin=-5.306 entropy=0.3514 | deploy=9.4% bundle=0.10 ratio=0.981 clip=8.6% gs=16 adv=-21.111±9.164 gnorm=0.32 n=128
+[solo step 31751] policy=0.0030 value=0.0006 vraw=0.09 EVb=-0.145 EVin=-0.008 entropy=0.1897 | deploy=7.0% bundle=0.07 ratio=0.999 clip=0.0% gs=16 adv=-0.165±1.733 gnorm=0.15 n=128
+[solo step 31752] policy=0.0536 value=0.0019 vraw=0.29 EVb=-2.261 EVin=-2.956 entropy=0.2825 | deploy=9.4% bundle=0.09 ratio=0.982 clip=3.9% gs=16 adv=-2.665±1.543 gnorm=0.47 n=128
+[solo] 冻结副本已同步 @step 32000
+[solo step 32012] policy=0.0803 value=0.0476 vraw=7.35 EVb=-6.413 EVin=-6.828 entropy=0.6113 | deploy=15.6% bundle=0.16 ratio=0.974 clip=14.8% gs=16 adv=-14.332±5.479 gnorm=0.65 n=128
+[solo step 32013] policy=-0.0269 value=0.0049 vraw=0.76 EVb=-1.150 EVin=-0.725 entropy=0.2637 | deploy=7.0% bundle=0.07 ratio=1.021 clip=5.5% gs=16 adv=+3.191±3.752 gnorm=0.18 n=128
+[solo step 32014] policy=-0.0330 value=0.0468 vraw=7.18 EVb=-1.261 EVin=-1.113 entropy=0.3377 | deploy=8.6% bundle=0.09 ratio=1.012 clip=7.0% gs=16 adv=+11.000±10.430 gnorm=0.27 | p_gnorm=0.4753 v_gnorm=0.0736 v/p=0.15 scale=12.39 n=128
+[solo step 32314] policy=-0.0386 value=0.0137 vraw=2.10 EVb=-1.838 EVin=-1.516 entropy=0.3699 | deploy=7.8% bundle=0.09 ratio=1.012 clip=3.1% gs=16 adv=+6.359±5.162 gnorm=0.72 n=128
+[solo step 32315] policy=-0.0509 value=0.0018 vraw=0.27 EVb=-4.111 EVin=-2.612 entropy=0.3101 | deploy=8.6% bundle=0.09 ratio=1.014 clip=5.5% gs=16 adv=+2.528±1.560 gnorm=0.32 n=128
+[solo] anchor@32500: vs baseline_rand 胜率 0.575±0.078 (23W/17L/0D, 40局)
+[solo step 32607] policy=-0.0129 value=0.0204 vraw=3.10 EVb=-0.321 EVin=-0.169 entropy=0.4758 | deploy=11.7% bundle=0.12 ratio=1.012 clip=3.1% gs=16 adv=+3.790±9.215 gnorm=0.57 n=128
+[solo step 32608] policy=0.0694 value=0.0210 vraw=3.21 EVb=-4.627 EVin=-4.998 entropy=0.2499 | deploy=7.0% bundle=0.07 ratio=0.985 clip=3.1% gs=16 adv=-9.246±4.136 gnorm=0.50 n=128
+[solo step 32987] policy=0.0381 value=0.0635 vraw=9.77 EVb=-1.419 EVin=-1.555 entropy=0.5054 | deploy=11.7% bundle=0.12 ratio=0.967 clip=9.4% gs=16 adv=-13.799±11.064 gnorm=0.09 n=128
+[solo step 32988] policy=-0.0272 value=0.0022 vraw=0.34 EVb=-1.293 EVin=-0.764 entropy=0.2776 | deploy=7.0% bundle=0.07 ratio=1.005 clip=4.7% gs=16 adv=+2.169±2.492 gnorm=0.17 n=128
+[solo step 32989] policy=0.0257 value=0.0324 vraw=4.99 EVb=-0.545 EVin=-0.663 entropy=0.4367 | deploy=10.9% bundle=0.11 ratio=0.997 clip=7.8% gs=16 adv=-7.985±9.793 gnorm=0.66 n=128
+[solo step 33184] policy=0.0350 value=0.1385 vraw=21.77 EVb=-1.130 EVin=-1.256 entropy=0.5964 | deploy=12.5% bundle=0.13 ratio=0.986 clip=9.4% gs=16 adv=-19.705±17.575 gnorm=0.68 n=128
+[solo step 33185] policy=-0.0823 value=0.0228 vraw=3.56 EVb=-7.820 EVin=-6.987 entropy=0.2838 | deploy=7.8% bundle=0.08 ratio=1.008 clip=7.8% gs=16 adv=+9.982±3.779 gnorm=0.42 n=128
+[solo step 33653] policy=-0.0169 value=0.0217 vraw=3.40 EVb=-0.476 EVin=-0.290 entropy=0.8382 | deploy=10.2% bundle=0.16 ratio=1.010 clip=2.3% gs=16 adv=+4.946±9.180 gnorm=0.05 | p_gnorm=0.02657 v_gnorm=0.009462 v/p=0.36 scale=12.51 n=128
+[solo step 33654] policy=-0.0172 value=0.0004 vraw=0.06 EVb=-2.011 EVin=-0.289 entropy=0.2688 | deploy=7.8% bundle=0.08 ratio=1.005 clip=4.7% gs=16 adv=+0.655±1.209 gnorm=0.10 n=128
+[solo step 33655] policy=-0.0472 value=0.0033 vraw=0.51 EVb=-3.942 EVin=-2.224 entropy=0.5095 | deploy=14.1% bundle=0.14 ratio=1.022 clip=8.6% gs=16 adv=+3.349±2.242 gnorm=0.60 n=128
+[solo step 33999] policy=-0.0809 value=0.0369 vraw=5.72 EVb=-7.828 EVin=-6.727 entropy=0.7651 | deploy=14.8% bundle=0.18 ratio=1.021 clip=5.5% gs=16 adv=+12.631±4.869 gnorm=1.14 n=128
+[solo step 34000] policy=-0.0864 value=0.0201 vraw=3.11 EVb=-8.436 EVin=-7.584 entropy=0.2204 | deploy=7.0% bundle=0.07 ratio=1.012 clip=2.3% gs=16 adv=+9.386±3.406 gnorm=0.58 n=128
+[solo] 冻结副本已同步 @step 34000
+[solo] 对手池刷新 @step 34000: hist ckpts=12（本目录 12，新增 2） | 累计对手局 {'defend': 22, 'frozen': 22, 'hist': 70, 'rand_anchor': 4}
+[solo step 34001] policy=-0.0698 value=0.0104 vraw=1.60 EVb=-6.172 EVin=-4.985 entropy=0.3063 | deploy=9.4% bundle=0.09 ratio=1.013 clip=2.3% gs=16 adv=+6.534±2.922 gnorm=1.11 n=128
+[solo step 34359] policy=-0.0237 value=0.0549 vraw=8.47 EVb=-0.699 EVin=-0.562 entropy=0.5011 | deploy=13.3% bundle=0.13 ratio=1.019 clip=6.2% gs=16 adv=+9.884±13.172 gnorm=0.35 n=128
+[solo step 34360] policy=0.0462 value=0.0081 vraw=1.25 EVb=-1.883 EVin=-2.218 entropy=0.2412 | deploy=7.8% bundle=0.08 ratio=0.990 clip=6.2% gs=16 adv=-5.251±3.529 gnorm=0.45 n=128
+[solo step 34361] policy=0.0562 value=0.0014 vraw=0.21 EVb=-2.635 EVin=-3.362 entropy=0.3932 | deploy=11.7% bundle=0.12 ratio=0.972 clip=8.6% gs=16 adv=-2.273±1.242 gnorm=0.49 n=128
+[solo step 34709] policy=0.0052 value=0.0058 vraw=0.89 EVb=-0.048 EVin=-0.030 entropy=0.4787 | deploy=11.7% bundle=0.12 ratio=0.994 clip=7.0% gs=16 adv=-0.915±5.251 gnorm=0.26 n=128
+[solo step 34710] policy=-0.0392 value=0.0102 vraw=1.55 EVb=-1.902 EVin=-1.562 entropy=0.2311 | deploy=7.0% bundle=0.07 ratio=1.005 clip=3.9% gs=16 adv=+5.506±4.405 gnorm=0.34 | p_gnorm=0.05489 v_gnorm=0.02963 v/p=0.54 scale=12.36 n=128
+[solo step 34711] policy=-0.0336 value=0.0348 vraw=5.31 EVb=-1.315 EVin=-1.106 entropy=0.4862 | deploy=13.3% bundle=0.13 ratio=1.026 clip=3.9% gs=16 adv=+9.451±8.984 gnorm=0.81 n=128
+[solo step 34903] policy=-0.0839 value=0.0516 vraw=7.88 EVb=-7.657 EVin=-7.079 entropy=0.3087 | deploy=8.6% bundle=0.09 ratio=1.017 clip=3.9% gs=16 adv=+14.864±5.586 gnorm=1.05 n=128
+[solo] anchor@35000: vs baseline_rand 胜率 0.475±0.079 (19W/21L/0D, 40局)
+[solo step 35029] policy=-0.0938 value=0.0596 vraw=9.10 EVb=-9.515 EVin=-8.919 entropy=0.2806 | deploy=7.8% bundle=0.08 ratio=1.011 clip=3.9% gs=16 adv=+16.183±5.418 gnorm=1.05 n=128
+[solo step 35205] policy=-0.0144 value=0.0388 vraw=5.91 EVb=-0.256 EVin=-0.203 entropy=0.2831 | deploy=7.8% bundle=0.08 ratio=1.001 clip=6.2% gs=16 adv=+5.661±12.538 gnorm=0.23 n=128
+[solo step 35320] policy=0.1162 value=0.0856 vraw=13.21 EVb=-13.330 EVin=-13.985 entropy=0.3397 | deploy=8.6% bundle=0.09 ratio=0.989 clip=5.5% gs=16 adv=-19.859±5.311 gnorm=1.35 n=128
+[solo step 35722] policy=0.0610 value=0.0778 vraw=12.14 EVb=-3.685 EVin=-3.906 entropy=0.3596 | deploy=7.8% bundle=0.09 ratio=0.979 clip=8.6% gs=16 adv=-17.590±8.898 gnorm=0.95 n=128
+[solo step 35723] policy=-0.0094 value=0.0002 vraw=0.04 EVb=-1.106 EVin=-0.091 entropy=0.1918 | deploy=7.0% bundle=0.07 ratio=1.003 clip=5.5% gs=16 adv=+0.309±1.047 gnorm=0.22 n=128
+[solo step 35724] policy=0.0426 value=0.0180 vraw=2.81 EVb=-1.642 EVin=-1.884 entropy=0.2680 | deploy=9.4% bundle=0.09 ratio=0.982 clip=7.0% gs=16 adv=-7.667±5.579 gnorm=0.32 n=128
+[solo step 35725] policy=0.0882 value=0.0884 vraw=13.95 EVb=-7.394 EVin=-8.011 entropy=0.4785 | deploy=14.8% bundle=0.15 ratio=0.994 clip=6.2% gs=16 adv=-19.932±7.037 gnorm=2.35 n=128
+[solo step 35901] policy=-0.0182 value=0.0116 vraw=1.83 EVb=-0.402 EVin=-0.336 entropy=0.3339 | deploy=8.6% bundle=0.09 ratio=1.002 clip=1.6% gs=16 adv=+3.834±6.619 gnorm=0.39 | p_gnorm=0.1776 v_gnorm=0.03002 v/p=0.17 scale=12.54 n=128
+[solo] 冻结副本已同步 @step 36000
+[solo] 对手池刷新 @step 36000: hist ckpts=12（本目录 12，新增 3） | 累计对手局 {'defend': 22, 'frozen': 24, 'hist': 74, 'rand_anchor': 6}
+[solo step 36102] policy=-0.0835 value=0.0523 vraw=8.22 EVb=-7.675 EVin=-7.120 entropy=0.2749 | deploy=8.6% bundle=0.09 ratio=1.011 clip=1.6% gs=16 adv=+15.193±5.692 gnorm=0.73 n=128
+[solo step 36281] policy=-0.0802 value=0.0489 vraw=7.69 EVb=-6.948 EVin=-6.450 entropy=0.3181 | deploy=7.8% bundle=0.09 ratio=1.023 clip=10.9% gs=16 adv=+14.600±5.746 gnorm=0.46 n=128
+[solo step 36282] policy=-0.0983 value=0.0133 vraw=2.08 EVb=-10.979 EVin=-9.864 entropy=0.1801 | deploy=7.0% bundle=0.07 ratio=1.012 clip=3.1% gs=16 adv=+7.787±2.477 gnorm=0.93 n=128
+[solo step 36641] policy=-0.0329 value=0.0322 vraw=5.03 EVb=-1.232 EVin=-1.094 entropy=0.2472 | deploy=8.6% bundle=0.09 ratio=1.012 clip=3.9% gs=16 adv=+9.176±8.771 gnorm=0.33 n=128
+[solo step 36642] policy=-0.0371 value=0.0053 vraw=0.83 EVb=-1.743 EVin=-1.384 entropy=0.1597 | deploy=7.8% bundle=0.08 ratio=1.006 clip=6.2% gs=16 adv=+3.935±3.338 gnorm=0.41 n=128
+[solo step 36643] policy=-0.1005 value=0.0281 vraw=4.36 EVb=-11.468 EVin=-10.336 entropy=0.2789 | deploy=12.5% bundle=0.12 ratio=1.004 clip=5.5% gs=16 adv=+11.294±3.510 gnorm=1.20 n=128
+[solo step 36857] policy=0.0237 value=0.0246 vraw=3.84 EVb=-0.529 EVin=-0.585 entropy=0.3348 | deploy=9.4% bundle=0.10 ratio=0.988 clip=2.3% gs=16 adv=-6.730±8.802 gnorm=0.41 n=128
+[solo step 37066] policy=0.0585 value=0.0603 vraw=9.46 EVb=-3.350 EVin=-3.560 entropy=0.2499 | deploy=8.6% bundle=0.09 ratio=0.981 clip=3.9% gs=16 adv=-15.378±8.147 gnorm=0.44 n=128
+[solo step 37067] policy=0.0661 value=0.0270 vraw=4.24 EVb=-4.187 EVin=-4.546 entropy=0.1647 | deploy=7.0% bundle=0.07 ratio=0.994 clip=8.6% gs=16 adv=-10.554±4.945 gnorm=0.40 n=128
+[solo step 37258] policy=0.0175 value=0.0702 vraw=11.11 EVb=-0.286 EVin=-0.313 entropy=0.2720 | deploy=8.6% bundle=0.09 ratio=1.004 clip=2.3% gs=16 adv=-9.214±16.465 gnorm=0.52 | p_gnorm=0.06542 v_gnorm=0.05303 v/p=0.81 scale=12.59 n=128
+[solo step 37259] policy=-0.1141 value=0.0295 vraw=4.65 EVb=-14.159 EVin=-13.251 entropy=0.1578 | deploy=7.0% bundle=0.07 ratio=1.003 clip=2.3% gs=16 adv=+11.762±3.233 gnorm=1.08 n=128
+[solo] anchor@37500: vs baseline_rand 胜率 0.550±0.079 (22W/18L/0D, 40局)
+[solo step 37591] policy=-0.0570 value=0.0042 vraw=0.66 EVb=-4.731 EVin=-3.283 entropy=0.2670 | deploy=8.6% bundle=0.09 ratio=1.018 clip=2.3% gs=16 adv=+4.038±2.227 gnorm=0.88 n=128
+[solo step 37592] policy=-0.0351 value=0.0063 vraw=0.99 EVb=-1.542 EVin=-1.239 entropy=0.1801 | deploy=7.8% bundle=0.08 ratio=1.010 clip=3.9% gs=16 adv=+4.183±3.755 gnorm=0.30 n=128
+[solo step 37791] policy=-0.0569 value=0.0375 vraw=5.87 EVb=-3.620 EVin=-3.246 entropy=0.3756 | deploy=13.3% bundle=0.14 ratio=1.032 clip=12.5% gs=16 adv=+11.992±6.653 gnorm=0.35 n=128
+[solo step 37792] policy=-0.1549 value=0.0519 vraw=8.13 EVb=-26.053 EVin=-24.474 entropy=0.1348 | deploy=7.0% bundle=0.07 ratio=1.020 clip=7.0% gs=16 adv=+15.819±3.196 gnorm=1.31 n=128
+[solo step 37978] policy=0.0079 value=0.0413 vraw=6.49 EVb=-0.046 EVin=-0.067 entropy=0.2200 | deploy=8.6% bundle=0.09 ratio=0.999 clip=3.1% gs=16 adv=-3.600±13.960 gnorm=0.31 n=128
+[solo] 冻结副本已同步 @step 38000
+[solo] 对手池刷新 @step 38000: hist ckpts=12（本目录 12，新增 4） | 累计对手局 {'defend': 24, 'frozen': 25, 'hist': 77, 'rand_anchor': 9}
+[solo step 38315] policy=0.0557 value=0.0590 vraw=9.34 EVb=-3.007 EVin=-3.190 entropy=0.2386 | deploy=8.6% bundle=0.09 ratio=0.994 clip=2.3% gs=16 adv=-15.084±8.443 gnorm=0.57 n=128
+[solo step 38316] policy=0.0327 value=0.0078 vraw=1.23 EVb=-0.947 EVin=-1.110 entropy=0.1490 | deploy=7.0% bundle=0.07 ratio=0.988 clip=0.0% gs=16 adv=-4.561±4.320 gnorm=0.57 n=128
+[solo step 38317] policy=0.0189 value=0.0236 vraw=3.74 EVb=-0.316 EVin=-0.374 entropy=0.3016 | deploy=11.7% bundle=0.12 ratio=0.998 clip=10.2% gs=16 adv=-5.720±9.332 gnorm=0.33 n=128
+[solo step 38564] policy=0.0304 value=0.0517 vraw=8.21 EVb=-0.882 EVin=-0.955 entropy=0.3464 | deploy=10.2% bundle=0.11 ratio=0.994 clip=3.1% gs=16 adv=-11.337±11.600 gnorm=0.53 | p_gnorm=0.08114 v_gnorm=0.06543 v/p=0.81 scale=12.61 n=128
+[solo step 38565] policy=0.0707 value=0.0418 vraw=6.67 EVb=-4.793 EVin=-5.173 entropy=0.1771 | deploy=7.0% bundle=0.07 ratio=0.992 clip=3.1% gs=16 adv=-13.383±5.880 gnorm=0.72 n=128
+[solo step 38706] policy=-0.0017 value=0.0526 vraw=8.42 EVb=-0.038 EVin=-0.003 entropy=0.5696 | deploy=10.2% bundle=0.14 ratio=1.012 clip=3.9% gs=16 adv=+0.884±16.397 gnorm=0.29 n=128
+[solo step 39138] policy=-0.0218 value=0.0352 vraw=5.64 EVb=-0.539 EVin=-0.483 entropy=0.2743 | deploy=7.8% bundle=0.09 ratio=1.001 clip=0.0% gs=16 adv=+7.663±11.028 gnorm=0.38 n=128
+[solo step 39139] policy=0.0181 value=0.0003 vraw=0.05 EVb=-0.243 EVin=-0.338 entropy=0.1890 | deploy=7.8% bundle=0.08 ratio=1.000 clip=1.6% gs=16 adv=-0.602±1.042 gnorm=0.36 n=128
+[solo step 39140] policy=0.0868 value=0.0053 vraw=0.85 EVb=-6.336 EVin=-7.775 entropy=0.3163 | deploy=12.5% bundle=0.12 ratio=0.990 clip=1.6% gs=16 adv=-4.913±1.763 gnorm=1.21 n=128
+[solo step 39380] policy=0.0474 value=0.0335 vraw=5.36 EVb=-2.085 EVin=-2.350 entropy=0.4190 | deploy=14.1% bundle=0.14 ratio=0.979 clip=4.7% gs=16 adv=-10.969±7.153 gnorm=0.88 n=128
+[solo step 39381] policy=0.0397 value=0.0018 vraw=0.29 EVb=-1.485 EVin=-1.615 entropy=0.1882 | deploy=7.8% bundle=0.08 ratio=0.998 clip=6.2% gs=16 adv=-2.405±1.889 gnorm=0.31 n=128
+[solo step 39524] policy=-0.0011 value=0.0126 vraw=2.01 EVb=-0.039 EVin=-0.001 entropy=0.2696 | deploy=7.0% bundle=0.08 ratio=1.007 clip=4.7% gs=16 adv=+0.249±8.019 gnorm=0.17 n=128
+[solo step 39816] policy=-0.0365 value=0.0392 vraw=6.23 EVb=-1.532 EVin=-1.361 entropy=0.3248 | deploy=8.6% bundle=0.09 ratio=1.011 clip=2.3% gs=16 adv=+10.726±9.191 gnorm=0.59 n=128
+[solo step 39817] policy=-0.0214 value=0.0016 vraw=0.26 EVb=-1.002 EVin=-0.466 entropy=0.2107 | deploy=7.8% bundle=0.08 ratio=1.001 clip=5.5% gs=16 adv=+1.629±2.378 gnorm=0.22 | p_gnorm=0.1516 v_gnorm=0.004536 v/p=0.03 scale=12.6 n=128
+[solo] ⚠️ GRU 活力不达标 @step 40000: value/R std=0.001 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 40000: engagement_rate=0.800 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@40000: 胜率 0.463±0.079 (18W/21L/1D, 40局) mean_reward=-6.956 EV=-0.006（池化） EVb=-0.0134 h_std=8.89e-02 n_abs=0.770309 vstd/rstd=0.0011 累计局数=142
+[solo]   vs baseline0: 胜率 0.450±0.079 (18W/22L/0D)
+[solo]   vs baseline_prev: 胜率 0.450±0.079 (18W/22L/0D)
+[solo]   vs baseline_rand: 胜率 0.575±0.078 (23W/17L/0D)
+[solo] 冻结副本已同步 @step 40000
+[solo] 对手池刷新 @step 40000: hist ckpts=12（本目录 12，新增 4） | 累计对手局 {'defend': 26, 'frozen': 26, 'hist': 81, 'rand_anchor': 9}
+[solo step 40054] policy=-0.0890 value=0.0071 vraw=1.13 EVb=-10.661 EVin=-7.922 entropy=0.6501 | deploy=11.7% bundle=0.16 ratio=0.998 clip=7.0% gs=16 adv=+5.662±2.009 gnorm=0.95 n=128
+[solo step 40055] policy=0.0431 value=0.0159 vraw=2.52 EVb=-1.706 EVin=-1.910 entropy=0.2949 | deploy=8.6% bundle=0.09 ratio=0.990 clip=5.5% gs=16 adv=-7.279±5.268 gnorm=0.67 n=128
+[solo step 40489] policy=0.0605 value=0.0671 vraw=10.70 EVb=-3.643 EVin=-3.790 entropy=0.2680 | deploy=7.8% bundle=0.08 ratio=0.992 clip=4.7% gs=16 adv=-16.463±8.454 gnorm=0.43 n=128
+[solo step 40490] policy=-0.0292 value=0.0016 vraw=0.26 EVb=-1.613 EVin=-0.866 entropy=0.2482 | deploy=7.0% bundle=0.07 ratio=1.008 clip=0.8% gs=16 adv=+1.954±2.110 gnorm=0.81 n=128
+[solo step 40491] policy=-0.1268 value=0.0018 vraw=0.28 EVb=-23.951 EVin=-16.517 entropy=0.3068 | deploy=9.4% bundle=0.09 ratio=1.002 clip=0.0% gs=16 adv=+2.908±0.718 gnorm=2.16 n=128
+[solo step 40492] policy=-0.0679 value=0.0161 vraw=2.54 EVb=-5.830 EVin=-4.642 entropy=0.5364 | deploy=14.8% bundle=0.15 ratio=1.032 clip=8.6% gs=16 adv=+8.174±3.798 gnorm=1.02 n=128
+[solo step 40857] policy=-0.0239 value=0.0214 vraw=3.37 EVb=-0.735 EVin=-0.580 entropy=0.4042 | deploy=10.2% bundle=0.11 ratio=1.007 clip=3.1% gs=16 adv=+6.293±8.260 gnorm=0.25 n=128
+[solo step 40858] policy=-0.0589 value=0.0020 vraw=0.31 EVb=-5.016 EVin=-3.540 entropy=0.2331 | deploy=7.0% bundle=0.07 ratio=1.012 clip=1.6% gs=16 adv=+2.800±1.486 gnorm=0.81 n=128
+[solo step 40859] policy=-0.0814 value=0.0363 vraw=5.70 EVb=-7.776 EVin=-6.862 entropy=0.4028 | deploy=13.3% bundle=0.13 ratio=1.003 clip=3.1% gs=16 adv=+12.622±4.816 gnorm=1.65 n=128
+[solo step 41001] policy=-0.1053 value=0.0698 vraw=10.98 EVb=-12.048 EVin=-11.209 entropy=0.3184 | deploy=9.4% bundle=0.10 ratio=1.042 clip=8.6% gs=16 adv=+17.961±5.364 gnorm=0.45 | p_gnorm=0.5168 v_gnorm=0.1093 v/p=0.21 scale=12.54 n=128
+[solo step 41361] policy=-0.0209 value=0.0314 vraw=4.94 EVb=-0.536 EVin=-0.456 entropy=0.2465 | deploy=8.6% bundle=0.09 ratio=0.998 clip=0.0% gs=16 adv=+7.041±10.419 gnorm=0.71 n=128
+[solo step 41362] policy=-0.0528 value=0.0053 vraw=0.82 EVb=-3.477 EVin=-2.855 entropy=0.1811 | deploy=7.8% bundle=0.08 ratio=1.002 clip=0.8% gs=16 adv=+4.428±2.616 gnorm=0.81 n=128
+[solo step 41363] policy=-0.1120 value=0.0348 vraw=5.44 EVb=-13.832 EVin=-12.594 entropy=0.3016 | deploy=13.3% bundle=0.13 ratio=1.027 clip=15.6% gs=16 adv=+12.705±3.577 gnorm=1.10 n=128
+[solo step 41535] policy=-0.0524 value=0.0135 vraw=2.10 EVb=-3.311 EVin=-2.810 entropy=0.2426 | deploy=8.6% bundle=0.09 ratio=1.010 clip=3.9% gs=16 adv=+7.043±4.200 gnorm=0.60 n=128
+[solo step 41729] policy=-0.0034 value=0.0550 vraw=8.61 EVb=-0.015 EVin=-0.012 entropy=0.1989 | deploy=8.6% bundle=0.09 ratio=0.994 clip=0.0% gs=16 adv=+1.793±16.501 gnorm=0.16 n=128
+[solo step 41841] policy=0.1002 value=0.0955 vraw=15.10 EVb=-9.998 EVin=-10.350 entropy=0.2481 | deploy=9.4% bundle=0.09 ratio=0.991 clip=0.8% gs=16 adv=-20.989±6.524 gnorm=1.29 n=128
+[solo] 冻结副本已同步 @step 42000
+[solo step 42200] policy=0.0422 value=0.0039 vraw=0.62 EVb=-1.495 EVin=-1.952 entropy=0.2281 | deploy=7.0% bundle=0.07 ratio=0.973 clip=1.6% gs=16 adv=-3.624±2.591 gnorm=1.64 n=128
+[solo step 42201] policy=0.0747 value=0.0020 vraw=0.31 EVb=-4.170 EVin=-5.742 entropy=0.1897 | deploy=7.8% bundle=0.08 ratio=0.982 clip=8.6% gs=16 adv=-2.909±1.212 gnorm=0.71 n=128
+[solo step 42202] policy=0.0613 value=0.0330 vraw=5.21 EVb=-3.560 EVin=-3.931 entropy=0.2511 | deploy=9.4% bundle=0.09 ratio=0.988 clip=10.2% gs=16 adv=-11.539±5.816 gnorm=1.07 n=128
+[solo step 42432] policy=0.0626 value=0.0559 vraw=8.88 EVb=-3.642 EVin=-3.959 entropy=0.3337 | deploy=12.5% bundle=0.12 ratio=0.988 clip=5.5% gs=16 adv=-15.067±7.572 gnorm=1.36 | p_gnorm=1.198 v_gnorm=0.086 v/p=0.07 scale=12.6 n=128
+[solo step 42433] policy=0.0789 value=0.0153 vraw=2.43 EVb=-5.882 EVin=-6.383 entropy=0.1536 | deploy=7.0% bundle=0.07 ratio=0.996 clip=0.8% gs=16 adv=-8.205±3.245 gnorm=0.72 n=128
+[solo] anchor@42500: vs baseline_rand 胜率 0.512±0.079 (20W/19L/1D, 40局)
+[solo step 42641] policy=0.0351 value=0.0443 vraw=7.06 EVb=-1.157 EVin=-1.231 entropy=0.3117 | deploy=7.8% bundle=0.09 ratio=1.000 clip=6.2% gs=16 adv=-11.171±10.064 gnorm=0.82 n=128
+[solo step 42642] policy=0.1041 value=0.0989 vraw=15.94 EVb=-10.918 EVin=-11.347 entropy=0.2184 | deploy=7.0% bundle=0.07 ratio=0.986 clip=10.9% gs=16 adv=-21.660±6.427 gnorm=0.40 n=128
+[solo step 43193] policy=0.0030 value=0.0155 vraw=2.50 EVb=-0.008 EVin=-0.008 entropy=0.3255 | deploy=9.4% bundle=0.09 ratio=1.004 clip=4.7% gs=16 adv=-0.823±8.900 gnorm=0.50 n=128
+[solo step 43194] policy=0.0503 value=0.0032 vraw=0.52 EVb=-2.129 EVin=-2.594 entropy=0.2522 | deploy=7.8% bundle=0.08 ratio=0.990 clip=3.1% gs=16 adv=-3.454±2.141 gnorm=0.51 n=128
+[solo step 43195] policy=0.0407 value=0.0129 vraw=2.07 EVb=-1.411 EVin=-1.743 entropy=0.5753 | deploy=15.6% bundle=0.16 ratio=0.976 clip=5.5% gs=16 adv=-6.500±4.918 gnorm=0.77 n=128
+[solo step 43196] policy=0.0541 value=0.0077 vraw=1.24 EVb=-2.458 EVin=-3.102 entropy=0.6159 | deploy=15.6% bundle=0.16 ratio=0.964 clip=10.2% gs=16 adv=-5.490±3.111 gnorm=0.61 n=128
+[solo step 43307] policy=0.1235 value=0.0888 vraw=14.38 EVb=-15.108 EVin=-16.257 entropy=0.9047 | deploy=14.1% bundle=0.19 ratio=0.935 clip=14.8% gs=16 adv=-20.824±5.159 gnorm=0.37 n=128
+[solo step 43585] policy=0.0137 value=0.0379 vraw=6.16 EVb=-0.188 EVin=-0.201 entropy=0.3921 | deploy=8.6% bundle=0.09 ratio=0.998 clip=6.2% gs=16 adv=-5.746±12.811 gnorm=0.06 n=128
+[solo step 43586] policy=-0.0391 value=0.0089 vraw=1.44 EVb=-1.991 EVin=-1.559 entropy=0.2710 | deploy=7.0% bundle=0.07 ratio=1.021 clip=5.5% gs=16 adv=+5.296±4.246 gnorm=0.19 | p_gnorm=1.596 v_gnorm=0.04051 v/p=0.03 scale=12.72 n=128
+[solo] 冻结副本已同步 @step 44000
+[solo] 对手池刷新 @step 44000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 30, 'frozen': 27, 'hist': 89, 'rand_anchor': 10}
+[solo step 44004] policy=-0.0271 value=0.0301 vraw=4.87 EVb=-0.875 EVin=-0.745 entropy=0.4521 | deploy=10.2% bundle=0.11 ratio=1.012 clip=3.1% gs=16 adv=+8.157±9.448 gnorm=0.49 n=128
+[solo step 44005] policy=-0.0124 value=0.0061 vraw=0.98 EVb=-0.332 EVin=-0.152 entropy=0.3024 | deploy=7.8% bundle=0.08 ratio=1.018 clip=5.5% gs=16 adv=+2.046±5.226 gnorm=0.30 n=128
+[solo step 44006] policy=-0.0305 value=0.0132 vraw=2.12 EVb=-1.216 EVin=-0.911 entropy=0.5311 | deploy=12.5% bundle=0.12 ratio=1.021 clip=3.1% gs=16 adv=+5.699±5.965 gnorm=0.90 n=128
+[solo step 44396] policy=-0.0437 value=0.0355 vraw=5.71 EVb=-2.282 EVin=-1.922 entropy=0.5616 | deploy=12.5% bundle=0.13 ratio=1.029 clip=6.2% gs=16 adv=+10.971±7.912 gnorm=0.88 n=128
+[solo step 44397] policy=-0.0337 value=0.0016 vraw=0.26 EVb=-1.665 EVin=-1.153 entropy=0.2476 | deploy=7.0% bundle=0.07 ratio=1.003 clip=3.1% gs=16 adv=+2.114±1.964 gnorm=0.35 n=128
+[solo step 44398] policy=-0.0708 value=0.0032 vraw=0.51 EVb=-7.626 EVin=-4.945 entropy=0.4084 | deploy=10.9% bundle=0.11 ratio=1.030 clip=11.7% gs=16 adv=+3.684±1.653 gnorm=1.09 n=128
+[solo step 44677] policy=-0.0538 value=0.0338 vraw=5.40 EVb=-3.289 EVin=-2.926 entropy=0.5551 | deploy=14.1% bundle=0.15 ratio=1.014 clip=4.7% gs=16 adv=+11.351±6.634 gnorm=0.85 n=128
+[solo step 44678] policy=-0.0017 value=0.0016 vraw=0.26 EVb=-0.044 EVin=-0.002 entropy=0.2418 | deploy=7.0% bundle=0.07 ratio=1.002 clip=5.5% gs=16 adv=+0.144±2.877 gnorm=0.20 n=128
+[solo step 44896] policy=-0.0543 value=0.0654 vraw=10.42 EVb=-3.288 EVin=-3.013 entropy=0.4085 | deploy=10.2% bundle=0.11 ratio=1.012 clip=7.8% gs=16 adv=+15.832±9.116 gnorm=0.81 n=128
+[solo step 44897] policy=0.1100 value=0.0502 vraw=8.04 EVb=-11.702 EVin=-12.444 entropy=0.2185 | deploy=7.0% bundle=0.07 ratio=0.986 clip=3.1% gs=16 adv=-15.424±4.374 gnorm=0.95 | p_gnorm=2.122 v_gnorm=0.09616 v/p=0.05 scale=12.66 n=128
+[solo] anchor@45000: vs baseline_rand 胜率 0.650±0.075 (26W/14L/0D, 40局)
+[solo step 45228] policy=0.0527 value=0.0755 vraw=12.17 EVb=-2.606 EVin=-2.757 entropy=0.3439 | deploy=8.6% bundle=0.09 ratio=0.992 clip=5.5% gs=16 adv=-16.908±10.180 gnorm=0.78 n=128
+[solo step 45229] policy=0.0272 value=0.0054 vraw=0.87 EVb=-0.633 EVin=-0.757 entropy=0.2294 | deploy=7.0% bundle=0.07 ratio=0.995 clip=4.7% gs=16 adv=-3.481±3.989 gnorm=0.43 n=128
+[solo step 45230] policy=0.0342 value=0.0017 vraw=0.28 EVb=-0.955 EVin=-1.228 entropy=0.3535 | deploy=10.9% bundle=0.11 ratio=0.970 clip=12.5% gs=16 adv=-2.217±1.991 gnorm=0.25 n=128
+[solo step 45689] policy=0.0024 value=0.0042 vraw=0.68 EVb=-0.029 EVin=-0.008 entropy=0.3488 | deploy=10.2% bundle=0.10 ratio=0.990 clip=2.3% gs=16 adv=-0.416±4.652 gnorm=0.17 n=128
+[solo step 45690] policy=-0.0416 value=0.0012 vraw=0.19 EVb=-2.721 EVin=-1.744 entropy=0.1934 | deploy=7.0% bundle=0.07 ratio=1.006 clip=5.5% gs=16 adv=+1.954±1.480 gnorm=0.39 n=128
+[solo step 45691] policy=-0.0605 value=0.0041 vraw=0.65 EVb=-4.901 EVin=-3.654 entropy=0.3978 | deploy=13.3% bundle=0.13 ratio=1.021 clip=9.4% gs=16 adv=+4.036±2.111 gnorm=1.10 n=128
+[solo step 45865] policy=-0.0846 value=0.0338 vraw=5.39 EVb=-8.522 EVin=-7.407 entropy=0.5106 | deploy=14.8% bundle=0.16 ratio=1.014 clip=3.9% gs=16 adv=+12.332±4.531 gnorm=1.60 n=128
+[solo step 45866] policy=-0.0435 value=0.0220 vraw=3.50 EVb=-2.225 EVin=-1.949 entropy=0.2298 | deploy=7.8% bundle=0.08 ratio=1.007 clip=1.6% gs=16 adv=+8.609±6.162 gnorm=0.97 n=128
+[solo] 冻结副本已同步 @step 46000
+[solo] 对手池刷新 @step 46000: hist ckpts=12（本目录 12，新增 5） | 累计对手局 {'defend': 33, 'frozen': 27, 'hist': 93, 'rand_anchor': 10}
+[solo step 46108] policy=-0.0446 value=0.0327 vraw=5.20 EVb=-2.218 EVin=-2.031 entropy=0.2667 | deploy=7.0% bundle=0.08 ratio=1.007 clip=3.1% gs=16 adv=+10.562±7.410 gnorm=0.43 n=128
+[solo step 46109] policy=-0.0301 value=0.0176 vraw=2.80 EVb=-1.104 EVin=-0.921 entropy=0.2268 | deploy=7.8% bundle=0.08 ratio=1.010 clip=3.1% gs=16 adv=+6.557±6.825 gnorm=0.29 | p_gnorm=1.205 v_gnorm=0.05797 v/p=0.05 scale=12.59 n=128
+[solo step 46469] policy=-0.0107 value=0.0229 vraw=3.62 EVb=-0.148 EVin=-0.113 entropy=0.3171 | deploy=8.6% bundle=0.09 ratio=1.007 clip=5.5% gs=16 adv=+3.434±10.211 gnorm=0.30 n=128
+[solo step 46470] policy=-0.1127 value=0.0080 vraw=1.27 EVb=-16.393 EVin=-13.492 entropy=0.2315 | deploy=7.0% bundle=0.07 ratio=0.998 clip=1.6% gs=16 adv=+6.152±1.674 gnorm=2.87 n=128
+[solo step 46710] policy=-0.0875 value=0.0340 vraw=5.36 EVb=-9.044 EVin=-7.751 entropy=0.4964 | deploy=14.8% bundle=0.15 ratio=1.025 clip=13.3% gs=16 adv=+12.330±4.427 gnorm=1.72 n=128
+[solo step 46711] policy=-0.1123 value=0.0233 vraw=3.67 EVb=-14.268 EVin=-12.830 entropy=0.2249 | deploy=7.8% bundle=0.08 ratio=1.017 clip=3.9% gs=16 adv=+10.441±2.914 gnorm=0.82 n=128
+[solo step 47070] policy=-0.0481 value=0.0533 vraw=8.39 EVb=-2.559 EVin=-2.338 entropy=0.3337 | deploy=7.8% bundle=0.09 ratio=1.016 clip=9.4% gs=16 adv=+13.721±8.969 gnorm=0.48 n=128
+[solo step 47071] policy=0.0704 value=0.0012 vraw=0.19 EVb=-3.864 EVin=-5.155 entropy=0.2163 | deploy=7.8% bundle=0.08 ratio=0.989 clip=3.9% gs=16 adv=-2.268±1.003 gnorm=0.77 n=128
+[solo step 47072] policy=0.1005 value=0.0155 vraw=2.44 EVb=-9.156 EVin=-10.394 entropy=0.2722 | deploy=8.6% bundle=0.09 ratio=0.991 clip=3.1% gs=16 adv=-8.434±2.618 gnorm=1.49 n=128
+[solo step 47224] policy=0.0299 value=0.0077 vraw=1.21 EVb=-0.703 EVin=-0.953 entropy=0.4925 | deploy=13.3% bundle=0.13 ratio=0.969 clip=14.1% gs=16 adv=-4.339±4.445 gnorm=0.52 n=128
+[solo step 47342] policy=-0.0204 value=0.0652 vraw=10.26 EVb=-0.468 EVin=-0.430 entropy=0.3117 | deploy=7.8% bundle=0.09 ratio=0.990 clip=10.2% gs=16 adv=+9.934±15.151 gnorm=0.39 n=128
+[solo] anchor@47500: vs baseline_rand 胜率 0.675±0.074 (27W/13L/0D, 40局)
+[solo step 47616] policy=0.0458 value=0.1049 vraw=16.66 EVb=-2.038 EVin=-2.143 entropy=0.3335 | deploy=8.6% bundle=0.09 ratio=0.998 clip=1.6% gs=16 adv=-19.062±13.019 gnorm=0.85 | p_gnorm=1.092 v_gnorm=0.1229 v/p=0.11 scale=12.6 n=128
+[solo step 47617] policy=-0.0473 value=0.0072 vraw=1.14 EVb=-2.728 EVin=-2.276 entropy=0.2367 | deploy=7.0% bundle=0.07 ratio=1.006 clip=3.1% gs=16 adv=+5.024±3.333 gnorm=0.64 n=128
+[solo step 47742] policy=-0.0387 value=0.0484 vraw=7.66 EVb=-1.670 EVin=-1.502 entropy=0.3981 | deploy=9.4% bundle=0.10 ratio=1.018 clip=7.0% gs=16 adv=+12.131±9.901 gnorm=0.67 n=128
+[solo step 47919] policy=-0.0463 value=0.0405 vraw=6.41 EVb=-2.373 EVin=-2.167 entropy=0.3540 | deploy=8.6% bundle=0.09 ratio=1.017 clip=7.0% gs=16 adv=+11.849±8.045 gnorm=0.31 n=128
+[solo step 47920] policy=-0.0757 value=0.0209 vraw=3.30 EVb=-6.451 EVin=-5.804 entropy=0.2315 | deploy=7.8% bundle=0.08 ratio=1.015 clip=2.3% gs=16 adv=+9.501±3.940 gnorm=0.81 n=128
+[solo] 冻结副本已同步 @step 48000
+[solo] 对手池刷新 @step 48000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 35, 'frozen': 28, 'hist': 98, 'rand_anchor': 11}
+[solo step 48121] policy=-0.0278 value=0.0256 vraw=4.04 EVb=-0.875 EVin=-0.767 entropy=0.3139 | deploy=8.6% bundle=0.09 ratio=1.018 clip=5.5% gs=16 adv=+7.492±8.552 gnorm=0.08 n=128
+[solo step 48721] policy=-0.0534 value=0.0460 vraw=7.25 EVb=-3.159 EVin=-2.933 entropy=0.2780 | deploy=7.8% bundle=0.08 ratio=1.000 clip=0.8% gs=16 adv=+13.163±7.682 gnorm=0.90 n=128
+[solo step 48722] policy=0.0206 value=0.0048 vraw=0.75 EVb=-0.335 EVin=-0.450 entropy=0.2018 | deploy=7.0% bundle=0.07 ratio=0.984 clip=4.7% gs=16 adv=-2.725±4.075 gnorm=0.23 n=128
+[solo step 48723] policy=0.0180 value=0.0009 vraw=0.14 EVb=-0.859 EVin=-0.332 entropy=0.2554 | deploy=9.4% bundle=0.09 ratio=1.001 clip=7.0% gs=16 adv=-1.034±1.806 gnorm=0.24 n=128
+[solo step 48724] policy=0.1556 value=0.0101 vraw=1.59 EVb=-21.308 EVin=-25.630 entropy=0.4452 | deploy=15.6% bundle=0.16 ratio=0.971 clip=8.6% gs=16 adv=-6.985±1.381 gnorm=2.57 n=128
+[solo step 48725] policy=0.0362 value=0.0011 vraw=0.17 EVb=-0.845 EVin=-1.351 entropy=0.4852 | deploy=17.2% bundle=0.17 ratio=0.991 clip=14.1% gs=16 adv=-1.739±1.500 gnorm=1.01 | p_gnorm=0.7034 v_gnorm=0.01236 v/p=0.02 scale=12.52 n=128
+[solo step 49105] policy=0.0277 value=0.0055 vraw=0.85 EVb=-0.588 EVin=-0.852 entropy=0.4975 | deploy=16.4% bundle=0.16 ratio=0.963 clip=10.9% gs=16 adv=-3.547±3.839 gnorm=0.50 n=128
+[solo step 49106] policy=-0.0343 value=0.0011 vraw=0.16 EVb=-2.193 EVin=-1.186 entropy=0.1786 | deploy=7.0% bundle=0.07 ratio=1.018 clip=7.8% gs=16 adv=+1.689±1.553 gnorm=0.21 n=128
+[solo step 49107] policy=-0.1834 value=0.0137 vraw=2.13 EVb=-39.182 EVin=-34.689 entropy=0.2441 | deploy=11.7% bundle=0.12 ratio=1.004 clip=8.6% gs=16 adv=+8.139±1.382 gnorm=2.08 n=128
+[solo step 49243] policy=-0.1479 value=0.0351 vraw=5.47 EVb=-24.890 EVin=-22.507 entropy=0.3139 | deploy=12.5% bundle=0.12 ratio=1.008 clip=2.3% gs=16 adv=+12.946±2.728 gnorm=1.65 n=128
+[solo step 49466] policy=-0.0386 value=0.0314 vraw=4.88 EVb=-1.696 EVin=-1.540 entropy=0.2219 | deploy=8.6% bundle=0.09 ratio=1.003 clip=2.3% gs=16 adv=+9.731±7.839 gnorm=0.46 n=128
+[solo step 49467] policy=-0.0595 value=0.0181 vraw=2.81 EVb=-3.976 EVin=-3.612 entropy=0.1537 | deploy=7.8% bundle=0.08 ratio=0.998 clip=1.6% gs=16 adv=+8.399±4.415 gnorm=0.43 n=128
+[solo step 49642] policy=-0.0320 value=0.0346 vraw=5.36 EVb=-1.171 EVin=-1.048 entropy=0.2212 | deploy=7.0% bundle=0.08 ratio=1.008 clip=3.1% gs=16 adv=+9.379±9.159 gnorm=0.41 n=128
+[solo step 49808] policy=-0.0598 value=0.0293 vraw=4.54 EVb=-4.001 EVin=-3.621 entropy=0.2097 | deploy=7.8% bundle=0.09 ratio=1.014 clip=7.8% gs=16 adv=+10.678±5.608 gnorm=0.40 n=128
+[solo step 49809] policy=-0.0483 value=0.0346 vraw=5.36 EVb=-2.527 EVin=-2.346 entropy=0.1259 | deploy=7.8% bundle=0.08 ratio=1.019 clip=1.6% gs=16 adv=+10.974±7.157 gnorm=0.39 n=128
+[solo step 49935] policy=-0.0575 value=0.0365 vraw=5.65 EVb=-3.642 EVin=-3.364 entropy=0.1733 | deploy=8.6% bundle=0.09 ratio=1.010 clip=2.3% gs=16 adv=+11.809±6.436 gnorm=0.22 | p_gnorm=0.436 v_gnorm=0.07912 v/p=0.18 scale=12.43 n=128
+[solo] ⚠️ GRU 活力不达标 @step 50000: value/R std=0.002 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 50000: engagement_rate=4.900 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@50000: 胜率 0.600±0.077 (24W/16L/0D, 40局) mean_reward=0.547 EV=-0.0258（池化） EVb=-0.0354 h_std=8.22e-02 n_abs=0.809306 vstd/rstd=0.002 累计局数=180
+[solo]   vs baseline0: 胜率 0.525±0.079 (21W/19L/0D)
+[solo]   vs baseline_prev: 胜率 0.575±0.078 (23W/17L/0D)
+[solo]   vs baseline_rand: 胜率 0.550±0.079 (22W/18L/0D)
+[solo] 冻结副本已同步 @step 50000
+[solo] 对手池刷新 @step 50000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 36, 'frozen': 30, 'hist': 103, 'rand_anchor': 11}
+[solo step 50149] policy=-0.0767 value=0.0492 vraw=7.60 EVb=-6.498 EVin=-5.957 entropy=0.2531 | deploy=8.6% bundle=0.10 ratio=1.036 clip=3.1% gs=16 adv=+14.440±5.914 gnorm=0.34 n=128
+[solo step 50509] policy=-0.0414 value=0.0364 vraw=5.63 EVb=-1.948 EVin=-1.729 entropy=0.4264 | deploy=9.4% bundle=0.13 ratio=0.999 clip=1.6% gs=16 adv=+10.692±8.124 gnorm=0.16 n=128
+[solo step 50510] policy=-0.0059 value=0.0010 vraw=0.16 EVb=-0.109 EVin=-0.033 entropy=0.0682 | deploy=7.8% bundle=0.08 ratio=1.004 clip=0.8% gs=16 adv=+0.418±2.237 gnorm=0.05 n=128
+[solo step 50511] policy=-0.0368 value=0.0061 vraw=0.94 EVb=-1.591 EVin=-1.346 entropy=0.0533 | deploy=10.2% bundle=0.10 ratio=1.009 clip=0.0% gs=16 adv=+4.162±3.575 gnorm=0.12 n=128
+[solo step 50869] policy=-0.0393 value=0.0240 vraw=3.68 EVb=-1.904 EVin=-1.614 entropy=0.1474 | deploy=11.7% bundle=0.12 ratio=0.998 clip=3.1% gs=16 adv=+8.536±6.717 gnorm=0.30 n=128
+[solo step 50870] policy=-0.0486 value=0.0020 vraw=0.30 EVb=-3.105 EVin=-2.401 entropy=0.0275 | deploy=7.0% bundle=0.07 ratio=1.000 clip=0.0% gs=16 adv=+2.614±1.682 gnorm=0.05 n=128
+[solo step 50871] policy=-0.0722 value=0.0422 vraw=6.46 EVb=-5.693 EVin=-5.332 entropy=0.0635 | deploy=12.5% bundle=0.12 ratio=1.004 clip=0.8% gs=16 adv=+13.202±5.713 gnorm=0.39 n=128
+[solo step 51017] policy=0.0081 value=0.0503 vraw=7.71 EVb=-0.049 EVin=-0.070 entropy=0.1380 | deploy=10.9% bundle=0.12 ratio=0.992 clip=2.3% gs=16 adv=-4.002±15.198 gnorm=0.07 n=128
+[solo step 51121] policy=0.1241 value=0.0911 vraw=14.09 EVb=-15.132 EVin=-15.830 entropy=0.1284 | deploy=7.8% bundle=0.09 ratio=0.993 clip=0.8% gs=16 adv=-20.595±5.175 gnorm=0.90 n=128
+[solo step 51433] policy=0.0195 value=0.0330 vraw=5.11 EVb=-0.352 EVin=-0.391 entropy=0.1281 | deploy=7.8% bundle=0.09 ratio=0.996 clip=1.6% gs=16 adv=-6.786±10.848 gnorm=0.05 | p_gnorm=0.002659 v_gnorm=0.03629 v/p=13.65 scale=12.44 n=128
+[solo step 51434] policy=0.0600 value=0.0024 vraw=0.36 EVb=-2.852 EVin=-3.670 entropy=0.0481 | deploy=7.0% bundle=0.07 ratio=0.996 clip=0.8% gs=16 adv=-3.035±1.579 gnorm=0.10 n=128
+[solo step 51552] policy=0.0664 value=0.0159 vraw=2.45 EVb=-4.084 EVin=-4.543 entropy=0.1726 | deploy=12.5% bundle=0.13 ratio=0.988 clip=0.8% gs=16 adv=-8.029±3.758 gnorm=0.40 n=128
+[solo step 51684] policy=0.0166 value=0.0991 vraw=15.42 EVb=-0.271 EVin=-0.283 entropy=0.1536 | deploy=9.4% bundle=0.09 ratio=1.015 clip=3.9% gs=16 adv=-10.445±19.612 gnorm=0.20 n=128
+[solo step 51796] policy=-0.0318 value=0.0625 vraw=9.75 EVb=-1.126 EVin=-1.039 entropy=0.4075 | deploy=8.6% bundle=0.11 ratio=0.988 clip=2.3% gs=16 adv=+12.602±12.366 gnorm=0.27 n=128
+[solo] 冻结副本已同步 @step 52000
+[solo step 52001] policy=0.1923 value=0.0126 vraw=1.97 EVb=-34.133 EVin=-38.050 entropy=0.2151 | deploy=9.4% bundle=0.10 ratio=0.988 clip=1.6% gs=16 adv=-7.830±1.270 gnorm=1.81 n=128
+[solo step 52002] policy=0.0474 value=0.0300 vraw=4.68 EVb=-2.084 EVin=-2.306 entropy=0.1104 | deploy=7.0% bundle=0.07 ratio=1.000 clip=3.1% gs=16 adv=-10.220±6.730 gnorm=0.37 n=128
+[solo] anchor@52500: vs baseline_rand 胜率 0.625±0.076 (25W/15L/0D, 40局)
+[solo step 52601] policy=0.0182 value=0.0256 vraw=4.00 EVb=-0.327 EVin=-0.342 entropy=0.2499 | deploy=7.8% bundle=0.09 ratio=0.998 clip=2.3% gs=16 adv=-5.715±9.762 gnorm=0.06 n=128
+[solo step 52602] policy=-0.0193 value=0.0007 vraw=0.11 EVb=-1.056 EVin=-0.388 entropy=0.1517 | deploy=7.0% bundle=0.07 ratio=1.002 clip=0.8% gs=16 adv=+0.994±1.603 gnorm=0.23 n=128
+[solo step 52603] policy=0.0039 value=0.0001 vraw=0.01 EVb=-5.889 EVin=-0.016 entropy=0.4267 | deploy=14.1% bundle=0.14 ratio=1.012 clip=7.8% gs=16 adv=-0.084±0.628 gnorm=0.56 n=128
+[solo step 52604] policy=-0.0515 value=0.0038 vraw=0.59 EVb=-4.763 EVin=-2.735 entropy=0.4752 | deploy=15.6% bundle=0.16 ratio=1.039 clip=4.7% gs=16 adv=+3.719±2.252 gnorm=0.88 | p_gnorm=1.18 v_gnorm=0.02698 v/p=0.02 scale=12.45 n=128
+[solo step 52825] policy=-0.1391 value=0.0157 vraw=2.44 EVb=-27.691 EVin=-19.640 entropy=0.9279 | deploy=20.3% bundle=0.20 ratio=1.054 clip=14.1% gs=16 adv=+8.610±1.943 gnorm=3.48 n=128
+[solo step 52826] policy=-0.0949 value=0.0093 vraw=1.43 EVb=-10.923 EVin=-9.257 entropy=0.2163 | deploy=7.8% bundle=0.08 ratio=1.006 clip=2.3% gs=16 adv=+6.427±2.112 gnorm=0.70 n=128
+[solo step 52965] policy=-0.0972 value=0.0529 vraw=8.16 EVb=-10.319 EVin=-9.569 entropy=0.2814 | deploy=8.6% bundle=0.09 ratio=1.017 clip=4.7% gs=16 adv=+15.380±4.970 gnorm=0.56 n=128
+[solo step 53103] policy=-0.0617 value=0.0620 vraw=9.58 EVb=-4.269 EVin=-3.911 entropy=0.2411 | deploy=7.0% bundle=0.08 ratio=1.017 clip=3.1% gs=16 adv=+15.634±7.902 gnorm=0.65 n=128
+[solo step 53365] policy=-0.0411 value=0.0359 vraw=5.54 EVb=-2.009 EVin=-1.725 entropy=0.4836 | deploy=9.4% bundle=0.12 ratio=1.005 clip=3.1% gs=16 adv=+10.599±8.064 gnorm=0.33 n=128
+[solo step 53366] policy=-0.0363 value=0.0039 vraw=0.60 EVb=-1.933 EVin=-1.308 entropy=0.1628 | deploy=7.0% bundle=0.07 ratio=1.015 clip=12.5% gs=16 adv=+3.310±2.885 gnorm=0.25 n=128
+[solo step 53530] policy=-0.0201 value=0.0357 vraw=5.49 EVb=-0.530 EVin=-0.415 entropy=0.3732 | deploy=10.2% bundle=0.10 ratio=0.998 clip=3.1% gs=16 adv=+7.194±11.146 gnorm=0.72 n=128
+[solo step 53531] policy=0.0709 value=0.0787 vraw=12.19 EVb=-4.743 EVin=-5.008 entropy=0.1953 | deploy=7.0% bundle=0.07 ratio=1.009 clip=5.5% gs=16 adv=-18.030±8.058 gnorm=0.73 n=128
+[solo step 53689] policy=-0.0066 value=0.0324 vraw=5.03 EVb=-0.085 EVin=-0.044 entropy=0.2808 | deploy=8.6% bundle=0.09 ratio=1.017 clip=3.9% gs=16 adv=+2.602±12.412 gnorm=0.15 n=128
+[solo step 53813] policy=-0.0836 value=0.0493 vraw=7.64 EVb=-7.834 EVin=-7.118 entropy=0.2512 | deploy=8.6% bundle=0.09 ratio=1.017 clip=2.3% gs=16 adv=+14.639±5.485 gnorm=0.92 | p_gnorm=0.7774 v_gnorm=0.103 v/p=0.13 scale=12.45 n=128
+[solo step 53914] policy=0.0129 value=0.0914 vraw=14.24 EVb=-0.148 EVin=-0.174 entropy=0.2242 | deploy=7.8% bundle=0.09 ratio=0.986 clip=2.3% gs=16 adv=-8.210±19.705 gnorm=0.27 n=128
+[solo] 冻结副本已同步 @step 54000
+[solo] 对手池刷新 @step 54000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 41, 'frozen': 31, 'hist': 115, 'rand_anchor': 13}
+[solo step 54160] policy=0.0058 value=0.0203 vraw=3.16 EVb=-0.049 EVin=-0.036 entropy=0.2487 | deploy=7.8% bundle=0.09 ratio=1.007 clip=2.3% gs=16 adv=-1.876±9.886 gnorm=0.13 n=128
+[solo step 54161] policy=-0.0651 value=0.0494 vraw=7.70 EVb=-4.649 EVin=-4.295 entropy=0.2536 | deploy=7.8% bundle=0.08 ratio=1.016 clip=17.2% gs=16 adv=+14.132±6.820 gnorm=0.96 n=128
+[solo step 54316] policy=0.0447 value=0.0428 vraw=6.68 EVb=-1.885 EVin=-2.076 entropy=0.3259 | deploy=8.6% bundle=0.09 ratio=0.979 clip=4.7% gs=16 adv=-12.014±8.337 gnorm=0.79 n=128
+[solo step 54524] policy=0.0751 value=0.1449 vraw=22.90 EVb=-5.666 EVin=-6.022 entropy=0.4559 | deploy=10.2% bundle=0.10 ratio=0.958 clip=15.6% gs=16 adv=-25.073±10.215 gnorm=0.77 n=128
+[solo step 54641] policy=-0.0632 value=0.0404 vraw=6.38 EVb=-4.499 EVin=-4.138 entropy=0.2341 | deploy=7.0% bundle=0.07 ratio=1.002 clip=5.5% gs=16 adv=+12.817±6.303 gnorm=0.75 n=128
+[solo step 54747] policy=-0.0198 value=0.0523 vraw=8.27 EVb=-0.448 EVin=-0.397 entropy=0.2926 | deploy=9.4% bundle=0.09 ratio=0.999 clip=4.7% gs=16 adv=+8.673±13.765 gnorm=0.33 n=128
+[solo step 54890] policy=0.0139 value=0.0875 vraw=13.90 EVb=-0.179 EVin=-0.203 entropy=0.2667 | deploy=7.0% bundle=0.08 ratio=1.002 clip=3.9% gs=16 adv=-8.668±19.227 gnorm=0.45 n=128
+[solo] anchor@55000: vs baseline_rand 胜率 0.575±0.078 (23W/17L/0D, 40局)
+[solo step 55002] policy=-0.0403 value=0.0732 vraw=11.65 EVb=-1.808 EVin=-1.665 entropy=0.3302 | deploy=8.6% bundle=0.09 ratio=1.004 clip=3.1% gs=16 adv=+15.264±11.829 gnorm=0.86 n=128
+[solo step 55186] policy=0.1254 value=0.0122 vraw=1.94 EVb=-13.847 EVin=-16.019 entropy=0.2679 | deploy=8.6% bundle=0.09 ratio=0.994 clip=7.0% gs=16 adv=-7.645±1.911 gnorm=1.84 | p_gnorm=0.7976 v_gnorm=0.04688 v/p=0.06 scale=12.61 n=128
+[solo step 55187] policy=0.0812 value=0.0758 vraw=12.13 EVb=-6.385 EVin=-6.791 entropy=0.2390 | deploy=7.8% bundle=0.08 ratio=0.993 clip=0.0% gs=16 adv=-18.397±7.059 gnorm=1.02 n=128
+[solo step 55327] policy=-0.0411 value=0.0380 vraw=6.08 EVb=-1.907 EVin=-1.699 entropy=0.2461 | deploy=7.8% bundle=0.08 ratio=1.028 clip=4.7% gs=16 adv=+11.071±8.493 gnorm=0.19 n=128
+[solo step 55444] policy=-0.0610 value=0.0708 vraw=11.33 EVb=-3.969 EVin=-3.758 entropy=0.2223 | deploy=8.6% bundle=0.09 ratio=1.013 clip=3.1% gs=16 adv=+16.926±8.728 gnorm=0.46 n=128
+[solo step 55637] policy=-0.0463 value=0.0190 vraw=3.03 EVb=-2.569 EVin=-2.195 entropy=0.2168 | deploy=8.6% bundle=0.09 ratio=1.011 clip=3.9% gs=16 adv=+8.169±5.511 gnorm=0.54 n=128
+[solo step 55789] policy=-0.0262 value=0.0356 vraw=5.69 EVb=-0.829 EVin=-0.696 entropy=0.1693 | deploy=7.8% bundle=0.08 ratio=1.008 clip=2.3% gs=16 adv=+8.651±10.364 gnorm=0.32 n=128
+[solo step 55910] policy=0.0028 value=0.0192 vraw=3.07 EVb=-0.006 EVin=-0.008 entropy=0.1343 | deploy=8.6% bundle=0.09 ratio=1.004 clip=0.8% gs=16 adv=-0.887±9.867 gnorm=0.21 n=128
+[solo step 55997] policy=-0.0144 value=0.1057 vraw=16.95 EVb=-0.225 EVin=-0.209 entropy=0.1408 | deploy=9.4% bundle=0.09 ratio=0.994 clip=2.3% gs=16 adv=+9.692±21.182 gnorm=0.19 n=128
+[solo] 冻结副本已同步 @step 56000
+[solo] 对手池刷新 @step 56000: hist ckpts=12（本目录 12，新增 11） | 累计对手局 {'defend': 43, 'frozen': 37, 'hist': 121, 'rand_anchor': 14}
+[solo step 56106] policy=0.0063 value=0.0686 vraw=11.04 EVb=-0.037 EVin=-0.043 entropy=0.1679 | deploy=7.0% bundle=0.08 ratio=1.008 clip=3.1% gs=16 adv=-3.799±18.407 gnorm=0.20 n=128
+[solo step 56274] policy=0.0075 value=0.0359 vraw=5.78 EVb=-0.029 EVin=-0.058 entropy=0.1745 | deploy=7.8% bundle=0.09 ratio=0.992 clip=1.6% gs=16 adv=-3.188±13.225 gnorm=0.23 n=128
+[solo step 56398] policy=0.1677 value=0.0960 vraw=15.59 EVb=-27.721 EVin=-28.951 entropy=0.1795 | deploy=7.8% bundle=0.09 ratio=0.991 clip=3.1% gs=16 adv=-21.962±4.081 gnorm=0.85 | p_gnorm=1.3 v_gnorm=0.1293 v/p=0.10 scale=12.74 n=128
+[solo step 56544] policy=0.0186 value=0.0416 vraw=6.76 EVb=-0.320 EVin=-0.358 entropy=0.1543 | deploy=8.6% bundle=0.09 ratio=0.994 clip=0.0% gs=16 adv=-7.560±12.624 gnorm=0.24 n=128
+[solo step 56645] policy=-0.1063 value=0.0639 vraw=10.39 EVb=-12.418 EVin=-11.515 entropy=0.2112 | deploy=7.8% bundle=0.09 ratio=1.022 clip=2.3% gs=16 adv=+17.491±5.154 gnorm=0.63 n=128
+[solo step 56800] policy=-0.0043 value=0.0322 vraw=5.24 EVb=-0.052 EVin=-0.018 entropy=0.1995 | deploy=7.8% bundle=0.08 ratio=1.007 clip=2.3% gs=16 adv=+1.738±12.833 gnorm=0.23 n=128
+[solo step 57019] policy=0.0630 value=0.0838 vraw=13.72 EVb=-3.889 EVin=-4.092 entropy=0.1991 | deploy=7.8% bundle=0.09 ratio=0.991 clip=2.3% gs=16 adv=-18.784±9.284 gnorm=0.28 n=128
+[solo step 57020] policy=0.0872 value=0.0232 vraw=3.80 EVb=-7.013 EVin=-7.779 entropy=0.1212 | deploy=7.8% bundle=0.08 ratio=0.993 clip=3.1% gs=16 adv=-10.393±3.723 gnorm=0.49 n=128
+[solo step 57261] policy=0.0390 value=0.0521 vraw=8.55 EVb=-1.487 EVin=-1.583 entropy=0.2488 | deploy=7.8% bundle=0.09 ratio=0.994 clip=3.9% gs=16 adv=-12.960±10.297 gnorm=0.19 n=128
+[solo step 57262] policy=0.0289 value=0.0016 vraw=0.26 EVb=-0.572 EVin=-0.863 entropy=0.1863 | deploy=7.0% bundle=0.07 ratio=0.982 clip=6.2% gs=16 adv=-1.964±2.105 gnorm=0.12 n=128
+[solo] anchor@57500: vs baseline_rand 胜率 0.725±0.071 (29W/11L/0D, 40局)
+[solo step 57560] policy=0.0000 value=0.0035 vraw=0.58 EVb=-0.157 EVin=+0.000 entropy=0.3410 | deploy=7.8% bundle=0.09 ratio=1.016 clip=3.1% gs=16 adv=-0.003±4.302 gnorm=0.25 n=128
+[solo step 57561] policy=-0.0659 value=0.0061 vraw=1.00 EVb=-6.055 EVin=-4.413 entropy=0.2775 | deploy=7.8% bundle=0.08 ratio=1.023 clip=5.5% gs=16 adv=+5.102±2.429 gnorm=0.67 n=128
+[solo step 57723] policy=-0.0636 value=0.0577 vraw=9.43 EVb=-4.532 EVin=-4.082 entropy=0.4391 | deploy=10.9% bundle=0.11 ratio=1.024 clip=6.2% gs=16 adv=+15.568±7.704 gnorm=0.69 | p_gnorm=0.924 v_gnorm=0.08337 v/p=0.09 scale=12.79 n=128
+[solo step 57900] policy=-0.0835 value=0.0661 vraw=10.82 EVb=-7.699 EVin=-7.063 entropy=0.3388 | deploy=8.6% bundle=0.09 ratio=1.022 clip=3.9% gs=16 adv=+17.421±6.553 gnorm=1.09 n=128
+[solo step 57901] policy=-0.0856 value=0.0159 vraw=2.60 EVb=-8.493 EVin=-7.432 entropy=0.2435 | deploy=7.8% bundle=0.08 ratio=1.010 clip=2.3% gs=16 adv=+8.570±3.140 gnorm=0.73 n=128
+[solo] 冻结副本已同步 @step 58000
+[solo] 对手池刷新 @step 58000: hist ckpts=12（本目录 12，新增 1） | 累计对手局 {'defend': 44, 'frozen': 39, 'hist': 129, 'rand_anchor': 14}
+[solo step 58045] policy=-0.0420 value=0.0380 vraw=6.21 EVb=-2.065 EVin=-1.795 entropy=0.2935 | deploy=8.6% bundle=0.09 ratio=1.020 clip=3.1% gs=16 adv=+11.300±8.433 gnorm=0.41 n=128
+[solo step 58160] policy=0.0077 value=0.0716 vraw=11.73 EVb=-0.042 EVin=-0.065 entropy=0.3166 | deploy=7.8% bundle=0.09 ratio=0.991 clip=3.9% gs=16 adv=-4.776±18.777 gnorm=0.31 n=128
+[solo step 58386] policy=0.0088 value=0.0240 vraw=3.94 EVb=-0.055 EVin=-0.079 entropy=0.2559 | deploy=8.6% bundle=0.09 ratio=0.999 clip=2.3% gs=16 adv=-3.033±10.806 gnorm=0.12 n=128
+[solo step 58387] policy=-0.0517 value=0.0376 vraw=6.15 EVb=-2.922 EVin=-2.717 entropy=0.1328 | deploy=7.0% bundle=0.07 ratio=1.008 clip=0.0% gs=16 adv=+11.996±7.277 gnorm=0.50 n=128
+[solo step 58536] policy=-0.1028 value=0.0364 vraw=5.95 EVb=-11.827 EVin=-10.891 entropy=0.1977 | deploy=7.8% bundle=0.09 ratio=1.011 clip=1.6% gs=16 adv=+13.212±4.002 gnorm=0.81 n=128
+[solo step 58665] policy=0.0209 value=0.0542 vraw=8.89 EVb=-0.405 EVin=-0.454 entropy=0.1838 | deploy=8.6% bundle=0.09 ratio=0.994 clip=2.3% gs=16 adv=-9.422±13.989 gnorm=0.13 n=128
+[solo step 58819] policy=-0.0105 value=0.0611 vraw=10.03 EVb=-0.141 EVin=-0.113 entropy=0.1728 | deploy=9.4% bundle=0.09 ratio=1.008 clip=1.6% gs=16 adv=+5.717±16.982 gnorm=0.16 n=128
+[solo step 58949] policy=-0.0998 value=0.0507 vraw=8.33 EVb=-11.073 EVin=-10.154 entropy=0.1563 | deploy=7.8% bundle=0.09 ratio=1.036 clip=2.3% gs=16 adv=+15.582±4.889 gnorm=0.27 | p_gnorm=0.5371 v_gnorm=0.09368 v/p=0.17 scale=12.82 n=128
+[solo step 59137] policy=-0.0051 value=0.0390 vraw=6.41 EVb=-0.033 EVin=-0.026 entropy=0.1891 | deploy=9.4% bundle=0.09 ratio=0.986 clip=4.7% gs=16 adv=+2.282±14.142 gnorm=0.14 n=128
+[solo step 59377] policy=0.0624 value=0.0818 vraw=13.52 EVb=-3.820 EVin=-4.000 entropy=0.1693 | deploy=7.0% bundle=0.08 ratio=0.996 clip=1.6% gs=16 adv=-18.600±9.300 gnorm=0.32 n=128
+[solo step 59378] policy=0.0458 value=0.0140 vraw=2.32 EVb=-1.903 EVin=-2.145 entropy=0.1052 | deploy=7.8% bundle=0.08 ratio=1.001 clip=0.0% gs=16 adv=-7.122±4.857 gnorm=0.28 n=128
+[solo step 59587] policy=0.0568 value=0.0591 vraw=9.80 EVb=-3.144 EVin=-3.315 entropy=0.1605 | deploy=7.8% bundle=0.08 ratio=0.991 clip=2.3% gs=16 adv=-15.534±8.528 gnorm=0.20 n=128
+[solo step 59588] policy=0.0741 value=0.0227 vraw=3.76 EVb=-5.211 EVin=-5.649 entropy=0.0879 | deploy=7.0% bundle=0.07 ratio=0.998 clip=1.6% gs=16 adv=-10.126±4.255 gnorm=0.58 n=128
+[solo step 59719] policy=0.0086 value=0.0649 vraw=10.81 EVb=-0.069 EVin=-0.074 entropy=0.2156 | deploy=7.8% bundle=0.09 ratio=1.006 clip=1.6% gs=16 adv=-4.896±17.947 gnorm=0.17 n=128
+[solo step 59859] policy=-0.0585 value=0.0463 vraw=7.71 EVb=-3.738 EVin=-3.460 entropy=0.2719 | deploy=7.8% bundle=0.09 ratio=1.014 clip=3.9% gs=16 adv=+13.833±7.435 gnorm=0.50 n=128
+[solo step 59979] policy=0.0006 value=0.0422 vraw=7.03 EVb=+0.008 EVin=-0.001 entropy=0.2694 | deploy=7.8% bundle=0.09 ratio=0.983 clip=9.4% gs=16 adv=-0.393±14.991 gnorm=0.19 n=128
+[solo] ⚠️ GRU 活力不达标 @step 60000: value/R std=0.001 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 60000: engagement_rate=2.100 不满足 >= 5.850（50%×起点(11.7)；只报警，不中断训练）
+[solo] eval@60000: 胜率 0.800±0.063 (32W/8L/0D, 40局) mean_reward=18.442 EV=-0.0037（池化） EVb=-0.0113 h_std=9.46e-02 n_abs=0.814676 vstd/rstd=0.0009 累计局数=239
+[solo]   vs baseline0: 胜率 0.550±0.079 (22W/18L/0D)
+[solo]   vs baseline_prev: 胜率 0.450±0.079 (18W/22L/0D)
+[solo]   vs baseline_rand: 胜率 0.675±0.074 (27W/13L/0D)
+[solo] 冻结副本已同步 @step 60000
+[solo] 对手池刷新 @step 60000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 44, 'frozen': 39, 'hist': 140, 'rand_anchor': 16}
+[solo step 60107] policy=0.0041 value=0.0882 vraw=14.76 EVb=-0.021 EVin=-0.018 entropy=0.2282 | deploy=8.6% bundle=0.09 ratio=1.008 clip=7.0% gs=16 adv=-2.909±21.540 gnorm=0.12 n=128
+[solo step 60237] policy=-0.0038 value=0.0741 vraw=12.44 EVb=-0.015 EVin=-0.013 entropy=0.1872 | deploy=7.8% bundle=0.09 ratio=0.996 clip=4.7% gs=16 adv=+2.279±19.819 gnorm=0.09 | p_gnorm=0.2956 v_gnorm=0.02679 v/p=0.09 scale=12.95 n=128
+[solo step 60462] policy=0.0477 value=0.0533 vraw=8.98 EVb=-2.185 EVin=-2.331 entropy=0.2533 | deploy=7.8% bundle=0.08 ratio=0.990 clip=3.9% gs=16 adv=-14.181±9.286 gnorm=0.34 n=128
+[solo step 60463] policy=0.0956 value=0.0393 vraw=6.63 EVb=-8.817 EVin=-9.370 entropy=0.0879 | deploy=7.0% bundle=0.07 ratio=0.995 clip=0.8% gs=16 adv=-13.853±4.523 gnorm=0.61 n=128
+[solo step 60600] policy=-0.0006 value=0.0488 vraw=8.25 EVb=-0.016 EVin=-0.000 entropy=0.2587 | deploy=9.4% bundle=0.09 ratio=1.004 clip=6.2% gs=16 adv=+0.218±16.246 gnorm=0.12 n=128
+[solo step 60752] policy=-0.0130 value=0.0328 vraw=5.53 EVb=-0.211 EVin=-0.177 entropy=0.2706 | deploy=8.6% bundle=0.09 ratio=0.994 clip=0.8% gs=16 adv=+5.152±12.262 gnorm=0.20 n=128
+[solo step 60888] policy=0.0855 value=0.0239 vraw=4.04 EVb=-6.942 EVin=-7.573 entropy=0.2349 | deploy=7.8% bundle=0.08 ratio=0.986 clip=3.9% gs=16 adv=-10.690±3.885 gnorm=0.58 n=128
+[solo step 61091] policy=0.0202 value=0.0697 vraw=11.82 EVb=-0.411 EVin=-0.437 entropy=0.4190 | deploy=7.8% bundle=0.09 ratio=0.980 clip=8.6% gs=16 adv=-10.730±16.224 gnorm=0.23 n=128
+[solo step 61092] policy=-0.1113 value=0.0211 vraw=3.57 EVb=-14.650 EVin=-12.715 entropy=0.3158 | deploy=7.0% bundle=0.07 ratio=1.005 clip=4.7% gs=16 adv=+10.287±2.886 gnorm=1.14 n=128
+[solo step 61508] policy=-0.0100 value=0.0093 vraw=1.58 EVb=-0.253 EVin=-0.097 entropy=0.4367 | deploy=8.6% bundle=0.09 ratio=1.004 clip=3.1% gs=16 adv=+2.109±6.785 gnorm=0.09 n=128
+[solo step 61509] policy=0.0426 value=0.0030 vraw=0.50 EVb=-1.451 EVin=-1.887 entropy=0.3241 | deploy=7.0% bundle=0.07 ratio=0.993 clip=4.7% gs=16 adv=-3.248±2.365 gnorm=0.76 n=128
+[solo step 61510] policy=0.0926 value=0.0194 vraw=3.27 EVb=-7.598 EVin=-9.338 entropy=0.7543 | deploy=14.1% bundle=0.14 ratio=0.930 clip=21.1% gs=16 adv=-9.719±3.181 gnorm=0.18 | p_gnorm=3.028 v_gnorm=0.05744 v/p=0.02 scale=12.99 n=128
+[solo step 61713] policy=0.1163 value=0.0456 vraw=7.73 EVb=-12.688 EVin=-14.100 entropy=0.5761 | deploy=10.2% bundle=0.10 ratio=0.959 clip=13.3% gs=16 adv=-15.195±4.046 gnorm=0.99 n=128
+[solo step 61714] policy=0.1385 value=0.0915 vraw=15.58 EVb=-18.948 EVin=-20.221 entropy=0.4173 | deploy=7.8% bundle=0.08 ratio=0.967 clip=10.9% gs=16 adv=-21.803±4.847 gnorm=0.13 n=128
+[solo] 冻结副本已同步 @step 62000
+[solo step 62073] policy=-0.0089 value=0.0003 vraw=0.05 EVb=-2.411 EVin=-0.077 entropy=0.5031 | deploy=8.6% bundle=0.09 ratio=1.018 clip=8.6% gs=16 adv=+0.340±1.238 gnorm=0.13 n=128
+[solo step 62074] policy=-0.0899 value=0.0044 vraw=0.75 EVb=-12.259 EVin=-7.949 entropy=0.4872 | deploy=8.6% bundle=0.09 ratio=1.083 clip=10.2% gs=16 adv=+4.605±1.635 gnorm=0.42 n=128
+[solo step 62221] policy=-0.0201 value=0.0169 vraw=2.87 EVb=-0.680 EVin=-0.394 entropy=0.8425 | deploy=13.3% bundle=0.14 ratio=1.097 clip=15.6% gs=16 adv=+5.093±8.109 gnorm=0.07 n=128
+[solo] anchor@62500: vs baseline_rand 胜率 0.550±0.079 (22W/18L/0D, 40局)
+[solo step 62581] policy=0.0723 value=0.0627 vraw=10.65 EVb=-5.023 EVin=-5.452 entropy=0.5469 | deploy=9.4% bundle=0.09 ratio=0.973 clip=5.5% gs=16 adv=-16.972±7.269 gnorm=1.01 n=128
+[solo step 62582] policy=-0.0289 value=0.0008 vraw=0.13 EVb=-2.752 EVin=-0.860 entropy=0.3927 | deploy=7.0% bundle=0.07 ratio=1.010 clip=4.7% gs=16 adv=+1.372±1.483 gnorm=0.27 n=128
+[solo step 62583] policy=-0.0570 value=0.0071 vraw=1.20 EVb=-4.609 EVin=-3.270 entropy=0.4795 | deploy=8.6% bundle=0.09 ratio=1.058 clip=7.0% gs=16 adv=+5.411±2.993 gnorm=0.22 n=128
+[solo step 62915] policy=-0.0923 value=0.0158 vraw=2.67 EVb=-12.071 EVin=-8.672 entropy=0.9184 | deploy=14.1% bundle=0.15 ratio=1.085 clip=14.1% gs=16 adv=+8.751±2.971 gnorm=2.03 n=128
+[solo step 62916] policy=-0.0503 value=0.0060 vraw=1.01 EVb=-3.638 EVin=-2.555 entropy=0.4027 | deploy=7.0% bundle=0.07 ratio=1.049 clip=7.0% gs=16 adv=+4.820±3.014 gnorm=0.03 | p_gnorm=0.865 v_gnorm=0.03503 v/p=0.04 scale=12.99 n=128
+[solo step 62917] policy=-0.0640 value=0.0172 vraw=2.91 EVb=-5.369 EVin=-4.157 entropy=0.5777 | deploy=10.2% bundle=0.10 ratio=1.056 clip=10.9% gs=16 adv=+8.663±4.246 gnorm=0.13 n=128
+[solo step 63102] policy=-0.0425 value=0.0429 vraw=7.23 EVb=-2.213 EVin=-1.791 entropy=0.7893 | deploy=11.7% bundle=0.12 ratio=1.081 clip=12.5% gs=16 adv=+12.188±9.105 gnorm=0.37 n=128
+[solo step 63373] policy=-0.0658 value=0.0458 vraw=7.71 EVb=-4.943 EVin=-4.324 entropy=0.5483 | deploy=8.6% bundle=0.09 ratio=1.040 clip=7.0% gs=16 adv=+14.164±6.809 gnorm=0.61 n=128
+[solo step 63374] policy=-0.0912 value=0.0178 vraw=3.00 EVb=-10.124 EVin=-8.447 entropy=0.4603 | deploy=7.8% bundle=0.08 ratio=1.041 clip=5.5% gs=16 adv=+9.271±3.187 gnorm=1.01 n=128
+[solo step 63937] policy=-0.0984 value=0.0695 vraw=11.70 EVb=-10.893 EVin=-9.745 entropy=0.6556 | deploy=10.2% bundle=0.10 ratio=1.035 clip=4.7% gs=16 adv=+18.437±5.903 gnorm=1.70 n=128
+[solo step 63938] policy=0.0136 value=0.0005 vraw=0.09 EVb=-0.723 EVin=-0.186 entropy=0.4320 | deploy=7.0% bundle=0.07 ratio=1.009 clip=14.1% gs=16 adv=-0.664±1.550 gnorm=0.30 n=128
+[solo step 63939] policy=0.0595 value=0.0012 vraw=0.20 EVb=-3.037 EVin=-3.661 entropy=0.5065 | deploy=8.6% bundle=0.09 ratio=0.997 clip=14.1% gs=16 adv=-2.240±1.173 gnorm=0.68 n=128
+[solo step 63940] policy=-0.0202 value=0.0010 vraw=0.17 EVb=-2.864 EVin=-0.401 entropy=0.9064 | deploy=14.1% bundle=0.14 ratio=1.045 clip=11.7% gs=16 adv=+1.269±1.997 gnorm=0.37 n=128
+[solo step 63941] policy=-0.0944 value=0.0129 vraw=2.15 EVb=-13.195 EVin=-8.761 entropy=1.0358 | deploy=16.4% bundle=0.16 ratio=1.076 clip=14.8% gs=16 adv=+7.864±2.655 gnorm=2.06 n=128
+[solo] 冻结副本已同步 @step 64000
+[solo] 对手池刷新 @step 64000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 47, 'frozen': 41, 'hist': 150, 'rand_anchor': 17}
+[solo step 64264] policy=-0.0171 value=0.0222 vraw=3.71 EVb=-0.619 EVin=-0.302 entropy=0.9469 | deploy=14.1% bundle=0.14 ratio=1.014 clip=8.6% gs=16 adv=+5.250±9.548 gnorm=0.92 | p_gnorm=0.9815 v_gnorm=0.03756 v/p=0.04 scale=12.93 n=128
+[solo step 64265] policy=0.0819 value=0.0223 vraw=3.73 EVb=-6.054 EVin=-6.960 entropy=0.4277 | deploy=7.0% bundle=0.07 ratio=0.985 clip=6.2% gs=16 adv=-10.220±3.874 gnorm=0.86 n=128
+[solo step 64552] policy=0.0643 value=0.0725 vraw=12.16 EVb=-3.540 EVin=-4.066 entropy=0.9055 | deploy=14.1% bundle=0.14 ratio=0.981 clip=9.4% gs=16 adv=-17.675±8.765 gnorm=1.42 n=128
+[solo step 64553] policy=0.0136 value=0.0005 vraw=0.09 EVb=-0.913 EVin=-0.204 entropy=0.4566 | deploy=7.0% bundle=0.07 ratio=0.989 clip=13.3% gs=16 adv=-0.703±1.546 gnorm=0.22 n=128
+[solo step 64554] policy=-0.0446 value=0.0386 vraw=6.46 EVb=-2.497 EVin=-2.118 entropy=0.5405 | deploy=8.6% bundle=0.09 ratio=0.997 clip=5.5% gs=16 adv=+11.850±8.144 gnorm=0.74 n=128
+[solo step 64762] policy=0.0065 value=0.0396 vraw=6.64 EVb=-0.061 EVin=-0.045 entropy=0.5664 | deploy=9.4% bundle=0.09 ratio=0.989 clip=7.8% gs=16 adv=-3.016±14.265 gnorm=0.27 n=128
+[solo] ⚠️ 绝对强度警报 @step 65000: vs 固定随机锚点 胜率=0.275 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] anchor@65000: vs baseline_rand 胜率 0.275±0.071 (11W/29L/0D, 40局)
+[solo step 65122] policy=0.0392 value=0.0565 vraw=9.50 EVb=-1.425 EVin=-1.594 entropy=0.4666 | deploy=7.8% bundle=0.08 ratio=0.987 clip=5.5% gs=16 adv=-13.673±10.826 gnorm=0.43 n=128
+[solo step 65123] policy=0.0396 value=0.0012 vraw=0.20 EVb=-1.397 EVin=-1.672 entropy=0.5088 | deploy=7.8% bundle=0.08 ratio=0.966 clip=7.8% gs=16 adv=-2.017±1.554 gnorm=0.94 n=128
+[solo step 65124] policy=0.1143 value=0.0042 vraw=0.71 EVb=-10.371 EVin=-13.966 entropy=0.5445 | deploy=8.6% bundle=0.09 ratio=0.951 clip=11.7% gs=16 adv=-4.601±1.229 gnorm=0.95 n=128
+[solo step 65467] policy=0.0376 value=0.0201 vraw=3.37 EVb=-1.152 EVin=-1.546 entropy=0.8290 | deploy=13.3% bundle=0.13 ratio=0.944 clip=18.8% gs=16 adv=-8.099±6.512 gnorm=0.25 n=128
+[solo step 65468] policy=0.0122 value=0.0008 vraw=0.13 EVb=-0.610 EVin=-0.153 entropy=0.4412 | deploy=7.8% bundle=0.08 ratio=0.998 clip=5.5% gs=16 adv=-0.736±1.872 gnorm=0.18 | p_gnorm=0.8476 v_gnorm=0.003424 v/p=0.00 scale=12.94 n=128
+[solo step 65469] policy=0.0566 value=0.0536 vraw=8.99 EVb=-2.938 EVin=-3.331 entropy=0.5955 | deploy=10.2% bundle=0.10 ratio=0.974 clip=7.8% gs=16 adv=-14.884±8.151 gnorm=0.70 n=128
+[solo step 65664] policy=0.0684 value=0.0775 vraw=13.06 EVb=-4.493 EVin=-5.014 entropy=0.6773 | deploy=10.9% bundle=0.11 ratio=0.951 clip=13.3% gs=16 adv=-18.675±8.340 gnorm=0.27 n=128
+[solo step 65969] policy=0.0465 value=0.0656 vraw=11.09 EVb=-2.026 EVin=-2.199 entropy=0.5269 | deploy=8.6% bundle=0.09 ratio=0.981 clip=8.6% gs=16 adv=-15.630±10.535 gnorm=0.26 n=128
+[solo step 65970] policy=-0.0689 value=0.0111 vraw=1.88 EVb=-6.205 EVin=-4.816 entropy=0.4414 | deploy=7.8% bundle=0.08 ratio=1.032 clip=7.8% gs=16 adv=+7.046±3.215 gnorm=0.50 n=128
+[solo step 65971] policy=-0.0887 value=0.0081 vraw=1.37 EVb=-10.955 EVin=-7.981 entropy=0.4884 | deploy=8.6% bundle=0.09 ratio=1.051 clip=8.6% gs=16 adv=+6.235±2.210 gnorm=0.39 n=128
+[solo] 冻结副本已同步 @step 66000
+[solo] 对手池刷新 @step 66000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 48, 'frozen': 42, 'hist': 154, 'rand_anchor': 18}
+[solo step 66329] policy=-0.0313 value=0.0091 vraw=1.53 EVb=-1.621 EVin=-0.998 entropy=0.6361 | deploy=10.2% bundle=0.11 ratio=1.039 clip=8.6% gs=16 adv=+4.939±4.940 gnorm=0.35 n=128
+[solo step 66330] policy=-0.0634 value=0.0036 vraw=0.60 EVb=-5.941 EVin=-4.064 entropy=0.3719 | deploy=7.0% bundle=0.07 ratio=1.024 clip=3.9% gs=16 adv=+3.931±1.948 gnorm=0.63 n=128
+[solo step 66331] policy=-0.0358 value=0.0034 vraw=0.57 EVb=-2.768 EVin=-1.278 entropy=0.8011 | deploy=14.1% bundle=0.14 ratio=1.046 clip=11.7% gs=16 adv=+3.195±2.820 gnorm=0.72 n=128
+[solo step 66689] policy=0.0359 value=0.0151 vraw=2.52 EVb=-1.125 EVin=-1.340 entropy=0.4623 | deploy=8.6% bundle=0.09 ratio=0.976 clip=6.2% gs=16 adv=-6.799±5.874 gnorm=0.57 n=128
+[solo step 66690] policy=0.0906 value=0.0077 vraw=1.29 EVb=-7.050 EVin=-8.740 entropy=0.3495 | deploy=7.0% bundle=0.07 ratio=0.956 clip=13.3% gs=16 adv=-6.092±2.060 gnorm=0.36 | p_gnorm=1.834 v_gnorm=0.03568 v/p=0.02 scale=12.94 n=128
+[solo step 66999] policy=0.0594 value=0.0159 vraw=2.66 EVb=-2.948 EVin=-3.586 entropy=0.7082 | deploy=14.8% bundle=0.15 ratio=0.973 clip=15.6% gs=16 adv=-8.165±4.310 gnorm=1.11 n=128
+[solo step 67000] policy=-0.0635 value=0.0069 vraw=1.15 EVb=-5.393 EVin=-4.087 entropy=0.3727 | deploy=7.0% bundle=0.07 ratio=1.050 clip=4.7% gs=16 adv=+5.436±2.690 gnorm=0.76 n=128
+[solo step 67001] policy=-0.1185 value=0.0543 vraw=9.07 EVb=-15.709 EVin=-14.078 entropy=0.5352 | deploy=9.4% bundle=0.09 ratio=1.039 clip=16.4% gs=16 adv=+16.464±4.388 gnorm=0.73 n=128
+[solo step 67398] policy=-0.0185 value=0.0388 vraw=6.49 EVb=-0.478 EVin=-0.345 entropy=0.6190 | deploy=10.9% bundle=0.11 ratio=1.018 clip=7.0% gs=16 adv=+7.302±12.428 gnorm=0.18 n=128
+[solo step 67399] policy=0.0027 value=0.0002 vraw=0.04 EVb=-1.765 EVin=-0.008 entropy=0.3873 | deploy=7.8% bundle=0.08 ratio=1.000 clip=6.2% gs=16 adv=-0.092±1.097 gnorm=0.25 n=128
+[solo step 67400] policy=-0.0341 value=0.0084 vraw=1.40 EVb=-1.777 EVin=-1.182 entropy=0.6544 | deploy=13.3% bundle=0.13 ratio=1.033 clip=10.2% gs=16 adv=+4.928±4.525 gnorm=0.47 n=128
+[solo] anchor@67500: vs baseline_rand 胜率 0.700±0.072 (28W/12L/0D, 40局)
+[solo step 67649] policy=-0.1361 value=0.0275 vraw=4.58 EVb=-21.857 EVin=-18.571 entropy=0.5688 | deploy=11.7% bundle=0.12 ratio=1.038 clip=9.4% gs=16 adv=+11.801±2.740 gnorm=1.15 n=128
+[solo step 67650] policy=-0.0591 value=0.0215 vraw=3.57 EVb=-4.106 EVin=-3.492 entropy=0.3741 | deploy=7.0% bundle=0.07 ratio=1.029 clip=10.2% gs=16 adv=+9.432±5.045 gnorm=0.35 n=128
+[solo step 67919] policy=-0.0512 value=0.0383 vraw=6.36 EVb=-3.122 EVin=-2.638 entropy=0.5561 | deploy=9.4% bundle=0.10 ratio=1.036 clip=8.6% gs=16 adv=+12.156±7.484 gnorm=0.50 n=128
+[solo step 67920] policy=-0.1114 value=0.0297 vraw=4.93 EVb=-14.242 EVin=-12.633 entropy=0.3502 | deploy=7.0% bundle=0.07 ratio=1.011 clip=1.6% gs=16 adv=+12.102±3.402 gnorm=1.47 | p_gnorm=0.8079 v_gnorm=0.07649 v/p=0.09 scale=12.89 n=128
+[solo] 冻结副本已同步 @step 68000
+[solo] 对手池刷新 @step 68000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 49, 'frozen': 43, 'hist': 158, 'rand_anchor': 18}
+[solo step 68279] policy=-0.0451 value=0.0362 vraw=6.00 EVb=-2.356 EVin=-2.007 entropy=0.5405 | deploy=9.4% bundle=0.10 ratio=1.026 clip=5.5% gs=16 adv=+11.330±7.996 gnorm=1.20 n=128
+[solo step 68280] policy=-0.0514 value=0.0053 vraw=0.88 EVb=-4.121 EVin=-2.716 entropy=0.3446 | deploy=7.8% bundle=0.08 ratio=1.011 clip=5.5% gs=16 adv=+4.549±2.756 gnorm=0.59 n=128
+[solo step 68281] policy=-0.1591 value=0.0062 vraw=1.02 EVb=-38.348 EVin=-25.616 entropy=0.6010 | deploy=11.7% bundle=0.12 ratio=1.041 clip=8.6% gs=16 adv=+5.610±1.107 gnorm=2.75 n=128
+[solo step 68611] policy=-0.0823 value=0.0069 vraw=1.14 EVb=-9.895 EVin=-6.926 entropy=0.5351 | deploy=10.9% bundle=0.11 ratio=1.031 clip=6.2% gs=16 adv=+5.647±2.147 gnorm=0.74 n=128
+[solo step 68612] policy=0.0105 value=0.0053 vraw=0.87 EVb=-0.121 EVin=-0.124 entropy=0.3727 | deploy=7.8% bundle=0.08 ratio=0.971 clip=15.6% gs=16 adv=-1.754±4.987 gnorm=0.26 n=128
+[solo step 68970] policy=-0.0482 value=0.0046 vraw=0.76 EVb=-4.303 EVin=-2.493 entropy=0.4869 | deploy=12.5% bundle=0.12 ratio=1.010 clip=4.7% gs=16 adv=+4.171±2.641 gnorm=1.57 n=128
+[solo step 68971] policy=0.1059 value=0.0015 vraw=0.25 EVb=-7.493 EVin=-10.999 entropy=0.3603 | deploy=7.8% bundle=0.08 ratio=1.005 clip=10.2% gs=16 adv=-2.706±0.816 gnorm=2.06 n=128
+[solo step 68972] policy=0.0600 value=0.0089 vraw=1.46 EVb=-2.997 EVin=-3.769 entropy=0.3716 | deploy=9.4% bundle=0.09 ratio=0.974 clip=7.8% gs=16 adv=-6.076±3.129 gnorm=0.80 n=128
+[solo step 69252] policy=0.0309 value=0.0057 vraw=0.93 EVb=-0.817 EVin=-0.975 entropy=0.4831 | deploy=12.5% bundle=0.12 ratio=0.991 clip=10.2% gs=16 adv=-3.830±3.876 gnorm=0.62 n=128
+[solo step 69253] policy=-0.0527 value=0.0036 vraw=0.59 EVb=-3.997 EVin=-2.832 entropy=0.3433 | deploy=7.8% bundle=0.08 ratio=1.015 clip=6.2% gs=16 adv=+3.728±2.216 gnorm=0.24 | p_gnorm=0.3745 v_gnorm=0.02369 v/p=0.06 scale=12.8 n=128
+[solo step 69611] policy=-0.0488 value=0.0064 vraw=1.04 EVb=-3.657 EVin=-2.405 entropy=0.5136 | deploy=10.2% bundle=0.11 ratio=1.032 clip=11.7% gs=16 adv=+4.858±3.132 gnorm=0.42 n=128
+[solo step 69612] policy=-0.0519 value=0.0011 vraw=0.17 EVb=-5.572 EVin=-2.754 entropy=0.3075 | deploy=7.0% bundle=0.07 ratio=1.009 clip=1.6% gs=16 adv=+2.029±1.221 gnorm=0.66 n=128
+[solo step 69613] policy=-0.0861 value=0.0106 vraw=1.72 EVb=-9.943 EVin=-7.656 entropy=0.4349 | deploy=9.4% bundle=0.09 ratio=1.015 clip=5.5% gs=16 adv=+6.984±2.522 gnorm=1.67 n=128
+[solo step 69804] policy=-0.0549 value=0.0184 vraw=2.99 EVb=-4.051 EVin=-3.026 entropy=0.6686 | deploy=12.5% bundle=0.13 ratio=1.027 clip=7.0% gs=16 adv=+8.484±4.876 gnorm=0.61 n=128
+[solo step 69805] policy=-0.0524 value=0.0290 vraw=4.72 EVb=-3.220 EVin=-2.797 entropy=0.3548 | deploy=7.8% bundle=0.08 ratio=1.020 clip=4.7% gs=16 adv=+10.551±6.305 gnorm=0.48 n=128
+[solo] ⚠️ GRU 活力不达标 @step 70000: value/R std=0.001 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@70000: 胜率 0.838±0.058 (33W/6L/1D, 40局) mean_reward=21.058 EV=-0.0024（池化） EVb=-0.0111 h_std=8.77e-02 n_abs=0.773358 vstd/rstd=0.0011 累计局数=274
+[solo]   vs baseline0: 胜率 0.625±0.076 (25W/15L/0D)
+[solo]   vs baseline_prev: 胜率 0.750±0.069 (30W/10L/0D)
+[solo]   vs baseline_rand: 胜率 0.775±0.066 (31W/9L/0D)
+[solo] 冻结副本已同步 @step 70000
+[solo] 对手池刷新 @step 70000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 49, 'frozen': 43, 'hist': 164, 'rand_anchor': 18}
+[solo step 70112] policy=-0.0145 value=0.0265 vraw=4.30 EVb=-0.295 EVin=-0.214 entropy=0.3820 | deploy=7.8% bundle=0.08 ratio=1.004 clip=0.8% gs=16 adv=+4.927±10.646 gnorm=0.16 n=128
+[solo step 70113] policy=-0.0395 value=0.0199 vraw=3.23 EVb=-1.907 EVin=-1.581 entropy=0.2840 | deploy=7.8% bundle=0.08 ratio=1.018 clip=3.1% gs=16 adv=+7.963±6.327 gnorm=0.46 n=128
+[solo step 70305] policy=-0.0608 value=0.0760 vraw=12.36 EVb=-4.292 EVin=-3.764 entropy=0.7455 | deploy=12.5% bundle=0.14 ratio=1.036 clip=3.1% gs=16 adv=+17.683±9.114 gnorm=1.88 n=128
+[solo step 70306] policy=-0.1203 value=0.0725 vraw=11.80 EVb=-15.975 EVin=-14.746 entropy=0.3616 | deploy=7.8% bundle=0.08 ratio=1.017 clip=3.1% gs=16 adv=+18.815±4.897 gnorm=1.70 n=128
+[solo step 70905] policy=-0.0132 value=0.0152 vraw=2.48 EVb=-0.308 EVin=-0.176 entropy=0.4076 | deploy=7.8% bundle=0.08 ratio=1.006 clip=3.9% gs=16 adv=+3.452±8.213 gnorm=0.06 | p_gnorm=0.7803 v_gnorm=0.02918 v/p=0.04 scale=12.75 n=128
+[solo step 70906] policy=0.0226 value=0.0002 vraw=0.04 EVb=-1.967 EVin=-0.537 entropy=0.3818 | deploy=7.8% bundle=0.08 ratio=0.991 clip=2.3% gs=16 adv=-0.643±0.883 gnorm=0.42 n=128
+[solo step 70907] policy=-0.0112 value=0.0001 vraw=0.01 EVb=-15.574 EVin=-0.111 entropy=0.7367 | deploy=14.8% bundle=0.15 ratio=0.994 clip=18.0% gs=16 adv=+0.179±0.522 gnorm=0.22 n=128
+[solo step 70908] policy=-0.0938 value=0.0017 vraw=0.27 EVb=-19.817 EVin=-8.862 entropy=0.7723 | deploy=15.6% bundle=0.16 ratio=1.030 clip=10.2% gs=16 adv=+2.793±0.936 gnorm=1.71 n=128
+[solo step 71187] policy=-0.0542 value=0.0065 vraw=1.04 EVb=-5.384 EVin=-2.814 entropy=1.0709 | deploy=18.0% bundle=0.19 ratio=1.070 clip=22.7% gs=16 adv=+4.971±2.962 gnorm=1.78 n=128
+[solo step 71188] policy=-0.0478 value=0.0004 vraw=0.07 EVb=-8.453 EVin=-2.280 entropy=0.3596 | deploy=7.8% bundle=0.08 ratio=1.014 clip=4.7% gs=16 adv=+1.253±0.829 gnorm=0.87 n=128
+[solo step 71546] policy=-0.0708 value=0.0048 vraw=0.77 EVb=-7.624 EVin=-4.817 entropy=0.5392 | deploy=10.2% bundle=0.11 ratio=1.046 clip=3.9% gs=16 adv=+4.513±2.055 gnorm=2.21 n=128
+[solo step 71547] policy=-0.0842 value=0.0093 vraw=1.49 EVb=-9.521 EVin=-7.206 entropy=0.3022 | deploy=7.0% bundle=0.07 ratio=1.014 clip=3.1% gs=16 adv=+6.477±2.412 gnorm=1.46 n=128
+[solo step 71548] policy=-0.1048 value=0.0033 vraw=0.53 EVb=-17.831 EVin=-11.021 entropy=0.3905 | deploy=8.6% bundle=0.09 ratio=1.023 clip=5.5% gs=16 adv=+3.946±1.187 gnorm=1.03 n=128
+[solo step 71794] policy=-0.0405 value=0.0073 vraw=1.16 EVb=-2.723 EVin=-1.681 entropy=0.6857 | deploy=14.1% bundle=0.15 ratio=1.009 clip=10.2% gs=16 adv=+4.832±3.724 gnorm=0.68 n=128
+[solo step 71795] policy=-0.0059 value=0.0089 vraw=1.43 EVb=-0.102 EVin=-0.035 entropy=0.3124 | deploy=7.0% bundle=0.07 ratio=0.993 clip=1.6% gs=16 adv=+1.248±6.639 gnorm=0.48 | p_gnorm=0.6496 v_gnorm=0.00551 v/p=0.01 scale=12.64 n=128
+[solo step 71906] policy=-0.0418 value=0.0570 vraw=9.11 EVb=-2.001 EVin=-1.764 entropy=0.3415 | deploy=8.6% bundle=0.09 ratio=1.010 clip=3.9% gs=16 adv=+13.646±10.272 gnorm=0.80 n=128
+[solo] 冻结副本已同步 @step 72000
+[solo step 72113] policy=0.0047 value=0.0064 vraw=1.03 EVb=-0.122 EVin=-0.024 entropy=0.4593 | deploy=8.6% bundle=0.09 ratio=1.006 clip=3.9% gs=16 adv=-0.876±5.668 gnorm=0.44 n=128
+[solo step 72114] policy=-0.0447 value=0.0208 vraw=3.33 EVb=-2.522 EVin=-2.055 entropy=0.2588 | deploy=7.0% bundle=0.07 ratio=1.001 clip=2.3% gs=16 adv=+8.466±5.903 gnorm=0.76 n=128
+[solo step 72381] policy=0.0067 value=0.0414 vraw=6.62 EVb=-0.017 EVin=-0.045 entropy=0.4125 | deploy=7.8% bundle=0.08 ratio=0.989 clip=1.6% gs=16 adv=-3.017±14.238 gnorm=0.41 n=128
+[solo step 72382] policy=0.1258 value=0.0258 vraw=4.13 EVb=-14.056 EVin=-15.881 entropy=0.3087 | deploy=7.8% bundle=0.08 ratio=1.005 clip=7.8% gs=16 adv=-11.149±2.798 gnorm=2.44 n=128
+[solo] anchor@72500: vs baseline_rand 胜率 0.525±0.079 (21W/19L/0D, 40局)
+[solo step 72653] policy=0.0298 value=0.0248 vraw=3.96 EVb=-0.715 EVin=-0.892 entropy=0.5238 | deploy=10.2% bundle=0.10 ratio=0.999 clip=1.6% gs=16 adv=-7.736±8.189 gnorm=0.86 n=128
+[solo step 72654] policy=0.0534 value=0.0027 vraw=0.43 EVb=-2.107 EVin=-2.927 entropy=0.3263 | deploy=7.8% bundle=0.08 ratio=0.983 clip=7.8% gs=16 adv=-3.193±1.863 gnorm=0.45 n=128
+[solo step 73013] policy=0.0225 value=0.0044 vraw=0.70 EVb=-0.403 EVin=-0.525 entropy=0.5471 | deploy=10.9% bundle=0.11 ratio=0.991 clip=3.9% gs=16 adv=-2.789±3.846 gnorm=0.65 n=128
+[solo step 73014] policy=0.0579 value=0.0039 vraw=0.63 EVb=-2.427 EVin=-3.386 entropy=0.3337 | deploy=6.2% bundle=0.06 ratio=0.997 clip=4.7% gs=16 adv=-3.939±2.139 gnorm=0.93 n=128
+[solo step 73015] policy=0.2039 value=0.0309 vraw=4.93 EVb=-37.672 EVin=-44.770 entropy=0.7479 | deploy=11.7% bundle=0.12 ratio=0.941 clip=26.6% gs=16 adv=-12.427±1.857 gnorm=3.51 | p_gnorm=5.225 v_gnorm=0.07618 v/p=0.01 scale=12.63 n=128
+[solo step 73125] policy=0.0300 value=0.0180 vraw=2.87 EVb=-0.681 EVin=-0.904 entropy=0.5268 | deploy=10.2% bundle=0.10 ratio=0.986 clip=6.2% gs=16 adv=-6.601±6.941 gnorm=0.92 n=128
+[solo step 73450] policy=0.0671 value=0.0163 vraw=2.59 EVb=-3.871 EVin=-4.728 entropy=0.4606 | deploy=8.6% bundle=0.09 ratio=0.971 clip=6.2% gs=16 adv=-8.276±3.805 gnorm=0.84 n=128
+[solo step 73451] policy=0.0835 value=0.0179 vraw=2.85 EVb=-6.098 EVin=-7.159 entropy=0.3387 | deploy=7.0% bundle=0.07 ratio=0.988 clip=3.9% gs=16 adv=-8.955±3.344 gnorm=1.27 n=128
+[solo step 73789] policy=0.0429 value=0.0864 vraw=13.83 EVb=-1.705 EVin=-1.943 entropy=0.7256 | deploy=13.3% bundle=0.14 ratio=0.978 clip=6.2% gs=16 adv=-17.100±12.263 gnorm=1.06 n=128
+[solo step 73790] policy=0.0582 value=0.0170 vraw=2.73 EVb=-2.991 EVin=-3.483 entropy=0.3444 | deploy=7.0% bundle=0.07 ratio=0.986 clip=3.9% gs=16 adv=-8.243±4.411 gnorm=0.55 n=128
+[solo step 73791] policy=0.0746 value=0.0355 vraw=5.69 EVb=-5.018 EVin=-5.960 entropy=0.5835 | deploy=11.7% bundle=0.12 ratio=0.954 clip=17.2% gs=16 adv=-12.502±5.115 gnorm=0.43 n=128
+[solo] 冻结副本已同步 @step 74000
+[solo] 对手池刷新 @step 74000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 53, 'frozen': 43, 'hist': 173, 'rand_anchor': 19}
+[solo step 74230] policy=0.0195 value=0.0538 vraw=8.64 EVb=-0.299 EVin=-0.385 entropy=0.5115 | deploy=9.4% bundle=0.10 ratio=0.987 clip=3.1% gs=16 adv=-8.778±14.138 gnorm=0.27 n=128
+[solo step 74231] policy=-0.0345 value=0.0027 vraw=0.43 EVb=-2.110 EVin=-1.199 entropy=0.3667 | deploy=7.8% bundle=0.08 ratio=1.015 clip=5.5% gs=16 adv=+2.725±2.495 gnorm=0.19 n=128
+[solo step 74232] policy=-0.1520 value=0.0123 vraw=1.96 EVb=-30.461 EVin=-23.537 entropy=0.6287 | deploy=13.3% bundle=0.13 ratio=1.040 clip=6.2% gs=16 adv=+7.756±1.600 gnorm=1.88 n=128
+[solo step 74425] policy=-0.0607 value=0.0206 vraw=3.29 EVb=-4.897 EVin=-3.769 entropy=0.6937 | deploy=14.1% bundle=0.14 ratio=1.025 clip=5.5% gs=16 adv=+9.124±4.699 gnorm=1.02 | p_gnorm=0.8041 v_gnorm=0.0614 v/p=0.08 scale=12.64 n=128
+[solo step 74426] policy=-0.0745 value=0.0201 vraw=3.20 EVb=-6.584 EVin=-5.620 entropy=0.3498 | deploy=7.8% bundle=0.08 ratio=1.016 clip=6.2% gs=16 adv=+9.332±3.934 gnorm=0.45 n=128
+[solo step 74718] policy=-0.0309 value=0.0337 vraw=5.38 EVb=-1.214 EVin=-0.976 entropy=0.5499 | deploy=8.6% bundle=0.11 ratio=1.019 clip=3.9% gs=16 adv=+9.226±9.337 gnorm=0.28 n=128
+[solo step 74719] policy=-0.0950 value=0.0198 vraw=3.15 EVb=-10.399 EVin=-9.134 entropy=0.3170 | deploy=7.0% bundle=0.07 ratio=1.017 clip=6.2% gs=16 adv=+9.545±3.155 gnorm=0.59 n=128
+[solo] anchor@75000: vs baseline_rand 胜率 0.650±0.075 (26W/14L/0D, 40局)
+[solo step 75078] policy=-0.0290 value=0.0513 vraw=8.18 EVb=-1.092 EVin=-0.845 entropy=0.8035 | deploy=12.5% bundle=0.16 ratio=1.024 clip=9.4% gs=16 adv=+10.961±11.915 gnorm=0.44 n=128
+[solo step 75079] policy=0.0454 value=0.0037 vraw=0.59 EVb=-1.582 EVin=-2.164 entropy=0.2856 | deploy=7.0% bundle=0.07 ratio=0.984 clip=5.5% gs=16 adv=-3.588±2.444 gnorm=0.10 n=128
+[solo step 75080] policy=0.0796 value=0.0239 vraw=3.81 EVb=-5.561 EVin=-6.512 entropy=0.5012 | deploy=11.7% bundle=0.12 ratio=0.979 clip=12.5% gs=16 adv=-10.279±4.030 gnorm=0.99 n=128
+[solo step 75438] policy=0.0091 value=0.0115 vraw=1.83 EVb=-0.058 EVin=-0.079 entropy=0.5357 | deploy=10.2% bundle=0.11 ratio=1.015 clip=10.2% gs=16 adv=-2.070±7.359 gnorm=0.30 n=128
+[solo step 75439] policy=-0.0850 value=0.0189 vraw=3.00 EVb=-8.812 EVin=-7.325 entropy=0.3948 | deploy=7.8% bundle=0.08 ratio=1.021 clip=4.7% gs=16 adv=+9.193±3.398 gnorm=1.30 n=128
+[solo step 75440] policy=-0.0674 value=0.0138 vraw=2.20 EVb=-6.269 EVin=-4.487 entropy=0.7003 | deploy=12.5% bundle=0.12 ratio=1.045 clip=17.2% gs=16 adv=+7.581±3.579 gnorm=0.98 n=128
+[solo step 75798] policy=-0.0274 value=0.0031 vraw=0.49 EVb=-1.571 EVin=-0.761 entropy=0.5419 | deploy=9.4% bundle=0.09 ratio=1.012 clip=0.8% gs=16 adv=+2.617±2.997 gnorm=0.63 | p_gnorm=0.7823 v_gnorm=0.0151 v/p=0.02 scale=12.59 n=128
+[solo step 75799] policy=-0.0528 value=0.0101 vraw=1.61 EVb=-3.652 EVin=-2.800 entropy=0.3694 | deploy=7.0% bundle=0.07 ratio=1.019 clip=3.9% gs=16 adv=+6.157±3.677 gnorm=0.63 n=128
+[solo] 冻结副本已同步 @step 76000
+[solo] 对手池刷新 @step 76000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 53, 'frozen': 44, 'hist': 178, 'rand_anchor': 19}
+[solo step 76045] policy=-0.1270 value=0.0082 vraw=1.30 EVb=-24.651 EVin=-16.080 entropy=0.7230 | deploy=14.1% bundle=0.14 ratio=1.037 clip=11.7% gs=16 adv=+6.259±1.559 gnorm=2.50 n=128
+[solo step 76046] policy=-0.0546 value=0.0102 vraw=1.60 EVb=-3.894 EVin=-3.012 entropy=0.3280 | deploy=7.0% bundle=0.07 ratio=1.022 clip=3.1% gs=16 adv=+6.209±3.575 gnorm=0.51 n=128
+[solo step 76405] policy=-0.0631 value=0.0344 vraw=5.42 EVb=-4.736 EVin=-4.082 entropy=0.4959 | deploy=8.6% bundle=0.09 ratio=1.005 clip=3.1% gs=16 adv=+11.815±5.844 gnorm=0.90 n=128
+[solo step 76406] policy=0.0223 value=0.0011 vraw=0.17 EVb=-0.492 EVin=-0.530 entropy=0.3414 | deploy=6.2% bundle=0.06 ratio=0.984 clip=4.7% gs=16 adv=-1.364±1.884 gnorm=0.58 n=128
+[solo step 76407] policy=0.0629 value=0.0143 vraw=2.26 EVb=-3.313 EVin=-4.105 entropy=0.4957 | deploy=8.6% bundle=0.09 ratio=0.981 clip=5.5% gs=16 adv=-7.615±3.762 gnorm=1.23 n=128
+[solo step 76765] policy=0.0221 value=0.0314 vraw=4.96 EVb=-0.406 EVin=-0.514 entropy=0.6820 | deploy=12.5% bundle=0.13 ratio=0.988 clip=10.2% gs=16 adv=-7.336±10.232 gnorm=0.60 n=128
+[solo step 76766] policy=-0.0260 value=0.0058 vraw=0.92 EVb=-1.092 EVin=-0.693 entropy=0.4138 | deploy=7.0% bundle=0.07 ratio=0.998 clip=3.9% gs=16 adv=+3.460±4.162 gnorm=0.45 n=128
+[solo step 76767] policy=-0.0819 value=0.0043 vraw=0.67 EVb=-11.205 EVin=-6.856 entropy=0.5845 | deploy=10.9% bundle=0.11 ratio=1.011 clip=2.3% gs=16 adv=+4.337±1.657 gnorm=1.97 n=128
+[solo step 76937] policy=-0.0475 value=0.0045 vraw=0.70 EVb=-4.342 EVin=-2.305 entropy=0.6134 | deploy=11.7% bundle=0.12 ratio=1.025 clip=7.0% gs=16 adv=+3.952±2.602 gnorm=0.67 | p_gnorm=1.125 v_gnorm=0.02986 v/p=0.03 scale=12.53 n=128
+[solo step 77305] policy=-0.0639 value=0.0062 vraw=0.97 EVb=-6.051 EVin=-4.124 entropy=0.4856 | deploy=9.4% bundle=0.09 ratio=1.023 clip=5.5% gs=16 adv=+4.989±2.455 gnorm=0.94 n=128
+[solo step 77306] policy=-0.0402 value=0.0010 vraw=0.16 EVb=-3.773 EVin=-1.624 entropy=0.3115 | deploy=7.0% bundle=0.07 ratio=1.017 clip=3.9% gs=16 adv=+1.767±1.384 gnorm=0.25 n=128
+[solo step 77307] policy=0.0085 value=0.0035 vraw=0.55 EVb=-0.063 EVin=-0.091 entropy=0.5106 | deploy=8.6% bundle=0.09 ratio=0.957 clip=24.2% gs=16 adv=-1.212±4.030 gnorm=0.42 n=128
+[solo step 77417] policy=-0.0181 value=0.0391 vraw=6.11 EVb=-0.481 EVin=-0.347 entropy=0.6763 | deploy=13.3% bundle=0.13 ratio=0.994 clip=8.6% gs=16 adv=+7.102±12.043 gnorm=0.59 n=128
+[solo] ⚠️ 绝对强度警报 @step 77500: vs 固定随机锚点 胜率=0.275 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] anchor@77500: vs baseline_rand 胜率 0.275±0.071 (9W/27L/4D, 40局)
+[solo step 77696] policy=0.0120 value=0.0101 vraw=1.58 EVb=-0.102 EVin=-0.145 entropy=0.4255 | deploy=8.6% bundle=0.09 ratio=1.009 clip=3.9% gs=16 adv=-2.530±6.644 gnorm=0.64 n=128
+[solo step 77697] policy=-0.0840 value=0.0279 vraw=4.35 EVb=-8.403 EVin=-7.193 entropy=0.3892 | deploy=7.8% bundle=0.08 ratio=1.013 clip=3.9% gs=16 adv=+11.058±4.122 gnorm=1.57 n=128
+[solo] 冻结副本已同步 @step 78000
+[solo] 对手池刷新 @step 78000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 54, 'frozen': 44, 'hist': 181, 'rand_anchor': 22}
+[solo step 78056] policy=-0.0721 value=0.0806 vraw=12.58 EVb=-5.913 EVin=-5.287 entropy=0.5558 | deploy=10.2% bundle=0.11 ratio=1.016 clip=3.1% gs=16 adv=+18.406±8.003 gnorm=1.15 n=128
+[solo step 78057] policy=-0.0356 value=0.0049 vraw=0.76 EVb=-1.879 EVin=-1.286 entropy=0.3164 | deploy=7.0% bundle=0.07 ratio=1.001 clip=2.3% gs=16 adv=+3.706±3.260 gnorm=0.33 n=128
+[solo step 78058] policy=-0.0982 value=0.0012 vraw=0.18 EVb=-20.913 EVin=-9.595 entropy=0.4619 | deploy=9.4% bundle=0.09 ratio=1.027 clip=4.7% gs=16 adv=+2.309±0.742 gnorm=1.21 n=128
+[solo step 78656] policy=-0.0514 value=0.0045 vraw=0.69 EVb=-5.314 EVin=-2.633 entropy=0.6662 | deploy=12.5% bundle=0.13 ratio=1.042 clip=7.8% gs=16 adv=+4.020±2.476 gnorm=0.56 | p_gnorm=1.175 v_gnorm=0.02605 v/p=0.02 scale=12.47 n=128
+[solo step 78657] policy=0.0448 value=0.0006 vraw=0.09 EVb=-1.632 EVin=-2.082 entropy=0.3287 | deploy=6.2% bundle=0.06 ratio=0.987 clip=2.3% gs=16 adv=-1.422±0.988 gnorm=0.83 n=128
+[solo step 78658] policy=0.0411 value=0.0004 vraw=0.06 EVb=-3.552 EVin=-1.761 entropy=0.5418 | deploy=10.9% bundle=0.11 ratio=0.972 clip=10.2% gs=16 adv=-1.088±0.822 gnorm=0.98 n=128
+[solo step 78659] policy=-0.0199 value=0.0002 vraw=0.03 EVb=-7.649 EVin=-0.416 entropy=0.7184 | deploy=14.8% bundle=0.15 ratio=1.013 clip=7.8% gs=16 adv=+0.537±0.829 gnorm=0.75 n=128
+[solo step 78660] policy=-0.0688 value=0.0073 vraw=1.13 EVb=-7.770 EVin=-4.884 entropy=0.8339 | deploy=17.2% bundle=0.17 ratio=1.018 clip=12.5% gs=16 adv=+5.484±2.480 gnorm=1.29 n=128
+[solo step 79016] policy=-0.0752 value=0.0082 vraw=1.26 EVb=-8.818 EVin=-5.894 entropy=0.5898 | deploy=12.5% bundle=0.12 ratio=1.014 clip=6.2% gs=16 adv=+5.884±2.423 gnorm=1.28 n=128
+[solo step 79017] policy=-0.0834 value=0.0111 vraw=1.71 EVb=-8.999 EVin=-7.070 entropy=0.4228 | deploy=7.8% bundle=0.08 ratio=1.014 clip=2.3% gs=16 adv=+6.927±2.604 gnorm=0.98 n=128
+[solo step 79018] policy=-0.0245 value=0.0105 vraw=1.61 EVb=-0.995 EVin=-0.591 entropy=0.5796 | deploy=12.5% bundle=0.12 ratio=1.015 clip=7.8% gs=16 adv=+4.383±5.692 gnorm=0.36 n=128
+[solo step 79136] policy=-0.1277 value=0.0933 vraw=14.39 EVb=-17.922 EVin=-16.420 entropy=0.4460 | deploy=9.4% bundle=0.09 ratio=1.024 clip=6.2% gs=16 adv=+20.838±5.139 gnorm=1.52 n=128
+[solo step 79412] policy=-0.0417 value=0.0177 vraw=2.73 EVb=-2.240 EVin=-1.763 entropy=0.4066 | deploy=7.0% bundle=0.08 ratio=1.011 clip=1.6% gs=16 adv=+7.467±5.620 gnorm=0.60 n=128
+[solo step 79413] policy=-0.1236 value=0.0772 vraw=11.91 EVb=-17.035 EVin=-15.557 entropy=0.3326 | deploy=7.8% bundle=0.08 ratio=1.014 clip=2.3% gs=16 adv=+18.932±4.797 gnorm=2.24 | p_gnorm=0.7893 v_gnorm=0.1212 v/p=0.15 scale=12.42 n=128
+[solo] ⚠️ GRU 活力不达标 @step 80000: value/R std=0.002 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@80000: 胜率 0.900±0.047 (36W/4L/0D, 40局) mean_reward=27.618 EV=-0.0711（池化） EVb=-0.0814 h_std=8.80e-02 n_abs=0.794623 vstd/rstd=0.002 累计局数=306
+[solo]   vs baseline0: 胜率 0.350±0.075 (13W/25L/2D)
+[solo]   vs baseline_prev: 胜率 0.850±0.057 (34W/6L/0D)
+[solo]   vs baseline_rand: 胜率 0.237±0.067 (8W/29L/3D)
+[solo] ⚠️ 绝对强度警报 @step 80000: vs 固定随机锚点 胜率=0.237 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] 冻结副本已同步 @step 80000
+[solo] 对手池刷新 @step 80000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 56, 'frozen': 45, 'hist': 183, 'rand_anchor': 22}
+[solo step 80012] policy=-0.0155 value=0.0297 vraw=4.58 EVb=-0.367 EVin=-0.241 entropy=0.4832 | deploy=9.4% bundle=0.09 ratio=1.010 clip=2.3% gs=16 adv=+5.336±10.872 gnorm=0.49 n=128
+[solo step 80013] policy=0.0097 value=0.0008 vraw=0.13 EVb=-0.209 EVin=-0.101 entropy=0.2869 | deploy=7.0% bundle=0.07 ratio=0.997 clip=4.7% gs=16 adv=-0.602±1.910 gnorm=0.22 n=128
+[solo step 80014] policy=0.0626 value=0.0017 vraw=0.26 EVb=-2.692 EVin=-3.965 entropy=0.5853 | deploy=13.3% bundle=0.13 ratio=0.990 clip=7.8% gs=16 adv=-2.551±1.284 gnorm=1.31 n=128
+[solo step 80015] policy=0.1267 value=0.0015 vraw=0.22 EVb=-10.785 EVin=-16.503 entropy=0.6165 | deploy=14.1% bundle=0.14 ratio=0.985 clip=4.7% gs=16 adv=-2.592±0.639 gnorm=1.96 n=128
+[solo step 80326] policy=0.0576 value=0.0088 vraw=1.36 EVb=-2.492 EVin=-3.496 entropy=0.9334 | deploy=20.3% bundle=0.20 ratio=0.969 clip=14.1% gs=16 adv=-5.805±3.105 gnorm=0.79 n=128
+[solo step 80327] policy=-0.0605 value=0.0064 vraw=0.98 EVb=-5.316 EVin=-3.700 entropy=0.3195 | deploy=7.0% bundle=0.07 ratio=1.017 clip=3.1% gs=16 adv=+4.960±2.579 gnorm=0.64 n=128
+[solo step 80328] policy=-0.1607 value=0.0480 vraw=7.36 EVb=-29.265 EVin=-26.163 entropy=0.4302 | deploy=8.6% bundle=0.09 ratio=1.016 clip=5.5% gs=16 adv=+15.062±2.944 gnorm=1.82 n=128
+[solo step 80501] policy=-0.0030 value=0.0744 vraw=11.43 EVb=-0.030 EVin=-0.007 entropy=0.5047 | deploy=10.2% bundle=0.10 ratio=1.004 clip=6.2% gs=16 adv=+1.648±19.058 gnorm=0.32 n=128
+[solo step 80861] policy=0.0442 value=0.1089 vraw=16.82 EVb=-1.885 EVin=-2.055 entropy=0.4319 | deploy=8.6% bundle=0.09 ratio=0.983 clip=3.9% gs=16 adv=-19.028±13.271 gnorm=0.45 n=128
+[solo step 80862] policy=-0.0612 value=0.0010 vraw=0.15 EVb=-8.228 EVin=-3.863 entropy=0.3187 | deploy=7.0% bundle=0.07 ratio=1.011 clip=3.1% gs=16 adv=+1.959±1.003 gnorm=0.73 | p_gnorm=0.8703 v_gnorm=0.01408 v/p=0.02 scale=12.42 n=128
+[solo step 80863] policy=-0.0548 value=0.0098 vraw=1.52 EVb=-4.184 EVin=-3.060 entropy=0.4298 | deploy=9.4% bundle=0.09 ratio=1.020 clip=5.5% gs=16 adv=+6.033±3.455 gnorm=0.68 n=128
+[solo step 81167] policy=-0.0109 value=0.0070 vraw=1.08 EVb=-0.353 EVin=-0.120 entropy=0.5032 | deploy=10.9% bundle=0.11 ratio=1.000 clip=7.0% gs=16 adv=+1.925±5.554 gnorm=0.44 n=128
+[solo step 81168] policy=0.0553 value=0.0314 vraw=4.84 EVb=-2.767 EVin=-3.183 entropy=0.3075 | deploy=7.8% bundle=0.08 ratio=0.988 clip=2.3% gs=16 adv=-10.853±6.084 gnorm=0.59 n=128
+[solo step 81668] policy=0.0692 value=0.0998 vraw=15.42 EVb=-4.480 EVin=-4.843 entropy=0.4741 | deploy=10.9% bundle=0.11 ratio=0.992 clip=8.6% gs=16 adv=-20.230±9.190 gnorm=1.36 n=128
+[solo step 81669] policy=-0.0027 value=0.0004 vraw=0.06 EVb=-0.983 EVin=-0.007 entropy=0.3491 | deploy=7.0% bundle=0.07 ratio=0.995 clip=6.2% gs=16 adv=+0.100±1.352 gnorm=0.35 n=128
+[solo step 81670] policy=-0.0268 value=0.0028 vraw=0.43 EVb=-1.380 EVin=-0.790 entropy=0.3801 | deploy=7.8% bundle=0.08 ratio=0.994 clip=4.7% gs=16 adv=+2.457±2.775 gnorm=0.65 n=128
+[solo step 81671] policy=-0.1597 value=0.0028 vraw=0.44 EVb=-46.563 EVin=-25.964 entropy=0.5805 | deploy=14.1% bundle=0.14 ratio=1.036 clip=11.7% gs=16 adv=+3.655±0.719 gnorm=2.45 n=128
+[solo] 冻结副本已同步 @step 82000
+[solo step 82028] policy=-0.0478 value=0.0230 vraw=3.54 EVb=-3.050 EVin=-2.278 entropy=0.8182 | deploy=14.8% bundle=0.16 ratio=1.017 clip=13.3% gs=16 adv=+8.867±5.876 gnorm=0.75 n=128
+[solo step 82029] policy=0.0447 value=0.0029 vraw=0.45 EVb=-1.344 EVin=-2.063 entropy=0.3318 | deploy=7.0% bundle=0.07 ratio=0.993 clip=1.6% gs=16 adv=-3.099±2.160 gnorm=0.73 n=128
+[solo step 82030] policy=0.0732 value=0.0131 vraw=2.02 EVb=-4.525 EVin=-5.507 entropy=0.3749 | deploy=8.6% bundle=0.09 ratio=0.991 clip=3.9% gs=16 adv=-7.392±3.151 gnorm=0.82 | p_gnorm=0.8659 v_gnorm=0.04837 v/p=0.06 scale=12.39 n=128
+[solo] anchor@82500: vs baseline_rand 胜率 0.375±0.076 (14W/24L/2D, 40局)
+[solo step 82555] policy=0.0617 value=0.0100 vraw=1.53 EVb=-3.143 EVin=-3.979 entropy=0.5558 | deploy=10.9% bundle=0.12 ratio=0.972 clip=6.2% gs=16 adv=-6.253±3.133 gnorm=0.78 n=128
+[solo step 82556] policy=0.0281 value=0.0005 vraw=0.08 EVb=-1.363 EVin=-0.810 entropy=0.3792 | deploy=7.0% bundle=0.07 ratio=0.994 clip=3.9% gs=16 adv=-1.041±1.152 gnorm=0.45 n=128
+[solo step 82557] policy=0.0987 value=0.0021 vraw=0.32 EVb=-7.219 EVin=-9.928 entropy=0.4804 | deploy=10.2% bundle=0.10 ratio=0.984 clip=4.7% gs=16 adv=-3.078±0.975 gnorm=1.69 n=128
+[solo step 82558] policy=0.1311 value=0.0079 vraw=1.21 EVb=-13.427 EVin=-18.178 entropy=0.6500 | deploy=13.3% bundle=0.13 ratio=0.965 clip=8.6% gs=16 adv=-6.057±1.419 gnorm=2.30 n=128
+[solo step 82915] policy=0.0547 value=0.0285 vraw=4.37 EVb=-2.672 EVin=-3.252 entropy=0.7997 | deploy=14.8% bundle=0.16 ratio=0.958 clip=10.2% gs=16 adv=-10.343±5.734 gnorm=1.28 n=128
+[solo step 82916] policy=0.0551 value=0.0034 vraw=0.51 EVb=-2.318 EVin=-3.277 entropy=0.4121 | deploy=7.0% bundle=0.07 ratio=0.951 clip=25.0% gs=16 adv=-3.554±1.961 gnorm=0.80 n=128
+[solo step 82917] policy=0.1072 value=0.0290 vraw=4.44 EVb=-10.548 EVin=-12.199 entropy=0.5065 | deploy=9.4% bundle=0.09 ratio=0.965 clip=9.4% gs=16 adv=-11.459±3.279 gnorm=2.33 n=128
+[solo step 83499] policy=0.0268 value=0.0092 vraw=1.41 EVb=-0.469 EVin=-0.704 entropy=0.5930 | deploy=11.7% bundle=0.12 ratio=0.976 clip=7.8% gs=16 adv=-4.316±5.140 gnorm=0.59 n=128
+[solo step 83500] policy=-0.0556 value=0.0036 vraw=0.55 EVb=-5.396 EVin=-3.164 entropy=0.3705 | deploy=7.8% bundle=0.08 ratio=1.019 clip=4.7% gs=16 adv=+3.641±2.049 gnorm=0.48 n=128
+[solo step 83501] policy=0.0442 value=0.0125 vraw=1.91 EVb=-1.542 EVin=-2.073 entropy=0.5571 | deploy=10.9% bundle=0.11 ratio=0.978 clip=6.2% gs=16 adv=-6.419±4.456 gnorm=1.09 | p_gnorm=1.188 v_gnorm=0.03803 v/p=0.03 scale=12.35 n=128
+[solo step 83502] policy=0.0719 value=0.0135 vraw=2.06 EVb=-4.159 EVin=-5.265 entropy=0.6698 | deploy=14.8% bundle=0.15 ratio=0.985 clip=10.9% gs=16 adv=-7.439±3.240 gnorm=1.30 n=128
+[solo step 83503] policy=0.1156 value=0.0274 vraw=4.18 EVb=-11.472 EVin=-14.010 entropy=0.8266 | deploy=18.0% bundle=0.18 ratio=0.957 clip=11.7% gs=16 adv=-11.176±2.984 gnorm=2.07 n=128
+[solo step 83896] policy=0.0216 value=0.0193 vraw=2.95 EVb=-0.315 EVin=-0.494 entropy=0.4974 | deploy=9.4% bundle=0.10 ratio=0.981 clip=9.4% gs=16 adv=-5.585±7.947 gnorm=0.45 n=128
+[solo step 83897] policy=-0.0632 value=0.0099 vraw=1.51 EVb=-5.279 EVin=-4.027 entropy=0.3363 | deploy=7.8% bundle=0.08 ratio=1.025 clip=5.5% gs=16 adv=+6.211±3.097 gnorm=0.39 n=128
+[solo step 83898] policy=-0.0940 value=0.0399 vraw=6.08 EVb=-10.573 EVin=-8.957 entropy=0.6623 | deploy=14.8% bundle=0.15 ratio=1.044 clip=10.2% gs=16 adv=+13.232±4.421 gnorm=1.78 n=128
+[solo] 冻结副本已同步 @step 84000
+[solo] 对手池刷新 @step 84000: hist ckpts=12（本目录 12，新增 11） | 累计对手局 {'defend': 58, 'frozen': 47, 'hist': 190, 'rand_anchor': 22}
+[solo step 84168] policy=-0.0301 value=0.0284 vraw=4.32 EVb=-1.128 EVin=-0.897 entropy=0.5065 | deploy=10.2% bundle=0.10 ratio=1.019 clip=2.3% gs=16 adv=+8.091±8.537 gnorm=0.51 n=128
+[solo step 84169] policy=-0.0517 value=0.0203 vraw=3.09 EVb=-3.337 EVin=-2.731 entropy=0.3286 | deploy=7.0% bundle=0.07 ratio=1.014 clip=4.7% gs=16 adv=+8.521±5.151 gnorm=0.74 n=128
+[solo step 84394] policy=-0.0362 value=0.0531 vraw=8.08 EVb=-1.586 EVin=-1.331 entropy=0.4663 | deploy=10.2% bundle=0.10 ratio=1.021 clip=8.6% gs=16 adv=+12.161±10.539 gnorm=0.70 n=128
+[solo step 84395] policy=-0.0434 value=0.0359 vraw=5.46 EVb=-2.225 EVin=-1.937 entropy=0.3368 | deploy=7.8% bundle=0.08 ratio=1.004 clip=2.3% gs=16 adv=+10.748±7.713 gnorm=0.77 n=128
+[solo step 84634] policy=-0.0249 value=0.0216 vraw=3.29 EVb=-0.810 EVin=-0.634 entropy=0.4007 | deploy=7.0% bundle=0.08 ratio=1.009 clip=0.8% gs=16 adv=+6.398±8.031 gnorm=0.44 | p_gnorm=0.4569 v_gnorm=0.058 v/p=0.13 scale=12.33 n=128
+[solo step 84635] policy=-0.0490 value=0.0358 vraw=5.44 EVb=-2.646 EVin=-2.333 entropy=0.3829 | deploy=7.0% bundle=0.07 ratio=1.035 clip=9.4% gs=16 adv=+11.050±7.228 gnorm=0.57 n=128
+[solo step 84801] policy=0.0519 value=0.0376 vraw=5.72 EVb=-2.456 EVin=-2.749 entropy=0.3827 | deploy=7.8% bundle=0.09 ratio=0.975 clip=7.0% gs=16 adv=-11.585±6.988 gnorm=0.50 n=128
+[solo] anchor@85000: vs baseline_rand 胜率 0.475±0.079 (19W/21L/0D, 40局)
+[solo step 85184] policy=0.0207 value=0.0423 vraw=6.44 EVb=-0.368 EVin=-0.439 entropy=0.3996 | deploy=8.6% bundle=0.09 ratio=0.994 clip=1.6% gs=16 adv=-7.930±11.963 gnorm=0.21 n=128
+[solo step 85185] policy=0.0391 value=0.0014 vraw=0.21 EVb=-1.198 EVin=-1.554 entropy=0.2501 | deploy=7.0% bundle=0.07 ratio=0.993 clip=4.7% gs=16 adv=-2.018±1.611 gnorm=0.47 n=128
+[solo step 85186] policy=0.0698 value=0.0150 vraw=2.28 EVb=-3.976 EVin=-4.977 entropy=0.5429 | deploy=11.7% bundle=0.12 ratio=0.990 clip=4.7% gs=16 adv=-7.804±3.493 gnorm=1.13 n=128
+[solo step 85457] policy=0.0390 value=0.0256 vraw=3.90 EVb=-1.280 EVin=-1.601 entropy=0.5176 | deploy=10.2% bundle=0.10 ratio=0.978 clip=3.9% gs=16 adv=-8.766±6.928 gnorm=0.76 n=128
+[solo step 85458] policy=-0.0368 value=0.0465 vraw=7.07 EVb=-1.575 EVin=-1.411 entropy=0.2650 | deploy=6.2% bundle=0.06 ratio=0.996 clip=1.6% gs=16 adv=+11.504±9.687 gnorm=0.64 n=128
+[solo step 85817] policy=-0.0238 value=0.0689 vraw=10.49 EVb=-0.659 EVin=-0.553 entropy=0.4778 | deploy=10.2% bundle=0.11 ratio=1.010 clip=4.7% gs=16 adv=+10.939±14.698 gnorm=0.35 n=128
+[solo step 85818] policy=0.1018 value=0.0154 vraw=2.34 EVb=-9.034 EVin=-10.820 entropy=0.3603 | deploy=7.0% bundle=0.07 ratio=0.983 clip=2.3% gs=16 adv=-8.267±2.516 gnorm=1.39 n=128
+[solo step 85819] policy=0.0921 value=0.0171 vraw=2.60 EVb=-7.041 EVin=-8.657 entropy=0.3930 | deploy=12.5% bundle=0.12 ratio=0.987 clip=8.6% gs=16 adv=-8.621±2.933 gnorm=1.76 | p_gnorm=1.506 v_gnorm=0.05507 v/p=0.04 scale=12.34 n=128
+[solo] 冻结副本已同步 @step 86000
+[solo] 对手池刷新 @step 86000: hist ckpts=12（本目录 12，新增 1） | 累计对手局 {'defend': 58, 'frozen': 47, 'hist': 197, 'rand_anchor': 23}
+[solo step 86131] policy=-0.0222 value=0.0530 vraw=8.08 EVb=-0.584 EVin=-0.495 entropy=0.5022 | deploy=9.4% bundle=0.11 ratio=1.002 clip=5.5% gs=16 adv=+9.252±13.148 gnorm=0.25 n=128
+[solo step 86132] policy=0.0919 value=0.0303 vraw=4.62 EVb=-7.626 EVin=-8.648 entropy=0.2883 | deploy=5.5% bundle=0.05 ratio=0.990 clip=3.1% gs=16 adv=-11.508±3.915 gnorm=0.98 n=128
+[solo step 86243] policy=0.0448 value=0.0414 vraw=6.32 EVb=-1.852 EVin=-2.123 entropy=0.3668 | deploy=8.6% bundle=0.09 ratio=0.975 clip=7.8% gs=16 adv=-11.728±8.046 gnorm=0.70 n=128
+[solo step 86433] policy=0.0622 value=0.0259 vraw=3.95 EVb=-3.495 EVin=-4.055 entropy=0.6113 | deploy=7.8% bundle=0.11 ratio=0.963 clip=16.4% gs=16 adv=-10.077±4.998 gnorm=0.88 n=128
+[solo step 86434] policy=0.1119 value=0.0639 vraw=9.78 EVb=-11.878 EVin=-12.957 entropy=0.2251 | deploy=7.8% bundle=0.08 ratio=0.979 clip=5.5% gs=16 adv=-17.049±4.734 gnorm=1.95 n=128
+[solo step 86603] policy=-0.0341 value=0.0455 vraw=6.97 EVb=-1.392 EVin=-1.168 entropy=0.3855 | deploy=7.8% bundle=0.08 ratio=1.033 clip=6.2% gs=16 adv=+10.961±10.146 gnorm=0.37 n=128
+[solo step 86788] policy=-0.0537 value=0.0393 vraw=6.01 EVb=-3.390 EVin=-2.938 entropy=0.4500 | deploy=8.6% bundle=0.09 ratio=1.021 clip=3.1% gs=16 adv=+11.983±6.989 gnorm=0.83 n=128
+[solo step 86993] policy=-0.0553 value=0.0438 vraw=6.70 EVb=-3.478 EVin=-3.088 entropy=0.3380 | deploy=7.8% bundle=0.08 ratio=1.025 clip=5.5% gs=16 adv=+12.735±7.241 gnorm=0.49 n=128
+[solo step 86994] policy=-0.0842 value=0.0146 vraw=2.24 EVb=-8.592 EVin=-7.086 entropy=0.3245 | deploy=7.8% bundle=0.08 ratio=1.020 clip=9.4% gs=16 adv=+7.934±2.975 gnorm=0.75 n=128
+[solo] anchor@87500: vs baseline_rand 胜率 0.650±0.075 (26W/14L/0D, 40局)
+[solo step 87593] policy=-0.0209 value=0.0397 vraw=6.07 EVb=-0.524 EVin=-0.450 entropy=0.3234 | deploy=8.6% bundle=0.09 ratio=1.001 clip=3.1% gs=16 adv=+7.772±11.575 gnorm=0.53 | p_gnorm=0.03001 v_gnorm=0.05065 v/p=1.69 scale=12.36 n=128
+[solo step 87594] policy=-0.0237 value=0.0004 vraw=0.06 EVb=-3.300 EVin=-0.563 entropy=0.2638 | deploy=7.0% bundle=0.07 ratio=1.011 clip=1.6% gs=16 adv=+0.852±1.126 gnorm=0.53 n=128
+[solo step 87595] policy=-0.1170 value=0.0034 vraw=0.51 EVb=-24.608 EVin=-13.665 entropy=0.5802 | deploy=13.3% bundle=0.13 ratio=1.027 clip=5.5% gs=16 adv=+3.920±1.058 gnorm=1.65 n=128
+[solo step 87596] policy=-0.0844 value=0.0022 vraw=0.34 EVb=-14.195 EVin=-7.082 entropy=0.5871 | deploy=14.1% bundle=0.14 ratio=1.028 clip=10.2% gs=16 adv=+3.076±1.152 gnorm=1.18 n=128
+[solo step 87597] policy=-0.0547 value=0.0034 vraw=0.52 EVb=-6.742 EVin=-3.096 entropy=0.7878 | deploy=20.3% bundle=0.20 ratio=1.008 clip=15.6% gs=16 adv=+3.565±2.020 gnorm=0.88 n=128
+[solo step 87938] policy=0.0334 value=0.0192 vraw=2.91 EVb=-1.049 EVin=-1.156 entropy=0.4139 | deploy=9.4% bundle=0.10 ratio=0.987 clip=5.5% gs=16 adv=-7.066±6.575 gnorm=0.52 n=128
+[solo step 87939] policy=0.0567 value=0.0075 vraw=1.14 EVb=-2.591 EVin=-3.263 entropy=0.1530 | deploy=7.8% bundle=0.08 ratio=1.003 clip=0.8% gs=16 adv=-5.298±2.930 gnorm=0.70 n=128
+[solo] 冻结副本已同步 @step 88000
+[solo] 对手池刷新 @step 88000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 61, 'frozen': 47, 'hist': 201, 'rand_anchor': 24}
+[solo step 88420] policy=0.0527 value=0.1033 vraw=15.76 EVb=-2.506 EVin=-2.730 entropy=0.5213 | deploy=14.1% bundle=0.15 ratio=1.015 clip=6.2% gs=16 adv=-19.219±11.629 gnorm=1.20 n=128
+[solo step 88421] policy=0.0080 value=0.0003 vraw=0.05 EVb=-0.572 EVin=-0.063 entropy=0.2816 | deploy=7.0% bundle=0.07 ratio=0.995 clip=4.7% gs=16 adv=-0.321±1.249 gnorm=0.26 n=128
+[solo step 88422] policy=0.0184 value=0.0011 vraw=0.17 EVb=-0.162 EVin=-0.362 entropy=0.3766 | deploy=8.6% bundle=0.09 ratio=0.969 clip=12.5% gs=16 adv=-1.216±2.007 gnorm=0.44 n=128
+[solo step 88423] policy=0.0532 value=0.0071 vraw=1.08 EVb=-2.012 EVin=-2.841 entropy=0.6269 | deploy=14.8% bundle=0.15 ratio=0.992 clip=11.7% gs=16 adv=-5.074±3.004 gnorm=1.38 | p_gnorm=1.44 v_gnorm=0.03371 v/p=0.02 scale=12.33 n=128
+[solo step 88692] policy=0.0350 value=0.0418 vraw=6.35 EVb=-1.031 EVin=-1.277 entropy=0.5452 | deploy=11.7% bundle=0.12 ratio=0.978 clip=6.2% gs=16 adv=-10.686±9.455 gnorm=0.92 n=128
+[solo step 88693] policy=-0.0227 value=0.0035 vraw=0.53 EVb=-0.964 EVin=-0.525 entropy=0.2774 | deploy=7.8% bundle=0.08 ratio=1.003 clip=5.5% gs=16 adv=+2.417±3.341 gnorm=0.33 n=128
+[solo step 88904] policy=-0.0387 value=0.0399 vraw=6.06 EVb=-1.715 EVin=-1.515 entropy=0.3161 | deploy=9.4% bundle=0.09 ratio=1.002 clip=1.6% gs=16 adv=+10.806±8.779 gnorm=0.48 n=128
+[solo step 88905] policy=0.0556 value=0.0026 vraw=0.39 EVb=-2.016 EVin=-3.249 entropy=0.3654 | deploy=7.8% bundle=0.08 ratio=0.978 clip=5.5% gs=16 adv=-3.090±1.718 gnorm=1.85 n=128
+[solo step 89036] policy=-0.0159 value=0.0262 vraw=3.98 EVb=-0.364 EVin=-0.249 entropy=0.3654 | deploy=7.8% bundle=0.09 ratio=1.007 clip=6.2% gs=16 adv=+5.040±10.089 gnorm=0.22 n=128
+[solo step 89320] policy=-0.0330 value=0.0358 vraw=5.43 EVb=-1.268 EVin=-1.112 entropy=0.3002 | deploy=8.6% bundle=0.09 ratio=1.006 clip=0.8% gs=16 adv=+9.569±9.071 gnorm=0.17 n=128
+[solo step 89321] policy=-0.0725 value=0.0384 vraw=5.82 EVb=-6.050 EVin=-5.321 entropy=0.2993 | deploy=7.8% bundle=0.08 ratio=1.016 clip=3.9% gs=16 adv=+12.530±5.428 gnorm=0.66 n=128
+[solo step 89561] policy=-0.0482 value=0.0946 vraw=14.38 EVb=-2.556 EVin=-2.314 entropy=0.5564 | deploy=10.9% bundle=0.12 ratio=1.031 clip=6.2% gs=16 adv=+17.936±11.788 gnorm=0.48 n=128
+[solo step 89562] policy=-0.0603 value=0.0216 vraw=3.28 EVb=-4.379 EVin=-3.698 entropy=0.2664 | deploy=7.8% bundle=0.08 ratio=1.010 clip=3.9% gs=16 adv=+9.109±4.728 gnorm=0.56 n=128
+[solo] ⚠️ GRU 活力不达标 @step 90000: value/R std=0.001 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@90000: 胜率 0.725±0.071 (29W/11L/0D, 40局) mean_reward=14.326 EV=0.0001（池化） EVb=-0.0063 h_std=7.96e-02 n_abs=0.826652 vstd/rstd=0.0013 累计局数=339
+[solo]   vs baseline0: 胜率 0.713±0.072 (27W/10L/3D)
+[solo]   vs baseline_prev: 胜率 0.525±0.079 (20W/18L/2D)
+[solo]   vs baseline_rand: 胜率 0.750±0.069 (30W/10L/0D)
+[solo] 冻结副本已同步 @step 90000
+[solo] 对手池刷新 @step 90000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 62, 'frozen': 48, 'hist': 204, 'rand_anchor': 25}
+[solo step 90023] policy=-0.0367 value=0.0450 vraw=6.83 EVb=-1.549 EVin=-1.377 entropy=0.2632 | deploy=7.0% bundle=0.08 ratio=1.006 clip=0.8% gs=16 adv=+11.263±9.593 gnorm=0.43 | p_gnorm=0.3071 v_gnorm=0.09004 v/p=0.29 scale=12.32 n=128
+[solo step 90024] policy=-0.0324 value=0.0044 vraw=0.67 EVb=-1.742 EVin=-1.048 entropy=0.3189 | deploy=7.8% bundle=0.08 ratio=1.019 clip=9.4% gs=16 adv=+3.333±3.244 gnorm=0.60 n=128
+[solo step 90025] policy=0.0568 value=0.0056 vraw=0.85 EVb=-2.319 EVin=-3.354 entropy=0.4378 | deploy=11.7% bundle=0.12 ratio=0.985 clip=6.2% gs=16 adv=-4.573±2.504 gnorm=0.96 n=128
+[solo step 90026] policy=-0.0046 value=0.0088 vraw=1.33 EVb=-0.110 EVin=-0.018 entropy=0.3851 | deploy=14.8% bundle=0.15 ratio=1.003 clip=5.5% gs=16 adv=+0.875±6.458 gnorm=0.31 n=128
+[solo step 90224] policy=-0.0871 value=0.0300 vraw=4.54 EVb=-8.850 EVin=-7.713 entropy=0.3035 | deploy=8.6% bundle=0.09 ratio=1.017 clip=4.7% gs=16 adv=+11.341±4.082 gnorm=0.77 n=128
+[solo step 90446] policy=-0.0238 value=0.0613 vraw=9.28 EVb=-0.640 EVin=-0.562 entropy=0.3461 | deploy=7.8% bundle=0.09 ratio=1.004 clip=6.2% gs=16 adv=+10.340±13.790 gnorm=0.16 n=128
+[solo step 90447] policy=0.0338 value=0.0080 vraw=1.20 EVb=-0.841 EVin=-1.165 entropy=0.1272 | deploy=7.0% bundle=0.07 ratio=0.999 clip=0.0% gs=16 adv=-4.545±4.218 gnorm=0.66 n=128
+[solo step 90806] policy=0.0097 value=0.0077 vraw=1.16 EVb=-0.091 EVin=-0.100 entropy=0.3090 | deploy=8.6% bundle=0.09 ratio=0.999 clip=1.6% gs=16 adv=-1.838±5.804 gnorm=0.28 n=128
+[solo step 90807] policy=0.0140 value=0.0065 vraw=0.98 EVb=-0.090 EVin=-0.204 entropy=0.2091 | deploy=7.0% bundle=0.07 ratio=0.992 clip=2.3% gs=16 adv=-2.304±5.099 gnorm=0.41 n=128
+[solo step 90808] policy=-0.0484 value=0.0174 vraw=2.62 EVb=-2.740 EVin=-2.327 entropy=0.1726 | deploy=13.3% bundle=0.13 ratio=1.016 clip=12.5% gs=16 adv=+7.658±5.021 gnorm=0.39 n=128
+[solo step 91024] policy=0.0039 value=0.0210 vraw=3.16 EVb=-0.012 EVin=-0.018 entropy=0.2473 | deploy=9.4% bundle=0.10 ratio=0.998 clip=3.1% gs=16 adv=-1.333±9.975 gnorm=0.19 | p_gnorm=0.276 v_gnorm=0.007796 v/p=0.03 scale=12.28 n=128
+[solo step 91342] policy=0.0650 value=0.0751 vraw=11.35 EVb=-4.042 EVin=-4.319 entropy=0.2157 | deploy=8.6% bundle=0.09 ratio=1.001 clip=0.8% gs=16 adv=-17.177±8.264 gnorm=0.59 n=128
+[solo step 91343] policy=-0.0553 value=0.0073 vraw=1.10 EVb=-4.192 EVin=-3.123 entropy=0.2665 | deploy=7.0% bundle=0.07 ratio=1.007 clip=3.1% gs=16 adv=+5.167±2.928 gnorm=0.70 n=128
+[solo step 91344] policy=-0.1476 value=0.0623 vraw=9.42 EVb=-24.487 EVin=-22.217 entropy=0.3064 | deploy=9.4% bundle=0.09 ratio=1.011 clip=2.3% gs=16 adv=+16.982±3.604 gnorm=2.00 n=128
+[solo step 91702] policy=-0.0264 value=0.0486 vraw=7.34 EVb=-0.886 EVin=-0.682 entropy=0.6037 | deploy=10.9% bundle=0.13 ratio=1.040 clip=11.7% gs=16 adv=+9.764±11.816 gnorm=0.26 n=128
+[solo step 91703] policy=-0.0734 value=0.0028 vraw=0.42 EVb=-8.790 EVin=-5.443 entropy=0.3047 | deploy=7.0% bundle=0.07 ratio=1.031 clip=12.5% gs=16 adv=+3.393±1.451 gnorm=0.75 n=128
+[solo step 91704] policy=-0.0828 value=0.0294 vraw=4.44 EVb=-8.696 EVin=-7.011 entropy=0.4400 | deploy=12.5% bundle=0.12 ratio=1.014 clip=4.7% gs=16 adv=+11.154±4.209 gnorm=1.16 n=128
+[solo step 91868] policy=-0.0459 value=0.0139 vraw=2.10 EVb=-2.874 EVin=-2.136 entropy=0.3371 | deploy=10.2% bundle=0.10 ratio=1.023 clip=4.7% gs=16 adv=+6.765±4.626 gnorm=0.54 n=128
+[solo] 冻结副本已同步 @step 92000
+[solo step 92100] policy=-0.0213 value=0.0303 vraw=4.56 EVb=-0.551 EVin=-0.453 entropy=0.2524 | deploy=8.6% bundle=0.09 ratio=1.005 clip=3.9% gs=16 adv=+6.755±10.026 gnorm=0.17 n=128
+[solo step 92101] policy=0.0486 value=0.0079 vraw=1.19 EVb=-1.839 EVin=-2.391 entropy=0.1543 | deploy=7.8% bundle=0.08 ratio=1.001 clip=0.0% gs=16 adv=-5.180±3.353 gnorm=0.57 n=128
+[solo step 92459] policy=0.0727 value=0.0059 vraw=0.89 EVb=-4.219 EVin=-5.468 entropy=0.2763 | deploy=7.8% bundle=0.09 ratio=0.983 clip=5.5% gs=16 adv=-4.897±2.092 gnorm=0.52 | p_gnorm=0.7031 v_gnorm=0.03169 v/p=0.05 scale=12.27 n=128
+[solo step 92460] policy=0.0508 value=0.0189 vraw=2.84 EVb=-2.255 EVin=-2.681 entropy=0.1720 | deploy=7.0% bundle=0.07 ratio=0.984 clip=7.8% gs=16 adv=-8.146±4.971 gnorm=0.19 n=128
+[solo step 92461] policy=0.0780 value=0.0073 vraw=1.10 EVb=-4.603 EVin=-6.108 entropy=0.2361 | deploy=12.5% bundle=0.12 ratio=0.997 clip=0.8% gs=16 adv=-5.507±2.224 gnorm=1.29 n=128
+[solo] anchor@92500: vs baseline_rand 胜率 0.825±0.060 (33W/7L/0D, 40局)
+[solo step 92931] policy=0.0159 value=0.0024 vraw=0.37 EVb=-0.150 EVin=-0.258 entropy=0.3522 | deploy=10.2% bundle=0.10 ratio=0.995 clip=1.6% gs=16 adv=-1.556±3.060 gnorm=0.72 n=128
+[solo step 92932] policy=-0.0137 value=0.0007 vraw=0.11 EVb=-1.049 EVin=-0.195 entropy=0.2385 | deploy=7.0% bundle=0.07 ratio=0.997 clip=3.9% gs=16 adv=+0.742±1.687 gnorm=0.26 n=128
+[solo step 92933] policy=-0.1225 value=0.0015 vraw=0.22 EVb=-33.519 EVin=-14.938 entropy=0.4971 | deploy=14.8% bundle=0.15 ratio=1.027 clip=7.8% gs=16 adv=+2.560±0.663 gnorm=2.13 n=128
+[solo step 93097] policy=-0.0050 value=0.0148 vraw=2.22 EVb=-0.136 EVin=-0.026 entropy=0.6799 | deploy=13.3% bundle=0.16 ratio=0.989 clip=6.2% gs=16 adv=+1.351±8.309 gnorm=0.31 n=128
+[solo step 93098] policy=0.0972 value=0.0632 vraw=9.48 EVb=-9.083 EVin=-9.865 entropy=0.1334 | deploy=7.8% bundle=0.08 ratio=0.985 clip=7.8% gs=16 adv=-16.600±5.285 gnorm=0.54 n=128
+[solo step 93457] policy=-0.0007 value=0.0175 vraw=2.63 EVb=-0.040 EVin=-0.000 entropy=0.2954 | deploy=7.8% bundle=0.09 ratio=1.011 clip=3.9% gs=16 adv=+0.128±9.173 gnorm=0.16 n=128
+[solo step 93458] policy=-0.0435 value=0.0084 vraw=1.26 EVb=-2.516 EVin=-1.935 entropy=0.2127 | deploy=7.0% bundle=0.07 ratio=1.002 clip=0.8% gs=16 adv=+5.151±3.705 gnorm=0.47 n=128
+[solo] 冻结副本已同步 @step 94000
+[solo] 对手池刷新 @step 94000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 65, 'frozen': 50, 'hist': 211, 'rand_anchor': 26}
+[solo step 94057] policy=-0.0507 value=0.0056 vraw=0.84 EVb=-3.966 EVin=-2.618 entropy=0.3749 | deploy=13.3% bundle=0.14 ratio=1.010 clip=3.1% gs=16 adv=+4.419±2.731 gnorm=0.41 | p_gnorm=0.3315 v_gnorm=0.0287 v/p=0.09 scale=12.23 n=128
+[solo step 94058] policy=0.0036 value=0.0002 vraw=0.04 EVb=-1.046 EVin=-0.015 entropy=0.3179 | deploy=7.8% bundle=0.08 ratio=1.012 clip=3.1% gs=16 adv=-0.127±1.065 gnorm=0.34 n=128
+[solo step 94059] policy=-0.0058 value=0.0003 vraw=0.04 EVb=-2.832 EVin=-0.032 entropy=0.3464 | deploy=8.6% bundle=0.09 ratio=1.003 clip=4.7% gs=16 adv=+0.208±1.140 gnorm=0.22 n=128
+[solo step 94060] policy=-0.0101 value=0.0003 vraw=0.05 EVb=-2.963 EVin=-0.110 entropy=0.4949 | deploy=14.1% bundle=0.14 ratio=1.003 clip=7.0% gs=16 adv=+0.399±1.190 gnorm=0.49 n=128
+[solo step 94061] policy=0.0994 value=0.0023 vraw=0.35 EVb=-6.269 EVin=-10.178 entropy=0.5891 | deploy=16.4% bundle=0.16 ratio=0.989 clip=7.8% gs=16 adv=-3.175±0.997 gnorm=1.87 n=128
+[solo step 94227] policy=0.0565 value=0.0330 vraw=4.91 EVb=-2.805 EVin=-3.331 entropy=0.6283 | deploy=15.6% bundle=0.16 ratio=0.971 clip=8.6% gs=16 adv=-10.994±6.025 gnorm=0.69 n=128
+[solo step 94529] policy=0.0666 value=0.0794 vraw=11.86 EVb=-4.318 EVin=-4.573 entropy=0.4772 | deploy=9.4% bundle=0.12 ratio=0.992 clip=3.1% gs=16 adv=-17.657±8.253 gnorm=1.50 n=128
+[solo step 94530] policy=-0.0269 value=0.0009 vraw=0.13 EVb=-2.290 EVin=-0.726 entropy=0.3079 | deploy=7.0% bundle=0.07 ratio=1.004 clip=8.6% gs=16 adv=+1.321±1.561 gnorm=0.25 n=128
+[solo step 94531] policy=-0.0261 value=0.0039 vraw=0.58 EVb=-1.215 EVin=-0.746 entropy=0.2622 | deploy=9.4% bundle=0.09 ratio=0.997 clip=0.8% gs=16 adv=+2.804±3.256 gnorm=0.64 n=128
+[solo step 94670] policy=-0.0075 value=0.0031 vraw=0.47 EVb=-0.415 EVin=-0.052 entropy=0.3614 | deploy=9.4% bundle=0.09 ratio=1.008 clip=5.5% gs=16 adv=+0.861±3.768 gnorm=0.52 n=128
+[solo] anchor@95000: vs baseline_rand 胜率 0.525±0.079 (21W/19L/0D, 40局)
+[solo step 95021] policy=0.0651 value=0.0052 vraw=0.78 EVb=-3.174 EVin=-4.360 entropy=0.4193 | deploy=8.6% bundle=0.09 ratio=0.980 clip=5.5% gs=16 adv=-4.501±2.155 gnorm=1.28 | p_gnorm=1.228 v_gnorm=0.02998 v/p=0.02 scale=12.19 n=128
+[solo step 95022] policy=0.0573 value=0.0146 vraw=2.17 EVb=-2.697 EVin=-3.417 entropy=0.3036 | deploy=7.8% bundle=0.08 ratio=0.990 clip=8.6% gs=16 adv=-7.339±3.969 gnorm=0.98 n=128
+[solo step 95023] policy=0.0619 value=0.0071 vraw=1.06 EVb=-2.859 EVin=-4.096 entropy=0.4759 | deploy=12.5% bundle=0.12 ratio=0.971 clip=10.2% gs=16 adv=-5.227±2.580 gnorm=0.91 n=128
+[solo step 95380] policy=0.0846 value=0.0099 vraw=1.47 EVb=-6.011 EVin=-7.617 entropy=0.3986 | deploy=8.6% bundle=0.09 ratio=0.959 clip=11.7% gs=16 adv=-6.443±2.334 gnorm=1.03 n=128
+[solo step 95381] policy=0.0220 value=0.0021 vraw=0.31 EVb=-0.236 EVin=-0.496 entropy=0.1759 | deploy=7.0% bundle=0.07 ratio=0.990 clip=11.7% gs=16 adv=-1.816±2.573 gnorm=0.22 n=128
+[solo step 95560] policy=0.0399 value=0.0071 vraw=1.06 EVb=-1.378 EVin=-1.823 entropy=0.5629 | deploy=14.8% bundle=0.15 ratio=0.923 clip=31.2% gs=16 adv=-4.679±3.462 gnorm=0.64 n=128
+[solo step 95561] policy=-0.0445 value=0.0249 vraw=3.69 EVb=-2.417 EVin=-2.069 entropy=0.2007 | deploy=7.0% bundle=0.07 ratio=1.005 clip=3.1% gs=16 adv=+8.924±6.205 gnorm=0.51 n=128
+[solo step 95920] policy=-0.0244 value=0.0371 vraw=5.50 EVb=-0.735 EVin=-0.610 entropy=0.3086 | deploy=8.6% bundle=0.09 ratio=1.023 clip=4.7% gs=16 adv=+8.169±10.456 gnorm=0.18 n=128
+[solo step 95921] policy=0.0900 value=0.0142 vraw=2.11 EVb=-6.941 EVin=-8.246 entropy=0.2046 | deploy=7.0% bundle=0.07 ratio=0.998 clip=3.9% gs=16 adv=-7.747±2.700 gnorm=1.09 n=128
+[solo step 95922] policy=0.1045 value=0.0294 vraw=4.35 EVb=-9.431 EVin=-11.412 entropy=0.4732 | deploy=14.1% bundle=0.14 ratio=0.972 clip=14.8% gs=16 adv=-11.303±3.347 gnorm=1.44 n=128
+[solo] 冻结副本已同步 @step 96000
+[solo] 对手池刷新 @step 96000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 67, 'frozen': 50, 'hist': 216, 'rand_anchor': 27}
+[solo step 96520] policy=0.0058 value=0.0031 vraw=0.45 EVb=-0.106 EVin=-0.036 entropy=0.3860 | deploy=10.2% bundle=0.10 ratio=0.984 clip=5.5% gs=16 adv=-0.707±3.744 gnorm=0.18 | p_gnorm=0.8449 v_gnorm=0.008271 v/p=0.01 scale=12.16 n=128
+[solo step 96521] policy=-0.0038 value=0.0007 vraw=0.10 EVb=-0.702 EVin=-0.012 entropy=0.2340 | deploy=7.0% bundle=0.07 ratio=1.013 clip=3.9% gs=16 adv=+0.194±1.769 gnorm=0.23 n=128
+[solo step 96522] policy=-0.0367 value=0.0007 vraw=0.10 EVb=-6.594 EVin=-1.394 entropy=0.5354 | deploy=14.8% bundle=0.15 ratio=1.029 clip=16.4% gs=16 adv=+1.383±1.173 gnorm=0.65 n=128
+[solo step 96523] policy=-0.1587 value=0.0025 vraw=0.36 EVb=-47.896 EVin=-25.421 entropy=0.5489 | deploy=15.6% bundle=0.16 ratio=1.028 clip=7.0% gs=16 adv=+3.338±0.662 gnorm=2.20 n=128
+[solo step 96794] policy=-0.0581 value=0.0080 vraw=1.17 EVb=-5.837 EVin=-3.319 entropy=0.7600 | deploy=19.5% bundle=0.20 ratio=1.054 clip=8.6% gs=16 adv=+5.368±2.946 gnorm=1.51 n=128
+[solo step 96795] policy=-0.0271 value=0.0041 vraw=0.60 EVb=-1.315 EVin=-0.745 entropy=0.2059 | deploy=7.8% bundle=0.08 ratio=1.011 clip=3.1% gs=16 adv=+2.876±3.328 gnorm=0.24 n=128
+[solo step 96922] policy=-0.0885 value=0.0725 vraw=10.67 EVb=-8.723 EVin=-7.940 entropy=0.2866 | deploy=10.9% bundle=0.11 ratio=1.030 clip=4.7% gs=16 adv=+17.416±6.179 gnorm=0.49 n=128
+[solo step 97391] policy=-0.0526 value=0.0587 vraw=8.65 EVb=-3.086 EVin=-2.800 entropy=0.2118 | deploy=7.8% bundle=0.08 ratio=1.009 clip=4.7% gs=16 adv=+14.291±8.533 gnorm=0.28 n=128
+[solo step 97392] policy=0.0071 value=0.0006 vraw=0.09 EVb=-0.101 EVin=-0.057 entropy=0.1632 | deploy=7.8% bundle=0.08 ratio=1.001 clip=2.3% gs=16 adv=-0.369±1.608 gnorm=0.17 n=128
+[solo step 97393] policy=0.0475 value=0.0012 vraw=0.18 EVb=-1.338 EVin=-2.350 entropy=0.1862 | deploy=8.6% bundle=0.09 ratio=0.994 clip=0.8% gs=16 adv=-1.972±1.297 gnorm=0.44 n=128
+[solo step 97394] policy=0.0795 value=0.0153 vraw=2.25 EVb=-5.293 EVin=-6.518 entropy=0.3971 | deploy=14.8% bundle=0.15 ratio=0.994 clip=7.8% gs=16 adv=-7.886±3.094 gnorm=1.41 | p_gnorm=0.4216 v_gnorm=0.05109 v/p=0.12 scale=12.12 n=128
+[solo] anchor@97500: vs baseline_rand 胜率 0.700±0.072 (28W/12L/0D, 40局)
+[solo step 97586] policy=0.0210 value=0.0453 vraw=6.65 EVb=-0.378 EVin=-0.454 entropy=0.3846 | deploy=12.5% bundle=0.12 ratio=0.998 clip=5.5% gs=16 adv=-8.147±12.096 gnorm=0.51 n=128
+[solo step 97587] policy=-0.0931 value=0.0195 vraw=2.87 EVb=-10.318 EVin=-8.677 entropy=0.1973 | deploy=7.0% bundle=0.07 ratio=1.027 clip=5.5% gs=16 adv=+9.064±3.078 gnorm=0.70 n=128
+[solo step 97848] policy=-0.0117 value=0.0169 vraw=2.48 EVb=-0.237 EVin=-0.142 entropy=0.2780 | deploy=8.6% bundle=0.09 ratio=0.999 clip=2.3% gs=16 adv=+3.145±8.333 gnorm=0.11 n=128
+[solo step 97849] policy=0.0900 value=0.0039 vraw=0.58 EVb=-6.037 EVin=-8.495 entropy=0.1785 | deploy=7.0% bundle=0.07 ratio=0.976 clip=9.4% gs=16 adv=-4.060±1.394 gnorm=0.36 n=128
+[solo] 冻结副本已同步 @step 98000
+[solo] 对手池刷新 @step 98000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 68, 'frozen': 50, 'hist': 220, 'rand_anchor': 28}
+[solo step 98019] policy=0.1070 value=0.0612 vraw=8.99 EVb=-10.873 EVin=-11.898 entropy=0.3035 | deploy=9.4% bundle=0.10 ratio=0.974 clip=3.9% gs=16 adv=-16.293±4.723 gnorm=0.94 n=128
+[solo step 98331] policy=0.0272 value=0.0662 vraw=9.75 EVb=-0.682 EVin=-0.764 entropy=0.2334 | deploy=8.6% bundle=0.09 ratio=0.989 clip=1.6% gs=16 adv=-11.636±13.300 gnorm=0.20 n=128
+[solo step 98332] policy=0.0344 value=0.0010 vraw=0.15 EVb=-0.586 EVin=-1.217 entropy=0.1810 | deploy=7.0% bundle=0.07 ratio=0.989 clip=3.1% gs=16 adv=-1.634±1.469 gnorm=0.38 n=128
+[solo step 98512] policy=0.0355 value=0.0082 vraw=1.20 EVb=-1.027 EVin=-1.286 entropy=0.4331 | deploy=12.5% bundle=0.13 ratio=1.012 clip=9.4% gs=16 adv=-4.659±4.098 gnorm=0.75 n=128
+[solo step 98513] policy=-0.0817 value=0.0677 vraw=9.96 EVb=-7.472 EVin=-6.822 entropy=0.2240 | deploy=7.0% bundle=0.07 ratio=1.018 clip=3.1% gs=16 adv=+16.669±6.382 gnorm=0.72 n=128
+[solo step 98872] policy=-0.0326 value=0.0409 vraw=6.01 EVb=-1.285 EVin=-1.081 entropy=0.2833 | deploy=7.8% bundle=0.09 ratio=1.014 clip=3.1% gs=16 adv=+10.000±9.611 gnorm=0.35 | p_gnorm=0.8514 v_gnorm=0.06743 v/p=0.08 scale=12.13 n=128
+[solo step 98873] policy=-0.0695 value=0.0080 vraw=1.18 EVb=-6.569 EVin=-4.914 entropy=0.1843 | deploy=7.8% bundle=0.08 ratio=1.010 clip=0.8% gs=16 adv=+5.613±2.527 gnorm=1.05 n=128
+[solo step 98874] policy=-0.0109 value=0.0066 vraw=0.97 EVb=-0.289 EVin=-0.113 entropy=0.3505 | deploy=12.5% bundle=0.12 ratio=1.004 clip=5.5% gs=16 adv=+1.794±5.293 gnorm=0.22 n=128
+[solo step 99097] policy=0.0212 value=0.0166 vraw=2.44 EVb=-0.398 EVin=-0.459 entropy=0.3805 | deploy=10.2% bundle=0.11 ratio=0.985 clip=4.7% gs=16 adv=-4.958±7.319 gnorm=0.27 n=128
+[solo step 99578] policy=0.0748 value=0.1034 vraw=15.22 EVb=-5.438 EVin=-5.808 entropy=0.2627 | deploy=7.8% bundle=0.08 ratio=0.988 clip=2.3% gs=16 adv=-20.390±8.458 gnorm=0.49 n=128
+[solo step 99579] policy=0.0507 value=0.0006 vraw=0.09 EVb=-2.370 EVin=-2.584 entropy=0.2476 | deploy=7.8% bundle=0.08 ratio=0.995 clip=6.2% gs=16 adv=-1.445±0.891 gnorm=0.48 n=128
+[solo step 99580] policy=-0.0005 value=0.0015 vraw=0.22 EVb=-0.201 EVin=-0.000 entropy=0.2506 | deploy=8.6% bundle=0.09 ratio=1.004 clip=3.9% gs=16 adv=+0.045±2.666 gnorm=0.26 n=128
+[solo step 99581] policy=-0.0606 value=0.0084 vraw=1.24 EVb=-5.323 EVin=-3.702 entropy=0.5057 | deploy=14.8% bundle=0.15 ratio=1.033 clip=3.9% gs=16 adv=+5.567±2.901 gnorm=1.02 n=128
+[solo step 99767] policy=-0.0635 value=0.0578 vraw=8.49 EVb=-4.601 EVin=-4.063 entropy=0.4700 | deploy=14.1% bundle=0.14 ratio=1.018 clip=10.2% gs=16 adv=+14.758±7.319 gnorm=0.98 n=128
+[solo step 99768] policy=-0.1041 value=0.0219 vraw=3.21 EVb=-12.924 EVin=-11.013 entropy=0.1993 | deploy=7.0% bundle=0.07 ratio=1.016 clip=2.3% gs=16 adv=+9.717±2.926 gnorm=0.99 n=128
+[solo step 99915] policy=-0.0647 value=0.0395 vraw=5.79 EVb=-4.850 EVin=-4.217 entropy=0.3099 | deploy=7.8% bundle=0.09 ratio=1.026 clip=3.1% gs=16 adv=+12.245±5.962 gnorm=0.48 | p_gnorm=0.9208 v_gnorm=0.07286 v/p=0.08 scale=12.11 n=128
+[solo] ⚠️ GRU 活力不达标 @step 100000: value/R std=0.001 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@100000: 胜率 0.600±0.077 (24W/16L/0D, 40局) mean_reward=-1.700 EV=-0.0022（池化） EVb=-0.0093 h_std=8.38e-02 n_abs=0.813951 vstd/rstd=0.0009 累计局数=374
+[solo]   vs baseline0: 胜率 0.675±0.074 (26W/12L/2D)
+[solo]   vs baseline_prev: 胜率 0.475±0.079 (19W/21L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.076 (25W/15L/0D)
+[solo] 冻结副本已同步 @step 100000
+[solo] 对手池刷新 @step 100000: hist ckpts=12（本目录 12，新增 6） | 累计对手局 {'defend': 70, 'frozen': 50, 'hist': 225, 'rand_anchor': 29}
+[solo] 训练循环耗时 8909.1s
+[done] solo 'd1_long_100k' 完成，产物在 runs\d1_long_100k （solo_state.json 供 dashboard --solo 读取）
