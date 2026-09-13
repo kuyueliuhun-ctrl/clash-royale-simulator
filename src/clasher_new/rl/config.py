@@ -101,6 +101,13 @@ class TrainConfig:
     # —— 训练/评估超参 ——
     total_steps: int = 20000
     steps_per_eval: int = 4000   # 评估频率：每 N 步训满再评（2000→4000：每 ckpt 训练量翻倍、评估频率减半）
+    anchor_every: int = 0        # C 方案（2026-09-13）：轻量评估点间隔——只跑固定随机锚点
+                                 # （baseline_rand，C1 判据原料）+ 落快照，不跑 main/对照两块
+                                 # （省 3/4 成本）。0=关闭（旧行为，逐位不变）。
+                                 # 用途：长 run 上把锚点维持在 2500 分辨率、其余块稀疏到
+                                 # steps_per_eval，实测（D1 三跑锚点序列粗采样回放）证明
+                                 # C1 的谷底只有 1 个点宽、5000 即开始漏，10000 会把最差点
+                                 # 系统性抬高 ~2×（0.192→0.462）。
     batch_size: int = 128
     update_interval: int = 128
     lr: float = 3e-4

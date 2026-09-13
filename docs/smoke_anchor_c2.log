@@ -1,0 +1,61 @@
+[solo] 单人自对弈 配置 'smoke_anchor_c2' -> runs\smoke_anchor_c2 (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=500, value_norm=running, adv_norm=scale, diagnose_every=10, n_eval_games=4, eval_workers=4, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=1 minibatch=128 shuffle=False ⇒ 每 128 帧 1 次梯度步（旧行为：1 次）
+[solo] 对手池: hist ckpts=7（其中 7 来自补种目录 ['runs/economy_9k_ft']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 500 步重扫本 run 目录）
+[solo] eval@0: 胜率 0.375±0.242 (1W/2L/1D, 4局) mean_reward=-4.229 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.375±0.242 (1W/2L/1D)
+[solo]   vs baseline_prev: 胜率 0.250±0.216 (1W/3L/0D)
+[solo]   vs baseline_rand: 胜率 0.500±0.250 (1W/1L/2D)
+[solo] 启动耗时分解: torch+CUDA init=0.1s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=2.1s | eval@0 4局=25.0s (并行worker=4) | 合计(A→B)=27.1s
+[solo] 评估节奏: 全点每 1000 步（2 个，含 eval@0）/ 轻量锚点每 500 步（2 个，只跑 baseline_rand + 落盘）
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 160] policy=0.2333 value=1.0427 vraw=59.09 EVb=-0.051 entropy=1.0753 | deploy=10.9% bundle=0.16 ratio=1.000 clip=0.0% gs=1 adv=-1.746±7.486 gnorm=149.48 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 280] policy=-0.5358 value=1.1487 vraw=70.55 EVb=-0.302 entropy=0.6400 | deploy=8.6% bundle=0.10 ratio=1.002 clip=0.0% gs=1 adv=+3.837±7.190 gnorm=161.85 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_2000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 400] policy=-0.0438 value=0.9251 vraw=54.88 EVb=-0.003 entropy=0.6646 | deploy=9.4% bundle=0.10 ratio=1.001 clip=0.0% gs=1 adv=+0.323±7.529 gnorm=47.91 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo] ⚠️ 绝对强度警报 @step 500: vs 固定随机锚点 胜率=0.250 < 0.35（自对弈可能在循环里打转，v3 §3.8.4 取证）
+[solo] anchor@500: vs baseline_rand 胜率 0.250±0.216 (0W/2L/2D, 4局)
+[solo] 冻结副本已同步 @step 500
+[solo] 对手池刷新 @step 500: hist ckpts=9（本目录 2，新增 2） | 累计对手局 {'frozen': 2, 'hist': 10}
+[solo step 520] policy=0.4581 value=1.0677 vraw=64.74 EVb=-0.209 entropy=0.6068 | deploy=7.8% bundle=0.09 ratio=1.000 clip=0.0% gs=1 adv=-3.334±7.277 gnorm=94.22 n=128
+[solo step 640] policy=2.0248 value=2.3941 vraw=190.01 EVb=-4.063 entropy=0.6109 | deploy=7.0% bundle=0.09 ratio=1.000 clip=0.0% gs=1 adv=-12.368±6.108 gnorm=244.64 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_0.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 800] policy=0.4307 value=0.6704 vraw=48.97 EVb=-0.185 entropy=0.7574 | deploy=9.4% bundle=0.12 ratio=1.000 clip=0.0% gs=1 adv=-2.768±6.427 gnorm=60.04 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_10000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[follower] ⚠️ runs/economy_9k_ft\solo_main_8000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 920] policy=0.4708 value=0.7888 vraw=54.57 EVb=-0.201 entropy=0.8176 | deploy=8.6% bundle=0.12 ratio=1.000 clip=0.0% gs=1 adv=-3.115±6.609 gnorm=63.08 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_12000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo] ⚠️ GRU 活力不达标 @step 1000: h 跨帧 std=4.22e-02 ≤ 0.05（隐状态被冻住，GRU 未解冻） | value/R std=0.041 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 1000: engagement_rate=0.000 不满足 >= 12.500（50%×起点(25)；只报警，不中断训练）
+[gate] WARN @step 1000: ghost_rate=21.100 不满足 <= 21.000（200%×起点(10.5)；只报警，不中断训练）
+[solo] eval@1000: 胜率 0.625±0.242 (2W/1L/1D, 4局) mean_reward=-4.352 EV=-0.1221（池化） EVb=-0.1322 h_std=4.22e-02 n_abs=0.411145 vstd/rstd=0.0405 累计局数=25
+[solo]   vs baseline0: 胜率 0.750±0.216 (3W/1L/0D)
+[solo]   vs baseline_prev: 胜率 0.625±0.242 (2W/1L/1D)
+[solo]   vs baseline_rand: 胜率 0.750±0.216 (3W/1L/0D)
+[solo] 冻结副本已同步 @step 1000
+[solo] 对手池刷新 @step 1000: hist ckpts=10（本目录 3，新增 1） | 累计对手局 {'defend': 3, 'frozen': 3, 'hist': 17, 'rand_anchor': 2}
+[solo step 1040] policy=0.7597 value=0.7773 vraw=50.62 EVb=-0.566 entropy=0.6915 | deploy=8.6% bundle=0.11 ratio=1.000 clip=0.0% gs=1 adv=-4.329±5.698 gnorm=81.05 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_6000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1160] policy=0.9044 value=0.8725 vraw=54.10 EVb=-0.789 entropy=0.6474 | deploy=7.8% bundle=0.10 ratio=1.000 clip=0.0% gs=1 adv=-4.913±5.429 gnorm=86.11 n=128
+[solo step 1280] policy=0.2142 value=0.8784 vraw=53.56 EVb=-0.046 entropy=0.5618 | deploy=7.8% bundle=0.09 ratio=1.000 clip=0.0% gs=1 adv=-1.535±7.167 gnorm=32.01 | p_gnorm=21.03 v_gnorm=24.36 v/p=1.16 scale=7.808 n=128
+[follower] ⚠️ runs/economy_9k_ft\solo_main_4000.pt 缺 enc_ln/grid_ln.*（旧架构）：LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），只能当对照基线/对手池
+[solo step 1440] policy=6.2821 value=0.9505 vraw=54.97 EVb=-39.628 entropy=0.9317 | deploy=9.4% bundle=0.14 ratio=1.000 clip=0.0% gs=1 adv=-7.322±1.166 gnorm=238.29 n=128
+[solo] anchor@1500: vs baseline_rand 胜率 0.875±0.165 (3W/0L/1D, 4局)
+[solo] 冻结副本已同步 @step 1500
+[solo] 对手池刷新 @step 1500: hist ckpts=11（本目录 4，新增 1） | 累计对手局 {'defend': 6, 'frozen': 6, 'hist': 23, 'rand_anchor': 2}
+[solo step 1560] policy=3.6706 value=1.0052 vraw=55.32 EVb=-13.831 entropy=0.8051 | deploy=8.6% bundle=0.12 ratio=1.000 clip=0.0% gs=1 adv=-7.207±1.965 gnorm=149.99 n=128
+[solo] 训练循环耗时 135.8s
+[solo] ⚠️ GRU 活力不达标 @step 1600: h 跨帧 std=4.25e-02 ≤ 0.05（隐状态被冻住，GRU 未解冻） | value/R std=0.039 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[gate] WARN @step 1600: engagement_rate=0.000 不满足 >= 12.500（50%×起点(25)；只报警，不中断训练）
+[gate] WARN @step 1600: ghost_rate=27.800 不满足 <= 21.000（200%×起点(10.5)；只报警，不中断训练）
+[solo] eval@1600: 胜率 0.750±0.216 (3W/1L/0D, 4局) mean_reward=5.285 EV=-0.867（池化） EVb=-0.8973 h_std=4.25e-02 n_abs=0.469767 vstd/rstd=0.0387 累计局数=40
+[solo]   vs baseline0: 胜率 1.000±0.000 (4W/0L/0D)
+[solo]   vs baseline_prev: 胜率 0.750±0.216 (3W/1L/0D)
+[solo]   vs baseline_rand: 胜率 0.625±0.242 (2W/1L/1D)
+[done] solo 'smoke_anchor_c2' 完成，产物在 runs\smoke_anchor_c2 （solo_state.json 供 dashboard --solo 读取）

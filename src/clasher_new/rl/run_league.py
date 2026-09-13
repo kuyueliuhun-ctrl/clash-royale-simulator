@@ -1203,6 +1203,9 @@ def main():
     # run 模式：超参覆盖（优先级高于配置预设）
     ap.add_argument("--total-steps", type=int, default=None)
     ap.add_argument("--steps-per-eval", type=int, default=None)
+    ap.add_argument("--anchor-every", type=int, default=None,
+                    help="C 方案：轻量锚点评估点间隔（只跑 baseline_rand 锚点+落快照，"
+                         "不跑 main/对照两块）；0/缺省=关闭")
     ap.add_argument("--n-envs", type=int, default=None,
                     help="并行多环境数（>1 用批量推理/更新；默认 1）")
     ap.add_argument("--parallel", type=str, choices=["mp", "proc"], default=None,
@@ -1295,7 +1298,8 @@ def main():
 
     # ---- run 模式：解析命名配置 + 命令行覆盖 ----
     overrides = {}
-    for k in ("total_steps", "steps_per_eval", "n_envs", "parallel", "card_level",
+    for k in ("total_steps", "steps_per_eval", "anchor_every", "n_envs", "parallel",
+              "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
               "deck_set",

@@ -4692,6 +4692,82 @@ def test_solo_rand_anchor():
           f"报警线 <{train_solo.RAND_ANCHOR_WARN_FLOOR} 生效")
 
 
+def test_anchor_light_point_state():
+    """C 方案（2026-09-13）：轻量锚点评估点（`--anchor-every`）。
+
+    背景：100k 级长 run 里评估占 ~3/4 墙钟，但 C1 判据（单跑最差锚点）用的锚点序列
+    实测谷底**只有 1 个点宽**（相邻点 |Δ|≈0.23 ≈ 3σ）；粗采样回放证明 5000 步就开始
+    漏真谷底、10000 步把"最差点"从 0.192 系统性抬到 0.462（病态组的塌陷是持续性的、
+    任何粗采样都留得住；D1 的低点是周期性瞬态、粗采样直接丢）。故拆成
+    "密锚点（只跑 baseline_rand）+ 稀全点（main/对照三块）"。
+
+    本测试盯的都是会**静默失效**的点：
+    ① `TrainConfig.anchor_every` 默认 0（关闭 = 旧行为，不动任何既有 run）；
+    ② CLI `--anchor-every` 已接线到 overrides（漏接 = 传了也不生效，最典型的脚枪）；
+    ③ 轻点写入的锚点条目与全点三条对照**共存**、按 step 去重、锚点序列可复原
+       （轻点若把历史覆盖掉，"2500 分辨率"就是假的）；
+    ④ 同 step 重复写幂等（resume 重跑同一评估点不留重复条目）。
+    """
+    import json
+    import re
+    import tempfile
+    import inspect
+    from rl.config import TrainConfig
+    from rl import run_league, train_solo
+
+    # ① 默认关闭 / 可显式开启
+    assert TrainConfig().anchor_every == 0, TrainConfig().anchor_every
+    assert TrainConfig.resolve("economy", anchor_every=2500).anchor_every == 2500
+    assert TrainConfig.resolve("economy").anchor_every == 0
+
+    # ② CLI 接线：flag 存在 **且** 进了 overrides 元组（源码级断言）
+    src = inspect.getsource(run_league.main)
+    assert '"--anchor-every"' in src, "CLI flag --anchor-every 缺失"
+    assert re.search(r'for k in \([^)]*"anchor_every"', src, re.S), \
+        "CLI flag 未进 overrides 元组 → 传了不生效"
+
+    with tempfile.TemporaryDirectory() as td:
+        cfg = TrainConfig(name="c_anchor", out_dir=td)
+        p = os.path.join(td, "c_anchor", "solo_state.json")
+        hist = [{"step": 0, "winrate": 0.5, "games": 40}]
+
+        def rd():
+            with open(p, encoding="utf-8") as f:
+                return json.load(f)
+
+        # 全点 @0：三条对照
+        train_solo.write_solo_state(p, cfg, hist, 0, controls=[
+            {"step": 0, "vs": "baseline0", "winrate": 0.525},
+            {"step": 0, "vs": "baseline_prev", "winrate": 0.600},
+            {"step": 0, "vs": "baseline_rand", "winrate": 0.625}])
+        # 轻点 @2500：只有锚点（且 history 未变）
+        train_solo.write_solo_state(p, cfg, hist, 2500, controls=[
+            {"step": 2500, "vs": "baseline_rand", "winrate": 0.400}])
+        ch = rd()["_controls_history"]
+        assert len(ch) == 4, ch
+        assert sorted(c["step"] for c in ch if c["vs"] == "baseline_rand") == [0, 2500], ch
+        assert rd()["total_steps"] == 2500, "轻点也应推进进度（dashboard）"
+        assert len(rd()["history"]) == 1, "轻点不得改动胜率曲线"
+
+        # ④ 同 step 重复写 → 幂等
+        train_solo.write_solo_state(p, cfg, hist, 2500, controls=[
+            {"step": 2500, "vs": "baseline_rand", "winrate": 0.400}])
+        assert len(rd()["_controls_history"]) == 4, rd()["_controls_history"]
+
+        # ③ 下一个全点 @5000：3 旧 + 3 新，锚点序列仍连续
+        train_solo.write_solo_state(p, cfg, hist, 5000, controls=[
+            {"step": 5000, "vs": "baseline0", "winrate": 0.5},
+            {"step": 5000, "vs": "baseline_prev", "winrate": 0.5},
+            {"step": 5000, "vs": "baseline_rand", "winrate": 0.5}])
+        ch = rd()["_controls_history"]
+        assert len(ch) == 7, ch
+        assert sorted(c["step"] for c in ch if c["vs"] == "baseline_rand") \
+            == [0, 2500, 5000], ch
+
+    print("[PASS] C 方案轻量锚点：默认关、CLI 已接线、轻点/全点对照共存可复原"
+          "（step=0/2500/5000 锚点序列）、同 step 幂等")
+
+
 def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
@@ -4776,6 +4852,7 @@ def main():
     test_value_channel_norm_and_gnorm_split()
     test_history_dedup_and_gates()
     test_solo_rand_anchor()
+    test_anchor_light_point_state()
     test_opponent_pool_rand_anchor()
     test_opponent_pool_mix_multi_dir()
     test_pfsp_gate_and_dynamic_hist()

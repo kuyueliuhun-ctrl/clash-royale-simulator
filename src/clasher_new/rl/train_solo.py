@@ -1371,6 +1371,15 @@ def run_solo(cfg, resume=False, record_replays=True):
                 for _w in _rand_anchor_warns(_c.get("winrate")):
                     _print_safe(f"[solo] ⚠️ 绝对强度警报 @step {step}: {_w}")
                 break
+        _persist(step)
+
+    def _persist(step):
+        """落盘训练态：主快照 + 步进快照（D1 自身联赛成员）+ Adam + run_state。
+
+        从 eval_and_write 尾部抽出（C 方案 2026-09-13），供**轻量锚点评估点**复用：
+        轻点不跑 main/对照三块、只跑锚点，但保留同样的落盘语义 ⇒ 崩溃续训的粒度
+        仍是 anchor_every（2500）而不是 steps_per_eval（10000）。
+        """
         save_checkpoint(main, cfg.solo_main_path())
         save_checkpoint(main, cfg.solo_ckpt_path(step))   # 历史版本保留（solo_main_<step>.pt）
         torch.save(ppo.opt.state_dict(), cfg.solo_opt_path())   # 断点续练恢复 Adam
@@ -1387,6 +1396,33 @@ def run_solo(cfg, resume=False, record_replays=True):
                        "ppo_shuffle": bool(cfg.ppo_shuffle),
                        "ret_scaler": ppo.ret_scaler.to_dict()}, f)
 
+    def anchor_point(step):
+        """C 方案（2026-09-13）：轻量评估点 = 只跑固定随机锚点（C1 判据原料）+ 落盘。
+
+        不跑 main vs 冻结副本 / baseline0 / baseline_prev 三块（省掉一个评估点 3/4 的
+        成本 ≈155s），因此锚点序列能维持 2500 分辨率、其余块稀疏到 steps_per_eval。
+
+        为什么必须这么分（实测，非直觉）：D1 三跑锚点序列的谷底**只有 1 个点宽**
+        （相邻点 |Δ|≈0.225~0.240 ≈ 3σ），粗采样回放显示 5000 就开始漏真谷底、10000 把
+        "最差点"从 0.192 系统性抬到 0.462 —— 病态组的塌陷是持续性的（多个点 0.000，
+        任何粗采样都留得住），而 D1 的低点是周期性瞬态（粗采样直接丢）。粗采样只会让
+        D1 显得更好，恰是"长 run 会不会真塌"最不该失真的地方。
+        """
+        _sync_controls_once()   # 保证 baseline0/baseline_prev = 训练起点权重（与全点同语义）
+        try:
+            c = eval_control(step, "baseline_rand", baseline_rand, RAND_ANCHOR_EVAL_SEED)
+        except OSError as e:
+            print(f"[solo] 锚点评估失败（不影响训练）: {e!r}", flush=True)
+            return
+        for _w in _rand_anchor_warns(c.get("winrate")):
+            _print_safe(f"[solo] ⚠️ 绝对强度警报 @step {step}: {_w}")
+        _persist(step)
+        write_solo_state(cfg.solo_state_path(), cfg, history, step,
+                         status="running", deck=list(mirror_deck), controls=[c])
+        print(f"[solo] anchor@{step}: vs baseline_rand 胜率 {c['winrate']:.3f}"
+              f"±{c['winrate_se']:.3f} ({c['wins']}W/{c['losses']}L/{c['draws']}D, "
+              f"{c['games']}局)", flush=True)
+
     # 训练开始先跑一次评估（WebUI 立即有真实数据）；resume 时不重跑起始评估
     if cfg.eval_at_start and start_step == 0:
         _t_eval0 = time.monotonic()
@@ -1398,6 +1434,15 @@ def run_solo(cfg, resume=False, record_replays=True):
               f"eval@0 {cfg.n_eval_games}局={_t_eval1-_t_eval0:.1f}s "
               f"(并行worker={cfg.eval_workers}) | "
               f"合计(A→B)={_t_eval1-_t_cfg:.1f}s", flush=True)
+
+    # C 方案：评估节奏自述（事后凭日志即可复原协议，不必翻命令行）
+    if cfg.anchor_every and cfg.steps_per_eval:
+        _ts, _spe, _ae = int(cfg.total_steps), int(cfg.steps_per_eval), int(cfg.anchor_every)
+        _n_full = 1 + _ts // _spe
+        _n_light = sum(1 for s in range(_ae, _ts + 1, _ae) if s % _spe)
+        print(f"[solo] 评估节奏: 全点每 {_spe} 步（{_n_full} 个，含 eval@0）/ "
+              f"轻量锚点每 {_ae} 步（{_n_light} 个，只跑 baseline_rand + 落盘）",
+              flush=True)
 
     obs, _ = env.reset()
     belief.reset(env.deck1)
@@ -1583,6 +1628,10 @@ def run_solo(cfg, resume=False, record_replays=True):
         if cfg.steps_per_eval and step % cfg.steps_per_eval == 0:
             eval_and_write(step)
             last_eval_step = step
+        elif (cfg.anchor_every and step % cfg.anchor_every == 0
+              and step != cfg.total_steps):
+            # C 方案轻量点：只跑锚点（全点已含锚点，故用 elif；末步交给收尾全点）
+            anchor_point(step)
 
         # 周期同步冻结副本（原版 WeightsCopyingCallback 思路）
         if cfg.solo_copy_every and step % cfg.solo_copy_every == 0:
