@@ -1229,7 +1229,11 @@ def run_solo(cfg, resume=False, record_replays=True):
             stats["explained_variance_batched"] = None
             stats["r_std"] = None
             stats["r_std_batch"] = None
-        stats["value_std_ratio"] = None   # 由下方 GRU 探针块填入（分子 value_std）
+            # 2026-09-12 修：这一行原先在 if/else **之外**无条件执行，会把上面刚算好的
+            # `value_std_ratio`/（新增的）`value_std_ev` 立刻清成 None
+            # ⇒ 评估行 vstd/rstd 恒 None（gfix_20k 前两点就是这么丢的）。
+            stats["value_std_ratio"] = None
+            stats["value_std_ev"] = None
         _probe["ev_pairs"] = []
         # v3 P0-B：GRU 活力（h 跨帧 std / 候选饱和）—— 负 EV 的直接机理指标。
         # 门槛见 rl/diagnostics.THRESHOLDS（h_std>0.05 且 n_abs<0.9）；不达标只报警。

@@ -947,6 +947,48 @@ critic 工作**应当停**，把算力转回策略侧（cycling / 组织进攻�
   **G′-fix = 把双方塔血/皇冠/圣水差做成显式 scalar 通道**（`scalar_dim` 3 → ~11），
   预注册判据：`enc → hp_diff` 分组 R² 从 −0.03 升到 ≈+1（架构改动 ⇒ 必须 `--fresh`）。
 
+### 3.14 G′-fix 落地：塔血/皇冠/圣水差进显式 scalar 通道（2026-09-12，分支 `no-human-watch-B`）
+
+依据 §3.13 的独立发现（`enc → 塔血差` 分组 R²=−0.03，同一 enc → time=+0.9999；
+策略头只吃 h）——把它当**独立假设**验证，不当 critic 的解药。
+
+| 文件 | 改动 |
+|---|---|
+| `rl/observation.py` | obs 新增 `tower_state` **9 维**：我方三塔血量比 + 敌方三塔血量比 + 双方皇冠/3 + 圣水差/10；归一化用本局满血（`battle.tower_max_hp`，缺失退回 lv11 锚），clip 到 [0,1] |
+| `rl/env_wrapper.py` | reset 时把 `_blue/_red_towers_max` 写给 `battle.tower_max_hp` |
+| `rl/follower.py` | `tower_dim=9`，**追加在 `fused` 尾部**（plan_f/belief_f 之后）⇒ 旧 ckpt 列序是前缀；单条/批量两条编码路径同步；`_tower_state_tensor` 对缺键/长度不符的旧 obs 补零；`enc_dim`/`value_enc_fc` 同步 |
+| `rl/follower.py::load_checkpoint` | `enc_fc.weight`/`value_enc_fc.weight` 走"前 v.shape[1] 列拷贝 + 尾零"（尾部追加 ⇒ 旧列语义不变；旧 ckpt/对手池 ckpt 照常加载） |
+| `rl/selftest.py` | `test_tower_state_observation`：obs 语义（满血=1/破塔=0/皇冠/费差带符号）、`fused` 尾部接线一致、**只改塔血 enc 必变**、旧 obs 尾零兼容。官方全量 selftest PASS |
+
+**为什么必须 tail 追加而不是插进 scalar 块**：`fused = [grid|hand|scalar|plan|belief]`，
+把新列插在 scalar 中间会让 plan/belief 列整体后移 ⇒ `enc_fc` 的"前列拷贝"兼容分支
+会**语义错位**（旧权重被接到错误的列上）。tail 追加保证旧列是前缀。
+
+**预注册判据**（跑完 20k 后按此判，`scripts/diag_critic_ev.py --predict`）：
+`enc → 塔血差` 按局分组 R² 从 **−0.03 → ≈+1**（该信息现在是 `fused` 的直接线性输入）。
+注意判据只验证"观测/表征缺口已关闭"，**不预期**局结果变得可预测（§3.13 ③ 的结论不变）。
+
+**附带修掉一个诊断回归**（同日发现）：`train_solo.eval_and_write` 里
+`stats["value_std_ratio"] = None` 写在 `if/else` **之外**，会把刚算好的同窗口比值
+立刻清空 ⇒ 评估行 `vstd/rstd` 恒 None（`gfix_20k` 前两点实测丢了这个数）。
+已移进 `else` 分支（同时补 `value_std_ev` 的清空）。
+
+### 3.15 G′-fix 20k 验证（`gfix_20k`，进行中）
+
+协议与 F′ 完全一致（同 seed / 同 hist 种子目录 / `--ppo-epochs 4 --ppo-minibatch 32
+--ppo-shuffle`），**唯一变量 = `tower_state` 9 维标量**。启动 0 降级 / 0 Traceback，
+eval@0 40 局 255.7s（12 worker）。
+
+| step | ES 池化 EV（**更新前**口径，可比） | EVb | h_std | n_abs | 镜像胜率 |
+|---|---|---|---|---|---|
+| 2500 | **+0.2824** | +0.272 | 0.0404 | 0.550 | 0.325 |
+| 5000 | **+0.1574** | +0.155 | 0.0493 | 0.622 | 0.075 |
+
+⚠️ 两点不能定论，但值得记：① EV 为正且是**更新前口径**（F′ 的 +0.10/+0.56 是 in-sample，
+不可直读；等 F′ 用同口径复跑才能干净对比）；② `eval@5000` 镜像胜率 0.075（3W/37L）
+是红旗——但镜像曲线本身在 cycling 区间剧烈振荡（历史 0.10↔1.0），且 1σ≈0.078，
+**必须等更多点 + 对照曲线**再判。
+
 ## 4. 明确不做
 
 - 不因为 EV 为负而调 `vf_coef` / 奖励权重——病因已定位为输入饱和，这两项
