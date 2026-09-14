@@ -1,0 +1,1775 @@
+{
+ "replays": "runs/d1_long_100k/replays",
+ "cost_map_size": 144,
+ "per_file": {
+  "league_0.pkl": {
+   "step": 0,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 9049,
+   "n_deploy_frames": 768,
+   "n_subactions": 831,
+   "n_subactions_dedup": 813,
+   "dup_subaction_frames": 9,
+   "subaction_hist": {
+    "1": 723,
+    "2": 36,
+    "4": 9
+   },
+   "n_card_plays": 813,
+   "card_counts": {
+    "Log": 169,
+    "Skeletons": 169,
+    "Knight": 158,
+    "Archer": 156,
+    "IceWizard": 152,
+    "Tesla": 8,
+    "Fireball": 1
+   },
+   "card_share": {
+    "Log": 0.2079,
+    "Skeletons": 0.2079,
+    "Knight": 0.1943,
+    "Archer": 0.1919,
+    "IceWizard": 0.187,
+    "Tesla": 0.0098,
+    "Fireball": 0.0012
+   },
+   "card_y_max": {
+    "Log": 21,
+    "Knight": 20,
+    "Skeletons": 19,
+    "Archer": 20,
+    "IceWizard": 20,
+    "Tesla": 14,
+    "Fireball": 26
+   },
+   "card_cost": {
+    "Log": 2.0,
+    "Knight": 3.0,
+    "Skeletons": 1.0,
+    "Archer": 3.0,
+    "IceWizard": 3.0,
+    "Tesla": 4.0,
+    "Fireball": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Log",
+    "Skeletons",
+    "Knight",
+    "Archer",
+    "IceWizard"
+   ],
+   "topk_share": 0.9889,
+   "cheap_le3_share": 0.9889,
+   "deck_cards": {
+    "Knight": 40,
+    "Log": 40,
+    "Archer": 40,
+    "Tesla": 40,
+    "Skeletons": 40,
+    "IceWizard": 40,
+    "Xbow": 40,
+    "Fireball": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 643,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 170,
+    "n_spell_y_ge21_legal": 5,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 151,
+    "legacy_filter_frames": 151,
+    "n_single_frames": 723,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 1737.0,
+   "elix_post": {
+    "n": 723,
+    "mean": 0.3455,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.5655,
+    "min": 0.0893,
+    "max": 2.1786
+   },
+   "elix_pre": {
+    "n": 723,
+    "mean": 2.748,
+    "median": 3.25,
+    "p10": 1.3214,
+    "p90": 3.4226,
+    "min": 1.2143,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 683,
+    "mean": 6.1854,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 382,
+    "mean": 6.6091,
+    "median": 8.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 9049,
+    "mean": 1.5476,
+    "median": 1.4643,
+    "p10": 0.4643,
+    "p90": 2.8214,
+    "min": 0.0893,
+    "max": 6.0714
+   },
+   "all_frames_frac_ge6": 0.0001,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.2857,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.8755,
+   "post_frac_lt_1": 0.9931,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_10000.pkl": {
+   "step": 10000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 5267,
+   "n_deploy_frames": 517,
+   "n_subactions": 831,
+   "n_subactions_dedup": 685,
+   "dup_subaction_frames": 93,
+   "subaction_hist": {
+    "1": 392,
+    "2": 30,
+    "3": 1,
+    "4": 94
+   },
+   "n_card_plays": 685,
+   "card_counts": {
+    "Skeletons": 183,
+    "Knight": 109,
+    "Log": 105,
+    "IceWizard": 95,
+    "Archer": 90,
+    "Fireball": 58,
+    "Tesla": 44,
+    "Xbow": 1
+   },
+   "card_share": {
+    "Skeletons": 0.2672,
+    "Knight": 0.1591,
+    "Log": 0.1533,
+    "IceWizard": 0.1387,
+    "Archer": 0.1314,
+    "Fireball": 0.0847,
+    "Tesla": 0.0642,
+    "Xbow": 0.0015
+   },
+   "card_y_max": {
+    "Skeletons": 4,
+    "Tesla": 4,
+    "Log": 21,
+    "IceWizard": 4,
+    "Archer": 4,
+    "Knight": 4,
+    "Fireball": 29,
+    "Xbow": 4
+   },
+   "card_cost": {
+    "Skeletons": 1.0,
+    "Tesla": 4.0,
+    "Log": 2.0,
+    "IceWizard": 3.0,
+    "Archer": 3.0,
+    "Knight": 3.0,
+    "Fireball": 4.0,
+    "Xbow": 6.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Knight",
+    "Log",
+    "IceWizard",
+    "Archer"
+   ],
+   "topk_share": 0.8496,
+   "cheap_le3_share": 0.8496,
+   "deck_cards": {
+    "Skeletons": 40,
+    "Fireball": 40,
+    "Tesla": 40,
+    "Knight": 40,
+    "Log": 40,
+    "IceWizard": 40,
+    "Archer": 40,
+    "Xbow": 40
+   },
+   "unplayed_in_deck": [],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 522,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 163,
+    "n_spell_y_ge21_legal": 14,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 48,
+    "legacy_filter_frames": 54,
+    "n_single_frames": 392,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 940.0,
+   "elix_post": {
+    "n": 392,
+    "mean": 0.3329,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.3571,
+    "min": 0.1786,
+    "max": 3.1786
+   },
+   "elix_pre": {
+    "n": 392,
+    "mean": 2.7309,
+    "median": 3.25,
+    "p10": 1.25,
+    "p90": 3.3571,
+    "min": 1.1786,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 352,
+    "mean": 6.56,
+    "median": 8.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 352,
+    "mean": 6.56,
+    "median": 8.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 5267,
+    "mean": 1.6386,
+    "median": 1.4643,
+    "p10": 0.4286,
+    "p90": 2.8571,
+    "min": 0.1786,
+    "max": 10.0
+   },
+   "all_frames_frac_ge6": 0.014,
+   "all_frames_frac_ge8": 0.0104,
+   "post_median": 0.2857,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.977,
+   "post_frac_lt_1": 0.977,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_20000.pkl": {
+   "step": 20000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 10181,
+   "n_deploy_frames": 947,
+   "n_subactions": 1065,
+   "n_subactions_dedup": 1015,
+   "dup_subaction_frames": 30,
+   "subaction_hist": {
+    "1": 890,
+    "2": 26,
+    "3": 1,
+    "4": 30
+   },
+   "n_card_plays": 1015,
+   "card_counts": {
+    "Log": 214,
+    "Archer": 211,
+    "Skeletons": 207,
+    "Knight": 191,
+    "IceWizard": 182,
+    "Tesla": 7,
+    "Fireball": 3
+   },
+   "card_share": {
+    "Log": 0.2108,
+    "Archer": 0.2079,
+    "Skeletons": 0.2039,
+    "Knight": 0.1882,
+    "IceWizard": 0.1793,
+    "Tesla": 0.0069,
+    "Fireball": 0.003
+   },
+   "card_y_max": {
+    "IceWizard": 11,
+    "Log": 21,
+    "Archer": 19,
+    "Knight": 11,
+    "Skeletons": 11,
+    "Tesla": 11,
+    "Fireball": 30
+   },
+   "card_cost": {
+    "IceWizard": 3.0,
+    "Log": 2.0,
+    "Archer": 3.0,
+    "Knight": 3.0,
+    "Skeletons": 1.0,
+    "Tesla": 4.0,
+    "Fireball": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Log",
+    "Archer",
+    "Skeletons",
+    "Knight",
+    "IceWizard"
+   ],
+   "topk_share": 0.9901,
+   "cheap_le3_share": 0.9901,
+   "deck_cards": {
+    "Tesla": 40,
+    "IceWizard": 40,
+    "Fireball": 40,
+    "Archer": 40,
+    "Log": 40,
+    "Xbow": 40,
+    "Knight": 40,
+    "Skeletons": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 798,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 217,
+    "n_spell_y_ge21_legal": 136,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 136,
+    "legacy_filter_frames": 136,
+    "n_single_frames": 890,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 2139.0,
+   "elix_post": {
+    "n": 890,
+    "mean": 0.4062,
+    "median": 0.3214,
+    "p10": 0.2143,
+    "p90": 0.6369,
+    "min": 0.1786,
+    "max": 3.1786
+   },
+   "elix_pre": {
+    "n": 890,
+    "mean": 2.8096,
+    "median": 3.25,
+    "p10": 1.3214,
+    "p90": 3.5655,
+    "min": 1.1786,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 850,
+    "mean": 5.6819,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 558,
+    "mean": 5.7628,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 10181,
+    "mean": 1.5736,
+    "median": 1.494,
+    "p10": 0.4643,
+    "p90": 2.8512,
+    "min": 0.1786,
+    "max": 8.0357
+   },
+   "all_frames_frac_ge6": 0.0012,
+   "all_frames_frac_ge8": 0.0001,
+   "post_median": 0.3214,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.8,
+   "post_frac_lt_1": 0.9809,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 5.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_30000.pkl": {
+   "step": 30000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 5671,
+   "n_deploy_frames": 492,
+   "n_subactions": 647,
+   "n_subactions_dedup": 563,
+   "dup_subaction_frames": 42,
+   "subaction_hist": {
+    "1": 421,
+    "2": 29,
+    "4": 42
+   },
+   "n_card_plays": 563,
+   "card_counts": {
+    "Log": 134,
+    "Skeletons": 112,
+    "Knight": 102,
+    "Archer": 101,
+    "IceWizard": 101,
+    "Tesla": 7,
+    "Fireball": 4,
+    "Xbow": 2
+   },
+   "card_share": {
+    "Log": 0.238,
+    "Skeletons": 0.1989,
+    "Knight": 0.1812,
+    "Archer": 0.1794,
+    "IceWizard": 0.1794,
+    "Tesla": 0.0124,
+    "Fireball": 0.0071,
+    "Xbow": 0.0036
+   },
+   "card_y_max": {
+    "Skeletons": 12,
+    "Archer": 12,
+    "IceWizard": 12,
+    "Knight": 12,
+    "Log": 3,
+    "Fireball": 28,
+    "Tesla": 3,
+    "Xbow": 3
+   },
+   "card_cost": {
+    "Skeletons": 1.0,
+    "Archer": 3.0,
+    "IceWizard": 3.0,
+    "Knight": 3.0,
+    "Log": 2.0,
+    "Fireball": 4.0,
+    "Tesla": 4.0,
+    "Xbow": 6.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Log",
+    "Skeletons",
+    "Knight",
+    "Archer",
+    "IceWizard"
+   ],
+   "topk_share": 0.9769,
+   "cheap_le3_share": 0.9769,
+   "deck_cards": {
+    "Skeletons": 40,
+    "Tesla": 40,
+    "Archer": 40,
+    "Fireball": 40,
+    "IceWizard": 40,
+    "Knight": 40,
+    "Xbow": 40,
+    "Log": 40
+   },
+   "unplayed_in_deck": [],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 425,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 138,
+    "n_spell_y_ge21_legal": 4,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 4,
+    "legacy_filter_frames": 4,
+    "n_single_frames": 421,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 1019.0,
+   "elix_post": {
+    "n": 421,
+    "mean": 0.3208,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.3571,
+    "min": 0.1726,
+    "max": 2.1786
+   },
+   "elix_pre": {
+    "n": 421,
+    "mean": 2.7413,
+    "median": 3.2143,
+    "p10": 1.2857,
+    "p90": 3.3571,
+    "min": 1.1786,
+    "max": 6.25
+   },
+   "dt_all": {
+    "n": 381,
+    "mean": 6.5899,
+    "median": 8.0,
+    "p10": 3.0,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 380,
+    "mean": 6.6059,
+    "median": 8.0,
+    "p10": 3.0,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 5671,
+    "mean": 1.552,
+    "median": 1.4286,
+    "p10": 0.4286,
+    "p90": 2.8214,
+    "min": 0.1726,
+    "max": 7.1429
+   },
+   "all_frames_frac_ge6": 0.0028,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.2857,
+   "pre_median": 3.2143,
+   "post_frac_lt_0p5": 0.9739,
+   "post_frac_lt_1": 0.9762,
+   "pre_frac_ge_6": 0.0048,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.0,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_40000.pkl": {
+   "step": 40000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 6977,
+   "n_deploy_frames": 585,
+   "n_subactions": 686,
+   "n_subactions_dedup": 638,
+   "dup_subaction_frames": 24,
+   "subaction_hist": {
+    "1": 532,
+    "2": 29,
+    "4": 24
+   },
+   "n_card_plays": 638,
+   "card_counts": {
+    "Log": 139,
+    "Skeletons": 134,
+    "Knight": 125,
+    "IceWizard": 119,
+    "Archer": 113,
+    "Fireball": 4,
+    "Tesla": 4
+   },
+   "card_share": {
+    "Log": 0.2179,
+    "Skeletons": 0.21,
+    "Knight": 0.1959,
+    "IceWizard": 0.1865,
+    "Archer": 0.1771,
+    "Fireball": 0.0063,
+    "Tesla": 0.0063
+   },
+   "card_y_max": {
+    "Skeletons": 12,
+    "Knight": 12,
+    "IceWizard": 12,
+    "Log": 3,
+    "Archer": 12,
+    "Fireball": 28,
+    "Tesla": 3
+   },
+   "card_cost": {
+    "Skeletons": 1.0,
+    "Knight": 3.0,
+    "IceWizard": 3.0,
+    "Log": 2.0,
+    "Archer": 3.0,
+    "Fireball": 4.0,
+    "Tesla": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Log",
+    "Skeletons",
+    "Knight",
+    "IceWizard",
+    "Archer"
+   ],
+   "topk_share": 0.9875,
+   "cheap_le3_share": 0.9875,
+   "deck_cards": {
+    "Skeletons": 40,
+    "Tesla": 40,
+    "Knight": 40,
+    "Xbow": 40,
+    "IceWizard": 40,
+    "Archer": 40,
+    "Log": 40,
+    "Fireball": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 495,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 143,
+    "n_spell_y_ge21_legal": 4,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 4,
+    "legacy_filter_frames": 4,
+    "n_single_frames": 532,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 1274.0,
+   "elix_post": {
+    "n": 532,
+    "mean": 0.3305,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.3571,
+    "min": 0.0893,
+    "max": 3.1786
+   },
+   "elix_pre": {
+    "n": 532,
+    "mean": 2.7253,
+    "median": 3.2143,
+    "p10": 1.2857,
+    "p90": 3.3571,
+    "min": 1.1786,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 492,
+    "mean": 6.5062,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 482,
+    "mean": 6.5333,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 6977,
+    "mean": 1.5275,
+    "median": 1.4286,
+    "p10": 0.4286,
+    "p90": 2.7857,
+    "min": 0.0893,
+    "max": 7.1429
+   },
+   "all_frames_frac_ge6": 0.0013,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.2857,
+   "pre_median": 3.2143,
+   "post_frac_lt_0p5": 0.9474,
+   "post_frac_lt_1": 0.9737,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.0,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_50000.pkl": {
+   "step": 50000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 9820,
+   "n_deploy_frames": 927,
+   "n_subactions": 955,
+   "n_subactions_dedup": 955,
+   "dup_subaction_frames": 0,
+   "subaction_hist": {
+    "1": 899,
+    "2": 28
+   },
+   "n_card_plays": 955,
+   "card_counts": {
+    "Skeletons": 200,
+    "Log": 195,
+    "IceWizard": 185,
+    "Knight": 182,
+    "Archer": 179,
+    "Tesla": 8,
+    "Fireball": 6
+   },
+   "card_share": {
+    "Skeletons": 0.2094,
+    "Log": 0.2042,
+    "IceWizard": 0.1937,
+    "Knight": 0.1906,
+    "Archer": 0.1874,
+    "Tesla": 0.0084,
+    "Fireball": 0.0063
+   },
+   "card_y_max": {
+    "Tesla": 12,
+    "Skeletons": 12,
+    "Archer": 12,
+    "Log": 12,
+    "Knight": 12,
+    "IceWizard": 12,
+    "Fireball": 26
+   },
+   "card_cost": {
+    "Tesla": 4.0,
+    "Skeletons": 1.0,
+    "Archer": 3.0,
+    "Log": 2.0,
+    "Knight": 3.0,
+    "IceWizard": 3.0,
+    "Fireball": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Log",
+    "IceWizard",
+    "Knight",
+    "Archer"
+   ],
+   "topk_share": 0.9853,
+   "cheap_le3_share": 0.9853,
+   "deck_cards": {
+    "Tesla": 40,
+    "Archer": 40,
+    "Knight": 40,
+    "Skeletons": 40,
+    "IceWizard": 40,
+    "Xbow": 40,
+    "Log": 40,
+    "Fireball": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 754,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 201,
+    "n_spell_y_ge21_legal": 6,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 6,
+    "legacy_filter_frames": 6,
+    "n_single_frames": 899,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 2156.0,
+   "elix_post": {
+    "n": 899,
+    "mean": 0.4152,
+    "median": 0.3214,
+    "p10": 0.2143,
+    "p90": 0.7083,
+    "min": 0.1071,
+    "max": 2.1786
+   },
+   "elix_pre": {
+    "n": 899,
+    "mean": 2.8134,
+    "median": 3.25,
+    "p10": 1.3214,
+    "p90": 3.6369,
+    "min": 1.125,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 859,
+    "mean": 5.4167,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 801,
+    "mean": 5.5404,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 9820,
+    "mean": 1.5623,
+    "median": 1.494,
+    "p10": 0.4643,
+    "p90": 2.8214,
+    "min": 0.1071,
+    "max": 3.5298
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.3214,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.7497,
+   "post_frac_lt_1": 0.9778,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 5.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_60000.pkl": {
+   "step": 60000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 6440,
+   "n_deploy_frames": 534,
+   "n_subactions": 569,
+   "n_subactions_dedup": 564,
+   "dup_subaction_frames": 3,
+   "subaction_hist": {
+    "1": 504,
+    "2": 27,
+    "3": 1,
+    "4": 2
+   },
+   "n_card_plays": 564,
+   "card_counts": {
+    "Skeletons": 120,
+    "Log": 114,
+    "Archer": 108,
+    "IceWizard": 106,
+    "Knight": 105,
+    "Tesla": 6,
+    "Fireball": 5
+   },
+   "card_share": {
+    "Skeletons": 0.2128,
+    "Log": 0.2021,
+    "Archer": 0.1915,
+    "IceWizard": 0.1879,
+    "Knight": 0.1862,
+    "Tesla": 0.0106,
+    "Fireball": 0.0089
+   },
+   "card_y_max": {
+    "Log": 20,
+    "Archer": 12,
+    "Skeletons": 12,
+    "Knight": 12,
+    "IceWizard": 12,
+    "Fireball": 29,
+    "Tesla": 12
+   },
+   "card_cost": {
+    "Log": 2.0,
+    "Archer": 3.0,
+    "Skeletons": 1.0,
+    "Knight": 3.0,
+    "IceWizard": 3.0,
+    "Fireball": 4.0,
+    "Tesla": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Log",
+    "Archer",
+    "IceWizard",
+    "Knight"
+   ],
+   "topk_share": 0.9805,
+   "cheap_le3_share": 0.9805,
+   "deck_cards": {
+    "Log": 40,
+    "Xbow": 40,
+    "Archer": 40,
+    "Skeletons": 40,
+    "Tesla": 40,
+    "Knight": 40,
+    "IceWizard": 40,
+    "Fireball": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 445,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 119,
+    "n_spell_y_ge21_legal": 5,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 9,
+    "legacy_filter_frames": 9,
+    "n_single_frames": 504,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 1215.0,
+   "elix_post": {
+    "n": 504,
+    "mean": 0.3516,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.4226,
+    "min": 0.1012,
+    "max": 2.5357
+   },
+   "elix_pre": {
+    "n": 504,
+    "mean": 2.7623,
+    "median": 3.25,
+    "p10": 1.25,
+    "p90": 3.3571,
+    "min": 1.1012,
+    "max": 5.5357
+   },
+   "dt_all": {
+    "n": 464,
+    "mean": 6.3669,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 462,
+    "mean": 6.3695,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 6440,
+    "mean": 1.5332,
+    "median": 1.4643,
+    "p10": 0.4286,
+    "p90": 2.7857,
+    "min": 0.1012,
+    "max": 5.3571
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.2857,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.9246,
+   "post_frac_lt_1": 0.9702,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.0,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_70000.pkl": {
+   "step": 70000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 13875,
+   "n_deploy_frames": 1422,
+   "n_subactions": 1438,
+   "n_subactions_dedup": 1438,
+   "dup_subaction_frames": 0,
+   "subaction_hist": {
+    "1": 1406,
+    "2": 16
+   },
+   "n_card_plays": 1438,
+   "card_counts": {
+    "Skeletons": 294,
+    "Log": 290,
+    "Archer": 284,
+    "IceWizard": 283,
+    "Knight": 281,
+    "Tesla": 5,
+    "Fireball": 1
+   },
+   "card_share": {
+    "Skeletons": 0.2045,
+    "Log": 0.2017,
+    "Archer": 0.1975,
+    "IceWizard": 0.1968,
+    "Knight": 0.1954,
+    "Tesla": 0.0035,
+    "Fireball": 0.0007
+   },
+   "card_y_max": {
+    "Log": 7,
+    "Archer": 14,
+    "IceWizard": 14,
+    "Skeletons": 14,
+    "Knight": 14,
+    "Tesla": 14,
+    "Fireball": 27
+   },
+   "card_cost": {
+    "Log": 2.0,
+    "Archer": 3.0,
+    "IceWizard": 3.0,
+    "Skeletons": 1.0,
+    "Knight": 3.0,
+    "Tesla": 4.0,
+    "Fireball": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Log",
+    "Archer",
+    "IceWizard",
+    "Knight"
+   ],
+   "topk_share": 0.9958,
+   "cheap_le3_share": 0.9958,
+   "deck_cards": {
+    "Archer": 40,
+    "Fireball": 40,
+    "Log": 40,
+    "IceWizard": 40,
+    "Xbow": 40,
+    "Tesla": 40,
+    "Skeletons": 40,
+    "Knight": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 1147,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 291,
+    "n_spell_y_ge21_legal": 1,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 1,
+    "legacy_filter_frames": 1,
+    "n_single_frames": 1406,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 3366.0,
+   "elix_post": {
+    "n": 1406,
+    "mean": 0.4887,
+    "median": 0.4226,
+    "p10": 0.25,
+    "p90": 0.7083,
+    "min": 0.2143,
+    "max": 4.1786
+   },
+   "elix_pre": {
+    "n": 1406,
+    "mean": 2.8827,
+    "median": 3.25,
+    "p10": 1.4226,
+    "p90": 3.6369,
+    "min": 1.2143,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 1366,
+    "mean": 4.9402,
+    "median": 4.5,
+    "p10": 1.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 729,
+    "mean": 4.7983,
+    "median": 4.0,
+    "p10": 2.264,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 13875,
+    "mean": 1.599,
+    "median": 1.5,
+    "p10": 0.5,
+    "p90": 2.8571,
+    "min": 0.1786,
+    "max": 4.1786
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.4226,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.6636,
+   "post_frac_lt_1": 0.9716,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 4.0,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_80000.pkl": {
+   "step": 80000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 14811,
+   "n_deploy_frames": 1429,
+   "n_subactions": 1450,
+   "n_subactions_dedup": 1450,
+   "dup_subaction_frames": 0,
+   "subaction_hist": {
+    "1": 1408,
+    "2": 21
+   },
+   "n_card_plays": 1450,
+   "card_counts": {
+    "Skeletons": 248,
+    "Log": 247,
+    "Knight": 241,
+    "IceWizard": 241,
+    "Archer": 240,
+    "Fireball": 120,
+    "Tesla": 113
+   },
+   "card_share": {
+    "Skeletons": 0.171,
+    "Log": 0.1703,
+    "Knight": 0.1662,
+    "IceWizard": 0.1662,
+    "Archer": 0.1655,
+    "Fireball": 0.0828,
+    "Tesla": 0.0779
+   },
+   "card_y_max": {
+    "Log": 9,
+    "Knight": 9,
+    "Archer": 9,
+    "Skeletons": 9,
+    "Fireball": 27,
+    "IceWizard": 9,
+    "Tesla": 9
+   },
+   "card_cost": {
+    "Log": 2.0,
+    "Knight": 3.0,
+    "Archer": 3.0,
+    "Skeletons": 1.0,
+    "Fireball": 4.0,
+    "IceWizard": 3.0,
+    "Tesla": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Log",
+    "Knight",
+    "IceWizard",
+    "Archer"
+   ],
+   "topk_share": 0.8393,
+   "cheap_le3_share": 0.8393,
+   "deck_cards": {
+    "Knight": 40,
+    "Log": 40,
+    "Xbow": 40,
+    "Archer": 40,
+    "Fireball": 40,
+    "Skeletons": 40,
+    "Tesla": 40,
+    "IceWizard": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 1083,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 367,
+    "n_spell_y_ge21_legal": 83,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 83,
+    "legacy_filter_frames": 83,
+    "n_single_frames": 1408,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 3744.0,
+   "elix_post": {
+    "n": 1408,
+    "mean": 0.4957,
+    "median": 0.4226,
+    "p10": 0.25,
+    "p90": 0.7083,
+    "min": 0.2143,
+    "max": 4.1786
+   },
+   "elix_pre": {
+    "n": 1408,
+    "mean": 3.1547,
+    "median": 3.3214,
+    "p10": 1.5655,
+    "p90": 4.4226,
+    "min": 1.2143,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 1368,
+    "mean": 5.2425,
+    "median": 4.5,
+    "p10": 1.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 11.5
+   },
+   "dt_same_lane": {
+    "n": 1187,
+    "mean": 5.1361,
+    "median": 4.5,
+    "p10": 1.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 11.5
+   },
+   "elix_all_frames": {
+    "n": 14811,
+    "mean": 1.7731,
+    "median": 1.6786,
+    "p10": 0.5357,
+    "p90": 3.1369,
+    "min": 0.1786,
+    "max": 4.5298
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.4226,
+   "pre_median": 3.3214,
+   "post_frac_lt_0p5": 0.6001,
+   "post_frac_lt_1": 0.9716,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 4.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_90000.pkl": {
+   "step": 90000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 10123,
+   "n_deploy_frames": 926,
+   "n_subactions": 952,
+   "n_subactions_dedup": 952,
+   "dup_subaction_frames": 0,
+   "subaction_hist": {
+    "1": 900,
+    "2": 26
+   },
+   "n_card_plays": 952,
+   "card_counts": {
+    "Skeletons": 195,
+    "Log": 189,
+    "Knight": 183,
+    "Archer": 181,
+    "IceWizard": 179,
+    "Tesla": 13,
+    "Fireball": 12
+   },
+   "card_share": {
+    "Skeletons": 0.2048,
+    "Log": 0.1985,
+    "Knight": 0.1922,
+    "Archer": 0.1901,
+    "IceWizard": 0.188,
+    "Tesla": 0.0137,
+    "Fireball": 0.0126
+   },
+   "card_y_max": {
+    "Archer": 14,
+    "Skeletons": 14,
+    "Knight": 14,
+    "IceWizard": 14,
+    "Log": 7,
+    "Fireball": 31,
+    "Tesla": 14
+   },
+   "card_cost": {
+    "Archer": 3.0,
+    "Skeletons": 1.0,
+    "Knight": 3.0,
+    "IceWizard": 3.0,
+    "Log": 2.0,
+    "Fireball": 4.0,
+    "Tesla": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Skeletons",
+    "Log",
+    "Knight",
+    "Archer",
+    "IceWizard"
+   ],
+   "topk_share": 0.9737,
+   "cheap_le3_share": 0.9737,
+   "deck_cards": {
+    "Knight": 40,
+    "Archer": 40,
+    "Skeletons": 40,
+    "IceWizard": 40,
+    "Xbow": 40,
+    "Fireball": 40,
+    "Tesla": 40,
+    "Log": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 751,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 201,
+    "n_spell_y_ge21_legal": 6,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 6,
+    "legacy_filter_frames": 6,
+    "n_single_frames": 900,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 2184.0,
+   "elix_post": {
+    "n": 900,
+    "mean": 0.4264,
+    "median": 0.3214,
+    "p10": 0.2143,
+    "p90": 0.7083,
+    "min": 0.1667,
+    "max": 3.1786
+   },
+   "elix_pre": {
+    "n": 900,
+    "mean": 2.853,
+    "median": 3.25,
+    "p10": 1.3214,
+    "p90": 3.6369,
+    "min": 1.2143,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 860,
+    "mean": 5.609,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 608,
+    "mean": 5.6909,
+    "median": 5.5,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 10123,
+    "mean": 1.5798,
+    "median": 1.5,
+    "p10": 0.4643,
+    "p90": 2.8571,
+    "min": 0.1667,
+    "max": 4.3512
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.3214,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.7667,
+   "post_frac_lt_1": 0.9622,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 5.5,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  },
+  "league_100000.pkl": {
+   "step": 100000,
+   "n_games": 40,
+   "n_games_side0_main": 40,
+   "n_frames": 8646,
+   "n_deploy_frames": 731,
+   "n_subactions": 733,
+   "n_subactions_dedup": 733,
+   "dup_subaction_frames": 0,
+   "subaction_hist": {
+    "1": 729,
+    "2": 2
+   },
+   "n_card_plays": 733,
+   "card_counts": {
+    "Log": 150,
+    "Skeletons": 150,
+    "Knight": 145,
+    "Archer": 141,
+    "IceWizard": 135,
+    "Tesla": 8,
+    "Fireball": 4
+   },
+   "card_share": {
+    "Log": 0.2046,
+    "Skeletons": 0.2046,
+    "Knight": 0.1978,
+    "Archer": 0.1924,
+    "IceWizard": 0.1842,
+    "Tesla": 0.0109,
+    "Fireball": 0.0055
+   },
+   "card_y_max": {
+    "Knight": 14,
+    "Log": 14,
+    "IceWizard": 14,
+    "Archer": 14,
+    "Skeletons": 14,
+    "Tesla": 14,
+    "Fireball": 26
+   },
+   "card_cost": {
+    "Knight": 3.0,
+    "Log": 2.0,
+    "IceWizard": 3.0,
+    "Archer": 3.0,
+    "Skeletons": 1.0,
+    "Tesla": 4.0,
+    "Fireball": 4.0
+   },
+   "n_spells_distinct": 2,
+   "topk": 5,
+   "topk_cards": [
+    "Log",
+    "Skeletons",
+    "Knight",
+    "Archer",
+    "IceWizard"
+   ],
+   "topk_share": 0.9836,
+   "cheap_le3_share": 0.9836,
+   "deck_cards": {
+    "Knight": 40,
+    "IceWizard": 40,
+    "Xbow": 40,
+    "Archer": 40,
+    "Log": 40,
+    "Fireball": 40,
+    "Tesla": 40,
+    "Skeletons": 40
+   },
+   "unplayed_in_deck": [
+    "Xbow"
+   ],
+   "legality": {
+    "unit_y_max_legal": 20,
+    "n_unit_deploys": 579,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 154,
+    "n_spell_y_ge21_legal": 4,
+    "legacy_ghost_y": 20,
+    "legacy_filter_marks": 4,
+    "legacy_filter_frames": 4,
+    "n_single_frames": 729,
+    "exec_violations_should_be_0": 0
+   },
+   "unknown_cost_frames": 0,
+   "elixir_spent": 1751.0,
+   "elix_post": {
+    "n": 729,
+    "mean": 0.4495,
+    "median": 0.2857,
+    "p10": 0.2143,
+    "p90": 0.6369,
+    "min": 0.0595,
+    "max": 4.1786
+   },
+   "elix_pre": {
+    "n": 729,
+    "mean": 2.8515,
+    "median": 3.25,
+    "p10": 1.3143,
+    "p90": 3.5083,
+    "min": 1.2083,
+    "max": 5.1786
+   },
+   "dt_all": {
+    "n": 689,
+    "mean": 6.0358,
+    "median": 7.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "dt_same_lane": {
+    "n": 519,
+    "mean": 6.2037,
+    "median": 8.0,
+    "p10": 2.5,
+    "p90": 8.5,
+    "min": 0.5,
+    "max": 8.5
+   },
+   "elix_all_frames": {
+    "n": 8646,
+    "mean": 1.5389,
+    "median": 1.4643,
+    "p10": 0.4286,
+    "p90": 2.7857,
+    "min": 0.0595,
+    "max": 4.1786
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "post_median": 0.2857,
+   "pre_median": 3.25,
+   "post_frac_lt_0p5": 0.8697,
+   "post_frac_lt_1": 0.9287,
+   "pre_frac_ge_6": 0.0,
+   "pre_frac_ge_8": 0.0,
+   "lane_dt_median": 8.0,
+   "pairs": {
+    "main/frozen_copy": 40
+   }
+  }
+ },
+ "pooled": {
+  "step": null,
+  "n_games": 440,
+  "n_games_side0_main": 440,
+  "n_frames": 100860,
+  "n_deploy_frames": 9278,
+  "n_subactions": 10157,
+  "n_subactions_dedup": 9806,
+  "dup_subaction_frames": 201,
+  "subaction_hist": {
+   "1": 8804,
+   "2": 270,
+   "3": 3,
+   "4": 201
+  },
+  "n_card_plays": 9806,
+  "card_counts": {
+   "Skeletons": 2012,
+   "Log": 1946,
+   "Knight": 1822,
+   "Archer": 1804,
+   "IceWizard": 1778,
+   "Tesla": 223,
+   "Fireball": 218,
+   "Xbow": 3
+  },
+  "card_share": {
+   "Skeletons": 0.2052,
+   "Log": 0.1984,
+   "Knight": 0.1858,
+   "Archer": 0.184,
+   "IceWizard": 0.1813,
+   "Tesla": 0.0227,
+   "Fireball": 0.0222,
+   "Xbow": 0.0003
+  },
+  "card_y_max": {
+   "Log": 21,
+   "Knight": 20,
+   "Skeletons": 19,
+   "Archer": 20,
+   "IceWizard": 20,
+   "Tesla": 14,
+   "Fireball": 31,
+   "Xbow": 4
+  },
+  "card_cost": {
+   "Log": 2.0,
+   "Knight": 3.0,
+   "Skeletons": 1.0,
+   "Archer": 3.0,
+   "IceWizard": 3.0,
+   "Tesla": 4.0,
+   "Fireball": 4.0,
+   "Xbow": 6.0
+  },
+  "n_spells_distinct": 2,
+  "topk": 5,
+  "topk_cards": [
+   "Skeletons",
+   "Log",
+   "Knight",
+   "Archer",
+   "IceWizard"
+  ],
+  "topk_share": 0.9547,
+  "cheap_le3_share": 0.9547,
+  "deck_cards": {
+   "Knight": 440,
+   "Log": 440,
+   "Archer": 440,
+   "Tesla": 440,
+   "Skeletons": 440,
+   "IceWizard": 440,
+   "Xbow": 440,
+   "Fireball": 440
+  },
+  "unplayed_in_deck": [],
+  "legality": {
+   "unit_y_max_legal": 20,
+   "n_unit_deploys": 7642,
+   "n_unit_y_ge21_illegal": 0,
+   "n_spell_plays": 2164,
+   "n_spell_y_ge21_legal": 268,
+   "legacy_ghost_y": 20,
+   "legacy_filter_marks": 452,
+   "legacy_filter_frames": 458,
+   "n_single_frames": 8804,
+   "exec_violations_should_be_0": 0
+  },
+  "unknown_cost_frames": 0,
+  "elixir_spent": 0.0,
+  "elix_post": {
+   "n": 8804,
+   "mean": 0.4202,
+   "median": 0.3214,
+   "p10": 0.2143,
+   "p90": 0.6369,
+   "min": 0.0595,
+   "max": 4.1786
+  },
+  "elix_pre": {
+   "n": 8804,
+   "mean": 2.8651,
+   "median": 3.25,
+   "p10": 1.3214,
+   "p90": 3.6369,
+   "min": 1.1012,
+   "max": 6.25
+  },
+  "dt_all": {
+   "n": 8364,
+   "mean": 5.6892,
+   "median": 5.5,
+   "p10": 2.5,
+   "p90": 8.5,
+   "min": 0.5,
+   "max": 11.5
+  },
+  "dt_same_lane": {
+   "n": 6460,
+   "mean": 5.7838,
+   "median": 5.5,
+   "p10": 2.5,
+   "p90": 8.5,
+   "min": 0.5,
+   "max": 11.5
+  },
+  "elix_all_frames": {
+   "n": 100860,
+   "mean": 1.597,
+   "median": 1.5,
+   "p10": 0.4643,
+   "p90": 2.8571,
+   "min": 0.0595,
+   "max": 10.0
+  },
+  "all_frames_frac_ge6": 0.0011,
+  "all_frames_frac_ge8": 0.0006,
+  "post_median": 0.3214,
+  "pre_median": 3.25,
+  "post_frac_lt_0p5": 0.7819,
+  "post_frac_lt_1": 0.9709,
+  "pre_frac_ge_6": 0.0002,
+  "pre_frac_ge_8": 0.0,
+  "lane_dt_median": 5.5,
+  "pairs": {
+   "main/frozen_copy": 440
+  }
+ }
+}
