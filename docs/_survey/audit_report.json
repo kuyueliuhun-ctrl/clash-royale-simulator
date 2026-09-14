@@ -1,0 +1,49 @@
+{
+ "checked": 1453,
+ "not_found_in_ast": [
+  "G023.md:scripts/test_m3_evo.py:模块级驱动块（非符号，L469-488）",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:p64",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:i32",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:u32",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:f32",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:readEntity",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:readBattleEntities",
+  "GX01.md:src/clasher_new/hook_raw_capture.js:readPlayerIdentity",
+  "GX01.md:scripts/cdp_evo.js:extractPage",
+  "GX01.md:scripts/cdp_evo.js:extractPage.send（箭头函数）",
+  "GX01.md:scripts/cdp_evo.js:extractPage.send.executor（箭头函数）",
+  "GX01.md:scripts/cdp_evo.js:extractPage.ws.onmessage（箭头函数）",
+  "GX01.md:scripts/cdp_extract.js:extractPage",
+  "GX01.md:scripts/cdp_extract.js:extractPage.send（箭头函数）",
+  "GX01.md:scripts/cdp_extract.js:extractPage.send.executor（箭头函数）",
+  "GX01.md:scripts/cdp_extract.js:extractPage.ws.onmessage（箭头函数）",
+  "GX01.md:scripts/cdp_hero.js:extractPage",
+  "GX01.md:scripts/cdp_hero.js:extractPage.send（箭头函数）",
+  "GX01.md:scripts/cdp_hero.js:extractPage.send.executor（箭头函数）",
+  "GX01.md:scripts/cdp_hero.js:extractPage.ws.onmessage（箭头函数）",
+  "GX01.md:scripts/cdp_spell.js:extractPage",
+  "GX01.md:scripts/cdp_spell.js:extractPage.send（箭头函数）",
+  "GX01.md:scripts/cdp_spell.js:extractPage.send.executor（箭头函数）",
+  "GX01.md:scripts/cdp_spell.js:extractPage.ws.onmessage（箭头函数）",
+  "GX01.md:scripts/l1_upgrade.ps1:顶层可执行段-1：路径/协议/文件清单初始化",
+  "GX01.md:scripts/l1_upgrade.ps1:顶层可执行段-2：下载循环",
+  "GX01.md:scripts/run_probe_v3.sh:rollout",
+  "GX01.md:scripts/run_probe_v3.sh:fit",
+  "GX01.md:scripts/run_probe_v3.sh:顶层可执行段-1：变量与参数解析",
+  "GX01.md:scripts/run_probe_v3.sh:顶层可执行段-2：阶段分派与收尾"
+ ],
+ "range_mismatch": [
+  [
+   "G026.md:src/clasher_new/rl/config.py:TrainConfig.load",
+   "L310-313",
+   "L311-313"
+  ],
+  [
+   "G026.md:src/clasher_new/rl/config.py:TrainConfig.resolve",
+   "L371-396",
+   "L372-396"
+  ]
+ ],
+ "type_mismatch": [],
+ "param_name_missing": []
+}

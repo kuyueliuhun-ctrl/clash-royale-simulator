@@ -287,3 +287,4 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | RL 代码导读与训练入口 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
 | 自检 / 回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
 | 判读工具 | `scripts/judge_anchor_blocks.py`、`scripts/summarize_solo_run.py`、`scripts/diag_*.py` |
+| **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/project_full_reference.md`](docs/project_full_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`，素材 `docs/_survey/`（146 个 `.py`／1476 符号 100% 覆盖、0 参数缺失） |

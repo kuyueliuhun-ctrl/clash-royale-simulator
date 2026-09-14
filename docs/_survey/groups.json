@@ -1,0 +1,594 @@
+{
+ "big_lines": 400,
+ "cap_lines": 1000,
+ "max_files": 12,
+ "n_files": 141,
+ "n_groups": 47,
+ "groups": [
+  {
+   "id": "G001",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/selftest.py"
+   ],
+   "lines": 4983,
+   "symbols": 95,
+   "slug": "rl-selftest"
+  },
+  {
+   "id": "G002",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/battle.py"
+   ],
+   "lines": 3267,
+   "symbols": 140,
+   "slug": "battle"
+  },
+  {
+   "id": "G003",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/dashboard.py"
+   ],
+   "lines": 2365,
+   "symbols": 27,
+   "slug": "rl-dashboard"
+  },
+  {
+   "id": "G004",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/card_mechanics.py"
+   ],
+   "lines": 1895,
+   "symbols": 194,
+   "slug": "card-mechanics"
+  },
+  {
+   "id": "G005",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/train_solo.py"
+   ],
+   "lines": 1745,
+   "symbols": 25,
+   "slug": "rl-train-solo"
+  },
+  {
+   "id": "G006",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/run_league.py"
+   ],
+   "lines": 1375,
+   "symbols": 39,
+   "slug": "rl-run-league"
+  },
+  {
+   "id": "G007",
+   "kind": "single",
+   "files": [
+    "scripts/probe_value_ln.py"
+   ],
+   "lines": 918,
+   "symbols": 8,
+   "slug": "scripts-probe-value-ln"
+  },
+  {
+   "id": "G008",
+   "kind": "single",
+   "files": [
+    "scripts/diag_critic_ev.py"
+   ],
+   "lines": 854,
+   "symbols": 13,
+   "slug": "scripts-diag-critic-ev"
+  },
+  {
+   "id": "G009",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/belief_planner.py"
+   ],
+   "lines": 849,
+   "symbols": 34,
+   "slug": "rl-belief-planner"
+  },
+  {
+   "id": "G010",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/follower.py"
+   ],
+   "lines": 766,
+   "symbols": 21,
+   "slug": "rl-follower"
+  },
+  {
+   "id": "G011",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/env_wrapper.py"
+   ],
+   "lines": 731,
+   "symbols": 28,
+   "slug": "rl-env-wrapper"
+  },
+  {
+   "id": "G012",
+   "kind": "single",
+   "files": [
+    "scripts/pomdp_ceiling_probe.py"
+   ],
+   "lines": 726,
+   "symbols": 18,
+   "slug": "scripts-pomdp-ceiling-probe"
+  },
+  {
+   "id": "G013",
+   "kind": "single",
+   "files": [
+    "scripts/duel_search.py"
+   ],
+   "lines": 636,
+   "symbols": 17,
+   "slug": "scripts-duel-search"
+  },
+  {
+   "id": "G014",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/flow_league.py"
+   ],
+   "lines": 613,
+   "symbols": 18,
+   "slug": "rl-flow-league"
+  },
+  {
+   "id": "G015",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/action_mask.py"
+   ],
+   "lines": 573,
+   "symbols": 24,
+   "slug": "rl-action-mask"
+  },
+  {
+   "id": "G016",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/evaluate.py"
+   ],
+   "lines": 557,
+   "symbols": 11,
+   "slug": "rl-evaluate"
+  },
+  {
+   "id": "G017",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/ppo.py"
+   ],
+   "lines": 547,
+   "symbols": 17,
+   "slug": "rl-ppo"
+  },
+  {
+   "id": "G018",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/card_aliases.py"
+   ],
+   "lines": 540,
+   "symbols": 5,
+   "slug": "card-aliases"
+  },
+  {
+   "id": "G019",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/card_utils.py"
+   ],
+   "lines": 522,
+   "symbols": 15,
+   "slug": "card-utils"
+  },
+  {
+   "id": "G020",
+   "kind": "single",
+   "files": [
+    "scripts/test_m6_elite.py"
+   ],
+   "lines": 521,
+   "symbols": 25,
+   "slug": "scripts-test-m6-elite"
+  },
+  {
+   "id": "G021",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/prophet.py"
+   ],
+   "lines": 516,
+   "symbols": 28,
+   "slug": "rl-prophet"
+  },
+  {
+   "id": "G022",
+   "kind": "single",
+   "files": [
+    "scripts/test_m2.py"
+   ],
+   "lines": 488,
+   "symbols": 34,
+   "slug": "scripts-test-m2"
+  },
+  {
+   "id": "G023",
+   "kind": "single",
+   "files": [
+    "scripts/test_m3_evo.py"
+   ],
+   "lines": 488,
+   "symbols": 32,
+   "slug": "scripts-test-m3-evo"
+  },
+  {
+   "id": "G024",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/mcts.py"
+   ],
+   "lines": 480,
+   "symbols": 23,
+   "slug": "rl-mcts"
+  },
+  {
+   "id": "G025",
+   "kind": "single",
+   "files": [
+    "scripts/forensics_card_usage.py"
+   ],
+   "lines": 479,
+   "symbols": 4,
+   "slug": "scripts-forensics-card-usage"
+  },
+  {
+   "id": "G026",
+   "kind": "single",
+   "files": [
+    "src/clasher_new/rl/config.py"
+   ],
+   "lines": 412,
+   "symbols": 23,
+   "slug": "rl-config"
+  },
+  {
+   "id": "G027",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/coverage.py",
+    "scripts/probe_v4_ln_pair.py"
+   ],
+   "lines": 716,
+   "symbols": 13,
+   "slug": "scripts-coverage-x2"
+  },
+  {
+   "id": "G028",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/probe_reward_composition.py",
+    "scripts/test_m4_evo7.py",
+    "scripts/test_m5_data.py"
+   ],
+   "lines": 902,
+   "symbols": 34,
+   "slug": "scripts-probe-reward-composition-x3"
+  },
+  {
+   "id": "G029",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/_probe_value_collapse.py",
+    "scripts/judge_anchor_blocks.py",
+    "scripts/question_bank_poc.py",
+    "scripts/_probe_value_path.py"
+   ],
+   "lines": 956,
+   "symbols": 17,
+   "slug": "scripts--probe-value-collapse-x4"
+  },
+  {
+   "id": "G030",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/summarize_solo_run.py",
+    "scripts/test_m1.py",
+    "scripts/_survey_inventory.py",
+    "scripts/judge_probe_v3.py"
+   ],
+   "lines": 824,
+   "symbols": 25,
+   "slug": "scripts-summarize-solo-run-x4"
+  },
+  {
+   "id": "G031",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/probe_v3_mono_check.py",
+    "scripts/diag_gru_ablation.py",
+    "scripts/forensics_response.py",
+    "scripts/judge_critic_inertia.py",
+    "scripts/assassin_vs_sparky.py"
+   ],
+   "lines": 942,
+   "symbols": 17,
+   "slug": "scripts-probe-v3-mono-check-x5"
+  },
+  {
+   "id": "G032",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/summarize_probe_v3_mono.py",
+    "scripts/diag_value_head.py",
+    "scripts/judge_probe_v4.py",
+    "scripts/bench_train_speed.py",
+    "scripts/_survey_groups.py",
+    "scripts/_forensics_cycling.py",
+    "scripts/value_displacement_scan.py"
+   ],
+   "lines": 985,
+   "symbols": 15,
+   "slug": "scripts-summarize-probe-v3-mono-x7"
+  },
+  {
+   "id": "G033",
+   "kind": "group",
+   "dir": "scripts",
+   "files": [
+    "scripts/diag_encoder_scale.py",
+    "scripts/stop_solo_training_2200.py",
+    "scripts/batch_smoke.py",
+    "scripts/assassin_vs_megaknight.py",
+    "scripts/assassin_left_bridge_test.py",
+    "scripts/_mask_diff_snapshot.py",
+    "scripts/_survey_brief.py",
+    "scripts/extend_level16.py",
+    "scripts/cdp_forward.py"
+   ],
+   "lines": 856,
+   "symbols": 21,
+   "slug": "scripts-diag-encoder-scale-x9"
+  },
+  {
+   "id": "G034",
+   "kind": "group",
+   "dir": "scripts/rl",
+   "files": [
+    "scripts/rl/run_league.py",
+    "scripts/rl/dashboard.py",
+    "scripts/rl/evaluate.py",
+    "scripts/rl/export_replay.py",
+    "scripts/rl/selftest.py",
+    "scripts/rl/train_baseline.py",
+    "scripts/rl/train_bc.py",
+    "scripts/rl/train_belief.py",
+    "scripts/rl/train_exploiter.py",
+    "scripts/rl/train_follower.py",
+    "scripts/rl/train_prophet.py"
+   ],
+   "lines": 87,
+   "symbols": 1,
+   "slug": "scripts-rl-run-league-x11"
+  },
+  {
+   "id": "G035",
+   "kind": "group",
+   "dir": "src/clasher_new",
+   "files": [
+    "src/clasher_new/spell_module.py",
+    "src/clasher_new/simulate_exchange.py",
+    "src/clasher_new/evo_2025_data.py"
+   ],
+   "lines": 968,
+   "symbols": 19,
+   "slug": "spell-module-x3"
+  },
+  {
+   "id": "G036",
+   "kind": "group",
+   "dir": "src/clasher_new",
+   "files": [
+    "src/clasher_new/elite17_data.py",
+    "src/clasher_new/minimal_visualizer.py",
+    "src/clasher_new/arena.py",
+    "src/clasher_new/pathfinding_heap.py"
+   ],
+   "lines": 879,
+   "symbols": 37,
+   "slug": "elite17-data-x4"
+  },
+  {
+   "id": "G037",
+   "kind": "group",
+   "dir": "src/clasher_new",
+   "files": [
+    "src/clasher_new/environment.py",
+    "src/clasher_new/pathfinding.py",
+    "src/clasher_new/new_visualization.py",
+    "src/clasher_new/train.py",
+    "src/clasher_new/evolutions.py",
+    "src/clasher_new/benchmark_speed.py",
+    "src/clasher_new/server.py"
+   ],
+   "lines": 964,
+   "symbols": 48,
+   "slug": "environment-x7"
+  },
+  {
+   "id": "G038",
+   "kind": "group",
+   "dir": "src/clasher_new",
+   "files": [
+    "src/clasher_new/threat_calc.py",
+    "src/clasher_new/run_raw_capture.py",
+    "src/clasher_new/tmp_spell_forensics.py",
+    "src/clasher_new/core.py",
+    "src/clasher_new/player.py",
+    "src/clasher_new/evaluate.py",
+    "src/clasher_new/tmp_target_verify.py",
+    "src/clasher_new/tmp_tower_chip_test.py",
+    "src/clasher_new/tmp_formation_test.py",
+    "src/clasher_new/tmp_path_debug.py",
+    "src/clasher_new/train_autoregressive.py",
+    "src/clasher_new/agent_pool.py"
+   ],
+   "lines": 720,
+   "symbols": 37,
+   "slug": "threat-calc-x12"
+  },
+  {
+   "id": "G039",
+   "kind": "group",
+   "dir": "src/clasher_new",
+   "files": [
+    "src/clasher_new/timing.py",
+    "src/clasher_new/special_eval.py",
+    "src/clasher_new/watch_random_models.py",
+    "src/clasher_new/__init__.py"
+   ],
+   "lines": 55,
+   "symbols": 0,
+   "slug": "timing-x4"
+  },
+  {
+   "id": "G040",
+   "kind": "group",
+   "dir": "src/clasher_new/client_side",
+   "files": [
+    "src/clasher_new/client_side/client.py",
+    "src/clasher_new/client_side/card_utils.py",
+    "src/clasher_new/client_side/player.py",
+    "src/clasher_new/client_side/download_images.py",
+    "src/clasher_new/client_side/assure_names.py"
+   ],
+   "lines": 581,
+   "symbols": 26,
+   "slug": "client-side-client-x5"
+  },
+  {
+   "id": "G041",
+   "kind": "group",
+   "dir": "src/clasher_new/rl",
+   "files": [
+    "src/clasher_new/rl/belief.py",
+    "src/clasher_new/rl/human_play.py"
+   ],
+   "lines": 716,
+   "symbols": 39,
+   "slug": "rl-belief-x2"
+  },
+  {
+   "id": "G042",
+   "kind": "group",
+   "dir": "src/clasher_new/rl",
+   "files": [
+    "src/clasher_new/rl/launcher_menu.py",
+    "src/clasher_new/rl/train_follower.py",
+    "src/clasher_new/rl/train_belief.py"
+   ],
+   "lines": 866,
+   "symbols": 27,
+   "slug": "rl-launcher-menu-x3"
+  },
+  {
+   "id": "G043",
+   "kind": "group",
+   "dir": "src/clasher_new/rl",
+   "files": [
+    "src/clasher_new/rl/opponents.py",
+    "src/clasher_new/rl/plan_space.py",
+    "src/clasher_new/rl/bayes_filter.py",
+    "src/clasher_new/rl/league.py",
+    "src/clasher_new/rl/observation.py"
+   ],
+   "lines": 933,
+   "symbols": 51,
+   "slug": "rl-opponents-x5"
+  },
+  {
+   "id": "G044",
+   "kind": "group",
+   "dir": "src/clasher_new/rl",
+   "files": [
+    "src/clasher_new/rl/diagnostics.py",
+    "src/clasher_new/rl/train_prophet.py",
+    "src/clasher_new/rl/replay.py",
+    "src/clasher_new/rl/decks.py",
+    "src/clasher_new/rl/train_exploiter.py",
+    "src/clasher_new/rl/train_bc.py",
+    "src/clasher_new/rl/action_bundle.py"
+   ],
+   "lines": 981,
+   "symbols": 55,
+   "slug": "rl-diagnostics-x7"
+  },
+  {
+   "id": "G045",
+   "kind": "group",
+   "dir": "src/clasher_new/rl",
+   "files": [
+    "src/clasher_new/rl/workers.py",
+    "src/clasher_new/rl/train_baseline.py",
+    "src/clasher_new/rl/pfsp.py",
+    "src/clasher_new/rl/export_replay.py",
+    "src/clasher_new/rl/elo.py",
+    "src/clasher_new/rl/overtime.py",
+    "src/clasher_new/rl/__init__.py"
+   ],
+   "lines": 456,
+   "symbols": 27,
+   "slug": "rl-workers-x7"
+  },
+  {
+   "id": "G046",
+   "kind": "group",
+   "dir": "src/clasher_new/runs",
+   "files": [
+    "src/clasher_new/runs/_tmp_behavior_recount.py",
+    "src/clasher_new/runs/_tmp_ln_geom3.py",
+    "src/clasher_new/runs/_tmp_ln_geom.py",
+    "src/clasher_new/runs/_tmp_ln_geom2.py",
+    "src/clasher_new/runs/_tmp_scan_disp.py",
+    "src/clasher_new/runs/_tmp_variants.py",
+    "src/clasher_new/runs/_tmp_probe_maxpre.py",
+    "src/clasher_new/runs/_tmp_metric_id.py"
+   ],
+   "lines": 990,
+   "symbols": 24,
+   "slug": "runs--tmp-behavior-recount-x8"
+  },
+  {
+   "id": "G047",
+   "kind": "group",
+   "dir": "src/clasher_new/runs",
+   "files": [
+    "src/clasher_new/runs/_tmp_mm_debug.py",
+    "src/clasher_new/runs/_tmp_window.py",
+    "src/clasher_new/runs/_tmp_value_params.py"
+   ],
+   "lines": 128,
+   "symbols": 2,
+   "slug": "runs--tmp-mm-debug-x3"
+  }
+ ]
+}
