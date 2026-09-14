@@ -32,7 +32,7 @@ ROOT = os.path.dirname(HERE)
 SURVEY = os.path.join(ROOT, "docs", "_survey")
 PARTS = os.path.join(SURVEY, "parts")
 
-EXTRA_GROUPS = ["GX01", "GX02", "GX03"]  # 非 .py / 后加入的代码文件组（不在 groups.json 里）
+EXTRA_GROUPS = ["GX01", "GX02", "GX03", "GX04"]  # 非 .py 或后加入的代码文件组（不在 groups.json 里）
 SKIP_DIRS = {"__pycache__", ".git", ".venv", "clash-royale-simulator-main.venv", "node_modules", ".idea"}
 F_RE = re.compile(r"^##\s+F:(.+?)\s*$", re.M)
 H_RE = re.compile(r"^(#{1,6})\s+(.*)$")
@@ -163,6 +163,8 @@ def main() -> int:
     for i, p in enumerate(ordered, start=1):
         chap[p] = f"2.{i}"
 
+    n_py_src = sum(1 for p in ordered if p.startswith("src/") and p.endswith(".py"))
+    n_js_src = sum(1 for p in ordered if p.startswith("src/") and not p.endswith(".py"))
     total_lines = sum(disk_lines(p) for p in ordered)
     total_syms_ast = sum(len(bypath[p]["symbols"]) for p in ordered if p in bypath)
 
@@ -171,7 +173,7 @@ def main() -> int:
 
     W("# 项目内容全解文档（逐文件函数级摸底）")
     W("")
-    W("> 本文档由 8 个脚本 + 50 个子代理协作产出，**正文全部来自逐文件读码**，")
+    W("> 本文档由 `scripts/_survey_*.py` 工具链 + 50 个子代理协作产出，**正文全部来自逐文件读码**，")
     W("> 每个函数条目都带源码行号依据；读不懂的地方一律写「无法确认/待确认」而**不猜测**。")
     W("> 生成链路：`scripts/_survey_inventory.py`（AST 先验清单）→ `scripts/_survey_groups.py`（切组）")
     W("> → `scripts/_survey_brief.py`（子代理简报）→ 子代理逐文件分析 → `scripts/_survey_verify.py`（覆盖对账）")
@@ -197,9 +199,10 @@ def main() -> int:
     W("| 项 | 内容 |")
     W("|---|---|")
     W("| 仓库根目录 | `" + ROOT.replace("\\", "/") + "` |")
-    W("| **逐个代码文件分析** | `src/` 与 `scripts/` 下全部 `.py`（141 个）+ 全部 `.js`/`.ps1`/`.sh`（9 个，组 GX01）|")
+    W(f"| **逐个代码文件分析** | `src/` 与 `scripts/` 下全部 `.py`（{n_py_src} 个）+ 全部 `.js`/`.ps1`/`.sh`（{n_js_src} 个，组 GX01）|")
     W("| 同上（仓库根目录等其它位置） | `re_lib.py`、`ideas/pz_test.py`、`runs/*.py`(3)、`start_rl.bat`、`start_training.bat`、`docs/.cdp*.js`(7)（共 14 个，组 GX02）|")
     W("| 清单级列出（无函数可分析） | `.json` 数据/配置、`.pt`/`.pkl`/`.npz` 权重与回放、`.png` 资源、`.out`/`.log`/`.txt` 产物（见 §3）|")
+    W("| 配套取证 | `docs/mask_vs_engine_reconcile_2026-09-14.log`（掩码 ↔ 引擎部署合法性逐格双向对账；脚本 `scripts/_mask_vs_engine_reconcile.py`，R13 类只读取证）|")
     W("| 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|")
     W("| 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|")
     W("")
@@ -382,10 +385,17 @@ def main() -> int:
             W("|---|---|---|---|")
             for row in rm:
                 who, mat, ast_v = row[0], row[1], row[2]
-                note = "素材把**装饰器行**也算进定义区间，比 AST 的 `def` 行更完整 ⇒ 不是错误"
+                if "GX03" in who or "GX04" in who:
+                    note = ("**素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）"
+                            "⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。"
+                            "这是「素材快照 vs 后续改动」的正常结果，**不是编造**")
+                else:
+                    note = "素材把**装饰器行**也算进定义区间，比 AST 的 `def` 行更完整 ⇒ 不是错误"
                 W(f"| `{who}` | {mat} | {ast_v} | {note} |")
         W("")
-        W("**结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致；未发现编造的函数或参数。**")
+        W("**结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致（类型 0 处不符、参数 0 处缺失、"
+          "AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，"
+          "均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**")
         W("")
     W("---")
     W("")

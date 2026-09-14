@@ -70,6 +70,7 @@ CONF: Dict[str, Dict] = {
             ("卡牌与法术", "§B.6–B.7（机制类组织、法术落点与命中公式）"),
             ("部署合法性", "§B.8（`legal_cells`/`_position_legal` 与引擎侧校验的一致性）"),
             ("配套文档", "《项目内容全解文档》`docs/project_full_reference.md`、《训练方法文档》`docs/training_method.md`"),
+            ("一致性取证", "`docs/mask_vs_engine_reconcile_2026-09-14.log` —— 掩码 `legal_cells` 与引擎 `deploy_card` 的**逐格双向对账**（18×32×2 方 × 24 张卡），脚本 `scripts/_mask_vs_engine_reconcile.py`（只读）"),
         ],
         "howto_index": "按 `Ctrl+F` 搜函数名或常量名；引擎常量（格子尺寸、塔血量、代价表）都在 §A.2/§B.3/§B.5 的表格里。",
     },

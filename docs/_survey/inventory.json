@@ -4,9 +4,9 @@
   "src",
   "scripts"
  ],
- "n_files": 146,
- "n_symbols": 1476,
- "total_lines": 44735,
+ "n_files": 147,
+ "n_symbols": 1479,
+ "total_lines": 44854,
  "files": [
   {
    "path": "scripts/_forensics_cycling.py",
@@ -179,6 +179,105 @@
       "returns": null,
       "decorators": [],
       "display": "main(out_path)"
+     }
+    }
+   ],
+   "parse_error": null
+  },
+  {
+   "path": "scripts/_mask_vs_engine_reconcile.py",
+   "bytes": 4283,
+   "lines": 115,
+   "module_doc": "掩码 ↔ 引擎 部署合法性对账（R13 类取证；**只读**，不改任何判定逻辑）。",
+   "imports": [
+    "battle",
+    "copy",
+    "from __future__",
+    "from core",
+    "from rl.action_bundle",
+    "from rl.action_mask",
+    "io",
+    "os",
+    "player",
+    "sys"
+   ],
+   "symbols": [
+    {
+     "qualname": "make",
+     "name": "make",
+     "lineno": 45,
+     "end_lineno": 51,
+     "doc": null,
+     "kind": "function",
+     "sig": {
+      "args": [
+       {
+        "name": "card",
+        "annotation": "str",
+        "default": null
+       }
+      ],
+      "kwonlyargs": [],
+      "vararg": null,
+      "kwarg": null,
+      "returns": "'B.BattleState'",
+      "decorators": [],
+      "display": "make(card)"
+     }
+    },
+    {
+     "qualname": "engine_accepts",
+     "name": "engine_accepts",
+     "lineno": 54,
+     "end_lineno": 65,
+     "doc": null,
+     "kind": "function",
+     "sig": {
+      "args": [
+       {
+        "name": "bs",
+        "annotation": null,
+        "default": null
+       },
+       {
+        "name": "card",
+        "annotation": "str",
+        "default": null
+       },
+       {
+        "name": "pid",
+        "annotation": "int",
+        "default": null
+       },
+       {
+        "name": "pos",
+        "annotation": null,
+        "default": null
+       }
+      ],
+      "kwonlyargs": [],
+      "vararg": null,
+      "kwarg": null,
+      "returns": null,
+      "decorators": [],
+      "display": "engine_accepts(bs, card, pid, pos)"
+     }
+    },
+    {
+     "qualname": "main",
+     "name": "main",
+     "lineno": 68,
+     "end_lineno": 111,
+     "doc": null,
+     "kind": "function",
+     "sig": {
+      "args": [],
+      "kwonlyargs": [],
+      "vararg": null,
+      "kwarg": null,
+      "returns": "int",
+      "decorators": [],
+      "display": "main()"
      }
     }
    ],
@@ -1032,8 +1131,8 @@
   },
   {
    "path": "scripts/_survey_merge.py",
-   "bytes": 22554,
-   "lines": 469,
+   "bytes": 22999,
+   "lines": 472,
    "module_doc": "把 48+ 份逐文件分析素材（docs/_survey/parts/*.md）机械合并成",
    "imports": [
     "argparse",
@@ -1164,7 +1263,7 @@
      "qualname": "main",
      "name": "main",
      "lineno": 125,
-     "end_lineno": 465,
+     "end_lineno": 468,
      "doc": null,
      "kind": "function",
      "sig": {
@@ -1182,8 +1281,8 @@
   },
   {
    "path": "scripts/_survey_merge_docs.py",
-   "bytes": 12212,
-   "lines": 264,
+   "bytes": 12730,
+   "lines": 265,
    "module_doc": "把 A/B 两部分草稿合并成《训练方法文档》/《游戏引擎文档》（Markdown）。",
    "imports": [
     "argparse",
@@ -1198,8 +1297,8 @@
     {
      "qualname": "read_draft",
      "name": "read_draft",
-     "lineno": 79,
-     "end_lineno": 82,
+     "lineno": 80,
+     "end_lineno": 83,
      "doc": null,
      "kind": "function",
      "sig": {
@@ -1221,8 +1320,8 @@
     {
      "qualname": "shift_headings",
      "name": "shift_headings",
-     "lineno": 85,
-     "end_lineno": 98,
+     "lineno": 86,
+     "end_lineno": 99,
      "doc": "标题整体下移一级，返回 (新文本, [(级别, 标题)])",
      "kind": "function",
      "sig": {
@@ -1244,8 +1343,8 @@
     {
      "qualname": "extract_pending",
      "name": "extract_pending",
-     "lineno": 101,
-     "end_lineno": 125,
+     "lineno": 102,
+     "end_lineno": 126,
      "doc": "抽出所有「待确认清单」小节里的表格行，按 (所属标题, 表格行列表) 返回。",
      "kind": "function",
      "sig": {
@@ -1267,8 +1366,8 @@
     {
      "qualname": "main",
      "name": "main",
-     "lineno": 128,
-     "end_lineno": 260,
+     "lineno": 129,
+     "end_lineno": 261,
      "doc": null,
      "kind": "function",
      "sig": {

@@ -441,7 +441,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 | `HeroMiniPekka` | 948 | 煎饼进度 `meterSeconds`/`onHitProgress`、`maxMeter`；吃饼等级 `levelsByMeter`，`mult = 1.1**steps`，回复 `healPct` |
 | `HeroValkyrie` | 989 | 旋风 `whirlDuration`、`tick`、`radius`、`tickDamage`、`crownMult`；结束冲刺 `dashRange`，禁攻 `forbidAttack` |
 | `HeroWizard` | 1051 | 延迟 `flyDelay` 后升空 `flyDuration`、`speedMult`；火球命中处生成 `tornadoRadius/tornadoDuration` 旋风，`tornadoDps` |
-| `HeroBowler` | 1107 | 蓄力 `chargeTime` → 迫击炮 `siegeRange/siegeHitSpeed/siegeShots/siegeDuration/siegeDamage/crownMult`，退出还原 `_orig` |
+| `HeroBowler` | 1102 | 蓄力 `chargeTime` → 迫击炮 `siegeRange/siegeHitSpeed/siegeShots/siegeDuration/siegeDamage/crownMult`，退出还原 `_orig` |
 | `HeroGiant` | 1158 | 抓 2 格内 HP 最高敌部队，水平扔 `throwRange` 格，落地 `impactDamage/impactRadius/stun` |
 | `HeroGoblins` | 1197 | 2s 内同批算同组；最后一只死亡开 `window` 窗；`Brigade` 增援 `brigadeCount` |
 | `HeroMegaMinion` | 1233 | 标记最低 HP 敌人；瞬移 + `warpDamage/warpRadius`；`tower_damage_mult = crownMult`（永久） |

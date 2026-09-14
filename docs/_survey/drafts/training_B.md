@@ -753,8 +753,6 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 
 **跨模块要点（一句话式）**：`mcts.py` 是唯一完全未接入的模块（训练/评估双侧 0 命中，`--mcts` flag 不存在）；`bayes_filter.py` 只作为 `belief.py` 的内部规则层存在；`prophet.py` 只在训练/联赛侧以 0.3 概率注入（`train_solo.py:129`、`train_solo.py:1578`、`run_league.py:732`、`run_league.py:853`），评估侧未接入；`belief_planner.py` 是训练与评估共用的唯一规划器，且 `plan()` 的视角**写死为 `battle.players[0]`**（belief_planner.py:774）。
 
-INFER_ADJUNCT_OK sections=6
-
 ## B.8 全量函数索引
 
 **范围**：`src/clasher_new/rl/` 下**全部 38 个 `.py` 文件**中的每一个类、函数、方法（含嵌套闭包，均在下表中列出并标注所属外层函数）。**行号口径**：`def` / `class` 语句所在行（由 AST 解析源码得到，可用 `grep -n "^\s*\(def\|class\) "` 复核）。**列口径**：`关键参数` 直接取函数签名的参数名与默认值（默认值缺失即无默认值）；`返回` 取返回注解，无注解记 `—`；`一句话作用` 优先取源码 docstring 首行，无 docstring 的取已核对的描述映射。共 **711** 个符号。

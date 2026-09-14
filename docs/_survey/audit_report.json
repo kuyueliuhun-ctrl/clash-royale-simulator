@@ -1,5 +1,5 @@
 {
- "checked": 1453,
+ "checked": 1479,
  "not_found_in_ast": [
   "G023.md:scripts/test_m3_evo.py:模块级驱动块（非符号，L469-488）",
   "GX01.md:src/clasher_new/hook_raw_capture.js:p64",
@@ -42,6 +42,31 @@
    "G026.md:src/clasher_new/rl/config.py:TrainConfig.resolve",
    "L371-396",
    "L372-396"
+  ],
+  [
+   "GX03.md:scripts/_survey_merge.py:main",
+   "L125-465",
+   "L125-468"
+  ],
+  [
+   "GX03.md:scripts/_survey_merge_docs.py:read_draft",
+   "L79-82",
+   "L80-83"
+  ],
+  [
+   "GX03.md:scripts/_survey_merge_docs.py:shift_headings",
+   "L85-98",
+   "L86-99"
+  ],
+  [
+   "GX03.md:scripts/_survey_merge_docs.py:extract_pending",
+   "L101-125",
+   "L102-126"
+  ],
+  [
+   "GX03.md:scripts/_survey_merge_docs.py:main",
+   "L128-260",
+   "L129-261"
   ]
  ],
  "type_mismatch": [],

@@ -77,7 +77,7 @@ python rl/run_league.py --mode solo --config economy --config-name <name> --fres
   --ppo-epochs 4 --ppo-minibatch 32 --ppo-shuffle
 ```
 > `opp_mix` **没有 CLI flag**；恢复文档配比（frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1）
-> 的唯一途径是 `--hist-seed-dir`（可 append）。`economy` 预设 `eval_workers=0`（串行）⇒ **长跑必带 `--eval-workers`**。
+> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。
 
 ### 2.3 100k 长跑 + 评估节奏 C（密锚点 + 稀全块）
 
@@ -164,7 +164,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `DEFAULT_OPP_MIX`（= `train_solo._OPP_MIX`） | `frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1` | D1 后的对手分布（改它要同步两处） |
 | `_HIST_POOL_MAX` | 12 | hist 池上限；本目录 ckpt 优先 ⇒ **长 run 会把 `--hist-seed-dir` 的外部补种挤出**（脚本复算：首次"本目录 12"在 **28k** 步，`N(t)=⌊t/2500⌋+1`；`d1_long_100k_verdict` 写的 40k 属口径漂移）。选择规则是 `linspace(0,N−1,12)` **含端点 0** ⇒ `solo_main_0.pt`（未训练起点）**永久钉在 0 号槽**，池成员平均年龄 ≈ t/2 |
 | `_PFSP_ALPHA` / `_PFSP_GATE_HI` / `_PFSP_GATE_PENALTY` | 0.20 / 0.85 / 0.2 | PFSP EMA 学习率 / 易胜对手门槛 / 门禁惩罚（`rl/pfsp.py` 默认值仍 = 旧行为） |
-| `eval_workers` 安全档 | 12 | 16 有 commit 压力风险（见 R1）；`economy` 预设为 0（串行） |
+| `eval_workers` 安全档 | 12 | 16 有 commit 压力风险（见 R1）。**⚠️ 更正（2026-09-14 实测）**：`economy` 预设**未设置**该字段 ⇒ 继承 dataclass 默认 `min(16, os.cpu_count())`，本机实测 **= 16**（原文"预设为 0（串行）"**已作废**）⇒ 不显式传参就会落在风险档位 |
 
 ---
 
@@ -287,4 +287,4 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | RL 代码导读与训练入口 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
 | 自检 / 回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
 | 判读工具 | `scripts/judge_anchor_blocks.py`、`scripts/summarize_solo_run.py`、`scripts/diag_*.py` |
-| **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/project_full_reference.md`](docs/project_full_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`，素材 `docs/_survey/`（146 个 `.py`／1476 符号 100% 覆盖、0 参数缺失） |
+| **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/project_full_reference.md`](docs/project_full_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`，素材 `docs/_survey/`（147 个 `.py`／1479 符号 100% 覆盖、0 参数缺失） |

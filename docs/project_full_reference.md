@@ -1,6 +1,6 @@
 # 项目内容全解文档（逐文件函数级摸底）
 
-> 本文档由 8 个脚本 + 50 个子代理协作产出，**正文全部来自逐文件读码**，
+> 本文档由 `scripts/_survey_*.py` 工具链 + 50 个子代理协作产出，**正文全部来自逐文件读码**，
 > 每个函数条目都带源码行号依据；读不懂的地方一律写「无法确认/待确认」而**不猜测**。
 > 生成链路：`scripts/_survey_inventory.py`（AST 先验清单）→ `scripts/_survey_groups.py`（切组）
 > → `scripts/_survey_brief.py`（子代理简报）→ 子代理逐文件分析 → `scripts/_survey_verify.py`（覆盖对账）
@@ -26,13 +26,14 @@
 | 项 | 内容 |
 |---|---|
 | 仓库根目录 | `E:/clash-royale-simulator-main` |
-| **逐个代码文件分析** | `src/` 与 `scripts/` 下全部 `.py`（141 个）+ 全部 `.js`/`.ps1`/`.sh`（9 个，组 GX01）|
+| **逐个代码文件分析** | `src/` 与 `scripts/` 下全部 `.py`（88 个）+ 全部 `.js`/`.ps1`/`.sh`（1 个，组 GX01）|
 | 同上（仓库根目录等其它位置） | `re_lib.py`、`ideas/pz_test.py`、`runs/*.py`(3)、`start_rl.bat`、`start_training.bat`、`docs/.cdp*.js`(7)（共 14 个，组 GX02）|
 | 清单级列出（无函数可分析） | `.json` 数据/配置、`.pt`/`.pkl`/`.npz` 权重与回放、`.png` 资源、`.out`/`.log`/`.txt` 产物（见 §3）|
+| 配套取证 | `docs/mask_vs_engine_reconcile_2026-09-14.log`（掩码 ↔ 引擎部署合法性逐格双向对账；脚本 `scripts/_mask_vs_engine_reconcile.py`，R13 类只读取证）|
 | 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|
 | 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|
 
-共 **164 个代码文件**、**45407 行**；其中 `.py` 文件经 AST 抽取得 **1453 个类/函数/方法**。
+共 **170 个代码文件**、**46917 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
 
 ### 0.2 方法（为什么可以相信这份文档的数字）
 
@@ -70,16 +71,16 @@
 
 | 目录 | 文件数 | 行数 | 符号数 | 章节范围 |
 |---|---|---|---|---|
-| `.` | 3 | 533 | 0 | 2.9–2.164 |
+| `.` | 3 | 533 | 0 | 2.9–2.170 |
 | `docs` | 7 | 448 | 0 | 2.1–2.7 |
 | `ideas` | 1 | 14 | 0 | 2.8–2.8 |
 | `runs` | 3 | 279 | 0 | 2.10–2.12 |
-| `scripts` | 50 | 11833 | 293 | 2.13–2.73 |
-| `scripts/rl` | 11 | 87 | 1 | 2.52–2.62 |
-| `src/clasher_new` | 35 | 10050 | 495 | 2.74–2.162 |
-| `src/clasher_new/client_side` | 5 | 581 | 26 | 2.82–2.86 |
-| `src/clasher_new/rl` | 38 | 20464 | 612 | 2.99–2.136 |
-| `src/clasher_new/runs` | 11 | 1118 | 26 | 2.138–2.148 |
+| `scripts` | 56 | 13343 | 319 | 2.13–2.79 |
+| `scripts/rl` | 11 | 87 | 1 | 2.58–2.68 |
+| `src/clasher_new` | 35 | 10050 | 495 | 2.80–2.168 |
+| `src/clasher_new/client_side` | 5 | 581 | 26 | 2.88–2.92 |
+| `src/clasher_new/rl` | 38 | 20464 | 612 | 2.105–2.142 |
+| `src/clasher_new/runs` | 11 | 1118 | 26 | 2.144–2.154 |
 
 ### 1.2 全部代码文件清单
 
@@ -99,156 +100,162 @@
 | 12 | `runs/watch_100k.py` | 56 | 0 | 44 | §2.12 | GX02 |
 | 13 | `scripts/_forensics_cycling.py` | 128 | 3 | 55 | §2.13 | G032 |
 | 14 | `scripts/_mask_diff_snapshot.py` | 92 | 2 | 34 | §2.14 | G033 |
-| 15 | `scripts/_probe_value_collapse.py` | 257 | 3 | 45 | §2.15 | G029 |
-| 16 | `scripts/_probe_value_path.py` | 220 | 2 | 35 | §2.16 | G029 |
-| 17 | `scripts/_survey_brief.py` | 86 | 2 | 30 | §2.17 | G033 |
-| 18 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.18 | G032 |
-| 19 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.19 | G030 |
-| 20 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.20 | G033 |
-| 21 | `scripts/assassin_vs_megaknight.py` | 94 | 1 | 32 | §2.21 | G033 |
-| 22 | `scripts/assassin_vs_sparky.py` | 181 | 2 | 36 | §2.22 | G031 |
-| 23 | `scripts/batch_smoke.py` | 105 | 2 | 41 | §2.23 | G033 |
-| 24 | `scripts/bench_train_speed.py` | 130 | 1 | 26 | §2.24 | G032 |
-| 25 | `scripts/cdp_evo.js` | 64 | 0 | 141 | §2.25 | GX01 |
-| 26 | `scripts/cdp_extract.js` | 64 | 0 | 141 | §2.26 | GX01 |
-| 27 | `scripts/cdp_forward.py` | 70 | 4 | 53 | §2.27 | G033 |
-| 28 | `scripts/cdp_hero.js` | 64 | 0 | 141 | §2.28 | GX01 |
-| 29 | `scripts/cdp_leaderboard.js` | 134 | 0 | 175 | §2.29 | GX01 |
-| 30 | `scripts/cdp_leaderboard_probe.js` | 53 | 0 | 129 | §2.30 | GX01 |
-| 31 | `scripts/cdp_spell.js` | 64 | 0 | 141 | §2.31 | GX01 |
-| 32 | `scripts/coverage.py` | 360 | 9 | 144 | §2.32 | G027 |
-| 33 | `scripts/diag_critic_ev.py` | 854 | 13 | 195 | §2.33 | G008 |
-| 34 | `scripts/diag_encoder_scale.py` | 124 | 1 | 31 | §2.34 | G033 |
-| 35 | `scripts/diag_gru_ablation.py` | 192 | 3 | 47 | §2.35 | G031 |
-| 36 | `scripts/diag_value_head.py` | 164 | 1 | 29 | §2.36 | G032 |
-| 37 | `scripts/duel_search.py` | 636 | 17 | 243 | §2.37 | G013 |
-| 38 | `scripts/extend_level16.py` | 79 | 3 | 46 | §2.38 | G033 |
-| 39 | `scripts/forensics_card_usage.py` | 479 | 4 | 78 | §2.39 | G025 |
-| 40 | `scripts/forensics_response.py` | 187 | 3 | 44 | §2.40 | G031 |
-| 41 | `scripts/judge_anchor_blocks.py` | 240 | 6 | 92 | §2.41 | G029 |
-| 42 | `scripts/judge_critic_inertia.py` | 185 | 6 | 83 | §2.42 | G031 |
-| 43 | `scripts/judge_probe_v3.py` | 200 | 3 | 46 | §2.43 | G030 |
-| 44 | `scripts/judge_probe_v4.py` | 140 | 2 | 40 | §2.44 | G032 |
-| 45 | `scripts/l1_upgrade.ps1` | 30 | 0 | 46 | §2.45 | GX01 |
-| 46 | `scripts/pomdp_ceiling_probe.py` | 726 | 18 | 243 | §2.46 | G012 |
-| 47 | `scripts/probe_reward_composition.py` | 311 | 3 | 45 | §2.47 | G028 |
-| 48 | `scripts/probe_v3_mono_check.py` | 197 | 3 | 51 | §2.48 | G031 |
-| 49 | `scripts/probe_v4_ln_pair.py` | 356 | 4 | 85 | §2.49 | G027 |
-| 50 | `scripts/probe_value_ln.py` | 918 | 8 | 139 | §2.50 | G007 |
-| 51 | `scripts/question_bank_poc.py` | 239 | 6 | 94 | §2.51 | G029 |
-| 52 | `scripts/rl/dashboard.py` | 7 | 0 | 10 | §2.52 | G034 |
-| 53 | `scripts/rl/evaluate.py` | 7 | 0 | 10 | §2.53 | G034 |
-| 54 | `scripts/rl/export_replay.py` | 7 | 0 | 10 | §2.54 | G034 |
-| 55 | `scripts/rl/run_league.py` | 17 | 1 | 17 | §2.55 | G034 |
-| 56 | `scripts/rl/selftest.py` | 7 | 0 | 10 | §2.56 | G034 |
-| 57 | `scripts/rl/train_baseline.py` | 7 | 0 | 10 | §2.57 | G034 |
-| 58 | `scripts/rl/train_bc.py` | 7 | 0 | 10 | §2.58 | G034 |
-| 59 | `scripts/rl/train_belief.py` | 7 | 0 | 10 | §2.59 | G034 |
-| 60 | `scripts/rl/train_exploiter.py` | 7 | 0 | 10 | §2.60 | G034 |
-| 61 | `scripts/rl/train_follower.py` | 7 | 0 | 10 | §2.61 | G034 |
-| 62 | `scripts/rl/train_prophet.py` | 7 | 0 | 10 | §2.62 | G034 |
-| 63 | `scripts/run_probe_v3.sh` | 69 | 0 | 60 | §2.63 | GX01 |
-| 64 | `scripts/stop_solo_training_2200.py` | 113 | 5 | 62 | §2.64 | G033 |
-| 65 | `scripts/summarize_probe_v3_mono.py` | 168 | 2 | 33 | §2.65 | G032 |
-| 66 | `scripts/summarize_solo_run.py` | 212 | 2 | 39 | §2.66 | G030 |
-| 67 | `scripts/test_m1.py` | 212 | 12 | 143 | §2.67 | G030 |
-| 68 | `scripts/test_m2.py` | 488 | 34 | 366 | §2.68 | G022 |
-| 69 | `scripts/test_m3_evo.py` | 488 | 32 | 358 | §2.69 | G023 |
-| 70 | `scripts/test_m4_evo7.py` | 297 | 15 | 175 | §2.70 | G028 |
-| 71 | `scripts/test_m5_data.py` | 294 | 16 | 179 | §2.71 | G028 |
-| 72 | `scripts/test_m6_elite.py` | 521 | 25 | 273 | §2.72 | G020 |
-| 73 | `scripts/value_displacement_scan.py` | 126 | 4 | 62 | §2.73 | G032 |
-| 74 | `src/clasher_new/__init__.py` | 0 | 0 | 13 | §2.74 | G039 |
-| 75 | `src/clasher_new/agent_pool.py` | 35 | 2 | 39 | §2.75 | G038 |
-| 76 | `src/clasher_new/arena.py` | 209 | 14 | 179 | §2.76 | G036 |
-| 77 | `src/clasher_new/battle.py` | 3267 | 140 | 1680 | §2.77 | G002 |
-| 78 | `src/clasher_new/benchmark_speed.py` | 131 | 3 | 42 | §2.78 | G037 |
-| 79 | `src/clasher_new/card_aliases.py` | 540 | 5 | 68 | §2.79 | G018 |
-| 80 | `src/clasher_new/card_mechanics.py` | 1895 | 194 | 1894 | §2.80 | G004 |
-| 81 | `src/clasher_new/card_utils.py` | 522 | 15 | 210 | §2.81 | G019 |
-| 82 | `src/clasher_new/client_side/assure_names.py` | 19 | 0 | 12 | §2.82 | G040 |
-| 83 | `src/clasher_new/client_side/card_utils.py` | 180 | 9 | 120 | §2.83 | G040 |
-| 84 | `src/clasher_new/client_side/client.py` | 317 | 10 | 133 | §2.84 | G040 |
-| 85 | `src/clasher_new/client_side/download_images.py` | 28 | 0 | 15 | §2.85 | G040 |
-| 86 | `src/clasher_new/client_side/player.py` | 37 | 7 | 87 | §2.86 | G040 |
-| 87 | `src/clasher_new/core.py` | 69 | 11 | 120 | §2.87 | G038 |
-| 88 | `src/clasher_new/elite17_data.py` | 278 | 3 | 51 | §2.88 | G036 |
-| 89 | `src/clasher_new/environment.py` | 172 | 7 | 96 | §2.89 | G037 |
-| 90 | `src/clasher_new/evaluate.py` | 64 | 4 | 55 | §2.90 | G038 |
-| 91 | `src/clasher_new/evo_2025_data.py` | 287 | 3 | 76 | §2.91 | G035 |
-| 92 | `src/clasher_new/evolutions.py` | 133 | 3 | 49 | §2.92 | G037 |
-| 93 | `src/clasher_new/hook_raw_capture.js` | 240 | 0 | 145 | §2.93 | GX01 |
-| 94 | `src/clasher_new/minimal_visualizer.py` | 214 | 12 | 131 | §2.94 | G036 |
-| 95 | `src/clasher_new/new_visualization.py` | 137 | 10 | 124 | §2.95 | G037 |
-| 96 | `src/clasher_new/pathfinding.py` | 148 | 8 | 105 | §2.96 | G037 |
-| 97 | `src/clasher_new/pathfinding_heap.py` | 178 | 8 | 106 | §2.97 | G036 |
-| 98 | `src/clasher_new/player.py` | 67 | 10 | 114 | §2.98 | G038 |
-| 99 | `src/clasher_new/rl/__init__.py` | 13 | 0 | 8 | §2.99 | G045 |
-| 100 | `src/clasher_new/rl/action_bundle.py` | 110 | 15 | 156 | §2.100 | G044 |
-| 101 | `src/clasher_new/rl/action_mask.py` | 573 | 24 | 355 | §2.101 | G015 |
-| 102 | `src/clasher_new/rl/bayes_filter.py` | 184 | 13 | 133 | §2.102 | G043 |
-| 103 | `src/clasher_new/rl/belief.py` | 362 | 26 | 461 | §2.103 | G041 |
-| 104 | `src/clasher_new/rl/belief_planner.py` | 849 | 34 | 402 | §2.104 | G009 |
-| 105 | `src/clasher_new/rl/config.py` | 412 | 23 | 308 | §2.105 | G026 |
-| 106 | `src/clasher_new/rl/dashboard.py` | 2365 | 27 | 323 | §2.106 | G003 |
-| 107 | `src/clasher_new/rl/decks.py` | 139 | 7 | 84 | §2.107 | G044 |
-| 108 | `src/clasher_new/rl/diagnostics.py` | 163 | 5 | 70 | §2.108 | G044 |
-| 109 | `src/clasher_new/rl/elo.py` | 59 | 8 | 95 | §2.109 | G045 |
-| 110 | `src/clasher_new/rl/env_wrapper.py` | 731 | 28 | 372 | §2.110 | G011 |
-| 111 | `src/clasher_new/rl/evaluate.py` | 557 | 11 | 171 | §2.111 | G016 |
-| 112 | `src/clasher_new/rl/export_replay.py` | 66 | 1 | 17 | §2.112 | G045 |
-| 113 | `src/clasher_new/rl/flow_league.py` | 613 | 18 | 285 | §2.113 | G014 |
-| 114 | `src/clasher_new/rl/follower.py` | 766 | 21 | 320 | §2.114 | G010 |
-| 115 | `src/clasher_new/rl/human_play.py` | 354 | 13 | 279 | §2.115 | G041 |
-| 116 | `src/clasher_new/rl/launcher_menu.py` | 323 | 9 | 122 | §2.116 | G042 |
-| 117 | `src/clasher_new/rl/league.py` | 181 | 15 | 171 | §2.117 | G043 |
-| 118 | `src/clasher_new/rl/mcts.py` | 480 | 23 | 313 | §2.118 | G024 |
-| 119 | `src/clasher_new/rl/observation.py` | 172 | 2 | 59 | §2.119 | G043 |
-| 120 | `src/clasher_new/rl/opponents.py` | 208 | 14 | 161 | §2.120 | G043 |
-| 121 | `src/clasher_new/rl/overtime.py` | 38 | 1 | 20 | §2.121 | G045 |
-| 122 | `src/clasher_new/rl/pfsp.py` | 71 | 5 | 69 | §2.122 | G045 |
-| 123 | `src/clasher_new/rl/plan_space.py` | 188 | 7 | 92 | §2.123 | G043 |
-| 124 | `src/clasher_new/rl/ppo.py` | 547 | 17 | 227 | §2.124 | G017 |
-| 125 | `src/clasher_new/rl/prophet.py` | 516 | 28 | 306 | §2.125 | G021 |
-| 126 | `src/clasher_new/rl/replay.py` | 143 | 10 | 113 | §2.126 | G044 |
-| 127 | `src/clasher_new/rl/run_league.py` | 1375 | 39 | 578 | §2.127 | G006 |
-| 128 | `src/clasher_new/rl/selftest.py` | 4983 | 95 | 965 | §2.128 | G001 |
-| 129 | `src/clasher_new/rl/train_baseline.py` | 102 | 9 | 99 | §2.129 | G045 |
-| 130 | `src/clasher_new/rl/train_bc.py` | 131 | 3 | 54 | §2.130 | G044 |
-| 131 | `src/clasher_new/rl/train_belief.py` | 260 | 9 | 126 | §2.131 | G042 |
-| 132 | `src/clasher_new/rl/train_exploiter.py` | 137 | 3 | 48 | §2.132 | G044 |
-| 133 | `src/clasher_new/rl/train_follower.py` | 283 | 9 | 125 | §2.133 | G042 |
-| 134 | `src/clasher_new/rl/train_prophet.py` | 158 | 12 | 129 | §2.134 | G044 |
-| 135 | `src/clasher_new/rl/train_solo.py` | 1745 | 25 | 341 | §2.135 | G005 |
-| 136 | `src/clasher_new/rl/workers.py` | 107 | 3 | 51 | §2.136 | G045 |
-| 137 | `src/clasher_new/run_raw_capture.py` | 72 | 2 | 42 | §2.137 | G038 |
-| 138 | `src/clasher_new/runs/_tmp_behavior_recount.py` | 200 | 7 | 109 | §2.138 | G046 |
-| 139 | `src/clasher_new/runs/_tmp_ln_geom.py` | 148 | 3 | 52 | §2.139 | G046 |
-| 140 | `src/clasher_new/runs/_tmp_ln_geom2.py` | 133 | 4 | 68 | §2.140 | G046 |
-| 141 | `src/clasher_new/runs/_tmp_ln_geom3.py` | 162 | 3 | 61 | §2.141 | G046 |
-| 142 | `src/clasher_new/runs/_tmp_metric_id.py` | 57 | 1 | 34 | §2.142 | G046 |
-| 143 | `src/clasher_new/runs/_tmp_mm_debug.py` | 55 | 1 | 26 | §2.143 | G047 |
-| 144 | `src/clasher_new/runs/_tmp_probe_maxpre.py` | 85 | 0 | 36 | §2.144 | G046 |
-| 145 | `src/clasher_new/runs/_tmp_scan_disp.py` | 113 | 2 | 44 | §2.145 | G046 |
-| 146 | `src/clasher_new/runs/_tmp_value_params.py` | 23 | 0 | 19 | §2.146 | G047 |
-| 147 | `src/clasher_new/runs/_tmp_variants.py` | 92 | 4 | 68 | §2.147 | G046 |
-| 148 | `src/clasher_new/runs/_tmp_window.py` | 50 | 1 | 27 | §2.148 | G047 |
-| 149 | `src/clasher_new/server.py` | 107 | 7 | 88 | §2.149 | G037 |
-| 150 | `src/clasher_new/simulate_exchange.py` | 323 | 4 | 76 | §2.150 | G035 |
-| 151 | `src/clasher_new/special_eval.py` | 18 | 0 | 19 | §2.151 | G039 |
-| 152 | `src/clasher_new/spell_module.py` | 358 | 12 | 172 | §2.152 | G035 |
-| 153 | `src/clasher_new/threat_calc.py` | 106 | 2 | 40 | §2.153 | G038 |
-| 154 | `src/clasher_new/timing.py` | 20 | 0 | 21 | §2.154 | G039 |
-| 155 | `src/clasher_new/tmp_formation_test.py` | 53 | 1 | 25 | §2.155 | G038 |
-| 156 | `src/clasher_new/tmp_path_debug.py` | 37 | 1 | 29 | §2.156 | G038 |
-| 157 | `src/clasher_new/tmp_spell_forensics.py` | 70 | 1 | 25 | §2.157 | G038 |
-| 158 | `src/clasher_new/tmp_target_verify.py` | 56 | 1 | 25 | §2.158 | G038 |
-| 159 | `src/clasher_new/tmp_tower_chip_test.py` | 55 | 1 | 25 | §2.159 | G038 |
-| 160 | `src/clasher_new/train.py` | 136 | 10 | 113 | §2.160 | G037 |
-| 161 | `src/clasher_new/train_autoregressive.py` | 36 | 1 | 25 | §2.161 | G038 |
-| 162 | `src/clasher_new/watch_random_models.py` | 17 | 0 | 17 | §2.162 | G039 |
-| 163 | `start_rl.bat` | 322 | 0 | 220 | §2.163 | GX02 |
-| 164 | `start_training.bat` | 211 | 0 | 163 | §2.164 | GX02 |
+| 15 | `scripts/_mask_vs_engine_reconcile.py` | 115 | 3 | 39 | §2.15 | GX04 |
+| 16 | `scripts/_probe_value_collapse.py` | 257 | 3 | 45 | §2.16 | G029 |
+| 17 | `scripts/_probe_value_path.py` | 220 | 2 | 35 | §2.17 | G029 |
+| 18 | `scripts/_survey_audit.py` | 165 | 2 | 35 | §2.18 | GX03 |
+| 19 | `scripts/_survey_brief.py` | 86 | 2 | 30 | §2.19 | G033 |
+| 20 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.20 | G032 |
+| 21 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.21 | G030 |
+| 22 | `scripts/_survey_md_to_docx.py` | 341 | 9 | 113 | §2.22 | GX03 |
+| 23 | `scripts/_survey_merge.py` | 479 | 6 | 74 | §2.23 | GX03 |
+| 24 | `scripts/_survey_merge_docs.py` | 265 | 4 | 56 | §2.24 | GX03 |
+| 25 | `scripts/_survey_verify.py` | 145 | 2 | 30 | §2.25 | GX03 |
+| 26 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.26 | G033 |
+| 27 | `scripts/assassin_vs_megaknight.py` | 94 | 1 | 32 | §2.27 | G033 |
+| 28 | `scripts/assassin_vs_sparky.py` | 181 | 2 | 36 | §2.28 | G031 |
+| 29 | `scripts/batch_smoke.py` | 105 | 2 | 41 | §2.29 | G033 |
+| 30 | `scripts/bench_train_speed.py` | 130 | 1 | 26 | §2.30 | G032 |
+| 31 | `scripts/cdp_evo.js` | 64 | 0 | 141 | §2.31 | GX01 |
+| 32 | `scripts/cdp_extract.js` | 64 | 0 | 141 | §2.32 | GX01 |
+| 33 | `scripts/cdp_forward.py` | 70 | 4 | 53 | §2.33 | G033 |
+| 34 | `scripts/cdp_hero.js` | 64 | 0 | 141 | §2.34 | GX01 |
+| 35 | `scripts/cdp_leaderboard.js` | 134 | 0 | 175 | §2.35 | GX01 |
+| 36 | `scripts/cdp_leaderboard_probe.js` | 53 | 0 | 129 | §2.36 | GX01 |
+| 37 | `scripts/cdp_spell.js` | 64 | 0 | 141 | §2.37 | GX01 |
+| 38 | `scripts/coverage.py` | 360 | 9 | 144 | §2.38 | G027 |
+| 39 | `scripts/diag_critic_ev.py` | 854 | 13 | 195 | §2.39 | G008 |
+| 40 | `scripts/diag_encoder_scale.py` | 124 | 1 | 31 | §2.40 | G033 |
+| 41 | `scripts/diag_gru_ablation.py` | 192 | 3 | 47 | §2.41 | G031 |
+| 42 | `scripts/diag_value_head.py` | 164 | 1 | 29 | §2.42 | G032 |
+| 43 | `scripts/duel_search.py` | 636 | 17 | 243 | §2.43 | G013 |
+| 44 | `scripts/extend_level16.py` | 79 | 3 | 46 | §2.44 | G033 |
+| 45 | `scripts/forensics_card_usage.py` | 479 | 4 | 78 | §2.45 | G025 |
+| 46 | `scripts/forensics_response.py` | 187 | 3 | 44 | §2.46 | G031 |
+| 47 | `scripts/judge_anchor_blocks.py` | 240 | 6 | 92 | §2.47 | G029 |
+| 48 | `scripts/judge_critic_inertia.py` | 185 | 6 | 83 | §2.48 | G031 |
+| 49 | `scripts/judge_probe_v3.py` | 200 | 3 | 46 | §2.49 | G030 |
+| 50 | `scripts/judge_probe_v4.py` | 140 | 2 | 40 | §2.50 | G032 |
+| 51 | `scripts/l1_upgrade.ps1` | 30 | 0 | 46 | §2.51 | GX01 |
+| 52 | `scripts/pomdp_ceiling_probe.py` | 726 | 18 | 243 | §2.52 | G012 |
+| 53 | `scripts/probe_reward_composition.py` | 311 | 3 | 45 | §2.53 | G028 |
+| 54 | `scripts/probe_v3_mono_check.py` | 197 | 3 | 51 | §2.54 | G031 |
+| 55 | `scripts/probe_v4_ln_pair.py` | 356 | 4 | 85 | §2.55 | G027 |
+| 56 | `scripts/probe_value_ln.py` | 918 | 8 | 139 | §2.56 | G007 |
+| 57 | `scripts/question_bank_poc.py` | 239 | 6 | 94 | §2.57 | G029 |
+| 58 | `scripts/rl/dashboard.py` | 7 | 0 | 10 | §2.58 | G034 |
+| 59 | `scripts/rl/evaluate.py` | 7 | 0 | 10 | §2.59 | G034 |
+| 60 | `scripts/rl/export_replay.py` | 7 | 0 | 10 | §2.60 | G034 |
+| 61 | `scripts/rl/run_league.py` | 17 | 1 | 17 | §2.61 | G034 |
+| 62 | `scripts/rl/selftest.py` | 7 | 0 | 10 | §2.62 | G034 |
+| 63 | `scripts/rl/train_baseline.py` | 7 | 0 | 10 | §2.63 | G034 |
+| 64 | `scripts/rl/train_bc.py` | 7 | 0 | 10 | §2.64 | G034 |
+| 65 | `scripts/rl/train_belief.py` | 7 | 0 | 10 | §2.65 | G034 |
+| 66 | `scripts/rl/train_exploiter.py` | 7 | 0 | 10 | §2.66 | G034 |
+| 67 | `scripts/rl/train_follower.py` | 7 | 0 | 10 | §2.67 | G034 |
+| 68 | `scripts/rl/train_prophet.py` | 7 | 0 | 10 | §2.68 | G034 |
+| 69 | `scripts/run_probe_v3.sh` | 69 | 0 | 60 | §2.69 | GX01 |
+| 70 | `scripts/stop_solo_training_2200.py` | 113 | 5 | 62 | §2.70 | G033 |
+| 71 | `scripts/summarize_probe_v3_mono.py` | 168 | 2 | 33 | §2.71 | G032 |
+| 72 | `scripts/summarize_solo_run.py` | 212 | 2 | 39 | §2.72 | G030 |
+| 73 | `scripts/test_m1.py` | 212 | 12 | 143 | §2.73 | G030 |
+| 74 | `scripts/test_m2.py` | 488 | 34 | 366 | §2.74 | G022 |
+| 75 | `scripts/test_m3_evo.py` | 488 | 32 | 358 | §2.75 | G023 |
+| 76 | `scripts/test_m4_evo7.py` | 297 | 15 | 175 | §2.76 | G028 |
+| 77 | `scripts/test_m5_data.py` | 294 | 16 | 179 | §2.77 | G028 |
+| 78 | `scripts/test_m6_elite.py` | 521 | 25 | 273 | §2.78 | G020 |
+| 79 | `scripts/value_displacement_scan.py` | 126 | 4 | 62 | §2.79 | G032 |
+| 80 | `src/clasher_new/__init__.py` | 0 | 0 | 13 | §2.80 | G039 |
+| 81 | `src/clasher_new/agent_pool.py` | 35 | 2 | 39 | §2.81 | G038 |
+| 82 | `src/clasher_new/arena.py` | 209 | 14 | 179 | §2.82 | G036 |
+| 83 | `src/clasher_new/battle.py` | 3267 | 140 | 1680 | §2.83 | G002 |
+| 84 | `src/clasher_new/benchmark_speed.py` | 131 | 3 | 42 | §2.84 | G037 |
+| 85 | `src/clasher_new/card_aliases.py` | 540 | 5 | 68 | §2.85 | G018 |
+| 86 | `src/clasher_new/card_mechanics.py` | 1895 | 194 | 1894 | §2.86 | G004 |
+| 87 | `src/clasher_new/card_utils.py` | 522 | 15 | 210 | §2.87 | G019 |
+| 88 | `src/clasher_new/client_side/assure_names.py` | 19 | 0 | 12 | §2.88 | G040 |
+| 89 | `src/clasher_new/client_side/card_utils.py` | 180 | 9 | 120 | §2.89 | G040 |
+| 90 | `src/clasher_new/client_side/client.py` | 317 | 10 | 133 | §2.90 | G040 |
+| 91 | `src/clasher_new/client_side/download_images.py` | 28 | 0 | 15 | §2.91 | G040 |
+| 92 | `src/clasher_new/client_side/player.py` | 37 | 7 | 87 | §2.92 | G040 |
+| 93 | `src/clasher_new/core.py` | 69 | 11 | 120 | §2.93 | G038 |
+| 94 | `src/clasher_new/elite17_data.py` | 278 | 3 | 51 | §2.94 | G036 |
+| 95 | `src/clasher_new/environment.py` | 172 | 7 | 96 | §2.95 | G037 |
+| 96 | `src/clasher_new/evaluate.py` | 64 | 4 | 55 | §2.96 | G038 |
+| 97 | `src/clasher_new/evo_2025_data.py` | 287 | 3 | 76 | §2.97 | G035 |
+| 98 | `src/clasher_new/evolutions.py` | 133 | 3 | 49 | §2.98 | G037 |
+| 99 | `src/clasher_new/hook_raw_capture.js` | 240 | 0 | 145 | §2.99 | GX01 |
+| 100 | `src/clasher_new/minimal_visualizer.py` | 214 | 12 | 131 | §2.100 | G036 |
+| 101 | `src/clasher_new/new_visualization.py` | 137 | 10 | 124 | §2.101 | G037 |
+| 102 | `src/clasher_new/pathfinding.py` | 148 | 8 | 105 | §2.102 | G037 |
+| 103 | `src/clasher_new/pathfinding_heap.py` | 178 | 8 | 106 | §2.103 | G036 |
+| 104 | `src/clasher_new/player.py` | 67 | 10 | 114 | §2.104 | G038 |
+| 105 | `src/clasher_new/rl/__init__.py` | 13 | 0 | 8 | §2.105 | G045 |
+| 106 | `src/clasher_new/rl/action_bundle.py` | 110 | 15 | 156 | §2.106 | G044 |
+| 107 | `src/clasher_new/rl/action_mask.py` | 573 | 24 | 355 | §2.107 | G015 |
+| 108 | `src/clasher_new/rl/bayes_filter.py` | 184 | 13 | 133 | §2.108 | G043 |
+| 109 | `src/clasher_new/rl/belief.py` | 362 | 26 | 461 | §2.109 | G041 |
+| 110 | `src/clasher_new/rl/belief_planner.py` | 849 | 34 | 402 | §2.110 | G009 |
+| 111 | `src/clasher_new/rl/config.py` | 412 | 23 | 308 | §2.111 | G026 |
+| 112 | `src/clasher_new/rl/dashboard.py` | 2365 | 27 | 323 | §2.112 | G003 |
+| 113 | `src/clasher_new/rl/decks.py` | 139 | 7 | 84 | §2.113 | G044 |
+| 114 | `src/clasher_new/rl/diagnostics.py` | 163 | 5 | 70 | §2.114 | G044 |
+| 115 | `src/clasher_new/rl/elo.py` | 59 | 8 | 95 | §2.115 | G045 |
+| 116 | `src/clasher_new/rl/env_wrapper.py` | 731 | 28 | 372 | §2.116 | G011 |
+| 117 | `src/clasher_new/rl/evaluate.py` | 557 | 11 | 171 | §2.117 | G016 |
+| 118 | `src/clasher_new/rl/export_replay.py` | 66 | 1 | 17 | §2.118 | G045 |
+| 119 | `src/clasher_new/rl/flow_league.py` | 613 | 18 | 285 | §2.119 | G014 |
+| 120 | `src/clasher_new/rl/follower.py` | 766 | 21 | 320 | §2.120 | G010 |
+| 121 | `src/clasher_new/rl/human_play.py` | 354 | 13 | 279 | §2.121 | G041 |
+| 122 | `src/clasher_new/rl/launcher_menu.py` | 323 | 9 | 122 | §2.122 | G042 |
+| 123 | `src/clasher_new/rl/league.py` | 181 | 15 | 171 | §2.123 | G043 |
+| 124 | `src/clasher_new/rl/mcts.py` | 480 | 23 | 313 | §2.124 | G024 |
+| 125 | `src/clasher_new/rl/observation.py` | 172 | 2 | 59 | §2.125 | G043 |
+| 126 | `src/clasher_new/rl/opponents.py` | 208 | 14 | 161 | §2.126 | G043 |
+| 127 | `src/clasher_new/rl/overtime.py` | 38 | 1 | 20 | §2.127 | G045 |
+| 128 | `src/clasher_new/rl/pfsp.py` | 71 | 5 | 69 | §2.128 | G045 |
+| 129 | `src/clasher_new/rl/plan_space.py` | 188 | 7 | 92 | §2.129 | G043 |
+| 130 | `src/clasher_new/rl/ppo.py` | 547 | 17 | 227 | §2.130 | G017 |
+| 131 | `src/clasher_new/rl/prophet.py` | 516 | 28 | 306 | §2.131 | G021 |
+| 132 | `src/clasher_new/rl/replay.py` | 143 | 10 | 113 | §2.132 | G044 |
+| 133 | `src/clasher_new/rl/run_league.py` | 1375 | 39 | 578 | §2.133 | G006 |
+| 134 | `src/clasher_new/rl/selftest.py` | 4983 | 95 | 965 | §2.134 | G001 |
+| 135 | `src/clasher_new/rl/train_baseline.py` | 102 | 9 | 99 | §2.135 | G045 |
+| 136 | `src/clasher_new/rl/train_bc.py` | 131 | 3 | 54 | §2.136 | G044 |
+| 137 | `src/clasher_new/rl/train_belief.py` | 260 | 9 | 126 | §2.137 | G042 |
+| 138 | `src/clasher_new/rl/train_exploiter.py` | 137 | 3 | 48 | §2.138 | G044 |
+| 139 | `src/clasher_new/rl/train_follower.py` | 283 | 9 | 125 | §2.139 | G042 |
+| 140 | `src/clasher_new/rl/train_prophet.py` | 158 | 12 | 129 | §2.140 | G044 |
+| 141 | `src/clasher_new/rl/train_solo.py` | 1745 | 25 | 341 | §2.141 | G005 |
+| 142 | `src/clasher_new/rl/workers.py` | 107 | 3 | 51 | §2.142 | G045 |
+| 143 | `src/clasher_new/run_raw_capture.py` | 72 | 2 | 42 | §2.143 | G038 |
+| 144 | `src/clasher_new/runs/_tmp_behavior_recount.py` | 200 | 7 | 109 | §2.144 | G046 |
+| 145 | `src/clasher_new/runs/_tmp_ln_geom.py` | 148 | 3 | 52 | §2.145 | G046 |
+| 146 | `src/clasher_new/runs/_tmp_ln_geom2.py` | 133 | 4 | 68 | §2.146 | G046 |
+| 147 | `src/clasher_new/runs/_tmp_ln_geom3.py` | 162 | 3 | 61 | §2.147 | G046 |
+| 148 | `src/clasher_new/runs/_tmp_metric_id.py` | 57 | 1 | 34 | §2.148 | G046 |
+| 149 | `src/clasher_new/runs/_tmp_mm_debug.py` | 55 | 1 | 26 | §2.149 | G047 |
+| 150 | `src/clasher_new/runs/_tmp_probe_maxpre.py` | 85 | 0 | 36 | §2.150 | G046 |
+| 151 | `src/clasher_new/runs/_tmp_scan_disp.py` | 113 | 2 | 44 | §2.151 | G046 |
+| 152 | `src/clasher_new/runs/_tmp_value_params.py` | 23 | 0 | 19 | §2.152 | G047 |
+| 153 | `src/clasher_new/runs/_tmp_variants.py` | 92 | 4 | 68 | §2.153 | G046 |
+| 154 | `src/clasher_new/runs/_tmp_window.py` | 50 | 1 | 27 | §2.154 | G047 |
+| 155 | `src/clasher_new/server.py` | 107 | 7 | 88 | §2.155 | G037 |
+| 156 | `src/clasher_new/simulate_exchange.py` | 323 | 4 | 76 | §2.156 | G035 |
+| 157 | `src/clasher_new/special_eval.py` | 18 | 0 | 19 | §2.157 | G039 |
+| 158 | `src/clasher_new/spell_module.py` | 358 | 12 | 172 | §2.158 | G035 |
+| 159 | `src/clasher_new/threat_calc.py` | 106 | 2 | 40 | §2.159 | G038 |
+| 160 | `src/clasher_new/timing.py` | 20 | 0 | 21 | §2.160 | G039 |
+| 161 | `src/clasher_new/tmp_formation_test.py` | 53 | 1 | 25 | §2.161 | G038 |
+| 162 | `src/clasher_new/tmp_path_debug.py` | 37 | 1 | 29 | §2.162 | G038 |
+| 163 | `src/clasher_new/tmp_spell_forensics.py` | 70 | 1 | 25 | §2.163 | G038 |
+| 164 | `src/clasher_new/tmp_target_verify.py` | 56 | 1 | 25 | §2.164 | G038 |
+| 165 | `src/clasher_new/tmp_tower_chip_test.py` | 55 | 1 | 25 | §2.165 | G038 |
+| 166 | `src/clasher_new/train.py` | 136 | 10 | 113 | §2.166 | G037 |
+| 167 | `src/clasher_new/train_autoregressive.py` | 36 | 1 | 25 | §2.167 | G038 |
+| 168 | `src/clasher_new/watch_random_models.py` | 17 | 0 | 17 | §2.168 | G039 |
+| 169 | `start_rl.bat` | 322 | 0 | 220 | §2.169 | GX02 |
+| 170 | `start_training.bat` | 211 | 0 | 163 | §2.170 | GX02 |
 
 ---
 
@@ -813,7 +820,52 @@
 
 ---
 
-### 2.15 `scripts/_probe_value_collapse.py`
+### 2.15 `scripts/_mask_vs_engine_reconcile.py`
+
+- **分析组**：GX04　**行数**：115　**AST 符号数**：3
+
+- 语言/类型: Python
+- 行数: 115
+- 文件作用: 掩码层（`rl/action_mask.legal_cells`）与引擎层（`battle.BattleState.deploy_card`）的部署合法性双向对账脚本（L3 docstring）。对 24 张代表性卡、双方各穷举 18×32=576 个本地格，统计"掩码判否但引擎接受"（掩码过严）与"掩码判可但引擎拒绝"（掩码缺口）两类差异（L8-10）。只读、不修改任何判定逻辑，输出为 Markdown 表格 + 合计行（L72-110）。
+- 主要导入: `copy`、`io`、`os`、`sys`（L18-21；其中 `io` 在文件中未被使用，无法确认其用途）；`core.Position`（L28）、`battle as B`（L29）、`player as P`（L30）、`rl.action_mask.legal_cells`（L31）、`rl.action_bundle.sub_position`（L32）。导入前把 `os.getcwd()` 插入 `sys.path[0]`（L26），因此要求用户按 L12-14 在 `src/clasher_new` 下运行；`sys.stdout.reconfigure(encoding="utf-8", errors="replace")`（L23-24）是仓库 R-类 UTF-8 控制台兜底写法。
+- 关键模块级常量:
+  - `DECK = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]`（L34）— 8 张的**基础卡组模板**；`make()` 用它拼出"被测卡在前 + 其余 7 张"的循环队列（L46），使被对账的卡必然处于手牌区。
+  - `CARDS = [24 个卡名字符串]`（L37-42）— **被测卡清单**，注释（L36）标称按类型覆盖 5 类：部队（Knight/Giant/Miner/Musketeer/Minions/Archer/MiniPekka）、建筑（Cannon/Mortar/XBow）、法术（Arrows/Fireball/Zap/Poison/Tornado/Earthquake/Freeze/Rage/Heal/Lightning）、滚动物体/特殊部署（Log/BarbLog/GoblinBarrel）与 Mirror（L37-42）。用途：外层遍历 `for card in CARDS`（L75）。
+- 顶层数据表/字典: 无模块级字典或表；仅有上述两个列表常量（L34、L37-42）。运行期的表格由 `main()` 内局部列表 `rows` 累积，元素为 6 元组 `(card, pid, 掩码可放格数, 过严数, 缺口数, 异常数)`（L97）。
+
+#### 2.15.1 make [L45-51]
+- 类型: function
+- 签名: `def make(card: str) -> "B.BattleState":`
+- 作用: 为单张被测卡构造一个双方满圣水、同卡组的全新 `BattleState`。
+- 参数: `card: str` — 被测卡名；用于置顶循环队列（L46）并作为组卡依据。
+- 返回: `battle.BattleState` 实例（L47-51）。
+- 实现: L46 先构造 `dc = [card] + [c for c in DECK if c != card]`，若 card 本身在 DECK 中没有重复项则得到 8 张去重卡组（若 card 不在 DECK 中则为 9 张——如 CARDS 里的 Miner/XBow 等，见 L37-41，此时卡组长度 >8，属脚本自身未注释的行为，无法确认是否为有意）。L47-51 用 `P.PlayerState(0/1, list(dc), 10.0)` 建双方（`player.PlayerState.__init__` 第 3 参为 elixir，player.py:6），并传 `card_level=11`（`battle.BattleState.__init__` 的第三参，battle.py:2539；同时它会把 `Card.default_level` 全局设为 11）。双方均用 `list(dc)` 复制，避免共享同一列表。
+- 调用: 被 `main()` 调用（L77）。调用 `P.PlayerState`（L48-49）、`B.BattleState`（L47）。
+- 置信度: 已确认
+
+#### 2.15.2 engine_accepts [L54-65]
+- 类型: function
+- 签名: `def engine_accepts(bs, card: str, pid: int, pos):`
+- 作用: 在 `bs` 的深拷贝上模拟一次部署，返回引擎是否接受该落点（或异常类型串）。
+- 参数: `bs` — 基准 `BattleState`（只被深拷贝，原对象不被改）；`card: str` — 卡名；`pid: int` — 玩家 0/1；`pos` — 世界坐标（`core.Position`，由 `sub_position` 产出，见 L87）。
+- 返回: `bool`（`deploy_card` 的返回值强制转换，L63）；若抛出异常则返回字符串 `"ERR:" + 异常类名`（L64-65）。调用方用 `isinstance(e, str)` 区分这两类（L90）。
+- 实现: L55 用 `copy.deepcopy(bs)` 保证对账不污染基准状态，使 576 格之间相互独立。L56 把该玩家圣水重置为 10.0，排除"费用不足"这一与落点无关的否决原因。L57-60 把 `card` 移到 `cycle` 首位：先复制 cycle 列表，若卡已在其中则移除，再前插 —— 对应 `PlayerState.can_play_card` 要求卡在 `cycle[:4]` 内（player.py:36-39），保证手牌校验不成为干扰项。L61 把 `last_card` 设为 `"Knight"`，使 `Mirror` 卡的镜像分支（battle.py:2806-2825 需要 `last` 非空，且要求 `last` 的费用可算）可走通。L62-63 调 `sim.deploy_card(pid, card, Position(pos.x, pos.y))` 并 `bool(...)`。L64-65 捕获任何 `Exception`，注释说明"运行时异常 = 引擎拒绝路径的另一种表现"。
+- 调用: 被 `main()` 对每个格子调用（L89）。调用 `copy.deepcopy`、`Position`（L63）、`bs.players[pid]`（L56-61）、`BattleState.deploy_card`（L63；定义 battle.py:2806，其内部对非法落点主要 `return False`，如 battle.py:2844/2867/2870/2873-2887）。
+- 置信度: 已确认
+
+#### 2.15.3 main [L68-111]
+- 类型: function
+- 签名: `def main() -> int:`
+- 作用: 遍历全部被测卡与双方，逐格对比掩码与引擎的合法性，打印 Markdown 表与差异汇总并返回 0。
+- 参数: 无。
+- 返回: `int`，恒为 `0`（L111），经 `raise SystemExit(main())`（L115）作为进程退出码。
+- 实现: L69-73 打印表头（含 `card_level=11` 口径）与 6 列表头"卡牌|pid|掩码可放格数|掩码否/引擎可(过严)|掩码可/引擎否(缺口)|异常"。L75-81 对每张卡先 `make(card)` 再试调一次 `legal_cells(bs, 0, card)` 作**前置可用性探针**：失败则打印"前置失败 <异常类名>"行并 `continue` 跳过该卡（注意此处探针结果被丢弃，随后 L83 重新计算）。L82-96 对 pid∈{0,1}：L83 取掩码 `cells = legal_cells(bs, pid, card)`；L85-96 双重循环 `y in range(32)`、`x in range(18)`（硬编码，与 `rl/action_mask.py:27` 的 `GRID_H, GRID_W = 32, 18` 一致），每格用 `sub_position(pid, x, y)` 换成世界坐标（L87，与掩码内部 action_mask.py:462/473 用的是同一换算入口），`m = bool(cells[y, x])`（L88）为掩码判定，`e = engine_accepts(...)`（L89）为引擎判定；若 e 是字符串则记入 `exc` 并跳过该格（L90-92，因此异常格不参与两类差异统计）；L93-94 记录"掩码否 ∧ 引擎可"到 `mfe`，L95-96 记录"掩码可 ∧ 引擎否"到 `mte`。L97 追加 6 元组行，L98-100 打印该行 Markdown。L101-106 打印"有差异的条目（逐格样本）"小节，但对 `a or b or e` 非零的行只打印**计数**（`过严 N 格 / 缺口 N 格 / 异常 N`），并未输出任何格子坐标样本 —— 与标题"逐格样本"不符（脚本自身未注释该差异，无法确认是有意简化还是实现遗留；`mfe`/`mte` 中已存的 `(x, y)` 也未被使用）。L108-110 对 `rows` 求合计并打印"过严 / 缺口 / 异常"总数。
+- 调用: 由 `__main__` 块调用（L114-115）。调用 `make`（L77）、`legal_cells`（L78、L83）、`sub_position`（L87）、`engine_accepts`（L89）。
+- 置信度: 已确认（唯二待确认处已在"实现"内标注：L46 卡组长度、L102 标题与实际输出不符）
+
+---
+
+### 2.16 `scripts/_probe_value_collapse.py`
 
 - **分析组**：G029　**行数**：257　**AST 符号数**：3
 
@@ -824,7 +876,7 @@
 - 关键模块级常量: 无顶层 `NAME = 值` 形式的常量；只有两处路径变量 `_HERE = os.path.dirname(os.path.abspath(__file__))`（L23）、`_SRC = os.path.join(os.path.dirname(_HERE), "src", "clasher_new")`（L24），作用是把 `src/clasher_new` 插入 `sys.path`（L25-26）。另有 `layers` 字典字面量（L109-110）与空列表容器，均为 `main()` 内局部变量。
 - 顶层数据表/字典: 无（L109-110 的 `layers` 是 `main()` 局部字典，键为层名、值为逐帧 numpy 数组列表；L112 的 `ep_obs/ep_bel/ep_plan/ep_rew/ep_val/ep_term/ep_trunc` 为局内缓冲列表）。
 
-#### 2.15.1 measurement_line [L42-56]
+#### 2.16.1 measurement_line [L42-56]
 - 类型: function
 - 签名: `measurement_line(pol, L)`
 - 作用: 打印价值 MLP 第 0 层的 pre-activation 跨帧统计、LayerNorm 前统计与 ReLU 全零维度数。
@@ -836,7 +888,7 @@
 - 调用: 仅被本文件 `main()` 在 L183 调用；它调用 `pol.value_head_mlp`、`numpy`（函数内 `import numpy as _np`，L44）与 `python print`。无其它仓库内调用者（全仓 grep 未见于其它文件）。
 - 置信度: 已确认
 
-#### 2.15.2 _std [L59-60]
+#### 2.16.2 _std [L59-60]
 - 类型: function
 - 签名: `_std(x)`
 - 作用: 把输入转成 float64 numpy 数组并返回其全局标准差（标量 float）。
@@ -847,7 +899,7 @@
 - 调用: 本文件中**未被调用**（全文检索 `_std(` 只出现在 L59 定义处）；无其它模块 import 本文件（本文件无 import 者）。
 - 置信度: 已确认
 
-#### 2.15.3 main [L63-253]
+#### 2.16.3 main [L63-253]
 - 类型: function
 - 签名: `main()`
 - 作用: 命令行入口：解析参数、装载 ckpt 与配置、构造对手与信念链路、跑 `--frames` 帧确定性 rollout 并逐帧采集 value 通路各层，最后打印跨帧逐层统计、回报方差分解与多种 EV 口径。
@@ -864,7 +916,7 @@
 
 ---
 
-### 2.16 `scripts/_probe_value_path.py`
+### 2.17 `scripts/_probe_value_path.py`
 
 - **分析组**：G029　**行数**：220　**AST 符号数**：2
 
@@ -875,7 +927,7 @@
 - 关键模块级常量: 无顶层 `NAME = 值` 常量；仅有 `_HERE`（L23）与 `_SRC`（L24）两处路径变量，作用是把 `src/clasher_new` 插入 `sys.path`（L25-26）。L107-108 的 `buf` 字典（11 个层名 → 逐帧数组列表）为 `main()` 局部变量。
 - 顶层数据表/字典: 无（`buf`/`per_ep` 均为 `main()` 局部）。
 
-#### 2.16.1 layer_stats [L41-51]
+#### 2.17.1 layer_stats [L41-51]
 - 类型: function
 - 签名: `layer_stats(name, X)`
 - 作用: 对一个 `(T, D)` 层的逐帧矩阵返回一行格式化描述：维度、绝对值均值、恒定分量范数、跨帧变化范数、相对变化、逐维 std 均值、零变化维占比。
@@ -887,7 +939,7 @@
 - 调用: 被 `main()` 在 L181 的循环中每层调用一次；无其它模块引用。
 - 置信度: 已确认
 
-#### 2.16.2 main [L54-216]
+#### 2.17.2 main [L54-216]
 - 类型: function
 - 签名: `main()`
 - 作用: 命令行入口：装载 ckpt 与配置、建对手/信念链路、跑 `--frames` 帧确定性 rollout 并逐帧采集 value 通路（含 GRU 候选 pre-activation）与 GAE 回报，最后打印逐层统计、ReLU 存活率与多种 EV/vstd 口径。
@@ -905,7 +957,48 @@
 
 ---
 
-### 2.17 `scripts/_survey_brief.py`
+### 2.18 `scripts/_survey_audit.py`
+
+- **分析组**：GX03　**行数**：165　**AST 符号数**：2
+
+- 语言/类型: Python
+- 行数: 165
+- 文件作用: 模块 docstring（L3-15）自述为「签名/行号一致性抽检（防编造的第二道闸）」：把 `docs/_survey/parts/*.md` 里每个符号条目的**定义行号区间、类型、参数名**与 `docs/_survey/inventory.json` 的 AST 事实逐条对账，把不一致写入 `audit_report.json`。它只读素材与清单、只写报告，不对源码做任何修改。
+- 主要导入: `from __future__ import annotations` (L16)；标准库 `argparse` L18、`io` L19、`json` L20、`os` L21、`re` L22、`sys` L23；`from typing import Dict, List, Tuple` L24。无第三方依赖。
+- 关键模块级常量:
+  - `HERE = os.path.dirname(os.path.abspath(__file__))` — 本脚本所在目录（`scripts/`），L29
+  - `ROOT = os.path.dirname(HERE)` — 仓库根目录，L30
+  - `SURVEY = os.path.join(ROOT, "docs", "_survey")` — 中间产物目录，L31
+  - `PARTS = os.path.join(SURVEY, "parts")` — 逐文件素材目录，L32
+  - `F_RE = re.compile(r"^##\s+F:(.+?)\s*$")` — 素材里文件小节的标题（无 `re.M`，逐行 match），L34
+  - `S_RE = re.compile(r"^(#{3,5})\s+(?:S|M):([^\s\[]+)\s*(?:\[L(\d+)-(\d+)\])?\s*$")` — 符号标题 + 可选 `[L起-止]`，L35
+  - `SIG_RE = re.compile(r"^\s*-\s*签名:\s*`(.+?)`\s*$")` — 条目里的「签名」字段，L36
+  - `TYPE_RE = re.compile(r"^\s*-\s*类型:\s*(.+?)\s*$")` — 条目里的「类型」字段，L37
+- 顶层数据表/字典: 无（无模块级 dict/list 常量；符号映射 `ast_map` 在 `main` 内部构造，L53-58）
+
+#### 2.18.1 norm_sig [L40-44]
+- 类型: function
+- 签名: `norm_sig(s: str) -> str`
+- 作用: 把签名文本归一化成可比较的形式（去 `def`/`async def` 前缀、去反引号、删除全部空白）。
+- 参数: `s` (str): 素材条目里的原始签名字符串。
+- 返回: str —— 归一化后的签名字符串（L44）。
+- 实现: L41 用 `re.sub(r"^\s*(async\s+)?def\s+", "", s.strip())` 去掉（可选的 async）`def` 前缀；L42 先 `s.strip("`")` 再去首尾空白；L43 用 `re.sub(r"\s+", "", s)` 删除所有空白字符后作为返回值。
+- 调用: 被同文件 `main` 在 L101 调用（`sig = norm_sig(raw_sig)`），结果仅在 L110 用于 `sig.startswith("<")` 判断。全仓（排除 `docs/`）grep 未发现其它调用点 ⇒ **只在本文件内使用**。
+- 置信度: 已确认
+
+#### 2.18.2 main [L47-161]
+- 类型: function
+- 签名: `main() -> int`
+- 作用: 遍历 `docs/_survey/parts/*.md`，逐符号对账行号区间/类型/参数名与 AST 清单，输出 `audit_report.json` 并打印统计与前若干条不一致。
+- 参数: 无（参数走 CLI：`--out`，默认 `SURVEY/audit_report.json`，L48-50）。
+- 返回: int —— 恒 `return 0`（L161）；经由 `raise SystemExit(main())`（L164-165）作为进程退出码。
+- 实现: ① L52 读 `inventory.json`；L53-58 对每个文件建 `{qualname: sym}`，并在 L57 用 `setdefault(qualname.split(".")[-1], s)` 追加短名兜底（注释 L57 明示「短名不覆盖限定名」）。② L60-64 建四类问题列表（`not_found` / `range_bad` / `type_bad` / `param_bad`）。③ L66-70 遍历 `PARTS` 下全部 `.md`。④ L74-111 定义闭包 `flush(c)`（用 `nonlocal checked`，L75）：L79 先按限定名、再按 `re.split(r"[.:/]+", name)[-1]` 短名查符号；L80-82 查不到记入 `not_found` 并返回；L83 `checked += 1`；L84-86 仅当素材写了起始行号才比对（`int(lo) != lineno` 或 `hi` 存在且不等 ⇒ `range_bad`）；L88-95 按 AST 的 `kind` 与 `qualname` 是否含 `"."` 选出可接受的类型关键词集合（`function`/`method`/`async_function`/`class` 四套，见 L90-95）；L96-97 若素材写了类型且不含任一关键词 ⇒ `type_bad`；L99-111 对 function/async_function/method 且素材有签名者：归一化签名（L101），从 AST 收集位置参数 + 仅关键字参数（L102-103）+ `*args`（L104-105）+ `**kwargs`（L106-107），凡非 `self` 且未在素材原文签名中以词边界出现者记 `param_bad`（L108-111，L110 对 `<…>` 形式的签名跳过）。⑤ L113-139 单遍行状态机：L114-119 `## F:` 切换当前文件并 flush；L120-130 `### S:`/`#### M:` 起新条目（含 `lo`/`hi`/`sig`/`type` 四字段）；L131-138 在条目内各取首个「- 签名:」与「- 类型:」；L139 循环结束后 flush 末尾条目。⑥ L141-147 组装 `checked`/`not_found_in_ast`/`range_mismatch`/`type_mismatch`/`param_name_missing`；L148 写 UTF-8 JSON（`ensure_ascii=False, indent=1`）。⑦ L149-160 打印各项计数、行号/类型/参数不符各前 8 条、查无符号前 10 条，以及输出文件相对路径。
+- 调用: 仅由文件底部 `if __name__ == "__main__"`（L164-165）调用；内部调用 `norm_sig`（L101）与 `argparse`/`json`/`re`/`os`。全仓（排除 `docs/`）grep 未见其它模块导入或调用它；其产物 `audit_report.json` 被 `scripts/_survey_merge.py` 读取（该文件 L352-375），属**数据级依赖而非函数调用**。
+- 置信度: 已确认
+
+---
+
+### 2.19 `scripts/_survey_brief.py`
 
 - **分析组**：G033　**行数**：86　**AST 符号数**：2
 
@@ -916,7 +1009,7 @@
 - 关键模块级常量: `HERE = os.path.dirname(os.path.abspath(__file__))`（L21）；`ROOT = os.path.dirname(HERE)`（L22）；`SURVEY = os.path.join(ROOT, "docs", "_survey")` — 两个 JSON 的所在目录（L23）。
 - 顶层数据表/字典: 无模块级数据表；JSON 结构在运行时由 `load` 读出，其被使用的键为：`groups["groups"]`（每项含 `id`/`lines`/`symbols`/`files`/`slug`，L42-43、L46）、`inventory["files"]`（每项含 `path`/`lines`/`symbols`/`module_doc`，L39、L60-61）、符号项含 `lineno`/`end_lineno`/`kind`/`qualname`/`sig.display`/`bases`（L71-74）。模块级副作用：L18-19 若 `sys.stdout` 有 `reconfigure` 则设为 UTF-8（`errors="replace"`）。
 
-#### 2.17.1 load [L26-28]
+#### 2.19.1 load [L26-28]
 - 类型: function
 - 签名: `def load(name: str) -> Dict[str, Any]:`
 - 作用: 以 UTF-8 读取 `docs/_survey/<name>` 并 `json.load` 返回其内容。
@@ -927,7 +1020,7 @@
 - 调用: 被 `main` 调用两次（L37 读 `"groups.json"`、L38 读 `"inventory.json"`）。调用了 `io.open`、`json.load`。
 - 置信度: 已确认（未打开这两个 JSON 实物——按任务约束不读 `docs/` 下除 TASK_TEMPLATE.md 外的文件；此处描述的是代码如何使用其结构）
 
-#### 2.17.2 main [L31-82]
+#### 2.19.2 main [L31-82]
 - 类型: function
 - 签名: `def main() -> int:`
 - 作用: 解析 `--group`/`--list`；无组号或 `--list` 时逐组打印一行摘要，否则打印指定组的文件清单与符号清单；组号不存在时打印错误并返回 2。
@@ -941,7 +1034,7 @@
 
 ---
 
-### 2.18 `scripts/_survey_groups.py`
+### 2.20 `scripts/_survey_groups.py`
 
 - **分析组**：G032　**行数**：129　**AST 符号数**：2
 
@@ -957,7 +1050,7 @@
   - `sys.stdout.reconfigure(encoding="utf-8", errors="replace")`（L25-26）— 条件式强制 UTF-8 输出（本仓库防 GBK 崩的通用姿势）
 - 顶层数据表/字典: 无（组结构在 `main()` 内动态构造：每组含 `id`/`kind`/`files`/`lines`/`symbols`/`slug`（+ 组模式含 `dir`），L56-103）
 
-#### 2.18.1 slug [L33-37]
+#### 2.20.1 slug [L33-37]
 - 类型: function
 - 签名: `slug(path: str) -> str`
 - 作用: 把仓库相对路径压成扁平的小写短名，用作组名后缀（如 `scripts-summarize-probe-v3-mono`）。
@@ -968,7 +1061,7 @@
 - 调用: 被同文件 `main()` 在 L63（单文件组）、L86 与 L101（目录组：取 `cur[0]["path"]` 的 slug 再加 `-x{文件数}`）调用。它不调用其它项目函数。
 - 置信度: 已确认
 
-#### 2.18.2 main [L40-125]
+#### 2.20.2 main [L40-125]
 - 类型: function
 - 签名: `main() -> int`
 - 作用: 执行分组算法、断言全量覆盖、写 `groups.json` 并打印每组摘要。
@@ -987,7 +1080,7 @@
 
 ---
 
-### 2.19 `scripts/_survey_inventory.py`
+### 2.21 `scripts/_survey_inventory.py`
 
 - **分析组**：G030　**行数**：200　**AST 符号数**：8
 
@@ -1000,7 +1093,7 @@
 - 顶层数据表/字典: 无。
 - 模块级副作用: L24-25 若 `sys.stdout` 有 `reconfigure` 则重设为 utf-8/replace。
 
-#### 2.19.1 _fmt_default [L30-36]
+#### 2.21.1 _fmt_default [L30-36]
 - 类型: function
 - 签名: `_fmt_default(node: ast.AST | None) -> str | None`
 - 作用: 把一个 AST 表达式节点反解析成源码字符串；`None` 直接返回 `None`。
@@ -1011,7 +1104,7 @@
 - 调用: 被 `_signature` 在 L53（位置参数默认值）与 L58（keyword-only 默认值）调用。
 - 置信度: 已确认
 
-#### 2.19.2 _fmt_arg [L39-46]
+#### 2.21.2 _fmt_arg [L39-46]
 - 类型: function
 - 签名: `_fmt_arg(a: ast.arg, default: str | None) -> Dict[str, Any]`
 - 作用: 把一个 `ast.arg` 与已格式化的默认值字符串组成 `{"name","annotation","default"}` 三元字典。
@@ -1023,7 +1116,7 @@
 - 调用: 被 `_signature` 在 L55（位置参数）与 L59（keyword-only 参数）调用。
 - 置信度: 已确认
 
-#### 2.19.3 _signature [L49-93]
+#### 2.21.3 _signature [L49-93]
 - 类型: function
 - 签名: `_signature(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> Dict[str, Any]`
 - 作用: 从函数定义节点还原出可读签名：位置参数（含仅位置参数与 `/`）、`*args`、keyword-only（必要时补 `*`）、`**kwargs`、返回注解、装饰器列表，以及一个拼好的 `display` 字符串。
@@ -1034,7 +1127,7 @@
 - 调用: 被 `_sym` 在 L113 调用（仅当节点是函数/异步函数）。内部调用 `_fmt_default`(L53、L58) 与 `_fmt_arg`(L55、L59)。
 - 置信度: 已确认
 
-#### 2.19.4 _doc_first_line [L96-100]
+#### 2.21.4 _doc_first_line [L96-100]
 - 类型: function
 - 签名: `_doc_first_line(node: ast.AST) -> str | None`
 - 作用: 取节点 docstring 的第一行非空文本。
@@ -1045,7 +1138,7 @@
 - 调用: 被 `_sym` 在 L109 调用（模块级由 `scan_file` 在 L146 调用）。用户可见输出即简报里的"模块 docstring 首行"。
 - 置信度: 已确认
 
-#### 2.19.5 _sym [L103-117]
+#### 2.21.5 _sym [L103-117]
 - 类型: function
 - 签名: `_sym(node: ast.AST, qual: str) -> Dict[str, Any]`
 - 作用: 把函数/类节点序列化为符号记录（限定名、名字、行号区间、docstring 首行，以及函数的签名或类的基类列表）。
@@ -1057,7 +1150,7 @@
 - 调用: 被 `_walk` 在 L124 调用。内部调用 `_signature`(L113)、`_doc_first_line`(L109)。
 - 置信度: 已确认
 
-#### 2.19.6 _walk [L120-126]
+#### 2.21.6 _walk [L120-126]
 - 类型: function
 - 签名: `_walk(body: List[ast.stmt], prefix: str, out: List[Dict[str, Any]]) -> None`
 - 作用: 递归遍历语句体，把顶层与嵌套在类里的函数/类按限定名压平成一个符号列表。
@@ -1070,7 +1163,7 @@
 - 调用: 被 `scan_file` 在 L155 以 `_walk(tree.body, "", rec["symbols"])` 调用，并自身递归 L126。
 - 置信度: 已确认
 
-#### 2.19.7 scan_file [L129-156]
+#### 2.21.7 scan_file [L129-156]
 - 类型: function
 - 签名: `scan_file(path: str, rel: str) -> Dict[str, Any]`
 - 作用: 读入单个 .py 文件，用 ast 解析并返回该文件的结构化记录（路径、字节数、行数、模块 docstring 首行、导入、符号表、解析错误）。
@@ -1082,7 +1175,7 @@
 - 调用: 被 `main` 在 L176 调用。内部调用 `_doc_first_line`(L146)、`_walk`(L155)、`io.open`(L130)、`ast.parse`(L142)。排除 `node.lineno` 为 0 之类的边界处理：无。
 - 置信度: 已确认
 
-#### 2.19.8 main [L159-196]
+#### 2.21.8 main [L159-196]
 - 类型: function
 - 签名: `main() -> int`
 - 作用: 命令行入口：遍历 `--dirs` 指定的目录收集全部 .py 并写出 JSON 清单，打印文件/符号/行数统计与解析失败告警，返回 0。
@@ -1094,7 +1187,304 @@
 
 ---
 
-### 2.20 `scripts/assassin_left_bridge_test.py`
+### 2.22 `scripts/_survey_md_to_docx.py`
+
+- **分析组**：GX03　**行数**：341　**AST 符号数**：9
+
+- 语言/类型: Python
+- 行数: 341
+- 文件作用: 模块 docstring（L3-14）自述为「Markdown → DOCX 转换器（离线、无外部依赖，仅用 python-docx）」。支持标题/段落/无序与有序列表/围栏代码块/表格/引用/分隔线/行内粗体·代码·链接，并在文首插入由标题自动生成的**静态目录**与一个 **Word TOC 域**（L6-8）。脚本只读 `.md`、只写 `.docx`。
+- 主要导入: `from __future__ import annotations` (L15)；标准库 `argparse` L17、`io` L18、`re` L19、`sys` L20、`from typing import List, Tuple` L21；第三方 `python-docx`：`from docx import Document` L26、`WD_SECTION` L27、`WD_TABLE_ALIGNMENT` L28、`WD_ALIGN_PARAGRAPH`/`WD_BREAK` L29、`OxmlElement` L30、`qn` L31、`Cm`/`Pt`/`RGBColor` L32（L26-32 均带 `# noqa: E402`，因它们在 `sys.stdout.reconfigure` 之后导入）。
+- 关键模块级常量:
+  - `BODY_FONT = "微软雅黑"` — 正文字体，L34
+  - `CODE_FONT = "Consolas"` — 代码字体，L35
+  - `BODY_SIZE = Pt(10.5)` — 正文字号，L36
+  - `CODE_SIZE = Pt(9)` — 代码块字号，L37
+  - `TABLE_SIZE = Pt(9)` — 表格字号，L38
+  - `H_RE = re.compile(r"^(#{1,6})\s+(.*)$")` — 标题行，L40
+  - `UL_RE = re.compile(r"^(\s*)[-*+]\s+(.*)$")` — 无序列表，L41
+  - `OL_RE = re.compile(r"^(\s*)(\d+)[.)]\s+(.*)$")` — 有序列表，L42
+  - `TABLE_SEP_RE = re.compile(r"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$")` — 表格分隔行，L43
+  - `INLINE_RE = re.compile(r"(\*\*.+?\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))")` — 行内标记切分，L103（定义在 inline 区块注释 L102 之后）
+- 顶层数据表/字典: 无
+
+#### 2.22.1 set_run_font [L47-63]
+- 类型: function
+- 签名: `set_run_font(run, name: str, size: Pt, bold=None, italic=None, color=None)`
+- 作用: 设置一个 run 的字体名/字号与可选粗体、斜体、颜色，并显式写入 `w:rFonts` 的 `ascii`/`hAnsi`/`eastAsia` 三个属性（保证中文字体生效）。
+- 参数:
+  - `run` (无注解，python-docx 的 Run 对象): 目标文本 run
+  - `name` (str): 字体名
+  - `size` (Pt): 字号
+  - `bold` (默认 `None`): `None` 表示不改动该属性（L50-51）
+  - `italic` (默认 `None`): 同上（L52-53）
+  - `color` (默认 `None`): `RGBColor`，`None` 表示不改动（L54-55）
+- 返回: 无（函数体无 return）。
+- 实现: L48-49 直接赋 `font.name`/`font.size`；L50-55 三个可选属性各自仅在非 `None` 时赋值；L56 `run._element.get_or_add_rPr()` 取（或创建）`w:rPr`；L57-60 `find(qn("w:rFonts"))`，找不到则新建 `OxmlElement("w:rFonts")` 并 append；L61-63 依次 set `ascii`/`hAnsi`/`eastAsia` 为 `name`。
+- 调用: 被同文件 `add_inline`（L112、L115、L119、L122）与 `convert`（L167、L171、L177、L188、L192、L217，以及 L259-265 循环内）调用；全仓（排除 `docs/`）grep 未见其它调用点。
+- 置信度: 已确认
+
+#### 2.22.2 shade [L66-72]
+- 类型: function
+- 签名: `shade(element, hex_fill: str)`
+- 作用: 给段落（或任意传入元素）追加底纹 `w:shd`。
+- 参数: `element` (无注解): 若其 tag 以 `"}p"` 结尾则取 `get_or_add_pPr()`，否则直接当作属性容器（L67）；`hex_fill` (str): 16 进制填充色。
+- 返回: 无。
+- 实现: L67 三元表达式决定宿主（段落取 pPr、其它元素用自身）；L68-72 新建 `w:shd`，依次 set `w:val="clear"`、`w:color="auto"`、`w:fill=hex_fill`，再 `pr.append(shd)`。
+- 调用: 仅在 `convert` L215 被调用（代码块底色 `"F3F4F6"`）；全仓（排除 `docs/`）grep 无其它调用点。
+- 置信度: 已确认
+
+#### 2.22.3 cell_shade [L75-81]
+- 类型: function
+- 签名: `cell_shade(cell, hex_fill: str)`
+- 作用: 给表格单元格追加底纹 `w:shd`。
+- 参数: `cell` (无注解): python-docx 单元格对象，经 `cell._tc.get_or_add_tcPr()` 取属性容器（L76）；`hex_fill` (str): 16 进制填充色。
+- 返回: 无。
+- 实现: L76 取（或创建）`tcPr`；L77-81 与 `shade` 相同的三属性 `w:shd` 后 append 到 `tcpr`。
+- 调用: 仅在 `convert` L238 被调用（表头底色 `"DCE6F1"`）。
+- 置信度: 已确认
+
+#### 2.22.4 add_toc_field [L84-99]
+- 类型: function
+- 签名: `add_toc_field(paragraph)`
+- 作用: 往给定段落插入一个 Word TOC 域（`begin`/指令/`separate`/占位文本/`end` 五段）。
+- 参数: `paragraph` (无注解): 目标段落对象。
+- 返回: 无。
+- 实现: L86 `paragraph.add_run()` 拿空 run；L87-88 建 `w:fldChar` 并 set `w:fldCharType="begin"`；L89-91 建 `w:instrText`，set `xml:space="preserve"`，指令文本为 `TOC \o "1-3" \h \z \u`；L92-93 建 `separate`；L94-95 建 `w:t` 放占位说明「（Word 目录域：在 Word 中按 F9 或右键"更新域"生成带页码目录）」；L96-97 建 `end`；L98-99 按 `(fld, instr, sep, t, end)` 顺序 append 到 `run._element`。
+- 调用: 仅在 `convert` L193 被调用（`add_toc_field(doc.add_paragraph())`）。
+- 置信度: 已确认
+
+#### 2.22.5 add_inline [L106-122]
+- 类型: function
+- 签名: `add_inline(paragraph, text: str, base_size=BODY_SIZE, base_bold=False)`
+- 作用: 用正则切分行内 Markdown（`**粗体**`、`` `代码` ``、`[文本](链接)`）并逐块写入段落，各自套用不同字体/字号/颜色。
+- 参数: `paragraph` (无注解): 目标段落；`text` (str): 原始行内文本；`base_size` (默认 `BODY_SIZE` = `Pt(10.5)`，L36): 基准字号；`base_bold` (默认 `False`): 普通文本块是否加粗。
+- 返回: 无。
+- 实现: L107 用 `INLINE_RE.split(text)` 切块，L108-109 跳过空块；L110-112 `**…**` 且长度 > 4 ⇒ 去掉两侧星号写入，`BODY_FONT` + `bold=True`；L113-115 反引号且长度 > 2 ⇒ 去掉反引号，`CODE_FONT`、字号 `Pt(base_size.pt - 0.5)`、颜色 `RGBColor(0xB0, 0x30, 0x00)`；L116-119 含 `](` 的链接 ⇒ 用 `re.match(r"\[([^\]]+)\]\(([^)]+)\)", chunk)` 取两段，输出 `f"{文本}（{URL}）"`，颜色 `RGBColor(0x0B, 0x53, 0x94)`；L120-122 其余块按 `base_size` + `base_bold` 输出。
+- 调用: 被 `convert` 在 L237（表头）、L243（表格数据）、L257（标题）、L272（引用）、L294（有序列表）、L304（无序列表）、L314（普通段落）调用。
+- 置信度: 已确认
+
+#### 2.22.6 configure_styles [L126-139]
+- 类型: function
+- 签名: `configure_styles(doc: Document)`
+- 作用: 统一设置 `Normal` 与 `Heading 1`~`Heading 6` 的中文字体、字号、加粗、颜色与段落间距。
+- 参数: `doc` (Document): python-docx 文档对象。
+- 返回: 无。
+- 实现: L127-132 `doc.styles["Normal"]` 设字体名/字号，L130 通过 `st.element.rPr.rFonts.set(qn("w:eastAsia"), BODY_FONT)` 设东亚字体，L131-132 设 `space_after = Pt(4)`、`line_spacing = 1.15`；L133-139 对 `i in range(1, 7)` 取 `doc.styles[f"Heading {i}"]`，设字体名、字号 `Pt(max(11, 20 - i * 1.6))`、`bold=True`、颜色 `RGBColor(0x1F, 0x38, 0x64)`、东亚字体。
+- 调用: 仅在 `convert` L156 被调用。
+- 置信度: 已确认
+
+#### 2.22.7 split_table_row [L142-148]
+- 类型: function
+- 签名: `split_table_row(line: str) -> List[str]`
+- 作用: 把一行 `| a | b |` 文本切成单元格列表（去首尾竖线、逐格 strip）。
+- 参数: `line` (str): 原始表格行。
+- 返回: `List[str]` —— 单元格文本列表（L148）。
+- 实现: L143 `line.strip()`；L144-145 若以 `|` 开头则去掉首个字符；L146-147 若以 `|` 结尾则去掉末字符；L148 按 `"|"` 切分并对每格 `strip()`。
+- 调用: 被 `convert` 在 L223（表头）与 L227（每行）调用。
+- 置信度: 已确认
+
+#### 2.22.8 convert [L151-326]
+- 类型: function
+- 签名: `convert(md_path: str, docx_path: str, title: str | None = None) -> dict`
+- 作用: 把 Markdown 文件整体转成 DOCX（标题页 + 静态目录 + Word TOC 域 + 分页 + 正文各块），并返回各类块计数。
+- 参数: `md_path` (str): 源 `.md` 路径；`docx_path` (str): 输出 `.docx` 路径；`title` (`str | None`, 默认 `None`): 文档标题，`None` 时取首个 H1 文本、再退化到 `"文档"`（L163）。
+- 返回: dict，键为 `md`/`docx`/`headings`/`paragraphs`/`tables`/`code_blocks`（L319-326）。
+- 实现: ① L152-153 读入并按行拆分（`errors="replace"`）；L155-160 新建文档、`configure_styles`、设 A4 尺寸 `Cm(21.0)×Cm(29.7)` 与四边 `Cm(1.9)` 页边距。② L163 定标题；L164-167 居中 26pt 蓝色标题；L168-171 居中灰字「源文件：{md_path}」；L172 空段。③ L174-193 静态目录：L176-177 写小标题，L178-182 扫描全部行收集 H1~H3 的 `(级别, 标题)`，L183-188 逐条输出（缩进 `Cm(0.5*(lvl-1))`、字号 `Pt(11 - lvl*0.6)`、仅 lvl==1 加粗），L190-192 灰斜体提示行，L193 插入 TOC 域。④ L194 `add_page_break()`；L196-198 初始化 `i`/`n_tables`/`n_code`/`n_par` 与 `first_h1_skipped`。⑤ L199-316 主循环按固定优先级分支：**代码块**（L204-219，遇 ``` 则收集到下一个围栏，建段落设前后间距与左缩进、`shade(..., "F3F4F6")`、内容为空时写 `" "`、`n_code += 1`）；**表格**（L222-246，要求当前行以 `|` 开头且下一行匹配 `TABLE_SEP_RE`；`ncol` 取表头与所有行的最大列数（L229）；建表、样式 `Table Grid`、居中，表头填 `DCE6F1` 底色（L238），数据行逐行 `add_row()`）；**标题**（L248-267，L252-255 若为与标题页同名的首个 H1 则跳过，否则 `add_heading(level=lvl)`、`add_inline` 后把所有 run 统一改字体/字号/加粗/颜色）；**引用**（L269-276，左缩进 `Cm(0.6)`、`Pt(10)`、所有 run 置斜体）；**分隔线**（L278-289，`---`/`***`/`___` 时建 `w:pBdr`+`w:bottom` 单线 `sz=6`、颜色 `AAAAAA`）；**有序列表**（L291-297，`style="List Number"`）；**无序列表**（L299-307，`style="List Bullet"`，左缩进 `Cm(0.75 + 0.5 * (前导空格数 // 2))`）；**空行**（L309-311 跳过）；**其它行**（L313-316 作为普通段落）。⑥ L318 `doc.save(docx_path)`；L319-326 返回统计字典。
+- 调用: 被同文件 `main` 在 L335 调用（`info = convert(args.md, args.docx, args.title)`）；全仓（排除 `docs/`）grep 未见其它调用点。它内部调用 `configure_styles`(L156)、`set_run_font`(多处)、`shade`(L215)、`cell_shade`(L238)、`add_toc_field`(L193)、`add_inline`(多处)、`split_table_row`(L223/L227)。
+- 置信度: 已确认
+
+#### 2.22.9 main [L329-337]
+- 类型: function
+- 签名: `main() -> int`
+- 作用: 解析 `--md`/`--docx`/`--title` 三个参数，调用 `convert` 并把返回的统计打成一行 `k=v` 输出。
+- 参数: 无（CLI：`--md` 必填 L331、`--docx` 必填 L332、`--title` 默认 `None` L333）。
+- 返回: int —— 恒 `return 0`（L337）。
+- 实现: L330-334 argparse 定义并解析；L335 调用 `convert`；L336 用 `", ".join(f"{k}={v}" for k, v in info.items())` 加前缀 `[md->docx] ` 打印。
+- 调用: 仅由文件底部 `if __name__ == "__main__"`（L340-341）调用。全仓（排除 `docs/`）grep 未见其它调用点。
+- 置信度: 已确认
+
+---
+
+### 2.23 `scripts/_survey_merge.py`
+
+- **分析组**：GX03　**行数**：479　**AST 符号数**：6
+
+- 语言/类型: Python
+- 行数: 469
+- 文件作用: 模块 docstring（L3-16）自述为把「48+ 份逐文件分析素材（`docs/_survey/parts/*.md`）机械合并成《项目内容全解文档》（`docs/project_full_reference.md`）」。设计原则三条（L6-11）：不做二次创作、章节号/行数/符号行号一律由脚本从 `inventory.json` 与磁盘**复算**而不采信素材自报数字、把覆盖对账的「未覆盖」显式写进文档。它是全链路里唯一产出交付正文的汇总器。
+- 主要导入: `from __future__ import annotations` (L17)；标准库 `argparse` L19、`io` L20、`json` L21、`os` L22、`re` L23、`sys` L24；`from typing import Dict, List, Tuple` L25。无第三方依赖。
+- 关键模块级常量:
+  - `HERE` / `ROOT` / `SURVEY` / `PARTS` — 同前两个脚本的路径推导（L30-33）
+  - `EXTRA_GROUPS = ["GX01", "GX02", "GX03"]` — 不在 `groups.json` 里的「非 .py / 后加入」代码文件组，L35
+  - `SKIP_DIRS = {"__pycache__", ".git", ".venv", "clash-royale-simulator-main.venv", "node_modules", ".idea"}` — 遍历时剪枝的非项目源码目录，L36
+  - `F_RE = re.compile(r"^##\s+F:(.+?)\s*$", re.M)` — **已定义但全文件未被引用**（L61 用的是内联同款正则），L37；属实际未使用常量
+  - `H_RE = re.compile(r"^(#{1,6})\s+(.*)$")` — **同样已定义但未被引用**（本文件无 H_RE 使用点），L38
+  - `S_RE = re.compile(r"^(#{3,5})\s+((?:S|M):[^\s\[]+)\s*(\[[^\]]*\])?\s*$", re.M)` — 用于从非 `.py` 素材正文扫符号，L39，使用点 L407
+- 顶层数据表/字典: 无模块级字典/列表；`main` 内嵌一张 5 行字面量表 `extra_rows`（L340-346），把「素材中出现但 AST 无记录」的名字按组归类
+
+#### 2.23.1 load [L42-44]
+- 类型: function
+- 签名: `load(name: str) -> Dict`
+- 作用: 从 `docs/_survey` 读取指定 JSON 文件并解析。
+- 参数: `name` (str): `_survey` 目录下的文件名（如 `groups.json`）。
+- 返回: `Dict` —— `json.load` 的结果（L44）。
+- 实现: L43-44 以 `encoding="utf-8"` 打开 `SURVEY/name` 并 `json.load` 后返回。
+- 调用: 被 `main` 在 L130（`groups.json`）、L131（`inventory.json`）、L134（`coverage_report.json`）、L352（`audit_report.json`）调用。注意 `scripts/_survey_verify.py` 有一个**同名的独立定义**（该文件 L37-39），二者无共享代码。
+- 置信度: 已确认
+
+#### 2.23.2 disk_lines [L47-50]
+- 类型: function
+- 签名: `disk_lines(rel: str) -> int`
+- 作用: 直接从磁盘文件按行计数，得到「真实行数」以替代素材自报数字。
+- 参数: `rel` (str): 相对仓库根的路径。
+- 返回: int —— 行数。
+- 实现: L48 拼出绝对路径 `os.path.join(ROOT, rel)`；L49-50 以 `"rb"` 打开后用 `sum(1 for _ in fh)` 计数并返回。
+- 调用: 被 `main` 在 L166（总行数）、L250（按目录统计）、L262（文件清单）、L277（逐文件元信息）调用。
+- 置信度: 已确认
+
+#### 2.23.3 split_part [L54-73]
+- 类型: function
+- 签名: `split_part(txt: str) -> Tuple[str, Dict[str, List[str]]]`
+- 作用: 把一份「组素材」文本切分成组前言与「文件路径 → 该文件正文行」的字典。
+- 参数: `txt` (str): 一份 part 素材的全文。
+- 返回: `Tuple[str, Dict[str, List[str]]]` —— (strip 后的组前言字符串（L73），{文件相对路径: 行列表})。
+- 实现: L56 `splitlines()`；L60-72 单遍状态机：L61-65 内联正则 `^##\s+F:(.+?)\s*$` 命中即切到新文件（`files[cur] = []`）；L66-68 命中 `^##\s+覆盖清单\s*$` 则 `cur = None`，其后的行不再计入任何文件；L69-70 `cur is None` 时行进 `preface`；L71-72 否则 append 到当前文件的列表。
+- 调用: 仅在 `main` L151 被调用。注意它**未使用**模块级 `F_RE`（L37），而是就地 `re.match`（L61）。
+- 置信度: 已确认
+
+#### 2.23.4 renumber_file_sections [L76-106]
+- 类型: function
+- 签名: `renumber_file_sections(body: List[str], chap_prefix: str) -> Tuple[List[str], int]`
+- 作用: 把素材里的 `### S:x` / `#### M:x` 标题重排成带章节号的 4/5 级标题（`#### 2.7.3 名字 [L…]` / `##### 2.7.3.1 …`），并统计符号数。
+- 参数: `body` (List[str]): 单个文件的素材正文行；`chap_prefix` (str): 该文件的章节前缀（形如 `"2.7"`）。
+- 返回: `Tuple[List[str], int]` —— (重排后的行列表，该文件的符号数 `n_sym`)。
+- 实现: L82-84 初始化 `s_i`/`m_i`/`n_sym`；L85-100 逐行用内联正则匹配 `^(#{3,5})\s+((?:S|M):[^\s\[]+)\s*(\[[^\]]*\])?\s*$`：`S` 分支 `s_i += 1`、`m_i = 0`、编号 `f"{chap_prefix}.{s_i}"`，输出 4 级标题（L90-94）；`M` 分支 `m_i += 1`、编号 `f"{chap_prefix}.{s_i}.{m_i}"`（父级 S 的序号决定其编号，与 docstring L79 一致），输出 5 级标题（L95-98）；两分支都 `n_sym += 1`（L99）并 continue；L101-104 其余 4~6 级且非 S/M 的标题降级为 `**加粗行**`，避免污染目录；L105 其它行原样保留；L106 返回 `(out, n_sym)`。
+- 调用: 仅在 `main` L273 被调用（`body, k = renumber_file_sections(all_files[p], chap[p])`），其返回的 `k` 累加进 `n_doc_syms`（L274）。
+- 置信度: 已确认
+
+#### 2.23.5 collect_noncode [L109-122]
+- 类型: function
+- 签名: `collect_noncode() -> Dict[str, List[Tuple[str, int]]]`
+- 作用: 遍历 `src/` 与 `scripts/`（跳过 `SKIP_DIRS`），把非 `.py` 文件按扩展名分桶，返回每个文件的相对路径与字节数。
+- 参数: 无。
+- 返回: `Dict[str, List[Tuple[str, int]]]` —— {扩展名（小写，无扩展名为 `"(无扩展名)"`）: [(相对路径, 字节数), …]}。
+- 实现: L111 初始化 `buckets`；L112 对 `("src", "scripts")` 两个 base；L113 `os.walk`；L114 原地过滤 `dirnames`（`dirnames[:] = [...]`，使剪枝生效）；L115-117 跳过 `.py`；L118-120 求绝对路径、相对路径并把 `os.sep` 统一成 `"/"`、取小写扩展名；L121 按 ext 分桶 append `(rel, os.path.getsize(full))`。
+- 调用: 仅在 `main` L289 被调用（`nc = collect_noncode()`），结果用于 §3 非代码清单。
+- 置信度: 已确认
+
+#### 2.23.6 main [L125-465]
+- 类型: function
+- 签名: `main() -> int`
+- 作用: 解析全部 part 素材 + 清单 JSON，编章节号，生成《项目内容全解文档》：文档头/目录/§0 方法说明、§1 代码库总览、§2 逐文件正文、§3 非代码清单、§4 覆盖对账、§5 全局符号索引、附录 A/B，并写盘。
+- 参数: 无（CLI：`--out`，默认 `ROOT/docs/project_full_reference.md`，L126-128）。
+- 返回: int —— 恒 `return 0`（L465）。
+- 实现: ① **加载**（L130-137）：`load("groups.json")`、`load("inventory.json")` 建 `bypath`；L133-136 用 `try/except Exception` 读 `coverage_report.json`，失败则退化为 `{"summary": {}, "groups": []}`；L137 建 `cov_by_group`（该变量后续未见使用点）。② **解析素材**（L140-158）：L144 遍历 `groups["groups"] + [{"id": x, "files": []} for x in EXTRA_GROUPS]`（把 GX01/GX02/GX03 当作"空文件清单的伪组"追加）；L146-148 跳过不存在的 part；L149-151 读文本并 `split_part`；L152-153 有前言则存 `(gid, pre)`；L154-158 首次出现的路径进 `order`，并记录 `group_of[path] = gid`。③ **编号**（L161-167）：路径排序后 L163-164 编 `chap[p] = f"2.{i}"`；L166-167 复算总行数与 AST 符号数。④ **写正文**（L169-455，全部通过 `W = L.append` 追加）：L172-179 文档标题与生成链路说明；L180-189 目录（固定 8 条锚点）；L193-235 §0（0.1 分析范围表、0.2 方法 5 条、0.3 阅读约定与"有意保留的代码问题"提示）；L239-253 §1.1 按目录统计 `dirs`（文件数/行数/AST 符号数/`2.min–2.max` 章节范围）；L255-262 §1.2 全部代码文件清单（行数取 `disk_lines`、素材符号数取 `len(all_files[p])`）；L266-282 §2 逐文件：对每个路径 `renumber_file_sections` 后写 `### 章节 路径` 与分析组/行数/AST 符号数（L277 对非 `.py` 写"不适用"）；L285-303 §3 非代码清单（按桶大小排序，L297 的节号由排序后 `index+1` 得出，体积按 <1MB 用 KB、否则 MB）；L307-321 §4 汇总、L323-330 §4.1 逐组、L332-349 §4.2 内嵌 `extra_rows` 5 行字面量表、L350-389 §4.3 读 `audit_report.json`（缺失则整块跳过）并写抽检表 + 列出 `.py:` 的 `not_found_in_ast`（L370-375）+ 行号不符逐条统一注为"素材把装饰器行算进区间"（L385）；L393-416 §5 全局符号索引：`.py` 用 AST 的 `qualname`/`lineno`/`kind`（L403-405），非 `.py` 用 `S_RE.finditer` 扫素材并把 `S:` 视作 class、`M:` 视作 method，均标 `(素材)`（L406-410），L411 按末段短名小写 + 全名排序，最后追加总条数（L415）；L419-427 附录 A 各组前言；L430-455 附录 B 生成命令与 6 行脚本表。⑤ **落盘与日志**（L457-464）：`os.makedirs(..., exist_ok=True)`、写 UTF-8 文本 `"\n".join(L) + "\n"`；L460-461 打印 `files`/`doc_symbols`/`index_rows` 与输出相对路径和 MB 大小；L462-464 若 `order` 中有路径无素材，打印 WARNING 列表。
+- 调用: 仅由文件底部 `if __name__ == "__main__"`（L468-469）调用；内部调用 `load`、`disk_lines`、`split_part`、`renumber_file_sections`、`collect_noncode`。全仓（排除 `docs/`）grep 未见其它模块导入或调用它。
+- 置信度: 已确认
+- 备注（源码事实，非推测）: 文档中若干计数是**硬编码文案**而非复算值，例如 L174「8 个脚本 + 50 个子代理」、L200「141 个 `.py`」「9 个（GX01）」、L201「共 14 个（GX02）」；而 L206 的文件数/行数/符号数则是运行时插值（`len(ordered)`/`total_lines`/`total_syms_ast`）。
+
+---
+
+### 2.24 `scripts/_survey_merge_docs.py`
+
+- **分析组**：GX03　**行数**：265　**AST 符号数**：4
+
+- 语言/类型: Python
+- 行数: 264
+- 文件作用: 模块 docstring（L3-15）自述为「把 A/B 两部分草稿合并成《训练方法文档》/《游戏引擎文档》（Markdown）」。声明**不做二次创作**（L5）：正文逐字保留，只做标题整体下移一级、生成静态目录、追加「文档说明与方法」「待确认事项汇总」「生成方式」三个统一样式章节（L5-8）。两种文档形态由 `CONF` 配置区分（`--kind training|engine`）。
+- 主要导入: `from __future__ import annotations` (L16)；标准库 `argparse` L18、`io` L19、`os` L20、`re` L21、`sys` L22；`from typing import Dict, List, Tuple` L23。（注意：**未导入 `json`**，与 `_survey_merge.py` / `_survey_verify.py` 不同。）
+- 关键模块级常量:
+  - `HERE` / `ROOT` — 路径推导（L28-29）
+  - `DRAFTS = os.path.join(ROOT, "docs", "_survey", "drafts")` — A/B 草稿目录，L30
+  - `H_RE = re.compile(r"^(#{1,6})\s+(.*)$")` — 标题行，L32，使用点 L90/L108
+  - `CONF: Dict[str, Dict]` — 两种文档的配置表，L34-76（详见下）
+- 顶层数据表/字典: **`CONF`（L34-76）**，键为 `"training"`（L35-52）与 `"engine"`（L53-75），每项含：
+  - `title`：`"训练方法文档"` / `"游戏引擎文档"`
+  - `drafts`：`["training_A.md", "training_B.md"]` / `["engine_A.md", "engine_B.md"]`
+  - `intro`：文档开头逐行写入的说明段（training 为 5 行 L38-44；engine 为 6 行 L56-62）
+  - `scope_table`：列表，training **4 行**（L45-50）、engine **8 行**（L64-73），写出为 §0.1 表格
+  - `howto_index`：字符串，插入 §0.3 末尾（L51 / L74）
+
+#### 2.24.1 read_draft [L79-82]
+- 类型: function
+- 签名: `read_draft(name: str) -> str`
+- 作用: 从 `docs/_survey/drafts/` 读取指定草稿全文。
+- 参数: `name` (str): 草稿文件名。
+- 返回: str —— 草稿全文。
+- 实现: L80 拼 `os.path.join(DRAFTS, name)`；L81-82 以 `encoding="utf-8", errors="replace"` 打开并 `read()` 返回。
+- 调用: 仅在 `main` L139 被调用（在 `for name in cfg["drafts"]` 循环内）。
+- 置信度: 已确认
+
+#### 2.24.2 shift_headings [L85-98]
+- 类型: function
+- 签名: `shift_headings(txt: str) -> Tuple[str, List[Tuple[int, str]]]`
+- 作用: 把文本中所有标题层级整体下移一级（上限 6 级），并同时返回 (级别, 标题) 列表供生成目录用。
+- 参数: `txt` (str): 草稿全文。
+- 返回: `Tuple[str, List[Tuple[int, str]]]` —— (改写过的新文本，[(新级别, 标题), …])（L98）。
+- 实现: L87-88 初始化 `out`/`heads`；L89-97 逐行 `H_RE.match`：命中则 L92 `lvl = min(6, len(m.group(1)) + 1)`（下移一级并封顶 6），L93 取 `m.group(2).strip()` 作为标题，L94 append 到 `heads`，L95 输出 `"#" * lvl + " " + title`；未命中则 L97 原样 append；L98 用 `"\n".join(out)` 返回。
+- 调用: 仅在 `main` L141 被调用（`shifted, heads = shift_headings(txt)`）。
+- 置信度: 已确认
+
+#### 2.24.3 extract_pending [L101-125]
+- 类型: function
+- 签名: `extract_pending(txt: str) -> List[Tuple[str, List[str]]]`
+- 作用: 抽出草稿中所有标题含「待确认」的小节里的表格数据行，按 (所属标题, 行列表) 返回，供附录 A 汇总。
+- 参数: `txt` (str): 草稿全文。
+- 返回: `List[Tuple[str, List[str]]]` —— [(小节标题, [原始表格行字符串, …]), …]。
+- 实现: L104-106 初始化 `cur_title`/`cur_rows`/`in_tbl`；L107-122 单遍扫描：L108-114 遇标题行时先把上一节已收集的行落账（L110-111），再 L112 把 `cur_title` 设为**仅当标题含「待确认」时**的标题文本、否则 `None`，并重置 `cur_rows`/`in_tbl`；L115-116 `cur_title is None` 时跳过所有行；L117-122 以 `|` 开头的行：若匹配 `^\|[\s:|-]+\|$`（分隔行）则置 `in_tbl = True` 并跳过（L118-120），`in_tbl` 为真则把该行 strip 后收集（L121-122）；L123-124 循环末尾收尾落账。
+- 调用: 仅在 `main` L144 被调用，且传入的是**未经 `shift_headings` 的原始草稿文本 `txt`**（L141 的 `shifted` 只进 `bodies`）。返回值汇总进 `pending`。
+- 置信度: 已确认
+
+#### 2.24.4 main [L128-260]
+- 类型: function
+- 签名: `main() -> int`
+- 作用: 按 `--kind` 读取对应两份草稿，生成含标题/目录/§0 方法说明/正文/附录 A 待确认汇总/附录 B 生成方式的合并 Markdown 并写盘。
+- 参数: 无（CLI：`--kind` 必填且限定 `sorted(CONF)`（L130）、`--out` 必填（L131））。
+- 返回: int —— 恒 `return 0`（L260）。
+- 实现: ① L133 取 `cfg = CONF[args.kind]`。② L135-144 汇总阶段：对 `cfg["drafts"]` 每个文件名 `read_draft`（L139），L140 用正则 `^\s*(PART_[AB]_OK|TRAIN_[AB]_OK).*$`（`re.M`）删掉草稿里的完成标记行并 strip，L141 `shift_headings`，L142 收进 `bodies`，L143 只把**级别 ≤3** 的标题收进 `heads_all`，L144 `extract_pending(txt)` 收进 `pending`。③ L146-147 `L = []`、`W = L.append`。④ L148-152 写文档 H1 与 `intro` 各行。⑤ L153-164 目录：L155 固定首条 `[0. 文档说明与方法]`；L156-161 遍历 `heads_all`，L157 生成锚点（`re.sub(r"[^\w\u4e00-\u9fff -]", "", title)` 去噪 → strip → lower → 空格换 `-`），lvl==2 顶格、lvl==3 缩进两空格；L162-163 追加两条附录固定链接。⑥ L165-195 §0：`## 0. 文档说明与方法`、`### 0.1 覆盖范围`（遍历 `cfg["scope_table"]` 出两列表）、`### 0.2 资料来源与「不编造」的保证`（4 条，L178-184，其中 L183-184 说明函数清单由 `ast` 机械抽取）、`### 0.3 阅读约定与索引方式`（L186-194 含三行标记表与 `howto_index`）。⑦ L196-202 逐份 body 写入，每份后补 `---`。⑧ L203-226 附录 A：L207-208 若 `pending` 为空写「（无——各部分未产生待确认项。）」，否则逐节写 `### 标题` 与四列表头，L214-225 逐行处理：L215 去首尾竖线后按 `|` 切格并 strip，L217 跳过表头行（`i == 1` 且首格为 `"#"`），L219-224 `len(cells) >= 4` 时取第 2~4 格拼接、若拼出来为空则退回前 3 格，否则全部拼接，L225 写成 `| i | body |`（注意目标表头是四列而输出只有两列，源码即如此）。⑨ L227-253 附录 B：bash 代码块 6 条命令（L231-245，含 `_survey_inventory.py`/`_survey_groups.py`/`_survey_verify.py`/`_survey_merge.py`/本脚本/DOCX 生成）、以及 4 行源材料表（L247-252，其中 L250 写「48 份逐文件分析素材」为**硬编码数字**）。⑩ L255-257 `os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)` 后写 UTF-8 文本 `"\n".join(L) + "\n"`；L258-259 打印 `kind`、输出相对路径、KB、行数、`pending_sections` 数；L260 返回 0。
+- 调用: 仅由文件底部 `if __name__ == "__main__"`（L263-264）调用；内部调用 `read_draft`、`shift_headings`、`extract_pending`。全仓（排除 `docs/`）grep 未见其它模块导入或调用它；`scripts/_survey_merge.py` 在**生成文本**里举例了它的命令行（该文件 L240-241），属文档级引用而非调用。
+- 置信度: 已确认
+
+---
+
+### 2.25 `scripts/_survey_verify.py`
+
+- **分析组**：GX03　**行数**：145　**AST 符号数**：2
+
+- 语言/类型: Python
+- 行数: 145
+- 文件作用: 模块 docstring（L3-15）自述为「覆盖对账（防漏文件 / 防漏符号 / 防凭空造符号）」。它对每个分析组做三件事：`## F:<path>` 段落必须与 `groups.json` 的文件清单逐一对应；`inventory.json` 里该组的每个符号必须以 `### S:`/`#### M:`（或 5 级）出现；part 里出现的 `S:`/`M:` 标题若不在 AST 中，记为「未在 AST 中的符号」以发现编造的符号名（L6-10）。结果写 `coverage_report.json`。
+- 主要导入: `from __future__ import annotations` (L16)；标准库 `argparse` L18、`io` L19、`json` L20、`os` L21、`re` L22、`sys` L23；`from typing import Dict, List, Set` L24。无第三方依赖。
+- 关键模块级常量:
+  - `HERE` / `ROOT` / `SURVEY` — 路径推导（L29-31）
+  - `F_RE = re.compile(r"^##\s+F:(.+?)\s*$", re.M)` — 文件小节标题（**带 `re.M`**，供 `findall` 全局扫描），L33
+  - `S_RE = re.compile(r"^#{3,5}\s+(?:S|M):([^\s\[]+)", re.M)` — 符号标题，L34
+- 顶层数据表/字典: 无模块级字典/列表常量（`symbols_by_file`、`report` 均在 `main` 内构造，L49-53）
+
+#### 2.25.1 load [L37-39]
+- 类型: function
+- 签名: `load(name: str) -> Dict`
+- 作用: 从 `docs/_survey` 读取指定 JSON 文件（本文件只用于 `groups.json` 与 `inventory.json`）。
+- 参数: `name` (str): 文件名。
+- 返回: `Dict` —— 解析结果。
+- 实现: L38-39 以 `encoding="utf-8"` 打开 `SURVEY/name` 并 `json.load` 后直接 `return`。
+- 调用: 被 `main` 在 L47（`groups.json`）、L48（`inventory.json`）调用。`scripts/_survey_merge.py` 有同名独立定义（该文件 L42-44），二者无共享代码。
+- 置信度: 已确认
+
+#### 2.25.2 main [L42-141]
+- 类型: function
+- 签名: `main() -> int`
+- 作用: 对 `groups.json` 里的每个组，用 `inventory.json` 的 AST 符号集反向校验 `parts/<组号>.md` 的文件与符号覆盖，汇总缺失与「素材有、AST 无」的符号，写 `coverage_report.json` 并打印 PASS/FAIL。
+- 参数: 无（CLI：`--out`，默认 `SURVEY/coverage_report.json`，L43-45）。
+- 返回: int —— 恒 `return 0`（L141）；退出码来自 `raise SystemExit(main())`（L144-145）。
+- 实现: ① L47-51 `load` 两个 JSON，建 `symbols_by_file: {path: {qualname, …}}`。② L53-56 初始化 `report = {"groups": [], "ok": True}` 与四个计数器、`all_extra_syms`。③ L58-115 逐组：L59-60 定 part 路径与 `rec`（含 `exists`）；L61-66 文件不存在则置 `rec["ok"]=False`、`report["ok"]=False`、`n_file_missing += len(g["files"])` 后 continue；L67-68 读全文（`errors="replace"`）。④ L70-73 用 `F_RE.findall` 得 `found_files`，与 `g["files"]` 求差得 `missing_files`/`unknown_files`。⑤ L75-77 用 `S_RE.findall` 得 `found_syms` 及其**短名集合** `found_short`（按 `[.:/]+` 切末段，注释 L76 说明为兼容 `模块.类.方法`/`文件::符号` 等写法）。⑥ L78-80 汇总该组应覆盖的符号全集 `want_syms`（从 `inventory.json` 取）。⑦ L82-87 逐符号判定：全名命中 `found_syms`、或短名命中 `found_syms`/`found_short` 即视为覆盖，否则进 `missing_syms`。⑧ L88-94 `extra_syms` = 素材中出现、但全名与短名都不在 AST 符号集里、且不等于字面 `"（无）"` 的名字。⑨ L96-107 把 `files_want`/`files_found`/`missing_files`/`unknown_files`/`symbols_want`/`symbols_missing`/`symbols_extra` 与 `ok`（无缺文件且无缺符号）写回 `rec`。⑩ L108-115 累计四个计数器与 `all_extra_syms`（带组号前缀），若该组 `ok` 为假则 `report["ok"] = False`，最后 append 该组记录。⑪ L117-124 汇总 `summary`（groups/files_ok/files_missing/symbols_ok/symbols_missing/symbols_extra_not_in_ast）。⑫ L125-126 写 UTF-8 JSON（`ensure_ascii=False, indent=1`）。⑬ L128-140 打印：组数与 `OVERALL=PASS/FAIL`、文件与符号计数、`all_extra_syms` 前 40 条、每个 FAIL 组的缺失文件与前 12 个缺失符号、输出文件相对路径。
+- 调用: 仅由文件底部 `if __name__ == "__main__"`（L144-145）调用；内部调用 `load` 与 `argparse`/`json`/`re`/`os`。全仓（排除 `docs/`）grep 未见其它模块导入或调用它；其产物 `coverage_report.json` 被 `scripts/_survey_merge.py` 读取（该文件 L134、L310-330），属**数据级依赖而非函数调用**。
+- 置信度: 已确认
+
+---
+
+### 2.26 `scripts/assassin_left_bridge_test.py`
 
 - **分析组**：G033　**行数**：93　**AST 符号数**：1
 
@@ -1105,7 +1495,7 @@
 - 关键模块级常量: `DECK`（同上一文件的 8 卡卡组，L26-27）；`MK_DEPLOY = (3.5, 18.0)` — MK 部署点（L29）；`TRIGGER_Y = 13.5` — 刺客放出的 y 触发线（L30）。
 - 顶层数据表/字典: 无。模块级副作用：L19 stdout 包 UTF-8；L20 硬编码绝对路径插 `sys.path`。
 
-#### 2.20.1 run_case [L33-82]
+#### 2.26.1 run_case [L33-82]
 - 类型: function
 - 签名: `def run_case(label, assassin_pos, horizon=45.0):`
 - 作用: 在 lv11、默认 45s 视界下，触发式放出刺客并全程采样 MK 起跳/落地与刺客冲刺时序，输出塔损、MK 与刺客存活、以及落地溅射是否命中刺客。
@@ -1131,7 +1521,7 @@
 
 ---
 
-### 2.21 `scripts/assassin_vs_megaknight.py`
+### 2.27 `scripts/assassin_vs_megaknight.py`
 
 - **分析组**：G033　**行数**：94　**AST 符号数**：1
 
@@ -1142,7 +1532,7 @@
 - 关键模块级常量: `DECK = ['Knight','Arrows','Fireball','Musketeer','Giant','Minions','MiniPekka','Skeletons']` — 双方共用的 8 卡卡组（L26-27）；`DUAL_TOWER_Y = 11.5` — 「双塔射程交集」的 y 判据线，注释给出塔 3/塔 4 坐标与射程依据（L29-30）。
 - 顶层数据表/字典: 无（`DECK` 为列表）。模块级副作用：L19 把 `sys.stdout` 包成 UTF-8 的 `TextIOWrapper`；L20 硬编码 Windows 绝对路径 `E:/clash-royale-simulator-main/src/clasher_new` 插入 `sys.path`。
 
-#### 2.21.1 run_case [L33-80]
+#### 2.27.1 run_case [L33-80]
 - 类型: function
 - 签名: `def run_case(label, assassin_delay, assassin_pos, horizon=30.0):`
 - 作用: 在 lv11、给定视界下，让 P1 的 MegaKnight 从 (14.5, 18.0) 推进，在 `assassin_delay` 秒时于 `assassin_pos` 直接生成 P0 的 Assassin，统计并打印 MK 血量/存活、P0 三塔损失、刺客存活、MK 是否进入双塔区、刺客突进是否启动。
@@ -1169,7 +1559,7 @@
 
 ---
 
-### 2.22 `scripts/assassin_vs_sparky.py`
+### 2.28 `scripts/assassin_vs_sparky.py`
 
 - **分析组**：G031　**行数**：181　**AST 符号数**：2
 
@@ -1184,7 +1574,7 @@
 - 顶层数据表/字典: 无
 - 备注（模块级副作用，源码依据）: L24 在 import 期把 `sys.stdout` 换成 UTF-8 包装器；L25 用 `sys.path.insert(0, r"E:/clash-royale-simulator-main/src/clasher_new")` **硬编码 Windows 绝对路径**（不可移植）；L27-29 依赖同目录的 `battle` / `player` / `core` 模块。`run_case` 的形参 `label` 在函数体内从未被使用（grep 确认仅出现在 L38 签名）；`tower_damage_to_sparky`（L55）与 `last_tower_tgt`（L56）赋值后从未被引用。外部符号核对（已读源确认）：`battle.BattleState.__init__(self, player_0, player_1, card_level=None)`（`battle.py:2539`）、`BattleState.step(self, dt)`（L2652）、`deploy_card(self, player_id, card_name, position, _from_mirror=False)`（L2806）、`_spawn_entity(self, entity)`（L2603）、`Troop.__init__(self, id, position, player, card_name, battle_state=None, evolved=False)`（L760）、`player.PlayerState.__init__(self, player_id, cycle_queue, elixir, tower_hps=(4824, 3052, 3052))`（`player.py:6`，其中 `self.cycle = cycle_queue[:]` 可被外部覆写）、`core.Position` 为 dataclass（`x`,`y`）且带 `distance_to(other)`（用 `math.hypot`）（`core.py:5-9`）；`attack_cooldown`、`invincible`、`_dash_active` 均为 `Troop` 实例属性（`battle.py` 中 L~1148/1224 更新 `attack_cooldown`、L514 置 `invincible=True`、L108/L1153 读 `_dash_active`）。
 
-#### 2.22.1 run_case [L38-93]
+#### 2.28.1 run_case [L38-93]
 - 类型: function
 - 签名: `def run_case(label, assassin_pos, deploy_at, horizon=HORIZON, trace=False):`
 - 作用: 跑单个配置：建 lv11 战场、强制 P1 先手出 Sparky 于 `SPARKY_POS`、在 `deploy_at` 秒生成刺客，按 60 fps 步进到 `horizon` 或 Sparky 死亡，返回塔损/刺客/Sparky 的结局与关键时刻。
@@ -1199,7 +1589,7 @@
 - 调用: `main` 在 L141（扫描循环）与 L177（trace 复跑）调用；它调用了 `battle_mod.BattleState`、`player_mod.PlayerState`、`bs.step`、`bs.deploy_card`、`bs._spawn_entity`、`battle_mod.Troop`、`Position`。被谁调用：待确认（脚本入口）。
 - 置信度: 已确认（引擎侧属性存在性已在 `battle.py`/`player.py`/`core.py` 核对）
 
-#### 2.22.2 main [L96-177]
+#### 2.28.2 main [L96-177]
 - 类型: function
 - 签名: `def main():`
 - 作用: 命令行入口：先单独跑一局定位 Sparky 的开炮时刻，再对候选落点 × 部署时机的笛卡尔积跑 `run_case`，分类打印"完美解 / 0 塔损但刺客阵亡 / 无 0 塔损的最近配置"，可选对首个完美解做逐帧 trace。
@@ -1211,7 +1601,7 @@
 
 ---
 
-### 2.23 `scripts/batch_smoke.py`
+### 2.29 `scripts/batch_smoke.py`
 
 - **分析组**：G033　**行数**：105　**AST 符号数**：2
 
@@ -1222,7 +1612,7 @@
 - 关键模块级常量: `DURATION = 30` — 每张卡的模拟时长（秒），循环体用 `DURATION * 60` 帧（L18、L55）。
 - 顶层数据表/字典: 无（`results`/`errs`/`noact`/`ok` 都是 `main` 的局部变量）。模块级副作用：L11 `sys.path.insert(0, <scripts>/../src/clasher_new)`；L12 `os.chdir(<scripts>/../src/clasher_new)`。
 
-#### 2.23.1 smoke [L21-69]
+#### 2.29.1 smoke [L21-69]
 - 类型: function
 - 签名: `def smoke(name):`
 - 作用: 对单张卡做「构造→部署→30s 战斗」冒烟，返回 `(状态, 明细)` 元组，或（异常路径下）直接返回一个描述性字符串。
@@ -1244,7 +1634,7 @@
 - 调用: 被 `main` 调用（L76）。调用了 `Card`（`card_utils.py:223`）、`BattleState`（`battle.py:2539`）、`PlayerState`（`player.py:6`）、`Troop`（`battle.py:760`）、`bs._spawn_entity`（`battle.py:2603`）、`bs.deploy_card`（`battle.py:2806`）、`bs.step`（`battle.py:2652`）、`Position`（`core.py`）。
 - 置信度: 已确认（含实体 6 归属：由 `battle.py:2556-2561` 逐行核对；注释/命名与被测方归属的不一致已按源码写实）
 
-#### 2.23.2 main [L72-101]
+#### 2.29.2 main [L72-101]
 - 类型: function
 - 签名: `def main():`
 - 作用: 遍历全部 gamedata 卡跑 `smoke`，分类统计 OK / NO-ACT / 异常并打印，最后写 `docs/batch_smoke_report.json`，以退出码表示是否出现异常。
@@ -1258,7 +1648,7 @@
 
 ---
 
-### 2.24 `scripts/bench_train_speed.py`
+### 2.30 `scripts/bench_train_speed.py`
 
 - **分析组**：G032　**行数**：130　**AST 符号数**：1
 
@@ -1272,7 +1662,7 @@
   - `PY = os.path.join(REPO_ROOT, ".venv", "Scripts", "python.exe")` — 固定解释器路径（Windows venv；注释说 WSL2 里也是这个解释器，L31-32）
 - 顶层数据表/字典: 无
 
-#### 2.24.1 main [L35-126]
+#### 2.30.1 main [L35-126]
 - 类型: function
 - 签名: `main()`
 - 作用: 组装并运行一次受控短训练，采集带时间戳的日志，解析并打印吞吐/评估成本/降级提示，返回子进程退出码。
@@ -1290,7 +1680,7 @@
 
 ---
 
-### 2.25 `scripts/cdp_evo.js`
+### 2.31 `scripts/cdp_evo.js`
 
 - **分析组**：GX01　**行数**：64　**AST 符号数**：不适用（非 .py）
 
@@ -1303,7 +1693,7 @@
 - 顶层数据表/字典: 无（函数内的 `pending = new Map()`（L13）与 `waiters = []`（L14）是每次调用的局部状态，非模块级表）
 - 运行方式: `node scripts/cdp_evo.js <url1> <url2> ...`（L60 `process.argv.slice(2)`）；须先有 Chrome 在 `172.28.144.1:9222` 监听 CDP（L6）。
 
-#### 2.25.1 extractPage [L9-57]
+#### 2.31.1 extractPage [L9-57]
 - 类型: async_function
 - 签名: `async function extractPage(url, idx)`
 - 作用: 用 CDP 打开一个 URL，等待加载与水合完成后抓取页面可见文本，写入 `docs/_evo_<idx>.txt`，并打印计数信息。
@@ -1315,7 +1705,7 @@
 - 调用: 被 L62 的 CLI 循环 `await extractPage(urls[i], i + 1)` 调用；它调用 CDP 方法 `Page.enable`、`Runtime.enable`、`Page.navigate`、`Runtime.evaluate` 与 HTTP 端点 `/json/new`、`/json/close/<id>`，以及 `fs.writeFileSync`——已确认。
 - 置信度: 已确认
 
-#### 2.25.2 extractPage.send（箭头函数） [L15-19]
+#### 2.31.2 extractPage.send（箭头函数） [L15-19]
 - 类型: function（箭头函数，赋给 `const send`）
 - 签名: `const send = (method, params = {}) => new Promise((res) => {...})`
 - 作用: CDP 请求封装：给请求分配自增 id、把 resolve 回调登记到 `pending`，然后把 `{id, method, params}` 经 WebSocket 发出。
@@ -1327,7 +1717,7 @@
 - 调用: 由 `extractPage` 内部在 L26-L27、L30、L37、L43-L46、L49 调用；消费方是 `ws.onmessage`（L20-L24）——已确认。
 - 置信度: 已确认
 
-#### 2.25.3 extractPage.send.executor（箭头函数） [L15-19]
+#### 2.31.3 extractPage.send.executor（箭头函数） [L15-19]
 - 类型: function（箭头函数，`new Promise` 的执行器）
 - 签名: `(res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); }`
 - 作用: Promise 执行器，实际完成 id 分配、登记与发送三步。
@@ -1338,7 +1728,7 @@
 - 调用: 由 `new Promise`（L15）在 `send` 被调用时立即执行——已确认。
 - 置信度: 已确认
 
-#### 2.25.4 extractPage.ws.onmessage（箭头函数） [L20-24]
+#### 2.31.4 extractPage.ws.onmessage（箭头函数） [L20-24]
 - 类型: function（箭头函数，赋给 `ws.onmessage`）
 - 签名: `ws.onmessage = (ev) => {...}`
 - 作用: 分发 CDP 回包：带 `id` 的回包兑现对应 promise；`Page.loadEventFired` 事件唤醒所有 `waiters`。
@@ -1437,7 +1827,7 @@
 
 ---
 
-### 2.26 `scripts/cdp_extract.js`
+### 2.32 `scripts/cdp_extract.js`
 
 - **分析组**：GX01　**行数**：64　**AST 符号数**：不适用（非 .py）
 
@@ -1450,7 +1840,7 @@
 - 顶层数据表/字典: 无（`pending`/`waiters` 为函数内局部状态，L13-L14）
 - 运行方式: `node scripts/cdp_extract.js <url1> <url2> ...`（L60）；需目标 Chrome 在 `172.28.144.1:9222` 暴露 CDP（L6）。
 
-#### 2.26.1 extractPage [L9-57]
+#### 2.32.1 extractPage [L9-57]
 - 类型: async_function
 - 签名: `async function extractPage(url, idx)`
 - 作用: 用 CDP 打开指定 URL，等待加载/水合后抓取页面可见文本，写入 `docs/_page_<idx>.txt` 并打印信息。
@@ -1462,7 +1852,7 @@
 - 调用: 由 L62 的入口循环调用；它调用 CDP 方法与 `/json/new`、`/json/close/<id>`、`fs.writeFileSync`——已确认。
 - 置信度: 已确认
 
-#### 2.26.2 extractPage.send（箭头函数） [L15-19]
+#### 2.32.2 extractPage.send（箭头函数） [L15-19]
 - 类型: function（箭头函数，赋给 `const send`）
 - 签名: `const send = (method, params = {}) => new Promise((res) => {...})`
 - 作用: 把 CDP 请求编号后经 WebSocket 发出，并返回一个由对应回包兑现的 promise。
@@ -1474,7 +1864,7 @@
 - 调用: 被 `extractPage` 在 L26-L27、L30、L37、L43-L46、L49 调用；回包由 L20-L24 处理——已确认。
 - 置信度: 已确认
 
-#### 2.26.3 extractPage.send.executor（箭头函数） [L15-19]
+#### 2.32.3 extractPage.send.executor（箭头函数） [L15-19]
 - 类型: function（箭头函数，`new Promise` 执行器）
 - 签名: `(res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); }`
 - 作用: 执行器本体：分配 id、登记 resolve、发送请求三步同步完成。
@@ -1485,7 +1875,7 @@
 - 调用: 由 L15 `new Promise` 在 `send` 调用时立即执行——已确认。
 - 置信度: 已确认
 
-#### 2.26.4 extractPage.ws.onmessage（箭头函数） [L20-24]
+#### 2.32.4 extractPage.ws.onmessage（箭头函数） [L20-24]
 - 类型: function（箭头函数，赋给 `ws.onmessage`）
 - 签名: `ws.onmessage = (ev) => {...}`
 - 作用: 按 id 兑现 pending 请求；`Page.loadEventFired` 时清空并唤醒 `waiters`。
@@ -1584,7 +1974,7 @@
 
 ---
 
-### 2.27 `scripts/cdp_forward.py`
+### 2.33 `scripts/cdp_forward.py`
 
 - **分析组**：G033　**行数**：70　**AST 符号数**：4
 
@@ -1595,7 +1985,7 @@
 - 关键模块级常量: 无（`"172.28.144.1"` 与 `9222` 是函数内字面量；无模块级常量定义）。
 - 顶层数据表/字典: 无。模块级副作用：L65-70 的 `while True` 重启循环在 `__main__` 下运行，捕获 `OSError` 后打印并以 2s 间隔重试 `main()`。
 
-#### 2.27.1 windows_host_ip [L16-22]
+#### 2.33.1 windows_host_ip [L16-22]
 - 类型: function
 - 签名: `def windows_host_ip():`
 - 作用: 通过 `ip route show default` 的输出第 3 个字段取默认网关 IP（即 WSL 到 Windows 的 vEthernet 地址），失败时返回硬编码兜底值。
@@ -1605,7 +1995,7 @@
 - 调用: 被 `main` 调用（L53）。调用了 `subprocess.check_output`。
 - 置信度: 已确认
 
-#### 2.27.2 pipe [L25-38]
+#### 2.33.2 pipe [L25-38]
 - 类型: function
 - 签名: `def pipe(a, b):`
 - 作用: 单向字节泵：循环从 socket `a` 读 65536 字节写入 socket `b`，读到空即结束；无论正常结束还是 `OSError`，最后都关闭两个 socket。
@@ -1617,7 +2007,7 @@
 - 调用: 被 `handle` 以 `threading.Thread(target=pipe, args=(...), daemon=True).start()` 启动两次（L48-49）。调用了 socket 的 `recv`/`sendall`/`close`。
 - 置信度: 已确认
 
-#### 2.27.3 handle [L41-49]
+#### 2.33.3 handle [L41-49]
 - 类型: function
 - 签名: `def handle(client, upstream):`
 - 作用: 处理一个入站连接：向 `upstream:9222` 建连（5s 超时），成功则为两个方向各起一条 `pipe` 守护线程；失败则打印到 stderr 并关闭客户端连接。
@@ -1629,7 +2019,7 @@
 - 调用: 被 `main` 对每个 accept 到的连接以 `threading.Thread(...).start()` 启动（L60-61）。调用了 `socket.create_connection`、`threading.Thread`、`pipe`、`sys.stderr.write`。
 - 置信度: 已确认
 
-#### 2.27.4 main [L52-61]
+#### 2.33.4 main [L52-61]
 - 类型: function
 - 签名: `def main():`
 - 作用: 取网关 IP，在 `127.0.0.1:9222` 上建监听 socket（`SO_REUSEADDR`，backlog 16），打印就绪信息后进入 `accept` 循环，每个连接起一条 `handle` 线程。
@@ -1643,7 +2033,7 @@
 
 ---
 
-### 2.28 `scripts/cdp_hero.js`
+### 2.34 `scripts/cdp_hero.js`
 
 - **分析组**：GX01　**行数**：64　**AST 符号数**：不适用（非 .py）
 
@@ -1656,7 +2046,7 @@
 - 顶层数据表/字典: 无（`pending`/`waiters` 为 L13-L14 的局部状态）
 - 运行方式: `node scripts/cdp_hero.js <url1> <url2> ...`（L60）；需目标 Chrome 在 `172.28.144.1:9222` 开 CDP（L6）。
 
-#### 2.28.1 extractPage [L9-57]
+#### 2.34.1 extractPage [L9-57]
 - 类型: async_function
 - 签名: `async function extractPage(url, idx)`
 - 作用: CDP 打开 URL、等待加载与水合后抓取页面可见文本，写入 `docs/_hero_<idx>.txt` 并打印摘要。
@@ -1668,7 +2058,7 @@
 - 调用: 由 L62 入口循环调用；调用 CDP 方法与 `/json/new`、`/json/close/<id>`、`fs.writeFileSync`——已确认。
 - 置信度: 已确认
 
-#### 2.28.2 extractPage.send（箭头函数） [L15-19]
+#### 2.34.2 extractPage.send（箭头函数） [L15-19]
 - 类型: function（箭头函数，赋给 `const send`）
 - 签名: `const send = (method, params = {}) => new Promise((res) => {...})`
 - 作用: 给 CDP 请求编号并发送，返回由对应回包兑现的 promise。
@@ -1680,7 +2070,7 @@
 - 调用: 被 `extractPage` 于 L26-L27、L30、L37、L43-L46、L49 调用——已确认。
 - 置信度: 已确认
 
-#### 2.28.3 extractPage.send.executor（箭头函数） [L15-19]
+#### 2.34.3 extractPage.send.executor（箭头函数） [L15-19]
 - 类型: function（箭头函数，`new Promise` 执行器）
 - 签名: `(res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); }`
 - 作用: 执行 id 分配、resolve 登记与消息发送。
@@ -1691,7 +2081,7 @@
 - 调用: 由 L15 `new Promise` 立即执行——已确认。
 - 置信度: 已确认
 
-#### 2.28.4 extractPage.ws.onmessage（箭头函数） [L20-24]
+#### 2.34.4 extractPage.ws.onmessage（箭头函数） [L20-24]
 - 类型: function（箭头函数，赋给 `ws.onmessage`）
 - 签名: `ws.onmessage = (ev) => {...}`
 - 作用: 按 id 兑现 pending；`Page.loadEventFired` 时唤醒全部 waiters。
@@ -1790,7 +2180,7 @@
 
 ---
 
-### 2.29 `scripts/cdp_leaderboard.js`
+### 2.35 `scripts/cdp_leaderboard.js`
 
 - **分析组**：GX01　**行数**：134　**AST 符号数**：不适用（非 .py）
 
@@ -1971,7 +2361,7 @@
 
 ---
 
-### 2.30 `scripts/cdp_leaderboard_probe.js`
+### 2.36 `scripts/cdp_leaderboard_probe.js`
 
 - **分析组**：GX01　**行数**：53　**AST 符号数**：不适用（非 .py）
 
@@ -2106,7 +2496,7 @@
 
 ---
 
-### 2.31 `scripts/cdp_spell.js`
+### 2.37 `scripts/cdp_spell.js`
 
 - **分析组**：GX01　**行数**：64　**AST 符号数**：不适用（非 .py）
 
@@ -2119,7 +2509,7 @@
 - 顶层数据表/字典: 无（`pending`/`waiters` 为 L13-L14 局部状态）
 - 运行方式: `node scripts/cdp_spell.js <url1> <url2> ...`（L60）；需目标 Chrome 在 `172.28.144.1:9222` 开 CDP（L6）。
 
-#### 2.31.1 extractPage [L9-57]
+#### 2.37.1 extractPage [L9-57]
 - 类型: async_function
 - 签名: `async function extractPage(url, idx)`
 - 作用: CDP 打开 URL、等加载与水合后抓取页面可见文本，写入 `docs/_spell_<idx>.txt` 并打印摘要。
@@ -2131,7 +2521,7 @@
 - 调用: 由 L62 入口循环调用；调用 CDP 方法与 `/json/new`、`/json/close/<id>`、`fs.writeFileSync`——已确认。
 - 置信度: 已确认
 
-#### 2.31.2 extractPage.send（箭头函数） [L15-19]
+#### 2.37.2 extractPage.send（箭头函数） [L15-19]
 - 类型: function（箭头函数，赋给 `const send`）
 - 签名: `const send = (method, params = {}) => new Promise((res) => {...})`
 - 作用: CDP 请求封装：编号、登记 resolve、发送。
@@ -2143,7 +2533,7 @@
 - 调用: 被 `extractPage` 于 L26-L27、L30、L37、L43-L46、L49 调用——已确认。
 - 置信度: 已确认
 
-#### 2.31.3 extractPage.send.executor（箭头函数） [L15-19]
+#### 2.37.3 extractPage.send.executor（箭头函数） [L15-19]
 - 类型: function（箭头函数，`new Promise` 执行器）
 - 签名: `(res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); }`
 - 作用: 同步完成 id 分配、resolve 登记与发送。
@@ -2154,7 +2544,7 @@
 - 调用: 由 L15 `new Promise` 立即执行——已确认。
 - 置信度: 已确认
 
-#### 2.31.4 extractPage.ws.onmessage（箭头函数） [L20-24]
+#### 2.37.4 extractPage.ws.onmessage（箭头函数） [L20-24]
 - 类型: function（箭头函数，赋给 `ws.onmessage`）
 - 签名: `ws.onmessage = (ev) => {...}`
 - 作用: 按 id 兑现 pending；`Page.loadEventFired` 时清空并唤醒 waiters。
@@ -2253,7 +2643,7 @@
 
 ---
 
-### 2.32 `scripts/coverage.py`
+### 2.38 `scripts/coverage.py`
 
 - **分析组**：G027　**行数**：360　**AST 符号数**：9
 
@@ -2276,7 +2666,7 @@
   - `EVO_CONFIRMED_2026`：单个 dict，描述觉醒形态的名称、觉醒周期（`evolution_cycle=1`）、技能文案、基础数值（`stats`：elixir/units/target/move_speed/hit_speed）与来源 URL
   - `special_fields` 与 `basic_stats_lv11` 内部各有一个字段名集合/稀有度下标表（见对应符号条目），非模块级常量
 
-#### 2.32.1 norm [L59-60]
+#### 2.38.1 norm [L59-60]
 - 类型: function
 - 签名: `def norm(s):`
 - 作用: 把字符串归一化成只含小写字母数字的 key，用于跨数据源的名称/ID 宽容匹配。
@@ -2287,7 +2677,7 @@
 - 调用: 被 `load_sources`（L82、L84）、`build_registry`（L164、L171、L259、L261）调用；它自身只调用 `re.sub`。
 - 置信度: 已确认
 
-#### 2.32.2 jload [L63-65]
+#### 2.38.2 jload [L63-65]
 - 类型: function
 - 签名: `def jload(path):`
 - 作用: 以 UTF-8 读取并解析一个 JSON 文件。
@@ -2298,7 +2688,7 @@
 - 调用: 被 `load_sources`（L69、L72、L78、L95、L100）调用；它自身只调用 `json.load`。
 - 置信度: 已确认
 
-#### 2.32.3 load_sources [L68-108]
+#### 2.38.3 load_sources [L68-108]
 - 类型: function
 - 签名: `def load_sources():`
 - 作用: 汇总全部输入数据源：快照卡列表、官方元数据列表（仓库为主 + data_official 增量并集）、四类 per-level 数值表索引（仓库为主 + official 补缺）、已实现卡图文件名集合，并顺带拼出来源描述字符串。
@@ -2309,7 +2699,7 @@
 - 调用: 被 `build_registry` 在 L163 调用；它调用 `jload`、`norm`、`os.path.exists`、`os.listdir`、`os.path.join`。
 - 置信度: 已确认
 
-#### 2.32.4 special_fields [L111-123]
+#### 2.38.4 special_fields [L111-123]
 - 类型: function
 - 签名: `def special_fields(entry):`
 - 作用: 从一个快照条目（及其 `summonCharacterData` 子字典）里挑出「非基础数值」的字段名，作为特殊机制线索。
@@ -2321,7 +2711,7 @@
 - 调用: 被 `build_registry` 在 L225 调用（写入 registry 条目的 `special_fields`）；它自身只用 dict/list/set 操作。
 - 置信度: 已确认
 
-#### 2.32.5 basic_stats_lv11 [L126-141]
+#### 2.38.5 basic_stats_lv11 [L126-141]
 - 类型: function
 - 签名: `def basic_stats_lv11(scd_name, stats, rarity):`
 - 作用: 按稀有度给出该卡在「11 级」口径下的血量与伤害（从 per-level 数组取对应下标）。
@@ -2335,7 +2725,7 @@
 - 调用: 被 `build_registry` 在 L204 调用（仅当 `scd_name` 为真）；它自身不用其它模块函数。
 - 置信度: 已确认
 
-#### 2.32.6 classify [L144-159]
+#### 2.38.6 classify [L144-159]
 - 类型: function
 - 签名: `def classify(e, meta, has_meta):`
 - 作用: 依「塔 / 临时变体 / 限时卡 / 活动超级卡 / 缺元数据」的优先级给出一个前置状态或 None，并附带旗标文案。
@@ -2349,7 +2739,7 @@
 - 调用: 被 `build_registry` 在 L174 调用；它自身只用字符串判断与常量集合。
 - 置信度: 已确认（`meta` 参数在本函数体内未被使用，已核对 L144-159 全文）
 
-#### 2.32.7 build_registry [L162-276]
+#### 2.38.7 build_registry [L162-276]
 - 类型: function
 - 签名: `def build_registry():`
 - 作用: 逐条遍历快照卡构造全覆盖记录（分类、费用/稀有度官方-快照对账、数值可解析性、图片可实现性、状态机），再补入 2026 新卡与「快照缺失的官方新卡」，最后算出未对照上的元数据名单。
@@ -2371,7 +2761,7 @@
 - 调用: 被模块 `__main__` 块在 L354 调用；它调用 `load_sources`、`classify`、`special_fields`、`basic_stats_lv11`、`norm`。
 - 置信度: 已确认
 
-#### 2.32.8 apply_smoke [L279-303]
+#### 2.38.8 apply_smoke [L279-303]
 - 类型: function
 - 签名: `def apply_smoke(registry):`
 - 作用: 读 `docs/batch_smoke_report.json`（由 `scripts/batch_smoke.py` 产出），给 registry 条目打 `smoke_verified`，并把冒烟通过的 `data_ready` 升级为 `implemented`。
@@ -2383,7 +2773,7 @@
 - 调用: 被模块 `__main__` 块在 L355 调用；它调用 `json.load` / `os.path.exists`。其输入由 `scripts/batch_smoke.py` 产出（该文件 L5 注释自述「docs/batch_smoke_report.json（供 coverage.py 与人工评审消费）」）。
 - 置信度: 已确认
 
-#### 2.32.9 write_outputs [L306-350]
+#### 2.38.9 write_outputs [L306-350]
 - 类型: function
 - 签名: `def write_outputs(registry, unmatched_meta, meta_src, stats_src, smoke_note=''):`
 - 作用: 落盘机器可读主册 `docs/card_registry.json`（含 policy 头）与人类可读报告 `docs/card_coverage.md`（状态计数、需人工评审清单、快照缺失新卡、临时卡清单、未对照元数据健康检查），并返回状态计数。
@@ -2403,7 +2793,7 @@
 
 ---
 
-### 2.33 `scripts/diag_critic_ev.py`
+### 2.39 `scripts/diag_critic_ev.py`
 
 - **分析组**：G008　**行数**：854　**AST 符号数**：13
 
@@ -2420,7 +2810,7 @@
   - `timeout_winner`（L53）被 import 但全文未见使用（L53 是本文件唯一出现处）；`_stall_probe`、`STALL_WINDOW`、`overtime_open`、`settle_stall` 均在 `rollout` 内使用（L126-130、L179-185）。
 - 顶层数据表/字典: `RAW_FEATURE_NAMES`（L229-234）— 12 个字符串的列表，与 `rollout(collect_raw=True)` 里构造的 12 维原始标量数组逐列对应，顺序为 `"my_king_hp", "my_left_hp", "my_right_hp", "opp_king_hp", "opp_left_hp", "opp_right_hp", "my_crown", "opp_crown", "my_elixir", "opp_elixir", "time", "hp_diff"`。注释（L228）标注其为 G' 三层可预测性对照的列名。无其它模块级字典。
 
-#### 2.33.1 load_run_cfg [L57-70]
+#### 2.39.1 load_run_cfg [L57-70]
 - 类型: function
 - 签名: `def load_run_cfg(run_dir):`
 - 作用: 从 run 目录的 `config.json` 还原训练超参覆盖到 `economy` 预设上，保证诊断与训练同参。
@@ -2431,7 +2821,7 @@
 - 调用: 被本文件 `main()` 在 L694 调用；它调用 `rl.config.TrainConfig.resolve`。
 - 置信度: 已确认
 
-#### 2.33.2 rollout [L73-224]
+#### 2.39.2 rollout [L73-224]
 - 类型: function
 - 签名: `def rollout(cfg, main, n_games, seed, device, max_frames=400000, collect_features=False, collect_supervised=False, collect_raw=False):`
 - 作用: 用给定策略在镜像自对弈环境里按训练同口径跑 `n_games` 局，返回逐帧的 value/return/局号/步号/终止标记，并可选额外汇集表征 `X`、监督微调数据 `S`、原始标量 `RAW`。
@@ -2450,7 +2840,7 @@
 - 调用: 仅被本文件 `main()` 在 L708-711 调用。它调用 `resolve_deck_set`、`solo_env`、`BeliefInference`、`FollowerPolicy`、`BeliefPlanner`、`ProphetPlanner`、`FollowerOpponent`、`overtime_open`、`_stall_probe`、`settle_stall`、`reward_to_env`、`_draw_penalty`、`main._encode`、`main.act`、`belief.update`、`env.step`、`PPOTrainer.compute_gae`（均在 L87-224 内可见）。
 - 置信度: 已确认
 
-#### 2.33.3 _outcome_target [L237-251]
+#### 2.39.3 _outcome_target [L237-251]
 - 类型: function
 - 签名: `def _outcome_target(R, EP, TERM):`
 - 作用: 从逐帧 GAE return 里取出每局的"局结果"标签（该局最后一个终止帧的 R）并广播到该局所有帧，返回标签与有效掩码。
@@ -2463,7 +2853,7 @@
 - 调用: 被 `_three_layer_predictability` 在 L265 调用。它只调用 `np.zeros`，无其它依赖。
 - 置信度: 已确认
 
-#### 2.33.4 _three_layer_predictability [L254-326]
+#### 2.39.4 _three_layer_predictability [L254-326]
 - 类型: function
 - 签名: `def _three_layer_predictability(X, RAW, R, EP, TERM, STEP_IDX):`
 - 作用: G' 三层可预测性对照：在同一批帧、同一"按局分组留出 20%"口径下比较三种特征层 × 多个标签的线性/MLP 留出 R²，并打印打乱局标签的噪声地板。
@@ -2479,7 +2869,7 @@
 - 调用: 仅被 `main()` 在 L840 调用（`--predict` 且 `RAW` 非空时）。它调用 `_outcome_target`、`lin_probe`、`mlp_probe`、`np.unique/concat`。
 - 置信度: 已确认
 
-#### 2.33.5 ev [L329-336]
+#### 2.39.5 ev [L329-336]
 - 类型: function
 - 签名: `def ev(v, r):`
 - 作用: 池化 explained variance 口径：`1 − MSE(v, r) / Var(r)`。
@@ -2491,7 +2881,7 @@
 - 调用: 被 `_finetune_critic`（L505）、`_bypass_gru`（L614）、`batch_ev`（L349）、`main`（L730、L737、L777、L833）调用。无其它依赖。
 - 置信度: 已确认
 
-#### 2.33.6 batch_ev [L339-352]
+#### 2.39.6 batch_ev [L339-352]
 - 类型: function
 - 签名: `def batch_ev(v, r, bs=128, shuffle=False, seed=0):`
 - 作用: 按固定大小批（训练口径的 128 连续帧，或打散后的 128 帧）分别算 EV，返回批 EV 数组。
@@ -2505,7 +2895,7 @@
 - 调用: 被 `main()` 在 L731（连续口径）与 L732（打散口径）调用；它调用 `ev`。`main` 里对返回值用 `np.nanmean/nanmin/nanmax` 聚合（L733-735）。
 - 置信度: 已确认
 
-#### 2.33.7 _probe_ev [L355-361]
+#### 2.39.7 _probe_ev [L355-361]
 - 类型: function
 - 签名: `def _probe_ev(pred, r):`
 - 作用: 探针专用 EV（与 `ev` 同式，但只做方差除零保护，不检查样本数）。
@@ -2517,7 +2907,7 @@
 - 调用: 被 `lin_probe`（L400）与 `mlp_probe`（L448）调用。无其它依赖。
 - 置信度: 已确认
 
-#### 2.33.8 _grouped_split [L364-378]
+#### 2.39.8 _grouped_split [L364-378]
 - 类型: function
 - 签名: `def _grouped_split(groups, seed=0, test_frac=0.2):`
 - 作用: 按"组（局）"划分训练/测试下标：整个测试组的帧一条都不出现在训练集，以避免相邻帧时间泄漏抬高 R²。
@@ -2530,7 +2920,7 @@
 - 调用: 被 `lin_probe`（L389）与 `mlp_probe`（L416）在 `groups is not None` 时调用。无其它依赖。
 - 置信度: 已确认
 
-#### 2.33.9 lin_probe [L381-400]
+#### 2.39.9 lin_probe [L381-400]
 - 类型: function
 - 签名: `def lin_probe(X, y, seed=0, test_frac=0.2, groups=None):`
 - 作用: 用带偏置的最小二乘线性回归测"特征 → 标签"的留出 R²（EV 口径），可选按局分组留出。
@@ -2545,7 +2935,7 @@
 - 调用: 被 `_three_layer_predictability`（L307、L320）与 `main`（L781、L789、L816、L829）调用；它调用 `_grouped_split`、`_probe_ev`、`np.linalg.lstsq`。
 - 置信度: 已确认
 
-#### 2.33.10 mlp_probe [L403-448]
+#### 2.39.10 mlp_probe [L403-448]
 - 类型: function
 - 签名: `def mlp_probe(X, y, seed=0, hidden=64, iters=400, lr=1e-3, test_frac=0.2, groups=None):`
 - 作用: 用两层 64 隐单元的小 MLP（400 步 Adam）测"特征 → 标签"的非线性留出 R²，用于区分"线性≈0 但 MLP>0（关系非线性）"与"两者都≈0（该表征下不可预测）"。
@@ -2562,7 +2952,7 @@
 - 调用: 被 `_three_layer_predictability`（L308-309、L321）与 `main`（L783、L790、L817-818、L830）调用；它调用 `_grouped_split`、`_probe_ev`。
 - 置信度: 已确认
 
-#### 2.33.11 _finetune_critic [L451-532]
+#### 2.39.11 _finetune_critic [L451-532]
 - 类型: function
 - 签名: `def _finetune_critic(args, model, S, R_all, device):`
 - 作用: 实验 A：用 rollout 记录的逐帧 `(obs, belief_tok, plan_vec, hidden_prev)` 监督回归 GAE return（只算 value 项 MSE 梯度、全网络可训），看 test EV 能否升到探针水平，以判别"程序链路 OK 而 on-policy 训练没吸收"还是"价值头/GRU 结构问题"。
@@ -2577,7 +2967,7 @@
 - 调用: 被 `main()` 在 L845 调用（`--finetune` 时）。它调用 `model._encode_parts`、`model.gru_cell`、`model._value_from`、`ev`。
 - 置信度: 已确认
 
-#### 2.33.12 _bypass_gru [L535-664]
+#### 2.39.12 _bypass_gru [L535-664]
 - 类型: function
 - 签名: `def _bypass_gru(args, model, S, R_all, device):`
 - 作用: 实验 B'：用与实验 A 同数据、同局级留出（seed 0、1/5 局）、同配方，但把 value 头输入从 `gru_cell(enc, hidden.detach())` 换成 post-LN `enc`，跑三个变体量化"GRU 是否是吸收瓶颈 / head 容量是否限制 A"。
@@ -2592,7 +2982,7 @@
 - 调用: 被 `main()` 在 L843 调用（`--bypass` 时）。它调用 `model._encode`、`copy.deepcopy`、`ev`。
 - 置信度: 已确认
 
-#### 2.33.13 main [L667-850]
+#### 2.39.13 main [L667-850]
 - 类型: function
 - 签名: `def main():`
 - 作用: 命令行入口：解析参数、还原 run 配置、加载 checkpoint、跑 rollout，然后打印回报/价值分布、多种口径的 EV、方差结构、相关性/回归斜率，并按开关执行探针/三层对照/监督微调/bypass 对照与 npz 落盘。
@@ -2604,7 +2994,7 @@
 
 ---
 
-### 2.34 `scripts/diag_encoder_scale.py`
+### 2.40 `scripts/diag_encoder_scale.py`
 
 - **分析组**：G033　**行数**：124　**AST 符号数**：1
 
@@ -2615,7 +3005,7 @@
 - 关键模块级常量: `_HERE = os.path.dirname(os.path.abspath(__file__))` — 本脚本所在目录（L12）；`_SRC = os.path.join(os.path.dirname(_HERE), "src", "clasher_new")` — 被 append 进 `sys.path` 的源码根，使 `import rl.*` 可用（L13-15）。无其它模块级常量。
 - 顶层数据表/字典: 无（脚本内 `parts` 字典是 `main` 的局部变量，见 L75）。
 
-#### 2.34.1 main [L30-120]
+#### 2.40.1 main [L30-120]
 - 类型: function
 - 签名: `def main():`
 - 作用: 解析 `--ckpt/--run-dir/--frames/--device` → 载入 checkpoint 与镜像对手 → 跑 N 帧 rollout，逐帧记录 `fused` 各分量及 `enc_pre`/`enc` 的 L2 范数，最后打印均值/标准差/极值表。
@@ -2641,7 +3031,7 @@
 
 ---
 
-### 2.35 `scripts/diag_gru_ablation.py`
+### 2.41 `scripts/diag_gru_ablation.py`
 
 - **分析组**：G031　**行数**：192　**AST 符号数**：3
 
@@ -2656,7 +3046,7 @@
 - 备注（源码依据）: `W = pol.gru_cell.weight_hh...`（L164）赋值后**全文未再被引用**（grep 确认仅此一处）；L147 的 `adv` 解包后同样未被使用。
 - 外部符号签名核对（均已读源确认）: `load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None, ...)`（`rl/follower.py:67`）；`FollowerPolicy.__init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY, ...)`（`rl/follower.py:155`）；`_encode_parts(self, obs, belief_token, plan_token)`（L268）；`_value_from(self, enc, h, fused)`（L303）；`PPOTrainer.compute_gae(rewards, values, dones, gamma=0.99, lam=0.95, truncated=None, last_value=0.0)` 为 `@staticmethod`（`rl/ppo.py:167-168`）；`FollowerOpponent.__init__(self, policy, env, belief=None, planner=None, deterministic=True, use_plan_biases=False)`（`rl/train_follower.py:52,61`）；`BeliefInference.__init__(self, opp_deck, use_rule=True, use_stat=True, neural=None, n_particles=128, seed=0)`（`rl/belief.py:261`），`encode(self, obs=None, opp_played=None)`（L344），`reset(self, opp_deck=None)`（L274），`state(self)`（L318），`update(self, obs, opp_played, opp_x=None, opp_card_type=None, elixir_est=None)`（L300）；`BeliefPlanner.plan(self, battle, belief, obs=None)`（`rl/belief_planner.py:772`）；`solo_env(cfg, seed, deck0=None, deck1=None)`（`rl/train_solo.py:157`）；`resolve_deck_set(deck_set)`（L107）；`_draw_penalty(cfg)`（L164）；`timeout_winner(battle, hp_tiebreak=None)`（`rl/run_league.py:179`）；`_stall_probe(env, last_hp, stall_count)`（L252）；`overtime_open` 由 `rl.overtime` 导入（`rl/run_league.py:66`）。
 
-#### 2.35.1 ev [L41-46]
+#### 2.41.1 ev [L41-46]
 - 类型: function
 - 签名: `def ev(v, r):`
 - 作用: 计算**不分局**的线性 EV（解释方差）：`1 - MSE/Var(R)`。
@@ -2668,7 +3058,7 @@
 - 调用: `ridge_ev`（L68）与 `main` 打印表中 `vhead_EV`（L181）调用它；它不调用其它自定义函数。
 - 置信度: 已确认
 
-#### 2.35.2 ridge_ev [L49-68]
+#### 2.41.2 ridge_ev [L49-68]
 - 类型: function
 - 签名: `def ridge_ev(H, R, EP, lam=1e-2):`
 - 作用: 按局 70/30 切分的线性（Ridge）探针，只在**测试局**上算 EV，测量隐藏状态 H 中"线性可读出"的回报信息。
@@ -2682,7 +3072,7 @@
 - 调用: `main` 在 L181 的表格里调用；它调用了 `ev`。
 - 置信度: 已确认
 
-#### 2.35.3 main [L71-188]
+#### 2.41.3 main [L71-188]
 - 类型: function
 - 签名: `def main():`
 - 作用: 命令行入口：加载 ckpt 与配置 → 跑 `--games` 局镜像自对弈收集 enc/value/reward → 构造 A/B/C 三种 enc 变体 → 打印变体对照表与"h 跨局标准差"表。
@@ -2694,7 +3084,7 @@
 
 ---
 
-### 2.36 `scripts/diag_value_head.py`
+### 2.42 `scripts/diag_value_head.py`
 
 - **分析组**：G032　**行数**：164　**AST 符号数**：1
 
@@ -2708,7 +3098,7 @@
   - 无其它模块级常量（阈值/表均写死在函数体内，例如 `n_particles=128`、`seed=7`）
 - 顶层数据表/字典: 无
 
-#### 2.36.1 main [L33-160]
+#### 2.42.1 main [L33-160]
 - 类型: function
 - 签名: `main()`
 - 作用: 对一个 ckpt 做"参数范数 + rollout 隐状态/价值统计 + GRU 门抽样"三段落诊断并打印结论性提示。
@@ -2729,7 +3119,7 @@
 
 ---
 
-### 2.37 `scripts/duel_search.py`
+### 2.43 `scripts/duel_search.py`
 
 - **分析组**：G013　**行数**：636　**AST 符号数**：17
 
@@ -2745,7 +3135,7 @@
   - 另：L35 `sys.path.insert(0, r"E:/clash-royale-simulator-main/src/clasher_new")` — 硬编码 Windows 路径导入本仓库引擎模块。
 - 顶层数据表/字典: 无顶层数据表；`DECK`（列表）与 `OWN_CELLS`（坐标元组列表）是仅有的两个模块级可变数据；其余「表」均为函数内局部（如 `e2_positions` 六格桥头附近部署位 L326-327/L409-410）与 `search_1v1` 的 `timing_meta` 字典（L508）。
 
-#### 2.37.1 _own_deploy_cells [L46-53]
+#### 2.43.1 _own_deploy_cells [L46-53]
 - 类型: function
 - 签名: `def _own_deploy_cells():`
 - 作用: 枚举 player 0 的全部合法整格部署位（格子中心坐标）。
@@ -2755,7 +3145,7 @@
 - 调用: 仅在 L55 被模块级 `OWN_CELLS = _own_deploy_cells()` 调用一次；它调用 `arena.TileGrid` / `arena.TileGrid.can_deploy_at` / `core.Position`。
 - 置信度: 已确认
 
-#### 2.37.2 enemy_timeline [L61-115]
+#### 2.43.2 enemy_timeline [L61-115]
 - 类型: function
 - 签名: `def enemy_timeline(enemy_card, start=None, horizon=HORIZON, dt=0.1):`
 - 作用: 在一个只有该敌方单位的空场里预演该卡，按固定时间步 `dt` 记录 `(t, x, y, phase)` 时刻表。
@@ -2769,7 +3159,7 @@
 - 调用: 被 `enemy_path_checkpoints`(L120)、`search_2v2`(L317)、`search_2v1`(L397)、`search_1v1`(L487) 调用；它调用 `battle.BattleState` / `battle.BattleState.step` / `battle.Troop` / `BattleState._spawn_entity` / `player.PlayerState` / `core.Position`，并读取 `Troop` 的 `position.x/y`、`is_alive`、`jumping_across_river`、`entity_holder._mk_jump`。
 - 置信度: 已确认
 
-#### 2.37.3 enemy_path_checkpoints [L118-126]
+#### 2.43.3 enemy_path_checkpoints [L118-126]
 - 类型: function
 - 签名: `def enemy_path_checkpoints(enemy_card, start=None, horizon=HORIZON, step=0.1):`
 - 作用: 旧接口兼容层 —— 把时间轴变成「每个 0.1 格 y 首次出现时刻」的位置检查点。
@@ -2783,7 +3173,7 @@
 - 调用: 全仓库（除本文件外）未检出调用方（`grep -rn "enemy_path_checkpoints"` 仅命中定义行 L118）；`enemy_timeline` 是其唯一被调用者入口。属遗留兼容函数。
 - 置信度: 已确认（「无外部调用方」这一结论限于本仓库非 docs 文件范围）
 
-#### 2.37.4 _loss_metrics [L129-149]
+#### 2.43.4 _loss_metrics [L129-149]
 - 类型: function
 - 签名: `def _loss_metrics(bs, my_card, enemy_card, towers0, my_ent, enemy_ent):`
 - 作用: 从**调用当下的** `bs.entities` 计算一次对抗的塔损/存活指标（未完成的辅助函数）。
@@ -2799,7 +3189,7 @@
 - 调用: 全仓库（除本文件外）未检出调用方（`grep -rn "_loss_metrics"` 仅命中定义行 L129）⇒ 目前是死代码/未接线辅助函数。
 - 置信度: 已确认（无调用方结论限于本仓库非 docs 文件范围；`enemy_tower_loss` 恒零的推导基于 L136-141 的自洽读法）
 
-#### 2.37.5 run_duel [L152-185]
+#### 2.43.5 run_duel [L152-185]
 - 类型: function
 - 签名: `def run_duel(enemy_card, my_card, my_pos, deploy_at, horizon=HORIZON):`
 - 作用: 敌单卡从固定桥头推进、我方在 `deploy_at` 秒于 `my_pos` 部署单卡的完整 1v1 推演。
@@ -2814,7 +3204,7 @@
 - 调用: 被 `_run_1v1_worker`(L459) 调用（即 `search_1v1` 的并行单元）；`_run_1v1_worker` 是本仓库内唯一检出调用方。它调用 `battle.BattleState` / `step` / `Troop` / `_spawn_entity` / `player.PlayerState` / `core.Position`。
 - 置信度: 已确认
 
-#### 2.37.6 run_duel_2v1 [L188-232]
+#### 2.43.6 run_duel_2v1 [L188-232]
 - 类型: function
 - 签名: `def run_duel_2v1(enemy1, enemy2, enemy2_pos, enemy2_at, my_card, my_pos, my_at, horizon=HORIZON):`
 - 作用: 敌方双卡**异步**（第二张在指定时刻/位置补出）对我方单卡的推演。
@@ -2830,7 +3220,7 @@
 - 调用: 被 `_run_2v1_worker`(L237) 调用（`search_2v1` 的并行单元），`_run_2v1_worker` 是仓库内唯一检出调用方；它调用引擎构造/步进 API（同上）。
 - 置信度: 已确认
 
-#### 2.37.7 _run_2v1_worker [L235-238]
+#### 2.43.7 _run_2v1_worker [L235-238]
 - 类型: function
 - 签名: `def _run_2v1_worker(args):`
 - 作用: `multiprocessing` 任务包装器：解包 7 元组、跑 `run_duel_2v1`、回带搜索坐标。
@@ -2841,7 +3231,7 @@
 - 调用: 被 `search_2v1` 以函数引用形式传给 `_pmap`（L431）或串行 `[_run_2v1_worker(t) for t in tasks]`（L433）。
 - 置信度: 已确认
 
-#### 2.37.8 run_duel_2v2 [L241-288]
+#### 2.43.8 run_duel_2v2 [L241-288]
 - 类型: function
 - 签名: `def run_duel_2v2(enemy1, enemy2, e2_pos, e2_at, my1, my2, my1_pos, my1_at, my2_pos, my2_at, horizon=HORIZON):`
 - 作用: 敌方双卡异步 vs 我方双卡异步的推演（我方两张牌各自有独立时刻/位置）。
@@ -2856,7 +3246,7 @@
 - 调用: 被 `_run_2v2_worker`(L293) 调用（`search_2v2` 的并行单元），为仓库内唯一检出调用方。
 - 置信度: 已确认
 
-#### 2.37.9 _run_2v2_worker [L291-294]
+#### 2.43.9 _run_2v2_worker [L291-294]
 - 类型: function
 - 签名: `def _run_2v2_worker(args):`
 - 作用: `multiprocessing` 任务包装器：解包 10 元组、跑 `run_duel_2v2`、回带 6 个搜索坐标。
@@ -2867,7 +3257,7 @@
 - 调用: 被 `search_2v2` 传给 `_pmap`（L353）或串行列表推导（L355）。
 - 置信度: 已确认
 
-#### 2.37.10 search_2v2 [L297-367]
+#### 2.43.10 search_2v2 [L297-367]
 - 类型: function
 - 签名: `def search_2v2(enemy1, enemy2, my1, my2, workers=None, max_e2=None, max_my=None, guide_topk=None):`
 - 作用: 2v2 组合搜索：用 1v1 热图挑 TopK 部署位，再把「双卡位置×双卡时机」的笛卡尔积展开成任务批量并行推演。
@@ -2883,7 +3273,7 @@
 - 调用: 被 `main()` 的 2v2 分支调用（L612-617，`max_e2=min(max_timings or 3, 3)`、`max_my=min(max_timings or 2, 2)`、`guide_topk=4`）。它调用 `search_1v1`、`heatmap`、`enemy_timeline`、`total_loss`、`_pmap`、`_run_2v2_worker`。
 - 置信度: 已确认
 
-#### 2.37.11 search_2v1 [L370-445]
+#### 2.43.11 search_2v1 [L370-445]
 - 类型: function
 - 签名: `def search_2v1(enemy1, enemy2, my_card, my_at_grid=None, e2_timings=None, workers=None, max_e2=None, max_my=None, guide_topk=None):`
 - 作用: 2v1 搜索：热图挑 TopK 我方部署位后，展开「敌2时机 × 敌2位置 × 我方(时机,位置)」任务并推演。
@@ -2901,7 +3291,7 @@
 - 调用: 被 `main()` 的 2v1 分支调用（L589-592，`max_e2=args.max_timings`、`max_my=args.max_timings`，未传 `guide_topk` ⇒ 默认 32）。它调用 `search_1v1`、`heatmap`、`enemy_timeline`、`total_loss`、`_pmap`、`_run_2v1_worker`。
 - 置信度: 已确认
 
-#### 2.37.12 total_loss [L448-453]
+#### 2.43.12 total_loss [L448-453]
 - 类型: function
 - 签名: `def total_loss(r, w_tower=1.0, w_unit=0.5, w_enemy_tower=1.5, w_elixir=0.0):`
 - 作用: 把一次推演结果折算成待最小化的加权标量损失。
@@ -2916,7 +3306,7 @@
 - 调用: 被 `search_2v1`(L443)、`search_2v2`(L365)、`search_1v1`(L518) 调用，全部用默认权重。
 - 置信度: 已确认
 
-#### 2.37.13 _run_1v1_worker [L456-460]
+#### 2.43.13 _run_1v1_worker [L456-460]
 - 类型: function
 - 签名: `def _run_1v1_worker(args):`
 - 作用: `multiprocessing` 任务包装器：解包 `(敌卡, 我卡, 位置, 时刻)` 并跑 `run_duel`。
@@ -2927,7 +3317,7 @@
 - 调用: 被 `search_1v1` 传给 `_pmap`（L503）或串行执行（L505）。
 - 置信度: 已确认
 
-#### 2.37.14 _pmap [L463-475]
+#### 2.43.14 _pmap [L463-475]
 - 类型: function
 - 签名: `def _pmap(fn, tasks, workers):`
 - 作用: 分批流式并行 map：把大任务列表切成小批喂给 `mp.Pool.map`，规避 Windows spawn 的管道/句柄限制。
@@ -2940,7 +3330,7 @@
 - 调用: 被 `search_1v1`(L503)、`search_2v1`(L431)、`search_2v2`(L353) 在 `workers > 1` 时调用。
 - 置信度: 已确认
 
-#### 2.37.15 search_1v1 [L478-520]
+#### 2.43.15 search_1v1 [L478-520]
 - 类型: function
 - 签名: `def search_1v1(enemy_card, my_card, time_every=0.1, phases=None, max_timings=None, workers=None):`
 - 作用: 1v1 全扫：敌1时间轴检查点 × 我方 224 个整格部署位的完整笛卡尔积推演。
@@ -2955,7 +3345,7 @@
 - 调用: 被 `main()` 的 1v1 分支调用（L555-559）；并被 `search_2v1`(L387) 与 `search_2v2`(L308) 以 `max_timings=6` 调用作为热图引导来源。它调用 `enemy_timeline`、`_pmap`、`_run_1v1_worker`、`total_loss`。
 - 置信度: 已确认
 
-#### 2.37.16 heatmap [L523-529]
+#### 2.43.16 heatmap [L523-529]
 - 类型: function
 - 签名: `def heatmap(results):`
 - 作用: 按部署位对结果损失取算术平均，得到部署点热图。
@@ -2966,7 +3356,7 @@
 - 调用: 被 `search_2v1`(L388)、`search_2v2`(L309) 用于挑 TopK 引导位；被 `main()` 的 1v1 分支调用打印最优/最差部署位（L571）。注意它只对 `search_1v1` 的结果可用（`search_2v1/2v2` 的结果键是 `my_pos`/`my1_pos`，直接喂会 `KeyError`）。
 - 置信度: 已确认
 
-#### 2.37.17 main [L532-632]
+#### 2.43.17 main [L532-632]
 - 类型: function
 - 签名: `def main():`
 - 作用: CLI 入口：解析参数、按 `--mode` 分派到 1v1/2v1/2v2 搜索，打印损失升序前 10 与热图，可选写 JSON。
@@ -2978,7 +3368,7 @@
 
 ---
 
-### 2.38 `scripts/extend_level16.py`
+### 2.44 `scripts/extend_level16.py`
 
 - **分析组**：G033　**行数**：79　**AST 符号数**：3
 
@@ -2989,7 +3379,7 @@
 - 关键模块级常量: `SRC = os.path.join(os.path.dirname(__file__), '..', 'src', 'clasher_new')` — 数据目录（L11）；`FILES = ['cards_stats_characters.json','cards_stats_building.json','cards_stats_spell.json','cards_stats_projectile.json']` — 处理清单（L12-13）；`CANON = {'Common': 19, 'Rare': 17, 'Epic': 14, 'Legendary': 11, 'Champion': 9}` — 稀有度→规范数组长度（L14）；`FIELDS = ('hitpoints_per_level', 'damage_per_level', 'dps_per_level')` — 需延伸的字段名（L15）。
 - 顶层数据表/字典: `CANON`（键=稀有度字符串，值=该稀有度 per-level 数组的目标长度）；`FILES`（待处理 JSON 文件名列表）。二者语义同上。
 
-#### 2.38.1 extend_array [L18-33]
+#### 2.44.1 extend_array [L18-33]
 - 类型: function
 - 签名: `def extend_array(arr):`
 - 作用: 按「末 3 步比值均值」延续给定数值数组到 `CANON[rarity]` 长度，返回新数组与是否发生修改。
@@ -3000,7 +3390,7 @@
 - 调用: **本模块内没有任何调用点**：`main` 在 L51-64 内联复写了同一套延伸逻辑，没有调用 `extend_array`；全文件仅此一处定义。它调用了 `rarity_of`（L31）与内置 `round`/`max`/`min`/`sum`/`len`。文档字符串「由调用方注入」但实际未实现注入。
 - 置信度: 已确认（含"未被调用"这一事实：L18 定义处与 L41-75 的 `main` 全文对照）
 
-#### 2.38.2 rarity_of [L36-38]
+#### 2.44.2 rarity_of [L36-38]
 - 类型: function
 - 签名: `def rarity_of(arr):`
 - 作用: 稀有度解析占位函数，恒返回 `None`。
@@ -3011,7 +3401,7 @@
 - 调用: 仅被 `extend_array` 调用（L31）；本模块其它位置无调用。
 - 置信度: 已确认
 
-#### 2.38.3 main [L41-75]
+#### 2.44.3 main [L41-75]
 - 类型: function
 - 签名: `def main():`
 - 作用: 遍历 `FILES`，按每行的 `rarity` 字段确定目标长度，就地延伸三个 per-level 字段，改过的行打 `level16_extended` 标记；有改动则先备份 `.bak` 再重写文件并统计。
@@ -3030,7 +3420,7 @@
 
 ---
 
-### 2.39 `scripts/forensics_card_usage.py`
+### 2.45 `scripts/forensics_card_usage.py`
 
 - **分析组**：G025　**行数**：479　**AST 符号数**：4
 
@@ -3049,7 +3439,7 @@
   - `LEGACY_GHOST_Y = 20` — 旧口径（`forensics_response.py`）的幽灵阈值，**仅为 §5 缺陷量化而保留**（L69-70）
 - 顶层数据表/字典: 无（模块级只有上述标量常量；所有统计容器都在函数内构造）
 
-#### 2.39.1 load_cost_map [L74-109]
+#### 2.45.1 load_cost_map [L74-109]
 - 类型: function
 - 签名: `def load_cost_map(src=_SRC):`
 - 作用: 从源目录加载「卡名 → 圣水费」映射表，供后续把出手折算成费用/判断「便宜卡」。
@@ -3060,7 +3450,7 @@
 - 调用: 被 `main()` 在 L157 调用（`cost_map = load_cost_map()`，不传参用默认 `_SRC`）。它不调用本文件其他函数。脚本内没有其他调用点。
 - 置信度: 已确认（返回结构与优先级由 L83-109 直接读出；「与引擎扣费同源」一条已在同仓 `card_utils.py:227` 核对一致）
 
-#### 2.39.2 load_files [L112-127]
+#### 2.45.2 load_files [L112-127]
 - 类型: function
 - 签名: `def load_files(path):`
 - 作用: 把「回放目录或单个 pkl 路径」解析成 `(文件名, games)` 列表。
@@ -3071,7 +3461,7 @@
 - 调用: 被 `main()` 在 L158 调用（`files = load_files(a.replays)`）。其返回的 `games` 在 `main()` 的 L178-265 循环里被 `len()`、`for g in games` 消费。不被本文件其他函数调用。
 - 置信度: 已确认
 
-#### 2.39.3 _blank [L130-145]
+#### 2.45.3 _blank [L130-145]
 - 类型: function
 - 签名: `def _blank(step=None):`
 - 作用: 构造一个「全零/全空」的统计容器 dict，作为 per-file 与 pooled 累加器的模板。
@@ -3082,7 +3472,7 @@
 - 调用: 被 `main()` 在 L177（pooled）与 L180（per-file）调用。它不调用任何函数。
 - 置信度: 已确认
 
-#### 2.39.4 main [L149-475]
+#### 2.45.4 main [L149-475]
 - 类型: function
 - 签名: `def main():`
 - 作用: 脚本主流程：解析 CLI → 加载费率表与回放 → 逐帧统计卡牌使用/圣水/节奏/合法性 → 按 per-file 与 pooled 两口径汇总 → 打印 §1/§2/§3/§3b/§4/§5/§7 各节报表 → 可选写出 JSON。
@@ -3114,7 +3504,7 @@
 
 ---
 
-### 2.40 `scripts/forensics_response.py`
+### 2.46 `scripts/forensics_response.py`
 
 - **分析组**：G031　**行数**：187　**AST 符号数**：3
 
@@ -3128,7 +3518,7 @@
 - 顶层数据表/字典: 无
 - 备注（模块级副作用与死代码，源码依据）: L20 在 import 期就把 `sys.stdout` 换成 UTF-8 包装的 `io.TextIOWrapper`；L58-59 有一段 `foes_crossed = ... if False else ... if False else False` 的三元链，其结果恒为 `False`，且在第 65 行被立即重新赋值覆盖 ⇒ 是坐标系修正后残留的**死代码**。
 
-#### 2.40.1 load_games [L26-32]
+#### 2.46.1 load_games [L26-32]
 - 类型: function
 - 签名: `def load_games(pattern):`
 - 作用: 按 glob 模式批量读取回放 pkl，并把每个文件里的 `rep["games"]` 列表拼接成一个局列表。
@@ -3139,7 +3529,7 @@
 - 调用: L184 与 L186（`__main__` 块）调用它两次；它调用了 `glob.glob`、`pickle.load`。
 - 置信度: 已确认（未读取任何 pkl 文件内容，故 `rep` 的键结构仅依据 L31 的取用方式）
 
-#### 2.40.2 troop_list [L35-36]
+#### 2.46.2 troop_list [L35-36]
 - 类型: function
 - 签名: `def troop_list(fr):`
 - 作用: 从一帧的 `entities` 里抽出所有"troop"实体的世界坐标 `(x, y)`。
@@ -3150,7 +3540,7 @@
 - 调用: 在 `classify_games` L57 被调用一次（结果 `tp` 之后未被用于判定）；它只调用内建 `float`。
 - 置信度: 已确认
 
-#### 2.40.3 classify_games [L39-177]
+#### 2.46.3 classify_games [L39-177]
 - 类型: function
 - 签名: `def classify_games(games, label):`
 - 作用: 对一批回放逐帧扫描，统计我方与对手 deploy 的三类归属，并打印响应延迟/落点距离/拦截率/接敌率等取证指标。
@@ -3164,7 +3554,7 @@
 
 ---
 
-### 2.41 `scripts/judge_anchor_blocks.py`
+### 2.47 `scripts/judge_anchor_blocks.py`
 
 - **分析组**：G029　**行数**：240　**AST 符号数**：6
 
@@ -3183,7 +3573,7 @@
   - `Q2_BAND = 0.10` — Q2 描述性带宽（末块中位数 − 首块中位数）（L51）。
 - 顶层数据表/字典: 无字典/表字面量；`D1_GROUP`/`NOCHANGE_GROUP` 两个字符串列表即模块级配置数据（L46-47），其「数值一律由磁盘计算」的说明见 L45 注释。L35-39 的 `for _s in ("stdout","stderr")` 是 stdout/stderr UTF-8 reconfigure 兜底（非数据表）。
 
-#### 2.41.1 load_anchors_from_state [L54-67]
+#### 2.47.1 load_anchors_from_state [L54-67]
 - 类型: function
 - 签名: `load_anchors_from_state(run)`
 - 作用: 从 `runs/<run>/solo_state.json` 的 `_controls_history` 中筛出 `vs == "baseline_rand"` 的锚点，返回 `[(step, winrate)]` 升序序列与整个 state 字典。
@@ -3194,7 +3584,7 @@
 - 调用: 被 `main()` 的 `--groups` 分支（L187）与 `--run` 分支（L223）调用；无其它模块引用。实测 `src/clasher_new/runs/d1_long_100k/solo_state.json` 存在且 `_controls_history` 中 `baseline_rand` 条目为 41 条（step 0..100000），与 docstring 的「100k 的 2500 分辨率锚点序列天然可读」一致。
 - 置信度: 已确认
 
-#### 2.41.2 load_anchors_from_log [L70-88]
+#### 2.47.2 load_anchors_from_log [L70-88]
 - 类型: function
 - 签名: `load_anchors_from_log(path)`
 - 作用: 回退解析器：不读 state 而直接扫日志文本，抓 `eval@<step>:` / `anchor@<step>:` 后的 `vs baseline_rand: <数字>±` 值，返回 `(step, winrate)` 升序去重序列。
@@ -3205,7 +3595,7 @@
 - 调用: 被 `main()` 的 `--log` 分支调用（L219）；无其它模块引用。
 - 置信度: 已确认（正则为原样抄自 L73-74；对「旧日志格式」的具体版式未逐份日志验证，故只描述代码的分支行为）
 
-#### 2.41.3 blocks_of [L91-116]
+#### 2.47.3 blocks_of [L91-116]
 - 类型: function
 - 签名: `blocks_of(series, per_block)`
 - 作用: 把锚点序列按**序号**连续切成每块 `per_block` 个点，返回每块的块号、点数、worst（块内最小 winrate）、median、首末 step 与 step 列表。
@@ -3217,7 +3607,7 @@
 - 调用: 仅被本文件 `evaluate` 调用（L120）；`evaluate` 又被 `main()`（L194、L228）调用。
 - 置信度: 已确认（docstring 中的历史数字（0.400/0.192）是注释自述，未独立复算，本条目只描述代码行为）
 
-#### 2.41.4 evaluate [L119-138]
+#### 2.47.4 evaluate [L119-138]
 - 类型: function
 - 签名: `evaluate(series, per_block)`
 - 作用: 在 `blocks_of` 结果上算 P1 判据布尔值、Q2 末块−首块中位数差，以及全局最小、块 worst 的 mean/min/max 与首末块中位数。
@@ -3229,7 +3619,7 @@
 - 调用: 被 `main()` 的 `--groups` 分支（L194）与最终判读路径（L228）调用；无其它模块引用。
 - 置信度: 已确认
 
-#### 2.41.5 print_run [L141-162]
+#### 2.47.5 print_run [L141-162]
 - 类型: function
 - 签名: `print_run(run, per_block, series, res, note="", complete=True)`
 - 作用: 把一个 run 的判读结果打印成 Markdown（标题 + 锚点范围 + 每块表格 + worsts/medians 汇总 + P1 结论行），并在数据不完整时附加警示。
@@ -3245,7 +3635,7 @@
 - 调用: 仅被本文件 `main()` 在 L235 调用。
 - 置信度: 已确认
 
-#### 2.41.6 main [L165-236]
+#### 2.47.6 main [L165-236]
 - 类型: function
 - 签名: `main()`
 - 作用: CLI 入口，三条互斥路径：`--groups` 复算历史对照基线表并返回 0；`--log` 走日志回退解析；`--run` 走 state 解析；然后统一 `evaluate` + `print_run`。
@@ -3262,7 +3652,7 @@
 
 ---
 
-### 2.42 `scripts/judge_critic_inertia.py`
+### 2.48 `scripts/judge_critic_inertia.py`
 
 - **分析组**：G031　**行数**：185　**AST 符号数**：6
 
@@ -3282,7 +3672,7 @@
 - 顶层数据表/字典: 无（`_BASE_RUNS` 为列表，见上）
 - 备注（模块级副作用）: L18-21 尝试把 `sys.stdout` 重配为 UTF-8 且 `errors="replace"`，异常被吞掉。
 
-#### 2.42.1 _median [L43-48]
+#### 2.48.1 _median [L43-48]
 - 类型: function
 - 签名: `def _median(v):`
 - 作用: 过滤掉 `None` 后求中位数。
@@ -3293,7 +3683,7 @@
 - 调用: `main` 中多处调用（L129-138、L140、L153-155）；不调用其它自定义函数。
 - 置信度: 已确认
 
-#### 2.42.2 _fmt [L51-52]
+#### 2.48.2 _fmt [L51-52]
 - 类型: function
 - 签名: `def _fmt(x, nd=4):`
 - 作用: 把数值按固定小数位格式化，`None` 直出字符串 `"None"`。
@@ -3305,7 +3695,7 @@
 - 调用: `main` 的汇总/判决打印处（L129-138、L149-155）。
 - 置信度: 已确认
 
-#### 2.42.3 parse_log [L55-63]
+#### 2.48.3 parse_log [L55-63]
 - 类型: function
 - 签名: `def parse_log(path):`
 - 作用: 逐行扫日志，把所有匹配 `_LINE` 的诊断行解析成字典列表。
@@ -3316,7 +3706,7 @@
 - 调用: `main` 在 L102 调用；它调用了 `_LINE.search`。
 - 置信度: 已确认
 
-#### 2.42.4 anchor_series [L66-74]
+#### 2.48.4 anchor_series [L66-74]
 - 类型: function
 - 签名: `def anchor_series(run_dir):`
 - 作用: 从 run 目录的 `solo_state.json` 里读出 `vs == "baseline_rand"` 的锚点历史序列。
@@ -3327,7 +3717,7 @@
 - 调用: `main` 在 L158（本 run）与 L169（基线三跑）调用。
 - 置信度: 已确认（`solo_state.json` 的实际字段结构未打开文件验证，仅依据本函数取用方式）
 
-#### 2.42.5 block_worst [L77-92]
+#### 2.48.5 block_worst [L77-92]
 - 类型: function
 - 签名: `def block_worst(series, n_blocks=5):`
 - 作用: 把锚点序列按**序号**近等分成若干块，取每块最差（最小）胜率。
@@ -3339,7 +3729,7 @@
 - 调用: `main` 在 L166 打印本 run 的块 worst；它只调用内建 `min`。
 - 置信度: 已确认
 
-#### 2.42.6 main [L95-181]
+#### 2.48.6 main [L95-181]
 - 类型: function
 - 签名: `def main():`
 - 作用: 命令行入口：解析日志 → 打印逐点序列与汇总 → 按预注册阈值判决 → 打印次级（描述性）锚点对比。
@@ -3351,7 +3741,7 @@
 
 ---
 
-### 2.43 `scripts/judge_probe_v3.py`
+### 2.49 `scripts/judge_probe_v3.py`
 
 - **分析组**：G030　**行数**：200　**AST 符号数**：3
 
@@ -3367,7 +3757,7 @@
 - 模块级副作用: L17-20 尝试 `sys.stdout.reconfigure(encoding="utf-8")`，异常吞掉。
 - 未使用项（读码可得，非编造）: `glob`（L12）与 `HALF`（L25）在本文件正文中除定义外未被引用。
 
-#### 2.43.1 load [L47-52]
+#### 2.49.1 load [L47-52]
 - 类型: function
 - 签名: `load(d, s)`
 - 作用: 读单个 seed 的结果 JSON；文件不存在时返回 None。
@@ -3379,7 +3769,7 @@
 - 调用: 被 `main` 在 L69 调用（`r = load(a.dir, s)`）。同仓未见其它调用者。
 - 置信度: 已确认
 
-#### 2.43.2 ev_of [L55-57]
+#### 2.49.2 ev_of [L55-57]
 - 类型: function
 - 签名: `ev_of(run, key)`
 - 作用: 从一份 seed 结果里取指定层的 `EV_within` 读数。
@@ -3391,7 +3781,7 @@
 - 调用: 被 `main` 在 L89、L90、L108、L118、L182 调用。
 - 置信度: 已确认
 
-#### 2.43.3 main [L60-196]
+#### 2.49.3 main [L60-196]
 - 类型: function
 - 签名: `main()`
 - 作用: 载入各 seed JSON，打印 5 个小节的归约报告（逐 seed 基本量 / 逐层 EV / ρ 分布与 G-RATIO / 逐 seed 闸门与分支 / 汇总裁决），组装并可选写出 summary dict 后返回它。
@@ -3403,7 +3793,7 @@
 
 ---
 
-### 2.44 `scripts/judge_probe_v4.py`
+### 2.50 `scripts/judge_probe_v4.py`
 
 - **分析组**：G032　**行数**：140　**AST 符号数**：2
 
@@ -3417,7 +3807,7 @@
   - `BRANCHES = ("P-PROJ", "P-LN", "P-BOTH", "P-RANDOM", "P-VLN", "P-VLN-NEUTRAL")` — 六个判据分支名（L21）；含义在本文件内**未定义**（只在 §4 里用自然语言解释了 (a)(b) 两个比值）⇒ 分支判定语义来源是各 seed.json 的生产脚本，见"无法确认"
 - 顶层数据表/字典: 无
 
-#### 2.44.1 S [L24-29]
+#### 2.50.1 S [L24-29]
 - 类型: function
 - 签名: `S(rec, layer, al)`
 - 作用: 从单 seed 记录的 `curves[layer]` 曲线里按 α 取值，取该 α 对应条目的**第 0 个元素**（test 值），缺失返回 `None`。
@@ -3430,7 +3820,7 @@
 - 调用: 被同文件 `main()` 在 L80/L84/L97-98/L109-111 大量调用。它不调用其它项目函数。
 - 置信度: 已确认
 
-#### 2.44.2 main [L32-136]
+#### 2.50.2 main [L32-136]
 - 类型: function
 - 签名: `main()`
 - 作用: 归约多 seed 的 v4 探针 JSON，打印 5 个小节（闸门 / 分支命中票数 / 同 α 阶梯 / 关键比值 / 三态裁决）并可写 summary。
@@ -3449,7 +3839,7 @@
 
 ---
 
-### 2.45 `scripts/l1_upgrade.ps1`
+### 2.51 `scripts/l1_upgrade.ps1`
 
 - **分析组**：GX01　**行数**：30　**AST 符号数**：不适用（非 .py）
 
@@ -3468,7 +3858,7 @@
 - 运行方式: 在 Windows PowerShell 中执行 `scripts\l1_upgrade.ps1`（需联网；脚本自身不检查管理员权限，也未设 `$ErrorActionPreference`）。运行前须存在 `E:\clash-royale-simulator-main`（L2 硬编码路径）。
 - 符号计数说明: 本文件**无函数定义**（全文检索无 `function` 关键字）；按本组口径，符号 = 顶层可执行段，共 3 段（L2-L11 / L13-L22 / L24-L30）。
 
-#### 2.45.1 顶层可执行段-1：路径/协议/文件清单初始化 [L2-11]
+#### 2.51.1 顶层可执行段-1：路径/协议/文件清单初始化 [L2-11]
 - 类型: 顶层可执行段（非函数；自脚本第 2 行起顺序执行）
 - 签名: 不适用（PowerShell 顶层语句）
 - 作用: 定义仓库路径与目标目录、创建目标目录、把 TLS 协议提升到 1.2、声明远端基址与待下载文件清单。
@@ -3478,7 +3868,7 @@
 - 调用: 被脚本解释器顺序执行；它调用 `Join-Path`、`New-Item`；后续段（L16、L17、L27）读取这里定义的变量——已确认（同一脚本内变量流）。
 - 置信度: 已确认
 
-#### 2.45.2 顶层可执行段-2：下载循环 [L13-22]
+#### 2.51.2 顶层可执行段-2：下载循环 [L13-22]
 - 类型: 顶层可执行段（`foreach` 循环，非函数）
 - 签名: `foreach ($f in $files) { ... }`
 - 作用: 逐文件从远端下载到 `$dst`，成功时打印格式化的大小，失败时打印错误信息并把 `$ok` 置 false。
@@ -3501,7 +3891,7 @@
 
 ---
 
-### 2.46 `scripts/pomdp_ceiling_probe.py`
+### 2.52 `scripts/pomdp_ceiling_probe.py`
 
 - **分析组**：G012　**行数**：726　**AST 符号数**：18
 
@@ -3515,7 +3905,7 @@
   - `_SRC = os.path.join(_ROOT, "src", "clasher_new")` — 待插入 sys.path 的源码目录，L30-32
 - 顶层数据表/字典: 无（无引擎数值表 / 卡牌表；仅有 main 内构造的 `res` 结果字典 L569-584）
 
-#### 2.46.1 feat_obs [L51-58]
+#### 2.52.1 feat_obs [L51-58]
 - 类型: function
 - 签名: `def feat_obs(obs) -> np.ndarray:`
 - 作用: 构造特征集 A —— 把跟随者本帧真实观测的 5 个字段各自展平后拼接成一个一维向量。
@@ -3526,7 +3916,7 @@
 - 调用: 被 `rollout` 在 L145-147 调用三次（A 集、C 集的前半、B 集的前半）；本身只调用 numpy 函数。
 - 置信度: 已确认
 
-#### 2.46.2 make_hidden_mapper [L61-67]
+#### 2.52.2 make_hidden_mapper [L61-67]
 - 类型: function
 - 签名: `def make_hidden_mapper(deck):`
 - 作用: 建立「引擎实体 id（`ENTITY_NAMES` 下标）→ 本副牌内的槽位序号」映射，并返回牌组长度。
@@ -3537,7 +3927,7 @@
 - 调用: 被 `rollout` 在 L121 调用；它调用 `ENTITY_NAMES.index`。下游 `feat_hidden` 消费其结果。
 - 置信度: 已确认
 
-#### 2.46.3 feat_hidden [L70-90]
+#### 2.52.3 feat_hidden [L70-90]
 - 类型: function
 - 签名: `def feat_hidden(hid, eid2slot, ndeck) -> np.ndarray:`
 - 作用: 构造特征集 B 的**增量**部分（oracle 隐藏量）：把对手循环序编码成 slot 上的位置编码、手牌与进手编码成 one-hot，再接对手圣水标量。
@@ -3550,7 +3940,7 @@
 - 调用: 被 `rollout` 在 L147 调用（拼在 A 集之后构成 B 集）；只调用 numpy。
 - 置信度: 已确认（`hid` 的键名与形状依据 `src/clasher_new/rl/observation.py:147-172`）
 
-#### 2.46.4 rollout [L96-190]
+#### 2.52.4 rollout [L96-190]
 - 类型: function
 - 签名: `def rollout(a, cfg, device):`
 - 作用: 用 ckpt 权重在镜像环境中逐局跑 rollout，收集三套逐帧特征（A/C/B）、GAE 回报 `y`、critic 价值 `v` 与局编号 `ep`。
@@ -3563,7 +3953,7 @@
 - 调用: 被 `main` 在 L489 调用（`--npz` 未给时）；它调用 `solo_env`、`load_checkpoint`、`FollowerPolicy`、`FollowerOpponent`、`resolve_deck_set`、`make_hidden_mapper`、`BeliefPlanner`、`BeliefInference`、`feat_obs`、`feat_hidden`、`PPOTrainer.compute_gae`、`env.reset/step/get_action_mask/get_hidden_state`。是否被仓库其它脚本调用：待确认（本组文件外未检索）。
 - 置信度: 已确认（其中 `hidden_labels` 键名由 `src/clasher_new/rl/observation.py:147-172` 确认）
 
-#### 2.46.5 ev [L196-199]
+#### 2.52.5 ev [L196-199]
 - 类型: function
 - 签名: `def ev(pred, y):`
 - 作用: 池化（全局）解释方差 `1 - MSE/Var(y)`。
@@ -3575,7 +3965,7 @@
 - 调用: 被 `fit_ridge` L367、`fit_mlp` L407、`main` L562/L580/L604/L606/L617/L621 调用。
 - 置信度: 已确认
 
-#### 2.46.6 ev_within [L202-213]
+#### 2.52.6 ev_within [L202-213]
 - 类型: function
 - 签名: `def ev_within(pred, y, ep):`
 - 作用: 局内中心化 EV：**预测与目标都在各自局内减去局均值**后再算 `1 - MSE/Var`，只衡量局内变化。
@@ -3588,7 +3978,7 @@
 - 调用: 被 `fit_ridge` L367、`fit_mlp` L407、`main` L562-563/L580-581/L605/L607/L618/L622 调用。
 - 置信度: 已确认
 
-#### 2.46.7 ev_within_raw [L216-224]
+#### 2.52.7 ev_within_raw [L216-224]
 - 类型: function
 - 签名: `def ev_within_raw(pred, y, ep):`
 - 作用: 用「局内中心化目标的方差」作分母、但**分子用未中心化的原始预测**对原始目标的 MSE 的 EV 变体。
@@ -3601,7 +3991,7 @@
 - 调用: 被 `main` L563/L581/L608/L619 调用（打印与结果字典）；`fit_ridge`/`fit_mlp` 不调用它。
 - 置信度: 已确认（口径差异依源码 L217-224 逐行确认）
 
-#### 2.46.8 ev_win128_med [L227-237]
+#### 2.52.8 ev_win128_med [L227-237]
 - 类型: function
 - 签名: `def ev_win128_med(pred, y, ep, win=128):`
 - 作用: 把每局按 128 帧等长不重叠窗口切开，算每个窗口内的 EV，返回这些 EV 的**中位数**与窗口计数。
@@ -3615,7 +4005,7 @@
 - 调用: 被 `main` L565（对 critic 价值 `v` 求该指标）与 L609/L620（对模型预测）调用。
 - 置信度: 已确认
 
-#### 2.46.9 var_decomp [L240-249]
+#### 2.52.9 var_decomp [L240-249]
 - 类型: function
 - 签名: `def var_decomp(y, ep):`
 - 作用: 把目标方差分解成「局间（局均值之间的方差）」与「局内（各局方差的样本量加权平均）」两部分。
@@ -3627,7 +4017,7 @@
 - 调用: 被 `main` L501（对真实回报算 `tot_real/bet_real/wit_real`，用于阳性对照的方差配平）与 L558 调用。
 - 置信度: 已确认
 
-#### 2.46.10 clock_perm [L252-266]
+#### 2.52.10 clock_perm [L252-266]
 - 类型: function
 - 签名: `def clock_perm(n, ep, seed=0):`
 - 作用: 构造一个行置换下标数组：只在「同一条局内位置 k」的样本之间跨局互换，从而打散"状态↔回报"配对而保留时钟位置结构。
@@ -3640,7 +4030,7 @@
 - 调用: 被 `scramble_rows_by_clock` L276 与 `scramble_target_by_clock` L288 调用。
 - 置信度: 已确认（各行号行为依源码；关于 roll 是否对所有置换都严格无不动点，源码只给了注释断言，未做检查）
 
-#### 2.46.11 scramble_rows_by_clock [L269-276]
+#### 2.52.11 scramble_rows_by_clock [L269-276]
 - 类型: function
 - 签名: `def scramble_rows_by_clock(X, ep, seed=0):`
 - 作用: 按「局内位置相同、来自不同局」的行置换打散特征矩阵（证伪对照用）：时钟信息保留、状态信息被打散。
@@ -3653,7 +4043,7 @@
 - 调用: 被 `main` L535 对 `X` 的每个特征集调用（`--scramble-x` 时）。
 - 置信度: 已确认
 
-#### 2.46.12 scramble_target_by_clock [L279-288]
+#### 2.52.12 scramble_target_by_clock [L279-288]
 - 类型: function
 - 签名: `def scramble_target_by_clock(y, ep, seed=0):`
 - 作用: 用同一类时钟置换打散**目标**（阴性对照）：保留目标边缘分布与局内位置结构，只破坏"哪一帧特征对应哪个回报"的配对。
@@ -3666,7 +4056,7 @@
 - 调用: 被 `main` L519 调用（`--scramble-y` 时，在中心化之后执行，见 L516-521 注释）。
 - 置信度: 已确认
 
-#### 2.46.13 load_npz [L292-300]
+#### 2.52.13 load_npz [L292-300]
 - 类型: function
 - 签名: `def load_npz(path):`
 - 作用: 从 `--save-npz` 落盘的 npz 文件离线重建 `(X, y, v, ep)`，免于重跑 rollout。
@@ -3677,7 +4067,7 @@
 - 调用: 被 `main` L489 调用（`--npz` 给定时，走三元表达式的 else 分支）。
 - 置信度: 已确认（依赖 main L495-496 的落盘键名约定）
 
-#### 2.46.14 make_positive_control [L303-331]
+#### 2.52.14 make_positive_control [L303-331]
 - 类型: function
 - 签名: `def make_positive_control(Xa, ep, seed=0, within_var=58.0, between_var=166.0):`
 - 作用: 构造闸门 G5 的阳性对照目标：用少量真实特征列合成一个**按构造必然存在**的局内信号，再叠加局间水平偏移，方差按真实回报的局内/局间量配平。
@@ -3692,7 +4082,7 @@
 - 调用: 被 `main` L504 调用（`--positive-control` 时）。
 - 置信度: 已确认（方差配平语义由 docstring L304-312 与 L323-328 共同确认）
 
-#### 2.46.15 standardize [L337-341]
+#### 2.52.15 standardize [L337-341]
 - 类型: function
 - 签名: `def standardize(Xtr, Xs):`
 - 作用: 用训练集的均值/标准差对若干矩阵做标准化（只在训练集上统计，避免泄漏）。
@@ -3704,7 +4094,7 @@
 - 调用: 被 `main` L597 调用，一次传入 `[Xk[m_tr], Xk[m_va], Xk[m_te]]`（三者共用训练集统计量）。
 - 置信度: 已确认
 
-#### 2.46.16 fit_ridge [L344-375]
+#### 2.52.16 fit_ridge [L344-375]
 - 类型: function
 - 签名: `def fit_ridge(Xtr, ytr, Xva, yva, Xte, alphas=None, ep_va=None, select="pooled"):`
 - 作用: 在给定 alpha 网格上做岭回归（闭式解），按 `select` 口径在验证集上选最优 alpha，并把预测裁剪到训练目标区间内。
@@ -3720,7 +4110,7 @@
 - 调用: 被 `main` L600 调用；它调用 `ev`/`ev_within`；测试/验证指标由 main 事后计算。
 - 置信度: 已确认
 
-#### 2.46.17 fit_mlp [L378-422]
+#### 2.52.17 fit_mlp [L378-422]
 - 类型: function
 - 签名: `def fit_mlp(Xtr, ytr, Xva, yva, Xte, seed=0, epochs=400, hidden=128, lr=0.001, device="cpu", ep_va=None, select="pooled"):`
 - 作用: 训练一个 3 层全连接 MLP 回归器（带早停），同样按 `select` 口径在验证集上选最优 epoch，并裁剪预测到训练目标区间。
@@ -3738,7 +4128,7 @@
 - 调用: 被 `main` L615 调用（按 `--repeats` 重复多次，每次 `seed=a.seed+r`）；它调用 `ev`/`ev_within`。
 - 置信度: 已确认
 
-#### 2.46.18 main [L426-722]
+#### 2.52.18 main [L426-722]
 - 类型: function
 - 签名: `def main():`
 - 作用: 脚本入口：解析命令行 → 加载配置与 ckpt 元数据 → 跑 rollout 或读 npz → 应用各种对照/修订开关 → 做局分组留出 → 拟合 Ridge/MLP 并打印指标 → 按预注册判据给出 `verdict` 并落盘 JSON。
@@ -3750,7 +4140,7 @@
 
 ---
 
-### 2.47 `scripts/probe_reward_composition.py`
+### 2.53 `scripts/probe_reward_composition.py`
 
 - **分析组**：G028　**行数**：311　**AST 符号数**：3
 
@@ -3766,7 +4156,7 @@
   - `_ORIG = EW.compute_reward` — 保存原始函数引用，包装器以内层 `_ORIG` 计算真值与变体（L48、L53、L58）
 - 顶层数据表/字典: 无静态数据表；`REC` 是运行时被覆写的字典（键 `full/edw/crown/tower/terminal/edw_coef/tower_opp_coef`，L65-73）。
 
-#### 2.47.1 _install_recorder [L51-75]
+#### 2.53.1 _install_recorder [L51-75]
 - 类型: function
 - 签名: `def _install_recorder():`
 - 作用: 用闭包 `wrapped` 替换模块级 `EW.compute_reward`，使每次奖励计算同时算出 `full` 与 4 个"去某项"变体的差值并写入全局 `REC`，然后原样返回 `full`。
@@ -3777,7 +4167,7 @@
 - 置信度: 已确认
   - 附加事实（依据 `rl/env_wrapper.py`）：`RLEnv.step` 在调用前已把"两段价格"解析结果写回 `rw["tower_dmg_opp"] / rw["tower_dmg_self"] / rw["elixir_diff_weight"]`（`env_wrapper.py:678-683` 调 `_phase_weights`，L169-178 定义 120s 切档），而 `compute_reward` 内部不再重新解析（`env_wrapper.py:218-249` 直接读 `rw`），因此"把这三个键置 0"在前后两段都能真正关掉对应项；`compute_reward` 开头 `rw = dict(_DEFAULT_REWARD, **(rw or {}))`（`env_wrapper.py:209`）保证显式 0 值覆盖默认值生效。
 
-#### 2.47.2 _stat [L78-88]
+#### 2.53.2 _stat [L78-88]
 - 类型: function
 - 签名: `def _stat(x):`
 - 作用: 把一维数值序列压成一份固定键的统计字典（个数/均值/中位数/和/绝对值和/10 与 90 分位/最大绝对值），用于打印与 JSON 落盘。
@@ -3788,7 +4178,7 @@
 - 调用: 被 `main` 在 L229（§1 逐分量）与 L294（JSON 的 `stats`）调用。
 - 置信度: 已确认
 
-#### 2.47.3 main [L91-307]
+#### 2.53.3 main [L91-307]
 - 类型: function
 - 签名: `def main():`
 - 作用: 探针主流程：解析参数 → 装记录器 → 建环境/加载 ckpt/装镜像对手 → 跑 rollout 逐帧分解奖励 → 打印占比/分期/Φ → 按预注册判据给 verdict → 可选写 JSON。
@@ -3801,7 +4191,7 @@
 
 ---
 
-### 2.48 `scripts/probe_v3_mono_check.py`
+### 2.54 `scripts/probe_v3_mono_check.py`
 
 - **分析组**：G031　**行数**：197　**AST 符号数**：3
 
@@ -3816,7 +4206,7 @@
 - 顶层数据表/字典: 无（`X` 字典在 `main` 内动态构造）
 - 备注（源码依据）: `GRID_FLAT` 在第 35 行被 import，但全文仅出现这一次（grep 计数 = 1）⇒ **导入后未使用**。`ALPHAS_V2` 定义在 `scripts/probe_value_ln.py:64`，是 14 个元素的元组 `(1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)`（已读该文件确认）。`standardize(Xtr, Xs)`（`scripts/pomdp_ceiling_probe.py:337-341`）按训练集均值/标准差（`sd<1e-8` 置 1）返回 `[(x-mu)/sd for x in Xs]`；`ev_within(pred, y, ep)`（同文件 L202-213）做**逐局中心化**后返回 `1 - MSE/Var`，方差 ≤1e-12 时返回 `None`（已读该文件确认）。
 
-#### 2.48.1 split_masks [L42-53]
+#### 2.54.1 split_masks [L42-53]
 - 类型: function
 - 签名: `def split_masks(ep, seed, test_frac=0.25, val_frac=0.15):`
 - 作用: 以**局（episode）为单位**把样本切成 train/val/test 三个布尔掩码，避免逐帧随机切分。
@@ -3830,7 +4220,7 @@
 - 调用: `main` 在 L106 调用 `split_masks(ep, a.seed)`；与 `scripts/pomdp_ceiling_probe.py` 同名工具同构（未在该文件内确认同名函数，只确认 `ev_within`/`standardize`）。它调用了 `numpy.random.default_rng`、`numpy.unique`。
 - 置信度: 已确认
 
-#### 2.48.2 alpha_curve [L56-77]
+#### 2.54.2 alpha_curve [L56-77]
 - 类型: function
 - 签名: `def alpha_curve(Xl, y, ep, m_tr, m_va, m_te, ep_va, alphas=ALPHAS_V2):`
 - 作用: 对单层特征一次性解整条 Ridge α 路径，并返回每个 α 对应的 test 与 val 的局内中心化 EV。
@@ -3846,7 +4236,7 @@
 - 调用: `main` 在 L137 对每层调用；它调用了 `standardize`、`ev_within`（外部模块，均已核对定义）与 `np.linalg.solve`。
 - 置信度: 已确认
 
-#### 2.48.3 main [L80-193]
+#### 2.54.3 main [L80-193]
 - 类型: function
 - 签名: `def main():`
 - 作用: 命令行入口：载入 npz → 切分 → §1 超集逐位校验 → §2 每层 α 曲线 → §3 共同 α 阶梯 → §3b 各层自选 α 与 ρ → §4 单行判定。
@@ -3858,7 +4248,7 @@
 
 ---
 
-### 2.49 `scripts/probe_v4_ln_pair.py`
+### 2.55 `scripts/probe_v4_ln_pair.py`
 
 - **分析组**：G027　**行数**：356　**AST 符号数**：4
 
@@ -3875,7 +4265,7 @@
   - 注意：`ALPHAS_V2` 是 `alpha_curve` 的默认 α 网格，但它 import 自 `probe_value_ln`（L40），值 = `(1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)`（依据 `scripts/probe_value_ln.py:64`，为确认调用关系而读）
 - 顶层数据表/字典: 无（`main` 内部构造的 `gates`/`br`/`res` 等均为局部变量）
 
-#### 2.49.1 split_masks [L49-59]
+#### 2.55.1 split_masks [L49-59]
 - 类型: function
 - 签名: `def split_masks(ep, seed, test_frac=0.25, val_frac=0.15):`
 - 作用: 按「局（episode）」随机切出训练/验证/测试三组掩码，保证同一局不跨组。
@@ -3890,7 +4280,7 @@
 - 调用: 被 `main` 在 L178 调用一次；它自身只用 `numpy`。
 - 置信度: 已确认
 
-#### 2.49.2 alpha_curve [L62-81]
+#### 2.55.2 alpha_curve [L62-81]
 - 类型: function
 - 签名: `def alpha_curve(Xl, y, ep, m_tr, m_va, m_te, ep_va, alphas=ALPHAS_V2):`
 - 作用: 在给定特征层上用闭式岭回归扫一整条 α 曲线，对每个 α 报出测试集与验证集的「局内 EV」。
@@ -3907,7 +4297,7 @@
 - 调用: 被 `main` 在 L196（主层循环）、L240（时钟对照）、L252（阳性对照）、L260（打散对照）调用；它调用 `numpy` 与同仓 `pomdp_ceiling_probe` 的 `standardize`/`ev_within`。
 - 置信度: 已确认
 
-#### 2.49.3 layer_norm [L84-88]
+#### 2.55.3 layer_norm [L84-88]
 - 类型: function
 - 签名: `def layer_norm(X, w, b, eps=1e-05):`
 - 作用: 沿最后一维复刻 `torch.nn.LayerNorm` 的仿射归一化，用于离线重算 `enc_ln`。
@@ -3921,7 +4311,7 @@
 - 调用: 被 `main` 在 L144 调用（输入已转 `float64`，输出再转 `float32`）；它自身只用 `numpy`。
 - 置信度: 已确认
 
-#### 2.49.4 main [L91-352]
+#### 2.55.4 main [L91-352]
 - 类型: function
 - 签名: `def main():`
 - 作用: 探针 v4 的全流程驱动：解析参数 → 读 npz 特征 → 载 ckpt 并离线重算 enc 通路（含 G-OFFLINE 逐位对账）→ 构造随机投影对照 → 切分并在局内中心化目标 → 逐层扫 α 曲线 → 跑闸门电池 → 依预注册分支给判决并落 JSON。
@@ -3949,7 +4339,7 @@
 
 ---
 
-### 2.50 `scripts/probe_value_ln.py`
+### 2.56 `scripts/probe_value_ln.py`
 
 - **分析组**：G007　**行数**：918　**AST 符号数**：8
 
@@ -3970,7 +4360,7 @@
   - `LADDER_V3 = [("R_ref_raw_obs","raw_obs"),("R_nongrid","raw_nongrid"),("G0_x","grid_x"),("G1_cnn_pre_ln","cnn_pre_ln"),("G2_grid_ln","grid_ln_out"),("B1_hand_f","hand_f"),("B2_scalar_f","scalar_f"),("B3_plan_f","plan_f"),("B4_belief_f","belief_f"),("L0_fused","fused"),("E_enc","enc"),("L1_pre_ln","pre_ln"),("L2_relu_ln","relu_ln"),("L3_post_ln","post_ln"),("L4_mlp0_post","mlp0_post"),("L5_value","value")]`（L82-99）— 阶梯 v3：(标签, 键)；`G0_x`（14976 维）默认不抓，须 `--cnn-input`（L81 注释）。
   - `REPRO_REF = {"seed": 7, "frames": 29991, "EV_raw": 0.12145137497621039, "EV_fused": 0.04312000460119425, "var_within": 58.83}`（L107-113）— G-REPRO 跨版本复现闸的参考值（seed 7、30000 帧、stoch 的 v2 权威跑读数）。
 
-#### 2.50.1 _force_utf8_stdout [L116-120]
+#### 2.56.1 _force_utf8_stdout [L116-120]
 - 类型: function
 - 签名: `_force_utf8_stdout()`
 - 作用: 把 `sys.stdout` 重新配置为 utf-8 编码，异常时静默忽略。
@@ -3981,7 +4371,7 @@
 - 调用: 被 `main()` L405 调用；功能与模块级 L32-35 重复。
 - 置信度: 已确认
 
-#### 2.50.2 _capture_parts [L123-160]
+#### 2.56.2 _capture_parts [L123-160]
 - 类型: function
 - 签名: `_capture_parts(pol, obs, belief_token, plan_token)`
 - 作用: 逐字复刻 `FollowerPolicy._encode_parts` 的前向计算，并把中间张量（含 `_encode_parts` 不返回的 `x` / `cnn_pre_ln` / `grid_ln_out` / 4 个分块）全部返回。
@@ -3995,7 +4385,7 @@
 - 调用: 被 `rollout_layers` L241 调用（仅 `--ladder v3`）；其 `fused`/`enc` 结果在 L242-246 与 `pol._encode_parts` 逐帧逐位对账（`ident_max`）。
 - 置信度: 已确认（与 `src/clasher_new/rl/follower.py` L268-298 的同名实现逐行比对一致）
 
-#### 2.50.3 rollout_layers [L170-327]
+#### 2.56.3 rollout_layers [L170-327]
 - 类型: function
 - 签名: `rollout_layers(a, cfg, device)`
 - 作用: 用给定 ckpt 跑一条完整 rollout（stoch 或 det），逐帧抓取阶梯各层激活、每帧 value 与 GAE 回报，按 episode 聚合；可选把结果落成 npz，返回 `(X, y, v, ep, pol)`。
@@ -4008,7 +4398,7 @@
 - 调用: 被 `main()` L491 调用；它调用了 `rl.train_solo.solo_env` / `resolve_deck_set`、`rl.follower.load_checkpoint` / `FollowerPolicy`、`_capture_parts`、`BeliefPlanner.plan`、`BeliefInference.encode/update/reset`、`FollowerOpponent`、`PPOTrainer.compute_gae`、`pomdp_ceiling_probe.feat_obs`。同仓库另有 `scripts/probe_v3_mono_check.py` / `probe_v4_ln_pair.py` 只 import 本模块的常量（`ALPHAS_V2`、`GRID_FLAT`），不调用本函数。
 - 置信度: 已确认
 
-#### 2.50.4 fit_layer [L333-366]
+#### 2.56.4 fit_layer [L333-366]
 - 类型: function
 - 签名: `fit_layer(Xl, y, ep, m_tr, m_va, m_te, ep_va, select="within", repeats=1, alphas=None)`
 - 作用: 对**单层**特征做 Ridge 拟合与 within 口径评估，返回含 EV 读数、选中 α、维度与退化标志的字典。
@@ -4026,7 +4416,7 @@
 - 调用: 被 `main()` 在 L539（主阶梯每层）、L559（阳性对照）、L570（时钟基线）、L579（打散对照）、L595/L602/L604（v2 诊断三处）调用；它调用了 `pomdp_ceiling_probe` 的 `standardize` / `fit_ridge` / `ev` / `ev_within` / `ev_within_raw`。
 - 置信度: 已确认（`repeats`、`ew_tr` 两个名字在函数体内确未再出现）
 
-#### 2.50.5 layer_magstats [L369-379]
+#### 2.56.5 layer_magstats [L369-379]
 - 类型: function
 - 签名: `layer_magstats(name, X, ep)`
 - 作用: 统计某层表示的幅度结构（恒定分量范数、跨帧变化范数、零方差维占比等），供描述量打印，**不参与判决**（L370 注释）。
@@ -4039,7 +4429,7 @@
 - 调用: 被 `main()` L841 在主阶梯每一层调用；无常量外的内部调用。
 - 置信度: 已确认（`ep` 参数确实未被使用）
 
-#### 2.50.6 within_std_vec [L382-392]
+#### 2.56.6 within_std_vec [L382-392]
 - 类型: function
 - 签名: `within_std_vec(X, ep)`
 - 作用: 计算「该表示局内变化的总幅度」= 每维局内 std 向量的 L2 范数（L383 注释）。
@@ -4051,7 +4441,7 @@
 - 调用: 被 `main()` L842 在主阶梯每层调用。
 - 置信度: 已确认
 
-#### 2.50.7 within_std_scalar [L395-400]
+#### 2.56.7 within_std_scalar [L395-400]
 - 类型: function
 - 签名: `within_std_scalar(y, ep)`
 - 作用: 计算目标 `y` 在**局内中心化之后的总体 std**（即局内变动的标准差）。
@@ -4063,7 +4453,7 @@
 - 调用: 被 `main()` L838 调用，得 `ws_R`，再用于每层的 `gain_needed = ws_R / within_std_vec`（L843）。
 - 置信度: 已确认
 
-#### 2.50.8 main [L404-914]
+#### 2.56.8 main [L404-914]
 - 类型: function
 - 签名: `main()`
 - 作用: 命令行入口：解析参数 → 跑 rollout 或从 npz 载入 → 按局分组切分 → 目标按局中心化 → 逐层拟合与闸门/分支判决（v1/v2/v3 三套口径）→ 打印描述量 → 可选写出 JSON，并返回结果字典。
@@ -4094,7 +4484,7 @@
 
 ---
 
-### 2.51 `scripts/question_bank_poc.py`
+### 2.57 `scripts/question_bank_poc.py`
 
 - **分析组**：G029　**行数**：239　**AST 符号数**：6
 
@@ -4115,7 +4505,7 @@
   - `DECK_Q3`（L118-119）: 8 张卡名列表（Arrows/Musketeer/Minions/Knight/Fireball/Skeletons/Archers/Giant），题 3 的双方卡组。
   - `QUESTIONS`（L121-131）: 3 个 dict 组成的题库表。键含义：`qid` 题号；`defender_deck`/`attacker_deck` 双方卡组；`threat` 威胁卡名；`threat_pos` 部署坐标；`slice_y` 切片时的威胁 y；`horizon` 推演秒数；`expect` 已知解 `(卡名, 距离阈值)`。三条为 `giant_bridge`(Giant@(3.5,17.5), slice_y=14.0, horizon=20.0, expect=(MiniPekka,3.0))、`hog_bridge`(HogRider@(14.5,17.5), slice_y=15.0, horizon=12.0, expect=(Cannon,6.0))、`minions_air`(Minions@(3.5,17.5), slice_y=15.0, horizon=10.0, expect=(Arrows,99.0))。**注意 `build_questions` 会把 `battle`/`baseline`/`top` 三个运行时键写回这些 dict**（L145-147）。
 
-#### 2.51.1 make_battle [L46-68]
+#### 2.57.1 make_battle [L46-68]
 - 类型: function
 - 签名: `make_battle(defender_deck, attacker_deck, threat_card, threat_pos, elixir=8.0)`
 - 作用: 构造题目快照的 `BattleState`：防守方给定圣水（默认 8.0）、攻击方 5.0 圣水，把威胁卡排到攻击方手牌首位并部署，然后沿 y 方向直线下移到目标位置（近似「威胁已行进」）。
@@ -4130,7 +4520,7 @@
 - 调用: 被 `build_questions` 在 L139-140 调用；无其它模块引用。它调用了 `battle_mod.BattleState`、`player_mod.PlayerState`、`Position`、`bs.deploy_card`（返回 bool，`battle.py:2806`）。
 - 置信度: 已确认（「直线下移近似不会触发塔仇恨」是 docstring 的自述设计意图，未独立验证；本条目按源码描述行为）
 
-#### 2.51.2 question_candidates [L71-102]
+#### 2.57.2 question_candidates [L71-102]
 - 类型: function
 - 签名: `question_candidates(bs, horizon, coarse=2)`
 - 作用: 枚举防守方手牌前 4 张 × 粗网格落点，逐候选调 `simulate_exchange(defender="none")` 结算并按本文件汇率打分，返回「不动手」基线与按分数降序的候选列表。
@@ -4143,7 +4533,7 @@
 - 调用: 被 `build_questions` 在 L141 调用。它调用了 `rl.action_mask.legal_cells`（`rl/action_mask.py:441`）、`threat_calc.estimate_tower_threat`（`threat_calc.py:51`，返回 dict 含 `total`）、`simulate_exchange.simulate_exchange`（`simulate_exchange.py:163`，返回 dict 含 `legal`/`my_towers`/`opp_units`/`opp_towers`/`my_cost`）。**`xs`/`ys` 未被使用**为代码事实。
 - 置信度: 已确认
 
-#### 2.51.3 ev_of [L105-111]
+#### 2.57.3 ev_of [L105-111]
 - 类型: function
 - 签名: `ev_of(bs, cname, pos, horizon, baseline)`
 - 作用: 对单个 `(卡, 落点)` 候选按同一汇率公式算分（用于给 checkpoint 的答案打分），非法部署返回 None。
@@ -4158,7 +4548,7 @@
 - 调用: 被 `checkpoint_quiz` 在 L206 调用。调用了 `simulate_exchange`。
 - 置信度: 已确认
 
-#### 2.51.4 build_questions [L134-149]
+#### 2.57.4 build_questions [L134-149]
 - 类型: function
 - 签名: `build_questions()`
 - 作用: 遍历模块级 `QUESTIONS`，为每题构造快照、枚举候选、打印前 6 名，并把 `battle`/`baseline`/`top`（前 8 名）写回题目 dict。
@@ -4168,7 +4558,7 @@
 - 调用: 被文件末尾 `if __name__ == "__main__"` 块在 L230 调用；`qs` 随后传给 `reconcile`（L231）与可选 `checkpoint_quiz`（L235、L237）。
 - 置信度: 已确认
 
-#### 2.51.5 reconcile [L152-171]
+#### 2.57.5 reconcile [L152-171]
 - 类型: function
 - 签名: `reconcile(qs)`
 - 作用: 已知解对账：检查每题期望卡是否在 top-8 内，并打印其名次与「落点是否贴近威胁实体」的几何判定，返回是否全部通过。
@@ -4179,7 +4569,7 @@
 - 调用: 被文件末尾主块在 L231 调用；结果 `ok` 用于 L232 的打印。
 - 置信度: 已确认
 
-#### 2.51.6 checkpoint_quiz [L174-225]
+#### 2.57.6 checkpoint_quiz [L174-225]
 - 类型: function
 - 签名: `checkpoint_quiz(qs, ckpt_path, ckpt_label)`
 - 作用: 让指定 checkpoint 对每题出一次确定性动作，把其部署动作还原成 `(卡, 落点)` 并用 `ev_of` 打分，与 oracle 最高分比较给出 gap 与 top-8 命中名次。
@@ -4194,7 +4584,7 @@
 
 ---
 
-### 2.52 `scripts/rl/dashboard.py`
+### 2.58 `scripts/rl/dashboard.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4210,7 +4600,7 @@
 
 ---
 
-### 2.53 `scripts/rl/evaluate.py`
+### 2.59 `scripts/rl/evaluate.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4226,7 +4616,7 @@
 
 ---
 
-### 2.54 `scripts/rl/export_replay.py`
+### 2.60 `scripts/rl/export_replay.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4242,7 +4632,7 @@
 
 ---
 
-### 2.55 `scripts/rl/run_league.py`
+### 2.61 `scripts/rl/run_league.py`
 
 - **分析组**：G034　**行数**：17　**AST 符号数**：1
 
@@ -4253,7 +4643,7 @@
 - 关键模块级常量: 无（`_SRC` 是 `main()` 内的局部变量，定义在 L10-11，不是模块级常量）
 - 顶层数据表/字典: 无
 
-#### 2.55.1 scripts/rl/run_league.py::main [L9-14]
+#### 2.61.1 scripts/rl/run_league.py::main [L9-14]
 - 类型: function
 - 签名: `def main():`
 - 作用: 定位仓库内 `src/clasher_new` 目录，切换 cwd 与 `sys.path`，再以 `__main__` 身份执行其中真正的 `rl/run_league.py`。
@@ -4265,7 +4655,7 @@
 
 ---
 
-### 2.56 `scripts/rl/selftest.py`
+### 2.62 `scripts/rl/selftest.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4281,7 +4671,7 @@
 
 ---
 
-### 2.57 `scripts/rl/train_baseline.py`
+### 2.63 `scripts/rl/train_baseline.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4297,7 +4687,7 @@
 
 ---
 
-### 2.58 `scripts/rl/train_bc.py`
+### 2.64 `scripts/rl/train_bc.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4313,7 +4703,7 @@
 
 ---
 
-### 2.59 `scripts/rl/train_belief.py`
+### 2.65 `scripts/rl/train_belief.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4329,7 +4719,7 @@
 
 ---
 
-### 2.60 `scripts/rl/train_exploiter.py`
+### 2.66 `scripts/rl/train_exploiter.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4345,7 +4735,7 @@
 
 ---
 
-### 2.61 `scripts/rl/train_follower.py`
+### 2.67 `scripts/rl/train_follower.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4361,7 +4751,7 @@
 
 ---
 
-### 2.62 `scripts/rl/train_prophet.py`
+### 2.68 `scripts/rl/train_prophet.py`
 
 - **分析组**：G034　**行数**：7　**AST 符号数**：0
 
@@ -4377,7 +4767,7 @@
 
 ---
 
-### 2.63 `scripts/run_probe_v3.sh`
+### 2.69 `scripts/run_probe_v3.sh`
 
 - **分析组**：GX01　**行数**：69　**AST 符号数**：不适用（非 .py）
 
@@ -4398,7 +4788,7 @@
 - 运行方式: `bash scripts/run_probe_v3.sh [rollout|fit|all] [seed...]`（L10、L67 的 usage）；缺省阶段 `all`、缺省 seed `7 11 13 17`（L21、L24）。
 - 符号计数说明: 两个 Bash 函数 + 两个顶层可执行段 = 4。
 
-#### 2.63.1 rollout [L26-35]
+#### 2.69.1 rollout [L26-35]
 - 类型: function（Bash 函数）
 - 签名: `rollout() { local s="$1"; local extra="${2:-}"; ... }`
 - 作用: 对单个 seed 在 `src/clasher_new` 下运行探针的 rollout 阶段，把 30000 帧的中间张量存成 npz；日志重定向到 `runs/_probe_v3/rollout_seed<s>.log`。
@@ -4410,7 +4800,7 @@
 - 调用: 被 L52（`rollout`）、L62（`all`）以 `rollout "$s" "$extra" &` 后台并行调用；它调用 `.venv/Scripts/python.exe` 与 `scripts/probe_value_ln.py` 的 CLI（`--ckpt/--frames/--seed/--device/--tag/--ladder/--raw-obs/--save-npz/--rollout-only` 为探针侧接口，本组未读该 py，参数语义按脚本自身给出的字面值记录）——调用关系已确认，探针参数语义待确认。
 - 置信度: 已确认（对本脚本行为）；探针参数具体含义 待确认（原因：未读 `scripts/probe_value_ln.py`，本任务文件清单外）
 
-#### 2.63.2 fit [L37-46]
+#### 2.69.2 fit [L37-46]
 - 类型: function（Bash 函数）
 - 签名: `fit() { local s="$1"; ... }`
 - 作用: 对单个 seed 用上一步存下的 npz 做离线拟合（排除 `grid_x`），输出 json 到 `runs/_probe_v3/seed<s>.json`，日志写 `fit_seed<s>.log`。
@@ -4421,7 +4811,7 @@
 - 调用: 被 L57（`fit`）与 L65（`all`）串行调用；它调用 `.venv/Scripts/python.exe` 与 `scripts/probe_value_ln.py` 的 CLI——已确认。
 - 置信度: 已确认（对本脚本行为）；探针参数语义 待确认（原因：未读 `scripts/probe_value_ln.py`）
 
-#### 2.63.3 顶层可执行段-1：变量与参数解析 [L11-24]
+#### 2.69.3 顶层可执行段-1：变量与参数解析 [L11-24]
 - 类型: 顶层可执行段（非函数）
 - 签名: 不适用（Bash 顶层语句）
 - 作用: 设置 shell 选项，推导仓库根/解释器/探针/日志路径，建日志目录，解析阶段参数与 seed 列表（含默认值）。
@@ -4431,7 +4821,7 @@
 - 调用: 被解释器顺序执行；它调用 `dirname`、`cd`、`pwd`、`mkdir`；产出的变量被 `rollout`/`fit` 与 L48-L69 使用——已确认。
 - 置信度: 已确认
 
-#### 2.63.4 顶层可执行段-2：阶段分派与收尾 [L48-69]
+#### 2.69.4 顶层可执行段-2：阶段分派与收尾 [L48-69]
 - 类型: 顶层可执行段（`case` 语句 + 收尾 `echo`）
 - 签名: `case "$phase" in rollout) ... ;; fit) ... ;; all) ... ;; *) echo "usage: $0 [rollout|fit|all] [seeds...]"; exit 2;; esac`
 - 作用: 按 `rollout|fit|all` 分派：rollout 后台并行跑全部 seed 后 `wait`；fit 串行拟合全部 seed；all 先并行 rollout 再串行 fit；未知阶段打印用法并以码 2 退出；最后打印完成行。
@@ -4443,7 +4833,7 @@
 
 ---
 
-### 2.64 `scripts/stop_solo_training_2200.py`
+### 2.70 `scripts/stop_solo_training_2200.py`
 
 - **分析组**：G033　**行数**：113　**AST 符号数**：5
 
@@ -4454,7 +4844,7 @@
 - 关键模块级常量: `RUN_DIR = r"E:\clash-royale-simulator-main\src\clasher_new\runs\economy_towerprem"` — 目标 run 目录，硬编码绝对路径（L19）；`RUN_STATE = os.path.join(RUN_DIR, "run_state.json")` — 步数来源文件（L20）；`LOG = r"E:\clash-royale-simulator-main\scripts\stop_solo_2200.log"` — 日志文件绝对路径（L21）；`WAIT_MAX = 240` — 等待下一个 4000 边界的秒数上限，注释标其依据约为 194s@20.6 步/s（L22）。
 - 顶层数据表/字典: 无。
 
-#### 2.64.1 log [L25-29]
+#### 2.70.1 log [L25-29]
 - 类型: function
 - 签名: `def log(msg):`
 - 作用: 以 `[YYYY-mm-dd HH:MM:SS] msg` 格式同时追加写入 `LOG` 文件并 `print(flush=True)`。
@@ -4465,7 +4855,7 @@
 - 调用: 被本模块 `find_training_pids`（L41）、`kill_tree`（L61/66/68）、`main`（L73/76/86/90/94/97/100/105/108）调用。调用了 `time.strftime` 与内置 `open`/`print`。
 - 置信度: 已确认
 
-#### 2.64.2 find_training_pids [L32-46]
+#### 2.70.2 find_training_pids [L32-46]
 - 类型: function
 - 签名: `def find_training_pids():`
 - 作用: 通过 `wmic` 按命令行子串 `run_league.py --mode=solo` 查询所有 `python.exe` 的 ProcessId，返回去重升序的整数 PID 列表。
@@ -4475,7 +4865,7 @@
 - 调用: 被 `main` 调用（L74 首次、L103 二次确认）。调用了 `subprocess.run`、`re.finditer`、`log`。
 - 置信度: 已确认（依赖 Windows 的 `wmic` 可执行文件；非 Windows 环境下 L40 的 except 会兜住）
 
-#### 2.64.3 read_step [L49-55]
+#### 2.70.3 read_step [L49-55]
 - 类型: function
 - 签名: `def read_step():`
 - 作用: 读 `RUN_STATE`（run_state.json）的 `step` 字段；任何异常返回 `None`。
@@ -4485,7 +4875,7 @@
 - 调用: 被 `main` 调用（L84、L96）。**注意**：这里引用的 `json` 名只在文件末尾 `if __name__ == "__main__":` 块内（L112）才被 import；若以模块方式 `import` 本文件并调用 `read_step`，L53 会抛 `NameError`（会被 L54 的 `except Exception` 吞掉并返回 `None`）。仅当作为脚本直接运行时才正常工作。
 - 置信度: 已确认（`json` 的导入位置与使用位置不一致，L112 vs L53，已逐行核对）
 
-#### 2.64.4 kill_tree [L58-68]
+#### 2.70.4 kill_tree [L58-68]
 - 类型: function
 - 签名: `def kill_tree(pids, dry_run=False):`
 - 作用: 对给定 PID 列表逐个执行 `taskkill /PID <pid> /T /F`（结束进程树）；`dry_run=True` 时只记录不执行。
@@ -4497,7 +4887,7 @@
 - 调用: 被 `main` 调用（L107）。调用了 `subprocess.run`、`log`。
 - 置信度: 已确认
 
-#### 2.64.5 main [L71-108]
+#### 2.70.5 main [L71-108]
 - 类型: function
 - 签名: `def main():`
 - 作用: 主编排：定位训练进程 → （非 dry-run 且 run_state 存在时）轮询等待 checkpoint 步数落在 4000 的整数倍 → 二次确认进程仍在 → `kill_tree`。
@@ -4511,7 +4901,7 @@
 
 ---
 
-### 2.65 `scripts/summarize_probe_v3_mono.py`
+### 2.71 `scripts/summarize_probe_v3_mono.py`
 
 - **分析组**：G032　**行数**：168　**AST 符号数**：2
 
@@ -4527,7 +4917,7 @@
   - `os` 被 import（L11）但在文件内**未出现任何使用点**（L11-168 全文检索无 `os.` 调用）——照实记录：多余导入
 - 顶层数据表/字典: 无模块级数据表；`main()` 内默认列名表 `["raw_obs", "plan_f", "cnn_pre_ln", "grid_ln_out", "fused", "enc", "pre_ln"]`（L85-86），代表共同 α 表中各列的固定顺序（列 0 起计数），§B/§C/§F 的分支逻辑依赖这个位序（如 `vals[2]`=cnn_pre_ln、`vals[3]`=grid_ln_out、`vals[5]`=enc、`vals[6]`=pre_ln）。
 
-#### 2.65.1 parse [L27-75]
+#### 2.71.1 parse [L27-75]
 - 类型: function
 - 签名: `parse(path)`
 - 作用: 读入单个 `mono_check` 日志文件，抽取"超集逐位验证 / 共同 α 表 / 每层自身 α* / 同 α 差值"四类信息，返回一个 dict。
@@ -4538,7 +4928,7 @@
 - 调用: 被同文件 `main()` 在 L87 对每个日志路径调用一次；未被其它文件 import（本组内 grep 无外部引用）。它自己不调用任何项目内函数。
 - 置信度: 已确认
 
-#### 2.65.2 main [L78-164]
+#### 2.71.2 main [L78-164]
 - 类型: function
 - 签名: `main()`
 - 作用: 解析全部日志、跨 seed 归约为 6 个小节（§A/§B/§C/§D/§F/§E）的文本报告，并可把同一份汇总写 JSON。
@@ -4550,7 +4940,7 @@
 
 ---
 
-### 2.66 `scripts/summarize_solo_run.py`
+### 2.72 `scripts/summarize_solo_run.py`
 
 - **分析组**：G030　**行数**：212　**AST 符号数**：2
 
@@ -4572,7 +4962,7 @@
   - `_RE_RATE` — 匹配 `[solo] 评估节奏: <文本>`（L56）
 - 顶层数据表/字典: 无（顶层只有模块级路径常量与上述 7 条正则）；另在 L29-33 有模块级副作用循环：对 `sys.stdout`/`sys.stderr` 尝试 `reconfigure(encoding="utf-8", errors="replace")`，异常被吞；L37 把脚本自身目录插入 `sys.path` 以便 `import judge_anchor_blocks`（L43）。
 
-#### 2.66.1 _parse_log [L59-119]
+#### 2.72.1 _parse_log [L59-119]
 - 类型: function
 - 签名: `_parse_log(path)`
 - 作用: 逐行扫描日志文本，用 7 条正则抽取评估点、对照组、锚点、锚点警报、对手池、循环耗时、评估节奏，并统计 4 类异常关键词计数。
@@ -4583,7 +4973,7 @@
 - 调用: 被本文件 `main` 在 L130 调用；内部使用 `ast.literal_eval`（L99）、`open`（L65）、7 条模块级正则。除 `main` 外在本仓未检出其它调用者（全仓 grep `summarize_solo_run` 的代码级引用只在本文件）。
 - 置信度: 已确认
 
-#### 2.66.2 main [L122-208]
+#### 2.72.2 main [L122-208]
 - 类型: function
 - 签名: `main()`
 - 作用: 解析命令行参数，调用 `_parse_log` 后按 7 个小节把读数以 markdown 表格/列表打到 stdout，返回 0。
@@ -4595,7 +4985,7 @@
 
 ---
 
-### 2.67 `scripts/test_m1.py`
+### 2.73 `scripts/test_m1.py`
 
 - **分析组**：G030　**行数**：212　**AST 符号数**：12
 
@@ -4610,7 +5000,7 @@
 - 顶层数据表/字典: 无。
 - 模块级副作用: L8 `sys.path.insert(0, SRC)`；L9 `os.chdir(SRC)`，注释说明 `card_utils` 以相对路径读 json（L9）。
 
-#### 2.67.1 check [L18-20]
+#### 2.73.1 check [L18-20]
 - 类型: function
 - 签名: `check(name, cond, detail='')`
 - 作用: 断言收集器：按 `cond` 真假把 `name` 记入全局 PASS 或 FAIL，并打印 `OK`/`FAIL` 行（可选附加 detail）。
@@ -4623,7 +5013,7 @@
 - 调用: 被本文件全部 9 个 `test_*` 函数调用（L55-62、L84-87、L101-102、L120-121、L129、L133、L141、148、161-162、176-179、199/201）。`PASS`/`FAIL` 在 `__main__` 块被读取（L209-211）。
 - 置信度: 已确认
 
-#### 2.67.2 make_battle [L23-28]
+#### 2.73.2 make_battle [L23-28]
 - 类型: function
 - 签名: `make_battle(deck0=None, deck1=None)`
 - 作用: 构造一个双人 `battle.BattleState`，双方各给一副 8 卡默认牌组，初始圣水 10。
@@ -4635,7 +5025,7 @@
 - 调用: 被 `test_ramp_inferno_dragon`(L39)、`test_ramp_inferno_tower`(L67)、`test_ramp_reset`(L93)、`test_firecracker_chain`(L108)、`test_goblin_barrel`(L126)、`test_graveyard`(L138)、`test_clone`(L153)、`test_mirror`(L167)、`test_smoke_regression`(L187) 调用。
 - 置信度: 已确认
 
-#### 2.67.3 step_for [L31-33]
+#### 2.73.3 step_for [L31-33]
 - 类型: function
 - 签名: `step_for(b, seconds)`
 - 作用: 以固定 1/60 秒步长推进战斗状态 `int(seconds*60)` 次，模拟"等待 N 秒"。
@@ -4647,7 +5037,7 @@
 - 调用: 被 `test_ramp_inferno_tower`(L72)、`test_ramp_reset`(L97、L100)、`test_goblin_barrel`(L130)、`test_clone`(L156、L158)、`test_mirror`(L169、L173) 调用。
 - 置信度: 已确认
 
-#### 2.67.4 test_ramp_inferno_dragon [L37-62]
+#### 2.73.4 test_ramp_inferno_dragon [L37-62]
 - 类型: function
 - 签名: `test_ramp_inferno_dragon()`
 - 作用: 验证地狱飞龙对塔的递增伤害：蓄力阶段能到 2、三段伤害值与卡牌数据/官方值一致、伤害单调不减。
@@ -4657,7 +5047,7 @@
 - 调用: 在 `__main__` 的测试元组里第一个被调用（L205-208）。内部调用 `make_battle`(L39)、`battle.Troop(...)`(L41)、`b._spawn_entity`(L42)、`b.step`(L46)、`check`(L55-62)。`battle.Troop` 定义在同仓 `src/clasher_new/battle.py:759`。
 - 置信度: 已确认
 
-#### 2.67.5 test_ramp_inferno_tower [L65-88]
+#### 2.73.5 test_ramp_inferno_tower [L65-88]
 - 类型: function
 - 签名: `test_ramp_inferno_tower()`
 - 作用: 验证地狱塔（建筑直伤路径）的递增伤害缩放比：实测前三档伤害之比与 `data.damage` + `ramp_stage_damages` 的期望之比一致。
@@ -4667,7 +5057,7 @@
 - 调用: 在 `__main__` 测试元组中第二个（L205-208）。内部调用 `make_battle`、`battle.Building`（定义在同仓 `src/clasher_new/battle.py:1233`）、`battle.Troop`、`step_for`、`battle.Card`、`check`。
 - 置信度: 已确认
 
-#### 2.67.6 test_ramp_reset [L91-102]
+#### 2.73.6 test_ramp_reset [L91-102]
 - 类型: function
 - 签名: `test_ramp_reset()`
 - 作用: 验证地狱飞龙脱锁后蓄力阶段与计时器被清零。
@@ -4677,7 +5067,7 @@
 - 调用: 在 `__main__` 测试元组中第三个（L205-208）。内部调用 `make_battle`、`battle.Troop`、`b._spawn_entity`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.67.7 test_firecracker_chain [L106-121]
+#### 2.73.7 test_firecracker_chain [L106-121]
 - 类型: function
 - 签名: `test_firecracker_chain()`
 - 作用: 验证烟花射手命中后会生成 `FirecrackerExplosion` 二段弹，且二段弹对 Knight 造成非零伤害。
@@ -4687,7 +5077,7 @@
 - 调用: 在 `__main__` 测试元组中第四个（L205-208）。内部调用 `make_battle`、`battle.Troop`、`b._spawn_entity`、`b.step`、`check`。
 - 置信度: 已确认
 
-#### 2.67.8 test_goblin_barrel [L124-133]
+#### 2.73.8 test_goblin_barrel [L124-133]
 - 类型: function
 - 签名: `test_goblin_barrel()`
 - 作用: 验证哥布林飞桶部署成功后落地刷出至少 3 只哥布林。
@@ -4697,7 +5087,7 @@
 - 调用: 在 `__main__` 测试元组中第五个（L205-208）。内部调用 `make_battle`、`b.deploy_card`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.67.9 test_graveyard [L136-148]
+#### 2.73.9 test_graveyard [L136-148]
 - 类型: function
 - 签名: `test_graveyard()`
 - 作用: 验证墓园法术在持续时间（11s 观测窗）内持续刷出骷髅，出现过的不同 Skeletons 实体 id 至少 10 个。
@@ -4707,7 +5097,7 @@
 - 调用: 在 `__main__` 测试元组中第六个（L205-208）。内部调用 `make_battle`、`b.deploy_card`、`b.step`、`check`。
 - 置信度: 已确认
 
-#### 2.67.10 test_clone [L151-162]
+#### 2.73.10 test_clone [L151-162]
 - 类型: function
 - 签名: `test_clone()`
 - 作用: 验证克隆法术会复制出一个新的骑士，且克隆体 HP 为 1。
@@ -4717,7 +5107,7 @@
 - 调用: 在 `__main__` 测试元组中第七个（L205-208）。内部调用 `make_battle`、`b.deploy_card`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.67.11 test_mirror [L165-179]
+#### 2.73.11 test_mirror [L165-179]
 - 类型: function
 - 签名: `test_mirror()`
 - 作用: 验证镜像法术：部署成功、复制出第二个骑士、实扣费用为基础费+1（=4）、且 `last_card` 不被 Mirror 覆盖。
@@ -4727,7 +5117,7 @@
 - 调用: 在 `__main__` 测试元组中第八个（L205-208）。内部调用 `make_battle`、`b.deploy_card`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.67.12 test_smoke_regression [L183-201]
+#### 2.73.12 test_smoke_regression [L183-201]
 - 类型: function
 - 签名: `test_smoke_regression()`
 - 作用: 回归冒烟：固定随机种子下双方每约 0.75s 随机出一张牌，混战 60s 不抛异常即算通过。
@@ -4744,7 +5134,7 @@
 
 ---
 
-### 2.68 `scripts/test_m2.py`
+### 2.74 `scripts/test_m2.py`
 
 - **分析组**：G022　**行数**：488　**AST 符号数**：34
 
@@ -4758,7 +5148,7 @@
 - 顶层数据表/字典: 无（模块级只有两个计数器）
 - 说明（非简报符号）: 模块尾 L471-488 是运行器：按固定顺序逐个调用 28 个 `test_*`，用 `try/except` 捕获异常并 `traceback.print_exc()`，异常也计入 FAIL；最后打印 `通过 {PASS} / 失败 {FAIL}`。
 
-#### 2.68.1 check [L15-18]
+#### 2.74.1 check [L15-18]
 - 类型: function
 - 签名: `def check(name, cond, extra='')`
 - 作用: 断言记账器——条件为真 `PASS += 1` 打印 `OK`，否则 `FAIL += 1` 打印 `FAIL`，可选附带 `[extra]` 读数；绝不抛异常，保证后续用例继续跑。
@@ -4771,7 +5161,7 @@
 - 调用: 被本文件全部 28 个测试函数调用（共约 60 处），也被运行器的异常兜底调用（L486）；不调用其它函数。
 - 置信度: 已确认
 
-#### 2.68.2 make_battle [L20-26]
+#### 2.74.2 make_battle [L20-26]
 - 类型: function
 - 签名: `def make_battle(elixir=10)`
 - 作用: 造一个双人满圣水的 `BattleState` 测试局：蓝方 8 卡（含 Knight/Archers/Fireball/Giant/Musketeer/Arrows/Minions/Cannon），红方 8 卡（含 Knight/MiniPekka/…/Archer）。
@@ -4782,7 +5172,7 @@
 - 调用: 被 27 个测试函数调用；调用了 `PlayerState`（player.py L6）与 `BattleState`（battle.py L2538）。
 - 置信度: 已确认
 
-#### 2.68.3 give [L28-32]
+#### 2.74.3 give [L28-32]
 - 类型: function
 - 签名: `def give(bs, pid, card, elixir=10)`
 - 作用: 把指定卡「置顶入手」并重置该玩家圣水，绕开 `PlayerState.can_play_card` 只看 `cycle[:4]` 的限制，让测试能连续打出任意卡。
@@ -4796,7 +5186,7 @@
 - 调用: 被 `test_zap_stun`/`test_freeze`/`test_heal`/`test_rage`/`test_tornado_pull`/`test_building_decay`/`test_evo_cycle` 调用；直接操作 `PlayerState.cycle/elixir`（player.py L8/L9/L36-39）。
 - 置信度: 已确认
 
-#### 2.68.4 kill_red_towers [L34-37]
+#### 2.74.4 kill_red_towers [L34-37]
 - 类型: function
 - 签名: `def kill_red_towers(bs)`
 - 作用: 把红方两座公主塔（id 1、2）直接标死，给需要「敌方半场无塔射程干扰」的用例腾出测试位。
@@ -4807,7 +5197,7 @@
 - 调用: 被 `test_fisherman_hook`（L144）、`test_skeleton_king`（L156）调用。
 - 置信度: 已确认
 
-#### 2.68.5 step_for [L39-41]
+#### 2.74.5 step_for [L39-41]
 - 类型: function
 - 签名: `def step_for(bs, seconds)`
 - 作用: 以 1/60 s 固定步长推进战斗 `int(seconds*60)` 帧，是所有时间相关断言的唯一时间源。
@@ -4819,7 +5209,7 @@
 - 调用: 被本文件全部时序测试调用（约 20 处）；时长为 `int()` 截断，故 9.5s 实际 570 帧。
 - 置信度: 已确认
 
-#### 2.68.6 spawn_troop [L43-46]
+#### 2.74.6 spawn_troop [L43-46]
 - 类型: function
 - 签名: `def spawn_troop(bs, card, x, y, player, evolved=False)`
 - 作用: 不经出牌流程，直接在指定坐标生成一个 `Troop` 并注册进 `BattleState.entities`，用于精确摆位。
@@ -4834,7 +5224,7 @@
 - 调用: 被 19 个测试函数调用；调用 `Troop`、`Position`、`BattleState._spawn_entity`。
 - 置信度: 已确认
 
-#### 2.68.7 test_min_range [L49-63]
+#### 2.74.7 test_min_range [L49-63]
 - 类型: function
 - 签名: `def test_min_range()`
 - 作用: **验证机制：族 3 建筑最小射程**（Mortar 贴脸不攻击、射程内正常攻击、`minimum_range` 数值 = 3.5）。被测函数：`Card.min_range`（card_utils.py L315，取 `buildings['Mortar']['minimum_range']=3500` 毫秒除 1000）、`Entity.in_attack_range`（battle.py L599-600）、`Entity.get_nearest_target`（battle.py L629）、`Building.update` 的攻击分支（battle.py L1297-1308）。
@@ -4844,7 +5234,7 @@
 - 调用: 由模块尾运行器调用（L472）；调用 `make_battle`/`Building`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认（数值 3.5 已由 `cards_stats_building.json` 的 `Mortar.minimum_range=3500` 复算确认）
 
-#### 2.68.8 test_zap_stun [L66-79]
+#### 2.74.8 test_zap_stun [L66-79]
 - 类型: function
 - 签名: `def test_zap_stun()`
 - 作用: **验证机制：族 4 buff 槽——Zap 眩晕 + 伤害 + 攻击蓄力重置**。被测函数：`BattleState.deploy_card` 的瞬发区域法术分支（battle.py L2928-2939 构造 `AreaEffect`）、`AreaEffect._pulse` 的 `ZapFreeze` 分支（battle.py L1798-1799 调 `apply_buff(stun=..., retarget=True)`）、`Entity.apply_buff`（battle.py L106-126，L112 把 `attack_cooldown` 抬到 `hit_speed`）、`Troop.update` 冻结早退（battle.py L1102-1104）、法术伤害取值 `_value_at_level`（card_utils.py L196）。
@@ -4854,7 +5244,7 @@
 - 调用: 模块尾运行器（L472）；调用 `make_battle`/`spawn_troop`/`give`/`deploy_card`/`step_for`/`check`。
 - 置信度: 已确认（Zap 行与 dpl 已由 `cards_stats_spell.json` 复算：`buff='ZapFreeze'`、`buff_time=500`、dpl[10]=192）
 
-#### 2.68.9 test_freeze [L81-94]
+#### 2.74.9 test_freeze [L81-94]
 - 类型: function
 - 签名: `def test_freeze()`
 - 作用: **验证机制：族 4 Freeze 冰冻 4s（整场只施加一次、不因重复 pulse 刷新到 8s）**。被测函数：`AreaEffect._pulse` 的 `Freeze` 分支与 `stun_applied` 哨兵（battle.py L1800-1804）、`AreaEffect.update` 的脉冲/寿命循环（battle.py L1862-1868）、`Troop.update` 冻结期停移（battle.py L1102-1104）。
@@ -4864,7 +5254,7 @@
 - 调用: 模块尾运行器（L473）；调用 `make_battle`/`spawn_troop`/`give`/`deploy_card`/`step_for`/`check`。
 - 置信度: 已确认（Freeze 行 `buff_time=4000`、`life_duration=4000`、`hit_speed=0` 已复算）
 
-#### 2.68.10 test_heal [L96-105]
+#### 2.74.10 test_heal [L96-105]
 - 类型: function
 - 签名: `def test_heal()`
 - 作用: **验证机制：族 4 Heal 治疗导槽**（治疗量 ≈4×96=384）。被测函数：`AreaEffect.__init__` 的 `heal_per_tick` 计算（battle.py L1781，`OFFICIAL_OVERRIDES['Heal']['heal_per_tick_lv11']=96 × 1.1^(lv-11)`，evolutions.py L37）、`AreaEffect._pulse` 的 `Heal` 分支（battle.py L1812-1814，`apply_buff(heal={'hps': heal_per_tick/tick, 'time': tick})`）、`Entity.apply_buff` 的 `regen_buffs.append`（battle.py L149-150）、`Entity.update` 的治疗结算（battle.py L374-388，含 `min(_cap, hp + hps*dt)` 过量治疗上限）。
@@ -4874,7 +5264,7 @@
 - 调用: 模块尾运行器（L473）；调用 `make_battle`/`spawn_troop`/`give`/`deploy_card`/`step_for`/`check`。
 - 置信度: 已确认（机制与数值来源已核；具体脉冲次数是按 `duration/tick` 推导，落在测试区间内）
 
-#### 2.68.11 test_rage [L107-114]
+#### 2.74.11 test_rage [L107-114]
 - 类型: function
 - 签名: `def test_rage()`
 - 作用: **验证机制：族 4 Rage 官方现行 +30%（覆盖快照旧值 +35%）**。被测函数：`AreaEffect._pulse` 的 `Rage` 分支（battle.py L1809-1811，`apply_buff(speed_mult=ov.get('speed_mult',1.30), duration=ov.get('residue',1.0))`）、`OFFICIAL_OVERRIDES['Rage']`（evolutions.py L34：`speed_mult=1.30`、`duration=4.5`、`residue=1.0`）、`Entity.apply_buff` 的 `speed_buff` 写入与其独立窗口（battle.py L127-135）、`Entity.update` 的窗口到期归位（battle.py L363-367）。
@@ -4884,7 +5274,7 @@
 - 调用: 模块尾运行器（L473）；调用 `make_battle`/`spawn_troop`/`give`/`deploy_card`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.12 test_tornado_pull [L116-128]
+#### 2.74.12 test_tornado_pull [L116-128]
 - 类型: function
 - 签名: `def test_tornado_pull()`
 - 作用: **验证机制：族 5 Tornado 拉拽（两侧单位被拉向中心）+ 跳伤 84×2=168**。被测函数：`AreaEffect.update` 的 `controls` 拉拽分支（battle.py L1837-1847，`speed = dist / max(lifetime,0.1)`、逐帧向心位移并在 `arena.is_walkable` 允许时才落位）、`AreaEffect._pulse` 的伤害分支（battle.py L1817-1828）、`OFFICIAL_OVERRIDES['Tornado']`（evolutions.py L36：`damage_per_tick_lv11=84`、`tick=0.55`、`crown_tower_percent=0.35`）、`Entity.take_damage`（battle.py L507）。
@@ -4894,7 +5284,7 @@
 - 调用: 模块尾运行器（L473）；调用 `make_battle`/`spawn_troop`/`give`/`deploy_card`/`step_for`/`Position`/`check`。
 - 置信度: 已确认（Tornado 行 `controls_buff=True`、`life_duration=1050`、`hit_speed=50` 与 override 的 84/0.55 已复算）
 
-#### 2.68.13 test_building_decay [L130-139]
+#### 2.74.13 test_building_decay [L130-139]
 - 类型: function
 - 签名: `def test_building_decay()`
 - 作用: **验证机制：族 4 建筑 persistent 错位修复——Cannon 按寿命自衰减**。被测函数：`BattleState._wrap` 的建筑分支（battle.py L2623-2627，显式 `persistent=False`）、`Building.update` 的寿命衰减（battle.py L1293-1296，`decay=(data.hp/data.lifetime)*dt` 后 `take_damage(decay)`）、`Card.lifetime` 的毫秒→秒换算（card_utils.py L274-276，`lifeTime/1000`）。
@@ -4904,7 +5294,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`give`/`deploy_card`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.14 test_fisherman_hook [L141-150]
+#### 2.74.14 test_fisherman_hook [L141-150]
 - 类型: function
 - 签名: `def test_fisherman_hook()`
 - 作用: **验证机制：族 5 渔夫钩拉（把目标拉近自己 + 钩伤为唯一输出）**。被测函数：`Fisherman.on_tick`（card_mechanics.py L281-310：选 `target_id`、按 `special_min_range`/`special_range` 判 3.5~7 格、写 `t.hook_pull={'x','y','speed','time'}` 并 `take_damage(hook_dmg, delayed=True)`）、`Troop.update` 的钩拉位移分支（battle.py L1140-1150）、`Entity.take_damage` 的 `delayed` 入 `pending_damage` 与 `Entity.update` 重放（battle.py L537-539 / L405-407）、`OFFICIAL_OVERRIDES['Fisherman']['pull_speed']=8.5`（evolutions.py L38）。
@@ -4914,7 +5304,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`kill_red_towers`/`spawn_troop`/`step_for`/`Position`/`check`。
 - 置信度: 已确认（Fisherman lv11 damage=193 已复算；测试容差 ±3）
 
-#### 2.68.15 test_skeleton_king [L153-166]
+#### 2.74.15 test_skeleton_king [L153-166]
 - 类型: function
 - 签名: `def test_skeleton_king()`
 - 作用: **验证机制：族 6 Skeleton King 灵魂召唤**（能力释放成功、扣 2 圣水、召唤数 = 6+灵魂(4) = 10、进入 20s 冷却）。被测函数：`SkeletonKing.use_ability`（card_mechanics.py L328-333：`remaining = min(6+souls,16)`、清灵魂、`timer=0.9` 前摇）、`SkeletonKing.on_tick`（L335-352：0.25s/只、黄金角 `2.399963` 散布、半径 `OFFICIAL_OVERRIDES['SkeletonKing']['spawn_radius']=3.5`）、`BattleState.use_ability` 冠军路径（battle.py L3222-3247：`ability_cd = ability['cooldown']/1000`）、`abilityData.manaCost=2` / `cooldown=20000`（gamedata，已复算）、`BattleState.souls` 与 `on_death` 的加魂（battle.py L2571 / L3162-3167，`SkeletonKingSkeleton` 不计魂）。
@@ -4924,7 +5314,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`kill_red_towers`/`spawn_troop`/`step_for`/`check`；间接走 `BattleState.step`→`Troop.update`→holder `on_tick`。
 - 置信度: 已确认（`abilityData` 已复算：manaCost 2 / cooldown 20000 / resurrectBaseCount 6 / spawnLimit 16）
 
-#### 2.68.16 test_archer_queen [L168-179]
+#### 2.74.16 test_archer_queen [L168-179]
 - 类型: function
 - 签名: `def test_archer_queen()`
 - 作用: **验证机制：族 6 Archer Queen 隐身斗篷**（不可被选取、攻速 ×2.8、移速 -25%、到期恢复）。被测函数：`ArcherQueen.use_ability`（card_mechanics.py L358-364：`targetable=False`、`cloak_time=3.5`、`apply_buff(hit_speed_mult=2.8, duration=3.5)`、`apply_buff(speed_mult=0.75, duration=3.5)`）、`ArcherQueen.on_tick`（L366-372：`cloak_time` 到 0 恢复 `targetable`）、`Entity.apply_buff` 的攻速槽与减速槽（battle.py L136-145 / L127-135）、`Entity.update` 到期归位（battle.py L363-372）。
@@ -4934,7 +5324,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.17 test_golden_knight_dash [L181-193]
+#### 2.74.17 test_golden_knight_dash [L181-193]
 - 类型: function
 - 签名: `def test_golden_knight_dash()`
 - 作用: **验证机制：族 6 Golden Knight 连环突进**（单段伤害 ≈340 = 131×1.1^10、突进链造成位置位移）。被测函数：`GoldenKnight.use_ability`（card_mechanics.py L379-384：`dash_remaining=10`、`dashed_ids=set()`、`invincible=True`）、`GoldenKnight.on_tick`（L386-413：5.5 格内最近未突进目标、瞬移到 `best.position + 0.4`、`take_damage(131*level_scale(level))`、命中公主塔即停）、`level_scale`（card_utils.py L210-214，`1.1**(level-1)`）、`OFFICIAL_OVERRIDES['GoldenKnight']['ability_cooldown']=12.0`（evolutions.py L39，由 `BattleState.use_ability` L3244-3245 消费）。
@@ -4944,7 +5334,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`spawn_troop`/`step_for`/`Position`/`check`。
 - 置信度: 已确认
 
-#### 2.68.18 test_monk_reflect [L195-205]
+#### 2.74.18 test_monk_reflect [L195-205]
 - 类型: function
 - 签名: `def test_monk_reflect()`
 - 作用: **验证机制：族 6 Monk 禅定反弹**（减伤 65%、弓箭手被反弹伤害、Monk 存活且掉血少于一半）。被测函数：`Monk.use_ability`（card_mechanics.py L419-424：`deflect_active=True`、`deflect_time=4.0`、`apply_buff(damage_reduction=OFFICIAL_OVERRIDES['Monk']['damage_reduction']=0.65, duration=4.0)`，evolutions.py L40）、`Projectile._on_arrive` 的反弹分支（battle.py L1456-1465：目标 `deflect_active` 且来源是可命中的 `Entity` → `src.take_damage(dmg)`；来源已死 → `reflect_to_tower`）、`BattleState.reflect_to_tower`（battle.py L3170-3177）、`Entity.take_damage` 的减伤结算（battle.py L526-529，`amount *= (1-dr)`）、`Entity.create_projectile`（battle.py L738-746，把 `source=self` 传给弹道，反弹归因依赖它）。
@@ -4954,7 +5344,7 @@
 - 调用: 模块尾运行器（L474）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认（反弹归因链 `BasicCharacter.on_attack → create_projectile(source=self) → _on_arrive → src.take_damage` 已逐行核对）
 
-#### 2.68.19 test_little_prince_guard [L207-216]
+#### 2.74.19 test_little_prince_guard [L207-216]
 - 类型: function
 - 签名: `def test_little_prince_guard()`
 - 作用: **验证机制：族 6 Little Prince 皇家救援**（召唤 1 个 Guardienne 守护者、lv11 ≈1621 血）。被测函数：`LittlePrince.use_ability`（card_mechanics.py L464-473：按玩家方向偏移 `gy=∓0.6` 生成 `ChampionGuard`、`deal_area_damage(1.5, 90*level_scale)`、`push_enemies(1.5, 2.0)`）、`BattleState._spawn_entity`、卡牌数值表 `ChampionGuard.hp`（已复算 lv11 = 1621 = 625×1.1^10）。
@@ -4964,7 +5354,7 @@
 - 调用: 模块尾运行器（L475）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认（`Card('ChampionGuard')` lv11 hp = 1621 已复算）
 
-#### 2.68.20 test_mighty_miner [L218-229]
+#### 2.74.20 test_mighty_miner [L218-229]
 - 类型: function
 - 签名: `def test_mighty_miner()`
 - 作用: **验证机制：族 6 Mighty Miner 爆破脱身**（镜像换路瞬移、钻地期间不可选取、钻地结束恢复）。被测函数：`MightyMiner.use_ability`（card_mechanics.py L438-448：`targetable=False`、`invincible=True`、`drill_time=0.6`、原地生成 `GenericBomb(130*level_scale, radius=2.0, delay=1.0, knockback=1.8)`、`position = Position(18.0 - x, y)`）、`MightyMiner.on_tick`（L450-458：`drill_time` 到 0 恢复 `targetable`/`invincible`）、`GenericBomb`（battle.py L1892-1935）。
@@ -4974,7 +5364,7 @@
 - 调用: 模块尾运行器（L475）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.21 test_boss_bandit [L231-244]
+#### 2.74.21 test_boss_bandit [L231-244]
 - 类型: function
 - 签名: `def test_boss_bandit()`
 - 作用: **验证机制：族 6 Boss Bandit 金蝉脱壳（每局限 2 次）**（向后传送 6 格、第 2 次可用、第 3 次被拒）。被测函数：`BossBandit.use_ability`（card_mechanics.py L480-488：`if e.ability_uses >= 2: return False`、`targetable=False`、`grenade_time=1.0`、`dy=∓6` 后 `Position(x, clamp(y+dy, 0.5, 31.5))`）、`BossBandit.on_tick`（L490-496）、`BattleState.use_ability` 冠军路径（battle.py L3240-3247：`holder.use_ability()` 为假则 `continue`，为真才扣费、置 `ability_cd`、`ability_uses += 1`）。
@@ -4984,7 +5374,7 @@
 - 调用: 模块尾运行器（L475）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.22 test_evo_cycle [L247-268]
+#### 2.74.22 test_evo_cycle [L247-268]
 - 类型: function
 - 签名: `def test_evo_cycle()`
 - 作用: **验证机制：族 7 觉醒周期**（Knight cycle=2：前两次普通、第 3 次觉醒，觉醒 hp 按曲线 = 1766；未携带觉醒位的同卡永不觉醒）。被测函数：`PlayerState.set_evolution_slots`（player.py L17-19，`set(list(cards)[:2])`）、`BattleState.deploy_card` 的觉醒判定（battle.py L2860-2863：`card_info.evo_raw and card_name in _p.evo_slots and card_name not in _p.hero_slots and evolution_state(_p.evo_plays.get(card_name,0), card_name)`）、`evolution_state`（evolutions.py L89-95，`plays % (cycle+1) == cycle`）、`BattleState._finish_deploy` 的出牌计数（battle.py L2735-2736，有 `evo_raw` 才 `evo_plays[card]+=1`）、`Troop._apply_evolution`（battle.py L782-802）与 `derive_evolved_stats`（evolutions.py L98-113）。
@@ -4994,7 +5384,7 @@
 - 调用: 模块尾运行器（L476）；调用 `make_battle`/`give`/`deploy_card`/`Position`/`check`。
 - 置信度: 已确认（Knight lv11 hp=1766、`evolution_state(2,'Knight')=True`、`(1,'Knight')=False` 已复算）
 
-#### 2.68.23 test_evo_knight_fortify [L270-278]
+#### 2.74.23 test_evo_knight_fortify [L270-278]
 - 类型: function
 - 签名: `def test_evo_knight_fortify()`
 - 作用: **验证机制：族 7 觉醒骑士 fortify（脱战减伤 60%、攻击中解除）**。被测函数：`Entity.update` 的 fortify 分支（battle.py L395-403：读 `evo['buffWhenNotAttackingData']['damageReduction']/100`，`self.battle_state.time - self.last_attack_time > 1.0` 时给 `_fortify_dr`，否则清 0）、`BasicCharacter.on_attack` 写 `last_attack_time`（core.py L31）、`Entity.take_damage` 取 `max(damage_reduction, _fortify_dr)`（battle.py L526-529）。
@@ -5004,7 +5394,7 @@
 - 调用: 模块尾运行器（L476）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.24 test_evo_skeletons_duplication [L280-289]
+#### 2.74.24 test_evo_skeletons_duplication [L280-289]
 - 类型: function
 - 签名: `def test_evo_skeletons_duplication()`
 - 作用: **验证机制：族 7 觉醒骷髅分裂（每次攻击 +1，组上限 8）**。被测函数：`Troop._evo_on_attack` 的 `Duplication` 分支（battle.py L894-909：按 `evo.get('groupMaxSize',8)`、统计 5 格内存活同卡组员，未满则 `evo_extra_spawned += 1` 并 `battle_state.spawn_arrival_troops(card, 1, 位置+0.3, player)`）、`BattleState.spawn_arrival_troops`（battle.py L2775-2781 → `delayed_spawn` → `_wrap`/`_spawn_entity`）、`BasicCharacter.on_attack` 的 `_evo_on_attack` 调用点（core.py L61-63）。
@@ -5014,7 +5404,7 @@
 - 调用: 模块尾运行器（L477）；调用 `make_battle`/`spawn_troop`/`Building`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.68.25 test_evo_wizard_shield [L291-295]
+#### 2.74.25 test_evo_wizard_shield [L291-295]
 - 类型: function
 - 签名: `def test_evo_wizard_shield()`
 - 作用: **验证机制：族 7 觉醒法师护盾（75×1.1^10 ≈194）**。被测函数：`derive_evolved_stats` 的护盾推导（evolutions.py L114-115：`out['shield_hitpoints'] = evolved_scd['shieldHitpoints'] * level_scale(level)`）、`Troop._apply_evolution` 写 `shield_health`（battle.py L800-801）、`level_scale`（card_utils.py L210-214）、`Entity.take_damage` 的先扣护盾再扣血（battle.py L540-542）。
@@ -5024,7 +5414,7 @@
 - 调用: 模块尾运行器（L477）；调用 `make_battle`/`spawn_troop`/`check`。
 - 置信度: 已确认
 
-#### 2.68.26 test_evo_archer_double_shot [L297-305]
+#### 2.74.26 test_evo_archer_double_shot [L297-305]
 - 类型: function
 - 签名: `def test_evo_archer_double_shot()`
 - 作用: **验证机制：族 7 觉醒弓箭手双发射击（主箭 + 二段箭，3s 内总伤 >200）**。被测函数：`Troop._evo_on_attack` 的 `projectile2Data` 分支（battle.py L919-925：读 `evo['projectile2Data']['damage']`、用 `specialAttackRangeForStats/1000` 做距离门槛，命中则 `target.take_damage(p2['damage'] * level_scale(level), delayed=True)`）、`BasicCharacter.on_attack`（core.py L30-69，主箭走 `data.projectiles` 分支 `create_projectile`）、`Projectile._on_arrive`（battle.py L1445-1478）。
@@ -5034,7 +5424,7 @@
 - 调用: 模块尾运行器（L477）；调用 `make_battle`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认（`projectile2Data.damage=84` 已复算；主箭具体数值未在本组展开，故只写「伤害在弹道行里」）
 
-#### 2.68.27 test_evo_royal_giant_push [L307-316]
+#### 2.74.27 test_evo_royal_giant_push [L307-316]
 - 类型: function
 - 签名: `def test_evo_royal_giant_push()`
 - 作用: **验证机制：族 7 觉醒皇家巨人推击（对建筑造成伤害 = 攻击 + 推击 AoE）**。被测函数：`Troop._evo_on_attack` 的 `onAttackActionData` + `PushBack` 分支（battle.py L934-942：`dmg=(spawnDataData.damage or 32)*level_scale(level)`、`radius=(radius or 3000)/1000`、`deal_area_damage(player, position, radius, dmg, True, False)` + `push_enemies(player, position, radius, 1.0)`）、`BattleState.deal_area_damage`（battle.py L3250-3265，塔用矩形边缘距离）、`BattleState.push_enemies`（battle.py L3180-3189）、`BasicCharacter.on_attack` 主伤结算（core.py L33-56）。
@@ -5044,7 +5434,7 @@
 - 调用: 模块尾运行器（L478）；调用 `make_battle`/`spawn_troop`/`Building`/`Position`/`step_for`/`check`。
 - 置信度: 已确认（推击字段已复算；主伤具体数值未在本组展开）
 
-#### 2.68.28 test_evo_all_construct [L318-336]
+#### 2.74.28 test_evo_all_construct [L318-336]
 - 类型: function
 - 签名: `def test_evo_all_construct()`
 - 作用: **验证机制：族 7 全快照觉醒卡 evolved 形态可构造（构造数 41）**。被测函数：`Card.evo_raw`（card_utils.py L326，读 `card_data[name]['evolvedSpellsData']`）、`Troop._apply_evolution`（battle.py L782-849）与 `Building.__init__` 的觉醒分支（battle.py L1245-1259）、`derive_evolved_stats`（evolutions.py L98-133）、数据表 `EVOLUTION_CYCLES`（evolutions.py L11-30）。
@@ -5054,7 +5444,7 @@
 - 调用: 模块尾运行器（L478）；调用 `EVOLUTION_CYCLES`/`Card`/`Troop`/`Building`/`Position`/`check`。
 - 置信度: 已确认（跳过条件与别名事实已复算；`ok_n == 41` 的实跑结果本组未执行脚本，属测试断言本身）
 
-#### 2.68.29 test_attack_seq_inferno_evo [L339-356]
+#### 2.74.29 test_attack_seq_inferno_evo [L339-356]
 - 类型: function
 - 签名: `def test_attack_seq_inferno_evo()`
 - 作用: **验证机制：M4.5 攻击序列——觉醒地狱龙四级递增 14/47/165/330（lv11 ≈36/121/424/849）、逐攻击推进、封顶末档、脱锁重置**。被测函数：`Entity._resolve_attack_seq`（battle.py L459-488，按 `data.damage/首档 damage` 等比缩放并挂 `attack_seq_*`）、`Entity.ramped_damage`（battle.py L442-456，有 `attack_seq` 时优先取 `attack_seq_damages[stage]`）、`Entity._on_attack_done`（battle.py L490-504，`Manual` 模式跨攻击 `stage = min(stage+1, len-1)`）、`Entity.update` 的脱锁重置（battle.py L424-428）、`Troop._apply_evolution` 挂序列（battle.py L813-814）。
@@ -5064,7 +5454,7 @@
 - 调用: 模块尾运行器（L479）；调用 `make_battle`/`spawn_troop`/`battle.Entity.update`/`check`。
 - 置信度: 已确认（`attackSequenceList` 扁平结构与 `Manual` 模式、lv11 缩放基数 36 已复算）
 
-#### 2.68.30 test_attack_seq_inferno_battle [L358-375]
+#### 2.74.30 test_attack_seq_inferno_battle [L358-375]
 - 类型: function
 - 签名: `def test_attack_seq_inferno_battle()`
 - 作用: **验证机制：M4.5 攻击序列的集成行为**——战斗中觉醒地狱龙对同一目标的单次伤害随攻击推进，末段单发 ≈849、首击 ≈36。被测函数：`BasicCharacter.on_attack`（core.py L30-69，`damage = entity.ramped_damage(self.data.damage)` 后 `take_damage(damage, delayed=True, source=...)`）、`Entity.ramped_damage`/`Entity._on_attack_done`（battle.py L442-504）、`Entity.update` 的 `pending_damage` 重放（battle.py L405-407）、`Troop.update` 的攻击分支（battle.py L1225-1229）。
@@ -5074,7 +5464,7 @@
 - 调用: 模块尾运行器（L479）；调用 `make_battle`/`spawn_troop`/`check`（内部自驱 `b.step`）。
 - 置信度: 已确认（伤害管线 `on_attack → ramped_damage → take_damage(delayed) → pending_damage` 已逐行核对）
 
-#### 2.68.31 test_attack_seq_berserker [L377-397]
+#### 2.74.31 test_attack_seq_berserker [L377-397]
 - 类型: function
 - 签名: `def test_attack_seq_berserker()`
 - 作用: **验证机制：M4.5 攻击序列——Berserker 三连击（lv11 官方 102×3，单次攻击周期内打满 306）**。被测函数：`Card` 的序列伤害兜底（card_utils.py L338-343：`damage=0` 且有序列表时以首档伤害作为基准）、`Entity._resolve_attack_seq`（battle.py L459-488）、`Entity._on_attack_done` 的多段命中分支（battle.py L498-504：`attack_seq_pending = n-1`、记录 `attack_seq_target_id`）、`Entity.update` 的多段排队结算（battle.py L430-440：每 `hit_speed/len(damages)` 打一段）、`BasicCharacter.on_attack`（core.py L33-34）。
@@ -5084,7 +5474,7 @@
 - 调用: 模块尾运行器（L480）；调用 `make_battle`/`spawn_troop`/`check`（内部自驱 `b2.step`）。
 - 置信度: 已确认（Berserker lv11 damage=102、`attack_seq_raw` 三档已复算）
 
-#### 2.68.32 test_level16_support [L400-422]
+#### 2.74.32 test_level16_support [L400-422]
 - 类型: function
 - 签名: `def test_level16_support()`
 - 作用: **验证机制：16 级数据支持**（全卡 `set_level(16)` 无越界、稀有度轴修正、派生曲线卡可用）。被测函数：`Card.set_level`（card_utils.py L347+）、`_rarity_level_index`（card_utils.py L182-193）、`_value_at_level` 的越界延伸分支（card_utils.py L196-207，`arr[-1] * 1.1**(li-len+1)`）、`card_data` 全表。
@@ -5094,7 +5484,7 @@
 - 调用: 模块尾运行器（L481）；调用 `Card`/`card_data`/`check`。
 - 置信度: 已确认（机制链 L182-207 与 L347 已读；具体期望值 2822/同轴/`vh.hp>0` 是测试自身断言）
 
-#### 2.68.33 test_battle_level_range [L424-449]
+#### 2.74.33 test_battle_level_range [L424-449]
 - 类型: function
 - 签名: `def test_battle_level_range()`
 - 作用: **验证机制：11-16 全等级战斗贯通**——`BattleState(card_level)` 让实体、法术、觉醒三种数值全部按该等级取值，且觉醒 hp 随级严格递增。被测函数：`BattleState.__init__` 的等级传播（battle.py L2540-2541：`self.card_level = card_level or Card.default_level` 且 `Card.default_level = self.card_level`）、`Card.set_level`/`Card.__init__` 的 `self.level`（card_utils.py L222-223, L347）、`_value_at_level`（card_utils.py L196-207）、`AreaEffect.__init__` 的法术伤害分级（battle.py L1755-1769）、`derive_evolved_stats` 的觉醒 hp 分级（evolutions.py L107-113）。
@@ -5104,7 +5494,7 @@
 - 调用: 模块尾运行器（L481）；调用 `make_battle`/`spawn_troop`/`AreaEffect`/`_value_at_level`/`check`。
 - 置信度: 已确认（等级传播链与 `_value_at_level` 口径已核对；`Card.default_level` 是模块级类属性）
 
-#### 2.68.34 test_witchmother_curse [L452-469]
+#### 2.74.34 test_witchmother_curse [L452-469]
 - 类型: function
 - 签名: `def test_witchmother_curse()`
 - 作用: **验证机制：M4.5 女巫妈妈诅咒（VoodooCurse → VoodooHog）**——被诅咒的骑士死亡后生成 `VoodooHog`，归属施法者（player 0）且有血量。被测函数：`Projectile.__init__` 读 `targetBuffData.deathSpawnData`（card_utils.py L451-454）、`Projectile._on_arrive` 的单体分支写 `voodoo_curse`（battle.py L1471-1473）与清溅射分支的同名写入（battle.py L1626-1628，带 `'until': time+5.0`）、`Entity.die` 的诅咒消费（battle.py L208-218：`Card(curse['name'])` 校验后按 `curse['player']` 构造 `Troop` 并 `_spawn_entity`）、`Entity.update` 的诅咒 5s 过期（battle.py L345-348，仅当 `until` 存在）。
@@ -5116,7 +5506,7 @@
 
 ---
 
-### 2.69 `scripts/test_m3_evo.py`
+### 2.75 `scripts/test_m3_evo.py`
 
 - **分析组**：G023　**行数**：488　**AST 符号数**：32
 
@@ -5129,7 +5519,7 @@
   - `S = 2.5937`（L59）— 注释标明 `1.1^10`，即 lv1 基准 → lv11 的数值缩放系数；仅作为文档化常量存在，测试体内部未直接引用该名字（各测试用硬编码的期望数字）
 - 顶层数据表/字典: 无（L22-25 的 `d0`/`d1` 是 `make_battle` 内的局部牌组列表，非模块级）
 
-#### 2.69.1 check [L17-20]
+#### 2.75.1 check [L17-20]
 - 类型: function
 - 签名: `def check(name, cond, extra='')`
 - 作用: 断言辅助函数：把一条断言的通过/失败计入全局计数并打印结果行。
@@ -5142,7 +5532,7 @@
 - 调用: 被本文件内所有 `test_*` 函数调用；异常兜底路径 L486 也调用它（`check(t.__name__ + ' 异常', False, str(e)[:80])`）。
 - 置信度: 已确认
 
-#### 2.69.2 make_battle [L22-28]
+#### 2.75.2 make_battle [L22-28]
 - 类型: function
 - 签名: `def make_battle(elixir=10)`
 - 作用: 构造一个双方圣水都被显式设定为 `elixir` 的 `BattleState`，供测试使用。
@@ -5153,7 +5543,7 @@
 - 调用: 被本文件全部 20 个 `test_*` 调用；它调用了 `battle.BattleState`（`src/clasher_new/battle.py:2538`）与 `player.PlayerState`（`src/clasher_new/player.py:5`）。
 - 置信度: 已确认
 
-#### 2.69.3 kill_blue_towers [L30-33]
+#### 2.75.3 kill_blue_towers [L30-33]
 - 类型: function
 - 签名: `def kill_blue_towers(bs)`
 - 作用: 把 1 号玩家（蓝方）三座塔的 `is_alive` 直接置 False，用于隔离伤害断言。
@@ -5164,7 +5554,7 @@
 - 调用: 被 `test_musketeer_snipe`（L313）、`test_archer_special_range`（L393）、`test_bomber_chain`（L414）、`test_icespirits_zone`（L432）调用；依赖 `BattleState.entities` 字典的 id→实体映射（塔 id 为 3/4/6 未在本文件给出依据，属硬编码假设）。
 - 置信度: 已确认（实现已确认；`(3,4,6)` 为塔 id 这一映射依据不在本文件内，属硬编码约定）
 
-#### 2.69.4 spawn_troop [L35-38]
+#### 2.75.4 spawn_troop [L35-38]
 - 类型: function
 - 签名: `def spawn_troop(bs, card, x, y, player, evolved=False)`
 - 作用: 在指定坐标生成一个部队实体并登记进战场。
@@ -5180,7 +5570,7 @@
 - 调用: 被绝大多数 `test_*` 调用；它调用了 `battle.Troop`（`battle.py:759`）、`battle.Position`、`BattleState._spawn_entity`。对应类来源：`from battle import Troop, Position`（L12）。
 - 置信度: 已确认
 
-#### 2.69.5 spawn_building [L40-43]
+#### 2.75.5 spawn_building [L40-43]
 - 类型: function
 - 签名: `def spawn_building(bs, card, x, y, player, evolved=False)`
 - 作用: 在指定坐标生成一个建筑实体并登记进战场。
@@ -5196,7 +5586,7 @@
 - 调用: 被 `test_goblindrill_hide`（L253）、`test_goblincage_capture`（L276）、`test_tesla_pulse`（L376）调用；它调用了 `battle.Building`（`battle.py:1233`）。
 - 置信度: 已确认（第 5 个位置参数 `False` 的具体语义无法确认，原因：未读取 `Building.__init__` 定义）
 
-#### 2.69.6 step_for [L45-47]
+#### 2.75.6 step_for [L45-47]
 - 类型: function
 - 签名: `def step_for(bs, seconds)`
 - 作用: 以 1/60 秒为步长推进战场指定秒数。
@@ -5208,7 +5598,7 @@
 - 调用: 被大量 `test_*` 调用（如 L72、L100、L115、L222、L280、L302、L323、L396、L416、L435、L451、L462 等）。
 - 置信度: 已确认
 
-#### 2.69.7 deploy_evo_spell [L49-57]
+#### 2.75.7 deploy_evo_spell [L49-57]
 - 类型: function
 - 签名: `def deploy_evo_spell(bs, card, position, times=3)`
 - 作用: 把某法术卡声明为 0 号玩家的觉醒卡并在同一位置连续打出 `times` 次，以走到觉醒形态。
@@ -5222,7 +5612,7 @@
 - 调用: 被 `test_goblinbarrel_decoy`（L221）与 `test_zap_evo_zone`（L294）调用；它调用了 `player.PlayerState.set_evolution_slots`、`BattleState.deploy_card`（`battle.py:2806`）。
 - 置信度: 已确认
 
-#### 2.69.8 test_action_interp_damage [L62-76]
+#### 2.75.8 test_action_interp_damage [L62-76]
 - 类型: function
 - 签名: `def test_action_interp_damage()`
 - 作用: 验收动作组解释器的直接伤害分支与纯视觉动作跳过分支。
@@ -5232,7 +5622,7 @@
 - 调用: 由 `__main__` 元组 L470 调度；它调用了 `make_battle`、`spawn_troop`、`check`、`step_for` 与 `battle.interpret_action_group`（`battle.py:2268`）。
 - 置信度: 已确认
 
-#### 2.69.9 test_action_interp_spawn_giant [L78-91]
+#### 2.75.9 test_action_interp_spawn_giant [L78-91]
 - 类型: function
 - 签名: `def test_action_interp_spawn_giant()`
 - 作用: 验收动作组解释器的 `SpawnEnemy` 分支：觉醒哥布林巨人内嵌 Goblin 定义出兵。
@@ -5242,7 +5632,7 @@
 - 调用: 由 `__main__` 元组 L470 调度；调用 `make_battle`、`spawn_troop`、`interpret_action_group`、`check`。
 - 置信度: 已确认
 
-#### 2.69.10 test_goblin_giant_threshold [L93-103]
+#### 2.75.10 test_goblin_giant_threshold [L93-103]
 - 类型: function
 - 签名: `def test_goblin_giant_threshold()`
 - 作用: 验收觉醒哥布林巨人按 `healthPercentages` 50% 阈值 + 1800ms 间隔连续投掷。
@@ -5252,7 +5642,7 @@
 - 调用: 由 `__main__` 元组 L471 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`。
 - 置信度: 已确认（L103 恒真断言已确认，其"对照组"名义与实现不符）
 
-#### 2.69.11 test_pekka_resurrect [L106-127]
+#### 2.75.11 test_pekka_resurrect [L106-127]
 - 类型: function
 - 签名: `def test_pekka_resurrect()`
 - 作用: 验收 Pekka 觉醒临时复活（延迟 2s、HP 1297、临时寿命 5s、每场一次）。
@@ -5262,7 +5652,7 @@
 - 调用: 由 `__main__` 元组 L472 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`，以及 `Troop.take_damage`。
 - 置信度: 已确认
 
-#### 2.69.12 test_pekka_soul_bonus [L129-139]
+#### 2.75.12 test_pekka_soul_bonus [L129-139]
 - 类型: function
 - 签名: `def test_pekka_soul_bonus()`
 - 作用: 验收 Pekka 复活时的灵魂加成（每灵魂 +519）。
@@ -5272,7 +5662,7 @@
 - 调用: 由 `__main__` 元组 L472 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.13 test_pekka_heal_on_kill [L141-153]
+#### 2.75.13 test_pekka_heal_on_kill [L141-153]
 - 类型: function
 - 签名: `def test_pekka_heal_on_kill()`
 - 作用: 验收 Pekka 的 `onKilledDoneAction` 击杀治疗（+1297，封顶 max_hp）。
@@ -5282,7 +5672,7 @@
 - 调用: 由 `__main__` 元组 L472 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`；依赖 `entity_holder.on_attack`（属性来源未在本文件给出，属外部实现）。
 - 置信度: 待确认（`entity_holder` 的具体类型与 `on_attack` 语义未在本文件定义，原因：只读到调用点，未读对应类的定义）
 
-#### 2.69.14 test_megaknight_dash [L156-168]
+#### 2.75.14 test_megaknight_dash [L156-168]
 - 类型: function
 - 签名: `def test_megaknight_dash()`
 - 作用: 验收 MegaKnight 冲锋跳（3.5~5.0 格内贴脸 + 落地 AoE 545 伤害）。
@@ -5292,7 +5682,7 @@
 - 调用: 由 `__main__` 元组 L473 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`、`Position.distance_to`。
 - 置信度: 已确认
 
-#### 2.69.15 test_megaknight_uppercut [L170-180]
+#### 2.75.15 test_megaknight_uppercut [L170-180]
 - 类型: function
 - 签名: `def test_megaknight_uppercut()`
 - 作用: 验收 MegaKnight 上勾拳击退（约 4 格）。
@@ -5302,7 +5692,7 @@
 - 调用: 由 `__main__` 元组 L473 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.16 test_electro_dragon_chain [L183-199]
+#### 2.75.16 test_electro_dragon_chain [L183-199]
 - 类型: function
 - 签名: `def test_electro_dragon_chain()`
 - 作用: 验收 ElectroDragon 链电命中 3 个目标、每跳 192 伤害。
@@ -5312,7 +5702,7 @@
 - 调用: 由 `__main__` 元组 L474 调度；调用 `make_battle`、`spawn_troop`、`check`、`entity_holder.on_attack`。
 - 置信度: 待确认（`entity_holder.on_attack` 的链电实现未在本文件，原因：未读该 holder 类定义）
 
-#### 2.69.17 test_battleram_pushback [L202-214]
+#### 2.75.17 test_battleram_pushback [L202-214]
 - 类型: function
 - 签名: `def test_battleram_pushback()`
 - 作用: 验收 BattleRam 冲锋推击（伤害 ≈215、推退 ≈2.5 格）。
@@ -5322,7 +5712,7 @@
 - 调用: 由 `__main__` 元组 L474 调度；调用 `make_battle`、`spawn_troop`、`check`、`entity_holder.starting_position`。
 - 置信度: 待确认（`entity_holder.starting_position` 与冲锋触发逻辑未在本文件，原因：未读该 holder 类定义）
 
-#### 2.69.18 test_goblinbarrel_decoy [L217-227]
+#### 2.75.18 test_goblinbarrel_decoy [L217-227]
 - 类型: function
 - 签名: `def test_goblinbarrel_decoy()`
 - 作用: 验收觉醒 GoblinBarrel 的 GoblinDummy 诱饵与 3 次出牌共 9 哥布林。
@@ -5332,7 +5722,7 @@
 - 调用: 由 `__main__` 元组 L475 调度；调用 `make_battle`、`deploy_evo_spell`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.19 test_bats_overheal [L230-245]
+#### 2.75.19 test_bats_overheal [L230-245]
 - 类型: function
 - 签名: `def test_bats_overheal()`
 - 作用: 验收 Bats 觉醒过量治疗可突破 max_hp 并封顶 3×max。
@@ -5342,7 +5732,7 @@
 - 调用: 由 `__main__` 元组 L475 调度；调用 `make_battle`、`spawn_troop`、`check`、`battle.Entity.update`（`battle.py:13`）、`Troop._evo_on_attack`。
 - 置信度: 已确认（`_evo_on_attack` 为内部回调，其实现未在本文件，原因：调用点在 battle.py 的 Troop 内）
 
-#### 2.69.20 test_goblindrill_hide [L248-268]
+#### 2.75.20 test_goblindrill_hide [L248-268]
 - 类型: function
 - 签名: `def test_goblindrill_hide()`
 - 作用: 验收觉醒 GoblinDrill 在 66%/33% 两档血量阈值各触发一次隐匿（不可选取+无敌+钻出哥布林）。
@@ -5352,7 +5742,7 @@
 - 调用: 由 `__main__` 元组 L476 调度；调用 `make_battle`、`spawn_building`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.21 test_goblincage_capture [L271-284]
+#### 2.75.21 test_goblincage_capture [L271-284]
 - 类型: function
 - 签名: `def test_goblincage_capture()`
 - 作用: 验收觉醒 GoblinCage 捕获 3 格内地面部队并持续眩晕/按秒伤害。
@@ -5362,7 +5752,7 @@
 - 调用: 由 `__main__` 元组 L476 调度；调用 `make_battle`、`spawn_building`、`spawn_troop`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.22 test_zap_evo_zone [L287-303]
+#### 2.75.22 test_zap_evo_zone [L287-303]
 - 类型: function
 - 签名: `def test_zap_evo_zone()`
 - 作用: 验收觉醒 Zap 生成 5s 眩晕领域且总伤害为 192×3。
@@ -5372,7 +5762,7 @@
 - 调用: 由 `__main__` 元组 L477 调度；调用 `make_battle`、`spawn_troop`、`deploy_evo_spell`、`step_for`、`check`，并引用 `battle.EvoZapZone`（`battle.py:2328`）。
 - 置信度: 已确认
 
-#### 2.69.23 test_musketeer_snipe [L306-324]
+#### 2.75.23 test_musketeer_snipe [L306-324]
 - 类型: function
 - 签名: `def test_musketeer_snipe()`
 - 作用: 验收觉醒 Musketeer 每第 2 发狙击弹临时射程 30 并可命中 8 格外目标。
@@ -5382,7 +5772,7 @@
 - 调用: 由 `__main__` 元组 L477 调度；调用 `make_battle`、`spawn_troop`、`kill_blue_towers`、`step_for`、`check`、`entity_holder.on_tick/on_attack`、`Troop.in_attack_range/in_sight_range`。
 - 置信度: 待确认（`entity_holder.shot_index`/`on_tick`/`on_attack` 与 `_snipe_range_active` 的产生逻辑不在本文件，原因：未读对应类定义）
 
-#### 2.69.24 test_valkyrie_tornado [L327-344]
+#### 2.75.24 test_valkyrie_tornado [L327-344]
 - 类型: function
 - 签名: `def test_valkyrie_tornado()`
 - 作用: 验收觉醒 Valkyrie 攻击生成迷你龙卷领域并累计伤害 >200。
@@ -5392,7 +5782,7 @@
 - 调用: 由 `__main__` 元组 L478 调度；调用 `make_battle`、`spawn_troop`、`check`，并引用 `battle.EvoEffectZone`（`battle.py:1946`）。
 - 置信度: 已确认（变量 `prev` L336/L341 被赋值但未参与断言，属实现中的无用残留）
 
-#### 2.69.25 test_wizard_shield_lost [L347-357]
+#### 2.75.25 test_wizard_shield_lost [L347-357]
 - 类型: function
 - 签名: `def test_wizard_shield_lost()`
 - 作用: 验收觉醒 Wizard 破盾时的 AoE 爆炸伤害 ≈285。
@@ -5402,7 +5792,7 @@
 - 调用: 由 `__main__` 元组 L478 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`、`Entity.take_damage`。
 - 置信度: 已确认
 
-#### 2.69.26 test_barbarians_rage [L360-368]
+#### 2.75.26 test_barbarians_rage [L360-368]
 - 类型: function
 - 签名: `def test_barbarians_rage()`
 - 作用: 验收 Barbarians 觉醒狂暴同时提升移速与攻速 ×1.35。
@@ -5412,7 +5802,7 @@
 - 调用: 由 `__main__` 元组 L478 调度；调用 `make_battle`、`spawn_troop`、`check`、`Troop._evo_on_attack`。
 - 置信度: 已确认
 
-#### 2.69.27 test_tesla_pulse [L371-382]
+#### 2.75.27 test_tesla_pulse [L371-382]
 - 类型: function
 - 签名: `def test_tesla_pulse()`
 - 作用: 验收觉醒 Tesla 出场脉冲眩晕 1.5s 与 DOT 伤害 ≈265。
@@ -5422,7 +5812,7 @@
 - 调用: 由 `__main__` 元组 L479 调度；调用 `make_battle`、`spawn_building`、`spawn_troop`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.28 test_archer_special_range [L385-404]
+#### 2.75.28 test_archer_special_range [L385-404]
 - 类型: function
 - 签名: `def test_archer_special_range()`
 - 作用: 验收觉醒 Archer 二段箭仅在 4.5 格内附加（近目标多出 ≈218）。
@@ -5432,7 +5822,7 @@
 - 调用: 由 `__main__` 元组 L479 调度；调用 `make_battle`、`spawn_troop`、`kill_blue_towers`、`step_for`、`check`、`entity_holder.on_attack`。
 - 置信度: 待确认（`entity_holder.on_attack` 的二段箭实现不在本文件，原因：未读对应类定义）
 
-#### 2.69.29 test_bomber_chain [L407-420]
+#### 2.75.29 test_bomber_chain [L407-420]
 - 类型: function
 - 签名: `def test_bomber_chain()`
 - 作用: 验收觉醒 Bomber 命中后追加二段爆炸（damage 88）且总伤 ≥380。
@@ -5442,7 +5832,7 @@
 - 调用: 由 `__main__` 元组 L480 调度；调用 `make_battle`、`spawn_troop`、`kill_blue_towers`、`step_for`、`check`。
 - 置信度: 已确认
 
-#### 2.69.30 test_icespirits_zone [L423-439]
+#### 2.75.30 test_icespirits_zone [L423-439]
 - 类型: function
 - 签名: `def test_icespirits_zone()`
 - 作用: 验收觉醒 IceSpirits 命中点冰雾伤害+冰冻，以及友方狂暴领域 ×1.30。
@@ -5452,7 +5842,7 @@
 - 调用: 由 `__main__` 元组 L480 调度；调用 `make_battle`、`spawn_troop`、`kill_blue_towers`、`step_for`、`check`、`entity_holder.on_attack`。
 - 置信度: 待确认（`entity_holder.on_attack` 的冰雾/领域实现不在本文件，原因：未读对应类定义）
 
-#### 2.69.31 test_hunter_net [L442-453]
+#### 2.75.31 test_hunter_net [L442-453]
 - 类型: function
 - 签名: `def test_hunter_net()`
 - 作用: 验收觉醒 Hunter 首攻网缚使目标眩晕约 1.0s。
@@ -5462,7 +5852,7 @@
 - 调用: 由 `__main__` 元组 L480 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`、`entity_holder.on_attack`。
 - 置信度: 待确认（`entity_holder.on_attack` 的网缚实现不在本文件，原因：未读对应类定义）
 
-#### 2.69.32 test_wallbreakers_mini [L456-467]
+#### 2.75.32 test_wallbreakers_mini [L456-467]
 - 类型: function
 - 签名: `def test_wallbreakers_mini()`
 - 作用: 验收觉醒 Wallbreakers 死亡后亡语生成 Wallbreaker_mini（hp≈166、归属不变）。
@@ -5472,7 +5862,7 @@
 - 调用: 由 `__main__` 元组 L481 调度；调用 `make_battle`、`spawn_troop`、`step_for`、`check`、`Entity.take_damage`。
 - 置信度: 已确认
 
-#### 2.69.33 模块级驱动块（非符号，L469-488）
+#### 2.75.33 模块级驱动块（非符号，L469-488）
 - 类型: `if __name__ == '__main__':` 顶层语句（简报未列为符号，但必须记录）
 - 作用: 顺序执行 25 个测试函数、逐个捕获异常、汇总并决定退出码。
 - 实现: L470-481 是一个 25 元素元组（明确列出全部 `test_*` 函数，包括 `test_goblin_giant_threshold`、`test_action_interp_spawn_giant` 等；注意简报列出的 32 个符号中有 7 个是辅助函数，测试函数共 25 个）；L482-486 用 `try/except Exception` 逐个执行，异常时先 `traceback.print_exc()` 再调 `check(t.__name__ + ' 异常', False, str(e)[:80])`；L487 打印 `通过 {PASS} / 失败 {FAIL}`；L488 `sys.exit(1 if FAIL else 0)`。
@@ -5480,7 +5870,7 @@
 
 ---
 
-### 2.70 `scripts/test_m4_evo7.py`
+### 2.76 `scripts/test_m4_evo7.py`
 
 - **分析组**：G028　**行数**：297　**AST 符号数**：15
 
@@ -5492,7 +5882,7 @@
 - 关键模块级常量: `PASS = FAIL = 0`（L22）— 断言通过/失败计数器，由 `check` 用 `global` 累加（L24-26）。
 - 顶层数据表/字典: 无。两副 8 卡卡组是 `make_battle` 内的字面量（L29-30），断言文案与期望数值散在各 test 函数内。
 
-#### 2.70.1 check [L23-26]
+#### 2.76.1 check [L23-26]
 - 类型: function
 - 签名: `def check(name, cond, extra=''):`
 - 作用: 单调计数器式断言：`cond` 为真自增 `PASS` 并打印 `OK <name>`，否则自增 `FAIL` 并打印 `FAIL <name>`；`extra` 非空时方括号附在后面。
@@ -5505,7 +5895,7 @@
 - 调用: 被本文件所有 8 个 test 函数调用；`PASS/FAIL` 在 L296 汇总、L297 `sys.exit(1 if FAIL else 0)`。
 - 置信度: 已确认
 
-#### 2.70.2 make_battle [L28-34]
+#### 2.76.2 make_battle [L28-34]
 - 类型: function
 - 签名: `def make_battle(elixir=10):`
 - 作用: 用两副写死的 8 卡卡组构造一个 `BattleState`，并把双方圣水都顶到 `elixir`（构造后再次显式赋值）。
@@ -5516,7 +5906,7 @@
 - 调用: 被 `test_princess_slow_shot`(L59)、`test_minionhorde_first_hit_veil`(L83)、`test_royalhogs_flying_landing`(L101)、`test_ghost_souldier_summon`(L126)、`test_skeletonarmy_general_gerry`(L166)、`test_babydragon_gust`(L209)、`test_furnace_hot_spawn`(L243)、`test_cycle_trigger_path`(L270) 调用。
 - 置信度: 已确认
 
-#### 2.70.3 kill_blue_towers [L36-38]
+#### 2.76.3 kill_blue_towers [L36-38]
 - 类型: function
 - 签名: `def kill_blue_towers(bs):`
 - 作用: 把实体 id 3、4、6 的 `is_alive` 直接置 False（= 蓝方两座公主塔与蓝方王塔），用于排除塔的攻击干扰。
@@ -5527,7 +5917,7 @@
 - 调用: 被本文件 7 个 test 函数调用（L60、L102、L117、L127、L167、L210、L244）。注：直接改 `is_alive` **不改 hp**，而 `BattleState.update_player_hp` 只同步 `.hp`（`battle.py:2642-2651`）、`PlayerState.get_crown_count` 也只判 `hp<=0`（`player.py:54-58`），因此本函数不会因"杀王塔"而触发 `step()` 的 `game_over` 判定（`battle.py:2653-2659`）。
 - 置信度: 已确认
 
-#### 2.70.4 spawn_troop [L40-43]
+#### 2.76.4 spawn_troop [L40-43]
 - 类型: function
 - 签名: `def spawn_troop(bs, card, x, y, player, evolved=False):`
 - 作用: 用给定坐标/归属/觉醒标志构造一个 `Troop` 并注册进战场，返回该实体（部署延迟由调用方自行清零）。
@@ -5542,7 +5932,7 @@
 - 调用: 被本文件全部 8 个 test 函数调用（如 L61-63、L84、L103、L128、L168-169、L211、L216-217、L245 为 `spawn_building`）。
 - 置信度: 已确认
 
-#### 2.70.5 spawn_building [L45-48]
+#### 2.76.5 spawn_building [L45-48]
 - 类型: function
 - 签名: `def spawn_building(bs, card, x, y, player, evolved=False):`
 - 作用: 构造一个 `Building` 并注册进战场，返回该实体。
@@ -5557,7 +5947,7 @@
 - 调用: 仅被 `test_furnace_hot_spawn` 调用（L245，`FirespiritHut` 觉醒建筑）。
 - 置信度: 已确认
 
-#### 2.70.6 step_for [L50-52]
+#### 2.76.6 step_for [L50-52]
 - 类型: function
 - 签名: `def step_for(bs, seconds):`
 - 作用: 以 1/60 s 固定步长推进战斗 `int(seconds*60)` 次。
@@ -5569,7 +5959,7 @@
 - 调用: 被 6 个 test 函数调用（L67、L73、L91、L118、L140、L144、L155、L157、L192、L198、L219、L223、L227、L229、L250-252 处另有内联 `b.step(1/60)` 循环）。
 - 置信度: 已确认
 
-#### 2.70.7 test_princess_slow_shot [L56-76]
+#### 2.76.7 test_princess_slow_shot [L56-76]
 - 类型: function
 - 签名: `def test_princess_slow_shot():`
 - 作用: 断言觉醒公主的"首发射击附加 30% 减速（×0.70，约 5.5s）"与"死亡后留下半径 3.0 的减速领域"两条机制。
@@ -5579,7 +5969,7 @@
 - 调用: 由 `__main__` runner（L287-290）调用；调用 `make_battle`/`kill_blue_towers`/`spawn_troop`/`step_for`/`check`；触发引擎侧 `card_mechanics` 的 Princess 觉醒钩子与 `battle.py:1044` 的死亡领域生成。减速数值落点见 `battle.py:129-134`（`speed_buff`/`speed_debuff`）。
 - 置信度: 已确认
 
-#### 2.70.8 test_minionhorde_first_hit_veil [L80-94]
+#### 2.76.8 test_minionhorde_first_hit_veil [L80-94]
 - 类型: function
 - 签名: `def test_minionhorde_first_hit_veil():`
 - 作用: 断言觉醒亡灵大军"每成员首次受击被闪避 + 进入 0.67s 无敌窗口，窗口结束后正常受伤"。
@@ -5589,7 +5979,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`spawn_troop`/`step_for`/`check`；被断言的行为在 `battle.py:350-352`、`511-515`、`821-824`。
 - 置信度: 已确认
 
-#### 2.70.9 test_royalhogs_flying_landing [L98-119]
+#### 2.76.9 test_royalhogs_flying_landing [L98-119]
 - 类型: function
 - 签名: `def test_royalhogs_flying_landing():`
 - 作用: 断言觉醒皇家野猪"部署即飞行（地面单位选不中）→ 受击或攻击时落地并造成一次落地 AoE（lv11≈43）"。
@@ -5599,7 +5989,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_blue_towers`/`spawn_troop`/`step_for`/`check`；相关引擎分支 `battle.py:529-535`、`826-833`、`3250-3265`。
 - 置信度: 已确认
 
-#### 2.70.10 test_ghost_souldier_summon [L123-158]
+#### 2.76.10 test_ghost_souldier_summon [L123-158]
 - 类型: function
 - 签名: `def test_ghost_souldier_summon():`
 - 作用: 断言觉醒皇家幽灵"部署即隐身（不可选取）→ 首次攻击显形并召唤 2 名 Souldier（召唤伤害 81@lv11）→ Souldier 不自然消失 → 脱战 2s 后重新隐身"。
@@ -5609,7 +5999,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_blue_towers`/`spawn_troop`/`step_for`/`check`；Souldier 派生角色在 `evo_2025_data.py:145` 注册（L12 注释：注册 3 个派生角色）。
 - 置信度: 已确认
 
-#### 2.70.11 test_skeletonarmy_general_gerry [L162-202]
+#### 2.76.11 test_skeletonarmy_general_gerry [L162-202]
 - 类型: function
 - 签名: `def test_skeletonarmy_general_gerry():`
 - 作用: 断言觉醒骷髅军团"同批部署只生成 1 个 General Gerry（HP=护盾=32、排在己方后排）"、"Gerry 存活时阵亡骷髅转成无敌且不可选取的亡影（仅法术可穿透）"、"Gerry 阵亡后亡影全灭且骷髅不再转化"。
@@ -5619,7 +6009,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_blue_towers`/`spawn_troop`/`step_for`/`check`；相关引擎分支 `battle.py:856-864`、`507-516`、`3158`（`_evo2025_is_gerry` 分支）。
 - 置信度: 已确认（含 L201-202 恒真断言这一事实的确认）
 
-#### 2.70.12 test_babydragon_gust [L206-230]
+#### 2.76.12 test_babydragon_gust [L206-230]
 - 类型: function
 - 签名: `def test_babydragon_gust():`
 - 作用: 断言觉醒幼龙"攻击期间友军 +30% / 敌军 -30%（半径 4.0 假设）"、"觉醒弹道伤害为基础弹道伤害 ×1.04"、"死亡后气流残留约 2s 且残留期内减速仍生效、到期解除"。
@@ -5629,7 +6019,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_blue_towers`/`spawn_troop`/`step_for`/`check` 与同文件 `Card_base_damage`（L214-215）。
 - 置信度: 已确认
 
-#### 2.70.13 Card_base_damage [L233-236]
+#### 2.76.13 Card_base_damage [L233-236]
 - 类型: function
 - 签名: `def Card_base_damage():`
 - 作用: 取"基础幼龙"（未觉醒 `BabyDragon`）的弹道伤害作为对照基准值。
@@ -5639,7 +6029,7 @@
 - 调用: 仅被 `test_babydragon_gust` 调用（L214-215，两次）。
 - 置信度: 已确认
 
-#### 2.70.14 test_furnace_hot_spawn [L240-259]
+#### 2.76.14 test_furnace_hot_spawn [L240-259]
 - 类型: function
 - 签名: `def test_furnace_hot_spawn():`
 - 作用: 断言觉醒火焰熔炉"攻击期间以 2.4s 间隔热生成火灵，且左右侧交替生成"。
@@ -5649,7 +6039,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_blue_towers`/`spawn_building`/`check`，并直接内联 `b.step`（L250-252）。
 - 置信度: 已确认
 
-#### 2.70.15 test_cycle_trigger_path [L263-283]
+#### 2.76.15 test_cycle_trigger_path [L263-283]
 - 类型: function
 - 签名: `def test_cycle_trigger_path():`
 - 作用: 对 7 张卡逐一验证"觉醒周期触发路径畅通"：把该卡放进觉醒槽并置入循环队首后连续出牌 `times` 次，断言每次部署都成功且最后一次部署出的是带 `evo` 属性的觉醒实体。
@@ -5661,7 +6051,7 @@
 
 ---
 
-### 2.71 `scripts/test_m5_data.py`
+### 2.77 `scripts/test_m5_data.py`
 
 - **分析组**：G028　**行数**：294　**AST 符号数**：16
 
@@ -5672,7 +6062,7 @@
 - 关键模块级常量: `PASS = FAIL = 0`（L24）— 断言计数器，由 `check`（L25-28）用 `global` 累加。
 - 顶层数据表/字典: 无。卡组是 `make_battle` 内的字面量（L31-33）与 `_mm_battle` 内改写（L201）。
 
-#### 2.71.1 check [L25-28]
+#### 2.77.1 check [L25-28]
 - 类型: function
 - 签名: `def check(name, cond, extra=''):`
 - 作用: 与 `test_m4_evo7.py` 的同名函数逐字同形：真则 `PASS += 1` 打印 `OK`，假则 `FAIL += 1` 打印 `FAIL`，`extra` 非空时方括号附加。
@@ -5685,7 +6075,7 @@
 - 调用: 被本文件 9 个 test 函数调用；`PASS/FAIL` 在 L293 汇总、L294 `sys.exit(1 if FAIL else 0)`。
 - 置信度: 已确认
 
-#### 2.71.2 make_battle [L30-34]
+#### 2.77.2 make_battle [L30-34]
 - 类型: function
 - 签名: `def make_battle():`
 - 作用: 构造一副固定卡组（含被测三卡）对 `['Knight']*8` 的 `BattleState`，双方圣水均为 10。
@@ -5695,7 +6085,7 @@
 - 调用: 被 `test_ronin_data`(L57)、`test_ronin_parry_reflect`(L69)、`test_ronin_cooldown_and_ranged`(L85)、`test_vines_data_and_zone`(L115)、`test_vines_two_hits_and_tower`(L135)、`test_vines_ground_snare_top3`(L161 与 L180)、`_mm_battle`(L199) 调用。
 - 置信度: 已确认
 
-#### 2.71.3 kill_princess_towers [L36-39]
+#### 2.77.3 kill_princess_towers [L36-39]
 - 类型: function
 - 签名: `def kill_princess_towers(bs):`
 - 作用: 把实体 id 1、2、3、4（双方四座公主塔）的 `is_alive` 置 False，并附注"King 塔未激活不攻击"，以排除塔防干扰。
@@ -5706,7 +6096,7 @@
 - 调用: 被本文件 8 处调用（L70、L86、L116、L162、L181、L203，以及 `test_vines_two_hits_and_tower` 只用 (3,4) 的等价写法 L137-138）。
 - 置信度: 已确认
 
-#### 2.71.4 spawn_troop [L41-45]
+#### 2.77.4 spawn_troop [L41-45]
 - 类型: function
 - 签名: `def spawn_troop(bs, card, x, y, player):`
 - 作用: 构造 `Troop`、注册进战场，并**在函数内**把 `deploy_delay_remaining` 清零后返回（与 m4 版本不同点）。
@@ -5720,7 +6110,7 @@
 - 调用: 被 `test_ronin_*`、`test_vines_*` 各测试调用（如 L58、L71-72、L87-89、L99、L117、L139、L163-164、L182-185）。
 - 置信度: 已确认
 
-#### 2.71.5 step_for [L47-49]
+#### 2.77.5 step_for [L47-49]
 - 类型: function
 - 签名: `def step_for(bs, seconds):`
 - 作用: 以 1/60 s 步长推进 `int(seconds*60)` 次。
@@ -5732,7 +6122,7 @@
 - 调用: 被 `test_ronin_parry_reflect`(L75)、`test_ronin_cooldown_and_ranged`(L94、L96)、`test_vines_data_and_zone`(L119)、`test_vines_two_hits_and_tower`(L142、L152)、`test_vines_ground_snare_top3`(L166、L173、L176、L187)、`test_mergemaiden_forms`(L242) 调用。
 - 置信度: 已确认
 
-#### 2.71.6 test_ronin_data [L54-63]
+#### 2.77.6 test_ronin_data [L54-63]
 - 类型: function
 - 签名: `def test_ronin_data():`
 - 作用: 断言 Ronin 的格挡参数已由 gamedata 字段经 `card_mechanics.Ronin` 挂载到 `entity_holder` 上（反射 200%、冷却 3.5s、仅近战、部署即就绪）。
@@ -5742,7 +6132,7 @@
 - 调用: 由 `__main__` runner 调用（L284-292 列表首项）；调用 `make_battle`/`spawn_troop`/`check`。
 - 置信度: 已确认
 
-#### 2.71.7 test_ronin_parry_reflect [L66-79]
+#### 2.77.7 test_ronin_parry_reflect [L66-79]
 - 类型: function
 - 签名: `def test_ronin_parry_reflect():`
 - 作用: 断言近战首击被格挡（本体不掉血）+ 攻击者受到 200% 反弹 + 进入约 3.5s 冷却。
@@ -5752,7 +6142,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_princess_towers`/`spawn_troop`/`step_for`/`check`；被断言行为在 `card_mechanics.py:696-711` 与 `battle.py:520-525`（`on_take_damage` 钩子短路点）。
 - 置信度: 已确认
 
-#### 2.71.8 test_ronin_cooldown_and_ranged [L82-102]
+#### 2.77.8 test_ronin_cooldown_and_ranged [L82-102]
 - 类型: function
 - 签名: `def test_ronin_cooldown_and_ranged():`
 - 作用: 断言"冷却期间正常受伤、冷却结束后再次格挡、远程攻击不触发格挡"三条。
@@ -5762,7 +6152,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_princess_towers`/`spawn_troop`/`step_for`/`check`。
 - 置信度: 已确认
 
-#### 2.71.9 test_vines_data_and_zone [L107-128]
+#### 2.77.9 test_vines_data_and_zone [L107-128]
 - 类型: function
 - 签名: `def test_vines_data_and_zone():`
 - 作用: 断言 Vines 数值贯通（弹道伤害 lv11=153、弹速已注入）且出牌后落地生成 `Vines_AeO` 领域（半径 2.5、剩余寿命 ≤2s、锁定 ≤3 个高血目标）。
@@ -5772,7 +6162,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_princess_towers`/`spawn_troop`/`step_for`/`check` 与 `Card`（L110）；引擎侧领域类 `battle.py:2103-2170`、弹道钩子 `battle.py:1449`。
 - 置信度: 已确认
 
-#### 2.71.10 test_vines_two_hits_and_tower [L131-154]
+#### 2.77.10 test_vines_two_hits_and_tower [L131-154]
 - 类型: function
 - 签名: `def test_vines_two_hits_and_tower():`
 - 作用: 断言 Vines 对单位两跳共 306（153×2）伤害、领域 2s 后消失、对王塔类按 25% 计价（2×153×0.25=76.5）。
@@ -5782,7 +6172,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`spawn_troop`/`step_for`/`check` 与 `b.deploy_card`。
 - 置信度: 已确认
 
-#### 2.71.11 test_vines_ground_snare_top3 [L157-193]
+#### 2.77.11 test_vines_ground_snare_top3 [L157-193]
 - 类型: function
 - 签名: `def test_vines_ground_snare_top3():`
 - 作用: 断言 Vines 的拽落（空中单位临时落地、可被地面单位选取）、束缚（不移动/不攻击、时长 >2s、结束后复飞）与 3 目标上限。
@@ -5792,7 +6182,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `make_battle`/`kill_princess_towers`/`spawn_troop`/`step_for`/`check`、`Troop.update_current_target`。
 - 置信度: 已确认
 
-#### 2.71.12 _mm_battle [L198-204]
+#### 2.77.12 _mm_battle [L198-204]
 - 类型: function
 - 签名: `def _mm_battle(elixir):`
 - 作用: 为 Spirit Empress 测试准备战场：把 player 0 的手牌循环改成 `['MergeMaiden'] + ['Knight']*7`、圣水设为给定值、关掉四座公主塔，返回 `(battle, player0)`。
@@ -5803,7 +6193,7 @@
 - 调用: 被 `test_mergemaiden_forms`(L231) 与 `test_mergemaiden_mirror`(L269) 调用。
 - 置信度: 已确认
 
-#### 2.71.13 _mm_forms [L206-208]
+#### 2.77.13 _mm_forms [L206-208]
 - 类型: function
 - 签名: `def _mm_forms(b):`
 - 作用: 过滤出战场上"塔之外的、存活的、卡名以 `MergeMaiden` 开头"的实体（即两种形态的部署产物）。
@@ -5814,7 +6204,7 @@
 - 调用: 被 `test_mergemaiden_forms`(L233、L246、L254、L260) 与 `test_mergemaiden_mirror`(L275) 调用。
 - 置信度: 已确认
 
-#### 2.71.14 test_mergemaiden_data [L211-225]
+#### 2.77.14 test_mergemaiden_data [L211-225]
 - 类型: function
 - 签名: `def test_mergemaiden_data():`
 - 作用: 断言 Spirit Empress 两个形态条目的数值贯通：飞行形态 lv11 hp 1798 / dmg 309 / 攻速 1.6 / 射程 5 / 对空对地 / 飞行；地面形态攻速 1.2 / 近战射程 1.2 / 仅对地 / 地面；两形态共享 hp 1798 与 dmg 309。
@@ -5824,7 +6214,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `check` 与 `Card`；数值表来源据 docstring L11 为官方数值表行 + M7 补建 Normal 行。
 - 置信度: 已确认
 
-#### 2.71.15 test_mergemaiden_forms [L228-263]
+#### 2.77.15 test_mergemaiden_forms [L228-263]
 - 类型: function
 - 签名: `def test_mergemaiden_forms():`
 - 作用: 断言双费用形态的部署规则：圣水 ≥6 出 6 费飞行远程（Mounted）、<6 出 3 费地面（Normal）、恰好 6 出空中形态、圣水不足实际费用时拒绝且不扣费，并核对扣费、手牌循环、`last_card`、`last_card_cost` 一致性。
@@ -5834,7 +6224,7 @@
 - 调用: 由 `__main__` runner 调用；调用 `_mm_battle`/`_mm_forms`/`step_for`/`check` 与 `BattleState.deploy_card`。
 - 置信度: 已确认
 
-#### 2.71.16 test_mergemaiden_mirror [L266-280]
+#### 2.77.16 test_mergemaiden_mirror [L266-280]
 - 类型: function
 - 签名: `def test_mergemaiden_mirror():`
 - 作用: 断言镜像法术复制 Spirit Empress 的**上一形态**（此处为空中 Mounted），且按其"实际费用 + 1"扣费（6+1=7）。
@@ -5846,7 +6236,7 @@
 
 ---
 
-### 2.72 `scripts/test_m6_elite.py`
+### 2.78 `scripts/test_m6_elite.py`
 
 - **分析组**：G020　**行数**：521　**AST 符号数**：25
 
@@ -5859,7 +6249,7 @@
   - `sys.path.insert(0, ...'src'/'clasher_new')` + `os.chdir(...)`（L13-14）— 把源码目录加入导入路径并把工作目录切到 `src/clasher_new`，使 `from battle import ...` 这类**裸模块名导入**可用；是脚本能在任意 cwd 下跑的前提。
 - 顶层数据表/字典: 无（无模块级字典/表；所有卡组以函数内局部列表字面量给出）
 
-#### 2.72.1 check [L22-25]
+#### 2.78.1 check [L22-25]
 - 类型: function
 - 签名: `def check(name, cond, extra='')`
 - 作用: 断言记录器：条件为真则 `PASS += 1` 并打印 `  OK <name>`，否则 `FAIL += 1` 并打印 `  FAIL <name>`；`extra` 非空时追加方括号附注。**不抛异常**，全部测试跑完才由退出码体现失败。
@@ -5872,7 +6262,7 @@
 - 调用: 被本文件全部 19 个 test 函数调用；不调用其它模块。全局 `PASS`/`FAIL` 在 `__main__` L520 汇总打印。
 - 置信度: 已确认
 
-#### 2.72.2 make_battle [L27-30]
+#### 2.78.2 make_battle [L27-30]
 - 类型: function
 - 签名: `def make_battle(deck0)`
 - 作用: 构造一个双方圣水均为 10 的 `BattleState`：player 0 用调用方给的 8 卡牌组，player 1 固定 `['Knight'] * 8`（**陪练靶子**，本脚本全部用例中 player 1 只用于放"受测敌军"）。
@@ -5883,7 +6273,7 @@
 - 调用: 被 19 个 test 函数全部调用（每个用例开头）；调用了 `PlayerState`（`player.py` L5）与 `BattleState`（`battle.py`）。
 - 置信度: 已确认
 
-#### 2.72.3 kill_towers [L32-35]
+#### 2.78.3 kill_towers [L32-35]
 - 类型: function
 - 签名: `def kill_towers(bs)`
 - 作用: 把实体 id 1~4 的 `is_alive` 置 False，关掉四座公主塔。
@@ -5894,7 +6284,7 @@
 - 调用: 被全部 19 个 test 调用（紧随 `make_battle`）。**依赖"实体 id 1~4 恒为公主塔"这一引擎布局约定**（未在本文件内校验）。
 - 置信度: 已确认（"id 1~4 = 四座公主塔"是引擎既有约定，见 battle.py 塔实体初始化；本脚本按此约定使用）
 
-#### 2.72.4 spawn [L37-41]
+#### 2.78.4 spawn [L37-41]
 - 类型: function
 - 签名: `def spawn(bs, card, x, y, player)`
 - 作用: **绕过手牌/圣水/部署区校验**，直接在指定坐标造一个 `Troop` 实体并立刻去掉部署延迟，返回该实体——用于精确布置敌军/友军。
@@ -5908,7 +6298,7 @@
 - 调用: 被 test_minipekka/test_knight/test_musketeer(间接)/test_giant/test_goblins/test_megaminion/test_icewizard/test_berserker/test_balloon/test_barblog/test_elitearcher/test_icegolemite 调用；内部调用 `Troop`、`Position`（`battle.py`）与 `BattleState._spawn_entity`。
 - 置信度: 已确认
 
-#### 2.72.5 step_for [L43-45]
+#### 2.78.5 step_for [L43-45]
 - 类型: function
 - 签名: `def step_for(bs, seconds)`
 - 作用: 以固定 1/60 s 步长推进战斗 `seconds` 秒。
@@ -5920,7 +6310,7 @@
 - 调用: 被全部 test 函数多次调用；调用 `BattleState.step`（`battle.py`）。
 - 置信度: 已确认
 
-#### 2.72.6 deploy_hero [L47-52]
+#### 2.78.6 deploy_hero [L47-52]
 - 类型: function
 - 签名: `def deploy_hero(bs, card, x, y)`
 - 作用: **经正式部署链路**（`deploy_card`，含手牌/圣水/部署区校验与 `apply_hero_overlay`）部署 player 0 的一张 Hero 卡，越过部署延迟后返回该实体。
@@ -5933,7 +6323,7 @@
 - 调用: 被全部 Hero 用例（test_data_layer 起）调用；调用 `BattleState.deploy_card`（`battle.py`，Hero 分支经 `apply_hero_overlay` L2409/L2633）。
 - 置信度: 已确认
 
-#### 2.72.7 test_data_layer [L57-79]
+#### 2.78.7 test_data_layer [L57-79]
 - 类型: function
 - 签名: `def test_data_layer()`
 - 作用: **数据层 + Wild slot 互斥**验收：17 卡 `abilityData` 是否注入、`Card.ability` 是否由 `summonCharacterData.abilityData` 派生、Hero 槽上限是否 2、以及"hero 声明后该卡觉醒禁用"。
@@ -5943,7 +6333,7 @@
 - 调用: `__main__` L501 第一个执行；调用 `check`、`make_battle`、`kill_towers`、`deploy_hero`，并直接使用 `Card`/`card_data`(`card_utils`)、`PlayerState`(`player`)。
 - 置信度: 已确认
 
-#### 2.72.8 test_knight [L84-107]
+#### 2.78.8 test_knight [L84-107]
 - 类型: function
 - 签名: `def test_knight()`
 - 作用: **§1 Hero Knight — Triumphant Taunt**：验证独立数值表缩放（含护盾）、2 费单次能力、6.5 格嘲讽锁定与半径外免疫、5s 嘲讽窗、护盾挂载与到期消失。
@@ -5953,7 +6343,7 @@
 - 调用: `__main__` L502；调用 `check`/`make_battle`/`kill_towers`/`deploy_hero`/`spawn`/`step_for`；被验机制在 `battle.py` L2409-2437/L3208-3248 与 `card_mechanics.py` HeroKnight。
 - 置信度: 已确认
 
-#### 2.72.9 test_musketeer [L112-130]
+#### 2.78.9 test_musketeer [L112-130]
 - 类型: function
 - 签名: `def test_musketeer()`
 - 作用: **§2 Heroic Musketeer — Trusty Turret**：验证能力在 Hero 前方 3 格生成炮塔、炮塔独立数值（基准 L3）、`lifeTime=10` 建筑管线与线性 HP 衰减。
@@ -5963,7 +6353,7 @@
 - 调用: `__main__` L503；被验机制 `HeroMusketeer`（`card_mechanics.py` L932）与 `elite17_data.MUSKETEER_TURRET_SCD`/`_DERIVED`。
 - 置信度: 已确认
 
-#### 2.72.10 test_minipekka [L135-153]
+#### 2.78.10 test_minipekka [L135-153]
 - 类型: function
 - 签名: `def test_minipekka()`
 - 作用: **§3 Heroic Mini P.E.K.K.A — Breakfast Boost**：验证 holder 换类为 `HeroMiniPekka`、攻击累计"煎饼进度"且未满格时 `meter` 不变、能力在 0 格时 +1 级（伤害 ×1.1）并回复 30% 最大 HP。
@@ -5973,7 +6363,7 @@
 - 调用: `__main__` L504；被验机制 `HeroMiniPekka`（`card_mechanics.py` L948-987）。
 - 置信度: 已确认
 
-#### 2.72.11 test_valkyrie [L158-176]
+#### 2.78.11 test_valkyrie [L158-176]
 - 类型: function
 - 签名: `def test_valkyrie()`
 - 作用: **§4 Hero Valkyrie — Wild Whirlwind**：验证独立数值（L11 基准，故与 `hval` 等价）、旋风阶段开启 + 15% 减伤、旋风期间禁普攻、旋风结束进入位移冲刺与禁攻段、禁攻结束后还原。
@@ -5983,7 +6373,7 @@
 - 调用: `__main__` L505；被验机制 `HeroValkyrie`（`card_mechanics.py` L989-1050，含 `_dash`）。
 - 置信度: 已确认
 
-#### 2.72.12 test_wizard [L181-203]
+#### 2.78.12 test_wizard [L181-203]
 - 类型: function
 - 签名: `def test_wizard()`
 - 作用: **§5 Hero Wizard — Fiery Flight**：验证 Hero 主伤害覆写到**弹丸槽**、能力带 1 s 施法延迟、升空（空中位面 + 移速 +50%）、火球命中生成火旋风领域（半径 4）、5 s 后落地还原。
@@ -5993,7 +6383,7 @@
 - 调用: `__main__` L506；被验机制 `HeroWizard`（`card_mechanics.py` L1051-1100）。
 - 置信度: 已确认
 
-#### 2.72.13 test_bowler [L208-228]
+#### 2.78.13 test_bowler [L208-228]
 - 类型: function
 - 签名: `def test_bowler()`
 - 作用: **§6 Hero Bowler — Stone Swish**：验证弹丸伤害覆写、2.5 s 蓄力段（禁攻）、攻城模式三项改动（射程 11.5 / 攻速 1.9 / 塔伤 ×0.5）、以及 3 发用尽后自动还原射程与攻速。
@@ -6003,7 +6393,7 @@
 - 调用: `__main__` L507；被验机制 `HeroBowler`（`card_mechanics.py` L1102-1157）。
 - 置信度: 已确认
 
-#### 2.72.14 test_giant [L233-253]
+#### 2.78.14 test_giant [L233-253]
 - 类型: function
 - 签名: `def test_giant()`
 - 作用: **§7 Hero Giant — Heroic Hurl**：验证独立数值、能力抓取"最高 HP 部队"并位移、落地 2 s 眩晕 + 溅射伤害、以及**无抓取目标时不扣费（返还）**。
@@ -6013,7 +6403,7 @@
 - 调用: `__main__` L508；被验机制 `HeroGiant`（`card_mechanics.py` L1158-1196）+ `BattleState.use_ability` 退款分支。
 - 置信度: 已确认
 
-#### 2.72.15 test_goblins [L258-279]
+#### 2.78.15 test_goblins [L258-279]
 - 类型: function
 - 签名: `def test_goblins()`
 - 作用: **§8 Hero Goblins — Banner Brigade**：验证一次部署出 x4 同组、本体存活时按钮禁用、最后一只阵亡落旗开 5 s 条件窗、窗内按按钮出 x2 增援、单次使用后窗关闭。
@@ -6023,7 +6413,7 @@
 - 调用: `__main__` L509；被验机制 `HeroGoblins`（`card_mechanics.py` L1197-1232）+ `BattleState.hero_windows`/`use_ability` 条件窗分支（`battle.py` L2565、L3209-3221）。
 - 置信度: 已确认
 
-#### 2.72.16 test_megaminion [L284-307]
+#### 2.78.16 test_megaminion [L284-307]
 - 类型: function
 - 签名: `def test_megaminion()`
 - 作用: **§9 Hero Mega Minion — Wounding Warp**：验证独立数值、部署被动标记最低 HP 敌人、标记随目标死亡转移、能力瞬移到标记处 + WarpDmg + 永久塔伤 ×0.25。
@@ -6033,7 +6423,7 @@
 - 调用: `__main__` L510；被验机制 `HeroMegaMinion`（`card_mechanics.py` L1233-1277）。
 - 置信度: 已确认
 
-#### 2.72.17 test_icewizard [L312-326]
+#### 2.78.17 test_icewizard [L312-326]
 - 类型: function
 - 签名: `def test_icewizard()`
 - 作用: **§10 Hero Ice Wizard — 冰封自身**（数值【暂借-待实测】，机制先行）：验证能力使自身不可选取 + 无敌 + 定身，3 s 后破碎解除并复现冻结 AOE。
@@ -6043,7 +6433,7 @@
 - 调用: `__main__` L511；被验机制 `HeroIceWizard`（`card_mechanics.py` L1447-1493）。
 - 置信度: 已确认
 
-#### 2.72.18 test_tombstone [L331-347]
+#### 2.78.18 test_tombstone [L331-347]
 - 类型: function
 - 签名: `def test_tombstone()`
 - 作用: **§11 Hero Tombstone — Regal Revive**：验证 Hero 形态移除持续产骷髅、能力预付 5 费武装复活、墓碑破碎后升起 Tomb Queen（数值/只攻建筑/sight 7）、Queen 临时寿命计时器【假设 15 s】。
@@ -6053,7 +6443,7 @@
 - 调用: `__main__` L512；被验机制 `HeroTombstone`（`card_mechanics.py` L1278-1304）+ `elite17_data.TOMB_QUEEN_SCD`/`_DERIVED`。
 - 置信度: 已确认
 
-#### 2.72.19 test_berserker [L352-370]
+#### 2.78.19 test_berserker [L352-370]
 - 类型: function
 - 签名: `def test_berserker()`
 - 作用: **§12 Hero Berserker — Savage Survival**：验证熊灵形态四项数值（攻速 0.2 / UltraFast 2.7 / BearDmg 167 / 塔伤 ×0.25）、窗内致死伤害被钳制到 1 HP、4 s 后还原、窗后再受致死伤害正常死亡。
@@ -6063,7 +6453,7 @@
 - 调用: `__main__` L513；被验机制 `HeroBerserker`（`card_mechanics.py` L1305-1342）。
 - 置信度: 已确认
 
-#### 2.72.20 test_darkprince [L375-390]
+#### 2.78.20 test_darkprince [L375-390]
 - 类型: function
 - 签名: `def test_darkprince()`
 - 作用: **§13 Hero Dark Prince — Destructive Dismount**：验证能力下马并独立 spawn 犀牛坐骑（HP1356/Dmg179/ChargeDmg358/只攻建筑）、本体徒步化（失去冲锋 + 普攻溅射半径 1.2）。
@@ -6073,7 +6463,7 @@
 - 调用: `__main__` L514；被验机制 `HeroDarkPrince`（`card_mechanics.py` L1343-1372）+ `elite17_data.RHINO_SCD`/`_DERIVED`。
 - 置信度: 已确认
 
-#### 2.72.21 test_balloon [L395-413]
+#### 2.78.21 test_balloon [L395-413]
 - 类型: function
 - 签名: `def test_balloon()`
 - 作用: **§14 Hero Balloon — Coffin Cadets**：验证能力召出骷髅伞兵、伞降段不可选取 + 无敌、落地 AOE（263@L11，对塔 ×0.1）后转为可选取并驻场攻击、以及本体死亡继承基础 Balloon 亡语掉炸弹。
@@ -6083,7 +6473,7 @@
 - 调用: `__main__` L515；被验机制 `HeroBalloon`（继承 `Balloon`，`card_mechanics.py` L1373）+ `elite17_data.SKELETROOPER_SCD`/`_DERIVED`。
 - 置信度: 已确认
 
-#### 2.72.22 test_barblog [L418-436]
+#### 2.78.22 test_barblog [L418-436]
 - 类型: function
 - 签名: `def test_barblog()`
 - 作用: **§15 Hero Barbarian Barrel — Rowdy Reroll**：验证部署即开二次滚按钮窗（10 s【假设】）、能力（1 费）再滚一次、治疗野蛮人 = 桶伤害 50%、单次使用后窗关闭。
@@ -6093,7 +6483,7 @@
 - 调用: `__main__` L516；被验机制 `battle.py` L2440-2470（效果体）/L2952-2959（开窗）/L3209-3221（窗消费）+ `elite17_data.HERO_ABILITIES['BarbLog']`。
 - 置信度: 已确认
 
-#### 2.72.23 test_elitearcher [L441-460]
+#### 2.78.23 test_elitearcher [L441-460]
 - 类型: function
 - 签名: `def test_elitearcher()`
 - 作用: **§16 Hero Elite Archer — Warp + Triple Shot**（数值【暂借-待实测】，机制先行）：验证能力向最近敌人瞬移且距离缩短、三连射（攻速 0.3 s × 3 发待打）、假人分身 spawn（HP104 → lv11、寿命 5 s【假设】）、三连射打完攻速还原且计数归零。
@@ -6103,7 +6493,7 @@
 - 调用: `__main__` L517；被验机制 `HeroEliteArcher`（`card_mechanics.py` L1494-1541）+ `elite17_data.ELITE_ARCHER_DUMMY_SCD`/`_DERIVED`。
 - 置信度: 已确认
 
-#### 2.72.24 test_icegolemite [L465-484]
+#### 2.78.24 test_icegolemite [L465-484]
 - 类型: function
 - 签名: `def test_icegolemite()`
 - 作用: **§17 Hero Ice Golemite — 冰雪光环**（数值【暂借 Ice Golem/Hero】，机制先行）：验证能力开光环（半径 4 / 3 次脉冲【暂借】）、首脉冲在下一 tick 结算后剩 2 次、小体型档冻结 / 大体型档减速的分档、脉冲伤害命中。
@@ -6113,7 +6503,7 @@
 - 调用: `__main__` L518；被验机制 `HeroIceGolemite`（`card_mechanics.py` L1542-1560）。
 - 置信度: 已确认
 
-#### 2.72.25 test_champion_unaffected [L489-497]
+#### 2.78.25 test_champion_unaffected [L489-497]
 - 类型: function
 - 签名: `def test_champion_unaffected()`
 - 作用: **M8 回归红线**：验证冠军（Champion）路径不受 M8 改动影响 —— 未声明 hero 的 SkeletonKing 不带 `hero_mode`，其能力仍走原冷却路径。
@@ -6125,7 +6515,7 @@
 
 ---
 
-### 2.73 `scripts/value_displacement_scan.py`
+### 2.79 `scripts/value_displacement_scan.py`
 
 - **分析组**：G032　**行数**：126　**AST 符号数**：4
 
@@ -6138,7 +6528,7 @@
   - `sys.stdout.reconfigure(encoding="utf-8")`（L20-23）— 包在 try/except 里
 - 顶层数据表/字典: 无
 
-#### 2.73.1 load_ckpts [L34-42]
+#### 2.79.1 load_ckpts [L34-42]
 - 类型: function
 - 签名: `load_ckpts(run_dir)`
 - 作用: 列出 run 目录下所有 `solo_main_<数字>.pt`，按步数升序返回。
@@ -6149,7 +6539,7 @@
 - 调用: 被同文件 `scan`（L53）调用。不调用项目内函数。
 - 置信度: 已确认
 
-#### 2.73.2 state_dict_of [L45-49]
+#### 2.79.2 state_dict_of [L45-49]
 - 类型: function
 - 签名: `state_dict_of(path)`
 - 作用: 加载 ckpt 并把其中的张量转成 float32 的 numpy 数组字典。
@@ -6160,7 +6550,7 @@
 - 调用: 被同文件 `scan`（L57）调用。不调用项目内函数。
 - 置信度: 已确认
 
-#### 2.73.3 scan [L52-98]
+#### 2.79.3 scan [L52-98]
 - 类型: function
 - 签名: `scan(run_dir, filt, topk)`
 - 作用: 对一个 run 的全部相邻 ckpt 窗口，按 `filt` 子串筛选张量，统计每张量的"恰零位移窗口数"与中位相对位移，并给出策略侧（不含 filt）张量的整体冻结占比。
@@ -6181,7 +6571,7 @@
 - 调用: 被同文件 `main`（L113）调用；调用 `load_ckpts`（L53）、`state_dict_of`（L57）。
 - 置信度: 已确认
 
-#### 2.73.4 main [L101-122]
+#### 2.79.4 main [L101-122]
 - 类型: function
 - 签名: `main()`
 - 作用: 对命令行给出的多个 run 目录逐个扫描，最后汇总打印每个 run 中"全窗冻结"的 value 路径张量名。
@@ -6193,7 +6583,7 @@
 
 ---
 
-### 2.74 `src/clasher_new/__init__.py`
+### 2.80 `src/clasher_new/__init__.py`
 
 - **分析组**：G039　**行数**：0　**AST 符号数**：0
 
@@ -6207,12 +6597,12 @@
 - 调用: 无（无代码可执行）；被谁 import 取决于包的使用方，本文件自身不调用任何东西。
 - 置信度: 已确认（空文件，无内容可确认错）
 
-#### 2.74.1 （无） [L-]
+#### 2.80.1 （无） [L-]
 - 本文件无函数/类定义（简报亦记为 0 符号）；文件为空，无模块级语句。
 
 ---
 
-### 2.75 `src/clasher_new/agent_pool.py`
+### 2.81 `src/clasher_new/agent_pool.py`
 
 - **分析组**：G038　**行数**：35　**AST 符号数**：2
 
@@ -6228,7 +6618,7 @@
 - 顶层数据表/字典: 无
 - 顶层执行段（L19-35，非符号，附带说明）: L19-21 遍历 20 个有序对，取两个模型；L22 `env = CREnv(opponent_model=lambda observation: model2.predict(observation)[0])`——把 model2 包成对手策略（**每个配对都新建一个 env**）；L23-31 跑 30 局：`env.reset()`、循环 `model1.predict(obs)`→`env.step(action)` 直到终止，`wins += (1-env.battle.winner)`（L31，winner 为 None 时会 TypeError）；Elo 更新三行被注释（L32-34）；L35 `print(steps[index0], ':', steps[index1], '=', wins, ':', 10-wins)`——分母写成 10 而实际局数是 30，打印的「胜:负」不是 30 局口径（若 wins > 10 还会出现负数「负」）。
 
-#### 2.75.1 agent_pool.expected [L12-13]
+#### 2.81.1 agent_pool.expected [L12-13]
 - 类型: function
 - 签名: `expected(r_a, r_b)`
 - 作用: 标准 Elo 期望胜率公式。
@@ -6240,7 +6630,7 @@
 - 调用: 被 `update` 调用（L16）。**当前模块运行路径中无调用**（L32-34 已注释）。
 - 置信度: 已确认
 
-#### 2.75.2 agent_pool.update [L15-17]
+#### 2.81.2 agent_pool.update [L15-17]
 - 类型: function
 - 签名: `update(r_a, r_b, score_a, k=32)`
 - 作用: 按 Elo 规则返回 A/B 双方更新后的评分二元组。
@@ -6257,7 +6647,7 @@
 
 ---
 
-### 2.76 `src/clasher_new/arena.py`
+### 2.82 `src/clasher_new/arena.py`
 
 - **分析组**：G036　**行数**：209　**AST 符号数**：14
 
@@ -6273,7 +6663,7 @@
   - `towers`（L36-46）— 列表，**6 项**，每项 `(中心 Position, 半宽, 半高, player_id)`；公主塔 half 1.5/1.5、国王塔 half 2.0/2.0；player_id 0=蓝(下)、1=红(上)。
 - 未定义的被调用符号（重要）: L181 调用 `self._is_rolling_projectile_spell(spell_obj)`，但**全仓检索该名字只出现这一处**（`grep -rn "_is_rolling_projectile_spell" --include=*.py .` 仅命中 arena.py:181），`TileGrid` 无此方法、模块级也无此函数 ⇒ 该分支一旦执行（`is_spell=True`）会抛 `AttributeError`；仓内两处调用方（battle.py:2855、spell_module.py:261-262）均显式传 `is_spell=False`，故该路径当前未被触发。
 
-#### 2.76.1 TileGrid [L8-206]
+#### 2.82.1 TileGrid [L8-206]
 - 类型: class
 - 签名: `class TileGrid:`（带 `@dataclass` 装饰器，L7）
 - 作用: 战场几何/部署规则查询对象；类级属性承载全部静态常量，实例方法提供塔存活缓存、塔矩形最近距离、禁放区、可走性、部署区与部署合法性判定。
@@ -6282,7 +6672,7 @@
 - 实现: 类属性分四组：尺寸（L9-10）、塔位/桥/河（L11-20）、禁区格表（L21-34）、塔足迹表（L36-46）。实例上还会动态出现 `_tower_alive`（由 `refresh_tower_alive_cache` 写入，L61-63）与缓存 dict 条目。方法 13 个，其中 `dist_to_rect` 为 `@staticmethod`。类在 `battle.py:2544` 以 `self.arena = TileGrid()` 实例化，并在 `battle.py:2697` 每帧调用 `refresh_tower_alive_cache(self)`。
 - 置信度: 已确认
 
-##### 2.76.1.1 TileGrid.dist_to_rect [L49-53]
+##### 2.82.1.1 TileGrid.dist_to_rect [L49-53]
 - 类型: staticmethod
 - 签名: `dist_to_rect(px: float, py: float, cx: float, cy: float, hw: float, hh: float) -> float`
 - 作用: 计算点到轴对齐矩形的最短距离（矩形内为 0，矩形外为到最近边的欧氏距离）。
@@ -6294,7 +6684,7 @@
 - 实现: L51 横向外溢量 `dx = max(abs(px-cx)-hw, 0.0)`；L52 纵向同式；L53 返回两分量欧氏范数。docstring（L50）注明「矩形内 0」。被同文件 `tower_rect_dist`（L81）与 `pathfinding.py:73` 使用。
 - 置信度: 已确认
 
-##### 2.76.1.2 TileGrid.refresh_tower_alive_cache [L55-63]
+##### 2.82.1.2 TileGrid.refresh_tower_alive_cache [L55-63]
 - 类型: method
 - 签名: `refresh_tower_alive_cache(self, battle_state)`
 - 作用: 按 `self.towers` 顺序重建实例属性 `_tower_alive`（6 个布尔位），供热路径 O(1) 读取塔存活状态。
@@ -6305,7 +6695,7 @@
 - 调用: 被 `battle.py:2697`（每帧 `self.arena.refresh_tower_alive_cache(self)`）与 `tower_rect_dist` 冷启动分支（L72-74）调用。
 - 置信度: 已确认
 
-##### 2.76.1.3 TileGrid.tower_rect_dist [L65-84]
+##### 2.82.1.3 TileGrid.tower_rect_dist [L65-84]
 - 类型: method
 - 签名: `tower_rect_dist(self, pos: Position, battle_state=None, player_filter=None) -> float`
 - 作用: 返回 `pos` 到所有「存活且未被过滤」塔矩形的最短距离；无存活塔或全部被过滤时返回 `inf`。
@@ -6318,7 +6708,7 @@
 - 调用: 被 `battle.py:3067`（`_tower_footprint_blocks`）调用；缓存由 `battle.py:2697` 每帧刷新。
 - 置信度: 已确认
 
-##### 2.76.1.4 TileGrid.behind_king_zone [L86-94]
+##### 2.82.1.4 TileGrid.behind_king_zone [L86-94]
 - 类型: method
 - 签名: `behind_king_zone(self, player_id: int) -> tuple`
 - 作用: 返回王塔身后 1 格带宽的建筑禁放带 `(x1, y1, x2, y2)`。
@@ -6329,7 +6719,7 @@
 - 调用: 被同文件 `is_behind_king`（L97）调用；`is_behind_king` 又被 `can_deploy_at`（L180）、`battle.py:2869`、`rl/action_mask.py:409` 调用。
 - 置信度: 已确认
 
-##### 2.76.1.5 TileGrid.is_behind_king [L96-98]
+##### 2.82.1.5 TileGrid.is_behind_king [L96-98]
 - 类型: method
 - 签名: `is_behind_king(self, pos: Position, player_id: int) -> bool`
 - 作用: 判断点是否落在该玩家王塔身后的建筑禁放带内。
@@ -6341,7 +6731,7 @@
 - 调用: 被 `can_deploy_at`（L180）、`battle.py:2869`、`rl/action_mask.py:409` 调用。
 - 置信度: 已确认
 
-##### 2.76.1.6 TileGrid.is_valid_position [L100-101]
+##### 2.82.1.6 TileGrid.is_valid_position [L100-101]
 - 类型: method
 - 签名: `is_valid_position(self, pos)`
 - 作用: 判断点是否在战场矩形范围内（`0 <= x < 18` 且 `0 <= y < 32`）。
@@ -6352,7 +6742,7 @@
 - 调用: 被同文件 `is_walkable`（L111）与 `can_deploy_at`（L176）调用。
 - 置信度: 已确认
 
-##### 2.76.1.7 TileGrid.is_blocked_tile [L103-104]
+##### 2.82.1.7 TileGrid.is_blocked_tile [L103-104]
 - 类型: method
 - 签名: `is_blocked_tile(self, x: int, y: int) -> bool`
 - 作用: 判断整数格 `(x, y)` 是否在 `BLOCKED_TILES` 禁区表内。
@@ -6364,7 +6754,7 @@
 - 调用: 被同文件 `is_walkable`（L111）与 `can_deploy_at`（L176）调用。
 - 置信度: 已确认
 
-##### 2.76.1.8 TileGrid.is_walkable [L106-119]
+##### 2.82.1.8 TileGrid.is_walkable [L106-119]
 - 类型: method
 - 签名: `is_walkable(self, pos: Position) -> bool`
 - 作用: 判断点是否可通行：越界或禁区格不可通行；河道带内仅两座桥的 x 区间可通行；其余可通行。
@@ -6375,7 +6765,7 @@
 - 调用: 被同文件 `can_deploy_at` 间接依赖链外的 `battle.py:3054`（`pathfind_ground_walkable`）与 `battle.py:3059`（`ground_walkable`）调用；`pathfind_ground_walkable` 又被 `pathfinding_heap.EntityPathfinder.calculate` 调用（L83/L93/L128）。
 - 置信度: 已确认
 
-##### 2.76.1.9 TileGrid._is_tower_alive [L121-129]
+##### 2.82.1.9 TileGrid._is_tower_alive [L121-129]
 - 类型: method
 - 签名: `_is_tower_alive(self, tower_pos: Position, player_id: int, battle_state) -> bool`
 - 作用: 在 `battle_state.entities` 中查找位置与该塔位**精确相等**且归属匹配的实体，返回其 `is_alive`；查不到返回 False。
@@ -6388,7 +6778,7 @@
 - 调用: 被同文件 `refresh_tower_alive_cache`（L62）、`is_tower_tile`（L136）、`get_tower_blocked_x_ranges`（L199）调用。
 - 置信度: 已确认
 
-##### 2.76.1.10 TileGrid.is_tower_tile [L131-143]
+##### 2.82.1.10 TileGrid.is_tower_tile [L131-143]
 - 类型: method
 - 签名: `is_tower_tile(self, pos: Position, battle_state=None) -> bool`
 - 作用: 判断点是否落在任一**存活/未判死**塔的矩形足迹内（含边界）。
@@ -6400,7 +6790,7 @@
 - 调用: 被同文件 `can_deploy_at`（L177，`is_spell=False` 时）调用。
 - 置信度: 已确认
 
-##### 2.76.1.11 TileGrid.get_deploy_zones [L145-171]
+##### 2.82.1.11 TileGrid.get_deploy_zones [L145-171]
 - 类型: method
 - 签名: `get_deploy_zones(self, player_id: int, battle_state=None)`
 - 作用: 返回该玩家当前可部署的矩形区列表 `(x1, y1, x2, y2)`（半开区间），含己方半场、王塔身后带，以及敌方某侧公主塔被摧毁后追加的过河/推进 4 格区。
@@ -6412,7 +6802,7 @@
 - 调用: 被同文件 `can_deploy_at`（L183）调用。其他调用者：本次检索范围内未发现（`grep` 全仓 `get_deploy_zones` 仅命中 arena.py 定义与 L183）。
 - 置信度: 已确认
 
-##### 2.76.1.12 TileGrid.can_deploy_at [L173-191]
+##### 2.82.1.12 TileGrid.can_deploy_at [L173-191]
 - 类型: method
 - 签名: `can_deploy_at(self, pos: Position, player_id: int, battle_state=None, is_spell=False, spell_obj=None, is_building=False) -> bool`
 - 作用: 综合判定某玩家能否在 `pos` 部署（法术、建筑、普通部队走不同规则）。
@@ -6428,7 +6818,7 @@
 - 调用: 被 `battle.py:2855`（`is_spell=False`）与 `spell_module.py:261-262`（`is_spell=False`，仅 BarbLog 分支）调用。
 - 置信度: 已确认（函数体逻辑）；对 L187-190 兜底分支是否可达：待确认（L182 已把 y∈{0,31} 且 x∉[6,11] 排除，而 L153 的蓝方区 `(6,0,12,6)` 已覆盖 y=0、x∈[6,12)；从字面看 L187-190 与 L183-186 的判定重叠，但未逐位对账）
 
-##### 2.76.1.13 TileGrid.get_tower_blocked_x_ranges [L193-206]
+##### 2.82.1.13 TileGrid.get_tower_blocked_x_ranges [L193-206]
 - 类型: method
 - 签名: `get_tower_blocked_x_ranges(self, y: float, battle_state=None)`
 - 作用: 返回在给定 y 坐标上被塔矩形横向覆盖的 x 区间列表。
@@ -6442,7 +6832,7 @@
 
 ---
 
-### 2.77 `src/clasher_new/battle.py`
+### 2.83 `src/clasher_new/battle.py`
 
 - **分析组**：G002　**行数**：3267　**AST 符号数**：140
 
@@ -6453,7 +6843,7 @@
 - 关键模块级常量: 无。本文件（L1-L11 导入区之后直到 L3267）**没有任何模块级赋值语句**，全文 AST 顶层只有 `class` 与 `def`（依据：对 `/^[A-Za-z_]\w*\s*=/` 的全文件检索仅命中 L1-L10 的导入行）。因此「格子尺寸/地图/数值表」类常量**不在本文件**，而是：① 格尺寸与地图尺寸来自 `arena.TileGrid`（`arena.py:9` `width, height = 18, 32`；内部 cell 索引 36×64，见本文件 L3033/L3035 的 `range(0,36)`/`range(0,64)`）；② 卡牌数值表来自 `card_utils.card_data`/`spells`/`buildings`/`projectiles` 与 `evolutions.OFFICIAL_OVERRIDES`（L6-L8）。本文件内只以**字面量**形式出现的引擎数值：河道格 L2574-2576、地图夹取边界 y∈[0,32]、x∈[0,18]（L2594-2597）、圣水回复 `self.regen = 2.8`（L2550）与分档 2.8 / 1.4 / 2.8/3（L2690）、加时 300s 与 180~300s 三冠判定期（L2667/L2676）、建筑 A* 距离场 36×64（L3033-3036）、塔 id≤6（L2556-2561）。
 - 顶层数据表/字典: 本文件内**无模块级数据表**。函数内构造的局部字面量表有 3 处：`_death_elixir_gift` 的 `_gift = {'ElixirGolem':1.0,'ElixirGolem2':0.5,'ElixirGolem4':0.25}`（L332，圣水馈赠量）；`get_spawn_position` 的 `angle_offset = {2:0, 3:π/2, 4:π/4, 6:0}`（L2528，多单位出兵角度偏置）；`in_river` 的 `river_tiles` 列表（L2574-2576，河道格集合）。
 
-#### 2.77.1 Entity [L13-756]
+#### 2.83.1 Entity [L13-756]
 - 类型: class
 - 签名: `class Entity:`（无基类）
 - 作用: 所有战斗实体的基类：持有卡牌身份（player/card_name/data/level）、可变战斗状态（hp/护盾/buff 计时/索敌/伤害队列），并实现索敌、受击、死亡、buff、亡语等全部通用逻辑；同时通过 `entity_holder`（`BasicCharacter` 或同名机制类）委托卡牌专属机制。
@@ -6463,7 +6853,7 @@
 - 调用: 被 `Troop`/`Building`/`Projectile`/`AreaEffect`/`GenericBomb`/`EvoEffectZone`/`HealAuraZone`/`VinesSnareZone`/`TimedExplosive`/`IceGolemiteSnowZone` 继承（L759/L1233/L1417/L1723/L1892/L1946/L2038/L2091/L2377/L2484）；`BattleState._wrap` 对法术卡直接构造 `Entity`（L2622）。
 - 置信度: 已确认
 
-##### 2.77.1.1 Entity.__init__ [L14-99]
+##### 2.83.1.1 Entity.__init__ [L14-99]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name, battle_state: "BattleState" = None)`
 - 作用: 建立实体的身份字段与全部可变状态字段，并挂载机制类 holder、调用其 `on_spawn`。
@@ -6478,7 +6868,7 @@
 - 调用: 由 `Troop.__init__`（L761）、`Building.__init__`（L1235）、`Projectile.__init__`（L1419）、`TimedExplosive.__init__`（L2379）经 `super().__init__` 调用；`BattleState._wrap` L2622 直接调用。内部调用 `BasicCharacter(self)`/`eval(card_name)` 与 `holder.on_spawn()`。
 - 置信度: 已确认
 
-##### 2.77.1.2 Entity.apply_buff [L102-150]
+##### 2.83.1.2 Entity.apply_buff [L102-150]
 - 类型: method
 - 签名: `def apply_buff(self, speed_mult=None, hit_speed_mult=None, duration=0.0, damage_reduction=None, stun=0.0, heal=None, retarget=False)`
 - 作用: 统一的 buff/debuff 施加入口（眩晕、加减速、独立攻速、减伤、持续治疗）。
@@ -6495,7 +6885,7 @@
 - 调用: 由几乎全部机制代码调用（例：`AreaEffect._pulse` L1799/L1803/L1808/L1811/L1814；`_evo2025_gust_tick` L886-888；`VinesSnareZone._lock_targets` L2140；`DeathSlowZone.update` L2217；`IceGolemiteSnowZone.update` L2516-2519；`_tesla_evo_pulse` L2324；`EvoZapZone.update` L2363/L2372；`EvoEffectZone.update` L1986-1987）。
 - 置信度: 已确认
 
-##### 2.77.1.3 Entity.edge_distance_from [L152-168]
+##### 2.83.1.3 Entity.edge_distance_from [L152-168]
 - 类型: method
 - 签名: `def edge_distance_from(self, pos) -> float`
 - 作用: 返回 `pos` 到本实体「边缘」的距离：塔用矩形最近点距离（矩形内为 0），其余实体用中心距 − collision_radius。
@@ -6506,7 +6896,7 @@
 - 调用: 被 `in_attack_range`（L593）、`in_sight_range`（L612）、`update_current_target` 的塔回退索敌（L710）、`deal_area_damage`（L3259/L3261）、`core.BasicCharacter._hit_by_area` 调用；自身调用 `_bind_tower_rect`。
 - 置信度: 已确认
 
-##### 2.77.1.4 Entity._bind_tower_rect [L170-183]
+##### 2.83.1.4 Entity._bind_tower_rect [L170-183]
 - 类型: method
 - 签名: `def _bind_tower_rect(self)`
 - 作用: 惰性绑定本实体对应的塔矩形 `(cx,cy,hw,hh)`；非塔或查无此塔则置 None。
@@ -6516,7 +6906,7 @@
 - 调用: 被 `edge_distance_from` L160 调用。
 - 置信度: 已确认
 
-##### 2.77.1.5 Entity.to_dict [L185-198]
+##### 2.83.1.5 Entity.to_dict [L185-198]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 返回渲染该实体所需的最小信息字典。
@@ -6526,7 +6916,7 @@
 - 调用: 被 `Troop.to_dict`（L1083）、`Building.to_dict`（L1262）、`Projectile.to_dict`（L1544）经 `super()` 调用；渲染/回放层消费（调用方不在本文件）。
 - 置信度: 已确认
 
-##### 2.77.1.6 Entity.die [L200-229]
+##### 2.83.1.6 Entity.die [L200-229]
 - 类型: method
 - 签名: `def die(self)`
 - 作用: 置死亡标记并依次执行 holder 亡语、觉醒亡语、通用亡语、诅咒转化、觉醒击杀治疗、通知战斗状态。
@@ -6536,7 +6926,7 @@
 - 调用: 被 `take_damage`（L559）、`Troop.update` 的临时复活体到期（L1109）、`BattleState.on_death` 的 Gerry 亡影消散（L3161）调用；自身调用 `_generic_death_spawn`/`_death_elixir_gift`（间接）与 `battle_state.on_death`。
 - 置信度: 已确认
 
-##### 2.77.1.7 Entity._collector_tick [L231-245]
+##### 2.83.1.7 Entity._collector_tick [L231-245]
 - 类型: method
 - 签名: `def _collector_tick(self, dt)`
 - 作用: 圣水收集器产水：每 `manaGenerateTimeMs` 产 `manaCollectAmount` 圣水，冻结期暂停。
@@ -6547,7 +6937,7 @@
 - 调用: 被 `Troop.update` L1133 调用。
 - 置信度: 已确认
 
-##### 2.77.1.8 Entity._troop_spawner_tick [L247-274]
+##### 2.83.1.8 Entity._troop_spawner_tick [L247-274]
 - 类型: method
 - 签名: `def _troop_spawner_tick(self, dt)`
 - 作用: 部队通用周期出兵（`spawnCharacterData` + `spawnNumber` + `spawnPauseTime`），首波延迟 1.0s。
@@ -6558,7 +6948,7 @@
 - 调用: 被 `Troop.update` L1138 调用；调用 `get_spawn_position`、`battle_state._spawn_entity`。
 - 置信度: 已确认
 
-##### 2.77.1.9 Entity._generic_death_spawn [L276-323]
+##### 2.83.1.9 Entity._generic_death_spawn [L276-323]
 - 类型: method
 - 签名: `def _generic_death_spawn(self)`
 - 作用: 通用基础亡语：消费 `deathSpawnCharacterData`，分炸弹型/容器型/单位型三种生成方式。
@@ -6568,7 +6958,7 @@
 - 调用: 被 `Entity.die` L207 调用；调用 `_death_elixir_gift`、`get_spawn_position`、`bs.delayed_spawn`/`bs._spawn_entity`。
 - 置信度: 已确认
 
-##### 2.77.1.10 Entity._death_elixir_gift [L325-336]
+##### 2.83.1.10 Entity._death_elixir_gift [L325-336]
 - 类型: method
 - 签名: `def _death_elixir_gift(self)`
 - 作用: 死亡圣水馈赠：自身 `manaOnDeath` 给对方，及 ElixirGolem 三级链固定馈赠。
@@ -6578,7 +6968,7 @@
 - 调用: 被 `_generic_death_spawn` L297 调用。
 - 置信度: 已确认
 
-##### 2.77.1.11 Entity.update [L338-440]
+##### 2.83.1.11 Entity.update [L338-440]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 实体通用逐帧更新：诅咒过期、面纱计时、拽落复飞、holder tick、buff/debuff 衰减、治疗/减伤/技能冷却、延迟伤害重放、递增伤害蓄力、攻击序列推进与多段命中排队。
@@ -6589,7 +6979,7 @@
 - 调用: 被 `Troop.update`（L1112/L1121）、`Building.update`（L1292）经 `super()` 调用；也被 `BattleState.step` 通过 `entity.update(dt)` 触发（L2702）。注释 L339-344 说明本函数不检查 is_alive/deploy_delay，因会被子类 super 调用且 Miner/Drill 需在部署前移动。
 - 置信度: 已确认
 
-##### 2.77.1.12 Entity.ramped_damage [L442-456]
+##### 2.83.1.12 Entity.ramped_damage [L442-456]
 - 类型: method
 - 签名: `def ramped_damage(self, base=None)`
 - 作用: 返回当前应结算的伤害：有攻击序列时用序列档位值，否则用递增蓄力阶段值，均缺省回退 `base` 或 `data.damage`。
@@ -6600,7 +6990,7 @@
 - 调用: 被 `core.BasicCharacter.on_attack`（`core.py:30`）调用；被 `Building.update`（L1305/L1307）调用。
 - 置信度: 已确认
 
-##### 2.77.1.13 Entity._resolve_attack_seq [L459-488]
+##### 2.83.1.13 Entity._resolve_attack_seq [L459-488]
 - 类型: method
 - 签名: `def _resolve_attack_seq(self, raw, mode=None)`
 - 作用: 挂载攻击序列并按当前等级等比缩放各档伤害。
@@ -6612,7 +7002,7 @@
 - 调用: 被 `Troop.__init__`（L780，基础卡序列）与 `Troop._apply_evolution`（L814，觉醒序列）调用。
 - 置信度: 已确认
 
-##### 2.77.1.14 Entity._on_attack_done [L490-504]
+##### 2.83.1.14 Entity._on_attack_done [L490-504]
 - 类型: method
 - 签名: `def _on_attack_done(self, current_target=None)`
 - 作用: 攻击完成钩子：Manual 序列跨攻击推进一档；无 mode 序列则排队剩余多段命中。
@@ -6623,7 +7013,7 @@
 - 调用: 注释 L491 声明由 `BasicCharacter.on_attack` 末段调用；本文件内未直接调用（调用点在同名机制类中，待确认具体行号）。
 - 置信度: 待确认(调用点在 card_mechanics.py 内，本组未读该文件)
 
-##### 2.77.1.15 Entity.take_damage [L507-584]
+##### 2.83.1.15 Entity.take_damage [L507-584]
 - 类型: method
 - 签名: `def take_damage(self, amount: float, delayed=False, source=None, pierce_invincible=False)`
 - 作用: 施加伤害的统一入口：面纱闪避、无敌判定、holder 受击钩子、减伤、受击落地、护盾/血量扣减、破盾爆炸与蓄能重置、死亡与亡语伤害、亡语减速圈、受击后钩子。
@@ -6637,7 +7027,7 @@
 - 调用: 被全引擎大量调用（例：`_deal_splash_damage` L1615、`AreaEffect._pulse` L1822/L1824/L1827、`VinesSnareZone._deal_hit` L2158、`GenericBomb.update` L1923、`EvoEffectZone.update` L1985、`_tesla_evo_pulse` L2325、`_cast_lightning` L2802、`TimedExplosive.update` L2393/L2395、`deal_area_damage` L3265、`reflect_to_tower` L3177）；`Building.take_damage` 覆写后调用 super（L1269）。
 - 置信度: 已确认
 
-##### 2.77.1.16 Entity.in_attack_range [L586-604]
+##### 2.83.1.16 Entity.in_attack_range [L586-604]
 - 类型: method
 - 签名: `def in_attack_range(self, target)`
 - 作用: 判定目标是否在攻击范围内（公主塔有 +0.5 加成；支持形态射程覆盖、最小射程、狙击临时射程）。
@@ -6648,7 +7038,7 @@
 - 调用: 被 `get_nearest_target`（L642）、`_should_switch_target`（L659/L661）、`Troop.update`（L1169）、`Building.update`（L1302）、`_evo_on_attack` 系列与 `_evo2025_gust_tick`（L873）、`Entity.update` 的 ramp/序列复位（L412/L427）调用。
 - 置信度: 已确认
 
-##### 2.77.1.17 Entity.in_sight_range [L605-616]
+##### 2.83.1.17 Entity.in_sight_range [L605-616]
 - 类型: method
 - 签名: `def in_sight_range(self, target)`
 - 作用: 判定目标是否在视距内（公主塔 +0.5；狙击临时射程同步扩展）。
@@ -6659,7 +7049,7 @@
 - 调用: 被 `get_nearest_target`（L632）、`update_current_target`（L683）、`Troop.update`（L1170/L1181）调用。
 - 置信度: 已确认
 
-##### 2.77.1.18 Entity.get_nearest_target [L618-649]
+##### 2.83.1.18 Entity.get_nearest_target [L618-649]
 - 类型: method
 - 签名: `def get_nearest_target(self)`
 - 作用: 按「建筑/部队分类 + 是否已进入攻击范围」的优先级规则选出最近合法目标。
@@ -6669,7 +7059,7 @@
 - 调用: 被 `update_current_target` L689 调用。
 - 置信度: 已确认
 
-##### 2.77.1.19 Entity._should_switch_target [L651-670]
+##### 2.83.1.19 Entity._should_switch_target [L651-670]
 - 类型: method
 - 签名: `def _should_switch_target(self, current_target, new_target)`
 - 作用: 决定是否从当前目标切换到新目标（含防御建筑优先转火部队的规则）。
@@ -6681,7 +7071,7 @@
 - 调用: 被 `update_current_target` L691 调用。
 - 置信度: 已确认
 
-##### 2.77.1.20 Entity.update_current_target [L672-727]
+##### 2.83.1.20 Entity.update_current_target [L672-727]
 - 类型: method
 - 签名: `def update_current_target(self)`
 - 作用: 维护 `target_id`：校验旧目标有效性、按规则换目标、无目标时回退到最近敌方塔（不跨中轴选对侧公主塔）。
@@ -6691,7 +7081,7 @@
 - 调用: 被 `Troop.update` L1127、`Building.update` L1299 调用。
 - 置信度: 已确认
 
-##### 2.77.1.21 Entity._hero_taunt_override [L729-736]
+##### 2.83.1.21 Entity._hero_taunt_override [L729-736]
 - 类型: method
 - 签名: `def _hero_taunt_override(self, current_target)`
 - 作用: Knight Hero 嘲讽窗内强制把目标改为嘲讽者。
@@ -6702,7 +7092,7 @@
 - 调用: 被 `Troop.update` L1129、`Building.update` L1301 调用（注释 L730-731 强调需在 update_current_target 之后调用）。
 - 置信度: 已确认
 
-##### 2.77.1.22 Entity.create_projectile [L738-746]
+##### 2.83.1.22 Entity.create_projectile [L738-746]
 - 类型: method
 - 签名: `def create_projectile(self, target, damage_override=None)`
 - 作用: 以自身为发射者创建一枚 `Projectile` 并直接登记进战斗实体表。
@@ -6714,7 +7104,7 @@
 - 调用: 被 `Building.update` L1305 调用（地狱塔类蓄力弹道）。
 - 置信度: 已确认
 
-##### 2.77.1.23 Entity.on_both_sides_of_river [L748-753]
+##### 2.83.1.23 Entity.on_both_sides_of_river [L748-753]
 - 类型: method
 - 签名: `def on_both_sides_of_river(self, e2)`
 - 作用: 判断自身与另一实体是否分处河道两侧（用于跳河判定）。
@@ -6725,7 +7115,7 @@
 - 调用: 被 `Troop.update` L1123/L1170 调用。
 - 置信度: 已确认
 
-##### 2.77.1.24 Entity.near_river [L755-756]
+##### 2.83.1.24 Entity.near_river [L755-756]
 - 类型: method
 - 签名: `def near_river(self)`
 - 作用: 判断自身是否贴近任一河岸线（y=15 或 y=17）。
@@ -6735,7 +7125,7 @@
 - 调用: 被 `Troop.update` L1170 调用。
 - 置信度: 已确认
 
-#### 2.77.2 Troop [L759-1229]
+#### 2.83.2 Troop [L759-1229]
 - 类型: class
 - 签名: `class Troop(Entity):`
 - 作用: 部队实体：在 Entity 基础上加入部署延迟、寻路移动/跳河、卡死自救、队形车道偏移，以及全部觉醒形态（M4/M5/M6）钩子的实现。
@@ -6745,7 +7135,7 @@
 - 调用: 由 `BattleState._wrap`（L2629）与各觉醒/亡语/出兵处直接构造；其 `update` 由 `BattleState.step`（L2702）调用。
 - 置信度: 已确认
 
-##### 2.77.2.1 Troop.__init__ [L760-780]
+##### 2.83.2.1 Troop.__init__ [L760-780]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name, battle_state=None, evolved=False)`
 - 作用: 构造部队并初始化部署延迟、卡死探针、车道偏移等字段，按 `evolved` 应用觉醒。
@@ -6761,7 +7151,7 @@
 - 调用: 被本文件多处直接构造（L214、L273、L320、L862、L990、L995、L1024、L1329、L1360、L1413、L2263、L2719、L2918），并被 `_wrap` L2629 调用。
 - 置信度: 已确认
 
-##### 2.77.2.2 Troop._apply_evolution [L782-848]
+##### 2.83.2.2 Troop._apply_evolution [L782-848]
 - 类型: method
 - 签名: `def _apply_evolution(self)`
 - 作用: 觉醒形态装配：按基础卡曲线推导数值、收集全树机制字段、挂载生命/伤害/护盾、弹道钩子、攻击序列、出场动作与 M6 evo2025Hooks。
@@ -6771,7 +7161,7 @@
 - 调用: 被 `Troop.__init__` L777 调用。
 - 置信度: 已确认
 
-##### 2.77.2.3 Troop._evo2025_ensure_gerry [L851-866]
+##### 2.83.2.3 Troop._evo2025_ensure_gerry [L851-866]
 - 类型: method
 - 签名: `def _evo2025_ensure_gerry(self, gg)`
 - 作用: SkeletonArmy_EV1：确保本方 General Gerry 单例（同批 15 只只生成一个）。
@@ -6782,7 +7172,7 @@
 - 调用: 被 `_apply_evolution` L837 调用。
 - 置信度: 已确认
 
-##### 2.77.2.4 Troop._evo2025_gust_tick [L868-888]
+##### 2.83.2.4 Troop._evo2025_gust_tick [L868-888]
 - 类型: method
 - 签名: `def _evo2025_gust_tick(self, dt, current_target=None)`
 - 作用: BabyDragon_EV1 气流：攻击期间对半径内友军 +30%、敌军 −30% 移速。
@@ -6794,7 +7184,7 @@
 - 调用: 被 `Troop.update` L1135 调用。
 - 置信度: 已确认
 
-##### 2.77.2.5 Troop._evo_on_attack [L890-979]
+##### 2.83.2.5 Troop._evo_on_attack [L890-979]
 - 类型: method
 - 签名: `def _evo_on_attack(self, target)`
 - 作用: 觉醒攻击后钩子总入口：按字段族分发（攻击后 buff、二段箭、网缚、攻击动作组、Princess 减速箭、RoyalHogs 落地）。
@@ -6805,7 +7195,7 @@
 - 调用: 待确认(注释 L891 声明为觉醒攻击后钩子，调用点在 card_mechanics.py 的机制类中，本组未读该文件)
 - 置信度: 待确认(调用点在同仓 card_mechanics.py，未在本组文件清单内)
 
-##### 2.77.2.6 Troop._evo_on_death [L981-1056]
+##### 2.83.2.6 Troop._evo_on_death [L981-1056]
 - 类型: method
 - 签名: `def _evo_on_death(self)`
 - 作用: 觉醒死亡钩子：亡语出兵、觉醒囚笼亡语、Pekka 临时复活入队、SkeletonArmy 亡影转化、Princess 死亡减速领域、BabyDragon 死后气流残留。
@@ -6815,7 +7205,7 @@
 - 调用: 被 `Entity.die` L205 调用。
 - 置信度: 已确认
 
-##### 2.77.2.7 Troop._evo_giant_tick [L1058-1080]
+##### 2.83.2.7 Troop._evo_giant_tick [L1058-1080]
 - 类型: method
 - 签名: `def _evo_giant_tick(self, dt, current_target=None)`
 - 作用: GoblinGiant_EV1 血量阈值触发的连续投掷出兵。
@@ -6827,7 +7217,7 @@
 - 调用: 被 `Troop.update` L1131 调用。
 - 置信度: 已确认
 
-##### 2.77.2.8 Troop.to_dict [L1082-1085]
+##### 2.83.2.8 Troop.to_dict [L1082-1085]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 在 Entity 字典基础上把 type 改为 'troop'。
@@ -6837,7 +7227,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-##### 2.77.2.9 Troop.move_towards [L1087-1097]
+##### 2.83.2.9 Troop.move_towards [L1087-1097]
 - 类型: method
 - 签名: `def move_towards(self, position, dt: float, can_overshoot=False) -> None`
 - 作用: 朝目标点直线移动一步，步长 = speed×dt×移速 buff；可选是否允许越过目标点。
@@ -6850,7 +7240,7 @@
 - 调用: 被 `Troop.update` L1177/L1211/L1223 调用。
 - 置信度: 已确认
 
-##### 2.77.2.10 Troop.update [L1099-1229]
+##### 2.83.2.10 Troop.update [L1099-1229]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 部队逐帧主循环：眩晕/临时寿命早退、部署期早退、通用 tick、跳河与索敌、各类钩子 tick、钩拉与突进、寻路移动或攻击结算。
@@ -6861,7 +7251,7 @@
 - 调用: 由 `BattleState.step` L2702 逐实体调用。
 - 置信度: 已确认
 
-#### 2.77.3 Building [L1233-1415]
+#### 2.83.3 Building [L1233-1415]
 - 类型: class
 - 签名: `class Building(Entity):`
 - 作用: 建筑实体：无移动、可被指定为 persistent 塔、按 lifetime 持续衰减、有独立的觉醒建筑逐 tick 钩子（隐匿迁移/捕获/热生成）与觉醒死亡钩子。
@@ -6871,7 +7261,7 @@
 - 调用: 由 `BattleState.__init__`（L2556-2561）与 `_wrap`（L2626）构造；`update` 由 `step` 调用。
 - 置信度: 已确认
 
-##### 2.77.3.1 Building.__init__ [L1234-1259]
+##### 2.83.3.1 Building.__init__ [L1234-1259]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name, persistent=False, evolved=False)`
 - 作用: 构造建筑并初始化部署延迟、寿命计时、塔激活标记与塔矩形哨兵；按需装配觉醒数值。
@@ -6887,7 +7277,7 @@
 - 调用: 被 `BattleState.__init__` L2556-2561（塔）与 `_wrap` L2626 调用。
 - 置信度: 已确认
 
-##### 2.77.3.2 Building.to_dict [L1261-1264]
+##### 2.83.3.2 Building.to_dict [L1261-1264]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 在 Entity 字典上把 type 改为 'building'。
@@ -6897,7 +7287,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-##### 2.77.3.3 Building.take_damage [L1266-1271]
+##### 2.83.3.3 Building.take_damage [L1266-1271]
 - 类型: method
 - 签名: `def take_damage(self, amount: float, delayed=False, source=None, pierce_invincible=False)`
 - 作用: 建筑受击：转调父类，并在 KingTower 首次受击时激活王塔。
@@ -6911,7 +7301,7 @@
 - 调用: 被 `deal_area_damage`、`AreaEffect._pulse`、`Projectile._deal_splash_damage` 等通用伤害路径调用（多态分派）。
 - 置信度: 已确认
 
-##### 2.77.3.4 Building.update [L1273-1308]
+##### 2.83.3.4 Building.update [L1273-1308]
 - 类型: method
 - 签名: `def update(self, dt: float)`
 - 作用: 建筑逐帧更新：出场觉醒脉冲、王塔未激活早退、部署期、冰冻、觉醒钩子、寿命衰减、索敌与攻击。
@@ -6922,7 +7312,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.3.5 Building._evo_on_death [L1311-1329]
+##### 2.83.3.5 Building._evo_on_death [L1311-1329]
 - 类型: method
 - 签名: `def _evo_on_death(self)`
 - 作用: 觉醒建筑死亡钩子：按 `deathSpawnCharacterData` + `deathSpawnCount` 出兵。
@@ -6932,7 +7322,7 @@
 - 调用: 被 `Entity.die` L205 调用。
 - 置信度: 已确认
 
-##### 2.77.3.6 Building._evo_building_tick [L1331-1415]
+##### 2.83.3.6 Building._evo_building_tick [L1331-1415]
 - 类型: method
 - 签名: `def _evo_building_tick(self, dt)`
 - 作用: 觉醒建筑逐帧钩子：GoblinDrill 血量阈值隐匿迁移、GoblinCage 周期捕获地面部队、Furnace 攻击期热生成火精灵。返回 True 表示本帧跳过常规行为。
@@ -6943,7 +7333,7 @@
 - 调用: 被 `Building.update` L1291 调用。
 - 置信度: 已确认
 
-#### 2.77.4 Projectile [L1417-1636]
+#### 2.83.4 Projectile [L1417-1636]
 - 类型: class
 - 签名: `class Projectile(Entity):`
 - 作用: 弹道实体：从发射者飞向目标（或直线滚动），到达后结算单体/溅射伤害与 buff，并触发弹道生成链与觉醒命中钩子。
@@ -6953,7 +7343,7 @@
 - 调用: 由 `Entity.create_projectile`（L740）与 `BattleState._wrap`（L2620）构造；`update` 由 `step` 调用。
 - 置信度: 已确认
 
-##### 2.77.4.1 Projectile.__init__ [L1418-1434]
+##### 2.83.4.1 Projectile.__init__ [L1418-1434]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, source_card_name, target, homing=True, battle_state=None, damage_override=None, source=None)`
 - 作用: 构造弹道：记录起点/目标点、弹道数值行、是否滚动/追踪、发射者引用与碰撞半径。
@@ -6972,7 +7362,7 @@
 - 调用: 被 `_wrap` L2620 与 `Entity.create_projectile` L740 调用。
 - 置信度: 已确认
 
-##### 2.77.4.2 Projectile._damage [L1436-1438]
+##### 2.83.4.2 Projectile._damage [L1436-1438]
 - 类型: method
 - 签名: `def _damage(self)`
 - 作用: 返回实际伤害：有覆盖值用覆盖值，否则 `proj.damage`。
@@ -6982,7 +7372,7 @@
 - 调用: 被 `_on_arrive`（L1458/L1467）、`_evo_impact`（L1499/L1506）、`update` 滚动分支（L1566）、`_deal_splash_damage`（L1603/L1613）、`spawn_vines_zone`（L2238）调用。
 - 置信度: 已确认
 
-##### 2.77.4.3 Projectile._arrival_direction [L1440-1443]
+##### 2.83.4.3 Projectile._arrival_direction [L1440-1443]
 - 类型: method
 - 签名: `def _arrival_direction(self)`
 - 作用: 返回「起点→目标点」的单位方向向量。
@@ -6992,7 +7382,7 @@
 - 调用: 被 `_chain` L1538 调用（传给 `spawn_projectile_chain`）。
 - 置信度: 已确认
 
-##### 2.77.4.4 Projectile._on_arrive [L1445-1478]
+##### 2.83.4.4 Projectile._on_arrive [L1445-1478]
 - 类型: method
 - 签名: `def _on_arrive(self)`
 - 作用: 到达目标点时的结算分派：Vines 特殊处理、单体伤害（含 Monk 反弹与减速/诅咒）、溅射，最后触发生成链与觉醒命中钩子。
@@ -7002,7 +7392,7 @@
 - 调用: 被 `update` L1591 调用。
 - 置信度: 已确认
 
-##### 2.77.4.5 Projectile._evo_impact [L1480-1532]
+##### 2.83.4.5 Projectile._evo_impact [L1480-1532]
 - 类型: method
 - 签名: `def _evo_impact(self, impact)`
 - 作用: 觉醒弹道命中钩子：链电弹射、二段爆炸、命中点效果领域（含友方狂暴领域）。
@@ -7013,7 +7403,7 @@
 - 调用: 被 `_on_arrive` L1478 调用。
 - 置信度: 已确认
 
-##### 2.77.4.6 Projectile._chain [L1534-1541]
+##### 2.83.4.6 Projectile._chain [L1534-1541]
 - 类型: method
 - 签名: `def _chain(self, impact)`
 - 作用: 触发弹道生成链：二段弹与落地出兵。
@@ -7024,7 +7414,7 @@
 - 调用: 被 `_on_arrive` L1464/L1477、`update` 滚动分支 L1556 调用。
 - 置信度: 已确认
 
-##### 2.77.4.7 Projectile.to_dict [L1543-1546]
+##### 2.83.4.7 Projectile.to_dict [L1543-1546]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 在 Entity 字典上把 type 改为 'projectile'。
@@ -7034,7 +7424,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-##### 2.77.4.8 Projectile.update [L1548-1594]
+##### 2.83.4.8 Projectile.update [L1548-1594]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 弹道逐帧更新：滚动弹沿直线推进并对沿途敌人造成一次性伤害+击退，非滚动弹追踪/直飞到点后触发 `_on_arrive`。
@@ -7045,7 +7435,7 @@
 - 调用: 由 `BattleState.step` L2702 调用（`SpawnProjectile.update` L1702 转调本函数）。
 - 置信度: 已确认
 
-##### 2.77.4.9 Projectile._deal_splash_damage [L1596-1628]
+##### 2.83.4.9 Projectile._deal_splash_damage [L1596-1628]
 - 类型: method
 - 签名: `def _deal_splash_damage(self) -> None`
 - 作用: 溅射结算：先检测 Monk 禅定整法反弹，否则对半径内敌方按空地过滤结算伤害、击退、减速与诅咒。
@@ -7055,7 +7445,7 @@
 - 调用: 被 `_on_arrive` L1475 调用。
 - 置信度: 已确认
 
-##### 2.77.4.10 Projectile._move_towards [L1630-1636]
+##### 2.83.4.10 Projectile._move_towards [L1630-1636]
 - 类型: method
 - 签名: `def _move_towards(self, target_pos, dt)`
 - 作用: 用复数表示方向，按 `proj.speed*dt` 推进弹道位置。
@@ -7067,7 +7457,7 @@
 - 调用: 被 `update` L1594 调用。
 - 置信度: 已确认
 
-#### 2.77.5 _ProjectileShim [L1639-1653]
+#### 2.83.5 _ProjectileShim [L1639-1653]
 - 类型: class
 - 签名: `class _ProjectileShim:`
 - 作用: 二段弹的 `data` 兼容垫片：提供下游代码访问的最小属性集（无卡牌身份）。
@@ -7077,7 +7467,7 @@
 - 调用: 被 `SpawnProjectile.__init__` L1693 构造。
 - 置信度: 已确认
 
-##### 2.77.5.1 _ProjectileShim.__init__ [L1641-1653]
+##### 2.83.5.1 _ProjectileShim.__init__ [L1641-1653]
 - 类型: method
 - 签名: `def __init__(self, proj)`
 - 作用: 用一个弹道数值行 wrapper 填充最小属性集。
@@ -7088,7 +7478,7 @@
 - 调用: 被 `SpawnProjectile.__init__` 调用。
 - 置信度: 已确认
 
-#### 2.77.6 SpawnProjectile [L1656-1702]
+#### 2.83.6 SpawnProjectile [L1656-1702]
 - 类型: class
 - 签名: `class SpawnProjectile(Projectile):`
 - 作用: 弹道生成链的二段弹：从数值表行 wrapper 直接驱动，**有意跳过 `Entity.__init__`**，手工补齐下游所需状态，并置无敌以免被任何伤害结算。
@@ -7098,7 +7488,7 @@
 - 调用: 被 `BattleState.spawn_projectile_chain` L2770 构造。
 - 置信度: 已确认
 
-##### 2.77.6.1 SpawnProjectile.__init__ [L1660-1693]
+##### 2.83.6.1 SpawnProjectile.__init__ [L1660-1693]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, proj_wrapper, target_position, battle_state)`
 - 作用: 不用 Entity.__init__ 手工建立二段弹的全部字段（身份、无敌、弹道 wrapper、目标占位、滚动标记与 buff 槽）。
@@ -7114,7 +7504,7 @@
 - 调用: 被 `BattleState.spawn_projectile_chain` L2770 调用。
 - 置信度: 已确认
 
-##### 2.77.6.2 SpawnProjectile.to_dict [L1695-1698]
+##### 2.83.6.2 SpawnProjectile.to_dict [L1695-1698]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 直接返回二段弹的渲染字典（不走父类，避免访问不存在的字段）。
@@ -7124,7 +7514,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-##### 2.77.6.3 SpawnProjectile.die [L1700-1700]
+##### 2.83.6.3 SpawnProjectile.die [L1700-1700]
 - 类型: method
 - 签名: `def die(self)`
 - 作用: 覆写为仅置死亡标记，不触发任何亡语/机制链。
@@ -7134,7 +7524,7 @@
 - 调用: 可能被伤害/寿命路径调用（本文件内无显式调用者）。
 - 置信度: 已确认
 
-##### 2.77.6.4 SpawnProjectile.update [L1702-1702]
+##### 2.83.6.4 SpawnProjectile.update [L1702-1702]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 完全复用 `Projectile.update` 的行为。
@@ -7145,7 +7535,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-#### 2.77.7 _EffectShim [L1707-1720]
+#### 2.83.7 _EffectShim [L1707-1720]
 - 类型: class
 - 签名: `class _EffectShim:`
 - 作用: `AreaEffect` 及效果领域的 `data` 兼容垫片（把半径当作碰撞半径）。
@@ -7155,7 +7545,7 @@
 - 调用: 被 `AreaEffect.__init__` L1782、`EvoEffectZone.__init__` L1967、`HealAuraZone.__init__` L2060、`VinesSnareZone.__init__` L2116 构造。
 - 置信度: 已确认
 
-##### 2.77.7.1 _EffectShim.__init__ [L1709-1720]
+##### 2.83.7.1 _EffectShim.__init__ [L1709-1720]
 - 类型: method
 - 签名: `def __init__(self, radius)`
 - 作用: 以半径为碰撞半径填充最小属性集。
@@ -7166,7 +7556,7 @@
 - 调用: 被上述四个类的 `__init__` 调用。
 - 置信度: 已确认
 
-#### 2.77.8 AreaEffect [L1723-1873]
+#### 2.83.8 AreaEffect [L1723-1873]
 - 类型: class
 - 签名: `class AreaEffect(Entity):`
 - 作用: 瞬发区域法术实体（Zap/Freeze/Heal/Rage/Tornado/Earthquake/Poison），由数值表行驱动半径/寿命/脉冲间隔/buff，按 tick 脉冲结算 buff 与伤害。
@@ -7176,7 +7566,7 @@
 - 调用: 被 `BattleState.deploy_card` L2936 构造；`EvoZapZone` 继承（L2328）。
 - 置信度: 已确认
 
-##### 2.77.8.1 AreaEffect.__init__ [L1728-1783]
+##### 2.83.8.1 AreaEffect.__init__ [L1728-1783]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name, battle_state=None)`
 - 作用: 从 `spells` 数值行 + `OFFICIAL_OVERRIDES` 构造区域法术：半径、寿命、tick、目标过滤、buff 种类与时长、伤害数值（多路回退）、对塔倍率、建筑加成、减速、治疗量。
@@ -7191,7 +7581,7 @@
 - 调用: 被 `deploy_card` L2936、以及 `_wrap` 对法术卡的 Entity 路径无关（`_wrap` L2622 构造的是 Entity 而非 AreaEffect）。
 - 置信度: 已确认
 
-##### 2.77.8.2 AreaEffect._in_radius [L1785-1786]
+##### 2.83.8.2 AreaEffect._in_radius [L1785-1786]
 - 类型: method
 - 签名: `def _in_radius(self, e)`
 - 作用: 判定实体是否落在法术半径内（中心距 ≤ 半径 + 目标碰撞半径）。
@@ -7202,7 +7592,7 @@
 - 调用: 被 `_pulse` L1795、`update` 的 Rage 分支 L1856 调用。
 - 置信度: 已确认
 
-##### 2.77.8.3 AreaEffect._pulse [L1788-1831]
+##### 2.83.8.3 AreaEffect._pulse [L1788-1831]
 - 类型: method
 - 签名: `def _pulse(self)`
 - 作用: 单次脉冲：按 buff 种类分发（ZapFreeze 眩晕+重索敌、Freeze 单次冻结、Earthquake/Poison 减速、Rage 加速、Heal 治疗），并按伤害轨结算对塔/建筑/普通目标的差异化伤害。
@@ -7212,7 +7602,7 @@
 - 调用: 被 `update` L1865 与 `EvoZapZone.update` L2352 调用。
 - 置信度: 已确认
 
-##### 2.77.8.4 AreaEffect.update [L1833-1868]
+##### 2.83.8.4 AreaEffect.update [L1833-1868]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 区域法术逐帧：Tornado 类把敌人匀速拉向中心、Rage 施法一次性伤害、按 tick 脉冲、寿命递减。
@@ -7223,7 +7613,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.8.5 AreaEffect.to_dict [L1870-1873]
+##### 2.83.8.5 AreaEffect.to_dict [L1870-1873]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 返回区域法术的渲染字典。
@@ -7233,7 +7623,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-#### 2.77.9 _BombShim [L1876-1889]
+#### 2.83.9 _BombShim [L1876-1889]
 - 类型: class
 - 签名: `class _BombShim:`
 - 作用: `GenericBomb` 的 `data` 兼容垫片。
@@ -7243,7 +7633,7 @@
 - 调用: 被 `GenericBomb.__init__` L1906 构造。
 - 置信度: 已确认
 
-##### 2.77.9.1 _BombShim.__init__ [L1878-1889]
+##### 2.83.9.1 _BombShim.__init__ [L1878-1889]
 - 类型: method
 - 签名: `def __init__(self, radius)`
 - 作用: 以半径为碰撞半径填充最小属性集。
@@ -7254,7 +7644,7 @@
 - 调用: 被 `GenericBomb.__init__` 调用。
 - 置信度: 已确认
 
-#### 2.77.10 GenericBomb [L1892-1938]
+#### 2.83.10 GenericBomb [L1892-1938]
 - 类型: class
 - 签名: `class GenericBomb(Entity):`
 - 作用: 可编程定时炸弹（Mighty Miner 能力/MK 落地溅射）：显式伤害/半径/延迟/击退/空地过滤，不可被攻击不可被选取。
@@ -7264,7 +7654,7 @@
 - 调用: 待确认(构造点在 card_mechanics.py 的机制类中，本组未读该文件)
 - 置信度: 已确认
 
-##### 2.77.10.1 GenericBomb.__init__ [L1895-1911]
+##### 2.83.10.1 GenericBomb.__init__ [L1895-1911]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, damage, radius, delay, knockback=0.0, hits_air=True, hits_ground=True)`
 - 作用: 手工建立定时炸弹字段（不走 Entity.__init__）。
@@ -7283,7 +7673,7 @@
 - 调用: 待确认(调用点在 card_mechanics.py，本组未读)
 - 置信度: 待确认(调用点不在本组文件内)
 
-##### 2.77.10.2 GenericBomb.update [L1913-1931]
+##### 2.83.10.2 GenericBomb.update [L1913-1931]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 引信计时，到点对半径内敌方结算伤害并按需击退，然后自毁。
@@ -7294,7 +7684,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.10.3 GenericBomb.take_damage [L1933-1933]
+##### 2.83.10.3 GenericBomb.take_damage [L1933-1933]
 - 类型: method
 - 签名: `def take_damage(self, amount)`
 - 作用: 空实现：炸弹不受伤。
@@ -7305,7 +7695,7 @@
 - 调用: 由通用伤害路径多态分派调用。
 - 置信度: 已确认
 
-##### 2.77.10.4 GenericBomb.to_dict [L1935-1938]
+##### 2.83.10.4 GenericBomb.to_dict [L1935-1938]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 返回炸弹的渲染字典。
@@ -7315,7 +7705,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-#### 2.77.11 EvoEffectZone [L1946-2003]
+#### 2.83.11 EvoEffectZone [L1946-2003]
 - 类型: class
 - 签名: `class EvoEffectZone(Entity):`
 - 作用: 觉醒效果领域通用实体：持续伤害脉冲、减速/冰冻、向心吸引、友方增益；由动作组解释器从 `spawnDataData` 构建。
@@ -7325,7 +7715,7 @@
 - 调用: 被 `_evo_on_attack`（L948 女武神龙卷）、`_evo_on_death`（L1039/L1049）、`Projectile._evo_impact`（L1525）、`spawn_evo_zone`（L2028）构造；被 `DeathSlowZone`/`IceGolemiteSnowZone` 继承。
 - 置信度: 已确认
 
-##### 2.77.11.1 EvoEffectZone.__init__ [L1952-1973]
+##### 2.83.11.1 EvoEffectZone.__init__ [L1952-1973]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, battle_state, radius, lifetime, dps=0.0, tick=0.5, slow=None, stun_pulse=0.0, attract=0.0, ally_buff=None, level=11, label='EvoEffectZone')`
 - 作用: 手工建立觉醒领域字段（半径/寿命/dps/tick/减速/眩晕/吸引/友方增益/等级/标签）。
@@ -7349,7 +7739,7 @@
 - 调用: 被 `spawn_evo_zone` L2028 与 `DeathSlowZone.__init__` L2192（super）调用。
 - 置信度: 已确认
 
-##### 2.77.11.2 EvoEffectZone.update [L1975-1996]
+##### 2.83.11.2 EvoEffectZone.update [L1975-1996]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 逐帧对半径内敌人结算 dps/减速/眩晕/吸引，对友军施加 `ally_buff`，并递减寿命。
@@ -7360,7 +7750,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.11.3 EvoEffectZone.take_damage [L1998-1998]
+##### 2.83.11.3 EvoEffectZone.take_damage [L1998-1998]
 - 类型: method
 - 签名: `def take_damage(self, amount, delayed=False, source=None)`
 - 作用: 空实现：效果领域不受伤。
@@ -7373,7 +7763,7 @@
 - 调用: 由通用伤害路径多态分派调用。
 - 置信度: 已确认
 
-##### 2.77.11.4 EvoEffectZone.to_dict [L2000-2003]
+##### 2.83.11.4 EvoEffectZone.to_dict [L2000-2003]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 返回领域渲染字典。
@@ -7383,7 +7773,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-#### 2.77.12 spawn_evo_zone [L2006-2033]
+#### 2.83.12 spawn_evo_zone [L2006-2033]
 - 类型: function
 - 签名: `def spawn_evo_zone(bs, src, sd, position, action=None)`
 - 作用: 由区域/buff 定义（`spawnDataData`）构建并登记一个 `EvoEffectZone`，若定义含单次伤害则先结算一次 AoE。
@@ -7398,7 +7788,7 @@
 - 调用: 被 `Projectile._evo_impact` L1518、`interpret_action_group` L2295/L2299 调用；自身调用 `bs.deal_area_damage`、`bs._spawn_entity`。
 - 置信度: 已确认
 
-#### 2.77.13 HealAuraZone [L2038-2088]
+#### 2.83.13 HealAuraZone [L2038-2088]
 - 类型: class
 - 签名: `class HealAuraZone(Entity):`
 - 作用: 治疗光环（BattleHealer）：1s 内每 0.25s 治疗半径内友军部队一跳（共 4 跳），不治疗光环源。
@@ -7408,7 +7798,7 @@
 - 调用: 待确认(构造点在 card_mechanics.py 的机制类中，本组未读该文件)
 - 置信度: 已确认
 
-##### 2.77.13.1 HealAuraZone.__init__ [L2043-2065]
+##### 2.83.13.1 HealAuraZone.__init__ [L2043-2065]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, radius, heal_per_tick, ticks=4, interval=0.25, exclude_id=None, label='HealAura')`
 - 作用: 手工建立治疗光环字段。
@@ -7427,7 +7817,7 @@
 - 调用: 待确认(调用点在 card_mechanics.py，本组未读)
 - 置信度: 待确认(调用点不在本组文件内)
 
-##### 2.77.13.2 HealAuraZone.update [L2067-2076]
+##### 2.83.13.2 HealAuraZone.update [L2067-2076]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 用累计计时 + 剩余跳数驱动脉冲，跳数用尽即消亡。
@@ -7438,7 +7828,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.13.3 HealAuraZone._pulse [L2078-2088]
+##### 2.83.13.3 HealAuraZone._pulse [L2078-2088]
 - 类型: method
 - 签名: `def _pulse(self)`
 - 作用: 单跳治疗：给半径内本方存活 Troop（排除 `exclude_id`）回血并封顶 max hp。
@@ -7448,7 +7838,7 @@
 - 调用: 被 `update` L2074 调用。
 - 置信度: 已确认
 
-#### 2.77.14 VinesSnareZone [L2091-2181]
+#### 2.83.14 VinesSnareZone [L2091-2181]
 - 类型: class
 - 签名: `class VinesSnareZone(Entity):`
 - 作用: Vines 藤蔓束缚领域：落地锁定半径内 HP 最高的至多 3 个敌人，施加束缚（眩晕语义）与拽落，并按跳数结算伤害。
@@ -7458,7 +7848,7 @@
 - 调用: 被 `spawn_vines_zone` L2234 构造；`Projectile._on_arrive` 经 `spawn_vines_zone` 间接触发（L1450）。
 - 置信度: 已确认
 
-##### 2.77.14.1 VinesSnareZone.__init__ [L2101-2124]
+##### 2.83.14.1 VinesSnareZone.__init__ [L2101-2124]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, battle_state, radius, lifetime, damage, hits=2, crown_pct=0.25, snare_duration=2.0, max_targets=3, grounds_air=True, level=11, label='Vines_AeO')`
 - 作用: 手工建立藤蔓领域字段并预置跳间隔。
@@ -7482,7 +7872,7 @@
 - 调用: 被 `spawn_vines_zone` L2234 调用。
 - 置信度: 已确认
 
-##### 2.77.14.2 VinesSnareZone._lock_targets [L2126-2149]
+##### 2.83.14.2 VinesSnareZone._lock_targets [L2126-2149]
 - 类型: method
 - 签名: `def _lock_targets(self)`
 - 作用: 落地锁定：按 HP+护盾降序取前 N 个半径内敌人，逐个施加束缚并拽落空中单位。
@@ -7492,7 +7882,7 @@
 - 调用: 被 `update` L2163 调用。
 - 置信度: 已确认
 
-##### 2.77.14.3 VinesSnareZone._deal_hit [L2151-2158]
+##### 2.83.14.3 VinesSnareZone._deal_hit [L2151-2158]
 - 类型: method
 - 签名: `def _deal_hit(self)`
 - 作用: 对当前锁定目标结算法术伤害（王塔类按 `crown_pct` 降伤），即时结算不走 delayed。
@@ -7502,7 +7892,7 @@
 - 调用: 被 `update` L2164/L2169 调用。
 - 置信度: 已确认
 
-##### 2.77.14.4 VinesSnareZone.update [L2160-2174]
+##### 2.83.14.4 VinesSnareZone.update [L2160-2174]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 首帧锁定并打出第 1 跳，之后按跳间隔打出余下跳数，寿命归零消亡。
@@ -7513,7 +7903,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.14.5 VinesSnareZone.take_damage [L2176-2176]
+##### 2.83.14.5 VinesSnareZone.take_damage [L2176-2176]
 - 类型: method
 - 签名: `def take_damage(self, amount, delayed=False, source=None)`
 - 作用: 空实现：束缚领域不受伤。
@@ -7526,7 +7916,7 @@
 - 调用: 由通用伤害路径多态分派调用。
 - 置信度: 已确认
 
-##### 2.77.14.6 VinesSnareZone.to_dict [L2178-2181]
+##### 2.83.14.6 VinesSnareZone.to_dict [L2178-2181]
 - 类型: method
 - 签名: `def to_dict(self)`
 - 作用: 返回束缚领域渲染字典。
@@ -7536,7 +7926,7 @@
 - 调用: 渲染层消费（本文件内无调用者）。
 - 置信度: 已确认
 
-#### 2.77.15 DeathSlowZone [L2184-2220]
+#### 2.83.15 DeathSlowZone [L2184-2220]
 - 类型: class
 - 签名: `class DeathSlowZone(EvoEffectZone):`
 - 作用: 亡语减速圈：单脉冲、落地帧即对范围内目标施加一次减速后由寿命自然结束。
@@ -7546,7 +7936,7 @@
 - 调用: 被 `Entity.take_damage` L572 的亡语路径构造。
 - 置信度: 已确认
 
-##### 2.77.15.1 DeathSlowZone.__init__ [L2189-2199]
+##### 2.83.15.1 DeathSlowZone.__init__ [L2189-2199]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, radius, lifetime, slow, buff_duration, only_enemies=True, hits_air=True, hits_ground=True, level=11, label='FreezeIceGolemite')`
 - 作用: 以 `dps=0/tick=0.5` 调父类建立领域，再补齐减速时长与空地/敌我过滤字段。
@@ -7568,7 +7958,7 @@
 - 调用: 被 `Entity.take_damage` L572 调用。
 - 置信度: 已确认
 
-##### 2.77.15.2 DeathSlowZone.update [L2201-2220]
+##### 2.83.15.2 DeathSlowZone.update [L2201-2220]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 首个 update 帧一次性对范围内目标施加减速（带敌我与空地过滤），之后仅递减寿命。
@@ -7579,7 +7969,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-#### 2.77.16 spawn_vines_zone [L2223-2247]
+#### 2.83.16 spawn_vines_zone [L2223-2247]
 - 类型: function
 - 签名: `def spawn_vines_zone(bs, projectile, impact)`
 - 作用: Vines 弹道落地 → 按 `Card('Vines').data.areaEffectObjectData` 全量构造束缚领域。
@@ -7592,7 +7982,7 @@
 - 调用: 被 `Projectile._on_arrive` L1450 调用。
 - 置信度: 已确认
 
-#### 2.77.17 _spawn_action_character [L2250-2265]
+#### 2.83.17 _spawn_action_character [L2250-2265]
 - 类型: function
 - 签名: `def _spawn_action_character(bs, player, sd, position=None)`
 - 作用: 动作组 `SpawnEnemy` 语义：按内嵌角色定义在指定位置生成 1 个单位。
@@ -7606,7 +7996,7 @@
 - 调用: 被 `interpret_action_group` L2292、`deploy_card` 的觉醒哥布林飞桶诱饵分支 L2978 调用。
 - 置信度: 已确认
 
-#### 2.77.18 interpret_action_group [L2268-2305]
+#### 2.83.18 interpret_action_group [L2268-2305]
 - 类型: function
 - 签名: `def interpret_action_group(entity, action, target=None, position=None)`
 - 作用: 通用动作组解释器入口：把 `evolvedSpellsData` 内嵌动作组递归解析为战斗语义（直接伤害、出兵、区域效果、buff 子动作）。
@@ -7620,7 +8010,7 @@
 - 调用: 被 `Troop._evo_giant_tick` L1080 调用；自身递归调用（L2304）。
 - 置信度: 已确认
 
-#### 2.77.19 _tesla_evo_pulse [L2308-2325]
+#### 2.83.19 _tesla_evo_pulse [L2308-2325]
 - 类型: function
 - 签名: `def _tesla_evo_pulse(bs, entity, osad)`
 - 作用: 觉醒特斯拉出场脉冲：半径内敌人眩晕并按 `onHitActionData` 的 dps 结算一次性 DOT。
@@ -7633,7 +8023,7 @@
 - 调用: 被 `Troop._apply_evolution` L818 与 `Building.update` L1281 调用。
 - 置信度: 已确认
 
-#### 2.77.20 EvoZapZone [L2328-2374]
+#### 2.83.20 EvoZapZone [L2328-2374]
 - 类型: class
 - 签名: `class EvoZapZone(AreaEffect):`
 - 作用: 觉醒 Zap 领域：首脉冲沿用基础 Zap 伤害+眩晕，另有一次性次级 AOE 眩晕，并在存活期内对进入的敌人各眩晕一次。
@@ -7643,7 +8033,7 @@
 - 调用: 被 `BattleState.deploy_card` L2931 构造。
 - 置信度: 已确认
 
-##### 2.77.20.1 EvoZapZone.__init__ [L2333-2345]
+##### 2.83.20.1 EvoZapZone.__init__ [L2333-2345]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name, battle_state=None)`
 - 作用: 在 `AreaEffect` 基础上从 `evo_raw.areaEffectObjectData` 取领域眩晕时长与寿命，并提取次级 AOE 定义。
@@ -7658,7 +8048,7 @@
 - 调用: 被 `deploy_card` L2931 调用。
 - 置信度: 已确认
 
-##### 2.77.20.2 EvoZapZone.update [L2347-2374]
+##### 2.83.20.2 EvoZapZone.update [L2347-2374]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 首次更新打一次基础 Zap 脉冲与次级 AOE 眩晕，此后对每个新进入的敌人施加一次领域眩晕，并按寿命消亡。
@@ -7669,7 +8059,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-#### 2.77.21 TimedExplosive [L2377-2400]
+#### 2.83.21 TimedExplosive [L2377-2400]
 - 类型: class
 - 签名: `class TimedExplosive(Entity):`
 - 作用: 定时爆炸物（如 BombTower 死亡炸弹）：部署延迟后对范围内敌人结算一次伤害（王塔类按比例降伤）。
@@ -7679,7 +8069,7 @@
 - 调用: 被 `Entity._generic_death_spawn` L299 构造。
 - 置信度: 已确认
 
-##### 2.77.21.1 TimedExplosive.__init__ [L2378-2382]
+##### 2.83.21.1 TimedExplosive.__init__ [L2378-2382]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, card_name)`
 - 作用: 用 `TimedExplosiveData` 解析本卡的亡语爆裂数据并设置引信时长。
@@ -7693,7 +8083,7 @@
 - 调用: 被 `_generic_death_spawn` L299 调用。
 - 置信度: 已确认
 
-##### 2.77.21.2 TimedExplosive.update [L2384-2396]
+##### 2.83.21.2 TimedExplosive.update [L2384-2396]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 引信走完后对范围内敌人结算一次伤害并自毁。
@@ -7705,7 +8095,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-##### 2.77.21.3 TimedExplosive.take_damage [L2398-2400]
+##### 2.83.21.3 TimedExplosive.take_damage [L2398-2400]
 - 类型: method
 - 签名: `def take_damage(self, amount: float)`
 - 作用: 空实现：爆炸物不受伤。
@@ -7716,7 +8106,7 @@
 - 调用: 由通用伤害路径多态分派调用。
 - 置信度: 已确认
 
-#### 2.77.22 apply_hero_overlay [L2409-2437]
+#### 2.83.22 apply_hero_overlay [L2409-2437]
 - 类型: function
 - 签名: `def apply_hero_overlay(entity, bs)`
 - 作用: M8 Hero 形态装配：用 Hero 独立数值表覆写 hp/伤害（或弹丸伤害）/护盾，并把机制 holder 换成 Hero 专属类。
@@ -7728,7 +8118,7 @@
 - 调用: 被 `BattleState._wrap` L2634 调用。
 - 置信度: 已确认
 
-#### 2.77.23 _barb_log_reroll_effect [L2440-2481]
+#### 2.83.23 _barb_log_reroll_effect [L2440-2481]
 - 类型: function
 - 签名: `def _barb_log_reroll_effect(bs)`
 - 作用: M8 BarbLog Hero「Rowdy Reroll」效果体：再生成一枚滚动桶（沿已记录方向重滚）并治疗二次滚车道带内的野蛮人。
@@ -7739,7 +8129,7 @@
 - 调用: 作为 `hero_windows[player].effect` 回调，被 `BattleState.use_ability` L3220 调用（窗口对象在 L2959 与 L2992 注册）。
 - 置信度: 已确认
 
-#### 2.77.24 IceGolemiteSnowZone [L2484-2521]
+#### 2.83.24 IceGolemiteSnowZone [L2484-2521]
 - 类型: class
 - 签名: `class IceGolemiteSnowZone(EvoEffectZone):`
 - 作用: M8 Hero IceGolemite 冰雪光环：按目标体型分档施加冻结或减速并附带每脉冲伤害；类属性 `SMALL_RADIUS` 为分档阈值。
@@ -7749,7 +8139,7 @@
 - 调用: 待确认(构造点在 card_mechanics.py 的 Hero 机制类中，本组未读该文件)
 - 置信度: 待确认(调用点不在本组文件内；分档规则与 `SMALL_RADIUS` 在 docstring L2485-2489 中被作者自标「暂借/待实测/假设」)
 
-##### 2.77.24.1 IceGolemiteSnowZone.__init__ [L2492-2501]
+##### 2.83.24.1 IceGolemiteSnowZone.__init__ [L2492-2501]
 - 类型: method
 - 签名: `def __init__(self, id, position, player, battle_state, radius, pulses, interval, damage, slow, slow_duration, small_freeze, level, label='IceGolemiteSnowZone')`
 - 作用: 以「脉冲数 × 间隔 + 0.01」为寿命调父类建立领域，并记录脉冲伤害、减速与冻结参数。
@@ -7772,7 +8162,7 @@
 - 调用: 待确认(调用点在 card_mechanics.py，本组未读)
 - 置信度: 待确认(调用点不在本组文件内)
 
-##### 2.77.24.2 IceGolemiteSnowZone.update [L2503-2521]
+##### 2.83.24.2 IceGolemiteSnowZone.update [L2503-2521]
 - 类型: method
 - 签名: `def update(self, dt)`
 - 作用: 按间隔执行有限次脉冲：范围内敌人受伤，小体型 Troop 被冻结、其余被减速；脉冲用尽即消亡。
@@ -7783,7 +8173,7 @@
 - 调用: 由 `BattleState.step` L2702 调用。
 - 置信度: 已确认
 
-#### 2.77.25 get_spawn_position [L2524-2535]
+#### 2.83.25 get_spawn_position [L2524-2535]
 - 类型: function
 - 签名: `def get_spawn_position(card_info, position, player, offset_angle=True)`
 - 作用: 按卡牌的 spawn_number/spawn_radius 把多单位出兵点环绕布置在部署中心周围（单位卡即原位置），并按阵营做 180° 镜像。
@@ -7797,7 +8187,7 @@
 - 调用: 被 `_troop_spawner_tick`（L272）、`_generic_death_spawn`（L319）、`_evo_on_death`（L989）、`Building._evo_on_death`（L1327）、`_spawn_action_character`（L2262）、`spawn_arrival_troops`（L2780）、`deploy_card`（L2996/L3022）调用。
 - 置信度: 已确认
 
-#### 2.77.26 BattleState [L2538-3265]
+#### 2.83.26 BattleState [L2538-3265]
 - 类型: class
 - 签名: `class BattleState:`
 - 作用: 战斗状态机：持有双方 PlayerState、实体表、竞技场网格、时间/帧计数与各类队列（延迟出兵、复活、Hero 窗口、灵魂），提供逐帧 `step`、出牌 `deploy_card`、伤害/位移辅助、碰撞与建筑寻路缓存。
@@ -7807,7 +8197,7 @@
 - 调用: 由环境/RL 层构造与驱动（调用方不在本文件）；`step` 由外部每帧调用。
 - 置信度: 已确认
 
-##### 2.77.26.1 BattleState.__init__ [L2539-2571]
+##### 2.83.26.1 BattleState.__init__ [L2539-2571]
 - 类型: method
 - 签名: `def __init__(self, player_0: PlayerState, player_1: PlayerState, card_level=None)`
 - 作用: 初始化战斗：卡牌等级、实体表、双方状态、竞技场、计时与各类队列，并按双方 `tower_troop` 放置 6 座塔。
@@ -7820,7 +8210,7 @@
 - 调用: 由环境/RL 层构造（调用方不在本文件）。
 - 置信度: 已确认
 
-##### 2.77.26.2 BattleState.in_river [L2573-2577]
+##### 2.83.26.2 BattleState.in_river [L2573-2577]
 - 类型: method
 - 签名: `def in_river(self, position)`
 - 作用: 判断坐标是否落在河道格集合内。
@@ -7831,7 +8221,7 @@
 - 调用: 被 `ensure_walkability` L2586 调用。
 - 置信度: 已确认
 
-##### 2.77.26.3 BattleState.ensure_walkability [L2579-2601]
+##### 2.83.26.3 BattleState.ensure_walkability [L2579-2601]
 - 类型: method
 - 签名: `def ensure_walkability(self, entity)`
 - 作用: 把不可行走位置上的实体夹回可站立区域（地图边界与河岸），并对跳河/空中/特殊状态做豁免。
@@ -7842,7 +8232,7 @@
 - 调用: 被 `_spawn_entity` L2604 与 `BattleState.step` L2703 调用。
 - 置信度: 已确认
 
-##### 2.77.26.4 BattleState._spawn_entity [L2603-2608]
+##### 2.83.26.4 BattleState._spawn_entity [L2603-2608]
 - 类型: method
 - 签名: `def _spawn_entity(self, entity)`
 - 作用: 实体入场的唯一登记口：先做走位修正，再回填 battle_state 并分配最终 id 入库。
@@ -7853,7 +8243,7 @@
 - 调用: 被本文件内几乎所有生成路径调用（例：L216、L273、L301、L322、L572、L865、L957、L991、L1035、L1328、L1363、L1413、L2032、L2246、L2264、L2634 间接触发、L2641、L2710、L2723、L2922、L2933、L2937）。
 - 置信度: 已确认
 
-##### 2.77.26.5 BattleState._wrap [L2610-2635]
+##### 2.83.26.5 BattleState._wrap [L2610-2635]
 - 类型: method
 - 签名: `def _wrap(self, entity_data)`
 - 作用: 把「元组形式的出兵描述」包装成正确类型的实体实例（弹道/法术/建筑/部队），并按需应用觉醒与 Hero 形态。
@@ -7864,7 +8254,7 @@
 - 调用: 被 `delayed_spawn` L2641 与 `step` 的 schedule 处理 L2710 调用；内部被本文件多处以 `(id, pos, player, name, bs[, evolved])` 形式喂入（L307、L2781、L2909、L2970、L3008、L3024）。
 - 置信度: 已确认
 
-##### 2.77.26.6 BattleState.delayed_spawn [L2637-2641]
+##### 2.83.26.6 BattleState.delayed_spawn [L2637-2641]
 - 类型: method
 - 签名: `def delayed_spawn(self, entity, delay)`
 - 作用: 按延迟把出兵描述排入计划表；延迟为 0 时立即包装并登记。
@@ -7876,7 +8266,7 @@
 - 调用: 被 `_generic_death_spawn` L307、`spawn_arrival_troops` L2781、`deploy_card` L2909/L2970/L3008/L3024 调用。
 - 置信度: 已确认
 
-##### 2.77.26.7 BattleState.update_player_hp [L2643-2650]
+##### 2.83.26.7 BattleState.update_player_hp [L2643-2650]
 - 类型: method
 - 签名: `def update_player_hp(self)`
 - 作用: 把 6 座塔实体的当前 hp 同步到双方 PlayerState 的 king/left/right 字段。
@@ -7886,7 +8276,7 @@
 - 调用: 被 `step` L2654 调用（每帧开头）。
 - 置信度: 已确认
 
-##### 2.77.26.8 BattleState.step [L2652-2726]
+##### 2.83.26.8 BattleState.step [L2652-2726]
 - 类型: method
 - 签名: `def step(self, dt)`
 - 作用: 战斗逐帧主循环：胜负裁决、圣水回复、实体清理与缓存刷新、全体 update、碰撞、延迟出兵与复活队列、时间推进。
@@ -7897,7 +8287,7 @@
 - 调用: 由环境/RL 层每帧调用（调用方不在本文件）；内部调用 `update_player_hp`/`calculate_building_cache`/`ensure_walkability`/`resolve_collisions`/`_wrap`/`_spawn_entity`/`regenerate_elixir`/`get_crown_count`。
 - 置信度: 已确认
 
-##### 2.77.26.9 BattleState._finish_deploy [L2728-2749]
+##### 2.83.26.9 BattleState._finish_deploy [L2728-2749]
 - 类型: method
 - 签名: `def _finish_deploy(self, player_id, card_name, from_mirror=False, hand_card=None, actual_cost=None)`
 - 作用: 出牌收尾：累计觉醒出牌计数、扣费并推进手牌循环（镜像与动态费用走特殊分支）。
@@ -7912,7 +8302,7 @@
 - 调用: 被 `deploy_card` 的各个成功分支调用（L2894、L2910、L2923、L2934、L2938、L2960、L2993、L3027）。
 - 置信度: 已确认
 
-##### 2.77.26.10 BattleState.spawn_projectile_chain [L2751-2773]
+##### 2.83.26.10 BattleState.spawn_projectile_chain [L2751-2773]
 - 类型: method
 - 签名: `def spawn_projectile_chain(self, projectile_name, position, player, direction)`
 - 作用: 按名称从弹道数值表构建并登记二段弹；对滚木类强制纵轴方向。
@@ -7926,7 +8316,7 @@
 - 调用: 被 `Projectile._chain` L1538 与 `_barb_log_reroll_effect` L2451、`deploy_card` 的 Log/BarbLog 分支 L2948 调用。
 - 置信度: 已确认
 
-##### 2.77.26.11 BattleState.spawn_arrival_troops [L2775-2781]
+##### 2.83.26.11 BattleState.spawn_arrival_troops [L2775-2781]
 - 类型: method
 - 签名: `def spawn_arrival_troops(self, card_name, count, position, player)`
 - 作用: 弹道到达后的落地出兵：在落点按数量部署指定卡。
@@ -7940,7 +8330,7 @@
 - 调用: 被 `Projectile._chain` L1541 与 `Troop._evo_on_attack` 的觉醒骷髅分裂分支 L908 调用。
 - 置信度: 已确认
 
-##### 2.77.26.12 BattleState._cast_lightning [L2783-2804]
+##### 2.83.26.12 BattleState._cast_lightning [L2783-2804]
 - 类型: method
 - 签名: `def _cast_lightning(self, player_id, position)`
 - 作用: Lightning 法术：半径 3.5 内按最高 HP 取至多 3 个敌方单位/建筑各受一道雷击（伤害 + 对部队 0.5s 眩晕与重索敌），对建筑伤害 ×0.65。
@@ -7952,7 +8342,7 @@
 - 调用: 被 `deploy_card` L2893 调用。
 - 置信度: 已确认
 
-##### 2.77.26.13 BattleState.deploy_card [L2806-3029]
+##### 2.83.26.13 BattleState.deploy_card [L2806-3029]
 - 类型: method
 - 签名: `def deploy_card(self, player_id, card_name, position, _from_mirror=False)`
 - 作用: 出牌总入口：处理镜像法术、Spirit Empress 动态费用形态、觉醒/Hero 判定、部署区合法性校验，并按卡类型分派（Lightning 特判、区域持续出兵、克隆、瞬发区域法术、滚木、投射物波次、普通单位出兵）。
@@ -7966,7 +8356,7 @@
 - 调用: 由环境/RL 层调用（调用方不在本文件）；镜像分支递归调用自身（L2822）；内部调用 `_finish_deploy`/`_cast_lightning`/`spawn_projectile_chain`/`_spawn_action_character`/`delayed_spawn`/`_spawn_entity`/`get_spawn_position`。
 - 置信度: 已确认
 
-##### 2.77.26.14 BattleState.calculate_building_cache [L3031-3052]
+##### 2.83.26.14 BattleState.calculate_building_cache [L3031-3052]
 - 类型: method
 - 签名: `def calculate_building_cache(self)`
 - 作用: 重建建筑/塔的距离场缓存（36×64 格，值为该格到最近塔矩形或非塔建筑圆的距离），供 A* 寻路作为障碍使用。
@@ -7976,7 +8366,7 @@
 - 调用: 被 `step` L2699 调用（`cache_fresh` 为假时）；`_wrap` L2624 与 `on_death` L3155 会把 `cache_fresh` 置假。
 - 置信度: 已确认
 
-##### 2.77.26.15 BattleState.pathfind_ground_walkable [L3053-3056]
+##### 2.83.26.15 BattleState.pathfind_ground_walkable [L3053-3056]
 - 类型: method
 - 签名: `def pathfind_ground_walkable(self, position, mover_radius)`
 - 作用: 供寻路使用的可走判定：网格本身可走且距离场值大于移动半径。
@@ -7988,7 +8378,7 @@
 - 调用: 待确认(本文件内未见调用者；疑为 `pathfinding_heap.EntityPathfinder` 使用，本组未读该文件)
 - 置信度: 待确认(调用方在 pathfinding_heap.py，本组未读)
 
-##### 2.77.26.16 BattleState.ground_walkable [L3058-3060]
+##### 2.83.26.16 BattleState.ground_walkable [L3058-3060]
 - 类型: method
 - 签名: `def ground_walkable(self, position, mover_radius)`
 - 作用: 实时可走判定：网格可走且该位置未被建筑/塔占位。
@@ -8000,7 +8390,7 @@
 - 调用: 被 `ensure_walkability` L2590、`Projectile.update` 滚动击退 L1578、`GenericBomb.update` L1929、`push_enemies` L3188、`pull_enemies` L3200 调用。
 - 置信度: 已确认
 
-##### 2.77.26.17 BattleState._tower_footprint_blocks [L3062-3070]
+##### 2.83.26.17 BattleState._tower_footprint_blocks [L3062-3070]
 - 类型: method
 - 签名: `def _tower_footprint_blocks(self, position, mover_radius: float) -> bool`
 - 作用: 判定坐标是否被存活塔矩形阻挡（部署脚点用「点在矩形内含边界」，行军圆用「到矩形距离 < 半径」）。
@@ -8012,7 +8402,7 @@
 - 调用: 被 `is_position_occupied_by_building` L3076 调用。
 - 置信度: 已确认
 
-##### 2.77.26.18 BattleState.is_position_occupied_by_building [L3072-3082]
+##### 2.83.26.18 BattleState.is_position_occupied_by_building [L3072-3082]
 - 类型: method
 - 签名: `def is_position_occupied_by_building(self, position, mover_radius: float = 0.5) -> bool`
 - 作用: 判定坐标是否与任一存活建筑占位重叠（塔走矩形口径，非塔建筑走圆形口径）。
@@ -8024,7 +8414,7 @@
 - 调用: 被 `ground_walkable` L3060 与 `deploy_card` L2867 调用。
 - 置信度: 已确认
 
-##### 2.77.26.19 BattleState.resolve_collisions [L3084-3113]
+##### 2.83.26.19 BattleState.resolve_collisions [L3084-3113]
 - 类型: method
 - 签名: `def resolve_collisions(self)`
 - 作用: 逐对解决实体重叠：塔-部队按矩形推出（组内先判），其余按圆形重叠依速度比例互相推开。
@@ -8034,7 +8424,7 @@
 - 调用: 被 `step` L2704 调用。
 - 置信度: 已确认
 
-##### 2.77.26.20 BattleState._push_troop_out_of_tower [L3115-3146]
+##### 2.83.26.20 BattleState._push_troop_out_of_tower [L3115-3146]
 - 类型: method
 - 签名: `def _push_troop_out_of_tower(self, troop, tower)`
 - 作用: 把与塔矩形重叠的部队沿最近点法线推出矩形外（部队承担全部位移）。
@@ -8046,7 +8436,7 @@
 - 调用: 被 `resolve_collisions` L3098/L3100 调用。
 - 置信度: 已确认
 
-##### 2.77.26.21 BattleState.on_death [L3148-3167]
+##### 2.83.26.21 BattleState.on_death [L3148-3167]
 - 类型: method
 - 签名: `def on_death(self, entity)`
 - 作用: 战斗侧死亡事件处理：公主塔阵亡激活王塔、建筑死亡使寻路缓存失效、Gerry 阵亡使名下亡影消散、部队死亡累积灵魂。
@@ -8057,7 +8447,7 @@
 - 调用: 被 `Entity.die` L229 调用。
 - 置信度: 已确认
 
-##### 2.77.26.22 BattleState.reflect_to_tower [L3170-3177]
+##### 2.83.26.22 BattleState.reflect_to_tower [L3170-3177]
 - 类型: method
 - 签名: `def reflect_to_tower(self, monk_entity, damage)`
 - 作用: Monk 法术反弹兜底：把伤害结算到最近的敌方公主塔。
@@ -8069,7 +8459,7 @@
 - 调用: 被 `Projectile._on_arrive` L1462 与 `_deal_splash_damage` L1603 调用。
 - 置信度: 已确认
 
-##### 2.77.26.23 BattleState.push_enemies [L3180-3189]
+##### 2.83.26.23 BattleState.push_enemies [L3180-3189]
 - 类型: method
 - 签名: `def push_enemies(self, player, position, radius, tiles)`
 - 作用: 把半径内敌方非建筑实体沿远离中心方向推开指定格数（需落点可走或为空中）。
@@ -8083,7 +8473,7 @@
 - 调用: 被 `Troop._evo_on_attack` 的 PushBack 分支 L942 调用。
 - 置信度: 已确认
 
-##### 2.77.26.24 BattleState.pull_enemies [L3191-3201]
+##### 2.83.26.24 BattleState.pull_enemies [L3191-3201]
 - 类型: method
 - 签名: `def pull_enemies(self, player, position, radius, tiles, dt=0.1)`
 - 作用: 把半径内敌方非建筑实体向中心拉近至多 `tiles` 格（需落点可走或为空中）。
@@ -8098,7 +8488,7 @@
 - 调用: 被 `EvoEffectZone.update` L1989 调用。
 - 置信度: 已确认
 
-##### 2.77.26.25 BattleState.use_ability [L3208-3248]
+##### 2.83.26.25 BattleState.use_ability [L3208-3248]
 - 类型: method
 - 签名: `def use_ability(self, player_id)`
 - 作用: 英雄能力释放入口：优先处理 Hero 条件窗（过期关闭或扣费执行），否则扫描己方实体寻找就绪能力，Hero 形态走「单次使用 + 圣水预检 + 未生效返还」，冠军卡走原路径。
@@ -8109,7 +8499,7 @@
 - 调用: 由环境/RL 层调用（调用方不在本文件）；内部调用 `holder.use_ability()` 与窗口 `effect` 回调（如 `_barb_log_reroll_effect`）。
 - 置信度: 已确认
 
-##### 2.77.26.26 BattleState.deal_area_damage [L3250-3265]
+##### 2.83.26.26 BattleState.deal_area_damage [L3250-3265]
 - 类型: method
 - 签名: `def deal_area_damage(self, from_player, position, range, amount, attack_air, attack_ground, crown_tower_damage_percent=1.0)`
 - 作用: 区域伤害结算：按空地过滤与半径（塔用矩形边缘距离）对敌方造成伤害，王塔类按比例降伤。
@@ -8128,7 +8518,7 @@
 
 ---
 
-### 2.78 `src/clasher_new/benchmark_speed.py`
+### 2.84 `src/clasher_new/benchmark_speed.py`
 
 - **分析组**：G037　**行数**：131　**AST 符号数**：3
 
@@ -8141,7 +8531,7 @@
 
 > **重要事实（已确认，非猜测）**：L24-25 导入的 `legal_random_strategy`（声称来自 `environment`）、`CRPolicy` 与 `CRSetExtractor`（声称来自 `train`）在本仓库中**不存在**：`environment.py` 只定义 `random_strategy`（L164），`train.py` 只定义 `CRFeatureExtractor`（L17）、两个 Callback 与 `make_env`；全仓 `grep -rn "legal_random_strategy\|CRPolicy\|CRSetExtractor"` 仅命中本文件 L24-25,33,70,72。⇒ 本模块**一 import 即 `ImportError`**，无法运行；属与现行 `environment.py`/`train.py` 脱节的过期脚本。
 
-#### 2.78.1 make_env [L28-35]
+#### 2.84.1 make_env [L28-35]
 - 类型: function
 - 签名: `def make_env(rank: int, speed: float):`
 - 作用: 返回一个 thunk，为 worker 设置独立 RNG 种子并构造一个以「合法随机策略」为对手、关闭可视化的 `CREnv`。
@@ -8153,7 +8543,7 @@
 - 调用: `main` L62-65 在 `SubprocVecEnv` 列表推导中使用（若模块能导入的话）。
 - 置信度: 已确认（函数体逐行已读）；其中 `legal_random_strategy` 的可解析性 = 已确认不存在 ⇒ 该函数运行时必失败。
 
-#### 2.78.2 parse_args [L38-51]
+#### 2.84.2 parse_args [L38-51]
 - 类型: function
 - 签名: `def parse_args() -> argparse.Namespace:`
 - 作用: 定义并解析命令行参数。
@@ -8163,7 +8553,7 @@
 - 调用: `main` L55 调用。
 - 置信度: 已确认
 
-#### 2.78.3 main [L54-127]
+#### 2.84.3 main [L54-127]
 - 类型: function
 - 签名: `def main() -> None:`
 - 作用: 校验参数 → 建并行环境与模型 → 预热 → 定时循环分别累计策略/模拟耗时 → 打印 13 行统计。
@@ -8176,7 +8566,7 @@
 
 ---
 
-### 2.79 `src/clasher_new/card_aliases.py`
+### 2.85 `src/clasher_new/card_aliases.py`
 
 - **分析组**：G018　**行数**：540　**AST 符号数**：5
 
@@ -8193,7 +8583,7 @@
 - 其他模块级结构: `if __name__ == "__main__":`（L535-540）简易命令行查卡：对 `sys.argv[1:]` 每个参数调用 `search_card` 与 `search_card_candidates`，打印 `原始串 → 命中   候选: 前 5 条`。
 - 与 docstring 不一致之处（照实记录）: docstring L8-13 列了「数据源优先级」4 项，其中第 2 项 `data_official/cards.json` 与第 3 项 `docs/card_registry.json` 在源码 `_build_index` 中**没有任何 open/读取代码**（L431-440 只打开 `gamedata.json` 与 `data_official/cards_i18n.json`）。经文件系统确认 `docs/card_registry.json` 在仓库根存在、`data_official/cards.json` 在同目录存在，但二者未被本模块读取。
 
-#### 2.79.1 normalize_query [L408-422]
+#### 2.85.1 normalize_query [L408-422]
 - 类型: function
 - 签名: `def normalize_query(q: str) -> str:`
 - 作用: 把任意查询串归一化成索引键：中文只保留汉字流，英文/数字转小写并剥掉所有非字母数字字符；同时含中文与拉丁字符时输出 `中文|英文` 复合键。
@@ -8204,7 +8594,7 @@
 - 调用: 被本模块 `_build_index._add`（L451）与 `search_card`（L492）、`search_card_candidates`（L514）调用。它本身只调用 `re.sub`/`str.strip`/`str.lower`。全仓 `.py` 检索未见其他模块直接调用 `normalize_query`。
 - 置信度: 已确认
 
-#### 2.79.2 _build_index [L426-485]
+#### 2.85.2 _build_index [L426-485]
 - 类型: function（带 `@functools.lru_cache(maxsize=1)` 装饰器，L425）
 - 签名: `def _build_index():`
 - 作用: 惰性构建并缓存「归一化别名 → 引擎卡名」唯一映射表与其展示名表，返回二元组 `(index, display)`；同一别名指向不同卡时保留先注册者（官方表优先于俗名表）。
@@ -8214,7 +8604,7 @@
 - 调用: 被 `search_card`（L491）与 `search_card_candidates`（L513）调用；全仓 `.py` 检索未见其他模块调用。它调用 `normalize_query`（经 `_add`）、`json.load`、`re.sub`、内置 `open`。
 - 置信度: 已确认
 
-#### 2.79.3 search_card [L488-507]
+#### 2.85.3 search_card [L488-507]
 - 类型: function
 - 签名: `def search_card(query: str):`
 - 作用: 按「精确命中 > 前缀唯一命中 > 子串唯一命中」三级优先级把查询串解析为唯一引擎卡名；多命中或未命中返回 `None`。
@@ -8225,7 +8615,7 @@
 - 调用: 被同仓 `src/clasher_new/rl/decks.py:65-71` 的 `normalize_card` 以 `from card_aliases import search_card` 延迟导入后调用（本地英文名表与 `CARD_ALIASES` 都未命中时的兜底，先试原始名再试剥 `-ev\d+/hero/star\d*/lvl\d+` 后缀的名）；也被本模块 `resolve_card`（L532）与 `__main__` 块（L538）调用。它调用 `_build_index`、`normalize_query`、内置 `sorted`。
 - 置信度: 已确认
 
-#### 2.79.4 search_card_candidates [L510-526]
+#### 2.85.4 search_card_candidates [L510-526]
 - 类型: function
 - 签名: `def search_card_candidates(query: str, limit: int = 8):`
 - 作用: 返回与查询串相关的所有候选卡，按展示别名长度升序（同长按引擎卡名升序）去重后截断到 `limit` 条，用于歧义提示与搜索框补全。
@@ -8237,7 +8627,7 @@
 - 调用: 被本模块 `__main__` 块（L539）调用；全仓 `.py` 检索未见其他模块调用。它调用 `_build_index`、`normalize_query`。
 - 置信度: 已确认
 
-#### 2.79.5 resolve_card [L529-532]
+#### 2.85.5 resolve_card [L529-532]
 - 类型: function
 - 签名: `def resolve_card(query: str):`
 - 作用: 声明为 `search_card` 的「宽容版」入口：唯一命中返回卡名，歧义/未命中返回 `None`。
@@ -8250,7 +8640,7 @@
 
 ---
 
-### 2.80 `src/clasher_new/card_mechanics.py`
+### 2.86 `src/clasher_new/card_mechanics.py`
 
 - **分析组**：G004　**行数**：1895　**AST 符号数**：194
 
@@ -8264,7 +8654,7 @@
   - 类属性常量（非模块级，但同为机制数值，列出以便对账）：`Ghost.EVOLVED_INVIS_DELAY = 2.0`(L15)、`Ronin.MELEE_RANGE_THRESHOLD = 1.5`(L680)、`Assassin.DASH_MIN = 3.5`(L725)、`Assassin.DASH_MAX = 6.0`(L726)、`BattleHealer.DEPLOY_RADIUS = 2.5`(L818)、`BattleHealer.ATTACK_RADIUS = 3.0`(L819)、`BattleHealer.TICKS = 4`(L820)、`BattleHealer.INTERVAL = 0.25`(L821)、`BattleHealer.DEPLOY_HEAL_LV11 = 50`(L822)、`_AttackStunMixin._stun_time = 0.5`(L1605)、`King_KnifeTowers.MAX_KNIVES = 8`(L1812)、`King_KnifeTowers.RECHARGE = 0.9`(L1813)、`King_ChefTowers.BASE_COOK = 23.0`(L1849)、`King_ChefTowers.FIRST_COOK = 7.0`(L1850)、`King_ChefTowers.MAX_COOK = 38.0`(L1851)。
 - 顶层数据表/字典: `HERO_CLASSES` (L1562-1579) — M8 精英卡「卡名 → Hero 机制类」映射，共 16 项：`'Knight'→HeroKnight`、`'Musketeer'→HeroMusketeer`、`'MiniPekka'→HeroMiniPekka`、`'Valkyrie'→HeroValkyrie`、`'Wizard'→HeroWizard`、`'Bowler'→HeroBowler`、`'Giant'→HeroGiant`、`'Goblins'→HeroGoblins`、`'MegaMinion'→HeroMegaMinion`、`'Tombstone'→HeroTombstone`、`'Berserker'→HeroBerserker`、`'DarkPrince'→HeroDarkPrince`、`'Balloon'→HeroBalloon`、`'IceWizard'→HeroIceWizard`、`'EliteArcher'→HeroEliteArcher`、`'IceGolemite'→HeroIceGolemite`；由 `battle.apply_hero_overlay` 消费（battle.py:2436-2438）。`DarkPrinceHeroRhino`(L1367) 与 `Skeletrooper`(L1398) 不在此表中（前者由 HeroDarkPrince.use_ability 直接 `Troop(..., ab['mountCard'], bs)` 创建，后者由 HeroBalloon 创建 cadetCard）。
 
-#### 2.80.1 Ghost [L8-63]
+#### 2.86.1 Ghost [L8-63]
 - 类型: class
 - 签名: `class Ghost(BasicCharacter):`
 - 作用: 皇家幽灵——脱战隐身/攻击显形的状态机（基础 + 觉醒两条路径）。
@@ -8274,7 +8664,7 @@
 - 调用: 由 `battle.Entity.__init__` 的 `eval(f"{self.card_name}(self)")` 按卡名 `Ghost` 实例化（battle.py:52）；基类 `BasicCharacter.__init__` 在 core.py:16-20。
 - 置信度: 已确认
 
-##### 2.80.1.1 Ghost.__init__ [L17-21]
+##### 2.86.1.1 Ghost.__init__ [L17-21]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化隐身状态并在部署帧直接置 `targetable=False`。
@@ -8284,7 +8674,7 @@
 - 实现: L18 调 `super().__init__(entity)`（core.py:17-20 绑定 entity/battle_state/data）；L19 `self.visible = False`；L20 `self._visible_timer = 0.0`；L21 `entity.targetable = False`（注释：部署即隐身，官方 spawn invisible）。
 - 置信度: 已确认
 
-##### 2.80.1.2 Ghost.on_tick [L23-29]
+##### 2.86.1.2 Ghost.on_tick [L23-29]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 显形计时递减，归零后回到隐身态。
@@ -8294,7 +8684,7 @@
 - 实现: L24 `super().on_tick(dt)`（core.py:22 仅重绑 `self.battle_state`）；L25 若 `not self.visible` 直接 return；L26 `self._visible_timer -= dt`；L27-29 计时 ≤0 时置 `self.visible = False` 且 `self.entity.targetable = False`。
 - 置信度: 已确认
 
-##### 2.80.1.3 Ghost.on_attack [L31-45]
+##### 2.86.1.3 Ghost.on_attack [L31-45]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 攻击时若处于隐身则显形，并（觉醒形态）在显形瞬间召唤 Souldier，随后重新武装隐身计时。
@@ -8305,7 +8695,7 @@
 - 调用: 引擎侧由 `battle.Troop.update` 在攻击时机调 `entity_holder.on_attack(current_target)`（battle.py:1227 区域）；它调用 `Ghost._evo2025_summon_souldiers`。
 - 置信度: 已确认（L33 `was_visible` 未被使用为源码事实）
 
-##### 2.80.1.4 Ghost._evo2025_summon_souldiers [L47-63]
+##### 2.86.1.4 Ghost._evo2025_summon_souldiers [L47-63]
 - 类型: method
 - 签名: `def _evo2025_summon_souldiers(self, ss):`
 - 作用: 在幽灵两侧各生成 `count` 名 Souldier，并对每个召唤位置结算一次召唤伤害。
@@ -8315,7 +8705,7 @@
 - 实现: L49 函数内 `from battle import Troop`；L51-54 用 `_rarity_level_index(ss.get('spawnDamageRarity','Legendary'), e.level)` 求等级索引 `li` 并取 `spawnDamagePerLevel[li]`，越界则取 `arr[-1]`，空数组则 0；L55 循环 `range(int(ss.get('count', 2)))`；L56 `side = 0.7 if i % 2 == 0 else -0.7`；L57-59 以 `Position(e.position.x + side, e.position.y)` 造 `Troop(bs.next_entity_id, ..., e.player, 'Souldier', bs)` 并设 `deploy_delay_remaining = t.data.deploy_time`；L60 `bs._spawn_entity(t)`；L61-63 若 dmg 非 0 则 `bs.deal_area_damage(e.player, t.position, ss.get('radius',1.0), dmg, True, True)`（对空对地；注释说明半径 1.0 为假设值——数据无字段）。
 - 置信度: 已确认（`radius` 默认 1.0 的"数据无字段"为源码注释自述，非外部核对）
 
-#### 2.80.2 Witch [L66-87]
+#### 2.86.2 Witch [L66-87]
 - 类型: class
 - 签名: `class Witch(BasicCharacter):`
 - 作用: 女巫周期召唤骷髅（4 只/次），周期走数据字段。
@@ -8325,7 +8715,7 @@
 - 调用: 同 Ghost，由 battle.py:52 的 eval 按卡名装配。
 - 置信度: 已确认
 
-##### 2.80.2.1 Witch.__init__ [L67-69]
+##### 2.86.2.1 Witch.__init__ [L67-69]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 设首次召唤倒计时为 1.0s。
@@ -8335,7 +8725,7 @@
 - 实现: L68 `super().__init__(entity)`；L69 `self.next_spawn_remaining = 1.0`。
 - 置信度: 已确认
 
-##### 2.80.2.2 Witch.on_tick [L70-87]
+##### 2.86.2.2 Witch.on_tick [L70-87]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 倒计时结束即按 `Skeletons` 卡生成 4 只骷髅，并重置为数据给出的出兵间隔。
@@ -8345,7 +8735,7 @@
 - 实现: L71 `super().on_tick(dt)`；L72 死亡则 return；L73-75 倒计时 >0 时递减并 return；L77 延迟导入 `get_spawn_position, Troop`；L78-81 构造 `Card('Skeletons')` 并临时改 `spawn_number = 4`、`spawn_radius = 2`、`spawn_delay = 0`；L82 `get_spawn_position(skeleton, self.entity.position, self.entity.player, False)`（第四参 offset_angle=False，即不按角度偏移）；L83-84 对每个落点 `Troop(bs.next_entity_id, each, self.entity.player, 'Skeletons')` 后 `_spawn_entity`（注意此处未传 bs 参数，与其它调用点不同）；L86-87 `_evo = getattr(self.entity,'evo',None) or {}`，`self.next_spawn_remaining = (_evo.get('spawnPauseTime') or 7000)/1000.0`（注释：基础 Witch 7000ms，此前硬编码 7.0）。
 - 置信度: 已确认
 
-#### 2.80.3 Balloon [L89-93]
+#### 2.86.3 Balloon [L89-93]
 - 类型: class
 - 签名: `class Balloon(BasicCharacter):`
 - 作用: 气球兵——死亡时在原地生成定时炸弹 `TimedExplosive`（亡语炸弹）。
@@ -8355,7 +8745,7 @@
 - 调用: 被 `HeroBalloon`(L1373) 继承（docstring 明确"本体死亡炸弹继承基础 Balloon 机制类"）。
 - 置信度: 已确认
 
-##### 2.80.3.1 Balloon.on_death [L90-93]
+##### 2.86.3.1 Balloon.on_death [L90-93]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 生成一个以自身卡名为名的定时爆炸实体。
@@ -8364,7 +8754,7 @@
 - 实现: L91 `from battle import TimedExplosive`；L92 `bomb = TimedExplosive(self.battle_state.next_entity_id, self.entity.position, self.entity.player, self.entity.name)`；L93 `self.battle_state._spawn_entity(bomb)`。爆炸的伤害/半径/时长全部由 `TimedExplosive` 内部按 `card_name`（= `self.entity.name`）查表决定（battle.py:2377），本类不传数值。
 - 置信度: 已确认（爆炸具体数值在 battle.py，未在本组文件内）
 
-#### 2.80.4 Golem [L95-103]
+#### 2.86.4 Golem [L95-103]
 - 类型: class
 - 签名: `class Golem(BasicCharacter):`
 - 作用: 戈仑石人——死亡时在左右各 0.5 格生成 2 只 Golemite。
@@ -8373,7 +8763,7 @@
 - 实现: 类内仅 `on_death`（L96-103）。
 - 置信度: 已确认
 
-##### 2.80.4.1 Golem.on_death [L96-103]
+##### 2.86.4.1 Golem.on_death [L96-103]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 原地分裂出 2 个 Golemite。
@@ -8382,7 +8772,7 @@
 - 实现: L97 `from battle import Troop, Position`；L98 重绑 `self.battle_state = self.entity.battle_state`；L100-101 落点列表 = `Position(x-0.5, y)` 与 `Position(x+0.5, y)`；L102-103 对每个落点 `self.battle_state._spawn_entity(Troop(next_entity_id, position, player, 'Golemite'))`（未传 bs 参数）。
 - 置信度: 已确认
 
-#### 2.80.5 LavaHound [L105-111]
+#### 2.86.5 LavaHound [L105-111]
 - 类型: class
 - 签名: `class LavaHound(BasicCharacter):`
 - 作用: 熔岩猎犬——死亡时分裂出 LavaPups（数量/落点由 `Card('LavaPups')` 描述）。
@@ -8391,7 +8781,7 @@
 - 实现: 类内仅 `on_death`（L106-111）。
 - 置信度: 已确认
 
-##### 2.80.5.1 LavaHound.on_death [L106-111]
+##### 2.86.5.1 LavaHound.on_death [L106-111]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 按 `LavaPups` 卡的散落位置生成小熔岩猎犬。
@@ -8400,7 +8790,7 @@
 - 实现: L107 延迟导入 `get_spawn_position, Troop`；L108 重绑 `self.battle_state`；L109 `get_spawn_position(Card('LavaPups'), self.entity.position, self.entity.player)`（未传第四参 → 默认 `offset_angle=True`，battle.py:2524）；L110-111 每个落点生成 `Troop(next_entity_id, position, player, 'LavaPups')` 并 `_spawn_entity`。
 - 置信度: 已确认
 
-#### 2.80.6 Prince [L113-153]
+#### 2.86.6 Prince [L113-153]
 - 类型: class
 - 签名: `class Prince(BasicCharacter):`
 - 作用: 王子/冲锋单位通用管线——移动超过 `charge_range` 后进入冲锋（速度 ×2、攻击冷却恒 0），命中时按冲锋伤害结算并复位。
@@ -8410,7 +8800,7 @@
 - 调用: 被 `DarkPrince`(L155)、`BattleRam`(L158)、`DarkPrinceHeroRhino`(L1367)、`RamRider`(L1662) 继承；`Prince.on_tick` 中的 `onStartChargingActionData` 分支服务觉醒冲锋羊。
 - 置信度: 已确认
 
-##### 2.80.6.1 Prince.__init__ [L115-118]
+##### 2.86.6.1 Prince.__init__ [L115-118]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 记录起始坐标（冲锋距离以起点计）并复位冲锋标记。
@@ -8420,7 +8810,7 @@
 - 实现: L116 `super().__init__(entity)`；L117 `self.starting_position = Position(self.entity.position.x, self.entity.position.y)`；L118 `self.charging = False`。
 - 置信度: 已确认
 
-##### 2.80.6.2 Prince.on_tick [L120-136]
+##### 2.86.6.2 Prince.on_tick [L120-136]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 距起点超过 `charge_range` 则进入冲锋并触发觉醒出场推击；冲锋中攻击冷却恒为 0。
@@ -8430,7 +8820,7 @@
 - 实现: L121 `super().on_tick(dt)`；L122 `distance = self.entity.position.distance_to(self.starting_position)`；L123-135 若 `distance > self.entity.data.charge_range` 且未冲锋：置 `charging=True`、`speed *= 2`；随后取 `evo = getattr(e,'evo',None)` 与 `oscd = evo.get('onStartChargingActionData')`，若非空则 `strength = oscd.get('pushBackStrength',2500)/1000`（毫格→格）、`dmg = oscd.get("pushBackDamage",83) * level_scale(e.level)`，并调 `deal_area_damage(e.player, e.position, 2.0, dmg, False, True)`（仅地面）与 `push_enemies(e.player, e.position, 2.0, strength)`；L136 若 `self.charging` 则 `attack_cooldown = 0`。注释 L127 自述：`e` 引用原代码在赋值前使用会 NameError，此处已修。
 - 置信度: 已确认
 
-##### 2.80.6.3 Prince.on_attack [L138-153]
+##### 2.86.6.3 Prince.on_attack [L138-153]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 未冲锋时按普攻直伤；冲锋时按冲锋伤害（含等级缩放）结算并退出冲锋、复位速度；最后统一设攻击冷却并处理 kamikaze。
@@ -8440,7 +8830,7 @@
 - 实现: L139-141 未冲锋分支：`current_target.take_damage(self.entity.data.damage)`，并把起点重置到当前坐标；L142-149 冲锋分支：`_cd = self.entity.data.charge_damage or self.entity.data.damage`，`_b0 = getattr(self.entity.data,'_base_damage0',0) or self.entity.data.damage`，`_scale = damage/_b0`（B 级缩放系数，注释：勘误批10 冲锋伤害随级缩放），对目标 `take_damage(_cd * _scale)`，随后置 `charging=False`、重置起点、`speed = self.entity.data.speed`；L150 统一 `self.entity.attack_cooldown = self.entity.data.hit_speed`；L151-153 若 `self.entity.data.kamikaze` → `is_alive = False` 并调 `self.on_death()`。注意本方法**未调用** `super().on_attack()`，即完全绕过 `BasicCharacter.on_attack`（core.py:32）的溅射/弹丸/击杀归因逻辑。
 - 置信度: 已确认
 
-#### 2.80.7 DarkPrince [L155-156]
+#### 2.86.7 DarkPrince [L155-156]
 - 类型: class
 - 签名: `class DarkPrince(Prince):`
 - 作用: 黑暗王子——直接继承 `Prince` 的冲锋行为，无任何覆写。
@@ -8450,7 +8840,7 @@
 - 调用: 被 `HeroDarkPrince`(L1343) 继承。
 - 置信度: 已确认
 
-#### 2.80.8 BattleRam [L158-163]
+#### 2.86.8 BattleRam [L158-163]
 - 类型: class
 - 签名: `class BattleRam(Prince):`
 - 作用: 攻城槌——继承冲锋管线，死亡时在周围生成 Barbarian。
@@ -8459,7 +8849,7 @@
 - 实现: 类内仅 `on_death`（L159-163）。
 - 置信度: 已确认
 
-##### 2.80.8.1 BattleRam.on_death [L159-163]
+##### 2.86.8.1 BattleRam.on_death [L159-163]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 死亡时按 `Card('Barbarian')` 的散落位置生成野蛮人。
@@ -8468,7 +8858,7 @@
 - 实现: L160 延迟导入 `get_spawn_position, Troop`；L161 `get_spawn_position(Card('Barbarian'), self.entity.position, self.entity.player)`；L162-163 每个落点生成 `Troop(next_entity_id, position, player, 'Barbarian')` 并 `self.battle_state._spawn_entity(...)`。
 - 置信度: 已确认
 
-#### 2.80.9 GiantSkeleton [L166-173]
+#### 2.86.9 GiantSkeleton [L166-173]
 - 类型: class
 - 签名: `class GiantSkeleton(BasicCharacter):`
 - 作用: 骷髅巨人——死亡时生成以自身卡名为名的 `TimedExplosive`（巨型炸弹）。
@@ -8477,7 +8867,7 @@
 - 实现: 成员 `__init__`（L167-168，与基类等价）与 `on_death`（L169-173，亡语炸弹）。
 - 置信度: 已确认
 
-##### 2.80.9.1 GiantSkeleton.__init__ [L167-168]
+##### 2.86.9.1 GiantSkeleton.__init__ [L167-168]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 仅调用基类构造，不引入额外状态。
@@ -8487,7 +8877,7 @@
 - 实现: L168 `super().__init__(entity)`（core.py:17-20 绑定 entity/battle_state/data）。该覆写与基类完全等价（冗余但无害）。
 - 置信度: 已确认
 
-##### 2.80.9.2 GiantSkeleton.on_death [L169-173]
+##### 2.86.9.2 GiantSkeleton.on_death [L169-173]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 死亡时在原地生成以自身卡名为名的延时爆炸实体。
@@ -8496,7 +8886,7 @@
 - 实现: L170 `from battle import TimedExplosive`；L171-172 `TimedExplosive(self.battle_state.next_entity_id, self.entity.position, self.entity.player, self.entity.name)`；L173 `_spawn_entity(bomb)`。结构与 `Balloon.on_death` 相同，数值由 `TimedExplosive` 内部按卡名查表决定。
 - 置信度: 已确认
 
-#### 2.80.10 IceWizard [L175-200]
+#### 2.86.10 IceWizard [L175-200]
 - 类型: class
 - 签名: `class IceWizard(BasicCharacter):`
 - 作用: 冰法师——落地时在自身周围结算一次"冰雾"：范围伤害 + 减速（含攻速减速），塔不吃伤害也不吃减速。
@@ -8506,7 +8896,7 @@
 - 调用: 被 `HeroIceWizard`(L1447) 继承。
 - 置信度: 已确认
 
-##### 2.80.10.1 IceWizard.on_spawn [L181-200]
+##### 2.86.10.1 IceWizard.on_spawn [L181-200]
 - 类型: method
 - 签名: `def on_spawn(self):`
 - 作用: 部署当帧对半径内所有敌方实体结算冰雾伤害与减速（塔豁免伤害与减速）。
@@ -8515,7 +8905,7 @@
 - 实现: L182 `from battle import Building, Troop`（`Troop` 实际未被使用）；L183-185 取 `spawn_data`、`e`、`bs`；L186 `radius = spawn_data['radius']/1000`（毫格→格）；L187-190 从 `buffData` 求 `slow = 1.0 + speedMultiplier/100`、`slow_hs = 1.0 + hitSpeedMultiplier/100`、`duration = (buffTime or 2500)/1000`；L191 `dmg_mult = 1.0 + crownTowerDamagePercent/100`（算出来但**未被使用**——实际对塔是直接跳过伤害，L197-198）；L192-200 遍历 `list(bs.entities.values())`：跳过死亡/同方实体；用 `距离 < radius + entity.data.collision_radius` 判定命中；L196 `is_tower = isinstance(entity, Building) and entity.id <= 6`（id≤6 视为塔）；L197-198 非塔才 `take_damage(spawn_data['damage'] * level_scale(e.level))`；L199-200 非 Building 才 `apply_buff(speed_mult=slow, hit_speed_mult=slow_hs, duration=duration)`。
 - 置信度: 已确认（`dmg_mult` 未被消费为源码事实）
 
-#### 2.80.11 Miner [L202-216]
+#### 2.86.11 Miner [L202-216]
 - 类型: class
 - 签名: `class Miner(BasicCharacter):`
 - 作用: 矿工——按到敌王塔的距离计算"钻地时间"，期间不可选取且无敌，随后解除。
@@ -8525,7 +8915,7 @@
 - 调用: 与 `MightyMiner`(L435) 无继承关系（后者是独立 `_HeroBase` 子类，仅语义相近）。
 - 置信度: 已确认
 
-##### 2.80.11.1 Miner.__init__ [L203-208]
+##### 2.86.11.1 Miner.__init__ [L203-208]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 按到敌方王塔的距离换算冻结时间，并在部署帧置不可选取 + 无敌。
@@ -8535,7 +8925,7 @@
 - 实现: L204 `super().__init__(entity)`；L205 `self.distance = distance_to(TileGrid.RED_KING_TOWER if player == 1 else TileGrid.BLUE_KING_TOWER)`（player 1 在王塔在 y=29.0；player 0 在 y=3.0，见 arena.py:11-14）；L206 `self.freeze_time = self.distance/(650/60)`；L207 `entity.targetable = False`；L208 `entity.invincible = True`。
 - 置信度: 已确认
 
-##### 2.80.11.2 Miner.on_tick [L210-216]
+##### 2.86.11.2 Miner.on_tick [L210-216]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 钻地期间反复重置部署延迟（保持不可动作），计时结束后恢复可选取与非无敌。
@@ -8545,7 +8935,7 @@
 - 实现: L211-213 若 `freeze_time > 0`：递减并把 `deploy_delay_remaining` 每帧重置为 `data.deploy_time`（即在钻地结束前永远处于部署延迟中）；L214-216 否则置 `targetable = True`、`invincible = False`。本方法**不调用** `super().on_tick(dt)`，因此不会重绑 `self.battle_state`（与 core.py:22 的默认行为不同）。
 - 置信度: 已确认
 
-#### 2.80.12 Rage [L218-259]
+#### 2.86.12 Rage [L218-259]
 - 类型: class
 - 签名: `class Rage(BasicCharacter):`
 - 作用: 狂暴法术实体——落地时结算一次法术伤害，并在存活期内周期给半径内友军挂移速 buff。
@@ -8555,7 +8945,7 @@
 - 调用: 由 `RageBarbarian.on_death`(L262-264) 通过 `Entity(..., "Rage", ...)` 生成。
 - 置信度: 已确认
 
-##### 2.80.12.1 Rage.__init__ [L219-234]
+##### 2.86.12.1 Rage.__init__ [L219-234]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 读取狂暴法术的持续/半径/攻速/增伤参数并立刻对范围内敌方结算一次范围伤害。
@@ -8565,7 +8955,7 @@
 - 实现: L220 `super().__init__(entity)`；L221 `self.deploy_delay_remaining = entity.data.deploy_time`；L222 `self.data = entity.data.death_area_effect`；L223 `self.lifetime = self.data['lifeDuration']/1000`；L225-227 `radius = data['radius']/1000`、`hit_speed = data['hitSpeed']/1000`、`buff_time = data['buffTime']/1000`；L228 `speed_multiplier = data['buffData']['hitSpeedMultiplier']/100`（字段名是 hitSpeedMultiplier 但被当作**移速** buff 使用，见 L253）；L229 `damage = data['spawnAreaEffectObjectData']['damage']`；L230 `crown_percent = spawnAreaEffectObjectData['crownTowerDamagePercent']/100 + 1`；L231 `attack_cooldown = 0`；L232-234 调 `entity.battle_state.deal_area_damage(entity.player, entity.position, self.radius, self.damage, True, True, self.crown_percent)`。
 - 置信度: 已确认
 
-##### 2.80.12.2 Rage.on_tick [L236-259]
+##### 2.86.12.2 Rage.on_tick [L236-259]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 处理部署延迟与寿命，并在冷却到点时对半径内友军部队/建筑施加移速 buff。
@@ -8575,7 +8965,7 @@
 - 实现: L237 `super().on_tick(dt)`；L238 导入 `Troop, Building, Projectile`（`Projectile` 未被使用）；L239 有一行被注释掉的调试 `print`；L240-242 部署延迟未结束时递减并 return；L243-245 寿命 ≤0 → `is_alive = False` 并 return；L246-247 否则寿命递减；L248-257 冷却 ≤0 时遍历全部实体：跳过死亡或非同方；用 `距离 > radius + collision_radius` 跳过；只对 `Troop` 或 `Building` 生效：`speed_buff = max(entity.speed_buff, self.speed_multiplier)`、`buff_time_remaining = max(entity.buff_time_remaining, self.buff_time)`，随后 `attack_cooldown = self.hit_speed`；L258-259 否则冷却递减。注：buff 直接写实体的 `speed_buff`/`buff_time_remaining` 两个字段，而不是走 `Entity.apply_buff`（battle.py:102）。
 - 置信度: 已确认
 
-#### 2.80.13 RageBarbarian [L261-264]
+#### 2.86.13 RageBarbarian [L261-264]
 - 类型: class
 - 签名: `class RageBarbarian(BasicCharacter):`
 - 作用: 狂暴野蛮人——死亡时在原地生成一个 `Rage` 法术实体。
@@ -8584,7 +8974,7 @@
 - 实现: 类内仅 `on_death`（L262-264）。
 - 置信度: 已确认
 
-##### 2.80.13.1 RageBarbarian.on_death [L262-264]
+##### 2.86.13.1 RageBarbarian.on_death [L262-264]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 死亡时在原地生成一个 `Rage` 法术实体（走 `Entity.__init__` 的卡名 eval 路径触发 Rage 机制类）。
@@ -8593,7 +8983,7 @@
 - 实现: L263 导入 `Entity`；L264 `self.battle_state._spawn_entity(Entity(self.battle_state.next_entity_id, self.entity.position, self.entity.player, "Rage", self.battle_state))` —— 用卡名 "Rage" 走 `Entity.__init__` 的 `eval` 机制类路径，从而实例化 `Rage` holder 并触发其 `__init__` 的落地伤害。
 - 置信度: 已确认
 
-#### 2.80.14 Fisherman [L269-310]
+#### 2.86.14 Fisherman [L269-310]
 - 类型: class
 - 签名: `class Fisherman(BasicCharacter):`
 - 作用: 渔夫——钩子是唯一攻击方式：对 3.5~7 格内的地面目标/建筑抛钩，拉到自身（或把自己拉向建筑），并结算钩伤；近身无输出。
@@ -8602,7 +8992,7 @@
 - 实现: docstring（L270-272）自述：钩子射程 3.5~7 格、蓄力 1.3s、弹速 800；命中拉向自己（内部值 8.5 格/s）；减速已被官方移除（2026/4/6）；近身（<3.5）无攻击手段。成员：`__init__`（special_cd 归零）、`on_attack`（不造成伤害，仅设冷却）、`on_tick`（钩拉状态机）。
 - 置信度: 已确认（docstring 里引用的"官方移除减速"属注释自述，未在本组文件外核对）
 
-##### 2.80.14.1 Fisherman.__init__ [L273-275]
+##### 2.86.14.1 Fisherman.__init__ [L273-275]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化钩子冷却。
@@ -8612,7 +9002,7 @@
 - 实现: L274 `super().__init__(entity)`；L275 `self.special_cd = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.14.2 Fisherman.on_attack [L277-279]
+##### 2.86.14.2 Fisherman.on_attack [L277-279]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 普攻不造成任何伤害，只把攻击冷却设为 `hit_speed`。
@@ -8622,7 +9012,7 @@
 - 实现: L278 注释说明"钩子是唯一输出"；L279 `self.entity.attack_cooldown = self.entity.data.hit_speed`。**不调用** `super().on_attack()`，即完全绕过基类伤害结算。
 - 置信度: 已确认
 
-##### 2.80.14.3 Fisherman.on_tick [L281-310]
+##### 2.86.14.3 Fisherman.on_tick [L281-310]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 钩子发射状态机：冷却就绪且已部署时，按目标类型分别处理"拉敌人"与"把自己拉向建筑"，并在命中时结算钩伤。
@@ -8633,7 +9023,7 @@
 - 调用: `hook_pull` 字典的实际消费点在 `battle.Troop.update`（本组外，未在本次范围内读取，故不描述其逐步实现）。
 - 置信度: 已确认（`hook_pull` 的消费实现：待确认——位于 battle.py 的 Troop.update，本次只读到调用面）
 
-#### 2.80.15 _HeroBase [L315-316]
+#### 2.86.15 _HeroBase [L315-316]
 - 类型: class
 - 签名: `class _HeroBase(BasicCharacter):`
 - 作用: 英雄（精英卡/冠军）机制类的公共基类，提供默认「能力总是可用」的实现。
@@ -8643,7 +9033,7 @@
 - 调用: 被 SkeletonKing、ArcherQueen、GoldenKnight、Monk、MightyMiner、LittlePrince、BossBandit、HeroKnight ~ HeroIceGolemite 等继承；`BattleState.use_ability`（battle.py:3208）通过 `hasattr(holder,'use_ability')` + 返回值判断是否扣圣水/返还。
 - 置信度: 已确认
 
-##### 2.80.15.1 _HeroBase.use_ability [L316-316]
+##### 2.86.15.1 _HeroBase.use_ability [L316-316]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 默认能力实现：不做任何事并报告成功。
@@ -8652,7 +9042,7 @@
 - 实现: 单行 `return True`。子类覆写时返回 `False` 表示"未生效"，`BattleState.use_ability` 的 M8 分支会据此返还圣水（battle.py:3236-3238）。
 - 置信度: 已确认
 
-#### 2.80.16 SkeletonKing [L319-352]
+#### 2.86.16 SkeletonKing [L319-352]
 - 类型: class
 - 签名: `class SkeletonKing(_HeroBase):`
 - 作用: 骷髅王——灵魂召唤：按灵魂数决定召唤数量（上限 16），以墓园形式每 0.25s 放出一只骷髅。
@@ -8661,7 +9051,7 @@
 - 实现: docstring（L320-321）自述：耗蓝 2 / 冷却 20s；数量 = 6 + 灵魂数（上限 10），上限 16；0.25s/只；lifeDuration 10s、半径 4→官方 3.5。成员：`__init__`（remaining/timer/index）、`use_ability`（结算数量并清零灵魂）、`on_tick`（按 0.25s 间隔在螺旋点生成 `SkeletonKingSkeleton`）。
 - 置信度: 已确认
 
-##### 2.80.16.1 SkeletonKing.__init__ [L322-326]
+##### 2.86.16.1 SkeletonKing.__init__ [L322-326]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化召唤计数、间隔计时与螺旋索引。
@@ -8671,7 +9061,7 @@
 - 实现: L323 `super().__init__(entity)`；L324 `self.remaining = 0`；L325 `self.timer = 0.0`；L326 `self.index = 0`。
 - 置信度: 已确认
 
-##### 2.80.16.2 SkeletonKing.use_ability [L328-333]
+##### 2.86.16.2 SkeletonKing.use_ability [L328-333]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 读取本局灵魂数决定召唤总量并清零灵魂，设置 0.9s 施法前摇。
@@ -8680,7 +9070,7 @@
 - 实现: L329 `souls = self.battle_state.souls[self.entity.player] if hasattr(self.battle_state,'souls') else 0`（`BattleState.souls` 为 `[0,0]`，battle.py:2571）；L330 `self.remaining = min(6 + souls, 16)`；L331 有 `souls` 属性则清零该玩家灵魂；L332 `self.timer = 0.9`（注释：官方前摇 0.933s）；L333 `return True`。
 - 置信度: 已确认
 
-##### 2.80.16.3 SkeletonKing.on_tick [L335-352]
+##### 2.86.16.3 SkeletonKing.on_tick [L335-352]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 施法前摇结束后每 0.25s 沿黄金角螺旋放出 1 只骷髅，直到数量用尽或本体死亡。
@@ -8690,7 +9080,7 @@
 - 实现: L336 `super().on_tick(dt)`；L337 `remaining <= 0` 则 return；L338 本体死亡则 return（注释：简化，官方墓园会继续刷完，待 L4）；L339-340 计时递减，>0 则 return；L341-342 `timer = 0.25`、`remaining -= 1`；L343 局部 `import math`；L344 `radius = OFFICIAL_OVERRIDES.get('SkeletonKing',{}).get('spawn_radius', 3.5)`；L345-346 黄金角 `ang = self.index * 2.399963`、`index += 1`；L347 `rad = 0.4 + 0.6 * ((self.index * 7) % 10) / 9.0 * radius`；L348-349 极坐标转 `Position`；L350-352 生成 `Troop(next_entity_id, pos, player, 'SkeletonKingSkeleton')` 并 `_spawn_entity`。
 - 置信度: 已确认
 
-#### 2.80.17 ArcherQueen [L355-372]
+#### 2.86.17 ArcherQueen [L355-372]
 - 类型: class
 - 签名: `class ArcherQueen(_HeroBase):`
 - 作用: 弓箭女皇——隐身斗篷：3.5s 内不可被选取（非无敌）、攻速 ×2.8、移速 ×0.75。
@@ -8699,7 +9089,7 @@
 - 实现: docstring（L356-357）自述耗蓝 1 / 冷却 17s。成员 `use_ability`（一次性上 buff）与 `on_tick`（计时解除隐身）。
 - 置信度: 已确认
 
-##### 2.80.17.1 ArcherQueen.use_ability [L358-364]
+##### 2.86.17.1 ArcherQueen.use_ability [L358-364]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 施加 3.5s 隐身 + 攻速/移速 buff。
@@ -8708,7 +9098,7 @@
 - 实现: L359-361 `e.targetable = False`、`e.cloak_time = 3.5`；L362 `e.apply_buff(hit_speed_mult=2.8, duration=3.5)`（攻速 +180%）；L363 `e.apply_buff(speed_mult=0.75, duration=3.5)`（移速 −25%）；L364 `return True`。注意不可选取由 `targetable` 而非 `invincible` 承载（法术/AOE 仍可命中）。
 - 置信度: 已确认
 
-##### 2.80.17.2 ArcherQueen.on_tick [L366-372]
+##### 2.86.17.2 ArcherQueen.on_tick [L366-372]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 斗篷计时递减，归零恢复可选取。
@@ -8718,7 +9108,7 @@
 - 实现: L367 `super().on_tick(dt)`；L368 `t = getattr(self.entity,'cloak_time',0)`；L369-372 若 `t > 0` 则递减写回，≤0 时 `targetable = True`。
 - 置信度: 已确认
 
-#### 2.80.18 GoldenKnight [L375-413]
+#### 2.86.18 GoldenKnight [L375-413]
 - 类型: class
 - 签名: `class GoldenKnight(_HeroBase):`
 - 作用: 黄金骑士——连环突进：最多 10 段，每段扑向 5.5 格内最近的、未突进过的可选取敌方部队/建筑，突进期间无敌；命中公主塔即终止。
@@ -8727,7 +9117,7 @@
 - 实现: docstring（L376-378）自述耗蓝 1 / 冷却 12s（官方，gamedata 8s 冲突按官方），突进伤害 ≈340（gamedata dashDamage 131 为起始级 ×1.1^10，wiki 335）。成员 `use_ability` 与 `on_tick`。
 - 置信度: 已确认
 
-##### 2.80.18.1 GoldenKnight.use_ability [L379-384]
+##### 2.86.18.1 GoldenKnight.use_ability [L379-384]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 进入突进态：剩余 10 段、清空已突进集合、置无敌。
@@ -8736,7 +9126,7 @@
 - 实现: L380-383 `e.dash_remaining = 10`、`e.dashed_ids = set()`、`e.invincible = True`；L384 `return True`。
 - 置信度: 已确认
 
-##### 2.80.18.2 GoldenKnight.on_tick [L386-413]
+##### 2.86.18.2 GoldenKnight.on_tick [L386-413]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 突进推进：每帧选择最近未突进目标，瞬移贴身后结算伤害并递减段数；无目标则结束突进并解除无敌。
@@ -8746,7 +9136,7 @@
 - 实现: L387 `super().on_tick(dt)`；L389-393 若 `dash_remaining <= 0`：若在 dashing 则清零 dashing 与 invincible 后 return；L394 `e.dashing = True`；L395 导入 `Troop, Building`；L396-402 遍历实体，仅取 `(Troop,Building)` 且 `targetable`、不在 `dashed_ids`、距离 < 5.5 的最近者（`best_d` 初值 5.5，严格小于）；L403-407 无目标 → 清零段数与状态后 return；L408-409 记录 `dashed_ids` 并递减段数；L410 `e.position = Position(best.position.x + 0.4, best.position.y)`（贴身瞬移，非插值移动）；L411 `best.take_damage(131 * level_scale(e.level))`（注释承认 131 为起始级基准）；L412-413 若目标名字含 `'PrincessTower'` 则清零剩余段数（命中公主塔即停）。
 - 置信度: 已确认
 
-#### 2.80.19 Monk [L416-432]
+#### 2.86.19 Monk [L416-432]
 - 类型: class
 - 签名: `class Monk(_HeroBase):`
 - 作用: 武僧——禅定护持：4s 内减伤 65%，投射物/法术反弹（反弹实现在 battle.Projectile 侧）。
@@ -8755,7 +9145,7 @@
 - 实现: docstring（L417-418）自述耗蓝 1 / 冷却 17s，gamedata 80% 冲突按官方 65%，免击退/拉扯未建模。成员 `use_ability` 与 `on_tick`。
 - 置信度: 已确认
 
-##### 2.80.19.1 Monk.use_ability [L419-424]
+##### 2.86.19.1 Monk.use_ability [L419-424]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 开启 4s 反弹窗口并施加减伤 buff。
@@ -8764,7 +9154,7 @@
 - 实现: L420-422 `e.deflect_active = True`、`e.deflect_time = 4.0`；L423 `e.apply_buff(damage_reduction=OFFICIAL_OVERRIDES.get('Monk',{}).get('damage_reduction', 0.65), duration=4.0)`；L424 `return True`。
 - 置信度: 已确认
 
-##### 2.80.19.2 Monk.on_tick [L426-432]
+##### 2.86.19.2 Monk.on_tick [L426-432]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 反弹窗口计时递减，归零关闭。
@@ -8774,7 +9164,7 @@
 - 实现: L427 `super().on_tick(dt)`；L428-432 `t = getattr(self.entity,'deflect_time',0)`，>0 时递减写回，≤0 时 `deflect_active = False`。
 - 置信度: 已确认
 
-#### 2.80.20 MightyMiner [L435-458]
+#### 2.86.20 MightyMiner [L435-458]
 - 类型: class
 - 签名: `class MightyMiner(_HeroBase):`
 - 作用: 威猛矿工——爆破脱身：钻地瞬移到镜像换路位置（期间不可选取且无敌），原地留 1s 延时炸弹（伤害+半径+击退）。
@@ -8783,7 +9173,7 @@
 - 实现: docstring（L436-437）自述耗蓝 1 / 冷却 13s，lv11 ≈332 伤害 / 半径 2 / 击退 1.8。成员 `use_ability` 与 `on_tick`。
 - 置信度: 已确认
 
-##### 2.80.20.1 MightyMiner.use_ability [L438-448]
+##### 2.86.20.1 MightyMiner.use_ability [L438-448]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 生成原地炸弹并把自身瞬移到 x 的镜像位置。
@@ -8792,7 +9182,7 @@
 - 实现: L439-441 `targetable=False`、`invincible=True`、`drill_time = 0.6`（注释：钻地过渡，简化）；L443-446 导入 `GenericBomb` 并以 `damage=130*level_scale(e.level)`、`radius=2.0`、`delay=1.0`、`knockback=1.8` 构造炸弹后 `_spawn_entity`（GenericBomb 签名见 battle.py:1894，含默认 `hits_air=True, hits_ground=True`）；L447 `e.position = Position(18.0 - e.position.x, e.position.y)`（竞技场宽 18 格，arena.py:9 `width = 18`）；L448 `return True`。
 - 置信度: 已确认
 
-##### 2.80.20.2 MightyMiner.on_tick [L450-458]
+##### 2.86.20.2 MightyMiner.on_tick [L450-458]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 钻地计时递减，归零恢复可选取与非无敌。
@@ -8802,7 +9192,7 @@
 - 实现: L451 `super().on_tick(dt)`；L452-458 读 `drill_time`，>0 时递减写回，≤0 时置 `targetable = True`、`invincible = False`。
 - 置信度: 已确认
 
-#### 2.80.21 LittlePrince [L461-474]
+#### 2.86.21 LittlePrince [L461-474]
 - 类型: class
 - 签名: `class LittlePrince(_HeroBase):`
 - 作用: 小王子——皇家救援：在身后 0.6 格召唤守护者 `ChampionGuard`，并在落点做一次范围伤害 + 击退。
@@ -8811,7 +9201,7 @@
 - 实现: docstring（L462-463）自述耗蓝 3 / 冷却 30s，Guardienne lv11 ≈1621 血 / 205 伤，沿途 ≈233 伤害并击退最多 2 格。类内仅 `use_ability`（L464-474）。
 - 置信度: 已确认
 
-##### 2.80.21.1 LittlePrince.use_ability [L464-474]
+##### 2.86.21.1 LittlePrince.use_ability [L464-474]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 召唤守护者并立即在其落点结算范围伤害与击退。
@@ -8820,7 +9210,7 @@
 - 实现: L465-466 `e = self.entity`、导入 `Troop`；L467 `gy = -0.6 if e.player == 0 else 0.6`（朝本方后方偏移）；L468-470 生成 `Troop(next_entity_id, Position(x, y+gy), player, 'ChampionGuard')` 并 `_spawn_entity`；L471 `dmg = 90 * level_scale(e.level)`（注释：pushBackDamage 90 起始级 → lv16 ≈370）；L472 `deal_area_damage(e.player, guard.position, 1.5, dmg, False, True)`（仅地面）；L473 `push_enemies(e.player, guard.position, 1.5, 2.0)`（击退 2 格）；L474 `return True`。
 - 置信度: 已确认
 
-#### 2.80.22 BossBandit [L477-504]
+#### 2.86.22 BossBandit [L477-504]
 - 类型: class
 - 签名: `class BossBandit(_HeroBase):`
 - 作用: 女头目——金蝉脱壳手雷（每局限 2 次）：隐身 1s 并向身后传送 6 格；另有 3.5~6 格被动双倍伤害冲刺。
@@ -8829,7 +9219,7 @@
 - 实现: docstring（L478-479）自述耗蓝 1 / 每局限 2 次（间隔 3s）。成员 `use_ability`、`on_tick`、`on_attack`。
 - 置信度: 已确认
 
-##### 2.80.22.1 BossBandit.use_ability [L480-488]
+##### 2.86.22.1 BossBandit.use_ability [L480-488]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 后撤传送 6 格并进入 1s 不可选取状态；次数用尽返回 False。
@@ -8838,7 +9228,7 @@
 - 实现: L481-482 若 `e.ability_uses >= 2` → `return False`（配合 BattleState 的返还语义）；L483-484 `targetable=False`、`grenade_time = 1.0`；L485 `dy = -6.0 if e.player == 0 else 6.0`；L486 `ny = max(0.5, min(31.5, e.position.y + dy))`（竞技场高 32 格，arena.py:9 `height = 32`）；L487 `e.position = Position(e.position.x, ny)`；L488 `return True`。
 - 置信度: 已确认
 
-##### 2.80.22.2 BossBandit.on_tick [L490-496]
+##### 2.86.22.2 BossBandit.on_tick [L490-496]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 手雷隐身计时递减，归零恢复可选取。
@@ -8848,7 +9238,7 @@
 - 实现: L491 `super().on_tick(dt)`；L492-496 读 `grenade_time`，>0 时递减，≤0 时 `targetable = True`。
 - 置信度: 已确认
 
-##### 2.80.22.3 BossBandit.on_attack [L498-504]
+##### 2.86.22.3 BossBandit.on_attack [L498-504]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 被动冲刺：目标处于 3.5~6.0 格时本次伤害翻倍。
@@ -8858,7 +9248,7 @@
 - 实现: L500 注释说明"双倍伤害 = 冲刺"；L501 `d = e.position.distance_to(current_target.position)`；L502 `mult = 2.0 if 3.5 <= d <= 6.0 else 1.0`；L503 `current_target.take_damage(e.data.damage * mult, delayed=True)`；L504 `e.attack_cooldown = e.data.hit_speed`。**不调用** `super().on_attack()`，因此没有溅射/弹丸/击杀归因路径。
 - 置信度: 已确认
 
-#### 2.80.23 MegaKnight [L509-636]
+#### 2.86.23 MegaKnight [L509-636]
 - 类型: class
 - 签名: `class MegaKnight(BasicCharacter):`
 - 作用: 超级骑士——落地溅射（部署动画结束时由 GenericBomb 结算）+ 冲刺跳（两阶段：0.5s 原地预备 → 1.2s 空中直线位移 → 落地 AOE）+ 觉醒上勾拳击退。
@@ -8868,7 +9258,7 @@
 - 调用: 由 `Troop.update` 直调 holder 的 `_mk_jump` 存在性判断（battle.py:1162-1165 注释与判断）——即跳跃位移由 battle.py 侧让位给本类的 `on_tick` 推进。
 - 置信度: 已确认
 
-##### 2.80.23.1 MegaKnight.__init__ [L524-531]
+##### 2.86.23.1 MegaKnight.__init__ [L524-531]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化冲刺跳冷却、落地炸弹标记与跳跃状态机字段。
@@ -8878,7 +9268,7 @@
 - 实现: L525 `super().__init__(entity)`；L526 `self.dash_cd = 0.0`；L527 `self._spawn_bomb_laid = False`；L528-529 注释说明空中不无敌（仍被索敌/受击）；L530 `self._mk_jump = None`（结构 `{x0,y0,x1,y1,timer,dmg,dur,landed}` 见注释，实际创建时键为 x0/y0/x1/y1/dmg/phase/prep_dur/air_dur/timer，见 L624-627）；L531 `self._mk_jump_landed = False`。
 - 置信度: 已确认
 
-##### 2.80.23.2 MegaKnight.on_spawn [L533-550]
+##### 2.86.23.2 MegaKnight.on_spawn [L533-550]
 - 类型: method
 - 签名: `def on_spawn(self):`
 - 作用: 生成一个延迟等于部署动画的 `MegaKnightAppear` 炸弹，实现落地溅射。
@@ -8887,7 +9277,7 @@
 - 实现: L536-538 取 `e`；若已挂载过或 `battle_state` 为空则 return；否则 `_spawn_bomb_laid = True`；L539-540 导入 `GenericBomb`、`projectiles, _value_at_level`；L541-543 `prj = projectiles.get('MegaKnightAppear') or {}`，`dmg = _value_at_level(prj.get('damage_per_level') or [], prj.get('rarity') or 'Common', e.level, prj.get('damage') or 168)`；L544-548 构造 `GenericBomb(next_entity_id, Position(x,y), player, damage=dmg, radius=(prj.get('radius') or 2200)/1000.0, delay=max(e.data.deploy_time, 0.1), knockback=(prj.get('pushback') or 1000)/1000.0, hits_air=bool(prj.get('aoe_to_air', False)), hits_ground=bool(prj.get('aoe_to_ground', True)))`；L549 `bomb.name = 'MegaKnightAppear'`；L550 `_spawn_entity`。
 - 置信度: 已确认
 
-##### 2.80.23.3 MegaKnight.on_tick [L552-628]
+##### 2.86.23.3 MegaKnight.on_tick [L552-628]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 推进冲刺跳状态机；静止时按边缘距离选最近地面敌人，若在 3.5~5.0 格（且不在普攻射程内）则发起新的跳跃。
@@ -8897,7 +9287,7 @@
 - 实现: L553 `super().on_tick(dt)`；L555 `dash_cd` 递减；L559-582 跳跃推进：`prep` 阶段原地倒计时后切 `air` 并重置 `timer=air_dur`；`air` 阶段按 `t = 1 - timer/air_dur` 在起跳点→落点间线性插值位置；`timer<=0` 时把位置钉到落点、`deal_area_damage(player, Position(x1,y1), area_damage_radius or 1.3, j['dmg'], False, True)`（仅地面）、设 `attack_cooldown = hit_speed`、`dash_cd = hit_speed`、清 `_mk_jump`、置 `_mk_jump_landed = True`；随后 return（跳跃期间不走后续起跳判定）；L587-591 取 `scd = e.data.data['summonCharacterData']`、`evo = getattr(e,'evo',None) or {}`，`dash_dmg = evo.get('dashDamage') or scd.get('dashDamage')`，无则 return（普通/觉醒都用同一路径，注释 L583-586 明确"普通超骑也有冲刺跳"）；L592 `dash_cd > 0` 或部署延迟中则 return；L599-611 遍历实体取**边缘距离** `ed = 距离 - e.data.collision_radius - 目标 collision_radius` 最小者（只考虑 `(Troop,Building)`、存活、敌方、可选取、非空中），无目标 return；L612-613 中心距 `d`，若 `e.in_attack_range(t)` 为真则 return（注释：起跳判定不受普通索敌视距限制，但已在近战范围内就不再跳）；L614-616 `lo/hi` 来自 evo 或 scd，缺省 3500/5000（毫格），要求 `lo <= best_edge <= hi`；L619-623 落点 = 目标位置向外 0.6 格（沿自身→目标方向），`prep = 0.5`、`air_dur = max(1.7 - prep, 0.3) = 1.2`；L624-628 建 `_mk_jump` 字典（dmg 已按 `level_scale` 缩放）、phase='prep'、timer=prep，并清 `_mk_jump_landed`。
 - 置信度: 已确认
 
-##### 2.80.23.4 MegaKnight.on_attack [L630-636]
+##### 2.86.23.4 MegaKnight.on_attack [L630-636]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 普攻后若觉醒参数含 `pushBackStrength`，把周围敌人击退相应格数（上勾拳）。
@@ -8907,7 +9297,7 @@
 - 实现: L631 `super().on_attack(current_target)`（走基类的溅射/主目标保底结算，core.py:32 起）；L632-633 取 evo；L633-636 若 `evo['pushBackStrength']` 为真则 `tiles = evo['pushBackStrength']/1000.0`（4000 → 4.0 格），调 `push_enemies(e.player, e.position, area_damage_radius or 1.3, tiles)`。
 - 置信度: 已确认
 
-#### 2.80.24 Musketeer [L639-664]
+#### 2.86.24 Musketeer [L639-664]
 - 类型: class
 - 签名: `class Musketeer(BasicCharacter):`
 - 作用: 觉醒火枪手——按 `attackSequenceList` 交替发射普射弹/狙击弹：轮到狙击弹时临时把有效射程扩到 `customRange/1000`。
@@ -8916,7 +9306,7 @@
 - 实现: docstring（L640-643）自述狙击弹 `customRange 30000`、可锁定 30 格内任意目标；数据未给狙击弹独立伤害 → 沿用普攻伤害（自标低置信度）；`attackSequenceMode=None` 即按序列逐发交替。成员 `__init__`/`on_tick`/`on_attack`。
 - 置信度: 已确认（狙击弹伤害口径为源码注释自述的"低置信度"）
 
-##### 2.80.24.1 Musketeer.__init__ [L644-646]
+##### 2.86.24.1 Musketeer.__init__ [L644-646]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化发射序号。
@@ -8926,7 +9316,7 @@
 - 实现: L645 `super().__init__(entity)`；L646 `self.shot_index = 0`。
 - 置信度: 已确认
 
-##### 2.80.24.2 Musketeer.on_tick [L648-659]
+##### 2.86.24.2 Musketeer.on_tick [L648-659]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 按当前序号在序列中取模，决定本发是否为狙击弹并设置实体的临时射程覆写值。
@@ -8936,7 +9326,7 @@
 - 实现: L649 `super().on_tick(dt)`；L651-652 取 `evo` 与 `seq = evo.get('attackSequenceList') or []`；L653-655 若序列中没有任何带 `customRange` 的字典项（即非觉醒形态）→ `e._snipe_range_active = 0` 并 return；L657 `idx = self.shot_index % max(len(seq),1)`；L658 取 `cur = seq[idx]`（非字典则空字典）；L659 `e._snipe_range_active = (cur.get('customRange') or 0) / 1000.0`（30000 → 30 格）。
 - 置信度: 已确认（`_snipe_range_active` 的消费点在 battle.py，未在本组读取）
 
-##### 2.80.24.3 Musketeer.on_attack [L661-664]
+##### 2.86.24.3 Musketeer.on_attack [L661-664]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 序号自增，清除临时狙击射程（下一帧按序列重设），再走基类攻击。
@@ -8946,7 +9336,7 @@
 - 实现: L662 `self.shot_index += 1`；L663 `self.entity._snipe_range_active = 0`；L664 `super().on_attack(current_target)`。
 - 置信度: 已确认
 
-#### 2.80.25 Ronin [L669-711]
+#### 2.86.25 Ronin [L669-711]
 - 类型: class
 - 签名: `class Ronin(BasicCharacter):`
 - 作用: 浪人——被动格挡反击：被近战攻击命中且冷却就绪时不受伤并把 200% 伤害弹回攻击者，进入 3.5s 冷却。
@@ -8956,7 +9346,7 @@
 - 调用: `on_take_damage` 由 `battle.Entity.take_damage` 调用（battle.py:523-524：`if hasattr(self.entity_holder,'on_take_damage'): if self.entity_holder.on_take_damage(amount, source): ...` 短路本次伤害）。
 - 置信度: 已确认
 
-##### 2.80.25.1 Ronin.__init__ [L682-688]
+##### 2.86.25.1 Ronin.__init__ [L682-688]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 从数据读取格挡比例、冷却与近战限定开关。
@@ -8966,7 +9356,7 @@
 - 实现: L683 `super().__init__(entity)`；L684 `scd = entity.data.data.get('summonCharacterData') or {}`；L685 `parry_percent = (scd.get('parryReflectPercent') or 200)/100.0`（→2.0）；L686 `parry_cooldown = (scd.get('parryCooldownMs') or 3500)/1000.0`；L687 `parry_melee_only = bool(scd.get('parryMeleeOnly', True))`；L688 `parry_timer = 0.0`（注释：>0 表示冷却中）。
 - 置信度: 已确认
 
-##### 2.80.25.2 Ronin.on_tick [L690-693]
+##### 2.86.25.2 Ronin.on_tick [L690-693]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 格挡冷却递减。
@@ -8976,7 +9366,7 @@
 - 实现: L691 `super().on_tick(dt)`；L692-693 `parry_timer > 0` 时以 `max(0.0, parry_timer - dt)` 收敛。
 - 置信度: 已确认
 
-##### 2.80.25.3 Ronin.on_take_damage [L695-711]
+##### 2.86.25.3 Ronin.on_take_damage [L695-711]
 - 类型: method
 - 签名: `def on_take_damage(self, amount, source):`
 - 作用: 受击钩子：满足条件时把本次伤害弹回攻击者并返回 True 短路伤害。
@@ -8987,7 +9377,7 @@
 - 实现: L697-698 冷却中或已死亡 → False；L700-701 `source` 无 `data`/`take_damage` 属性 → False；L702-703 同阵营 → False；L704-708 若 `parry_melee_only`：`getattr(source.data,'range',99) or 0 > 1.5` → False（远程），`source.data.is_air_unit` → False（空中近战免疫）；L709 `source.take_damage(amount * self.parry_percent, delayed=True, source=e)`；L710 `parry_timer = parry_cooldown`；L711 `return True`。
 - 置信度: 已确认
 
-#### 2.80.26 Assassin [L715-807]
+#### 2.86.26 Assassin [L715-807]
 - 类型: class
 - 签名: `class Assassin(BasicCharacter):`
 - 作用: 刺客——中心距进入 [3.5, 6.0] 格时起跑突进（0.8s 无敌、不可打断），突进中可换目标，抵达结算 `dashDamage` 并进入普攻冷却。
@@ -8997,7 +9387,7 @@
 - 调用: `dash_tick` 由 `battle.Troop.update` 直调（battle.py:1154 `self.entity_holder.dash_tick(dt)`）。
 - 置信度: 已确认（docstring 与代码在"是否无敌"上不一致：docstring L723 写"当前不无敌"，代码 L771-772 写 `invincible=True` + 0.8s —— 两者都如实记录）
 
-##### 2.80.26.1 Assassin.__init__ [L728-732]
+##### 2.86.26.1 Assassin.__init__ [L728-732]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 在实体上挂载突进状态字段。
@@ -9007,7 +9397,7 @@
 - 实现: L729 `super().__init__(entity)`；L730 `entity._dash_active = False`；L731 `entity._dash_target_id = None`；L732 `entity._dash_invincible_timer = 0.0`（注释：0.8s 全程无敌）。注意字段挂在 `entity` 而非 `self`。
 - 置信度: 已确认
 
-##### 2.80.26.2 Assassin._nearest_enemy [L734-743]
+##### 2.86.26.2 Assassin._nearest_enemy [L734-743]
 - 类型: method
 - 签名: `def _nearest_enemy(self, exclude_id=None):`
 - 作用: 求最近敌方实体（按边缘距离：减去目标碰撞半径）及其距离。
@@ -9017,7 +9407,7 @@
 - 实现: L736-737 `best, best_d = None, float('inf')`，遍历 `e.battle_state.entities.values()`；L738-739 跳过死亡/同方/等于 `exclude_id` 者；L740 `d = 距离 - getattr(o.data,'collision_radius',0)`；L741-742 取更小者；L743 返回。
 - 置信度: 已确认
 
-##### 2.80.26.3 Assassin.on_tick [L745-772]
+##### 2.86.26.3 Assassin.on_tick [L745-772]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 推进 0.8s 冲刺无敌计时，并在未突进时检测是否进入起跑窗口。
@@ -9027,7 +9417,7 @@
 - 实现: L746 `super().on_tick(dt)`；L748-749 死亡则 return；L751-754 `_dash_invincible_timer > 0` 时递减，归零置 `invincible = False`（注释：冲刺结束后仍走完剩余无敌）；L755-756 `_dash_active` 为真则 return（位移交给 `dash_tick`）；L757-758 仍在部署延迟则 return；L759-762 注释说明触发窗口用**中心距离**（与 MK 同口径），并记录历史踩坑：用边缘距离会被碰撞半径吃掉导致窗口打不开；L763 `tgt, _ = self._nearest_enemy()`；L764-772 若目标存在且 `DASH_MIN <= 中心距 <= DASH_MAX` → 置 `_dash_active=True`、`_dash_target_id=tgt.id`、`invincible=True`、`_dash_invincible_timer=0.8`。
 - 置信度: 已确认
 
-##### 2.80.26.4 Assassin.dash_tick [L774-807]
+##### 2.86.26.4 Assassin.dash_tick [L774-807]
 - 类型: method
 - 签名: `def dash_tick(self, dt):`
 - 作用: 突进推进：维护/切换目标、贴身后结算突进伤害，否则按 `jump_speed` 沿直线移动。
@@ -9037,7 +9427,7 @@
 - 实现: L776-777 取 `e`、`bs`；L778-786 从 `bs.entities.get(e._dash_target_id)` 取目标，若目标为空/已死则用 `_nearest_enemy()` 改选，仍无则清空 `_dash_active`/`_dash_target_id` 并 return；L787-792 若有更近的其它敌人（`nd < cur_d - 0.05`，均为边缘距离）则改突进目标；L793-795 `dist = 中心距`，`reach = 双方碰撞半径之和`，`dist <= max(reach, 0.3)` 视为抵达；L796-802 抵达分支：`dmg = summonCharacterData.dashDamage * level_scale(e.level)`、`tgt.take_damage(dmg, delayed=True, source=e)`、`attack_cooldown = hit_speed`、清空突进状态并 return（注释：无敌由 0.8s 计时器走完，不在此解除）；L803-805 `step = min(e.data.jump_speed * dt, dist - max(reach,0.3)*0.5)`，按单位方向向量推进 `position.x/y`；L807 突进期间冷却照常恢复：`attack_cooldown = max(hit_speed - load_time, attack_cooldown - dt)`。
 - 置信度: 已确认
 
-#### 2.80.27 BattleHealer [L810-853]
+#### 2.86.27 BattleHealer [L810-853]
 - 类型: class
 - 签名: `class BattleHealer(BasicCharacter):`
 - 作用: 战斗天使——部署时生成 2.5 格治疗光环、每次攻击时生成 3.0 格治疗光环；光环寿命 1s、每 0.25s 一跳共 4 跳。
@@ -9046,7 +9436,7 @@
 - 实现: docstring（L811-817）自述六条：部署光环随等级 1.1/级曲线（自标【假设】）；不治疗自己；仅治疗友军部队（建筑是否受疗【待确认】，当前不含）；`buffWhenNotAttackingTime` 为旧版残留不消费。类属性：`DEPLOY_RADIUS = 2.5`、`ATTACK_RADIUS = 3.0`、`TICKS = 4`、`INTERVAL = 0.25`、`DEPLOY_HEAL_LV11 = 50`（L818-822）。成员：`_deploy_heal`、`_spawn_aura`、`on_spawn`、`on_tick`、`on_attack`。
 - 置信度: 已确认
 
-##### 2.80.27.1 BattleHealer._deploy_heal [L824-825]
+##### 2.86.27.1 BattleHealer._deploy_heal [L824-825]
 - 类型: method
 - 签名: `def _deploy_heal(self):`
 - 作用: 按 1.1/级曲线把 lv11 基准治疗量换算到当前等级。
@@ -9055,7 +9445,7 @@
 - 实现: L825 `return self.DEPLOY_HEAL_LV11 * (1.1 ** (self.entity.level - 11))`。
 - 置信度: 已确认
 
-##### 2.80.27.2 BattleHealer._spawn_aura [L827-837]
+##### 2.86.27.2 BattleHealer._spawn_aura [L827-837]
 - 类型: method
 - 签名: `def _spawn_aura(self, radius, heal_per_tick):`
 - 作用: 手工构造 `HealAuraZone` 并直接注册进 `battle_state.entities`（绕开 `_spawn_entity`）。
@@ -9066,7 +9456,7 @@
 - 实现: L828 `from battle import HealAuraZone`；L829-830 取 `bs`、`e`；L831-834 `HealAuraZone(bs.next_entity_id, Position(x,y), e.player, radius, heal_per_tick, ticks=self.TICKS, interval=self.INTERVAL, exclude_id=e.id)`（签名见 battle.py:2042-2043，默认 label='HealAura'；`exclude_id` 保证不自疗）；L835 `zone.battle_state = bs`（HealAuraZone.__init__ 内 `battle_state=None`，battle.py:2045，所以必须手工补）；L836-837 `bs.entities[zone.id] = zone`、`bs.next_entity_id += 1`。
 - 置信度: 已确认
 
-##### 2.80.27.3 BattleHealer.on_spawn [L839-842]
+##### 2.86.27.3 BattleHealer.on_spawn [L839-842]
 - 类型: method
 - 签名: `def on_spawn(self):`
 - 作用: 只置一个待生成标记，把部署光环推迟到首次 `on_tick`。
@@ -9075,7 +9465,7 @@
 - 实现: L840-841 注释解释原因：`on_spawn` 在 `Troop.__init__` 内运行，此时 `bs.next_entity_id` 尚未被调用方递增，直接建实体会与本体 id 冲突被覆盖；L842 `self._deploy_aura_pending = True`。
 - 置信度: 已确认
 
-##### 2.80.27.4 BattleHealer.on_tick [L844-848]
+##### 2.86.27.4 BattleHealer.on_tick [L844-848]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 首帧消费待生成标记，生成部署治疗光环。
@@ -9085,7 +9475,7 @@
 - 实现: L845 `super().on_tick(dt)`；L846-848 若 `_deploy_aura_pending` 为真则清标记并 `self._spawn_aura(self.DEPLOY_RADIUS, self._deploy_heal())`。
 - 置信度: 已确认
 
-##### 2.80.27.5 BattleHealer.on_attack [L850-853]
+##### 2.86.27.5 BattleHealer.on_attack [L850-853]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 每次攻击时额外生成一个攻击治疗光环（治疗量 = 部署量的 ceil(1/2)）。
@@ -9095,7 +9485,7 @@
 - 实现: L851 `super().on_attack(current_target)`；L852-853 若仍存活则 `self._spawn_aura(self.ATTACK_RADIUS, math.ceil(self._deploy_heal() / 2))`。
 - 置信度: 已确认
 
-#### 2.80.28 _ab [L867-869]
+#### 2.86.28 _ab [L867-869]
 - 类型: function
 - 签名: `def _ab(e):`
 - 作用: 取实体的精英卡能力参数包（`elite17_data.HERO_ABILITIES` 注入到 `data.ability`）。
@@ -9106,7 +9496,7 @@
 - 调用: 被本文件所有 Hero* 类的 use_ability/on_tick 调用（如 HeroKnight L909、HeroMusketeer L937、HeroMiniPekka L960、HeroValkyrie L1001、HeroWizard L1062、HeroBowler L1115、HeroGiant L1164、HeroMegaMinion L1262、HeroTombstone L1298、HeroBerserker L1316、HeroDarkPrince L1349、HeroBalloon L1379、Skeletrooper L1406、HeroIceWizard L1459、HeroEliteArcher L1504、HeroIceGolemite L1547）。
 - 置信度: 已确认
 
-#### 2.80.29 _elite_hval [L864]
+#### 2.86.29 _elite_hval [L864]
 - 类型: 别名导入（`from elite17_data import hval as _elite_hval`）
 - 签名: 无（非函数定义；被绑定到 `elite17_data.hval`）
 - 作用: 精英卡数值的等级换算函数别名。
@@ -9116,7 +9506,7 @@
 - 调用: 被 `_sv`(L874) 与 `HeroKnight.use_ability`(L920) 调用。
 - 置信度: 已确认（按其被绑定到的实现 elite17_data.py:36-38 描述）
 
-#### 2.80.30 _HERO_ABILITIES [L864]
+#### 2.86.30 _HERO_ABILITIES [L864]
 - 类型: 别名导入（`from elite17_data import HERO_ABILITIES as _HERO_ABILITIES`）
 - 签名: 无（非函数定义；被绑定到 `elite17_data.HERO_ABILITIES` 字典）
 - 作用: 精英卡（M8 Hero 化）能力参数表的模块内别名。
@@ -9126,7 +9516,7 @@
 - 调用: 被 `open_goblin_window`(L879)、`_goblin_brigade_effect`(L892)、`Skeletrooper.__init__`(L1406) 调用。
 - 置信度: 已确认（仅对 L879/L892/L1406 三处实际消费的键做了核对；表中其余条目内容未在本组范围读取）
 
-#### 2.80.31 _sv [L872-874]
+#### 2.86.31 _sv [L872-874]
 - 类型: function
 - 签名: `def _sv(triple, level):`
 - 作用: 把 `(数值, 来源等级, 标注)` 三元组按官方 1.1/级曲线换算到当前战斗等级。
@@ -9138,7 +9528,7 @@
 - 调用: 被 HeroMusketeer L944、HeroValkyrie L1033、HeroWizard L1092、HeroBowler L1122、HeroGiant L1189、HeroMegaMinion L1273、HeroBerserker L1321、Skeletrooper L1418、HeroIceGolemite L1553 调用。
 - 置信度: 已确认
 
-#### 2.80.32 open_goblin_window [L877-883]
+#### 2.86.32 open_goblin_window [L877-883]
 - 类型: function
 - 签名: `def open_goblin_window(bs, player, pos):`
 - 作用: M8 ⑧：Goblins 旗窗——最后一只哥布林阵亡时开一个 5s 条件窗（窗口内按能力按钮可出增援）。
@@ -9151,7 +9541,7 @@
 - 调用: 由 `HeroGoblins.on_death`（L1230）在"同组最后一只阵亡且无同批未落地"时调用。
 - 置信度: 已确认
 
-#### 2.80.33 _goblin_brigade_effect [L886-897]
+#### 2.86.33 _goblin_brigade_effect [L886-897]
 - 类型: function
 - 签名: `def _goblin_brigade_effect(bs):`
 - 作用: M8 ⑧：条件窗效果体——为按下按钮的玩家在其窗口落点召出 `brigadeCount` 只 Goblins。
@@ -9162,7 +9552,7 @@
 - 调用: 由 `BattleState.use_ability` 的条件窗分支调用（battle.py:3219）。
 - 置信度: 已确认（"一次只处理一个玩家"为代码结构事实；若双方同一 tick 都有 used 窗口，第二个玩家的窗口不会生成增援——源码未处理该情形）
 
-#### 2.80.34 HeroKnight [L900-929]
+#### 2.86.34 HeroKnight [L900-929]
 - 类型: class
 - 签名: `class HeroKnight(_HeroBase):`
 - 作用: 【M8 §1】Hero 骑士——Triumphant Taunt：嘲讽 6.5 格内敌军 5s 锁定自己，并给自己一个限时护盾。
@@ -9171,7 +9561,7 @@
 - 实现: docstring（L901-903）自述 2 费单次、嘲讽时长 5s、强锁走 `Entity._hero_taunt_override`、护盾值 197[Fandom L1]/200 双记。成员：`__init__`（shield_timer）、`use_ability`、`on_tick`（护盾到期清零）。
 - 置信度: 已确认
 
-##### 2.80.34.1 HeroKnight.__init__ [L904-906]
+##### 2.86.34.1 HeroKnight.__init__ [L904-906]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化护盾计时器。
@@ -9181,7 +9571,7 @@
 - 实现: L905 `super().__init__(entity)`；L906 `self.shield_timer = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.34.2 HeroKnight.use_ability [L908-922]
+##### 2.86.34.2 HeroKnight.use_ability [L908-922]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 给半径内敌军打上嘲讽标记（锁定 + 清空路径），并给自身护盾。
@@ -9190,7 +9580,7 @@
 - 实现: L909-910 取 `e, ab` 与 `bs`；L911 导入 `Troop, Building`；L912-918 遍历实体：跳过死亡/同方/非部队建筑；`距离 > ab['tauntRadius'] + t.data.collision_radius` 跳过；命中者设 `t._taunt_until = bs.time + ab['tauntDuration']`、`t._taunt_target_id = e.id`、`t.path = []`；L919-921 `v, src, _ = ab['shieldValue']`，`entity.shield_health = _elite_hval(v, src, entity.level)`，`self.shield_timer = ab['shieldDuration']`；L922 `return True`。
 - 置信度: 已确认（`_taunt_until`/`_taunt_target_id` 的消费点在 battle.py:729 `_hero_taunt_override`，本组未展开其实现）
 
-##### 2.80.34.3 HeroKnight.on_tick [L924-929]
+##### 2.86.34.3 HeroKnight.on_tick [L924-929]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 护盾计时归零时把护盾血量清零。
@@ -9200,7 +9590,7 @@
 - 实现: L925 `super().on_tick(dt)`；L926-929 若 `shield_timer > 0` 则递减，≤0 时 `entity.shield_health = 0`（注释：与护盾被打掉共用同一槽位）。
 - 置信度: 已确认
 
-#### 2.80.35 HeroMusketeer [L932-945]
+#### 2.86.35 HeroMusketeer [L932-945]
 - 类型: class
 - 签名: `class HeroMusketeer(_HeroBase):`
 - 作用: 【M8 §2】Hero 火枪手——Trusty Turret：在身前 3 格放置自动炮塔并在落点结算一次 AOE。
@@ -9209,7 +9599,7 @@
 - 实现: docstring（L933-935）自述 3 费单次、炮塔 HP717@L3/射程 4/寿命 10s、落地 AOE 95@L3。类内仅 `use_ability`（L936-945）。
 - 置信度: 已确认
 
-##### 2.80.35.1 HeroMusketeer.use_ability [L936-945]
+##### 2.86.35.1 HeroMusketeer.use_ability [L936-945]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 在身前 `frontOffset` 格放置自动炮塔，并在落点结算一次对空对地的召唤 AOE。
@@ -9218,7 +9608,7 @@
 - 实现: L937-938 取 `e, ab` 并导入 `Building`；L938 导入 `Building`；L939 `gy = -ab['frontOffset'] if e.player == 0 else ab['frontOffset']`（player 0 朝 y 负方向进攻，故前方取负）；L940 `pos = Position(e.position.x, e.position.y + gy)`；L941-942 生成 `Building(next_entity_id, pos, player, ab['turretCard'])` 并 `_spawn_entity`；L943-944 `deal_area_damage(e.player, pos, ab['spawnRadius'], _sv(ab['spawnDamage'], e.level), True, True)`（对空对地）；L945 `return True`。
 - 置信度: 已确认
 
-#### 2.80.36 HeroMiniPekka [L948-986]
+#### 2.86.36 HeroMiniPekka [L948-986]
 - 类型: class
 - 签名: `class HeroMiniPekka(_HeroBase):`
 - 作用: 【M8 §3】Hero 小皮卡——Breakfast Boost：煎饼进度 22s 自动 +1 格或每击 +10s，吃煎饼按格数跳级并回血 30%。
@@ -9227,7 +9617,7 @@
 - 实现: docstring（L949-952）自述 1 费单次、0/1/2/3 格 → +1/+2/+3/+5 级（走 1.1/级曲线，自标【口径假设：沿等级表跳级】）+ 回复 30% maxHP。成员：`__init__`（progress/meter）、`on_tick`（自动进度）、`on_attack`（命中进度）、`use_ability`（跳级 + 回血）。
 - 置信度: 已确认
 
-##### 2.80.36.1 HeroMiniPekka.__init__ [L953-956]
+##### 2.86.36.1 HeroMiniPekka.__init__ [L953-956]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化煎饼进度与已烹饪格数。
@@ -9237,7 +9627,7 @@
 - 实现: L954 `super().__init__(entity)`；L955 `self.progress = 0.0`；L956 `self.meter = 0`（0..3）。
 - 置信度: 已确认
 
-##### 2.80.36.2 HeroMiniPekka.on_tick [L958-965]
+##### 2.86.36.2 HeroMiniPekka.on_tick [L958-965]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 未满格时按帧累加进度，达到 `meterSeconds` 则 +1 格并清零进度。
@@ -9247,7 +9637,7 @@
 - 实现: L959 `super().on_tick(dt)`；L960 `ab = _ab(self.entity)`；L961-965 若 `meter < ab['maxMeter']` 则 `progress += dt`，`progress >= meterSeconds` 时 `meter += 1`、`progress = 0.0`（每次 tick 最多进 1 格）。
 - 置信度: 已确认
 
-##### 2.80.36.3 HeroMiniPekka.on_attack [L967-974]
+##### 2.86.36.3 HeroMiniPekka.on_attack [L967-974]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 每次攻击给煎饼进度加 `onHitProgress`，并用 while 循环把足量进度换成格数。
@@ -9257,7 +9647,7 @@
 - 实现: L968 `super().on_attack(current_target)`；L969-970 取 ab；L970-974 若未满格：`progress += ab['onHitProgress']`，随后 `while progress >= meterSeconds and meter < maxMeter` 累加格数并扣减进度（允许一次命中跨越多个 `meterSeconds`）。
 - 置信度: 已确认
 
-##### 2.80.36.4 HeroMiniPekka.use_ability [L976-986]
+##### 2.86.36.4 HeroMiniPekka.use_ability [L976-986]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 按当前格数取跳级数，等比放大 HP 与伤害，并补足升级差 + 回血 30%。
@@ -9266,7 +9656,7 @@
 - 实现: L977-978 `steps = ab['levelsByMeter'][min(self.meter, 3)]`；L979 `mult = 1.1 ** steps`；L980 记录 `old_max, old_dmg = e.data.hp, e.data.damage`；L981-982 `e.data.hp = round(old_max*mult)`、`e.data.damage = round(old_dmg*mult)`；L984 `e.hp = min(e.data.hp, e.hp + (e.data.hp - old_max) + e.data.hp * ab['healPct'])`（升级补差 + 治疗量叠加，封顶新上限）；L985 `meter, progress = 0, 0.0`；L986 `return True`。
 - 置信度: 已确认
 
-#### 2.80.37 HeroValkyrie [L989-1048]
+#### 2.86.37 HeroValkyrie [L989-1048]
 - 类型: class
 - 签名: `class HeroValkyrie(_HeroBase):`
 - 作用: 【M8 §4】Hero 女武神——Wild Whirlwind：3.5s 旋风（0.25s 一跳 AOE 半径 2.5 + 减伤 15% + 移速提升），结束后向敌方王塔方向冲刺 5.5 格并进入禁攻期。
@@ -9275,7 +9665,7 @@
 - 实现: docstring（L990-993）自述 3 费单次、AbilityDmg 97@L11（对皇冠塔 ×0.5）、移速提升【假设 ×1.2】、旋风后禁攻【假设 1s】、与觉醒 EV1 Tornado 共用 Wild 槽互斥。成员：`__init__`（phase/timer/tick_timer）、`use_ability`、`_dash`、`on_tick`、`on_attack`。
 - 置信度: 已确认
 
-##### 2.80.37.1 HeroValkyrie.__init__ [L994-998]
+##### 2.86.37.1 HeroValkyrie.__init__ [L994-998]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化相位机状态。
@@ -9285,7 +9675,7 @@
 - 实现: L995 `super().__init__(entity)`；L996 `self.phase = None`（注释：None / 'whirl' / 'forbid'）；L997 `self.timer = 0.0`；L998 `self.tick_timer = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.37.2 HeroValkyrie.use_ability [L1000-1005]
+##### 2.86.37.2 HeroValkyrie.use_ability [L1000-1005]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 进入旋风相位并施加移速与减伤 buff。
@@ -9294,7 +9684,7 @@
 - 实现: L1001-1002 `self.phase, self.timer, self.tick_timer = 'whirl', ab['whirlDuration'], 0.0`；L1003 `e.apply_buff(speed_mult=ab['speedMult'], duration=ab['whirlDuration'])`；L1004 `e.apply_buff(damage_reduction=ab['damageReduction'], duration=ab['whirlDuration'])`；L1005 `return True`。
 - 置信度: 已确认
 
-##### 2.80.37.3 HeroValkyrie._dash [L1007-1021]
+##### 2.86.37.3 HeroValkyrie._dash [L1007-1021]
 - 类型: method
 - 签名: `def _dash(self):`
 - 作用: 旋风结束时朝敌方王塔方向位移 `dashRange` 格，落点不可走则按 1.0/0.66/0.33 逐级收缩。
@@ -9303,7 +9693,7 @@
 - 实现: L1008 docstring 说明方向与可走性约束；L1010-1011 导入 `TileGrid`，`tgt = RED_KING_TOWER if player == 0 else BLUE_KING_TOWER`；L1012-1013 求方向向量与模长（模长 0 时用 1.0 兜底）；L1014-1015 `step = ab['dashRange'] / n`；L1016-1021 依次尝试 `k` ∈ (1.0, 0.66, 0.33)：若自身为空中单位或 `bs.ground_walkable(Position(nx,ny), collision_radius)` 成立则落位、清空 `path` 并 break（注释：落点不可走则逐级收缩，应对河道/建筑）。
 - 置信度: 已确认
 
-##### 2.80.37.4 HeroValkyrie.on_tick [L1023-1042]
+##### 2.86.37.4 HeroValkyrie.on_tick [L1023-1042]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 旋风相位按 `tick` 间隔持续 AOE 并压制普攻；计时结束后触发位移冲刺并切到禁攻相位，禁攻期把攻击冷却顶到剩余时间。
@@ -9313,7 +9703,7 @@
 - 实现: L1024 `super().on_tick(dt)`；L1025-1026 取 e/ab；L1026-1037 `whirl` 分支：`timer -= dt`；`attack_cooldown = max(attack_cooldown, 0.25)`（注释：旋风期间不普攻）；`tick_timer -= dt`，≤0 时重置为 `ab['tick']` 并 `deal_area_damage(e.player, e.position, ab['radius'], _sv(ab['tickDamage'], e.level), e.data.attack_air, e.data.attack_ground, ab['crownMult'])`；`timer <= 0` 时 `self._dash()` 并切 `phase='forbid'`、`timer = ab['forbidAttack']`；L1038-1042 `forbid` 分支：递减并把 `attack_cooldown` 顶到 `self.timer`，到期后 `phase = None`。
 - 置信度: 已确认
 
-##### 2.80.37.5 HeroValkyrie.on_attack [L1044-1048]
+##### 2.86.37.5 HeroValkyrie.on_attack [L1044-1048]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 旋风期间关闭普攻（仅压制冷却并 return）。
@@ -9323,7 +9713,7 @@
 - 实现: L1045-1047 `if self.phase == 'whirl'`：`attack_cooldown = max(attack_cooldown, 0.25)` 并 return；L1048 否则 `super().on_attack(current_target)`。
 - 置信度: 已确认
 
-#### 2.80.38 HeroWizard [L1051-1099]
+#### 2.86.38 HeroWizard [L1051-1099]
 - 类型: class
 - 签名: `class HeroWizard(_HeroBase):`
 - 作用: 【M8 §5】Hero 法师——Fiery Flight：1s 延迟后升空 5s（临时空中单位 + 移速 buff），空中每次攻击在目标位置生成一个 2s 火旋风（独立 DPS）。
@@ -9332,7 +9722,7 @@
 - 实现: docstring（L1052-1055）自述 1 费单次（wiki 属性表 1 与信息框 2 矛盾，取 1）、旋风半径 4 / 2s / TornadoDmg 43@L11 对空对地、落点用攻击时刻目标位置代替弹道落点【近似】。成员：`__init__`、`use_ability`、`_end_fly`、`on_tick`、`on_attack`。
 - 置信度: 已确认
 
-##### 2.80.38.1 HeroWizard.__init__ [L1056-1059]
+##### 2.86.38.1 HeroWizard.__init__ [L1056-1059]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化升空延迟与飞行计时。
@@ -9342,7 +9732,7 @@
 - 实现: L1057 `super().__init__(entity)`；L1058 `self.fly_pending = 0.0`；L1059 `self.fly_timer = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.38.2 HeroWizard.use_ability [L1061-1063]
+##### 2.86.38.2 HeroWizard.use_ability [L1061-1063]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 设置升空前摇时长。
@@ -9351,7 +9741,7 @@
 - 实现: L1062 `self.fly_pending = _ab(self.entity)['flyDelay']`；L1063 `return True`。实际升空状态切换在 `on_tick`。
 - 置信度: 已确认
 
-##### 2.80.38.3 HeroWizard._end_fly [L1065-1069]
+##### 2.86.38.3 HeroWizard._end_fly [L1065-1069]
 - 类型: method
 - 签名: `def _end_fly(self):`
 - 作用: 落地还原位面（从 `Card` 重读该卡的 `is_air_unit`）并清空路径与飞行计时。
@@ -9360,7 +9750,7 @@
 - 实现: L1066-1067 `e.data.is_air_unit = Card(e.card_name).is_air_unit`；L1068 `e.path = []`；L1069 `self.fly_timer = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.38.4 HeroWizard.on_tick [L1071-1085]
+##### 2.86.38.4 HeroWizard.on_tick [L1071-1085]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 推进升空前摇 → 升空（置空中 + 移速 buff + 飞行计时）→ 飞行计时归零则落地。
@@ -9370,7 +9760,7 @@
 - 实现: L1072 `super().on_tick(dt)`；L1074-1081 若 `fly_pending > 0`：递减，≤0 时置 `e.data.is_air_unit = True`、`apply_buff(speed_mult=ab['speedMult'], duration=ab['flyDuration'])`、`e.path = []`、`fly_timer = ab['flyDuration']`，随后 return（同一帧不推进飞行计时）；L1082-1085 若 `fly_timer > 0` 则递减，≤0 调 `self._end_fly()`。
 - 置信度: 已确认
 
-##### 2.80.38.5 HeroWizard.on_attack [L1087-1099]
+##### 2.86.38.5 HeroWizard.on_attack [L1087-1099]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 飞行期间每次攻击在目标位置生成火旋风领域。
@@ -9380,7 +9770,7 @@
 - 实现: L1088 `super().on_attack(current_target)`；L1089-1099 若 `fly_timer > 0` 且目标非 None：导入 `EvoEffectZone`，`dps = _sv(ab['tornadoDps'], e.level)`，构造 `EvoEffectZone(next_entity_id, Position(target.x, target.y), player, battle_state, radius=ab['tornadoRadius'], lifetime=ab['tornadoDuration'], dps=dps, tick=0.5, level=1, label='WizardHero_MiniTornadoBuff')` 并 `_spawn_entity`（注释：dps 已按级换算 → level=1 避免二次缩放）。
 - 置信度: 已确认
 
-#### 2.80.39 HeroBowler [L1102-1155]
+#### 2.86.39 HeroBowler [L1102-1155]
 - 类型: class
 - 签名: `class HeroBowler(_HeroBase):`
 - 作用: 【M8 §6】Hero 投石人——Stone Swish：2.5s 蓄力（禁攻）后进入 7.3s 迫击炮模式（射程 11.5 / 3 发 / 攻速 1.9s / 独立伤害），结束后还原全部被覆写的字段。
@@ -9389,7 +9779,7 @@
 - 实现: docstring（L1103-1106）自述 2 费单次、AbilityDmg 508@L11（对皇冠塔 ×0.5）、弹丸飞行段简化为直接命中、Hero 主伤害 AreaDmg 289@L11 在弹丸上由 overlay 覆写。成员：`__init__`（phase/timer/shots_left/_orig）、`_enter_siege`、`_exit_siege`、`use_ability`、`on_tick`、`on_attack`。
 - 置信度: 已确认
 
-##### 2.80.39.1 HeroBowler.__init__ [L1107-1112]
+##### 2.86.39.1 HeroBowler.__init__ [L1107-1112]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化相位机与字段备份槽。
@@ -9399,7 +9789,7 @@
 - 实现: L1108 `super().__init__(entity)`；L1109 `self.phase = None`（注释：None / 'charge' / 'siege'）；L1110 `self.timer = 0.0`；L1111 `self.shots_left = 0`；L1112 `self._orig = None`。
 - 置信度: 已确认
 
-##### 2.80.39.2 HeroBowler._enter_siege [L1114-1125]
+##### 2.86.39.2 HeroBowler._enter_siege [L1114-1125]
 - 类型: method
 - 签名: `def _enter_siege(self):`
 - 作用: 备份并覆写射程/视距/攻速/对塔倍率/弹丸伤害，清空目标与路径并进入 siege 相位。
@@ -9408,7 +9798,7 @@
 - 实现: L1115-1117 `self._orig = (e.data.range, e.data.sight_range, e.data.hit_speed, e.data.tower_damage_mult, e.data.projectile_data.damage)`；L1118 `range = ab['siegeRange']`；L1119 `sight_range = max(sight_range, ab['siegeRange'])`；L1120-1122 `hit_speed = ab['siegeHitSpeed']`、`tower_damage_mult = ab['crownMult']`、`projectile_data.damage = _sv(ab['siegeDamage'], e.level)`；L1123-1124 `target_id = None`、`path = []`；L1125 `phase, timer, shots_left = 'siege', ab['siegeDuration'], ab['siegeShots']`。
 - 置信度: 已确认
 
-##### 2.80.39.3 HeroBowler._exit_siege [L1127-1132]
+##### 2.86.39.3 HeroBowler._exit_siege [L1127-1132]
 - 类型: method
 - 签名: `def _exit_siege(self):`
 - 作用: 把 `_enter_siege` 备份的 5 个字段原样还原并清相位。
@@ -9417,7 +9807,7 @@
 - 实现: L1128-1131 若 `_orig is not None` 则按同一顺序解包写回 `range/sight_range/hit_speed/tower_damage_mult/projectile_data.damage`；L1132 `self.phase = None`（`timer`/`shots_left` 不再复位，但 `use_ability` 会重设）。
 - 置信度: 已确认
 
-##### 2.80.39.4 HeroBowler.use_ability [L1134-1137]
+##### 2.86.39.4 HeroBowler.use_ability [L1134-1137]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 进入蓄力相位并设定蓄力时长。
@@ -9426,7 +9816,7 @@
 - 实现: L1135 `self.phase = 'charge'`；L1136 `self.timer = _ab(self.entity)['chargeTime']`；L1137 `return True`。
 - 置信度: 已确认
 
-##### 2.80.39.5 HeroBowler.on_tick [L1139-1150]
+##### 2.86.39.5 HeroBowler.on_tick [L1139-1150]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 蓄力期压制普攻并计时进入 siege；siege 期计时结束或弹药耗尽则退出。
@@ -9436,7 +9826,7 @@
 - 实现: L1140 `super().on_tick(dt)`；L1142-1146 `charge` 分支：`timer -= dt`、`attack_cooldown = max(attack_cooldown, self.timer)`（蓄力禁攻），`timer <= 0` 调 `_enter_siege()`；L1147-1150 `siege` 分支：`timer -= dt`，`timer <= 0 or shots_left <= 0` 调 `_exit_siege()`。
 - 置信度: 已确认
 
-##### 2.80.39.6 HeroBowler.on_attack [L1152-1155]
+##### 2.86.39.6 HeroBowler.on_attack [L1152-1155]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: siege 期间每次攻击消耗一发弹药。
@@ -9446,7 +9836,7 @@
 - 实现: L1153 `super().on_attack(current_target)`；L1154-1155 若 `phase == 'siege'` 则 `shots_left -= 1`（注释：3 发用尽立即还原，BowlerHeroDeactivateGroup）。弹药归零的退出发生在下一次 `on_tick`。
 - 置信度: 已确认
 
-#### 2.80.40 HeroGiant [L1158-1194]
+#### 2.86.40 HeroGiant [L1158-1194]
 - 类型: class
 - 签名: `class HeroGiant(_HeroBase):`
 - 作用: 【M8 §7】Hero 巨人——Heroic Hurl：抓取 2 格内最高 HP 的敌方部队（对空对地），朝进攻方向水平扔出 9 格，落地结算 ImpactDmg + 2s 眩晕。
@@ -9455,7 +9845,7 @@
 - 实现: docstring（L1159-1162）自述 2 费单次、ImpactDmg 135@L11、眩晕 2s、【简化】飞行中段不可被地面选取未建模（瞬时位移）。类内仅 `use_ability`（L1163-1194）。
 - 置信度: 已确认
 
-##### 2.80.40.1 HeroGiant.use_ability [L1163-1194]
+##### 2.86.40.1 HeroGiant.use_ability [L1163-1194]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 抓取 2 格内最高 HP 的敌方部队，朝进攻方向扔出 9 格，落点结算范围伤害并眩晕范围内敌方部队。
@@ -9464,7 +9854,7 @@
 - 实现: L1164-1166 取 e/ab/bs 并导入 `Troop`；L1167-1173 遍历实体，只取存活的敌方 `Troop`，命中判定 `距离 <= grabRadius + collision_radius`，按 `hp + shield_health` 取最大者；L1174-1175 无目标 → `return False`（不扣费）；L1176-1180 取敌方王塔方向，`step = throwRange / n`；L1181-1185 落点 = 被抓者位置 + 方向 × step；若被抓者非空中且落点不可走 → 折半投掷距离（k=0.5，注释：河道/边界兜底）；L1186-1187 写回 `best.position` 并清空其路径；L1188-1189 `deal_area_damage(e.player, best.position, ab['impactRadius'], _sv(ab['impactDamage'], e.level), True, True)`；L1190-1193 对落点 `impactRadius + collision_radius` 内的敌方 **Troop** 施加 `stun=ab['stun']`；L1194 `return True`。
 - 置信度: 已确认
 
-#### 2.80.41 HeroGoblins [L1197-1230]
+#### 2.86.41 HeroGoblins [L1197-1230]
 - 类型: class
 - 签名: `class HeroGoblins(_HeroBase):`
 - 作用: 【M8 §8】Hero 哥布林——Banner Brigade：部署按钮禁用，最后一只（同组）阵亡时落旗开 5s 窗口，窗口内按按钮召出增援。
@@ -9473,7 +9863,7 @@
 - 实现: docstring（L1198-1201）自述 1 费条件窗单次、窗口 5s、增援属性与本体同（不覆写数值表）。成员：`__init__`（分组 id）、`use_ability`（恒 False）、`on_death`（同组最后一只开窗）。
 - 置信度: 已确认
 
-##### 2.80.41.1 HeroGoblins.__init__ [L1202-1213]
+##### 2.86.41.1 HeroGoblins.__init__ [L1202-1213]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 按"2s 内同批部署视为同组"的规则给本实体分配 group_id。
@@ -9483,7 +9873,7 @@
 - 实现: L1203-1205 取 `e, bs` 与 `cur = bs._hero_goblin_group_state.get(e.player)`（该字段在 battle.py:2567 初始化为空 dict）；L1207-1209 若 `cur` 存在且 `bs.time - cur[1] < 2.0` → 沿用 `cur[0]` 作为 group_id 并刷新时刻；L1210-1213 否则 `bs._hero_goblin_group_seq += 1`，以新序号为 group_id 并记录 `(group_id, bs.time)`。
 - 置信度: 已确认
 
-##### 2.80.41.2 HeroGoblins.use_ability [L1215-1216]
+##### 2.86.41.2 HeroGoblins.use_ability [L1215-1216]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 本体存活时能力按钮禁用。
@@ -9492,7 +9882,7 @@
 - 实现: L1216 `return False`，配合 `BattleState.use_ability` 的"未生效返还圣水"语义（battle.py:3236-3238）。注释标注官方 `Flag_Disable_Ability_Button`。实际增援走 `hero_windows` 条件窗分支，与本方法无关。
 - 置信度: 已确认
 
-##### 2.80.41.3 HeroGoblins.on_death [L1218-1230]
+##### 2.86.41.3 HeroGoblins.on_death [L1218-1230]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 若同组哥布林全部阵亡且无同批未落地者，则开旗窗。
@@ -9501,7 +9891,7 @@
 - 实现: L1219-1221 取 e/bs 并 `alive = 0`；L1222-1226 遍历实体计数：存活 + 同玩家 + `card_name == 'Goblins'` + `isinstance(t.entity_holder, HeroGoblins)` + `holder.group_id == self.group_id`；L1228 `pending = any(item[0][3] == 'Goblins' and item[0][2] == e.player for item in bs.schedule)`（按 `schedule` 条目里 `(Troop 参数元组)[3]` = 卡名、`[2]` = 玩家 判定同批是否还有待落地者，注释：分批部署 0.2s 间隔未落地的同组成员不算最后一只）；L1229-1230 `alive == 0 and not pending and group_id is not None` → `open_goblin_window(bs, e.player, e.position)`。
 - 置信度: 已确认（`bs.schedule` 条目的内部结构在 battle.py，本组按其索引语义使用，未逐字核对 schedule 的构造点）
 
-#### 2.80.42 HeroMegaMinion [L1233-1275]
+#### 2.86.42 HeroMegaMinion [L1233-1275]
 - 类型: class
 - 签名: `class HeroMegaMinion(_HeroBase):`
 - 作用: 【M8 §9】Hero 重甲亡灵——Wounding Warp：部署时标记最低 HP 敌人（标记随目标死亡转移），按钮瞬移到标记处并结算溅射，之后永久对皇冠塔伤害 ×0.25。
@@ -9510,7 +9900,7 @@
 - 实现: docstring（L1234-1236）自述 2 费单次、WarpDmg 399@L11、溅射半径【假设 1.5】、对塔 ×0.25（2026-08-04）。成员：`__init__`、`_mark`、`on_tick`、`use_ability`。
 - 置信度: 已确认
 
-##### 2.80.42.1 HeroMegaMinion.__init__ [L1237-1240]
+##### 2.86.42.1 HeroMegaMinion.__init__ [L1237-1240]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化标记并在部署时立即执行一次标记。
@@ -9520,7 +9910,7 @@
 - 实现: L1238 `super().__init__(entity)`；L1239 `self.mark_id = None`；L1240 `self._mark()`。
 - 置信度: 已确认
 
-##### 2.80.42.2 HeroMegaMinion._mark [L1242-1252]
+##### 2.86.42.2 HeroMegaMinion._mark [L1242-1252]
 - 类型: method
 - 签名: `def _mark(self):`
 - 作用: 在敌方部队中选出 `hp + shield_health` 最低者作为标记目标。
@@ -9529,7 +9919,7 @@
 - 实现: L1243-1245 `best, best_hp = None, None`，遍历实体；L1246-1248 跳过死亡/同方/非 `Troop`（`from battle import Troop` 在循环内导入）；L1249 `hp = t.hp + t.shield_health`；L1250-1251 取更小者；L1252 `self.mark_id = best.id if best is not None else None`。
 - 置信度: 已确认
 
-##### 2.80.42.3 HeroMegaMinion.on_tick [L1254-1259]
+##### 2.86.42.3 HeroMegaMinion.on_tick [L1254-1259]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 标记目标死亡/消失时重新标记。
@@ -9539,7 +9929,7 @@
 - 实现: L1255 `super().on_tick(dt)`；L1257 `t = bs.entities.get(self.mark_id) if self.mark_id else None`；L1258-1259 若 `t is None or not t.is_alive` 则 `self._mark()`（注释：标记转移）。
 - 置信度: 已确认
 
-##### 2.80.42.4 HeroMegaMinion.use_ability [L1261-1275]
+##### 2.86.42.4 HeroMegaMinion.use_ability [L1261-1275]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 瞬移到标记目标身旁 0.5 格，对目标位置结算溅射，并永久把对塔倍率改为 `crownMult`。
@@ -9548,7 +9938,7 @@
 - 实现: L1262-1264 取 e/ab/bs 与标记实体；L1265-1269 若标记失效则重标一次，仍无则 `return False`（不扣费）；L1270 `e.position = Position(t.position.x + 0.5, t.position.y)`（注释：贴脸落点，空中单位）；L1271 `e.path = []`；L1272-1273 `deal_area_damage(e.player, t.position, ab['warpRadius'], _sv(ab['warpDamage'], e.level), True, True)`；L1274 `e.data.tower_damage_mult = ab['crownMult']`（注释：永久，不设时限）；L1275 `return True`。
 - 置信度: 已确认
 
-#### 2.80.43 HeroTombstone [L1278-1302]
+#### 2.86.43 HeroTombstone [L1278-1302]
 - 类型: class
 - 签名: `class HeroTombstone(_HeroBase):`
 - 作用: 【M8 §11】Hero 墓碑——Regal Revive：按钮"预付"后墓碑破碎时从墓中升起 Tomb Queen（带临时寿命），Hero 形态移除持续产骷髅。
@@ -9557,7 +9947,7 @@
 - 实现: docstring（L1279-1282）自述 5 费单次、Queen HP4224/Dmg422@L11、只攻建筑 sight 7、寿命【假设 15s】、2026-07-06 起移除 `spawnCharacterData`。成员 `__init__`（从数据里摘除产骷髅字段）、`use_ability`（置预付费标记）、`on_death`（升起 Queen）。
 - 置信度: 已确认
 
-##### 2.80.43.1 HeroTombstone.__init__ [L1283-1287]
+##### 2.86.43.1 HeroTombstone.__init__ [L1283-1287]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 从宿主实体的 `summonCharacterData` 中删除 `spawnCharacterData`（关闭持续产骷髅）。
@@ -9567,7 +9957,7 @@
 - 实现: L1284 `super().__init__(entity)`；L1285 `_scd = entity.data.data.get('summonCharacterData') or {}`；L1286-1287 若为 dict 则 `_scd.pop('spawnCharacterData', None)`（原地修改数据字典，不使用返回值）。**副作用**：因为 `entity.data.data` 是共享字典对象，此 pop 可能影响所有同类实体，源码未做拷贝。
 - 置信度: 已确认（"可能影响同类实体"为对 dict 原地修改的结构性推断，源码未注明）
 
-##### 2.80.43.2 HeroTombstone.use_ability [L1289-1291]
+##### 2.86.43.2 HeroTombstone.use_ability [L1289-1291]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 仅置"王后已预付"标记。
@@ -9576,7 +9966,7 @@
 - 实现: L1290 `self.entity._hero_queen_armed = True`；L1291 `return True`。
 - 置信度: 已确认
 
-##### 2.80.43.3 HeroTombstone.on_death [L1293-1302]
+##### 2.86.43.3 HeroTombstone.on_death [L1293-1302]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 若已预付则在自己位置生成 Tomb Queen 并按 `queenLifetime` 设定临时寿命。
@@ -9585,7 +9975,7 @@
 - 实现: L1294-1296 未预付（`_hero_queen_armed` 假）则 return；L1297-1300 导入 `Troop`，`Troop(next_entity_id, Position(x,y), player, ab['queenCard'], battle_state)`；L1301 `q._evo_temp_lifetime = ab['queenLifetime']`（注释：复用临时寿命管线，到期即亡）；L1302 `_spawn_entity(q)`。
 - 置信度: 已确认（`_evo_temp_lifetime` 的到期处理在 battle.py，本组未展开）
 
-#### 2.80.44 HeroBerserker [L1305-1340]
+#### 2.86.44 HeroBerserker [L1305-1340]
 - 类型: class
 - 签名: `class HeroBerserker(_HeroBase):`
 - 作用: 【M8 §12】Hero 狂暴樵夫——Savage Survival：4s 熊灵附体（攻速 0.2s / 移速 135 内部单位 / 对塔 ×0.25 / 伤害换成 BearDmg），期间受击致死时把 HP 钉在 1，结束后还原字段。
@@ -9594,7 +9984,7 @@
 - 实现: docstring（L1306-1309）自述 3 费单次、BearDmg 167@L11、【口径假设】clamp 前不享受减伤/护盾细分。成员：`__init__`、`use_ability`、`on_tick`（到点还原）、`on_take_damage`（HP 下限）。
 - 置信度: 已确认
 
-##### 2.80.44.1 HeroBerserker.__init__ [L1310-1313]
+##### 2.86.44.1 HeroBerserker.__init__ [L1310-1313]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化熊灵计时与字段备份槽。
@@ -9604,7 +9994,7 @@
 - 实现: L1311 `super().__init__(entity)`；L1312 `self.bear_timer = 0.0`；L1313 `self._orig = None`。
 - 置信度: 已确认
 
-##### 2.80.44.2 HeroBerserker.use_ability [L1315-1323]
+##### 2.86.44.2 HeroBerserker.use_ability [L1315-1323]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 备份并覆写攻速/移速/对塔倍率/伤害，进入熊灵形态。
@@ -9613,7 +10003,7 @@
 - 实现: L1316-1317 `self._orig = (e.data.hit_speed, e.speed, e.data.tower_damage_mult, e.data.damage)`；L1318 `e.data.hit_speed = ab['hitSpeed']`；L1319 `e.speed = ab['speed'] / 50.0`（注释：内部速度单位换算，与 `Card.speed` 同口径）；L1320 `e.data.tower_damage_mult = ab['crownMult']`；L1321 `e.data.damage = _sv(ab['bearDamage'], e.level)`；L1322 `self.bear_timer = ab['duration']`；L1323 `return True`。
 - 置信度: 已确认
 
-##### 2.80.44.3 HeroBerserker.on_tick [L1325-1332]
+##### 2.86.44.3 HeroBerserker.on_tick [L1325-1332]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 熊灵计时归零时按备份还原 4 个字段。
@@ -9623,7 +10013,7 @@
 - 实现: L1326 `super().on_tick(dt)`；L1327-1332 若 `bear_timer > 0` 则递减，≤0 时把 `_orig` 解包写回 `data.hit_speed / speed / data.tower_damage_mult / data.damage`（注释：change_back_from_bearform 还原）。
 - 置信度: 已确认
 
-##### 2.80.44.4 HeroBerserker.on_take_damage [L1334-1340]
+##### 2.86.44.4 HeroBerserker.on_take_damage [L1334-1340]
 - 类型: method
 - 签名: `def on_take_damage(self, amount, source):`
 - 作用: 熊灵期间受到致死伤害时把 HP 钉在 1 并短路本次伤害。
@@ -9634,7 +10024,7 @@
 - 实现: L1336-1337 取 e；L1337-1339 `if self.bear_timer > 0 and e.is_alive and e.hp - amount <= 0:` → `e.hp = 1.0`、`return True`；L1340 `return False`。docstring（L1335）自述"minimum hitpoints"语义。
 - 置信度: 已确认
 
-#### 2.80.45 HeroDarkPrince [L1343-1364]
+#### 2.86.45 HeroDarkPrince [L1343-1364]
 - 类型: class
 - 签名: `class HeroDarkPrince(DarkPrince):`
 - 作用: 【M8 §13】Hero 黑暗王子——Destructive Dismount：按钮下马：本体落地溅射 + 转为徒步溅射形态（失去冲锋），同时独立召出犀牛坐骑。
@@ -9643,7 +10033,7 @@
 - 实现: docstring（L1344-1347）自述 3 费单次、本体溅射伤害=普攻【假设】、半径 1.2、犀牛 HP1356/Dmg179/ChargeDmg358@L11、两者独立存活。类内仅 `use_ability`（L1348-1364）。
 - 置信度: 已确认
 
-##### 2.80.45.1 HeroDarkPrince.use_ability [L1348-1364]
+##### 2.86.45.1 HeroDarkPrince.use_ability [L1348-1364]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 下马：本体落地溅射 + 转为徒步溅射形态（失去冲锋），并独立召出犀牛坐骑。
@@ -9652,7 +10042,7 @@
 - 实现: L1349-1350 取 e/ab/bs；L1352-1353 `bs.deal_area_damage(e.player, e.position, ab['landingRadius'], e.data.damage * ab['landingDamageMult'], True, False)`（**仅空中**：attack_ground=False，注释称对应 Change_To_Walking 落地帧——与 docstring 的"落地溅射"口径需按字面读）；L1355 `e.data.charge_range = 0`（失去冲锋）；L1356 `self.charging = False`；L1357 `e.data.area_damage_radius = ab['landingRadius']`（普攻带溅射）；L1359-1363 导入 `Troop`，`gy = 0.8 if e.player == 0 else -0.8`（坐骑落位本体侧后【假设】），生成 `Troop(next_entity_id, Position(x, y+gy), player, ab['mountCard'], bs)` 并 `_spawn_entity`；L1364 `return True`。
 - 置信度: 已确认（L1352 的 `attack_air=True, attack_ground=False` 与 docstring「本体落地溅射」的描述在"只打空中"上不一致，如实记录两者）
 
-#### 2.80.46 DarkPrinceHeroRhino [L1367-1370]
+#### 2.86.46 DarkPrinceHeroRhino [L1367-1370]
 - 类型: class
 - 签名: `class DarkPrinceHeroRhino(Prince):`
 - 作用: 【M8 §13】犀牛坐骑（独立单位）：只攻建筑，冲锋伤害 `damageSpecial=358@L11`，复用 `Prince` 冲锋管线。
@@ -9661,7 +10051,7 @@
 - 实现: docstring（L1368-1369）说明 charge_range 3.5【假设同 Prince】、数据见 `elite17_data.RHINO_SCD`；L1370 方法体为 `pass`（无任何覆写，全部行为继承 `Prince`）。该类不在 `HERO_CLASSES` 表中，由 `HeroDarkPrince.use_ability` 通过 `ab['mountCard']` 动态创建。
 - 置信度: 已确认
 
-#### 2.80.47 HeroBalloon [L1373-1395]
+#### 2.86.47 HeroBalloon [L1373-1395]
 - 类型: class
 - 签名: `class HeroBalloon(Balloon):`
 - 作用: 【M8 §14】Hero 气球——Coffin Cadets：在 6 格内最近的**地面**敌人处投放骷髅伞兵（Skeletrooper），由伞兵自行飞抵并结算落地伤害；本体死亡炸弹继承基础 `Balloon` 机制类。
@@ -9670,7 +10060,7 @@
 - 实现: docstring（L1374-1377）自述 2 费单次、伞兵落地伤害 263@L11（对塔 ×0.1）并驻场攻击（HP473/Dmg204@L11/攻速 1.1s/VeryFast/对地）。类内仅 `use_ability`（L1378-1395）。
 - 置信度: 已确认
 
-##### 2.80.47.1 HeroBalloon.use_ability [L1378-1395]
+##### 2.86.47.1 HeroBalloon.use_ability [L1378-1395]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 在 `seekRadius` 内最近的**地面**敌人处投放一名骷髅伞兵（伞兵自行飞抵目标）。
@@ -9679,7 +10069,7 @@
 - 实现: L1379-1381 取 e/ab/bs 并导入 `Troop`；L1382-1388 `best, best_d = None, ab['seekRadius']`，遍历实体跳过死亡/同方/`t.data.is_air_unit`（注释：只找地面敌人），距离严格小于当前最优则更新；L1389-1390 无目标 → `return False`（不扣费）；L1391-1394 生成 `Troop(next_entity_id, Position(x,y), player, ab['cadetCard'], bs)`，给伞兵打 `c._sk_target_id = best.id`（供 `Skeletrooper.on_tick` 读取），`_spawn_entity(c)`；L1395 `return True`。
 - 置信度: 已确认
 
-#### 2.80.48 Skeletrooper [L1398-1444]
+#### 2.86.48 Skeletrooper [L1398-1444]
 - 类型: class
 - 签名: `class Skeletrooper(_HeroBase):`
 - 作用: 【M8 §14】骷髅伞兵：伞降段不可选取/无敌，飞向指定目标，落点 AOE 后转常规驻场攻击；目标中途死亡或超时则原地落地。
@@ -9688,7 +10078,7 @@
 - 实现: docstring（L1399-1400）自述落地 AOE 对塔 ×0.1、目标死亡则原地落地（官方有 `Failsafe_Spawn_Delayer` 兜底分支）。成员：`__init__`（状态 + 能力包回退 + 3s 兜底时限）、`_land`（落地结算）、`on_tick`（飞行推进）、`on_attack`（伞降段禁攻）。
 - 置信度: 已确认
 
-##### 2.80.48.1 Skeletrooper.__init__ [L1401-1409]
+##### 2.86.48.1 Skeletrooper.__init__ [L1401-1409]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化伞降状态，取能力参数（无 `abilityData` 时回退 Balloon 表），并置不可选取 + 无敌。
@@ -9698,7 +10088,7 @@
 - 实现: L1402 `super().__init__(entity)`；L1403 `self.landed = False`；L1404 `self.land_pos = None`；L1405-1406 注释说明直部署（无 abilityData，如 batch_smoke）回退 `_HERO_ABILITIES['Balloon']`，`self.ab = _ab(entity) or _HERO_ABILITIES['Balloon']`；L1407 `self.fly_timer = 3.0`（【假设】伞降兜底时限）；L1408-1409 `entity.targetable = False`、`entity.invincible = True`。
 - 置信度: 已确认
 
-##### 2.80.48.2 Skeletrooper._land [L1411-1419]
+##### 2.86.48.2 Skeletrooper._land [L1411-1419]
 - 类型: method
 - 签名: `def _land(self, pos):`
 - 作用: 落地：解除不可选取/无敌，并按能力参数在落点结算 AOE（含对塔倍率）。
@@ -9708,7 +10098,7 @@
 - 实现: L1412-1413 取 `e`、`ab = self.ab`；L1414 `self.landed, self.land_pos = True, Position(pos.x, pos.y)`；L1415-1416 `targetable = True`、`invincible = False`；L1417-1419 `deal_area_damage(e.player, pos, ab['landingRadius'], _sv(ab['landingDamage'], e.level), True, True, ab['crownMult'])`。
 - 置信度: 已确认
 
-##### 2.80.48.3 Skeletrooper.on_tick [L1421-1438]
+##### 2.86.48.3 Skeletrooper.on_tick [L1421-1438]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 伞降飞行推进：目标失效或超时则原地落地；抵达阈值内则在目标位置落地；否则按 `flySpeed` 直线逼近。
@@ -9718,7 +10108,7 @@
 - 实现: L1422 `super().on_tick(dt)`；L1423 已落地则 return；L1424-1425 取 e/ab 与 `_sk_target_id` 对应实体；L1426-1428 目标为空/已死 → `self._land(e.position)`（兜底：原地落地）并 return；L1429 `d = 距离`；L1430-1433 若 `d <= e.data.collision_radius + t.data.collision_radius + 0.3` → 在目标位置落地并 return；L1434-1436 `fly_timer` 递减，≤0 → 原地落地；L1437-1438 按单位方向 × `ab['flySpeed'] * dt` 推进位置。**注意**：L1435-1436 落地后并未 return，同一帧仍会执行 L1437-1438 的位移（一次多余的位移步进）。
 - 置信度: 已确认
 
-##### 2.80.48.4 Skeletrooper.on_attack [L1440-1444]
+##### 2.86.48.4 Skeletrooper.on_attack [L1440-1444]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 伞降段不攻击（只把冷却顶到 0.1s）。
@@ -9728,7 +10118,7 @@
 - 实现: L1441-1443 若未落地则 `attack_cooldown = max(attack_cooldown, 0.1)` 并 return（注释：伞降段不攻击）；L1444 否则 `super().on_attack(current_target)`。
 - 置信度: 已确认
 
-#### 2.80.49 HeroIceWizard [L1447-1491]
+#### 2.86.49 HeroIceWizard [L1447-1491]
 - 类型: class
 - 签名: `class HeroIceWizard(IceWizard):`
 - 作用: 【M8 §10】Hero 冰法师——自身变冰块（不可选取 + 无敌 + 定身）3s，破碎瞬间生成冻结 AOE（冻结 + 减速）。
@@ -9737,7 +10127,7 @@
 - 实现: docstring（L1448-1452）自述数值全缺、`[内存结构 54 动作组]` cube/attached/reapper/spawn_freeze/FreezeAeo、击杀联动的 `from_kill` 分支未建模。成员：`__init__`（cube_timer + 速度备份）、`use_ability`（结冰）、`on_tick`（计时破碎 + AOE）、`on_attack`（冰封期禁攻）。
 - 置信度: 已确认（数值来源为源码注释自述"全缺/暂借"，未外部核对）
 
-##### 2.80.49.1 HeroIceWizard.__init__ [L1453-1456]
+##### 2.86.49.1 HeroIceWizard.__init__ [L1453-1456]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化冰块计时与移速备份槽。
@@ -9747,7 +10137,7 @@
 - 实现: L1454 `super().__init__(entity)`；L1455 `self.cube_timer = 0.0`；L1456 `self._orig_speed = None`。
 - 置信度: 已确认
 
-##### 2.80.49.2 HeroIceWizard.use_ability [L1458-1467]
+##### 2.86.49.2 HeroIceWizard.use_ability [L1458-1467]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 进入冰块形态：不可选取 + 无敌 + 移速归零（不用 `freeze_timer`）。
@@ -9756,7 +10146,7 @@
 - 实现: L1459-1460 取 e/ab，`self.cube_timer = ab['cubeDuration']`；L1461-1462 `targetable = False`、`invincible = True`；L1463-1464 注释解释：不用 `freeze_timer`，因为那会让 `Troop.update` 早退导致 `on_tick` 饥饿，改为移速归零 + `on_attack` 禁攻；L1465-1466 `self._orig_speed = e.speed`、`e.speed = 0.0`；L1467 `return True`。
 - 置信度: 已确认
 
-##### 2.80.49.3 HeroIceWizard.on_tick [L1469-1486]
+##### 2.86.49.3 HeroIceWizard.on_tick [L1469-1486]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 冰块计时归零时解除状态、还原移速，并生成冻结 AOE 领域。
@@ -9766,7 +10156,7 @@
 - 实现: L1470 `super().on_tick(dt)`；L1471-1473 取 e/ab，若 `cube_timer > 0` 则递减；L1474-1486 归零时：导入 `EvoEffectZone`；`targetable = True`、`invincible = False`、`e.speed = self._orig_speed`；构造 `EvoEffectZone(next_entity_id, Position(x,y), player, battle_state, radius=ab['freezeRadius'], lifetime=0.5, tick=0.5, slow=ab['slowMult'], stun_pulse=ab['freeze'], level=1, label='IceWizardHero_FreezeAeo')` 并 `_spawn_entity`。
 - 置信度: 已确认
 
-##### 2.80.49.4 HeroIceWizard.on_attack [L1488-1491]
+##### 2.86.49.4 HeroIceWizard.on_attack [L1488-1491]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 冰封期间不攻击。
@@ -9776,7 +10166,7 @@
 - 实现: L1489-1490 `if self.cube_timer > 0: return`（注释：冰封中不攻击不移动）；L1491 `super().on_attack(current_target)`。
 - 置信度: 已确认
 
-#### 2.80.50 HeroEliteArcher [L1494-1539]
+#### 2.86.50 HeroEliteArcher [L1494-1539]
 - 类型: class
 - 签名: `class HeroEliteArcher(_HeroBase):`
 - 作用: 【M8 §16】Hero 精英弓箭手——Warp + Triple Shot：向最近敌人瞬移 3 格，接 3 发三连射（临时攻速 0.3s），并部署一个限时假人分身吸引火力。
@@ -9785,7 +10175,7 @@
 - 实现: docstring（L1495-1497）自述机制先行、数值全缺：瞬移 3 格【假设-暂借】、三连射攻速 0.3s【暂借-待实测】、假人 HP104【内存 Dummy 表中置信】/寿命 5s【假设】。成员：`__init__`（shots_left + 攻速备份）、`use_ability`（三步）、`on_attack`（三连射计数与还原）。
 - 置信度: 已确认
 
-##### 2.80.50.1 HeroEliteArcher.__init__ [L1498-1501]
+##### 2.86.50.1 HeroEliteArcher.__init__ [L1498-1501]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化剩余连射次数与攻速备份槽。
@@ -9795,7 +10185,7 @@
 - 实现: L1499 `super().__init__(entity)`；L1500 `self.shots_left = 0`；L1501 `self._orig_hit_speed = None`。
 - 置信度: 已确认
 
-##### 2.80.50.2 HeroEliteArcher.use_ability [L1503-1532]
+##### 2.86.50.2 HeroEliteArcher.use_ability [L1503-1532]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: ①向最近敌人瞬移；②开启 3 发临时攻速；③召出限时假人。
@@ -9804,7 +10194,7 @@
 - 实现: L1504-1505 取 e/ab/bs；L1507-1513 `best, best_d = None, inf`，遍历实体取最近的 `(Troop, Building)` 敌方目标；L1514-1522 若有目标：求方向单位步长 `step = ab['warpRange']/n`，落点不可走（`bs.ground_walkable`）则折半（k=0.5）兜底，然后写回位置并清空 `path`（无目标时跳过瞬移但仍继续执行后续步骤）；L1524-1526 `self._orig_hit_speed = e.data.hit_speed`、`e.data.hit_speed = ab['tripleHitSpeed']`、`self.shots_left = ab['tripleShots']`；L1528-1531 生成 `Troop(next_entity_id, Position(x, y ± 0.8), player, ab['dummyCard'], bs)`，设 `d._evo_temp_lifetime = ab['dummyLifetime']` 并 `_spawn_entity`；L1532 `return True`。
 - 置信度: 已确认
 
-##### 2.80.50.3 HeroEliteArcher.on_attack [L1534-1539]
+##### 2.86.50.3 HeroEliteArcher.on_attack [L1534-1539]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 每发攻击递减剩余连射数，用尽时还原原始攻速。
@@ -9814,7 +10204,7 @@
 - 实现: L1535 `super().on_attack(current_target)`；L1536-1539 若 `shots_left > 0` 则递减，≤0 时 `self.entity.data.hit_speed = self._orig_hit_speed`。
 - 置信度: 已确认
 
-#### 2.80.51 HeroIceGolemite [L1542-1558]
+#### 2.86.51 HeroIceGolemite [L1542-1558]
 - 类型: class
 - 签名: `class HeroIceGolemite(_HeroBase):`
 - 作用: 【M8 §17】Hero 冰雪哥仑雪人——冰雪光环：半径 4 / 3 次脉冲 / 间隔 1s / 脉冲伤 + 减速，按目标体型分档冻结或减速。
@@ -9823,7 +10213,7 @@
 - 实现: docstring（L1543-1545）自述机制先行、数值【暂借 Ice Golem/Hero】、分档规则在 `battle.IceGolemiteSnowZone`。类内仅 `use_ability`（L1546-1558）。
 - 置信度: 已确认
 
-##### 2.80.51.1 HeroIceGolemite.use_ability [L1546-1558]
+##### 2.86.51.1 HeroIceGolemite.use_ability [L1546-1558]
 - 类型: method
 - 签名: `def use_ability(self):`
 - 作用: 在自身位置生成冰雪光环领域（3 次脉冲，按目标体型分档冻结/减速）。
@@ -9832,7 +10222,7 @@
 - 实现: L1547-1548 取 e/ab 并导入 `IceGolemiteSnowZone`；L1549-1556 构造 `IceGolemiteSnowZone(next_entity_id, Position(x,y), player, battle_state, radius=ab['radius'], pulses=ab['pulses'], interval=ab['interval'], damage=_sv(ab['pulseDamage'], e.level), slow=ab['slowMult'], slow_duration=ab['slowDuration'], small_freeze=ab['smallFreeze'], level=1, label='IceGolemiteHero_ice_aura')`；L1557 `_spawn_entity(zone)`；L1558 `return True`。分档实现见 battle.py:2484-2520（`SMALL_RADIUS=0.5`：小体型冻结，其余减速，建筑塔只减速）。
 - 置信度: 已确认
 
-#### 2.80.52 ElectroGiant [L1584-1600]
+#### 2.86.52 ElectroGiant [L1584-1600]
 - 类型: class
 - 签名: `class ElectroGiant(BasicCharacter):`
 - 作用: 电击车小队/Zap Pack 反射（勘误批3）：被 2 格内敌方部队造成伤害时，对攻击者反射伤害 + 0.5s 眩晕；自身冰冻期间不反射。
@@ -9842,7 +10232,7 @@
 - 调用: 由 `battle.Entity.take_damage` 在扣血后调用（battle.py:583-584：`if self.is_alive and hasattr(self.entity_holder, 'on_damaged'): self.entity_holder.on_damaged(amount, source)`）。
 - 置信度: 已确认
 
-##### 2.80.52.1 ElectroGiant.on_damaged [L1587-1600]
+##### 2.86.52.1 ElectroGiant.on_damaged [L1587-1600]
 - 类型: method
 - 签名: `def on_damaged(self, amount, source):`
 - 作用: 受击后若来源是近距离敌方部队则反射伤害并眩晕来源。
@@ -9853,7 +10243,7 @@
 - 实现: L1588 导入 `Troop`；L1589-1591 死亡或 `freeze_timer > 0` 则 return（注释：自身冰冻期间不反射）；L1592-1593 `rad = (scd.get('reflectedAttackRadius') or 2000)/1000`；L1594-1595 来源非 `Troop`、同方、或已死 → return；L1596-1597 距离 > rad → return；L1598 `dmg = (scd.get('reflectedAttackDamage') or 75) * level_scale(e.level)`；L1599 `source.take_damage(dmg, source=e)`；L1600 `source.apply_buff(stun=(scd.get('reflectedAttackBuffDuration') or 500)/1000)`。
 - 置信度: 已确认
 
-#### 2.80.53 _AttackStunMixin [L1603-1610]
+#### 2.86.53 _AttackStunMixin [L1603-1610]
 - 类型: class
 - 签名: `class _AttackStunMixin:`
 - 作用: 攻击附带 0.5s 眩晕的混入类（仅对部队生效，塔不吃眩晕）。
@@ -9863,7 +10253,7 @@
 - 调用: 被 `ElectroWizard`(L1613) 与 `MiniSparkys`(L1626) 以第一基类方式混入（MRO 中排在 `BasicCharacter` 之前，故其 `on_attack` 先执行并 `super()` 到 BasicCharacter 的实现）。
 - 置信度: 已确认
 
-##### 2.80.53.1 _AttackStunMixin.on_attack [L1606-1610]
+##### 2.86.53.1 _AttackStunMixin.on_attack [L1606-1610]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 先走常规攻击，再对仍是部队的当前目标施加 `_stun_time` 眩晕。
@@ -9873,7 +10263,7 @@
 - 实现: L1607 导入 `Troop`；L1608 `super().on_attack(current_target)`；L1609-1610 若目标非 None、存活且是 `Troop` → `current_target.apply_buff(stun=self._stun_time)`（注释：塔不吃眩晕）。
 - 置信度: 已确认
 
-#### 2.80.54 ElectroWizard [L1613-1623]
+#### 2.86.54 ElectroWizard [L1613-1623]
 - 类型: class
 - 签名: `class ElectroWizard(_AttackStunMixin, BasicCharacter):`
 - 作用: 电击法师（勘误批3）：部署时造成一次半径 3 的 Zap 伤害并眩晕范围内敌方部队；普攻附带眩晕（来自 mixin）。
@@ -9882,7 +10272,7 @@
 - 实现: docstring（L1614）自述部署 Zap 半径 3 / 75@基准【Fandom，快照缺字段，待对拍】/ 0.5s 眩晕。类内仅 `on_spawn`（L1615-1623）。
 - 置信度: 已确认
 
-##### 2.80.54.1 ElectroWizard.on_spawn [L1615-1623]
+##### 2.86.54.1 ElectroWizard.on_spawn [L1615-1623]
 - 类型: method
 - 签名: `def on_spawn(self):`
 - 作用: 部署当帧结算一次半径 3 的 Zap 范围伤害，并眩晕半径内敌方部队。
@@ -9891,7 +10281,7 @@
 - 实现: L1616 导入 `Troop`；L1617-1619 取 bs/e 后 `bs.deal_area_damage(e.player, e.position, 3.0, 75 * level_scale(e.level), True, True)`；L1620-1623 遍历实体，对 `Troop`、存活、敌方且 `距离 <= 3.0 + collision_radius` 者 `apply_buff(stun=0.5)`。
 - 置信度: 已确认
 
-#### 2.80.55 MiniSparkys [L1626-1627]
+#### 2.86.55 MiniSparkys [L1626-1627]
 - 类型: class
 - 签名: `class MiniSparkys(_AttackStunMixin, BasicCharacter):`
 - 作用: 电击小队 Zappies（勘误批8）：每次攻击附带 0.5s 眩晕（此前 `buffOnDamageData=ZapFreeze` 零消费）。
@@ -9900,7 +10290,7 @@
 - 实现: docstring（L1627）说明机制来源；类体为空（无任何成员），行为全部来自 `_AttackStunMixin.on_attack` + `BasicCharacter`。
 - 置信度: 已确认
 
-#### 2.80.56 ElectroSpirit [L1630-1659]
+#### 2.86.56 ElectroSpirit [L1630-1659]
 - 类型: class
 - 签名: `class ElectroSpirit(BasicCharacter):`
 - 作用: 电击幽灵（勘误批3）：攻击命中后向最近敌人链式弹射（最多 `chainedHitCount` 次），随后自毁。
@@ -9909,7 +10299,7 @@
 - 实现: docstring（L1631-1632）自述 stats 行 `chained_hit_count 9 / radius 4.0`、同伤害链弹、攻击后自毁（kamikaze）。类内仅 `on_attack`（L1633-1659）。
 - 置信度: 已确认
 
-##### 2.80.56.1 ElectroSpirit.on_attack [L1633-1659]
+##### 2.86.56.1 ElectroSpirit.on_attack [L1633-1659]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 常规攻击后沿最近敌人链式弹射 `count - 1` 次（同伤害），最后把自身置死（自毁）。
@@ -9919,7 +10309,7 @@
 - 实现: L1634-1635 导入 `Troop, Projectile, SpawnProjectile` 与 `projectiles`；L1636 `super().on_attack(current_target)`；L1638-1640 `count = int(scd.get('chainedHitCount') or 9)`、`radius = (scd.get('chainedHitRadius') or 4000)/1000`；L1641-1644 `_pd = scd.get('projectileData') or {}`，从 `projectiles` 表按名取行，`_base = _prow.get('damage') or e.data.damage`，`dmg = _base * (1.1 ** (e.level - 1))`（投射物 lv1 基准 → 等级缩放）；L1645-1646 `hit_ids` 初值含被击目标 id，`cur = current_target`；L1647-1658 循环 `count - 1` 次：在 `radius` 内找**距当前节点**最近的未命中、非同方、非弹丸实体，命中则 `take_damage(dmg, source=e)`、加入 `hit_ids`、把 `cur` 前移，找不到则 break；L1659 `e.is_alive = False`（注释：命中后湮灭）。注：`Troop` 在 L1634 导入但未在本方法中使用。
 - 置信度: 已确认
 
-#### 2.80.57 RamRider [L1662-1669]
+#### 2.86.57 RamRider [L1662-1669]
 - 类型: class
 - 签名: `class RamRider(Prince):`
 - 作用: 攻城槌骑手（勘误批10）：继承 `Prince` 冲锋管线，攻击命中部队时施加 −70% 减速 2s。
@@ -9928,7 +10318,7 @@
 - 实现: docstring（L1663-1664）自述缠网来自 `BolaSnare`（快照嵌套字段缺 → Fandom 机制【待对拍】）、骑手独立攻击未建模【简化】。类内仅 `on_attack`（L1665-1669）。
 - 置信度: 已确认
 
-##### 2.80.57.1 RamRider.on_attack [L1665-1669]
+##### 2.86.57.1 RamRider.on_attack [L1665-1669]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 先走 `Prince` 冲锋/普攻结算，再对目标部队施加 −70% 减速 2s（缠网）。
@@ -9938,7 +10328,7 @@
 - 实现: L1666 导入 `Troop`；L1667 `super().on_attack(current_target)`（`Prince.on_attack`，即冲锋/普攻伤害与冷却）；L1668-1669 若目标非 None、存活且是 `Troop` → `apply_buff(speed_mult=0.30, duration=2.0)`。
 - 置信度: 已确认
 
-#### 2.80.58 MovingCannon [L1672-1689]
+#### 2.86.58 MovingCannon [L1672-1689]
 - 类型: class
 - 签名: `class MovingCannon(BasicCharacter):`
 - 作用: 加农炮战车（勘误批9）：HP 降至 50% 时变身 `BrokenCannon`（定身建筑态，保留当前 HP，寿命 15s）。
@@ -9947,7 +10337,7 @@
 - 实现: docstring（L1673-1674）自述变身不重置索敌【简化：新建建筑自然重索敌】、寿命 15s【Fandom，快照缺】。类内仅 `on_tick`（L1675-1689）。
 - 置信度: 已确认
 
-##### 2.80.58.1 MovingCannon.on_tick [L1675-1689]
+##### 2.86.58.1 MovingCannon.on_tick [L1675-1689]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: HP 降至当前上限 50% 以下时在当前位置生成 `BrokenCannon` 建筑（继承当前 HP），并把本体置为非存活（不走亡语）。
@@ -9957,7 +10347,7 @@
 - 实现: L1676 `super().on_tick(dt)`；L1677-1679 `if not e.is_alive or getattr(self,'_transformed',False): return`；L1680-1681 `if e.hp <= e.data.hp * 0.5:` 置 `self._transformed = True`；L1682-1687 导入 `Building`，以 `'BrokenCannon'` 在当前位置生成建筑 `nb`，`nb.hp = e.hp`、`nb.deploy_delay_remaining = 0`、`bs._spawn_entity(nb)`；L1689 `e.is_alive = False`（注释：变身不是死亡，绕过 `die()` 亡语）。注意 `self._transformed` 首次读取时不存在，用 `getattr` 默认 False；变身条件用 `e.data.hp`（当前上限）而非原始上限。
 - 置信度: 已确认
 
-#### 2.80.59 Phoenix [L1692-1712]
+#### 2.86.59 Phoenix [L1692-1712]
 - 类型: class
 - 签名: `class Phoenix(BasicCharacter):`
 - 作用: 凤凰（勘误批9）：死亡 → 亡语火球（范围伤害 + 击退）+ 产蛋；孵化出的再生体死亡不再产蛋/爆火球。
@@ -9966,7 +10356,7 @@
 - 实现: docstring（L1693-1694）自述死亡亡语火球 64@基准/半径 2.5/击退、产蛋孵化 4.3s【Fandom 现行】、孵化出满血再生体（2025/11 取消 80% 规则）。类内仅 `on_death`（L1695-1712）。
 - 置信度: 已确认
 
-##### 2.80.59.1 Phoenix.on_death [L1695-1712]
+##### 2.86.59.1 Phoenix.on_death [L1695-1712]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 非再生体死亡时结算亡语火球（范围伤害 + 击退）并产下一枚凤凰蛋。
@@ -9975,7 +10365,7 @@
 - 实现: L1696-1697 若 `_is_rebirth` 为真直接 return；L1698-1701 取 e/bs 与 `summonCharacterData.deathSpawnProjectileData`；L1703-1706 `dmg = (pfp.get('damage') or 64) * level_scale(e.level)`、`radius = (pfp.get('radius') or 2500)/1000`，调 `deal_area_damage(..., True, True)` 与 `push_enemies(..., radius, (pfp.get('pushback') or 2000)/1000)`；L1708-1711 生成 `Troop(..., 'PhoenixEgg', bs)` 并设 `egg._soul_excluded = True` 后 `_spawn_entity`；L1712 `bs.next_entity_id += 1`（此处**额外手工递增** id，与 `_spawn_entity` 自身的 id 管理叠加）。
 - 置信度: 已确认（L1712 的双重递增为源码事实；是否导致 id 跳号取决于 `_spawn_entity` 实现，未在本组展开）
 
-#### 2.80.60 PhoenixEgg [L1715-1735]
+#### 2.86.60 PhoenixEgg [L1715-1735]
 - 类型: class
 - 签名: `class PhoenixEgg(BasicCharacter):`
 - 作用: 凤凰蛋（勘误批9）：不可移动/不攻击，4.3s 后孵化出满血再生 Phoenix（不再产蛋）。
@@ -9984,7 +10374,7 @@
 - 实现: docstring（L1716）自述孵化 4.3s【Fandom 现行；快照 deployTime=1000 为部署动画】。成员 `__init__`（`self.hatch = 4.3`）与 `on_tick`（倒计时孵化）。
 - 置信度: 已确认
 
-##### 2.80.60.1 PhoenixEgg.__init__ [L1717-1719]
+##### 2.86.60.1 PhoenixEgg.__init__ [L1717-1719]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化孵化倒计时。
@@ -9994,7 +10384,7 @@
 - 实现: L1718 `super().__init__(entity)`；L1719 `self.hatch = 4.3`。
 - 置信度: 已确认
 
-##### 2.80.60.2 PhoenixEgg.on_tick [L1721-1735]
+##### 2.86.60.2 PhoenixEgg.on_tick [L1721-1735]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 倒计时归零时生成再生 Phoenix，标记为再生体并排除灵魂计数，随后把蛋置为死亡（破壳非死亡）。
@@ -10004,7 +10394,7 @@
 - 实现: L1722 `super().on_tick(dt)`；L1723-1725 取 e，若 `not e.is_alive` return；L1726 `self.hatch -= dt`；L1727-1735 若 `hatch <= 0`：导入 `Troop`，生成 `Troop(bs.next_entity_id, Position(x,y), player, 'Phoenix', bs)` 并 `_spawn_entity(t)`；`bs.next_entity_id += 1`；`t.entity_holder._is_rebirth = True`（供 `Phoenix.on_death` 早退）；`t._soul_excluded = True`；`e.is_alive = False`（注释：破壳不是死亡）。
 - 置信度: 已确认
 
-#### 2.80.61 ThreeMusketeers [L1738-1758]
+#### 2.86.61 ThreeMusketeers [L1738-1758]
 - 类型: class
 - 签名: `class ThreeMusketeers(BasicCharacter):`
 - 作用: 三剑客（勘误批12，2025/11 重构）：3 格内有敌方部队 → 切近战形态（射程 1.2，仅地面），敌人远离 → 自动切回远程 6，双向无限次。
@@ -10013,7 +10403,7 @@
 - 实现: docstring（L1739-1740）说明双向动态切换。类内仅 `on_tick`（L1741-1758）。
 - 置信度: 已确认
 
-##### 2.80.61.1 ThreeMusketeers.on_tick [L1741-1758]
+##### 2.86.61.1 ThreeMusketeers.on_tick [L1741-1758]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 每帧检测 3 格内是否有敌方部队，据此把射程覆写为近战 1.2 或远程 6.0（仅在形态变化时清目标与路径）。
@@ -10023,7 +10413,7 @@
 - 实现: L1742 `super().on_tick(dt)`；L1743-1745 死亡 return；L1746-1752 导入 `Troop`，遍历实体找 3.0 格内的敌方存活部队（用 `isinstance(o, Troop)` 判定），找到即 `near = True` 并 break；L1753 `want = 1.2 if near else 6.0`；L1754-1758 仅当 `getattr(self,'_form_range',None) != want` 时才切换：记录 `_form_range`、写 `e._range_override = want`、清 `target_id` 与 `path`（避免每帧重复清目标）。近战形态的"仅地面"为注释中的【简化：射程覆盖】，代码未改 `attack_air` 标志。
 - 置信度: 已确认
 
-#### 2.80.62 GoblinGiant [L1761-1802]
+#### 2.86.62 GoblinGiant [L1761-1802]
 - 类型: class
 - 签名: `class GoblinGiant(BasicCharacter):`
 - 作用: 哥布林巨人（勘误批5）：背载枪哥布林独立投掷（射程 5.5 / 攻速 1.7s，直接结算无弹道）；死亡时枪哥布林落地成 SpearGoblin。
@@ -10032,7 +10422,7 @@
 - 实现: docstring（L1762-1763）说明投掷【简化：无弹道】与 dismount。成员：`__init__`（rider_cd = 1.0）、`on_tick`（骑手投掷）、`on_death`（落地 SpearGoblin）。
 - 置信度: 已确认
 
-##### 2.80.62.1 GoblinGiant.__init__ [L1764-1766]
+##### 2.86.62.1 GoblinGiant.__init__ [L1764-1766]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始化骑手投掷冷却。
@@ -10042,7 +10432,7 @@
 - 实现: L1765 `super().__init__(entity)`；L1766 `self.rider_cd = 1.0`。
 - 置信度: 已确认
 
-##### 2.80.62.2 GoblinGiant.on_tick [L1768-1792]
+##### 2.86.62.2 GoblinGiant.on_tick [L1768-1792]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 骑手独立对 5.5 格内最近敌方部队结算投射物伤害。
@@ -10052,7 +10442,7 @@
 - 实现: L1769-1770 导入 `Troop` 与 `projectiles`；L1771 `super().on_tick(dt)`；L1773 死亡或仍在部署延迟则 return；L1775-1777 `rider_cd -= dt`，>0 则 return；L1778-1779 `rider_cd = summonCharacterData.spawnCharacterData.hitSpeed or 1700`（毫秒→秒）；L1780-1785 遍历实体取 5.5 格内最近的敌方 `Troop`；L1786-1787 无目标 return；L1788 `rider = Card('SpearGoblinGiant')`（构造后未使用）；L1789-1792 从 `projectiles['SpearGoblinProjectile'].damage`（快照 scd damage=None）按 `1.1 ** (level-1)` 换算，非 0 时 `best.take_damage(_rd, source=e)`。
 - 置信度: 已确认（L1788 局部变量 `rider` 之后未被使用为源码事实）
 
-##### 2.80.62.3 GoblinGiant.on_death [L1794-1802]
+##### 2.86.62.3 GoblinGiant.on_death [L1794-1802]
 - 类型: method
 - 签名: `def on_death(self):`
 - 作用: 死亡时在原地生成 SpearGoblin（dismount），并排除灵魂计数。
@@ -10061,7 +10451,7 @@
 - 实现: L1795 注释：专属 `on_death` 使通用亡语跳过，不双出；L1796 导入 `Troop`；L1797-1799 `bs = self.entity.battle_state`，生成 `Troop(bs.next_entity_id, Position(x,y), player, 'SpearGoblin', bs)`；L1800 `t._soul_excluded = True`；L1801 `bs._spawn_entity(t)`；L1802 `bs.next_entity_id += 1`（同 Phoenix，额外手工递增）。
 - 置信度: 已确认
 
-#### 2.80.63 King_KnifeTowers [L1807-1839]
+#### 2.86.63 King_KnifeTowers [L1807-1839]
 - 类型: class
 - 签名: `class King_KnifeTowers(BasicCharacter):`
 - 作用: Dagger Duchess 飞刀蓄能（勘误批7）：8 支飞刀，有刀时 0.5s 连发每次耗 1 支；从消耗第一支起每 0.9s 回充 1 支（独立计时，不因断攻重置），8 支封顶；刀耗尽期间无法攻击。
@@ -10070,7 +10460,7 @@
 - 实现: docstring（L1808-1811）列出四条规则并标注"用户口径 2026-09-04 覆盖快照 450ms"。类属性 `MAX_KNIVES = 8`(L1812)、`RECHARGE = 0.9`(L1813)。成员：`__init__`（knives/_regen_started/_regen_timer）、`on_attack`（耗刀与启动回充）、`on_tick`（回充计时）。
 - 置信度: 已确认
 
-##### 2.80.63.1 King_KnifeTowers.__init__ [L1815-1819]
+##### 2.86.63.1 King_KnifeTowers.__init__ [L1815-1819]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 初始满刀并复位回充状态。
@@ -10080,7 +10470,7 @@
 - 实现: L1816 `super().__init__(entity)`；L1817 `self.knives = self.MAX_KNIVES`；L1818 `self._regen_started = False`；L1819 `self._regen_timer = 0.0`。
 - 置信度: 已确认
 
-##### 2.80.63.2 King_KnifeTowers.on_attack [L1821-1831]
+##### 2.86.63.2 King_KnifeTowers.on_attack [L1821-1831]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 无刀时跳过攻击（只把冷却设为回充时间）；有刀时正常攻击、耗 1 支并把冷却硬设 0.5s，首支消耗时启动回充计时。
@@ -10090,7 +10480,7 @@
 - 实现: L1822-1825 `if self.knives <= 0:` → `attack_cooldown = self.RECHARGE` 并 return（注释：不进入冷却长眠）；L1826 `super().on_attack(current_target)`；L1827 `self.entity.attack_cooldown = 0.5`（注释：用户勘误覆盖快照 450ms）；L1828 `self.knives -= 1`；L1829-1831 若 `not _regen_started` → 置 True 并 `_regen_timer = self.RECHARGE`（注释：从消耗第一支开始计时）。
 - 置信度: 已确认
 
-##### 2.80.63.3 King_KnifeTowers.on_tick [L1833-1839]
+##### 2.86.63.3 King_KnifeTowers.on_tick [L1833-1839]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 回充计时到点则补 1 支刀（不超过上限）。
@@ -10100,7 +10490,7 @@
 - 实现: L1834 `super().on_tick(dt)`；L1835-1839 若 `_regen_started` 且 `knives < MAX_KNIVES`：`_regen_timer -= dt`，≤0 时 `knives += 1` 并把计时重置为 `RECHARGE`（每帧最多回 1 支）。
 - 置信度: 已确认
 
-#### 2.80.64 King_ChefTowers [L1842-1895]
+#### 2.86.64 King_ChefTowers [L1842-1895]
 - 类型: class
 - 签名: `class King_ChefTowers(BasicCharacter):`
 - 作用: Royal Chef 烹饪（用户裁决的简单拟合 2026-09-04）：塔自身攻击会延长烹饪进度，到点后给友军部队回血 + 提升伤害加成，塔况越差烹饪越慢。
@@ -10109,7 +10499,7 @@
 - 实现: docstring（L1843-1848）列出四条规则：基础 23s（首饼 7s）、烹饪期每次攻击延长 Δ = (38−23)×攻速/38；一塔失 ×2 变慢、双塔失停止；出餐 = +1 级治疗 10% max hp（可叠、允许超上限【简化】）+ 伤害 ×1.1（`_damage_mult` 载体）；只喂 >33% 血的友军部队（不喂建筑），优先未喂过的最高血量。类属性 `BASE_COOK = 23.0`、`FIRST_COOK = 7.0`、`MAX_COOK = 38.0`（L1849-1851）。成员：`__init__`、`_attack_extension`、`on_attack`、`on_tick`。
 - 置信度: 已确认
 
-##### 2.80.64.1 King_ChefTowers.__init__ [L1853-1856]
+##### 2.86.64.1 King_ChefTowers.__init__ [L1853-1856]
 - 类型: method
 - 签名: `def __init__(self, entity):`
 - 作用: 首炉烹饪时长取 `FIRST_COOK`，并初始化已喂食 id 集合。
@@ -10119,7 +10509,7 @@
 - 实现: L1854 `super().__init__(entity)`；L1855 `self._cook_left = self.FIRST_COOK`；L1856 `self._fed_ids = set()`。
 - 置信度: 已确认
 
-##### 2.80.64.2 King_ChefTowers._attack_extension [L1858-1860]
+##### 2.86.64.2 King_ChefTowers._attack_extension [L1858-1860]
 - 类型: method
 - 签名: `def _attack_extension(self):`
 - 作用: 计算单次攻击对烹饪进度的延长量。
@@ -10128,7 +10518,7 @@
 - 实现: L1859 `hit = (self.entity.data.hitSpeed or 1000) / 1000`（取快照字段 hitSpeed 转秒，缺省 1000ms）；L1860 `return (self.MAX_COOK - self.BASE_COOK) * hit / self.MAX_COOK`，即 15×hit/38——符合 docstring 的"持续攻击 38s 恰好把 23s 拉满到 38s"。
 - 置信度: 已确认
 
-##### 2.80.64.3 King_ChefTowers.on_attack [L1862-1866]
+##### 2.86.64.3 King_ChefTowers.on_attack [L1862-1866]
 - 类型: method
 - 签名: `def on_attack(self, current_target=None):`
 - 作用: 常规攻击后，若仍在烹饪期则延长烹饪进度（封顶 `MAX_COOK`）。
@@ -10138,7 +10528,7 @@
 - 实现: L1863 `super().on_attack(current_target)`；L1864 注释说明用户拟合；L1865-1866 若 `_cook_left > 0` 则 `_cook_left = min(MAX_COOK, _cook_left + self._attack_extension())`。
 - 置信度: 已确认
 
-##### 2.80.64.4 King_ChefTowers.on_tick [L1868-1895]
+##### 2.86.64.4 King_ChefTowers.on_tick [L1868-1895]
 - 类型: method
 - 签名: `def on_tick(self, dt):`
 - 作用: 按塔况推进烹饪倒计时，到点后选一名 >33% 血的友军部队喂食（回血 10% 上限 + 伤害 ×1.1），并开始下一炉。
@@ -10150,7 +10540,7 @@
 
 ---
 
-### 2.81 `src/clasher_new/card_utils.py`
+### 2.87 `src/clasher_new/card_utils.py`
 
 - **分析组**：G019　**行数**：522　**AST 符号数**：15
 
@@ -10187,7 +10577,7 @@
 - **两种"基准"字段不可混用**（L422-427 注释明示）：亡语伤害基准取 `gamedata.summonCharacterData.deathDamage`（快照 lv1 口径），**不是** characters 表的 `death_damage`（注释给出反例 Golemite 62 vs 39、IceGolemite 40 vs 33）。
 - **单位换算口径**（`Card.__init__` 统一执行）：时间字段 `/1000` 转秒；`speed`/`jump_speed` 除以 50/60；距离类（`summonRadius`/`areaDamageRadius`/`collisionRadius`/`range`/`sightRange`/`chargeRange`/`minimum_range`/`special*Range`/`pushback`/`projectileRange`）`/1000` 转"格"。`summonRadius` 缺省 **550**（L234）、`collisionRadius` 缺省 **1000**（L239）、`sightRange/range/…` 缺省 0。
 
-#### 2.81.1 _register_derived_character [L72-111]
+#### 2.87.1 _register_derived_character [L72-111]
 - 类型: function
 - 签名: `_register_derived_character(char_def)`
 - 作用: 把 gamedata 里内嵌的角色定义（能力召唤物/觉醒亡语等，数值为起始级基准）注册为可构造卡：生成合成 per-level 数组（×1.1/级），使标准 `set_level` 管线自动缩放到目标等级（L73-75 docstring）。
@@ -10204,7 +10594,7 @@
 - 调用: 被 `_scan_and_register`（L119）与模块级循环（L158）调用；本文件外无调用者（全仓 grep 仅 `battle.py:2252` 注释提及）。
 - 置信度: 已确认
 
-#### 2.81.2 _scan_and_register [L115-124]
+#### 2.87.2 _scan_and_register [L115-124]
 - 类型: function
 - 签名: `_scan_and_register(obj)`
 - 作用: 递归扫描 abilityData/action 树，登记所有"带 hitpoints 且有 name"的内嵌角色定义（L116 docstring）。
@@ -10215,7 +10605,7 @@
 - 调用: 被模块级循环 L131/L136/L143/L147/L151/L163/L167 调用；本文件外无调用者。
 - 置信度: 已确认
 
-#### 2.81.3 _rarity_level_index [L182-193]
+#### 2.87.3 _rarity_level_index [L182-193]
 - 类型: function
 - 签名: `_rarity_level_index(rarity, level)`
 - 作用: 稀有度→等级索引（数组 0 号对应该稀有度起始等级）：Common=lv1、Rare=lv3、Epic=lv6、Legendary=lv9、Champion=lv11；未知稀有度按 Common（L183-184 docstring）。
@@ -10227,7 +10617,7 @@
 - 调用: `Card.set_level` L348；外部 `battle.py:829`、`card_mechanics.py:52`、`evolutions.py:107`。
 - 置信度: 已确认
 
-#### 2.81.4 _value_at_level [L196-207]
+#### 2.87.4 _value_at_level [L196-207]
 - 类型: function
 - 签名: `_value_at_level(arr, rarity, level, base)`
 - 作用: 按稀有度等级轴取 per-level 数组值；索引越界按实测曲线 ×1.1 延续，数组为空则按 `base`（lv1 基准）×1.1^(level-1) 推导（L197-201 docstring）。
@@ -10241,7 +10631,7 @@
 - 调用: `Card.set_level` L356/L366/L374/L376/L394/L396；外部 `battle.py:1764/2462/2790`、`card_mechanics.py:542`、`scripts/test_m2.py:438/440`。
 - 置信度: 已确认
 
-#### 2.81.5 level_scale [L210-214]
+#### 2.87.5 level_scale [L210-214]
 - 类型: function
 - 签名: `level_scale(level)`
 - 作用: lv1 基准→指定等级的放大系数（官方曲线 1.1/级，11-16 级均适用）（L211-213 docstring）。
@@ -10252,14 +10642,14 @@
 - 调用: 外部大量使用——`battle.py`（L227/556/911/925/939/1006-1008/1396/1490/1769/1977/2026/2287/2318 等）、`card_mechanics.py`（L133/198/411/445/471/625/797/1598/1619/1703 等）、`evolutions.py:115`。
 - 置信度: 已确认
 
-#### 2.81.6 Card [L217-443]
+#### 2.87.6 Card [L217-443]
 - 类型: class
 - 签名: `class Card:`
 - 作用: 单张卡的运行时数据视图：从 `card_data[card_name]` 取原始行，把毫秒/内部单位换算成秒/格，派生攻击目标位面、飞行、递增伤害、能力、觉醒、攻击序列、亡语/亡语领域等字段，最后在构造末尾调用 `set_level` 完成等级缩放。
 - 类属性: `default_level = 11`（L220）— 全局默认等级；注释（L218-219）说明 `BattleState` 构造时设为自身 `card_level`，使战斗内所有 `Card()` 自动继承（**单战斗串行假设**，多战斗并行须显式传 `level`）。
 - 置信度: 已确认
 
-##### 2.81.6.1 Card.__init__ [L222-345]
+##### 2.87.6.1 Card.__init__ [L222-345]
 - 类型: method
 - 签名: `__init__(self, card_name, level=None)`
 - 作用: 由卡名取出原始行、计算全部战斗字段并触发等级缩放。
@@ -10280,7 +10670,7 @@
   10. L345：`self.set_level(self.level)` 收尾（等级缩放全部在 `set_level` 内完成）。
 - 置信度: 已确认
 
-##### 2.81.6.2 Card.set_level [L347-443]
+##### 2.87.6.2 Card.set_level [L347-443]
 - 类型: method
 - 签名: `set_level(self, level)`
 - 作用: 按卡类型把 hp/damage/弹丸伤害/递增伤害/攻击序列/亡语伤害与亡语领域字段缩放到目标等级。
@@ -10299,13 +10689,13 @@
   9. L430-441（亡语领域）：`death_area_effect` 非空时派生 `death_area_effect_radius`（/1000）、`death_area_effect_buff`（buffData.name）、`death_area_effect_slow = (100+speedMultiplier)/100`（无则 `None`）、`death_area_effect_duration`（`buffTime` 或 buffData.buffTime，/1000）、`death_area_effect_life`（lifeDuration/1000）、三个布尔（`onlyEnemies`/`hitsAir`/`hitsGround`）。
 - 置信度: 已确认
 
-#### 2.81.7 Projectile [L445-471]
+#### 2.87.7 Projectile [L445-471]
 - 类型: class
 - 签名: `class Projectile:`
 - 作用: gamedata `projectileData` 子树的薄包装：换算弹丸伤害/速度/半径/命中位面，并承载"命中后生成二段弹/落地出兵"两个待填字段。
 - 置信度: 已确认
 
-##### 2.81.7.1 Projectile.__init__ [L446-471]
+##### 2.87.7.1 Projectile.__init__ [L446-471]
 - 类型: method
 - 签名: `__init__(self, projectile_data)`
 - 作用: 从 gamedata 弹丸字典读字段并换算单位。
@@ -10315,7 +10705,7 @@
 - 实现: L447-448 `data`、`damage`（缺省 0）；L449 `speed = speed/60`；L450 `radius` 优先取 `spawnProjectileData.radius`，否则 `radius`，再 `/1000`；L451-454 `target_buff = targetBuffData`、`buff_time=buffTime/1000`、`target_buff_death_spawn = target_buff.deathSpawnData`（L453 注释：女巫妈妈诅咒，目标死亡生成 VoodooHog）；L455-456 `hits_air = 'AIR' in tidTarget`、`hits_ground = ('GROUND' in tidTarget) or ('BUILDING' in tidTarget)`；L457 `pushback/1000`；L459 `roll_range = projectileRange/1000`；L460 `crown_tower_percent = (crownTowerDamagePercent+100)/100`；**L461-465 Arrows 特例**：`name == 'ArrowsSpell'` 时强制 `crown_tower_percent = 25/122`（注释：gamedata 的 -75 与官方 122×3 波 / 塔 25×3 波口径不符）；L466-468 三个待填字段 `spawn_projectile=None`（由数值表 `spawn_projectile` 或 `spawnProjectileData` 回填）、`spawn_characters=None`；L469-471 `name == 'TowerPrincessProjectile'` 时强制 `hits_air = hits_ground = True`。
 - 置信度: 已确认
 
-#### 2.81.8 projectile_from_row [L474-495]
+#### 2.87.8 projectile_from_row [L474-495]
 - 类型: function
 - 签名: `projectile_from_row(row, level=11)`
 - 作用: M1 弹道生成链——从 `cards_stats_projectile` 数值表行构建二段弹包装（行格式为 snake_case + per_level 数组，与 gamedata `projectileData` 不同，故单独适配）（L475-476 docstring）。
@@ -10331,13 +10721,13 @@
 - 调用: `battle.py:6` 导入，实用于 `battle.py:2763`。
 - 置信度: 已确认
 
-#### 2.81.9 TimedExplosiveData [L497-505]
+#### 2.87.9 TimedExplosiveData [L497-505]
 - 类型: class
 - 签名: `class TimedExplosiveData:`
 - 作用: 定时爆炸物（如引信类亡语）参数包装：直接读 `deathSpawnCharacterData` 的必填字段并换算单位。
 - 置信度: 已确认
 
-##### 2.81.9.1 TimedExplosiveData.__init__ [L498-505]
+##### 2.87.9.1 TimedExplosiveData.__init__ [L498-505]
 - 类型: method
 - 签名: `__init__(self, death_spawn_data)`
 - 作用: 读入爆炸物的名称/伤害/部署时间/碰撞半径/射程/对塔百分比。
@@ -10347,13 +10737,13 @@
 - 实现: L499-503 用**下标**读 `['name']`、`['deathDamage']`、`['deployTime']`、`['collisionRadius']`——四者缺失即 `KeyError`（非 `.get`）；`deploy_time`/`collision_radius` 各 `/1000`；L504 `range` 硬编码 `3.0`；L505 `crown_tower_damage_percent = crownTowerDamagePercent/100`（缺省 100）。
 - 置信度: 已确认
 
-#### 2.81.10 AreaEffectData [L507-517]
+#### 2.87.10 AreaEffectData [L507-517]
 - 类型: class
 - 签名: `class AreaEffectData:`
 - 作用: 亡语范围效果数据包装（源码注释自述"只对 lumberjack 有效，后续再改"，L509）。
 - 置信度: 已确认
 
-##### 2.81.10.1 AreaEffectData.__init__ [L508-517]
+##### 2.87.10.1 AreaEffectData.__init__ [L508-517]
 - 类型: method
 - 签名: `__init__(self, source_card_name)`
 - 作用: 由卡名反查 `deathSpawnCharacterData.deathAreaEffectData` 并派生时长/半径/buff 字段。
@@ -10366,7 +10756,7 @@
 
 ---
 
-### 2.82 `src/clasher_new/client_side/assure_names.py`
+### 2.88 `src/clasher_new/client_side/assure_names.py`
 
 - **分析组**：G040　**行数**：19　**AST 符号数**：0
 
@@ -10384,7 +10774,7 @@
 
 ---
 
-### 2.83 `src/clasher_new/client_side/card_utils.py`
+### 2.89 `src/clasher_new/client_side/card_utils.py`
 
 - **分析组**：G040　**行数**：180　**AST 符号数**：9
 
@@ -10405,7 +10795,7 @@
   - 注意 L58 `self.data.setdefault('summonCharacterData', self.data)` 会就地修改**共享的** `card_data` 条目：`Card.__init__` 不是拷贝，`self.data` 与 `card_data[name]` 是同一对象（L57）。
   - 未在本文件出现的符号（对照引擎版副本的差异证据）：`_value_at_level`、`level_scale`、`_rarity_level_index`、`character_to_card`、`projectile_from_row` 均**不存在**（全文读完后确认）。
 
-#### 2.83.1 Card [L55-135]
+#### 2.89.1 Card [L55-135]
 - 类型: class
 - 签名: `class Card`（无基类、无类级 docstring）
 - 作用: 把一条 `card_data` 原始条目扁平化成带物理量纲的卡牌对象（血量、费用、伤害、半径、速度、攻速、弹道、死亡分裂、跳跃、守卫等），并在构造末尾按稀有度调用 `set_level(11)` 折算成 11 级数值。
@@ -10415,7 +10805,7 @@
 - 调用: 本组内被 `client.py:237,245,275`（判断/显示费用）、`client_side/player.py:18,24`（费用校验与扣除）、本文件 `AreaEffectData.__init__:168`、`__main__:180` 构造。跨模块不被仓库其他文件使用（见文首前置事实）。
 - 置信度: 已确认
 
-##### 2.83.1.1 Card.__init__ [L56-110]
+##### 2.89.1.1 Card.__init__ [L56-110]
 - 类型: method
 - 签名: `__init__(self, card_name)`
 - 作用: 用 `card_data[card_name]` 填充卡牌的全部数值属性，并把毫秒/千分格之类的原始单位换算成秒/格。
@@ -10426,7 +10816,7 @@
 - 调用: 由 `Card(card_name)` 触发（见类的“调用”行）。
 - 置信度: 已确认
 
-##### 2.83.1.2 Card.set_level [L112-135]
+##### 2.89.1.2 Card.set_level [L112-135]
 - 类型: method
 - 签名: `set_level(self, level)`
 - 作用: 按稀有度把等级换算成 `*_per_level` 数组下标，并用该下标覆盖弹道伤害、血量与（若原伤害非零）伤害。
@@ -10437,7 +10827,7 @@
 - 调用: 仅被 `Card.__init__` L110 调用（本组文件内未发现其他调用点）。
 - 置信度: 已确认
 
-#### 2.83.2 Projectile [L137-153]
+#### 2.89.2 Projectile [L137-153]
 - 类型: class
 - 签名: `class Projectile`（无基类、无 docstring）
 - 作用: 弹道数据包装：伤害、速度、命中半径、buff、击退、滚动射程、王塔伤害比例与空地命中判定。
@@ -10447,7 +10837,7 @@
 - 调用: 由 `Card.__init__` L83 构造；`client.py` 不直接使用该类。
 - 置信度: 已确认
 
-##### 2.83.2.1 Projectile.__init__ [L138-153]
+##### 2.89.2.1 Projectile.__init__ [L138-153]
 - 类型: method
 - 签名: `__init__(self, projectile_data)`
 - 作用: 从一条原始 `projectileData` 字典导出弹道属性。
@@ -10458,7 +10848,7 @@
 - 调用: 仅由 `Card.__init__` L83 调用。
 - 置信度: 已确认
 
-#### 2.83.3 TimedExplosiveData [L155-163]
+#### 2.89.3 TimedExplosiveData [L155-163]
 - 类型: class
 - 签名: `class TimedExplosiveData`（无基类、无 docstring）
 - 作用: 定时爆炸（死亡分裂）数据包装：名字、死亡伤害、部署时间、碰撞半径、固定 3.0 射程与王塔伤害比例。
@@ -10468,7 +10858,7 @@
 - 调用: 在本组 5 个文件内**未发现任何构造点**（`client.py` 只从 `card_utils` 导入 `card_data, Card`，`player.py` 只导入 `Card`，`download_images.py`/`assure_names.py` 亦然）。
 - 置信度: 已确认
 
-##### 2.83.3.1 TimedExplosiveData.__init__ [L156-163]
+##### 2.89.3.1 TimedExplosiveData.__init__ [L156-163]
 - 类型: method
 - 签名: `__init__(self, death_spawn_data)`
 - 作用: 从 `deathSpawnCharacterData` 条目导出死亡爆炸参数。
@@ -10479,7 +10869,7 @@
 - 调用: 本组文件内无调用点（见类的“调用”行）。
 - 置信度: 已确认
 
-#### 2.83.4 AreaEffectData [L165-175]
+#### 2.89.4 AreaEffectData [L165-175]
 - 类型: class
 - 签名: `class AreaEffectData`（无基类、无 docstring）
 - 作用: 区域效果（源码注释 L167 说明“只对 lumberjack 有效，以后改”）数据包装：持续时间、半径、buff 时间/数据、速度倍率、伤害与王塔伤害比例。
@@ -10489,7 +10879,7 @@
 - 调用: 在本组 5 个文件内**未发现任何构造点**。
 - 置信度: 已确认
 
-##### 2.83.4.1 AreaEffectData.__init__ [L166-175]
+##### 2.89.4.1 AreaEffectData.__init__ [L166-175]
 - 类型: method
 - 签名: `__init__(self, source_card_name)`
 - 作用: 以“源卡牌名”为入口，取该卡的死亡区域效果子字典并导出参数。
@@ -10510,7 +10900,7 @@
 
 ---
 
-### 2.84 `src/clasher_new/client_side/client.py`
+### 2.90 `src/clasher_new/client_side/client.py`
 
 - **分析组**：G040　**行数**：317　**AST 符号数**：10
 
@@ -10543,7 +10933,7 @@
   - L161-163 第二次 `set_mode((W, H))` 并重建 `clock`、`render_font`（字体 `None`, 18）。
   - L267-315 主循环（下文各符号的调用点）。
 
-#### 2.84.1 card_selection_screen [L56-91]
+#### 2.90.1 card_selection_screen [L56-91]
 - 类型: function
 - 签名: `card_selection_screen()`
 - 作用: 卡牌多选屏：滚动网格里点选恰好 8 张卡并返回英文显示名列表。
@@ -10553,7 +10943,7 @@
 - 调用: 定义于 L56；被 L113 调用，但 L112 的 `if not DEBUG` 在默认 `DEBUG=True` 下为假 ⇒ 默认运行路径不执行。内部调用 pygame 绘图/事件 API，无本仓函数调用。
 - 置信度: 已确认
 
-#### 2.84.2 ip_input_screen [L95-109]
+#### 2.90.2 ip_input_screen [L95-109]
 - 类型: function
 - 签名: `ip_input_screen()`
 - 作用: 文本输入屏：收集服务器 IP 字符串，按回车返回。
@@ -10563,7 +10953,7 @@
 - 调用: 定义于 L95；被 L118 调用，同样受 `if not DEBUG` 门控 ⇒ 默认路径不执行。
 - 置信度: 已确认
 
-#### 2.84.3 receiver [L136-143]
+#### 2.90.3 receiver [L136-143]
 - 类型: function
 - 签名: `receiver()`
 - 作用: 后台线程：循环读取 socket 行并 JSON 解析，把 `type == 'state'` 的消息合入全局 `state`。
@@ -10573,7 +10963,7 @@
 - 调用: 定义于 L136；被 L145 `threading.Thread(target=receiver, daemon=True).start()` 启动（daemon 线程随主进程退出）。它调用 `sock.makefile`、`json.loads` 与全局 `state.update`。
 - 置信度: 已确认
 
-#### 2.84.4 w2s [L156-159]
+#### 2.90.4 w2s [L156-159]
 - 类型: function
 - 签名: `w2s(x, y)`
 - 作用: 世界（格）坐标 → 屏幕像素坐标，并按本方视角做 Y 轴翻转。
@@ -10585,7 +10975,7 @@
 - 调用: 定义于 L156；唯一调用点是 `draw_entities` L178。`player_id`、`AX`、`AY`、`TILE` 均为模块级全局。
 - 置信度: 已确认
 
-#### 2.84.5 draw_arena [L165-174]
+#### 2.90.5 draw_arena [L165-174]
 - 类型: function
 - 签名: `draw_arena()`
 - 作用: 画竞技场底板：绿地、中央河道、两座桥、18×32 格网格线。
@@ -10595,7 +10985,7 @@
 - 调用: 定义于 L165；被主循环 L303 每帧调用。只调 pygame.draw。
 - 置信度: 已确认
 
-#### 2.84.6 draw_entities [L176-191]
+#### 2.90.6 draw_entities [L176-191]
 - 类型: function
 - 签名: `draw_entities()`
 - 作用: 把服务端实体列表画成带名字、血条（建筑还带血量数字）的圆。
@@ -10605,7 +10995,7 @@
 - 调用: 定义于 L176；被主循环 L304 调用，内部调用 `w2s`(L178)。
 - 置信度: 已确认
 
-#### 2.84.7 draw_ui [L193-200]
+#### 2.90.7 draw_ui [L193-200]
 - 类型: function
 - 签名: `draw_ui()`
 - 作用: 在竞技场下方画一行状态文本（玩家号/时间/圣水，结束时追加胜负）。
@@ -10615,7 +11005,7 @@
 - 调用: 定义于 L193；被主循环 L307 调用。
 - 置信度: 已确认
 
-#### 2.84.8 get_hand_rects [L226-233]
+#### 2.90.8 get_hand_rects [L226-233]
 - 类型: function
 - 签名: `get_hand_rects()`
 - 作用: 返回手牌区前 4 张卡的 `(卡牌 id, Rect)` 列表。
@@ -10625,7 +11015,7 @@
 - 调用: 定义于 L226；被 `draw_hand` L236 与主循环事件处理 L274 调用。
 - 置信度: 已确认
 
-#### 2.84.9 draw_hand [L235-248]
+#### 2.90.9 draw_hand [L235-248]
 - 类型: function
 - 签名: `draw_hand()`
 - 作用: 画 4 张手牌图（圣水不足时用灰度版），并逐张叠紫色费用徽标。
@@ -10635,7 +11025,7 @@
 - 调用: 定义于 L235；被主循环 L306 调用；内部调用 `get_hand_rects`(L236) 与 `Card(...)`（L237、L245 共两次构造/张/帧）。
 - 置信度: 已确认
 
-#### 2.84.10 draw_elixir_bar [L250-259]
+#### 2.90.10 draw_elixir_bar [L250-259]
 - 类型: function
 - 签名: `draw_elixir_bar()`
 - 作用: 画一条满宽圣水进度条并在条中央显示 `x.x/10`。
@@ -10649,7 +11039,7 @@
 
 ---
 
-### 2.85 `src/clasher_new/client_side/download_images.py`
+### 2.91 `src/clasher_new/client_side/download_images.py`
 
 - **分析组**：G040　**行数**：28　**AST 符号数**：0
 
@@ -10670,7 +11060,7 @@
 
 ---
 
-### 2.86 `src/clasher_new/client_side/player.py`
+### 2.92 `src/clasher_new/client_side/player.py`
 
 - **分析组**：G040　**行数**：37　**AST 符号数**：7
 
@@ -10681,7 +11071,7 @@
 - 关键模块级常量: 无（只有 L3 一行注释声明最大圣水 10，该数值以字面量 10 出现在 L14）
 - 顶层数据表/字典: 无
 
-#### 2.86.1 PlayerState [L5-37]
+#### 2.92.1 PlayerState [L5-37]
 - 类型: class
 - 签名: `class PlayerState`（无基类、无 docstring）
 - 作用: 单个玩家的可变状态：`cycle` 8 张牌的循环队列（前 4 张为手牌）、`elixir` 当前圣水、三塔血量；并给出出牌与皇冠判定。
@@ -10691,7 +11081,7 @@
 - 调用: 本组内由 `client.py:202` 构造（`PlayerState(player_id, list(deck), 5)`）；`regenerate_elixir`/`get_next_card`/`get_crown_count` 在 `client.py` 中**无调用点**（`client.py` 每帧用服务端值直接覆盖 `elixir` 与 `cycle`，见 `client.py:298-299`）。跨模块不被仓库其他文件使用（见文首前置事实）。
 - 置信度: 已确认
 
-##### 2.86.1.1 PlayerState.__init__ [L6-10]
+##### 2.92.1.1 PlayerState.__init__ [L6-10]
 - 类型: method
 - 签名: `__init__(self, player_id, cycle_queue, elixir, tower_hps=(4824, 3052, 3052))`
 - 作用: 保存玩家 id、牌序队列、圣水，并把三元组塔血量拆成王塔/左塔/右塔三个属性。
@@ -10705,7 +11095,7 @@
 - 调用: 由 `PlayerState(...)` 构造（本组内 `client.py:202`）。
 - 置信度: 已确认
 
-##### 2.86.1.2 PlayerState.regenerate_elixir [L12-14]
+##### 2.92.1.2 PlayerState.regenerate_elixir [L12-14]
 - 类型: method
 - 签名: `regenerate_elixir(self, dt: float, base_regen_time: float = 2.8)`
 - 作用: 按时间步长线性回费，上限 10。
@@ -10717,7 +11107,7 @@
 - 调用: 本组 5 个文件中无调用点（已逐文件确认）。
 - 置信度: 已确认
 
-##### 2.86.1.3 PlayerState.can_play_card [L16-19]
+##### 2.92.1.3 PlayerState.can_play_card [L16-19]
 - 类型: method
 - 签名: `can_play_card(self, card_name)`
 - 作用: 判定某张牌此刻是否可以打出：在手牌前 4 张内、圣水够、且王塔未倒。
@@ -10728,7 +11118,7 @@
 - 调用: 被 `play_card` L23 调用；被 `client.py:287`（鼠标抬起时的服务端发送门控）调用。
 - 置信度: 已确认
 
-##### 2.86.1.4 PlayerState.play_card [L21-27]
+##### 2.92.1.4 PlayerState.play_card [L21-27]
 - 类型: method
 - 签名: `play_card(self, card_name)`
 - 作用: 扣费并把该牌从队列前部移到队尾（完成循环轮转）；不可出时返回 False 且不改状态。
@@ -10739,7 +11129,7 @@
 - 调用: 被 `client.py:293` 调用（发送 deploy 消息之后本地同步扣费与轮转）。
 - 置信度: 已确认
 
-##### 2.86.1.5 PlayerState.get_next_card [L29-31]
+##### 2.92.1.5 PlayerState.get_next_card [L29-31]
 - 类型: method
 - 签名: `get_next_card(self)`
 - 作用: 取循环队列中的第 5 张（即将补进手牌的那张）。
@@ -10749,7 +11139,7 @@
 - 调用: 本组 5 个文件中无调用点。
 - 置信度: 已确认
 
-##### 2.86.1.6 PlayerState.get_crown_count [L33-37]
+##### 2.92.1.6 PlayerState.get_crown_count [L33-37]
 - 类型: method
 - 签名: `get_crown_count(self) -> int`
 - 作用: 按塔血量算已获得的皇冠数：王塔倒=3，否则两座侧塔各计 1。
@@ -10763,7 +11153,7 @@
 
 ---
 
-### 2.87 `src/clasher_new/core.py`
+### 2.93 `src/clasher_new/core.py`
 
 - **分析组**：G038　**行数**：69　**AST 符号数**：11
 
@@ -10774,7 +11164,7 @@
 - 关键模块级常量: 无
 - 顶层数据表/字典: 无
 
-#### 2.87.1 core.Position [L5-9]
+#### 2.93.1 core.Position [L5-9]
 - 类型: class
 - 签名: `@dataclass class Position: x: float; y: float`
 - 作用: 用两个 float 表示世界坐标点的不可变语义容器（实际非 frozen）。
@@ -10784,7 +11174,7 @@
 - 调用: 被本组多文件使用（`threat_calc.py:97`、`tmp_target_verify.py:7`、`tmp_tower_chip_test.py:7`、`tmp_formation_test.py:7`、`tmp_path_debug.py:7`、`evaluate.py:4` 经 environment 再导入）；`battle.py` 内部大量使用。
 - 置信度: 已确认
 
-##### 2.87.1.1 Position.distance_to [L8-9]
+##### 2.93.1.1 Position.distance_to [L8-9]
 - 类型: method
 - 签名: `distance_to(self, other)`
 - 作用: 返回本点到 `other` 的欧氏距离。
@@ -10794,7 +11184,7 @@
 - 实现: 单行 `math.hypot`（L9）；无类型校验、无除零风险。
 - 置信度: 已确认
 
-#### 2.87.2 core.BlankEntity [L11-14]
+#### 2.93.2 core.BlankEntity [L11-14]
 - 类型: class
 - 签名: `class BlankEntity:`
 - 作用: 占位实体，只编码 position（docstring L12 原文 "A placeholder that only encodes the position value."）。
@@ -10804,7 +11194,7 @@
 - 调用: 仓库内 `grep BlankEntity` 只命中本文件 ⇒ **未发现在别处被实例化或引用**（无法确认它的实际消费方）。
 - 置信度: 已确认（定义与无引用的事实）；其设计意图的消费方无法确认（原因：全仓无使用点）
 
-##### 2.87.2.1 BlankEntity.__init__ [L13-14]
+##### 2.93.2.1 BlankEntity.__init__ [L13-14]
 - 类型: method
 - 签名: `__init__(self, position)`
 - 作用: 把 `position` 存为实例属性。
@@ -10814,7 +11204,7 @@
 - 实现: 单行 `self.position = position`（L14）。
 - 置信度: 已确认
 
-#### 2.87.3 core.BasicCharacter [L16-69]
+#### 2.93.3 core.BasicCharacter [L16-69]
 - 类型: class
 - 签名: `class BasicCharacter:`
 - 作用: 实体行为的委派 holder 基类：持有 back-reference `entity`/`battle_state`/`data`，提供 `on_spawn`/`on_tick`/`on_death` 三个空钩子与普攻结算 `on_attack`、溅射圈判定 `_hit_by_area`。是 `card_mechanics.py` 中大量机制类的父类（同仓 `card_mechanics.py:8/66/89/95/105/113/166/175/202/218/261/269/315` 均 `class X(BasicCharacter)`）。
@@ -10824,7 +11214,7 @@
 - 调用: `battle.py:50`、`battle.py:1783` 构造；`card_mechanics.py` 多个子类继承并 `super().on_attack(...)`；`battle.py:1227` 调用 `self.entity_holder.on_attack(current_target)`；`battle.py:292` 通过 `type(self.entity_holder).on_death is not BasicCharacter.on_death` 判断子类是否覆写了 on_death（说明「未覆写」是用基类方法对象做哨兵）。
 - 置信度: 已确认
 
-##### 2.87.3.1 BasicCharacter.__init__ [L17-20]
+##### 2.93.3.1 BasicCharacter.__init__ [L17-20]
 - 类型: method
 - 签名: `__init__(self, entity)`
 - 作用: 绑定宿主实体并缓存其 battle_state 与 Card 数据。
@@ -10834,7 +11224,7 @@
 - 实现: `self.entity = entity`；`self.battle_state = self.entity.battle_state`；`self.data = self.entity.data`（L18-20）。**注意 `self.data` 是构造时的快照引用**，而 `on_tick` 只刷新 `battle_state` 不刷新 `data`（L22）。
 - 置信度: 已确认
 
-##### 2.87.3.2 BasicCharacter.on_spawn [L21-21]
+##### 2.93.3.2 BasicCharacter.on_spawn [L21-21]
 - 类型: method
 - 签名: `on_spawn(self)`
 - 作用: 出生钩子，基类空实现。
@@ -10843,7 +11233,7 @@
 - 实现: `pass`（L21）。
 - 置信度: 已确认
 
-##### 2.87.3.3 BasicCharacter.on_tick [L22-22]
+##### 2.93.3.3 BasicCharacter.on_tick [L22-22]
 - 类型: method
 - 签名: `on_tick(self, dt)`
 - 作用: 逐帧钩子；基类只做 `battle_state` 重新同步。
@@ -10853,7 +11243,7 @@
 - 实现: `self.battle_state = self.entity.battle_state`（L22）。
 - 置信度: 已确认
 
-##### 2.87.3.4 BasicCharacter.on_death [L23-23]
+##### 2.93.3.4 BasicCharacter.on_death [L23-23]
 - 类型: method
 - 签名: `on_death(self)`
 - 作用: 死亡钩子，基类空实现（同时被 `battle.py:292` 用作「子类是否覆写」的方法对象哨兵）。
@@ -10862,7 +11252,7 @@
 - 实现: `pass`（L23）。
 - 置信度: 已确认
 
-##### 2.87.3.5 BasicCharacter._hit_by_area [L25-28]
+##### 2.93.3.5 BasicCharacter._hit_by_area [L25-28]
 - 类型: method
 - 签名: `_hit_by_area(self, target, center, radius)`
 - 作用: 判断主目标是否落在以 `center` 为心的溅射圈内（与 `deal_area_damage` 同口径）。
@@ -10874,7 +11264,7 @@
 - 实现: 单行 L28。口径依据 docstring L26-27：塔走矩形边缘距离、普通实体中心距 − collision_radius；已与 `battle.py:152-166` `edge_distance_from` 实现对账一致（塔矩形最近点距离；非塔 `pos.distance_to(self.position) - collision_radius`）。**注意参数名是 `center`，但调用方传的是自身位置**（L44-46 传 `self.entity.position`），即溅射以自身为中心。
 - 置信度: 已确认
 
-##### 2.87.3.6 BasicCharacter.on_attack [L30-69]
+##### 2.93.3.6 BasicCharacter.on_attack [L30-69]
 - 类型: method
 - 签名: `on_attack(self, current_target=None)`
 - 作用: 普攻结算总入口：记录攻击时间、按有无 area_damage_radius 分支结算溅射或单体（含对塔减伤系数）、或改走弹道、然后重置攻击冷却并触发觉醒/动作链钩子、最后处理 kamikaze 自毁。
@@ -10889,7 +11279,7 @@
 
 ---
 
-### 2.88 `src/clasher_new/elite17_data.py`
+### 2.94 `src/clasher_new/elite17_data.py`
 
 - **分析组**：G036　**行数**：278　**AST 符号数**：3
 
@@ -10905,7 +11295,7 @@
   - `_DERIVED = (...)`（L248-254）— 5 元组序列，每项 `(SCD dict, hp 基准值, 基准等级)`，供 `apply()` 批量注册。
 - 顶层数据表/字典: 上述 4 张模块级表均为普通 dict（非 dataclass），键 = 卡名字符串；值 = 数值/机制参数。无外部 JSON 读取，全部内联在源码中。
 
-#### 2.88.1 _curve [L29-33]
+#### 2.94.1 _curve [L29-33]
 - 类型: function
 - 签名: `_curve(value, src_level, length=17)`
 - 作用: 以「官方统一 ×1.1/级」曲线，从 `src_level` 基准值生成一条长度为 `length` 的按级数值数组（index = level-1）。
@@ -10918,7 +11308,7 @@
 - 调用: 本文件内被 `apply()` 调用（L275 `hitpoints_per_level`、L276 `damage_per_level`）。全仓 `from elite17_data import` 语句只出现 `HERO_BASE_STATS`/`hval`/`HERO_ABILITIES`（battle.py L2415/L2459、card_mechanics.py L864），故 `_curve` 无跨模块调用者。
 - 置信度: 已确认
 
-#### 2.88.2 hval [L36-38]
+#### 2.94.2 hval [L36-38]
 - 类型: function
 - 签名: `hval(value, src_level, level)`
 - 作用: 把 Hero 独立表中的 `value`（取值于 `src_level` 等级）按官方 ×1.1/级曲线换算到当前战斗等级 `level`。
@@ -10931,7 +11321,7 @@
 - 调用: 被 battle.py `apply_hero_overlay`（L2415 导入，L2420/L2428/L2430/L2433 用于 hp/damage/projectile damage/shield）与 card_mechanics.py（L864 以 `_elite_hval` 别名导入）调用。
 - 置信度: 已确认
 
-#### 2.88.3 apply [L257-278]
+#### 2.94.3 apply [L257-278]
 - 类型: function
 - 签名: `apply(card_data, characters, character_to_card)`
 - 作用: `card_utils.py` 导入末尾调用的注入入口：把 17 张卡的 `abilityData` 挂到卡数据上，并把 5 个 Hero 派生角色注册为可构造卡（含按级数值数组与角色→卡映射）。
@@ -10946,7 +11336,7 @@
 
 ---
 
-### 2.89 `src/clasher_new/environment.py`
+### 2.95 `src/clasher_new/environment.py`
 
 - **分析组**：G037　**行数**：172　**AST 符号数**：7
 
@@ -10964,7 +11354,7 @@
   - `speed_types = [0, 0.75, 1.0, 1.5]` (L30) — 候选速度档位表；本文件内除定义外无引用（**已确认**：`speed_types` 仅 L30 出现）。
 - 顶层数据表/字典: 无（`entity_names`/`card_types` 是列表，非字典；`b` 是对象实例）
 
-#### 2.89.1 CREnv [L33-161]
+#### 2.95.1 CREnv [L33-161]
 - 类型: class
 - 签名: `class CREnv(gym.Env):`（基类 `gym.Env`）
 - 作用: 单人对战 Gym 环境：观测 = 网格张量 + 手牌 + 圣水，动作 = (出牌槽位, y, x)，每步推进 0.5 秒模拟并回报塔/血/胜负奖励。
@@ -10974,7 +11364,7 @@
 - 调用: 被 `train.py:1`、`agent_pool.py:1,22`、`evaluate.py:4,47`、`train_autoregressive.py:1,20`、`watch_random_models.py:1,6`、`benchmark_speed.py:24,33` import 使用；本文件 L171 自用。
 - 置信度: 已确认
 
-##### 2.89.1.1 CREnv.__init__ [L34-49]
+##### 2.95.1.1 CREnv.__init__ [L34-49]
 - 类型: method
 - 签名: `def __init__(self, opponent_model=None, opponent_pool=None, visualize=False, speed=1.0, card_level=11):`
 - 作用: 保存对手/可视化/速度/卡等级配置，并建立观测空间与动作空间。
@@ -10989,7 +11379,7 @@
 - 调用: 由各训练/评估脚本构造（如 `train.py:102`、`evaluate.py:47`、`benchmark_speed.py:33`）；本方法内部调 `gym.spaces.Dict/Box/MultiDiscrete`。
 - 置信度: 已确认
 
-##### 2.89.1.2 CREnv.reset [L51-63]
+##### 2.95.1.2 CREnv.reset [L51-63]
 - 类型: method
 - 签名: `def reset(self, *, seed=None, options=None):`
 - 作用: 洗牌双方卡组（按对手池抽样）、新建一局战斗，返回初始观测与空 info。
@@ -11001,7 +11391,7 @@
 - 调用: 被 Gym 使用方调用（`train.py:79`、`benchmark_speed.py:79` 的 env.reset 路径）；内部调 `battle.BattleState`、`player.PlayerState`、`Visualizer`、`self.observe`。
 - 置信度: 已确认
 
-##### 2.89.1.3 CREnv.opponent_action [L65-72]
+##### 2.95.1.3 CREnv.opponent_action [L65-72]
 - 类型: method
 - 签名: `def opponent_action(self):`
 - 作用: 取对手观测、向对手策略要一个动作，并把其中「出牌」动作以 180° 旋转坐标部署到玩家 1 侧。
@@ -11011,7 +11401,7 @@
 - 调用: 被 `CREnv.step` L96 调用；内部调 `self.observe`、`self.opponent`、`battle.BattleState.deploy_card`（定义于 `battle.py:2806`）。
 - 置信度: 已确认
 
-##### 2.89.1.4 CREnv.step [L76-121]
+##### 2.95.1.4 CREnv.step [L76-121]
 - 类型: method
 - 签名: `def step(self, action):`
 - 作用: 执行一次决策（部署己方牌 + 对手动作 + 推进 30 帧模拟），返回新观测、奖励、终止/截断标志与 info。
@@ -11022,7 +11412,7 @@
 - 调用: Gym 训练/评估循环（`train.py:84`、`benchmark_speed.py:104`、`evaluate.py` 等）；内部调 `battle.BattleState.deploy_card`、`self.opponent_action`、`battle.BattleState.step`、`Visualizer.render_frame`、`self.observe`。
 - 置信度: 已确认
 
-##### 2.89.1.5 CREnv.observe [L124-161]
+##### 2.95.1.5 CREnv.observe [L124-161]
 - 类型: method
 - 签名: `def observe(self, player_id_observe=0):`
 - 作用: 把当前战斗状态编码成固定形状的 Dict 观测（32×18 网格 × 15 特征 + 5 张手牌编码 + 圣水标量）。
@@ -11033,7 +11423,7 @@
 - 调用: 被 `reset` L63、`step` L121、`opponent_action` L66 调用；内部读 `battle.entities`、（`Entity.to_dict` 之外的）实体字段与 `players[*].cycle`。
 - 置信度: 已确认
 
-#### 2.89.2 random_strategy [L164-168]
+#### 2.95.2 random_strategy [L164-168]
 - 类型: function
 - 签名: `def random_strategy(observation):`
 - 作用: 均匀随机基线策略：在合法离散范围内随机抽 (slot, y, x)。
@@ -11048,7 +11438,7 @@
 
 ---
 
-### 2.90 `src/clasher_new/evaluate.py`
+### 2.96 `src/clasher_new/evaluate.py`
 
 - **分析组**：G038　**行数**：64　**AST 符号数**：4
 
@@ -11062,7 +11452,7 @@
 - 顶层数据表/字典: 无
 - 顶层执行段（L45-64，非符号，附带说明）: 对 `steps` 每个标签 `PPO.load(f"cr_logs/cr_{step}.zip", seed=None)`（L46）；`env = CREnv(opponent_model=random_strategy, visualize=False)`（L47，注意**不是**用刚定义的 SequentialEvalEnv）；打印评估头；`for i in tqdm(range(games_count))` 中 `env.reset()`、循环 `model.predict(obs)` → `env.step(action)` 直到 termination/truncation，累加 reward；`games_won += (1-env.battle.winner)`（L62）；最后打印 `Win rate` 与 `Mean reward`。注意 `env.battle.winner` 为 None（平局）时 `1-None` 会 TypeError；且 `import sys`、`import torch` 在本文件内未被使用（死导入）。
 
-#### 2.90.1 evaluate.SequentialEvalEnv [L13-34]
+#### 2.96.1 evaluate.SequentialEvalEnv [L13-34]
 - 类型: class（`class SequentialEvalEnv(CREnv)`，bases=['CREnv']）
 - 签名: `class SequentialEvalEnv(CREnv):`
 - 作用: 自定义评估环境：用固定起点卡组 `start_deck` 作为 P1（对手）卡组，并按 `events` 事件表在对局特定时刻让 P1 出指定牌；P0 卡组沿用 `environment.player_0_deck` 且每次 reset 后 shuffle。
@@ -11072,7 +11462,7 @@
 - 调用: 模块内仅在 L38-41 的注释示例中出现（被注释掉）；顶层评估实际用的是 `CREnv`（L47）⇒ **本类在当前文件状态下未被实例化**。
 - 置信度: 已确认
 
-##### 2.90.1.1 SequentialEvalEnv.__init__ [L14-17]
+##### 2.96.1.1 SequentialEvalEnv.__init__ [L14-17]
 - 类型: method
 - 签名: `__init__(self, start_deck, events, visualize=False, speed=1.0)`
 - 作用: 保存评估用卡组与事件表，转发渲染参数。
@@ -11085,7 +11475,7 @@
 - 实现: L15 `super().__init__(visualize=visualize, speed=speed)`；L16 `self.deck = start_deck`（**未复制**，与 reset 里的 `[:]` 形成对比）；L17 `self.events = events`。
 - 置信度: 已确认
 
-##### 2.90.1.2 SequentialEvalEnv.reset [L19-28]
+##### 2.96.1.2 SequentialEvalEnv.reset [L19-28]
 - 类型: method
 - 签名: `reset(self, *, seed=None, options=None)`
 - 作用: 重置环境：重洗 P0 卡组并新建 BattleState（双方 9.0 初费），返回初始观测。
@@ -11096,7 +11486,7 @@
 - 实现: L20 `super().reset(seed=seed, options=options)`（父类 reset 内部已 shuffle 双方卡组并各自建 5.0 费的 battle，`environment.py:52-61`）；L21 `shuffle(player_0_deck)`（模块级 random.shuffle，原地洗）；L22-23 **重新**构造 `battle.BattleState`，P0 用 `player_0_deck[:]`、9.0 费，P1 用 `self.deck[:]`、9.0 费——即覆盖父类刚建的 battle（父类那一次的随机种子状态因此被丢弃）；L24-25 若 visualize 则新建 `Visualizer(self.battle)`；L28 返回 `self.observe(0), {}`（观测实现继承父类 `environment.py:124`）。**未调用 `super().reset` 之后父类期望的其它初始化**无法确认是否有必要（原因：CREnv.reset 全文已读，只有 shuffle+battle+visualizer 三步，无其它副作用）。
 - 置信度: 已确认
 
-##### 2.90.1.3 SequentialEvalEnv.opponent_action [L30-34]
+##### 2.96.1.3 SequentialEvalEnv.opponent_action [L30-34]
 - 类型: method
 - 签名: `opponent_action(self)`
 - 作用: 按事件表在时间匹配时让 P1 在镜像坐标部署指定卡。
@@ -11109,7 +11499,7 @@
 
 ---
 
-### 2.91 `src/clasher_new/evo_2025_data.py`
+### 2.97 `src/clasher_new/evo_2025_data.py`
 
 - **分析组**：G035　**行数**：287　**AST 符号数**：3
 
@@ -11145,7 +11535,7 @@
   - `MERGE_MAIDEN_NORMAL_SCD`（L234-242）— M7：**地面近战**形态：同上但 `speed=90`、`hitSpeed=1200`、`loadTime=300`、`range=1200`、`attacksAir=False`、`tid='TID_CHARACTER_MERGE_MAIDEN_NORMAL'`、`tidTarget='TID_TARGETS_GROUND'`、`tidSpeed='TID_SPEED_4'`
   - 注释中给出的数值反推依据（L218-223）：两形态共享 hp/dmg per-hit，Fandom 表 air dps 159.4 = 255/1.6、ground dps 212.5 = 255/1.2 反推吻合；基准 = Legendary 轴起始 lv9（hp 1486 / dmg 255，与官方数值表行 per-level 首值一致）；`collisionRadius` 快照无字段 → `[假设]` 500
 
-#### 2.91.1 _register [L173-182]
+#### 2.97.1 _register [L173-182]
 - 类型: function
 - 签名: `_register(char_def, hp_pl, dmg_pl, rarity, card_data, characters, character_to_card)`
 - 作用: 登记派生角色——在 `card_data` 合成卡入口、在 `characters` 写官方数值表行（显式数组）。
@@ -11162,7 +11552,7 @@
 - 调用: 只被同文件 `apply` 三次调用（L192 / L196 / L202）。写入的 `characters`/`card_data` 由 `card_utils.py:172-174` 传入。
 - 置信度: 已确认
 
-#### 2.91.2 apply [L185-203]
+#### 2.97.2 apply [L185-203]
 - 类型: function
 - 签名: `apply(card_data, characters, character_to_card)`
 - 作用: `card_utils` 导入末尾调用：注入 7 卡 `evolvedSpellsData` + 注册 3 个派生角色。
@@ -11175,7 +11565,7 @@
 - 调用: 被 `card_utils.py:173`（`_evo_2025_mod.apply(card_data, characters, character_to_card)`）在模块导入末尾调用；紧随其后 `card_utils.py:175` 调用 `apply_m7`。它调用了 `_register`。
 - 置信度: 已确认
 
-#### 2.91.3 apply_m7 [L245-287]
+#### 2.97.3 apply_m7 [L245-287]
 - 类型: function
 - 签名: `apply_m7(card_data, characters, character_to_card, air_units=None)`
 - 作用: M7 数据接入补全（`card_utils` 导入末尾、紧随 `apply()` 调用）：① VinesProjectile 弹速注入；② Spirit Empress 双形态 `summonCharacterData` 挂载；③ MergeMaiden_Mounted 飞行标记；④ MergeMaiden_Normal 官方数值表行补建。
@@ -11191,7 +11581,7 @@
 
 ---
 
-### 2.92 `src/clasher_new/evolutions.py`
+### 2.98 `src/clasher_new/evolutions.py`
 
 - **分析组**：G037　**行数**：133　**AST 符号数**：3
 
@@ -11205,7 +11595,7 @@
   - `M5_EVO_PASSTHROUGH` (L48-67) — tuple（字段名白名单），`collect_evo_mechanics` 与 `derive_evolved_stats` 用它决定哪些觉醒机制字段透传到 `Entity.evo`。按注释分组：Pekka 复活 3 项（`tempResurrect`/`resurrectParameters`/`onKilledDoneAction`）；MegaKnight 冲刺 7 项（`dashDamage`…`pushBackStrength`）；链电/二段爆炸 2 项（`chainedHitCount`/`spawnChain`）；通用动作组 9 项（`subActionsData`/`actionsData`/`actionToExecute`/`actionToExecuteData`/`onHitActionData`/`onHitTargetActionData`/`healthPercentages`/`nextAction.spawnData` 等）；建筑类 10 项（`hideHpThresholds`…`spawnPauseTime`）；其他 6 项（`decoyData`/`allowedOverHealPerc`/`customRange`/`specialAttackRangeForStats`/`hitFrequency`/`areaEffectObjectData`）；M6 追加 `evo2025Hooks`。注释 L46-47 说明纯视觉/导出字段（`*Effect`/`Export`/`shadow`/`healthBar`）不在列。
 - 顶层数据表/字典: `EVOLUTION_CYCLES`（觉醒周期表）、`OFFICIAL_OVERRIDES`（官方数值覆盖表），含义见上。
 
-#### 2.92.1 collect_evo_mechanics [L70-86]
+#### 2.98.1 collect_evo_mechanics [L70-86]
 - 类型: function
 - 签名: `def collect_evo_mechanics(evo_raw):`
 - 作用: 递归遍历任意嵌套的 `evolvedSpellsData` 结构，把白名单内的机制字段收集成扁平 dict（同名键首见优先）。
@@ -11216,7 +11606,7 @@
 - 调用: `battle.py:8` 导入；被 `battle.py:795`（Troop 觉醒应用）与 `battle.py:1255`（建筑觉醒应用）以 `collect_evo_mechanics(evo_raw).items()` 形式调用，结果用 `stats.setdefault(k, v)` 合并（不覆盖 `derive_evolved_stats` 已给的值）。
 - 置信度: 已确认
 
-#### 2.92.2 evolution_state [L89-95]
+#### 2.98.2 evolution_state [L89-95]
 - 类型: function
 - 签名: `def evolution_state(plays: int, card_name: str):`
 - 作用: 按「本次出牌前该卡已打出次数」判断本手是否处于觉醒形态。
@@ -11228,7 +11618,7 @@
 - 调用: `battle.py:8` 导入；`battle.py:2863` 在 `deploy_card` 内用于计算 `evolved = bool(card_info.evo_raw and card_name in _p.evo_slots and card_name not in _p.hero_slots and evolution_state(_p.evo_plays.get(card_name, 0), card_name))`（其中 `evo_plays`/`evo_slots`/`hero_slots` 定义于 `player.py:12-13,19`）。`scripts/test_m4_evo7.py:264` 的 docstring 提到该函数的周期触发路径被测试覆盖。
 - 置信度: 已确认
 
-#### 2.92.3 derive_evolved_stats [L98-133]
+#### 2.98.3 derive_evolved_stats [L98-133]
 - 类型: function
 - 签名: `def derive_evolved_stats(card_name, evolved_scd, base_card, characters, buildings, level=11):`
 - 作用: 从觉醒形态定义 `evolved_scd`（`evolvedSpellsData.summonCharacterData`）推导出目标等级的觉醒属性 dict：血量按基础卡 per-level 曲线等比放大，护盾按统一 1.1^级 曲线放大，其余机制字段原样透传。
@@ -11246,7 +11636,7 @@
 
 ---
 
-### 2.93 `src/clasher_new/hook_raw_capture.js`
+### 2.99 `src/clasher_new/hook_raw_capture.js`
 
 - **分析组**：GX01　**行数**：240　**AST 符号数**：不适用（非 .py）
 
@@ -11262,7 +11652,7 @@
 - 顶层数据表/字典: `OFFSETS`（见上，键=函数名、值=模块内偏移）；另有内联字典 `entity_layout`（L228-L235：`registry:0x08, collection:0x40, data:0x08, count:0x14, owner:0x18, hp_component:0x10`），在 `capture_ready` 事件里回传给宿主，声明实体读取链路各段偏移。
 - 运行方式: 不作为独立程序运行；由 `src/clasher_new/run_raw_capture.py` 读成字符串经 Frida 注入 Android 目标进程（`run_raw_capture.py:20/60-62`；`adb forward tcp:27042`、`frida-server` 见同文件 L16、L23-L26）。
 
-#### 2.93.1 p64 [L23-26]
+#### 2.99.1 p64 [L23-26]
 - 类型: function
 - 签名: `function p64(address, offset)`
 - 作用: 读一个 8 字节指针：返回 `address+offset` 处的指针值，越界/不可读时返回空指针 `ptr(0)`。
@@ -11274,7 +11664,7 @@
 - 调用: 被 `readEntity`（L51-L52）、`readBattleEntities`（L80-L82）、`readPlayerIdentity`（L98）、快照回调（L159-L160、L172、L211）调用；它调用 `NativePointer.add` / `.readPointer` 与 `ptr`（Frida 全局）——已确认（同文件内调用点已逐一核对）。
 - 置信度: 已确认
 
-#### 2.93.2 i32 [L27-30]
+#### 2.99.2 i32 [L27-30]
 - 类型: function
 - 签名: `function i32(address, offset)`
 - 作用: 读 32 位有符号整数（`address+offset`），读取失败返回 `null`。
@@ -11286,7 +11676,7 @@
 - 调用: 被 `readEntity`（L41-L48、L54-L55、L70）、`readBattleEntities`（L83）、`readPlayerIdentity`（L101）、快照回调（L172-L173、L207、L210、L214）调用；内部调用 `NativePointer.readS32`——已确认。
 - 置信度: 已确认
 
-#### 2.93.3 u32 [L31-34]
+#### 2.99.3 u32 [L31-34]
 - 类型: function
 - 签名: `function u32(address, offset)`
 - 作用: 读 32 位无符号整数（`address+offset`），读取失败返回 `null`。
@@ -11298,7 +11688,7 @@
 - 调用: 被 `readPlayerIdentity` 在 L108（遍历 roster 读每个账户 id）和 L110（读本地账户 id）调用——已确认。
 - 置信度: 已确认
 
-#### 2.93.4 f32 [L35-38]
+#### 2.99.4 f32 [L35-38]
 - 类型: function
 - 签名: `function f32(address, offset)`
 - 作用: 读 32 位浮点数（`address+offset`），读取失败返回 `null`。
@@ -11310,7 +11700,7 @@
 - 调用: 仅被快照回调 L208 调用（`battle_clock_220`）——已确认（全文仅此一处引用）。
 - 置信度: 已确认
 
-#### 2.93.5 readEntity [L40-73]
+#### 2.99.5 readEntity [L40-73]
 - 类型: function
 - 签名: `function readEntity(entity)`
 - 作用: 从一个战斗实体对象按固定偏移抽出一组字段（种类/阵营/两组坐标/卡牌 id/等级/血量），组成供宿主消费的普通 JS 对象；HP 链路读不到时返回 `null`。
@@ -11321,7 +11711,7 @@
 - 调用: 被 `readBattleEntities` L89 调用；它调用 `i32`（L41-L48、L54-L55、L70）与 `p64`（L51-L52）——已确认。
 - 置信度: 已确认
 
-#### 2.93.6 readBattleEntities [L75-93]
+#### 2.99.6 readBattleEntities [L75-93]
 - 类型: function
 - 签名: `function readBattleEntities(hpState)`
 - 作用: 从 `hpState` 出发沿"registry → collection → 指针数组"三级解引用，遍历实体集合，逐个调用 `readEntity` 收集观察结果。
@@ -11332,7 +11722,7 @@
 - 调用: 被快照回调 L200 调用（结果经 L220-L221 的 `entity_list_valid` / `entities` 发出）；它调用 `p64`、`i32`、`readEntity`——已确认。
 - 置信度: 已确认
 
-#### 2.93.7 readPlayerIdentity [L95-114]
+#### 2.99.7 readPlayerIdentity [L95-114]
 - 类型: function
 - 签名: `function readPlayerIdentity(manager)`
 - 作用: 取本局玩家名册并定位"本地账户 id"，返回 `[本地id, 名册id数组]`；任何一步失败返回 `null`。
@@ -11385,7 +11775,7 @@
 - 调用: 由 `setInterval(..., SNAPSHOT_INTERVAL_MS)`（L223）每 100 ms 调用一次；它调用 `p64/i32/f32`、`getCardByHandSlot`、`cardObjectToData`、`getNextCard`、`getManager`、`getHpState`、`getTowerHp`、`readBattleEntities`、`readPlayerIdentity`、`send`。事件接收方为 `run_raw_capture.py:48-55`（`payload['event'] == 'runtime_snapshot'` 分支）——已确认。
 - 置信度: 已确认
 
-#### 2.93.8 keepAlive [L240]
+#### 2.99.8 keepAlive [L240]
 - 类型: function（具名函数表达式，作为 `setInterval` 参数）
 - 签名: `function keepAlive() {}`
 - 作用: 空函数，作为 1 秒周期的定时器占位，让注入脚本保持存活并继续接收事件。
@@ -11397,7 +11787,7 @@
 
 ---
 
-### 2.94 `src/clasher_new/minimal_visualizer.py`
+### 2.100 `src/clasher_new/minimal_visualizer.py`
 
 - **分析组**：G036　**行数**：214　**AST 符号数**：12
 
@@ -11412,7 +11802,7 @@
   - `model = PPO.load('cr_logs/cr_20461248n_steps.zip')`（L22）— **模块导入即加载**的稳定基线 PPO 模型，路径为相对路径（依赖 cwd）。
 - 顶层数据表/字典: `cards`（L63-65）— 由 `cards.json` 读入，`{each['id']: each['name'] for each in card_data['items']}`，即卡 id → 卡名映射。文件末尾 L211-214 为**脚本主体**：构造 `Visualizer()`、另起线程跑 `mainloop(window)`、主线程 `window.run()`——因此该模块被 import 会产生窗口、线程与网络/设备副作用。
 
-#### 2.94.1 slot_to_screen [L34-35]
+#### 2.100.1 slot_to_screen [L34-35]
 - 类型: function
 - 签名: `slot_to_screen(slot)`
 - 作用: 把手牌槽位号映射到模拟器屏幕上的手牌图标坐标。
@@ -11423,7 +11813,7 @@
 - 调用: 被同文件 `swipe()` 调用（L41）。无其他调用者。
 - 置信度: 已确认
 
-#### 2.94.2 tile_to_screen [L37-38]
+#### 2.100.2 tile_to_screen [L37-38]
 - 类型: function
 - 签名: `tile_to_screen(tile_x, tile_y)`
 - 作用: 把战场格子坐标换算为模拟器屏幕像素坐标（y 轴翻转：格子 y 增大 → 屏幕 y 减小）。
@@ -11435,7 +11825,7 @@
 - 调用: 被同文件 `swipe()` 调用（L42）。无其他调用者。
 - 置信度: 已确认
 
-#### 2.94.3 swipe [L40-58]
+#### 2.100.3 swipe [L40-58]
 - 类型: function
 - 签名: `swipe(slot, y, x)`
 - 作用: 通过 `adb` 在设备 `emulator-5554` 上执行一次滑动手势，把指定手牌槽拖到目标格。
@@ -11448,7 +11838,7 @@
 - 调用: 被同文件 `Visualizer.draw_entities` 调用（L175）。无其他调用者。
 - 置信度: 待确认(参数 y/x 与模型输出语义的对应关系只能靠命名推断；形参名与实参顺序存在错位嫌疑)
 
-#### 2.94.4 w2s [L60-61]
+#### 2.100.4 w2s [L60-61]
 - 类型: function
 - 签名: `w2s(x, y)`
 - 作用: 把战场世界坐标（格）换算为 pygame 窗口内的像素坐标。
@@ -11460,7 +11850,7 @@
 - 调用: 被同文件 `Visualizer.draw_entities` 调用（L143）。无其他调用者。
 - 置信度: 已确认
 
-#### 2.94.5 Visualizer [L67-209]
+#### 2.100.5 Visualizer [L67-209]
 - 类型: class
 - 签名: `class Visualizer:`
 - 作用: pygame 可视化器：持有窗口/时钟/字体与最新战斗快照，负责绘制战场、实体、UI，并在绘制过程中顺带用 PPO 模型出招。
@@ -11469,7 +11859,7 @@
 - 实现: 类体仅 7 个方法，无类属性、无 `__slots__`；状态全部在 `__init__` 建立（screen/clock/font/entities/snapshot/local_player_index/running/start_time）。绘制与决策耦合在 `draw_entities` 内（L168-175）。该类依赖模块级全局 `cards`、`model`、`entity_names`、`card_types`。
 - 置信度: 已确认
 
-##### 2.94.5.1 Visualizer.__init__ [L68-77]
+##### 2.100.5.1 Visualizer.__init__ [L68-77]
 - 类型: method
 - 签名: `__init__(self)`
 - 作用: 初始化 pygame 窗口、时钟、字体与各类状态字段。
@@ -11478,7 +11868,7 @@
 - 实现: L70 `pygame.display.set_mode((W, H))` 建窗口；L71 建 60 fps 时钟；L72 建默认字体（大小 18）；L73 `self.entities = {}`、L74 `self.snapshot = {}`、L75 `self.local_player_index = None`、L76 `self.running = True`、L77 `self.start_time = time.time()`。L69 的 docstring「If given a battle object, then render that battle.」与签名（无参数）不符，疑为残留注释。
 - 置信度: 已确认
 
-##### 2.94.5.2 Visualizer.draw_arena [L79-90]
+##### 2.100.5.2 Visualizer.draw_arena [L79-90]
 - 类型: method
 - 签名: `draw_arena(self)`
 - 作用: 绘制静态战场底图：绿色场地、青色河道、两座桥、四角灰色王区与 18×32 网格线。
@@ -11487,7 +11877,7 @@
 - 实现: L80 画整块绿色战场 `(AX,AY,AW,AH)`；L81-82 在 `AY+15*TILE` 处画高 2 格的青色河道；L83-84 在 bx∈{2,13} 处画宽 3 格、高 2 格的深灰桥面；L85-88 画四条王区深灰带（顶端/底端各左右两条，宽 6 格高 1 格）；L89 画 19 条竖网格线、L90 画 33 条横网格线（各自用 `range` + `pygame.draw.line`，颜色 `(0,150,0)`，粗 1）。全部坐标为硬编码，未使用 `TileGrid`/`arena.py` 的常量。
 - 置信度: 已确认
 
-##### 2.94.5.3 Visualizer.draw_entities [L92-175]
+##### 2.100.5.3 Visualizer.draw_entities [L92-175]
 - 类型: method
 - 签名: `draw_entities(self)`
 - 作用: 遍历快照中的实体：把每个实体转成环境口径的观测行写入 32×18×15 的 `obs` 网格，并在窗口上画圆点、名字、血条与血量数字；同时按 1.5 s 节流用 PPO 模型预测一次动作并通过 adb 出招。
@@ -11496,7 +11886,7 @@
 - 实现: L93 建 `obs = np.zeros((32, 18, 15), dtype=np.float32)`，L94 计数 `non_tower_count`。L95-111 逐实体定名：`card_id_ac == -1` 且 `kind_30 in (12, 13)` 视为塔（`name` 由该真值条件赋为 `"KingTower"` 或 `'King_PrincessTowers'`，此处 `if entity['kind_30']` 的判断与 `kind_30 in (12,13)` 组合下只会命中 13 分支，`'King_PrincessTowers'` 分支不可达——按源码字面陈述）；否则 `non_tower_count += 1`，再按 `card_id_ac` 查 `cards`（命中→卡名；`== -1`→`continue` 跳过；字符串前缀 `'13'`→`real_id = id + 13000000` 取 `'Evo ' + 名`；前缀 `'203'`→`real_id = id - 177000000` 取 `"Hero"+名`；否则打印 `'Entity unknown:'` 并直接把 id 当 name）。L112 半径 `r = 0.5*TILE`。L113-118 坐标与颜色：`local_player_index == 1` 时用原坐标、`side_78==1` 判蓝；否则镜像 `x = 18-pos_x/1000`、`y = 32-pos_y/1000`、`side_78==0` 判蓝。L120-141 构造观测行：`Card(name)` 取 elixir/type/speed/attack_ground/attack_air/range/sight_range/damage/projectile damage；`player_id` 硬编码 0（注释：己方部队恒为 0）；`hp_left = log(hp_10)/10`（hp=0 时为 0）；`hp_percentage = hp_10 / card.hp`（card.hp=0 时为 0）；格位 `x1,y1 = max(int(x),17), int(31-y)` 后 `obs[y1][x1] = obs_arr.copy()`（注释 L120 说明这是「环境兼容观测」；`max(...,17)` 使 x1 恒为 17，可疑但按源码陈述）。L143-155 画图：`w2s(x,y)` 画填充圆 + 黑边（半径 `max(r,4)`）、名字文本（居中于圆下方 10 px）、血条黑底绿条（宽 `max(r*2,16)`，`hp_width` 按 `entity['max_hp_14']` 归一，`max_hp<=0` 时取满宽）、血量数字。L156-162 组手牌：遍历 `snapshot['hand']` 用 `data_id_40` 查 `cards`（查不到则不入列），再追加 `next_card_data_id_40` 对应卡，最后转成 `entity_names.index()` 的 int32 数组。L163-167 组 `final_observation = {'grid': obs, 'hand': hand, 'elixir': np.array([own_elixir_1e0], float32)}`。L168-175 节流出招：`time.time()-start_time > 1.5` 且 `non_tower_count > 0` 时重置计时，`slot, y, x = model.predict(final_observation)[0]`；`slot != 0` 时取手牌卡名、`Card(card_name).elixir` 若不大于当前圣水则 `swipe(slot, y, x)`，否则直接 `return`（**提前返回导致本轮剩余实体不再绘制**）。
 - 置信度: 已确认（对 `model.predict` 输出三元组的语义与 `swipe` 形参命名的对应关系：待确认）
 
-##### 2.94.5.4 Visualizer.draw_ui [L177-188]
+##### 2.100.5.4 Visualizer.draw_ui [L177-188]
 - 类型: method
 - 签名: `draw_ui(self)`
 - 作用: 在战场下方绘制一行状态文本：战斗时钟、己方圣水与手牌列表。
@@ -11505,7 +11895,7 @@
 - 实现: L178-185 按 `snapshot['hand']` 的 `data_id_40` 查 `cards` 组手牌名，查不到则打印 `'Unknown card in hand:'` 并把 id 字符串入列；L186 拼 `f"t={battle_clock_220:.1f}s elixir={own_elixir_1e0} hand={hand}"`；L187-188 渲染并 blit 到 `(AX, AY+AH+10)`。与 `draw_entities` 不同，此处**不追加** `next_card_data_id_40`。
 - 置信度: 已确认
 
-##### 2.94.5.5 Visualizer.process_events [L190-193]
+##### 2.100.5.5 Visualizer.process_events [L190-193]
 - 类型: method
 - 签名: `process_events(self)`
 - 作用: 消费 pygame 事件队列，收到 `QUIT` 时把 `self.running` 置 False。
@@ -11514,7 +11904,7 @@
 - 实现: L191 遍历 `pygame.event.get()`；L192-193 仅处理 `pygame.QUIT`。其余事件（键盘/鼠标）被丢弃。
 - 置信度: 已确认
 
-##### 2.94.5.6 Visualizer.render_frame [L195-201]
+##### 2.100.5.6 Visualizer.render_frame [L195-201]
 - 类型: method
 - 签名: `render_frame(self)`
 - 作用: 渲染一帧：清屏、限帧、依次画战场/实体/UI，再 flip 显示。
@@ -11523,7 +11913,7 @@
 - 实现: L196 白底填充；L197 `self.clock.tick(60)` 限制 60 fps（**在绘制前调用**，其返回值被丢弃）；L198-200 依次 `draw_arena`→`draw_entities`→`draw_ui`；L201 `pygame.display.flip()`。绘制顺序决定实体与 UI 覆盖层级。
 - 置信度: 已确认
 
-##### 2.94.5.7 Visualizer.run [L203-209]
+##### 2.100.5.7 Visualizer.run [L203-209]
 - 类型: method
 - 签名: `run(self)`
 - 作用: 主循环：在 `self.running` 为真期间处理事件，并在快照就绪时逐帧渲染，退出后关闭 pygame。
@@ -11534,7 +11924,7 @@
 
 ---
 
-### 2.95 `src/clasher_new/new_visualization.py`
+### 2.101 `src/clasher_new/new_visualization.py`
 
 - **分析组**：G037　**行数**：137　**AST 符号数**：10
 
@@ -11554,7 +11944,7 @@
   - `schedule2` (L129-130) — 另一份 2 条目的剧本；`__main__` 未使用（**已确认**：`schedule2` 仅 L129 定义处出现）。
 - 顶层数据表/字典: 无（`schedule`/`schedule2` 是列表）
 
-#### 2.95.1 w2s [L14-16]
+#### 2.101.1 w2s [L14-16]
 - 类型: function
 - 签名: `def w2s(x, y):`
 - 作用: 世界坐标 → 屏幕像素坐标（翻转 y 轴，因为屏幕 y 向下）。
@@ -11566,7 +11956,7 @@
 - 调用: `Visualizer.draw_entities` L53 调用。
 - 置信度: 已确认
 
-#### 2.95.2 Visualizer [L19-116]
+#### 2.101.2 Visualizer [L19-116]
 - 类型: class
 - 作用: 一局战斗的 pygame 渲染与交互外壳：持有 screen/clock/font/battle，提供部署（含延迟预约）、分层绘制、事件处理、单帧渲染与主循环。
 - 参数: 无（类本身）
@@ -11575,7 +11965,7 @@
 - 调用: 被 `environment.py:2,61`、`evaluate.py:2,25`、`rl/env_wrapper.py:384-385` import/构造；本文件 L134 `__main__` 构造。
 - 置信度: 已确认
 
-##### 2.95.2.1 Visualizer.__init__ [L20-29]
+##### 2.101.2.1 Visualizer.__init__ [L20-29]
 - 类型: method
 - 签名: `def __init__(self, battle=None):`
 - 作用: 建窗口/时钟/字体，绑定或新建一局战斗，初始化交互状态与预约队列。
@@ -11586,7 +11976,7 @@
 - 调用: `environment.py:61`（`visualize=True` 时）、`evaluate.py:25`、`rl/env_wrapper.py:385`。
 - 置信度: 已确认
 
-##### 2.95.2.2 Visualizer.deploy [L31-35]
+##### 2.101.2.2 Visualizer.deploy [L31-35]
 - 类型: method
 - 签名: `def deploy(self, card, pos, player=0, delay=0):`
 - 作用: 立即或预约一次卡牌部署。
@@ -11600,7 +11990,7 @@
 - 调用: 本文件 L136（`__main__` 逐条剧本）调用；部署动作最终由 `run` L110-114 的预约分支消费。
 - 置信度: 已确认
 
-##### 2.95.2.3 Visualizer.draw_arena [L37-48]
+##### 2.101.2.3 Visualizer.draw_arena [L37-48]
 - 类型: method
 - 签名: `def draw_arena(self):`
 - 作用: 画竞技场底图：草地、河道、双桥、四角塔基座、网格线。
@@ -11610,7 +12000,7 @@
 - 调用: `render_frame` L98 调用。
 - 置信度: 已确认
 
-##### 2.95.2.4 Visualizer.draw_entities [L50-72]
+##### 2.101.2.4 Visualizer.draw_entities [L50-72]
 - 类型: method
 - 签名: `def draw_entities(self):`
 - 作用: 逐个绘制存活实体的圆形本体、名字标签与血条（建筑额外画整数血量）。
@@ -11620,7 +12010,7 @@
 - 调用: `render_frame` L99 调用；依赖 `battle.Building`/`battle.Projectile` 判型（L2 导入）。
 - 置信度: 已确认
 
-##### 2.95.2.5 Visualizer.draw_ui [L74-82]
+##### 2.101.2.5 Visualizer.draw_ui [L74-82]
 - 类型: method
 - 签名: `def draw_ui(self):`
 - 作用: 在竞技场下方画状态文本（时间/tick/速度），结束时追加胜者；暂停时在顶部画 PAUSED。
@@ -11630,7 +12020,7 @@
 - 调用: `render_frame` L100 调用。
 - 置信度: 已确认
 
-##### 2.95.2.6 Visualizer.process_events [L84-94]
+##### 2.101.2.6 Visualizer.process_events [L84-94]
 - 类型: method
 - 签名: `def process_events(self):`
 - 作用: 消费 pygame 事件队列：关闭窗口/ESC 退出、空格暂停、数字键 1-5 设速度。
@@ -11640,7 +12030,7 @@
 - 调用: `run` L105 调用。
 - 置信度: 已确认
 
-##### 2.95.2.7 Visualizer.render_frame [L96-101]
+##### 2.101.2.7 Visualizer.render_frame [L96-101]
 - 类型: method
 - 签名: `def render_frame(self):`
 - 作用: 画一帧并翻页。
@@ -11650,7 +12040,7 @@
 - 调用: `run` L115 调用、`environment.py:104`（`CREnv.step` 内）。**注意**：`CREnv.step` 每帧调用一次本方法，但 `render_frame` 不处理事件队列 ⇒ 在 RL 环境路径下窗口事件不会被消费（依赖 `run()` 才有交互）。
 - 置信度: 已确认
 
-##### 2.95.2.8 Visualizer.run [L103-116]
+##### 2.101.2.8 Visualizer.run [L103-116]
 - 类型: method
 - 签名: `def run(self):`
 - 作用: 实时主循环：处理事件、按速度倍率推进模拟、结算预约部署、渲染；退出时关闭 pygame。
@@ -11664,7 +12054,7 @@
 
 ---
 
-### 2.96 `src/clasher_new/pathfinding.py`
+### 2.102 `src/clasher_new/pathfinding.py`
 
 - **分析组**：G037　**行数**：148　**AST 符号数**：8
 
@@ -11678,7 +12068,7 @@
   - `cell_cache = {}` (L10) — `cell → Position` 的全局记忆化缓存（跨实例、跨局共享；Position 对象被复用，调用方若修改其字段会污染缓存）。
 - 顶层数据表/字典: 无（`contents` 是嵌套列表）
 
-#### 2.96.1 position_to_cell [L12-14]
+#### 2.102.1 position_to_cell [L12-14]
 - 类型: function
 - 签名: `def position_to_cell(position: Position):`
 - 作用: 世界坐标 → 半格网格下标（每世界单位 2 格）。
@@ -11689,7 +12079,7 @@
 - 调用: 本文件被 `EntityPathfinder.__init__` L40 与 `calculate` L67 调用。注意：`battle.py:4` 导入的是 **`pathfinding_heap`** 而非本模块，全仓未搜到 `from pathfinding import`/`import pathfinding`（**已确认**）⇒ 本模块在仓库内无 import 方。
 - 置信度: 已确认
 
-#### 2.96.2 cell_to_position [L16-20]
+#### 2.102.2 cell_to_position [L16-20]
 - 类型: function
 - 签名: `def cell_to_position(cell):`
 - 作用: 半格网格下标 → 该格中心的世界坐标（带缓存）。
@@ -11700,7 +12090,7 @@
 - 调用: 本文件 L71、L83、L101、L129 调用。无本仓外部调用方（同 S:position_to_cell 的说明）。
 - 置信度: 已确认
 
-#### 2.96.3 heuristic [L22-23]
+#### 2.102.3 heuristic [L22-23]
 - 类型: function
 - 签名: `def heuristic(current, goal):`
 - 作用: 两 Position 之间的切比雪夫距离 × 10，作为 A* 的启发函数。
@@ -11712,7 +12102,7 @@
 - 调用: 本文件内未被引用（`EntityPathfinder.calculate` 用的是 `self.heuristic`，L91/L122）。待确认：是否有本仓外部调用方 —— 全文检索未发现 `from pathfinding import`，故无。
 - 置信度: 已确认（本文件内未被调用）；外部调用方 = 未发现（已确认无 import 本模块的文件）
 
-#### 2.96.4 get_neighboring_points [L25-31]
+#### 2.102.4 get_neighboring_points [L25-31]
 - 类型: function
 - 签名: `def get_neighboring_points(x, y):`
 - 作用: 生成半格网格上的 8 邻域合法格。
@@ -11724,7 +12114,7 @@
 - 调用: `EntityPathfinder.calculate` L99 调用。
 - 置信度: 已确认
 
-#### 2.96.5 EntityPathfinder [L34-130]
+#### 2.102.5 EntityPathfinder [L34-130]
 - 类型: class
 - 作用: 为「某实体走向某目标」在 lane 网格上跑加权 A*，返回世界坐标路径点列表。
 - 参数: 无（类本身）
@@ -11733,7 +12123,7 @@
 - 调用: 本文件 L141 自用（`__main__` 演示）；本仓内 `battle.py:4` 导入的是 `pathfinding_heap` 的同名类，故本类的实战调用方 = 未发现（**已确认**：无文件 import 本模块）。
 - 置信度: 已确认
 
-##### 2.96.5.1 EntityPathfinder.__init__ [L35-42]
+##### 2.102.5.1 EntityPathfinder.__init__ [L35-42]
 - 类型: method
 - 签名: `def __init__(self, entity, target, battle_state):`
 - 作用: 记录起止坐标、实体/目标引用、起始格与战场，初始化目标格集合。
@@ -11746,7 +12136,7 @@
 - 调用: `battle.py:1180,1182,1197` 构造的是 `pathfinding_heap.EntityPathfinder`（非本类）；本文件 L141 构造本类。
 - 置信度: 已确认
 
-##### 2.96.5.2 EntityPathfinder.heuristic [L44-49]
+##### 2.102.5.2 EntityPathfinder.heuristic [L44-49]
 - 类型: method
 - 签名: `def heuristic(self, cell):`
 - 作用: 到当前目标格集合 `self.goals` 的最小切比雪夫距离 × 10。
@@ -11757,7 +12147,7 @@
 - 调用: `calculate` L91、L122 调用。
 - 置信度: 已确认
 
-##### 2.96.5.3 EntityPathfinder.calculate [L51-130]
+##### 2.102.5.3 EntityPathfinder.calculate [L51-130]
 - 类型: method
 - 签名: `def calculate(self):`
 - 作用: 先算出「能攻击到目标」的格子（对塔用矩形边缘距离口径），再以加权 A* 求从起始格到该格的最短路，返回世界坐标路径。
@@ -11775,7 +12165,7 @@
 
 ---
 
-### 2.97 `src/clasher_new/pathfinding_heap.py`
+### 2.103 `src/clasher_new/pathfinding_heap.py`
 
 - **分析组**：G036　**行数**：178　**AST 符号数**：8
 
@@ -11791,7 +12181,7 @@
   - 注意：两个缓存均为**模块级全局**且无上限，进程生命周期内持续增长；`contents` 在 import 时同步读取文件（文件缺失会直接抛异常）。
 - 顶层数据表/字典: 无内联数据表；地形表来自外部 `tilemap_lane_grid.txt`（结构见上）。
 
-#### 2.97.1 position_to_cell [L13-15]
+#### 2.103.1 position_to_cell [L13-15]
 - 类型: function
 - 签名: `position_to_cell(position: Position)`
 - 作用: 把世界坐标（格）映射到 36×64 半格网格的整数格坐标。
@@ -11802,7 +12192,7 @@
 - 调用: 被同文件 `EntityPathfinder.__init__`（L42）与 `calculate`（L75）调用；亦被 `battle.py:4` 导入并在 `battle.py:3055` 使用。
 - 置信度: 已确认
 
-#### 2.97.2 cell_to_position [L17-21]
+#### 2.103.2 cell_to_position [L17-21]
 - 类型: function
 - 签名: `cell_to_position(cell)`
 - 作用: 把半格网格坐标转回其中心的世界坐标，带模块级缓存。
@@ -11813,7 +12203,7 @@
 - 调用: 被同文件 `calculate` 多处调用（L79/L92/L106/L127/L159）；亦被 `battle.py:4` 导入并在 `battle.py:3041/3047` 使用。
 - 置信度: 已确认
 
-#### 2.97.3 get_neighboring_points [L23-33]
+#### 2.103.3 get_neighboring_points [L23-33]
 - 类型: function
 - 签名: `get_neighboring_points(x, y)`
 - 作用: 返回半格网格上 `(x, y)` 的 8 邻域中**落在 [0,36)×[0,64) 边界内**的格坐标列表，带缓存。
@@ -11825,7 +12215,7 @@
 - 调用: 被同文件 `calculate`（L125）调用；本次检索范围外未发现其他调用者。
 - 置信度: 已确认
 
-#### 2.97.4 EntityPathfinder [L36-160]
+#### 2.103.4 EntityPathfinder [L36-160]
 - 类型: class
 - 签名: `class EntityPathfinder:`
 - 作用: 单个实体到单个目标的路径规划器：先按「到目标边缘的距离」生成目标格集合与择优目标，再用 A* 在可通行半格网格上搜出路径并返回世界坐标序列。
@@ -11834,7 +12224,7 @@
 - 实现: 实例状态：`start_position`/`target_position`（拷贝出的 Position）、`target`/`entity`（原对象引用）、`start_cell`、`battle`、`goals`（set）、`goal`。方法 4 个：`heuristic`、`_target_footprint_radius`、`calculate`（`__init__` 之外无其他辅助）。被 `battle.py:1180/1182/1197` 以 `EntityPathfinder(self, current_target, self.battle_state).calculate()` 形式使用；`battle.py:4` 从本模块导入 `EntityPathfinder, position_to_cell, cell_to_position`（即 `pathfinding.py` 的同类实现被本模块取代）。
 - 置信度: 已确认
 
-##### 2.97.4.1 EntityPathfinder.__init__ [L37-45]
+##### 2.103.4.1 EntityPathfinder.__init__ [L37-45]
 - 类型: method
 - 签名: `__init__(self, entity, target, battle_state)`
 - 作用: 记录起点/终点位置（新建 Position 拷贝）、目标与实体引用、起点格、battle 引用，并初始化目标格集合与择优目标为空。
@@ -11846,7 +12236,7 @@
 - 实现: L38-39 用 `Position(entity.position.x, entity.position.y)` / 同式构造**坐标拷贝**（避免后续实体移动影响已算起点/终点）；L40-41 保存 `target`/`entity` 引用；L42 `self.start_cell = position_to_cell(self.start_position)`；L43 保存 `self.battle`；L44 `self.goals = set()`；L45 `self.goal = None`。构造时不校验 `target.position` 是否存在，若目标无 `position` 会抛 `AttributeError`。
 - 置信度: 已确认
 
-##### 2.97.4.2 EntityPathfinder.heuristic [L47-50]
+##### 2.103.4.2 EntityPathfinder.heuristic [L47-50]
 - 类型: method
 - 签名: `heuristic(self, cell)`
 - 作用: A* 启发式：当前格到 `self.goal` 的切比雪夫距离 ×10。
@@ -11856,7 +12246,7 @@
 - 实现: L48 解包当前格，L49 取 `self.goal`，L50 返回切比雪夫度量乘 10。乘 10 与 `calculate` 中直行 `geo_cost=10` 同量纲（对角 14），因此该启发式是 8 邻域网格上的一致（admissible 且 consistent）下界。**若在 `self.goal` 为 None 时调用会抛 TypeError**（`calculate` 在设好 goal 后才首次调用，L112-113）。
 - 置信度: 已确认
 
-##### 2.97.4.3 EntityPathfinder._target_footprint_radius [L52-63]
+##### 2.103.4.3 EntityPathfinder._target_footprint_radius [L52-63]
 - 类型: method
 - 签名: `_target_footprint_radius(self)`
 - 作用: 返回目标的占用半径：塔取矩形半轴较大者，非塔取圆形碰撞半径。
@@ -11865,7 +12255,7 @@
 - 实现: L57 `rect = getattr(self.target, '_tower_rect', 0)`（0 = 未绑定哨兵）；L58-60 若为 0 则调 `self.target._bind_tower_rect()` 重新读取；L61-62 `if rect is not None: return max(rect[2], rect[3])`（矩形半宽/半高较大者）；L63 回退返回 `collision_radius`。docstring（L53-56）说明理由：扫描窗需覆盖目标足迹+射程，塔矩形（王塔半宽 2.0）可能大于圆形碰撞半径（王塔 data 仍 1.0），取矩形半轴更稳。`_tower_rect`/`_bind_tower_rect` 定义在 `battle.py:1244`/`battle.py:170`，语义为「0=未绑定；None=非塔；tuple=塔矩形(cx,cy,hw,hh)」。
 - 置信度: 已确认
 
-##### 2.97.4.4 EntityPathfinder.calculate [L65-160]
+##### 2.103.4.4 EntityPathfinder.calculate [L65-160]
 - 类型: method
 - 签名: `calculate(self)`
 - 作用: 生成目标格集合、择优选出 `self.goal`，再用 A*（heapq）搜出从起点格到目标格的路径，返回对应的世界坐标列表。
@@ -11887,7 +12277,7 @@
 
 ---
 
-### 2.98 `src/clasher_new/player.py`
+### 2.104 `src/clasher_new/player.py`
 
 - **分析组**：G038　**行数**：67　**AST 符号数**：10
 
@@ -11899,7 +12289,7 @@
 - 顶层数据表/字典: 无
 - `__main__` 演示块（L60-67，非符号）: 构造 10 费 PlayerState，打印 cycle/elixir，然后两次 `play_card('Knight')` 并打印——因第一次已把 Knight 移出前 4 张，第二次返回 False（`can_play_card` L37 要求 card 在 `cycle[:4]`），用于人工观察循环行为。
 
-#### 2.98.1 player.PlayerState [L5-58]
+#### 2.104.1 player.PlayerState [L5-58]
 - 类型: class
 - 签名: `class PlayerState:`
 - 作用: 描述一名玩家的卡组循环与资源状态，并提供出牌/回复/皇冠查询接口。
@@ -11909,7 +12299,7 @@
 - 调用: 被 `battle.BattleState.__init__`（`battle.py:2543` 起使用 `player_0/player_1`）、`environment.CREnv.reset`（`environment.py:57-58`）、本组 `threat_calc.py:100-101`、`tmp_*` 测试与 `evaluate.py:22-23` 使用；`battle.py:2643-2650` 反向写入塔血字段。
 - 置信度: 已确认
 
-##### 2.98.1.1 PlayerState.__init__ [L6-15]
+##### 2.104.1.1 PlayerState.__init__ [L6-15]
 - 类型: method
 - 签名: `__init__(self, player_id, cycle_queue, elixir, tower_hps=(4824, 3052, 3052))`
 - 作用: 初始化玩家状态；手牌循环做浅拷贝，塔血按 (king, left, right) 顺序解包。
@@ -11922,7 +12312,7 @@
 - 实现: L7-10 写 `player_id/cycle/elixir/king_tower_hp/left_tower_hp/right_tower_hp`；L11 `last_card = None`（M1 镜像法术记录上一张）；L12 `evo_slots = set()`（M4 觉醒位 ≤2）；L13 `evo_plays = {}`（M4 觉醒周期计数 card_name→已打出次数）；L14 `hero_slots = set()`（M8 Hero 卡 ≤2，官方 Hero 槽 + Wild 槽共享上限）；L15 `tower_troop = None`（勘误批7 卡组第 9 张塔兵，None=默认 Princess）。
 - 置信度: 已确认
 
-##### 2.98.1.2 PlayerState.set_evolution_slots [L17-19]
+##### 2.104.1.2 PlayerState.set_evolution_slots [L17-19]
 - 类型: method
 - 签名: `set_evolution_slots(self, cards)`
 - 作用: 声明该卡组携带的觉醒卡（最多 2 个）。
@@ -11932,7 +12322,7 @@
 - 实现: `self.evo_slots = set(list(cards)[:2])`（L19）。静默截断到 2，不报错也不告警。
 - 置信度: 已确认
 
-##### 2.98.1.3 PlayerState.set_tower_troop [L21-25]
+##### 2.104.1.3 PlayerState.set_tower_troop [L21-25]
 - 类型: method
 - 签名: `set_tower_troop(self, name)`
 - 作用: 设定卡组第 9 张塔兵（两座公主塔共用），对局内不可更换。
@@ -11942,7 +12332,7 @@
 - 实现: L24 `assert name in (None, 'King_CannonTowers', 'King_KnifeTowers', 'King_ChefTowers')`（注意 `assert` 在 `-O` 下会被剥离，非硬校验），L25 赋值。消费点已确认：`battle.py:2554-2555` 用 `player.tower_troop or 'King_PrincessTowers'` 决定两座公主塔的卡名。
 - 置信度: 已确认
 
-##### 2.98.1.4 PlayerState.set_hero_slots [L27-30]
+##### 2.104.1.4 PlayerState.set_hero_slots [L27-30]
 - 类型: method
 - 签名: `set_hero_slots(self, cards)`
 - 作用: 声明该卡组 Hero 化的卡（≤2）。
@@ -11952,7 +12342,7 @@
 - 实现: `self.hero_slots = set(list(cards)[:2])`（L30）。docstring（L28-29）声明 Wild slot 互斥语义：Hero 形态部署 + 能力可用、觉醒禁用（二选一）——该互斥的**执行点不在本文件**，本类只存槽位集合（无法确认执行点，原因：本组范围外未追）。
 - 置信度: 已确认（就本文件行为而言）
 
-##### 2.98.1.5 PlayerState.regenerate_elixir [L32-34]
+##### 2.104.1.5 PlayerState.regenerate_elixir [L32-34]
 - 类型: method
 - 签名: `regenerate_elixir(self, dt: float, base_regen_time: float = 2.8)`
 - 作用: 按时间线性回复圣水，上限硬编码 10。
@@ -11963,7 +12353,7 @@
 - 实现: L33 `elixir_per_second = 1.0 / base_regen_time`；L34 `self.elixir = min(10, self.elixir + elixir_per_second * dt)`。调用点已确认：`battle.py:2688` 按阶段传不同 regen——`2.8`（<120s）、`1.4`（<240s）、`2.8/3`（加时段）。
 - 置信度: 已确认
 
-##### 2.98.1.6 PlayerState.can_play_card [L36-39]
+##### 2.104.1.6 PlayerState.can_play_card [L36-39]
 - 类型: method
 - 签名: `can_play_card(self, card_name)`
 - 作用: 判断某卡当前是否可打出（在手牌前 4 张、费用够、国王塔存活）。
@@ -11973,7 +12363,7 @@
 - 实现: 单表达式 `card_name in self.cycle[:4] and self.elixir >= Card(card_name).elixir and self.king_tower_hp > 0`（L37-39）。三个条件顺序短路；**注意没有检查 `card_name` 是否在 cycle 中就能通过（前 4 张即手牌）**，也不检查觉醒/Hero 槽与塔兵等机制是否允许。
 - 置信度: 已确认
 
-##### 2.98.1.7 PlayerState.play_card [L41-48]
+##### 2.104.1.7 PlayerState.play_card [L41-48]
 - 类型: method
 - 签名: `play_card(self, card_name)`
 - 作用: 扣费并把手牌轮转到队尾（更新循环）。
@@ -11984,7 +12374,7 @@
 - 调用: 被 `battle.py:2749` `p.play_card(card_name)` 调用（deploy_card 定义于 `battle.py:2806`）。本文件 `__main__` L64/L66 直接调用两次演示。
 - 置信度: 已确认
 
-##### 2.98.1.8 PlayerState.get_next_card [L50-52]
+##### 2.104.1.8 PlayerState.get_next_card [L50-52]
 - 类型: method
 - 签名: `get_next_card(self)`
 - 作用: 返回循环中「下一张」卡（手牌之后的那张）。
@@ -11993,7 +12383,7 @@
 - 实现: 单行 L52，直接按固定下标取（docstring L51 写 "Return the next card in cycle, if known." —— "if known" 的降级路径实际未实现）。
 - 置信度: 已确认
 
-##### 2.98.1.9 PlayerState.get_crown_count [L54-58]
+##### 2.104.1.9 PlayerState.get_crown_count [L54-58]
 - 类型: method
 - 签名: `get_crown_count(self) -> int`
 - 作用: 返回已摧毁的塔数（皇冠数）；国王塔倒直接算 3。
@@ -12007,7 +12397,7 @@
 
 ---
 
-### 2.99 `src/clasher_new/rl/__init__.py`
+### 2.105 `src/clasher_new/rl/__init__.py`
 
 - **分析组**：G045　**行数**：13　**AST 符号数**：0
 
@@ -12021,7 +12411,7 @@
 
 ---
 
-### 2.100 `src/clasher_new/rl/action_bundle.py`
+### 2.106 `src/clasher_new/rl/action_bundle.py`
 
 - **分析组**：G044　**行数**：110　**AST 符号数**：15
 
@@ -12034,7 +12424,7 @@
 - 模块级路径注入: L17-19 把 `src/clasher_new` 插入 `sys.path`。
 - 未使用导入: `Card`（L25）在本文件正文中无引用（仅 `player.cycle[self.slot-1]` 返回 str），属未使用导入。
 
-#### 2.100.1 sub_position [L31-39]
+#### 2.106.1 sub_position [L31-39]
 - 类型: function
 - 签名: `sub_position(player_id: int, x: int, y: int) -> Position`
 - 作用: 玩家本地网格坐标 (x, y) → 世界坐标（唯一换算入口）（L32）。
@@ -12047,14 +12437,14 @@
 - 调用: 被本文件 `SubAction.to_position` L68 调用；并被 `rl/action_mask.py:25`、`rl/env_wrapper.py:29`、`rl/mcts.py:33` import 复用（掩码层与提交层共用同一入口）。
 - 置信度: 已确认
 
-#### 2.100.2 SubAction [L43-72]
+#### 2.106.2 SubAction [L43-72]
 - 类型: class（`@dataclass` 装饰，L42）
 - 签名: `class SubAction:`
 - 作用: 单卡子动作：`slot = 1..4` 表示打出 `cycle[slot-1]`，`slot = 0` 为 no-op；`(x, y)` 为玩家本地网格坐标。`kind = "deploy"` 出牌（slot/x/y 生效），`kind = "ability"` 触发英雄技能（引擎 `battle.use_ability` 自动选取就绪英雄，slot/x/y 忽略）。
 - 实现: dataclass 字段（L53-56）`kind: str = "deploy"`、`slot: int = 0`、`x: int = 0`、`y: int = 0`；三个实例/类方法与一个旧接口兼容方法见下。
 - 置信度: 已确认
 
-##### 2.100.2.1 SubAction.ability [L59-60]
+##### 2.106.2.1 SubAction.ability [L59-60]
 - 类型: classmethod（`@classmethod`，L58）
 - 签名: `ability(cls) -> "SubAction"`
 - 作用: 构造"触发英雄技能"的子动作。
@@ -12063,7 +12453,7 @@
 - 实现: L60 `return cls(kind="ability")`。因 `x/y` 保持 0，技能类子动作不带落点。
 - 置信度: 已确认
 
-##### 2.100.2.2 SubAction.card_name [L62-65]
+##### 2.106.2.2 SubAction.card_name [L62-65]
 - 类型: method（注意：简报将其列为 `[function] card_name(self, player)`，源码为实例方法）
 - 签名: `card_name(self, player) -> Optional[str]`
 - 作用: 取该子动作对应槽位打出的卡名。
@@ -12073,7 +12463,7 @@
 - 实现: L63 `if self.kind != "deploy" or self.slot <= 0 or self.slot > K_MAX: return None`；L65 返回 `player.cycle[self.slot - 1]`。注意返回值类型取决于 `cycle` 元素类型（本模块内未定义，调用方 `ActionBundle.contains_card` 与 `rl/replay.py` 的用法表明为卡名字符串）。
 - 置信度: 已确认
 
-##### 2.100.2.3 SubAction.to_position [L67-68]
+##### 2.106.2.3 SubAction.to_position [L67-68]
 - 类型: method
 - 签名: `to_position(self, player_id: int = 0) -> Position`
 - 作用: 转世界坐标（委托给唯一入口 `sub_position`）。
@@ -12083,7 +12473,7 @@
 - 实现: L68 `return sub_position(player_id, self.x, self.y)`；自身不做任何坐标运算。默认 `player_id=0` 表示返回本地坐标即世界坐标。
 - 置信度: 已确认
 
-##### 2.100.2.4 SubAction.to_tuple [L70-72]
+##### 2.106.2.4 SubAction.to_tuple [L70-72]
 - 类型: method
 - 签名: `to_tuple(self) -> Tuple[int, int, int]`
 - 作用: 旧接口兼容：返回 `(slot, y, x)`（L71）。
@@ -12092,14 +12482,14 @@
 - 实现: L72 单行 tuple 构造，`y` 在 `x` 前。
 - 置信度: 已确认
 
-#### 2.100.3 ActionBundle [L76-110]
+#### 2.106.3 ActionBundle [L76-110]
 - 类型: class（`@dataclass` 装饰，L75）
 - 签名: `class ActionBundle:`
 - 作用: 一个决策步内同时提交的子动作集合，构造时强制不超过 K_MAX。
 - 实现: 唯一 dataclass 字段 `sub_actions: List[SubAction] = field(default_factory=list)`（L77）；`__post_init__` 做上限校验（L79-81）；提供 add/add_ability/size/to_tuple 实例接口与 from_single/noop 类方法、contains_card 查询（L83-110）。类无 docstring。**本文件未提供整包合法性校验/惩罚逻辑**（模块 docstring L6 描述的"整包校验、任一非法即拒绝整包并施加惩罚"需在掩码/提交层实现，本文件内无对应代码）。
 - 置信度: 已确认
 
-##### 2.100.3.1 ActionBundle.__post_init__ [L79-81]
+##### 2.106.3.1 ActionBundle.__post_init__ [L79-81]
 - 类型: method
 - 签名: `__post_init__(self)`
 - 作用: 构造后校验子动作数不超 K_MAX。
@@ -12108,7 +12498,7 @@
 - 实现: L80-81 `if len(self.sub_actions) > K_MAX: raise ValueError(f"ActionBundle 子动作数超过 K_MAX={K_MAX}")`。注意只在构造时校验：`add`/`add_ability` 走 append 路径，**不经过 __post_init__**，因此链式 add 超过 K_MAX 不会被本类拦截。
 - 置信度: 已确认
 
-##### 2.100.3.2 ActionBundle.add [L83-85]
+##### 2.106.3.2 ActionBundle.add [L83-85]
 - 类型: method
 - 签名: `add(self, slot: int, x: int, y: int) -> "ActionBundle"`
 - 作用: 追加一个 deploy 子动作并返回自身（支持链式调用）。
@@ -12120,7 +12510,7 @@
 - 实现: L84 `self.sub_actions.append(SubAction(kind="deploy", slot=slot, x=x, y=y))`；L85 `return self`。不做 K_MAX 检查（见上）。
 - 置信度: 已确认
 
-##### 2.100.3.3 ActionBundle.add_ability [L87-89]
+##### 2.106.3.3 ActionBundle.add_ability [L87-89]
 - 类型: method
 - 签名: `add_ability(self) -> "ActionBundle"`
 - 作用: 追加一个 ability 子动作并返回自身。
@@ -12129,7 +12519,7 @@
 - 实现: L88 `self.sub_actions.append(SubAction.ability())`；L89 `return self`。同样不做 K_MAX 检查。
 - 置信度: 已确认
 
-##### 2.100.3.4 ActionBundle.size [L92-93]
+##### 2.106.3.4 ActionBundle.size [L92-93]
 - 类型: property（`@property`，L91）
 - 签名: `size(self) -> int`
 - 作用: 返回子动作个数。
@@ -12138,7 +12528,7 @@
 - 实现: L93 单行。注意是 property，调用处写 `bundle.size` 而非 `bundle.size()`。
 - 置信度: 已确认
 
-##### 2.100.3.5 ActionBundle.to_tuple [L95-99]
+##### 2.106.3.5 ActionBundle.to_tuple [L95-99]
 - 类型: method
 - 签名: `to_tuple(self) -> Tuple[int, int, int]`
 - 作用: n<=1 兼容模式：转成旧版 `(slot, y, x)`（L96）。
@@ -12147,7 +12537,7 @@
 - 实现: L97-98 `if self.size == 0: return (0, 0, 0)`；L99 `return self.sub_actions[0].to_tuple()`。**多卡包只取第 0 个，信息丢失**（docstring 已声明是 n<=1 兼容模式）。
 - 置信度: 已确认
 
-##### 2.100.3.6 ActionBundle.from_single [L102-103]
+##### 2.106.3.6 ActionBundle.from_single [L102-103]
 - 类型: classmethod（`@classmethod`，L101）
 - 签名: `from_single(cls, slot: int, x: int, y: int) -> "ActionBundle"`
 - 作用: 由单个 deploy 子动作构造 bundle。
@@ -12160,7 +12550,7 @@
 - 调用: 被 `rl/train_bc.py:57`（`ActionBundle.from_single(slot, x, y)`）与 `rl/selftest.py` 多处调用。
 - 置信度: 已确认
 
-##### 2.100.3.7 ActionBundle.noop [L106-107]
+##### 2.106.3.7 ActionBundle.noop [L106-107]
 - 类型: classmethod（`@classmethod`，L105）
 - 签名: `noop(cls) -> "ActionBundle"`
 - 作用: 构造空 bundle（不出牌）。
@@ -12170,7 +12560,7 @@
 - 调用: 被 `rl/train_bc.py:46/50/53`、`rl/human_play.py:103` 与 selftest 多处调用。
 - 置信度: 已确认
 
-##### 2.100.3.8 ActionBundle.contains_card [L109-110]
+##### 2.106.3.8 ActionBundle.contains_card [L109-110]
 - 类型: method
 - 签名: `contains_card(self, player, card_name: str) -> bool`
 - 作用: 判断包内是否有子动作打出了指定卡。
@@ -12183,7 +12573,7 @@
 
 ---
 
-### 2.101 `src/clasher_new/rl/action_mask.py`
+### 2.107 `src/clasher_new/rl/action_mask.py`
 
 - **分析组**：G015　**行数**：573　**AST 符号数**：24
 
@@ -12212,7 +12602,7 @@
   - `_spell_tower_dmg_cache`（L122）与 `_card_static_cache`（L314）— 两个模块级缓存字典（键含义见上）
   - 其余为 frozenset 名单常量，无复杂表结构
 
-#### 2.101.1 _card_cost [L30-36]
+#### 2.107.1 _card_cost [L30-36]
 - 类型: function
 - 签名: `def _card_cost(player, card_name: str) -> Optional[float]:`
 - 作用: 算这张牌当前的实际出牌费用；Mirror 按引擎语义 = 上一张牌费用 + 1。
@@ -12224,7 +12614,7 @@
 - 调用: 被 `_slot_playable`(L51)、`_opp_min_hand_cost`(L236)、`validate_bundle`(L565) 调用；它调用 `Card`。
 - 置信度: 已确认
 
-#### 2.101.2 _effective_card [L39-43]
+#### 2.107.2 _effective_card [L39-43]
 - 类型: function
 - 签名: `def _effective_card(player, card_name: str) -> str:`
 - 作用: 返回引擎实际部署/校验用的卡名——Mirror 重放上一张牌。
@@ -12236,7 +12626,7 @@
 - 调用: 被 `legal_cells`(L453)、`validate_bundle`(L560) 调用。
 - 置信度: 已确认
 
-#### 2.101.3 _slot_playable [L46-56]
+#### 2.107.3 _slot_playable [L46-56]
 - 类型: function
 - 签名: `def _slot_playable(player, card_name: str, elixir: float) -> bool:`
 - 作用: 单个手牌槽在当前圣水下是否可出（塔存活 + 在手牌前 4 位 + 费用可负担）。
@@ -12249,7 +12639,7 @@
 - 调用: 被 `slot_mask`(L67)、`validate_bundle`(L561) 调用；它调用 `_card_cost`。
 - 置信度: 已确认
 
-#### 2.101.4 slot_mask [L59-68]
+#### 2.107.4 slot_mask [L59-68]
 - 类型: function
 - 签名: `def slot_mask(player, elixir_override: float = None, used_slots=None) -> np.ndarray:`
 - 作用: 返回 `(K_MAX,)` bool 掩码：哪些手牌槽在当前圣水下可出，且未在 partial bundle 中被占用。
@@ -12262,7 +12652,7 @@
 - 调用: 被 `rl/env_wrapper.py:465`（`get_action_mask_for`）与 `rl/mcts.py:203-204` 调用；它调用 `_slot_playable`。
 - 置信度: 已确认
 
-#### 2.101.5 _spell_radius_m [L79-86]
+#### 2.107.5 _spell_radius_m [L79-86]
 - 类型: function
 - 签名: `def _spell_radius_m(card_name: str, card_info: "Card" = None) -> float:`
 - 作用: 法术溅射半径（世界单位）；无半径数据返回 0.0（= 不做闸门，保持旧语义）。
@@ -12274,7 +12664,7 @@
 - 调用: 被 `_spell_tower_ev_illegal`(L176)、`_position_legal`(L398)、`legal_cells`(L458) 调用；`rl/mcts.py:261` 也直接导入该私有函数。
 - 置信度: 已确认
 
-#### 2.101.6 _spell_deals_damage [L89-94]
+#### 2.107.6 _spell_deals_damage [L89-94]
 - 类型: function
 - 签名: `def _spell_deals_damage(card_name: str, card_info: "Card" = None) -> bool:`
 - 作用: 该法术是否输出伤害——决定它是否受空砸闸门约束。
@@ -12286,7 +12676,7 @@
 - 调用: 被 `_spell_tower_ev_illegal`(L174)、`_position_legal`(L397)、`legal_cells`(L457) 调用。
 - 置信度: 已确认
 
-#### 2.101.7 _spell_has_enemy_target [L97-109]
+#### 2.107.7 _spell_has_enemy_target [L97-109]
 - 类型: function
 - 签名: `def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float) -> bool:`
 - 作用: 溅射半径内是否有存活敌方目标（塔/建筑/部队），命中口径与引擎溅射一致。
@@ -12300,7 +12690,7 @@
 - 调用: 被 `_position_legal`(L399)、`legal_cells`(L465) 调用；它调用 `pos.distance_to`。
 - 置信度: 已确认
 
-#### 2.101.8 _spell_tower_damage [L125-138]
+#### 2.107.8 _spell_tower_damage [L125-138]
 - 类型: function
 - 签名: `def _spell_tower_damage(card_name: str) -> float:`
 - 作用: 取该法术对塔伤害（引擎标定，带缓存）；标定失败返回 0.0 = 闸门自动放行。
@@ -12311,7 +12701,7 @@
 - 调用: 被 `_spell_tower_ev_illegal`(L179) 调用；它调用 `spell_module.get_spell_profile`。
 - 置信度: 已确认
 
-#### 2.101.9 _spell_covers_non_tower [L141-155]
+#### 2.107.9 _spell_covers_non_tower [L141-155]
 - 类型: function
 - 签名: `def _spell_covers_non_tower(battle, player_id: int, pos: Position, radius: float) -> bool:`
 - 作用: 溅射半径内是否有对手的非塔目标（部队/建筑）——有则法术“有正事可干”，放行。
@@ -12325,7 +12715,7 @@
 - 调用: 被 `_spell_tower_ev_illegal`(L197) 调用。
 - 置信度: 已确认
 
-#### 2.101.10 _spell_tower_ev_illegal [L158-219]
+#### 2.107.10 _spell_tower_ev_illegal [L158-219]
 - 类型: function
 - 签名: `def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Position,\n                            card_info: "Card" = None) -> bool:`
 - 作用: 前段“纯砸塔”落点非法判定（空砸闸门的对塔特化加强版）：条件全部满足才拒。
@@ -12349,7 +12739,7 @@
 - 调用: 被 `_position_legal`(L402)、`legal_cells`(L467) 调用；它调用 `_spell_deals_damage`、`_spell_radius_m`、`_spell_tower_damage`、`_spell_covers_non_tower`、`rl.env_wrapper.tower_value_mult`（后者的语义见 env_wrapper.py:101-118：凹形溢价 + 王塔闸门，`princesses_alive>=2` 时王塔打折）。
 - 置信度: 已确认
 
-#### 2.101.11 _opp_min_hand_cost [L231-238]
+#### 2.107.11 _opp_min_hand_cost [L231-238]
 - 类型: function
 - 签名: `def _opp_min_hand_cost(battle, player_id: int) -> Optional[float]:`
 - 作用: 对手手牌中最低的可出费用；手牌为空或国王已倒 → None（= 对手出不了手）。
@@ -12361,7 +12751,7 @@
 - 调用: 被 `solo_commit_blocked`(L266) 调用。
 - 置信度: 已确认
 
-#### 2.101.12 _enemy_in_my_half [L241-252]
+#### 2.107.12 _enemy_in_my_half [L241-252]
 - 类型: function
 - 签名: `def _enemy_in_my_half(battle, player_id: int) -> bool:`
 - 作用: 对方是否有存活单位已进入我半场（压境 → 防守优先）。
@@ -12373,7 +12763,7 @@
 - 调用: 被 `solo_commit_blocked`(L272) 调用。
 - 置信度: 已确认
 
-#### 2.101.13 solo_commit_blocked [L255-276]
+#### 2.107.13 solo_commit_blocked [L255-276]
 - 类型: function
 - 签名: `def solo_commit_blocked(battle, player_id: int, card_name: str,\n                        own_elixir: float) -> bool:`
 - 作用: 判断“高承诺单卡裸下”是否应被禁止（8h 不裸下闸门）。
@@ -12387,7 +12777,7 @@
 - 调用: 被 `rl/env_wrapper.py:473`（首卡决策时整槽禁掉）与 `validate_bundle`(L571) 调用；它调用 `_opp_min_hand_cost`、`_enemy_in_my_half`。
 - 置信度: 已确认
 
-#### 2.101.14 _active_push_tanks [L292-307]
+#### 2.107.14 _active_push_tanks [L292-307]
 - 类型: function
 - 签名: `def _active_push_tanks(battle, player_id: int):`
 - 作用: 本方可作推进前排的存活坦克（Giant/Knight），且已离开国王塔进入推进段。
@@ -12399,7 +12789,7 @@
 - 调用: 被 `_backline_placement_illegal`(L352) 调用。
 - 置信度: 已确认
 
-#### 2.101.15 _card_cached [L317-323]
+#### 2.107.15 _card_cached [L317-323]
 - 类型: function
 - 签名: `def _card_cached(card_name: str) -> "Card":`
 - 作用: 按 `(卡名, Card.default_level)` 缓存 Card 实例，省掉热路径上的重复构造。
@@ -12410,7 +12800,7 @@
 - 调用: 被 `_backline_min_gap_m`(L330, L331) 调用。
 - 置信度: 已确认
 
-#### 2.101.16 _backline_min_gap_m [L326-335]
+#### 2.107.16 _backline_min_gap_m [L326-335]
 - 类型: function
 - 签名: `def _backline_min_gap_m(back_card: str, tank_card: str,\n                        back_info: "Card" = None) -> float:`
 - 作用: 后排与坦克之间的最小纵向间距（世界单位）。
@@ -12423,7 +12813,7 @@
 - 调用: 被 `_backline_placement_illegal`(L361) 调用。
 - 置信度: 已确认
 
-#### 2.101.17 _backline_placement_illegal [L338-364]
+#### 2.107.17 _backline_placement_illegal [L338-364]
 - 类型: function
 - 签名: `def _backline_placement_illegal(battle, player_id: int, card_name: str,\n                                pos: Position, card_info: "Card" = None) -> bool:`
 - 作用: 后排落点几何闸门：同路有推进坦克时，落点必须位于某坦克之后且留足最小间距。
@@ -12438,7 +12828,7 @@
 - 调用: 被 `_position_legal`(L436) 调用；它调用 `_active_push_tanks`、`_backline_min_gap_m`。
 - 置信度: 已确认
 
-#### 2.101.18 _hits_dead_enemy_tower [L367-379]
+#### 2.107.18 _hits_dead_enemy_tower [L367-379]
 - 类型: function
 - 签名: `def _hits_dead_enemy_tower(battle, player_id: int, pos: Position) -> bool:`
 - 作用: 落点是否贴着已毁敌方塔本体（塔实体 id≤6 且 `is_alive=False` 会永留场）。
@@ -12451,7 +12841,7 @@
 - 调用: 被 `_position_legal`(L395)、`legal_cells`(L463) 调用。
 - 置信度: 已确认
 
-#### 2.101.19 _position_legal [L382-438]
+#### 2.107.19 _position_legal [L382-438]
 - 类型: function
 - 签名: `def _position_legal(battle, player_id: int, card_name: str, pos: Position,\n                    card_info: "Card" = None) -> bool:`
 - 作用: 复刻 `battle.deploy_card` 中的部署区域合法性；法术额外挡“已毁塔本体”与“空砸闸门”。
@@ -12468,7 +12858,7 @@
 - 调用: 被 `legal_cells`(L473)、`validate_bundle`(L563) 调用；它调用 `Card`、`_hits_dead_enemy_tower`、`_spell_deals_damage`、`_spell_radius_m`、`_spell_has_enemy_target`、`_spell_tower_ev_illegal`、`battle.is_position_occupied_by_building`、`battle.arena.is_behind_king`、`_backline_placement_illegal`。
 - 置信度: 已确认
 
-#### 2.101.20 legal_cells [L441-476]
+#### 2.107.20 legal_cells [L441-476]
 - 类型: function
 - 签名: `def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:`
 - 作用: 返回 `(32,18)` bool：该卡在玩家本地网格中可部署的格子。
@@ -12481,7 +12871,7 @@
 - 调用: 被 `rl/env_wrapper.py:442`（`get_action_mask_for`，结果缓存进 `_mask_cells`，指纹含 player_id/tick/双方三塔血量/建筑位置/cycle）、`rl/mcts.py:165` 调用。
 - 置信度: 已确认
 
-#### 2.101.21 _ready_ability_cost [L479-497]
+#### 2.107.21 _ready_ability_cost [L479-497]
 - 类型: function
 - 签名: `def _ready_ability_cost(battle, player_id: int) -> Optional[float]:`
 - 作用: 返回场上首个就绪英雄技能的耗蓝；无就绪英雄返回 None。
@@ -12493,7 +12883,7 @@
 - 调用: 被 `ability_legal`(L509)、`ability_mana`(L518) 调用。
 - 置信度: 已确认
 
-#### 2.101.22 ability_legal [L500-513]
+#### 2.107.22 ability_legal [L500-513]
 - 类型: function
 - 签名: `def ability_legal(battle, player_id: int, elixir_override: float = None,\n                  already_used: bool = False) -> bool:`
 - 作用: 当前 bundle 中是否还能再触发英雄技能。
@@ -12507,7 +12897,7 @@
 - 调用: 被 `rl/env_wrapper.py:479`（`"ability_legal"` 字段）与 L483（`any_legal`）调用；被 `rl/env_wrapper.py:30-31` 导入。
 - 置信度: 已确认
 
-#### 2.101.23 ability_mana [L516-518]
+#### 2.107.23 ability_mana [L516-518]
 - 类型: function
 - 签名: `def ability_mana(battle, player_id: int) -> Optional[float]:`
 - 作用: 返回就绪英雄技能的耗蓝；无就绪英雄返回 None（不再用 0 作哨兵）。
@@ -12519,7 +12909,7 @@
 - 调用: 被 `rl/env_wrapper.py:453`（partial bundle 模拟扣蓝时）与 L542（`validate_bundle`）调用；也被 `rl/env_wrapper.py:31` 导入。
 - 置信度: 已确认
 
-#### 2.101.24 validate_bundle [L521-573]
+#### 2.107.24 validate_bundle [L521-573]
 - 类型: function
 - 签名: `def validate_bundle(battle, player_id: int, bundle: ActionBundle):`
 - 作用: 整包校验（不修改任何状态）：任一子动作非法则拒绝整包，并返回按决策时刻手牌解析出的动作列表。
@@ -12544,7 +12934,7 @@
 
 ---
 
-### 2.102 `src/clasher_new/rl/bayes_filter.py`
+### 2.108 `src/clasher_new/rl/bayes_filter.py`
 
 - **分析组**：G043　**行数**：184　**AST 符号数**：13
 
@@ -12555,7 +12945,7 @@
 - 关键模块级常量: 无
 - 顶层数据表/字典: 无
 
-#### 2.102.1 CycleBayesFilter [L42-184]
+#### 2.108.1 CycleBayesFilter [L42-184]
 - 类型: class
 - 签名: `class CycleBayesFilter:`
 - 作用: 维护对手 8 卡循环队列的信念，提供「手牌概率 / 下一张概率 / 熵 / 是否锁定」四个查询。
@@ -12564,7 +12954,7 @@
 - 实现: 状态字段见 `__init__`；方法含 `locked`（property）、`reset`、静态 `_play`、`_lock_from_tail`、`_resample_uniform`、`_degrade`、`_consistent`、`update`、`hand_probs`、`next_probs`、`entropy`。状态机语义：`_cycle is not None` 为锁定流，否则粒子相。
 - 置信度: 已确认
 
-##### 2.102.1.1 CycleBayesFilter.__init__ [L45-54]
+##### 2.108.1.1 CycleBayesFilter.__init__ [L45-54]
 - 类型: method
 - 签名: `def __init__(self, deck, n_particles: int = 128, seed: int = 0):`
 - 作用: 记录卡组与粒子数，初始化观测序列/粒子/权重/锁定状态，并做一次均匀先验重采样。
@@ -12576,7 +12966,7 @@
 - 实现: L49 `self.observed = []`（观测出牌序列，含异常观测，供调试/重锁窗口）；L50 `self.particles = []`；L51 `self.weights = np.ones(n_particles, dtype=np.float32) / n_particles`；L52 `self._cycle = None`（None=粒子相）；L53 `self._run = 0`（粒子相连续一致步数）；L54 调 `_resample_uniform()`。
 - 置信度: 已确认
 
-##### 2.102.1.2 CycleBayesFilter.locked [L57-59]
+##### 2.108.1.2 CycleBayesFilter.locked [L57-59]
 - 类型: property（`@property`，L56）
 - 签名: `def locked(self) -> bool:`
 - 作用: 是否处于 O(1) 精确锁定流（hand/next 概率 0/1、熵 0）。
@@ -12585,7 +12975,7 @@
 - 实现: 单行返回（L59）。
 - 置信度: 已确认
 
-##### 2.102.1.3 CycleBayesFilter.reset [L61-67]
+##### 2.108.1.3 CycleBayesFilter.reset [L61-67]
 - 类型: method
 - 签名: `def reset(self, deck=None):`
 - 作用: 复位滤波器（可换卡组），清观测、回粒子相。
@@ -12595,7 +12985,7 @@
 - 实现: L62-63 可选换 deck；L64 `observed=[]`；L65 `_cycle=None`；L66 `_run=0`；L67 `_resample_uniform()`。**未重置 `self._rng`** ⇒ 同 seed 但在 reset 前后采样流不同（照实记录）。
 - 置信度: 已确认
 
-##### 2.102.1.4 CycleBayesFilter._play [L72-74]
+##### 2.108.1.4 CycleBayesFilter._play [L72-74]
 - 类型: staticmethod（`@staticmethod`，L71）
 - 签名: `def _play(perm, card):`
 - 作用: 队列规则：打出 `card` 后把它移到队尾。
@@ -12606,7 +12996,7 @@
 - 实现: 单行（L74），与 `player.play_card` 的队列更新一致（docstring L3-5）。
 - 置信度: 已确认
 
-##### 2.102.1.5 CycleBayesFilter._lock_from_tail [L76-87]
+##### 2.108.1.5 CycleBayesFilter._lock_from_tail [L76-87]
 - 类型: method
 - 签名: `def _lock_from_tail(self, last4):`
 - 作用: 用最近 4 张合法出牌重建规范 cycle，进入锁定流。
@@ -12616,7 +13006,7 @@
 - 实现: L82 `queue = list(last4)`；L83 `qset = set(queue)`；L84 规范 cycle = `[c for c in self.deck if c not in qset] + queue`（手牌取卡组序，队尾 = 真实进手序）；L85 清空粒子；L86 权重置空数组；L87 `_run = 0`。
 - 置信度: 已确认
 
-##### 2.102.1.6 CycleBayesFilter._resample_uniform [L89-100]
+##### 2.108.1.6 CycleBayesFilter._resample_uniform [L89-100]
 - 类型: method
 - 签名: `def _resample_uniform(self):`
 - 作用: 均匀先验重采样粒子（去重、等权）。
@@ -12625,7 +13015,7 @@
 - 实现: L91-99 `while len(self.particles) < self.n_particles`：每次 `shuffle(list(self.deck))`，用 tuple 作 key 去重，未见过才 append；L100 权重置 `1/n_particles`。**边界**：若 `len(deck)!` 的全排列数 < `n_particles`，该循环永不退出（代码无上限保护）——照实记录为潜在死循环风险。
 - 置信度: 已确认
 
-##### 2.102.1.7 CycleBayesFilter._degrade [L102-106]
+##### 2.108.1.7 CycleBayesFilter._degrade [L102-106]
 - 类型: method
 - 签名: `def _degrade(self):`
 - 作用: 异常/分歧时退回粒子相（保留 observed，后续合法 4 张自动重锁）。
@@ -12634,7 +13024,7 @@
 - 实现: L104 `_cycle=None`；L105 `_run=0`；L106 `_resample_uniform()`。
 - 置信度: 已确认
 
-##### 2.102.1.8 CycleBayesFilter._consistent [L108-114]
+##### 2.108.1.8 CycleBayesFilter._consistent [L108-114]
 - 类型: method
 - 签名: `def _consistent(self, card):`
 - 作用: 粒子一致性筛选：只保留能打出 `card` 的候选，并推进到打出后状态，结果去重。
@@ -12644,7 +13034,7 @@
 - 实现: L110 `out = {}`（用 dict 去重）；L111-113 对每个 `perm`，若 `card in perm[:4]` 则 `out[tuple(self._play(perm, card))] = True`；L114 返回 `[list(k) for k in out]`。**不含权重**（等权由调用方在 `update` 里重设）。
 - 置信度: 已确认
 
-##### 2.102.1.9 CycleBayesFilter.update [L116-147]
+##### 2.108.1.9 CycleBayesFilter.update [L116-147]
 - 类型: method
 - 签名: `def update(self, played_card):`
 - 作用: 观测到对手打出某张牌 → 推进信念（锁定流 O(1)，或粒子相筛选/重采样/重锁）。
@@ -12654,7 +13044,7 @@
 - 实现: L120 追加进 `self.observed`（**含异常观测**）；L123-129 锁定流分支：若 `played_card in self._cycle[:4]` 则 `_play` 推进并 return，否则（手牌外出牌/状态分歧）`_degrade()` 并 return（**不推进**）；L132 粒子相 `perms = self._consistent(played_card)`；L133-136 无一致解 → `_degrade()` 并 return；L138-139 全量保留 `perms` 并置等权（注释 L137：一致解数 ≤ 输入粒子数，故无抽样灭真解）；L140 `_run += 1`；L143-147 当 `_run >= 4` 且 `len(self.observed) >= 4`，取 `last4 = observed[-4:]`，若 4 张互异（`len(set)==4`）且都在 deck 内则 `_lock_from_tail(last4)`。
 - 置信度: 已确认
 
-##### 2.102.1.10 CycleBayesFilter.hand_probs [L151-165]
+##### 2.108.1.10 CycleBayesFilter.hand_probs [L151-165]
 - 类型: method
 - 签名: `def hand_probs(self) -> np.ndarray:`
 - 作用: 每张卡在对手手牌（`cycle[:4]`）中的概率，按 deck 顺序返回。
@@ -12663,7 +13053,7 @@
 - 实现: L156 `probs = {c: 0.0 for c in self.deck}`；L157-159 锁定流：`_cycle[:4]` 每张置 1.0（精确 0/1）；L160-164 粒子相：`n = max(1, len(particles))`，对每个排列的前 4 张累加 `1.0/n`（频率近似）；L165 按 deck 顺序取值成数组。
 - 置信度: 已确认
 
-##### 2.102.1.11 CycleBayesFilter.next_probs [L167-176]
+##### 2.108.1.11 CycleBayesFilter.next_probs [L167-176]
 - 类型: method
 - 签名: `def next_probs(self) -> np.ndarray:`
 - 作用: 每张卡是"对手下一张牌"（`cycle[4]`）的概率，按 deck 顺序返回。
@@ -12672,7 +13062,7 @@
 - 实现: L169 `probs` 初始化；L170-171 锁定流：`probs[self._cycle[4]] = 1.0`；L172-175 粒子相：累加 `1.0/n`；L176 返回。**边界**：`next_probs` 依赖 `perm[4]`，若粒子长度不足 5 会 IndexError（代码未防护）。
 - 置信度: 已确认
 
-##### 2.102.1.12 CycleBayesFilter.entropy [L178-184]
+##### 2.108.1.12 CycleBayesFilter.entropy [L178-184]
 - 类型: method
 - 签名: `def entropy(self) -> float:`
 - 作用: 手牌分布香农熵；锁定流恒 0。
@@ -12683,7 +13073,7 @@
 
 ---
 
-### 2.103 `src/clasher_new/rl/belief.py`
+### 2.109 `src/clasher_new/rl/belief.py`
 
 - **分析组**：G041　**行数**：362　**AST 符号数**：26
 
@@ -12743,7 +13133,7 @@
      `entropy()` 在锁定流恒为 0.0，粒子相为 `−Σ p log p`（`bayes_filter.py` L178-184）。
      log(8) 的分母与卡组 8 张的满熵对应。
 
-#### 2.103.1 belief_token_dim [L36-38]
+#### 2.109.1 belief_token_dim [L36-38]
 - 类型: function
 - 签名: `def belief_token_dim(deck) -> int`
 - 作用: 计算"只含规则+统计+事件通道"的 belief token 维度。
@@ -12758,7 +13148,7 @@
   `rl/selftest.py:997`（维度一致性自检）调用；本文件内不调用。
 - 置信度: 已确认
 
-#### 2.103.2 _event_row [L52-60]
+#### 2.109.2 _event_row [L52-60]
 - 类型: function
 - 签名: `def _event_row(card, x, y, dt) -> np.ndarray`
 - 作用: 把单条对手出牌事件编码成一行定长 float32 向量。
@@ -12776,7 +13166,7 @@
 - 置信度: 已确认（注意 L53 docstring 写"16 维行向量"是**过期注释**：当时 `ENTITY_NAMES`
   长度为 13 ⇒ 13+3=16；当前常量实测 180 维，以常量定义 L49 为准）
 
-#### 2.103.3 opp_event_token [L63-79]
+#### 2.109.3 opp_event_token [L63-79]
 - 类型: function
 - 签名: `def opp_event_token(history, now=None, k: int = OPP_EVENT_K) -> np.ndarray`
 - 作用: 把最近 k 条事件历史展平成 `k*OPP_EVENT_DIM` 的定长事件向量。
@@ -12793,7 +13183,7 @@
 - 调用: 被 `BeliefInference.encode` 调用（L358）；无其它本仓调用点。
 - 置信度: 已确认
 
-#### 2.103.4 normalize_played [L82-104]
+#### 2.109.4 normalize_played [L82-104]
 - 类型: function
 - 签名: `def normalize_played(opp_played)`
 - 作用: 把 `opp_played` 的多种输入形态统一成 `[(card_name, x, y), ...]`，并过滤哨兵。
@@ -12809,7 +13199,7 @@
   `BeliefInference.encode`（L355）各调用一次。
 - 置信度: 已确认
 
-#### 2.103.5 BeliefState [L108-127]
+#### 2.109.5 BeliefState [L108-127]
 - 类型: class（`@dataclass`，L107）
 - 签名: （无显式 `__init__` 签名，由 dataclass 生成；字段见下）
 - 作用: 信念推断的只读结果容器（规则后验 + 统计倾向 + 圣水估计 + 不确定度）。
@@ -12830,7 +13220,7 @@
   对 `intent_probs` 的全仓检索只命中本文件 L114/L123-124）。
 - 置信度: 已确认（`intent_probs` 恒均匀这一点为已确认，来源是全仓检索）
 
-##### 2.103.5.1 BeliefState.normalize [L118-127]
+##### 2.109.5.1 BeliefState.normalize [L118-127]
 - 类型: method
 - 签名: `def normalize(self)`
 - 作用: 就地把缺失/空的概率向量填成均匀分布（长度为 0 的卡组用 `max(1, len)` 防除零）。
@@ -12841,7 +13231,7 @@
   tendency_probs 同理（L125-126）。不校验已有向量长度是否等于 deck，也不重归一化。
 - 置信度: 已确认
 
-#### 2.103.6 StatisticalBelief [L130-164]
+#### 2.109.6 StatisticalBelief [L130-164]
 - 类型: class
 - 签名: （无基类）
 - 作用: 对手风格/路线倾向的**轻量计数统计信念**（docstring L131：P1-2 真正记录
@@ -12854,7 +13244,7 @@
   `BeliefInference.update` 调用其 `update`（L312）；`state()` 调用其 `probs`（L325）。
 - 置信度: 已确认
 
-##### 2.103.6.1 StatisticalBelief.__init__ [L133-138]
+##### 2.109.6.1 StatisticalBelief.__init__ [L133-138]
 - 类型: method
 - 签名: `def __init__(self)`
 - 作用: 初始化全部计数为零，维度由 `TENDENCIES` 长度决定。
@@ -12865,7 +13255,7 @@
   `total = 0` 三个 Python int（L136-138）。
 - 置信度: 已确认
 
-##### 2.103.6.2 StatisticalBelief.update [L140-158]
+##### 2.109.6.2 StatisticalBelief.update [L140-158]
 - 类型: method
 - 签名: `def update(self, card: str, x=None, y=None)`
 - 作用: 用一次已过滤的对手出牌观测累加风格/边路计数。
@@ -12887,7 +13277,7 @@
   `Card(card)` 或后续逻辑出错，调用方已过滤（L303）。
 - 置信度: 已确认
 
-##### 2.103.6.3 StatisticalBelief.probs [L160-164]
+##### 2.109.6.3 StatisticalBelief.probs [L160-164]
 - 类型: method
 - 签名: `def probs(self) -> np.ndarray`
 - 作用: 计数 → 加一平滑概率分布。
@@ -12896,7 +13286,7 @@
   否则 `(tendency_counts + 1)/Σ(tendency_counts + 1)`（L163-164）。恒非负且和为 1。
 - 置信度: 已确认
 
-#### 2.103.7 NeuralBeliefEncoder [L167-229]
+#### 2.109.7 NeuralBeliefEncoder [L167-229]
 - 类型: class
 - 签名: （无基类；torch 惰性导入，docstring L170）
 - 作用: 用单层 GRU 把最多 32 帧历史观测压成 64 维 belief token，并附带"下一张牌"与
@@ -12910,7 +13300,7 @@
   `rl/belief.py` 与 `train_belief.py`）⇒ 当前 `BeliefInference.neural` 恒为 None（已确认）。
 - 置信度: 已确认
 
-##### 2.103.7.1 NeuralBeliefEncoder.__init__ [L173-187]
+##### 2.109.7.1 NeuralBeliefEncoder.__init__ [L173-187]
 - 类型: method
 - 签名: `def __init__(self, in_dim: int, hidden: int = 64, num_classes: int = NUM_CARDS, hand_dim: int = 8, max_len: int = 32)`
 - 作用: 建 GRU 与三个线性头，并保存超参。
@@ -12929,7 +13319,7 @@
 - 调用: `load` 类方法（L220-223）与 `rl/train_belief.py:171`。
 - 置信度: 已确认
 
-##### 2.103.7.2 NeuralBeliefEncoder.reset_history [L189-190]
+##### 2.109.7.2 NeuralBeliefEncoder.reset_history [L189-190]
 - 类型: method
 - 签名: `def reset_history(self)`
 - 作用: 清空历史帧缓冲。
@@ -12939,7 +13329,7 @@
 - 调用: `BeliefInference.reset`（L282）。
 - 置信度: 已确认
 
-##### 2.103.7.3 NeuralBeliefEncoder.push_frame [L192-193]
+##### 2.109.7.3 NeuralBeliefEncoder.push_frame [L192-193]
 - 类型: method
 - 签名: `def push_frame(self, feat: np.ndarray)`
 - 作用: 追加一帧特征到历史（超长自动丢弃最旧帧）。
@@ -12950,7 +13340,7 @@
 - 调用: `encode`（L207）；外部也可能直接调用（`train_belief` 未验证）。
 - 置信度: 已确认
 
-##### 2.103.7.4 NeuralBeliefEncoder._history_tensor [L195-202]
+##### 2.109.7.4 NeuralBeliefEncoder._history_tensor [L195-202]
 - 类型: method
 - 签名: `def _history_tensor(self)`
 - 作用: 把历史帧堆成 GRU 输入张量。
@@ -12961,7 +13351,7 @@
   （L200-201）。不搬设备（保持 CPU）也不做 dtype 转换（依赖 `push_frame` 已转 float32）。
 - 置信度: 已确认
 
-##### 2.103.7.5 NeuralBeliefEncoder.encode [L204-213]
+##### 2.109.7.5 NeuralBeliefEncoder.encode [L204-213]
 - 类型: method
 - 签名: `def encode(self, feat: np.ndarray) -> np.ndarray`
 - 作用: 输入当前帧特征 → 输出 belief token（并把该帧写入历史）。
@@ -12975,7 +13365,7 @@
 - 调用: `BeliefInference.encode`（L361）。
 - 置信度: 已确认
 
-##### 2.103.7.6 NeuralBeliefEncoder.load [L216-229]
+##### 2.109.7.6 NeuralBeliefEncoder.load [L216-229]
 - 类型: classmethod
 - 签名: `@classmethod` + `def load(cls, path, in_dim=None)`
 - 作用: 从 `train_belief` 保存的 checkpoint 还原编码器（docstring L217：P1-1 训练产物消费）。
@@ -12992,7 +13382,7 @@
   `train_belief.py` 是否用待确认。
 - 置信度: 已确认（"本仓无调用点"为检索结论）
 
-#### 2.103.8 build_feature [L232-255]
+#### 2.109.8 build_feature [L232-255]
 - 类型: function
 - 签名: `def build_feature(obs: dict, opp_played) -> np.ndarray`
 - 作用: 把一帧观测压成神经编码器的定长输入向量。
@@ -13014,7 +13404,7 @@
 - 置信度: 已确认（维度按 `rl/env_wrapper.py` 的 observation_space 口径推算；若 `elixir`
   被改成多元素形状，维度随之变化——该假设已由 env 的 Box shape=(1,) 支撑）
 
-#### 2.103.9 BeliefInference [L258-362]
+#### 2.109.9 BeliefInference [L258-362]
 - 类型: class
 - 作用: 组合规则 / 统计 / 神经三层信念，对外提供 `update` / `state` / `encode` 三个入口。
 - 实现: 见各方法；类内还维护事件历史 `deque(maxlen=16)`（L272，比 token 窗口 3 大，
@@ -13024,7 +13414,7 @@
   `human_play.py:38,77,81` 也构造。
 - 置信度: 已确认
 
-##### 2.103.9.1 BeliefInference.__init__ [L261-272]
+##### 2.109.9.1 BeliefInference.__init__ [L261-272]
 - 类型: method
 - 签名: `def __init__(self, opp_deck, use_rule=True, use_stat=True, neural=None, n_particles=128, seed=0)`
 - 作用: 记录对手卡组与开关，按开关构造规则滤波器与统计计数器。
@@ -13043,7 +13433,7 @@
   （L270）；`self.event_history = deque(maxlen=16)`（L272）。
 - 置信度: 已确认
 
-##### 2.103.9.2 BeliefInference.reset [L274-286]
+##### 2.109.9.2 BeliefInference.reset [L274-286]
 - 类型: method
 - 签名: `def reset(self, opp_deck=None)`
 - 作用: 重置全部信念状态（新一局/新对手）。
@@ -13056,7 +13446,7 @@
   （L283-285）；`event_history.clear()`（L286）。
 - 置信度: 已确认
 
-##### 2.103.9.3 BeliefInference._tick_elixir [L288-298]
+##### 2.109.9.3 BeliefInference._tick_elixir [L288-298]
 - 类型: method
 - 签名: `def _tick_elixir(self, obs)`
 - 作用: 按观测时间差给对手圣水估计加回复量。
@@ -13070,7 +13460,7 @@
   **系数 2.8 s/点是硬编码近似**（docstring L289；本文件内无按预设切换的入口）。
 - 置信度: 已确认
 
-##### 2.103.9.4 BeliefInference.update [L300-316]
+##### 2.109.9.4 BeliefInference.update [L300-316]
 - 类型: method
 - 签名: `def update(self, obs, opp_played, opp_x=None, opp_card_type=None, elixir_est=None)`
 - 作用: 用本 tick 观测到的对手出牌推进三层信念，并返回当前 `BeliefState`。
@@ -13092,7 +13482,7 @@
   以 `update(None, c)` 逐卡调用）、`run_league.py` 等训练/评估侧调用点。
 - 置信度: 已确认（两个未使用参数按源码事实记录为"读了但未用"）
 
-##### 2.103.9.5 BeliefInference.state [L318-328]
+##### 2.109.9.5 BeliefInference.state [L318-328]
 - 类型: method
 - 签名: `def state(self) -> BeliefState`
 - 作用: 把三层内部状态打包成一个 `BeliefState`。
@@ -13107,7 +13497,7 @@
   返回 `st.normalize()`（L328）。**不改任何内部状态**（可重复调用）。
 - 置信度: 已确认
 
-##### 2.103.9.6 BeliefInference._now [L330-342]
+##### 2.109.9.6 BeliefInference._now [L330-342]
 - 类型: method
 - 签名: `def _now(self, obs)`
 - 作用: 取"当前决策时刻"（obs.time 优先，其次使用上次缓存值）。
@@ -13123,7 +13513,7 @@
   而本方法显式支持标量——即标量 obs 下 `update` 会在 `_tick_elixir` 抛错（见该条参数说明）。
 - 置信度: 已确认
 
-##### 2.103.9.7 BeliefInference.encode [L344-362]
+##### 2.109.9.7 BeliefInference.encode [L344-362]
 - 类型: method
 - 签名: `def encode(self, obs=None, opp_played=None) -> np.ndarray`
 - 作用: 组装并返回完整 `belief_token`（规则 + 统计 + 事件通道 + 可选神经）。
@@ -13150,7 +13540,7 @@
 
 ---
 
-### 2.104 `src/clasher_new/rl/belief_planner.py`
+### 2.110 `src/clasher_new/rl/belief_planner.py`
 
 - **分析组**：G009　**行数**：849　**AST 符号数**：34
 
@@ -13184,7 +13574,7 @@
   - `_HAND_PROB_THRESHOLD = 0.55` — 手牌概率高于此视为「对面有这张法术/突进卡」（L115）。
 - 顶层数据表/字典: `_SPELL_THREAT_KIND`（L110-114）—— 卡名 → `OPP_SPELL_THREATS` 枚举字符串的映射：`Fireball→"fireball"`、`Poison→"poison"`、`Lightning→"lightning"`、`Freeze/Vines/Tornado→"freeze"`、`Rocket/Earthquake/Void→"big_unknown"`；`_opp_spell_threat_of` 用它把手牌后验转成法术威胁枚举（L335）。
 
-#### 2.104.1 _is_tower [L118-119]
+#### 2.110.1 _is_tower [L118-119]
 - 类型: function
 - 签名: `def _is_tower(name: str) -> bool:`
 - 作用: 字符串判定：卡名里含 `"Tower"` 即为塔。
@@ -13195,7 +13585,7 @@
 - 调用: 仅本模块内部使用（`_deployable_entity`/`_enemy_pressure`/`_enemy_main_x`/`_my_main_x`）；全仓 grep 显示 `rl/prophet.py:45` 有自己的独立同名定义，非导入本函数。
 - 置信度: 已确认
 
-#### 2.104.2 _deployable_entity [L122-130]
+#### 2.110.2 _deployable_entity [L122-130]
 - 类型: function
 - 签名: `def _deployable_entity(e) -> bool:`
 - 作用: 判断一个战场实体是不是「可部署单位/建筑」，即是否可作为威胁或目标（排除塔、已死实体、弹道/区域效果等临时实体）。
@@ -13206,7 +13596,7 @@
 - 调用: 仅本模块内部（`_closest_threat` L313、`_protect_backline` L403/L410、`_pull` L458、`_punish` L520、`_push_commit` L544、`_setup_wait` L635、`_king_activate` L675、`_save_ace` L713）。
 - 置信度: 已确认
 
-#### 2.104.3 _unit_card [L133-138]
+#### 2.110.3 _unit_card [L133-138]
 - 类型: function
 - 签名: `def _unit_card(name):`
 - 作用: 卡名 → `Card` 对象（继承战斗等级），非卡名/数据缺失时返回 `None`。
@@ -13217,7 +13607,7 @@
 - 调用: 仅本模块内部（`_is_front_tank_name` L153、`_spell_trade` L376、`_protect_backline` L412、`_pull` L463）。
 - 置信度: 已确认
 
-#### 2.104.4 _tanky_or_melee [L141-148]
+#### 2.110.4 _tanky_or_melee [L141-148]
 - 类型: function
 - 签名: `def _tanky_or_melee(c) -> bool:`
 - 作用: 7g 拉扯对象口径：只打建筑的攻城单位 / 高血量血牛（hp≥`TANKY_HP`）/ 一切近战（range≤`MELEE_RANGE`）都算可拉扯对象。
@@ -13228,7 +13618,7 @@
 - 调用: 仅 `_pull` L464 一处调用；全仓无其它引用。
 - 置信度: 已确认
 
-#### 2.104.5 _is_front_tank_name [L151-156]
+#### 2.110.5 _is_front_tank_name [L151-156]
 - 类型: function
 - 签名: `def _is_front_tank_name(name) -> bool:`
 - 作用: push_commit 的前排主体判定：在 `FRONT_TANK_CARDS` 名单内，或「角色类且 hp≥TANKY_HP」的高血近战身板。
@@ -13239,7 +13629,7 @@
 - 调用: 仅 `_push_commit` L546 一处调用；全仓无其它引用。
 - 置信度: 已确认
 
-#### 2.104.6 _enemy_pressure [L159-173]
+#### 2.110.6 _enemy_pressure [L159-173]
 - 类型: function
 - 签名: `def _enemy_pressure(battle):`
 - 作用: 粗略估算双方在各自半场的推进压力，返回 `(threat, my_pressure)` 两个标量（排除静态塔）。
@@ -13250,7 +13640,7 @@
 - 调用: `plan()` L773 调用一次，结果喂给全部检测器与回退分支。
 - 置信度: 已确认
 
-#### 2.104.7 _enemy_main_x [L176-179]
+#### 2.110.7 _enemy_main_x [L176-179]
 - 类型: function
 - 签名: `def _enemy_main_x(battle):`
 - 作用: 敌方（player==1）全部存活非塔实体的平均 x（兵力重心）；无实体时返回 9.0。
@@ -13261,7 +13651,7 @@
 - 调用: `_punish` L518、`plan` L800/L802。
 - 置信度: 已确认
 
-#### 2.104.8 _my_main_x [L182-185]
+#### 2.110.8 _my_main_x [L182-185]
 - 类型: function
 - 签名: `def _my_main_x(battle):`
 - 作用: 我方（player==0）全部存活非塔实体的平均 x；无实体时返回 9.0。
@@ -13272,7 +13662,7 @@
 - 调用: 仅 `_punish` L521（无任何敌方单位时，用我方压力反侧决定进攻路）。
 - 置信度: 已确认
 
-#### 2.104.9 _region_from_intent [L188-199]
+#### 2.110.9 _region_from_intent [L188-199]
 - 类型: function
 - 签名: `def _region_from_intent(intent: str) -> str:`
 - 作用: 把宏观意图映射到 8 个 `FOCUS_REGIONS` 之一（P1-15 修复：focus_region 由 intent 推导）。
@@ -13283,7 +13673,7 @@
 - 调用: 仅 `plan` L816（旧回退分支）。
 - 置信度: 已确认
 
-#### 2.104.10 _side [L202-203]
+#### 2.110.10 _side [L202-203]
 - 类型: function
 - 签名: `def _side(x: float) -> str:`
 - 作用: x 坐标 → `"left"` / `"right"`（分界 `LANE_SPLIT_X = 9.0`）。
@@ -13294,7 +13684,7 @@
 - 调用: `_own_region` L207、`_enemy_region` L212（本模块内仅此两处）。
 - 置信度: 已确认
 
-#### 2.104.11 _own_region [L206-208]
+#### 2.110.11 _own_region [L206-208]
 - 类型: function
 - 签名: `def _own_region(x: float) -> str:`
 - 作用: x → 己方半场对应 region（`own_left`/`own_right`）。
@@ -13305,7 +13695,7 @@
 - 调用: `_soft_control` L360、`_spell_trade` L393、`_protect_backline` L442、`_pull` L502、`_push_commit` L567/L576（共 6 处）。
 - 置信度: 已确认
 
-#### 2.104.12 _enemy_region [L211-213]
+#### 2.110.12 _enemy_region [L211-213]
 - 类型: function
 - 签名: `def _enemy_region(x: float) -> str:`
 - 作用: x → 敌方半场对应 region（`enemy_left`/`enemy_right`）。
@@ -13316,7 +13706,7 @@
 - 调用: **本模块内无调用点（定义后未被使用）**；全仓 grep 无导入引用（`rl/prophet.py:115` 是它自己的独立同名函数）。
 - 置信度: 已确认
 
-#### 2.104.13 _opposite_enemy_region [L216-218]
+#### 2.110.13 _opposite_enemy_region [L216-218]
 - 类型: function
 - 签名: `def _opposite_enemy_region(x: float) -> str:`
 - 作用: 「敌方重心在 x → 建议进攻的另一路 region」：x < 9 时给 `enemy_right`，否则 `enemy_left`。
@@ -13327,7 +13717,7 @@
 - 调用: 仅 `_punish` L519。
 - 置信度: 已确认
 
-#### 2.104.14 _pick_suggested_card [L221-246]
+#### 2.110.14 _pick_suggested_card [L221-246]
 - 类型: function
 - 签名: `def _pick_suggested_card(battle, player_id, belief: Optional[BeliefState], intent: str):`
 - 作用: 旧回退分支的建议卡选择：在 4 个手牌槽里按启发式打分选一张，防守偏好法术/低费、进攻偏好高费角色。
@@ -13341,7 +13731,7 @@
 - 调用: 仅 `plan` L813。
 - 置信度: 已确认
 
-#### 2.104.15 _hand_slot [L249-250]
+#### 2.110.15 _hand_slot [L249-250]
 - 类型: function
 - 签名: `def _hand_slot(p, card_name):`
 - 作用: 卡名在手牌（`p.cycle[:4]`）则返回 1 基槽位号，否则 `None`。
@@ -13353,7 +13743,7 @@
 - 调用: `_soft_control` L356、`_spell_trade` L385、`_spell_finish` L603、`_save_ace` L703（本模块 4 处）。
 - 置信度: 已确认
 
-#### 2.104.16 _spell_cast_value [L253-306]
+#### 2.110.16 _spell_cast_value [L253-306]
 - 类型: function
 - 签名: `def _spell_cast_value(battle, player_id, card_name):`
 - 作用: 外置工具③（`spell_module`）的落点估值包装：返回最优落点的评分、对塔伤害的折费价值、以及「只罩对手塔」的布尔否决信号。
@@ -13366,7 +13756,7 @@
 - 调用: `_spell_trade` L388、`_spell_finish` L605；被调用模块 `spell_module`/`rl.env_wrapper` 属同仓被 import 模块（`rl/env_wrapper.py:101` 定义 `tower_value_mult`）。
 - 置信度: 已确认
 
-#### 2.104.17 _closest_threat [L309-318]
+#### 2.110.17 _closest_threat [L309-318]
 - 类型: function
 - 签名: `def _closest_threat(battle):`
 - 作用: 找「最接近我方塔」的敌方**可部署**单位（排除塔/弹道等）。
@@ -13377,7 +13767,7 @@
 - 调用: `_soft_control` L352、`_spell_trade` L373、`_protect_backline` L425、`_punish` L514-515（调两次）、`_setup_wait` L626、`_save_ace` L708、`_anti_spell` L739-740（调两次）、`_cycle_small` L757、`plan` L793。
 - 置信度: 已确认
 
-#### 2.104.18 _threat_unit_is_pressing [L321-323]
+#### 2.110.18 _threat_unit_is_pressing [L321-323]
 - 类型: function
 - 签名: `def _threat_unit_is_pressing(e) -> bool:`
 - 作用: 判断某威胁单位是否已进入我方半场/桥头（y ≤ 河中心 + 1）。
@@ -13388,7 +13778,7 @@
 - 调用: 本模块 7 处（L353、426、515、627、709、740、758）。
 - 置信度: 已确认
 
-#### 2.104.19 _opp_spell_threat_of [L326-338]
+#### 2.110.19 _opp_spell_threat_of [L326-338]
 - 类型: function
 - 签名: `def _opp_spell_threat_of(belief: Optional[BeliefState]):`
 - 作用: 从信念手牌后验估计对手最强法术威胁，返回 `OPP_SPELL_THREATS` 里的枚举字符串（`None` = 无/不确定）。
@@ -13399,7 +13789,7 @@
 - 调用: 仅 `_anti_spell` L736。
 - 置信度: 已确认
 
-#### 2.104.20 BeliefPlanner [L341-849]
+#### 2.110.20 BeliefPlanner [L341-849]
 - 类型: class
 - 签名: `class BeliefPlanner:`
 - 作用: 规则版信念规划器。实例本身只持有两个配置字段；核心是 12 个 `_xxx` 意图检测器（每个返回 `PlanToken` 或 `None`）与主入口 `plan()`（按紧急度优先链依次尝试，全部未命中则走旧 8 意图回退）。
@@ -13409,7 +13799,7 @@
 - 调用: 由同仓多处 `BeliefPlanner()` 构造并调用 `plan()`：`rl/train_follower.py`（L65/L139/L157/L252）、`rl/workers.py`、`rl/evaluate.py`、`rl/run_league.py`、`rl/train_solo.py`、`rl/train_bc.py`、`rl/train_exploiter.py`、`rl/flow_league.py`、`rl/human_play.py`、`rl/selftest.py` 及 `scripts/diag_*.py`/`scripts/probe_*.py`（均为 grep 得到的构造点）。
 - 置信度: 已确认
 
-##### 2.104.20.1 BeliefPlanner.__init__ [L344-346]
+##### 2.110.20.1 BeliefPlanner.__init__ [L344-346]
 - 类型: method
 - 签名: `def __init__(self, use_posterior_sampling: bool = False, n_samples: int = 8):`
 - 作用: 保存两个配置字段。
@@ -13420,7 +13810,7 @@
 - 实现: `self.use_posterior_sampling = use_posterior_sampling`（L345）、`self.n_samples = n_samples`（L346）。**两个字段在本文件与全仓其它 `.py` 中都没有任何读取点**（grep `use_posterior_sampling` 全仓只有 L344-345 两处）：模块 docstring 说「规则版 + 后验采样版」（L3），但本文件不存在后验采样分支实现 —— 该能力在本文件中不成立。
 - 置信度: 已确认
 
-##### 2.104.20.2 BeliefPlanner._soft_control [L350-364]
+##### 2.110.20.2 BeliefPlanner._soft_control [L350-364]
 - 类型: method
 - 签名: `def _soft_control(self, battle, p, threat, belief):`
 - 作用: 优先链第 1 位：威胁单位正在我方半场输出时，若有软控法术（冰冻/藤蔓/龙卷）可出，则输出 `soft_control` 计划。
@@ -13433,7 +13823,7 @@
 - 实现: 取 `_closest_threat`，`None` 或未压境（`_threat_unit_is_pressing` 假）→ `None`（L352-354）；按 `SOFT_CONTROL_CARDS` 顺序找手牌槽（`_hand_slot`）且圣水够（L355-357）；命中则返回 `PlanToken(macro_intent="soft_control", focus_region=_own_region(威胁单位 x), suggested_card=slot, target_kind="unit", placement_hint="none", elixir_budget=0.4, risk_profile=0.6, value_estimate=-2.0)`（L358-363）。`value_estimate` 为负值（L363），即语义上视为「被动支出」。
 - 置信度: 已确认
 
-##### 2.104.20.3 BeliefPlanner._spell_trade [L366-397]
+##### 2.110.20.3 BeliefPlanner._spell_trade [L366-397]
 - 类型: method
 - 签名: `def _spell_trade(self, battle, p, threat, belief):`
 - 作用: 解牌：敌方**远程脆皮**已进入我方半场时，用手牌伤害法术直接解（赚费差/保塔）。
@@ -13443,7 +13833,7 @@
 - 实现: `_closest_threat` 为 `None` 或 `y > OWN_HALF_EDGE + 1.5 = 16.5` → `None`（L373-375）；`_unit_card` 为 `None`（非卡名实体）→ `None`（L376-378）；**7g 口径**：`target_only_buildings` 或 `hp >= TANKY_HP` 或 `range <= MELEE_RANGE` → `None`，注释说交给 `_pull`（L379-380）；目标卡费 `< 3.0` → `None`（L381-383）；按 `TRADE_SPELL_CARDS` 顺序找槽且费用够（L384-386）；再调 `_spell_cast_value(battle, 0, card)`，`score <= 0.0`（罩不到任何目标）则 `continue` 试下一张（L387-390）；命中返回 `PlanToken(macro_intent="spell_trade", focus_region=_own_region(威胁 x), suggested_card=slot, target_kind="unit", placement_hint="none", elixir_budget=0.5, risk_profile=0.5, value_estimate=min(cost,6.0)*0.5 + score*0.3)`（L391-396）。
 - 置信度: 已确认
 
-##### 2.104.20.4 BeliefPlanner._protect_backline [L399-447]
+##### 2.110.20.4 BeliefPlanner._protect_backline [L399-447]
 - 类型: method
 - 签名: `def _protect_backline(self, battle, p, threat, belief):`
 - 作用: 保后排：a) 反应式——敌方近战已贴近我方后排（距离 ≤6）时用低费单位前置吸仇恨；b) 信念预判——对手手牌高概率（>0.55）有切后排突进卡且我方后排暴露（y≥9）时提前摆位。
@@ -13453,7 +13843,7 @@
 - 实现: L402-405 收集我方后排：`player == 0`、可部署、`name in BACKLINE_CARDS`、`y <= OWN_HALF_EDGE + 0.5 = 15.5`；L407-422 双循环找距离 ≤6 的敌人（`dx*dx + dy*dy <= 36.0`，L418）——但 **L409-415 存在源码级异常**：L413-414 判定 `cu is None or cu.target_only_buildings` 后 `continue`，而 L414 的 `#` 注释把原本应写在下行的 `if float(e.position.y) > BRIDGE_Y + 1.5:` **整句吞进注释**（已用 `repr` 逐字节核对 L414 = `continue  # …                if float(e.position.y) > BRIDGE_Y + 1.5:`），L415 是无条件 `continue`（永远不可达的重复分支）⇒ **原本的「敌方单位太远不算威胁」守卫被注释掉，只有 `target_only_buildings` 的攻城单位会被排除**；L423-433 预判分支：仅当有后排、`belief` 与 `belief.hand_probs` 非空、无压境威胁（L425-426）时，把 `belief.deck`×`hand_probs` 组成字典，任一 `BACKLINE_HARASSER_CARDS` 概率 >0.55（L427-429）且存在 `y >= 9.0` 的暴露后排（L430-433），则取第一个为目标并标 `predictive=True`；L436-446 从 4 个手牌槽选 `type in ("character","building")` 且 `1.0 <= elixir <= 4.0`、圣水够、非 Mirror 的卡，返回 `PlanToken(macro_intent="protect_backline", focus_region=_own_region(目标 x), suggested_card=i+1, target_kind="my_backline", placement_hint="pull_aggro", elixir_budget=0.4, risk_profile=0.5, value_estimate=0.3 if predictive else 0.5)`；无目标或无合适卡 → `None`。
 - 置信度: 已确认（含 L414 的注释吞语句异常；因该行 `if` 在注释内，L415 的 `continue` 对其无影响）
 
-##### 2.104.20.5 BeliefPlanner._pull [L449-508]
+##### 2.110.20.5 BeliefPlanner._pull [L449-508]
 - 类型: method
 - 签名: `def _pull(self, battle, p, threat, belief):`
 - 作用: 7g 拉扯/拦路：把进入本方桥头带（y∈[11,18]）的攻城单位/血牛/近战单位用便宜单位（或建筑）拦住。
@@ -13463,7 +13853,7 @@
 - 实现: L457-467 遍历敌方可部署实体，`y` 需满足 `OWN_HALF_EDGE-4.0=11.0 ≤ y ≤ BRIDGE_Y+2.0=18.0`，且 `_tanky_or_melee(cu)` 为真，取**第一个**满足者（dict 顺序）。L473-491 选卡：跳过 Mirror；费用 `> PULL_CHEAP_COST=3.0` 或圣水不足则跳过；若目标 `target_only_buildings` 则必须 `c.type == "building"`（L480-483）；否则要求 `type == "character"`（L484），空中目标要求 `c.attack_air`（L485-486），优先 `c.range <= MELEE_RANGE` 的近战身板（L487-489），否则记住任意便宜角色兜底（L490-491）。L494-502 按 `x` 是否偏离 `LANE_SPLIT_X` 超过 4.0 决定 hint：攻城单位走 `focus="own_center"`、`pull_across`/`pull_aggro`、`val=-1.0`；其它走目标所在自家半场 region、`pull_aggro`、`val=0.4`。L503-508 返回 `pull` 的 `PlanToken`（`target_kind="unit"`, `elixir_budget=0.3`, `risk_profile=0.5`）。
 - 置信度: 已确认
 
-##### 2.104.20.6 BeliefPlanner._punish [L510-532]
+##### 2.110.20.6 BeliefPlanner._punish [L510-532]
 - 类型: method
 - 签名: `def _punish(self, battle, p, threat, belief):`
 - 作用: 趁虚：读信念估计的对手圣水（`belief.elixir_mean`）判断对手低费，压与敌方重心相反的一路。
@@ -13473,7 +13863,7 @@
 - 实现: `belief is None` 或 `elixir_mean > 2.5` → `None`（对手圣水充足不算趁虚，L512-513）；若 `_closest_threat` 非空且压境 → `None`（L514-516，`_closest_threat` 被调用两次）；L518-521 选路：`enemy_x = _enemy_main_x(battle)`，若 `enemy_x != 9.0` 或场上存在任何敌方可部署单位 → `_opposite_enemy_region(enemy_x)`，否则用我方重心反侧（`_my_main_x >= 9.0` → `enemy_left` 否则 `enemy_right`）；L523-531 在 4 槽里找 `card in TANK_CARDS` 或「character 且 elixir ≥5.0」且圣水够的卡，返回 `PlanToken(macro_intent="punish", focus_region=region, suggested_card=i+1, target_kind="tower", placement_hint="none", elixir_budget=0.7, risk_profile=0.8, value_estimate=2.0)`。
 - 置信度: 已确认
 
-##### 2.104.20.7 BeliefPlanner._push_commit [L534-580]
+##### 2.110.20.7 BeliefPlanner._push_commit [L534-580]
 - 类型: method
 - 签名: `def _push_commit(self, battle, p, threat, belief):`
 - 作用: 推进跟进：我方前排主体在地图中前段（8 ≤ y ≤ 22）推进时，跟一张输出/支援卡。
@@ -13483,7 +13873,7 @@
 - 实现: L542-551 找**第一个**我方（`player == 0`）可部署且 `_is_front_tank_name(e.name)` 为真、`8.0 <= y <= 22.0` 的实体作为 `tank`；无则 `None`（L552-553）。内部闭包 `_ok(card)`（L555-560）：排除 Mirror，要求 `c.type == "character"`、`3.0 <= c.elixir <= 6.0`、`card not in TANK_CARDS`、圣水够。L562-570 第一遍只挑 `card in BACKLINE_CARDS` 的真后排，返回 `push_commit` token（`focus_region=_own_region(tank.x)`, `target_kind="unit"`, `placement_hint="support_zone"`, `elixir_budget=0.6`, `risk_profile=0.7`, `value_estimate=1.5`）；L571-579 第二遍放宽为任意满足 `_ok` 的卡（近战身板兜底），token 字段同上；两遍都没命中返回 `None`（L580）。
 - 置信度: 已确认
 
-##### 2.104.20.8 BeliefPlanner._spell_finish [L582-615]
+##### 2.110.20.8 BeliefPlanner._spell_finish [L582-615]
 - 类型: method
 - 签名: `def _spell_finish(self, battle, p, threat, belief):`
 - 作用: 后期磨塔：`battle.time >= 120` 且敌方公主塔残血（≤1200）时，用法术压最低血塔的血线，且要求账面不亏费。
@@ -13493,7 +13883,7 @@
 - 实现: `battle.time < LATE_S` → `None`（L584-585）；`p1 = battle.players[1]`（L586）；L588-592 把 `left_tower_hp/right_tower_hp > 0` 的公主塔组成候选 `("enemy_left"/"enemy_right", hp)`；无候选 → `None`（L593-594）；取 hp 最小的（L595）；`hp > 1200.0` → `None`（L596-597）。L601 定义局部常量 `TOWER_HP_PER_ELIXIR_LATE = 50.0`（注释说明后期 1 费≈50 塔 HP，L598-600）；按 `FINISH_SPELL_CARDS` 找槽且圣水够，调 `_spell_cast_value(battle, 0, card)` 得 `score, _tv_early, pure_tower`，用 `tower_value_late = score - _tv_early + _tv_early * (TOWER_HP_PER_ELIXIR_EARLY / TOWER_HP_PER_ELIXIR_LATE)`（L606-607，即把早期口径的塔伤价值按 500/50 折到后期）；若 `pure_tower` 且 `tower_value_late < 卡费` 则跳过该法术（L608-609）；否则返回 `PlanToken(macro_intent="spell_finish", focus_region=region, suggested_card=slot, target_kind="tower", placement_hint="none", elixir_budget=0.45, risk_profile=0.6, value_estimate=1.2 + tower_value_late*0.2)`（L610-614）。
 - 置信度: 已确认
 
-##### 2.104.20.9 BeliefPlanner._setup_wait [L617-666]
+##### 2.110.20.9 BeliefPlanner._setup_wait [L617-666]
 - 类型: method
 - 签名: `def _setup_wait(self, battle, p, threat, belief):`
 - 作用: 7h 主动攒费沉底：安全窗口内若手牌有沉底血牛且（有后排或已攒满），未满费时输出 `setup_wait + hold_mask=1111` 禁止乱花，满费时沉底血牛。
@@ -13503,7 +13893,7 @@
 - 实现: `threat >= PRESSURE_THRESHOLD` → `None`（L624-625）；有压境威胁（`_closest_threat` 且 `_threat_unit_is_pressing`）→ `None`（L626-628）；若 `belief.elixir_mean` 非 `None`、非 NaN 且 `> p.elixir + SAVE_BEHIND_ELIXIR(=2)` → `None`（我方落后太多先防守，L630-633）；场上已有我方沉底血牛（`name in SINK_TANK_CARDS`）→ `None`（L634-636）；L638-644 收集手牌里的血牛槽（跳过 Mirror、非沉底名单、要求 `c.type == "character"`），按费用降序排（L647）取最贵槽 `best_slot`（L648）；无血牛槽 → `None`（L645-646）；`has_backline = any(card in BACKLINE_CARDS for card in p.cycle[:4])`（L649）；`near_full = p.elixir >= SAVE_FULL_ELIXIR - 1e-6`（L650）。满费 → 返回 `setup_wait` token（`suggested_card=best_slot`, `target_kind="none"`, `elixir_budget=0.6`, `risk_profile=0.4`, `value_estimate=0.5`，L651-657）；未满费但有后排 → 返回 `setup_wait` token（`suggested_card=None`, `elixir_budget=0.2`, `risk_profile=0.2`, `value_estimate=0.3`, `hold_mask=SAVE_HOLD_ALL=0b1111`，L658-665）；否则 `None` 交回其它意图（L666）。
 - 置信度: 已确认
 
-##### 2.104.20.10 BeliefPlanner._king_activate [L668-696]
+##### 2.110.20.10 BeliefPlanner._king_activate [L668-696]
 - 类型: method
 - 签名: `def _king_activate(self, battle, p, threat, belief):`
 - 作用: 激活国王塔：公主塔残血/被破且敌方重单位逼近中轴时，放低费单位拉仇恨位。
@@ -13513,7 +13903,7 @@
 - 实现: `min(p.left_tower_hp, p.right_tower_hp) > KING_ACTIVATE_PRINCESS_HP(=800)` → `None`（两塔都还健康，L671-672）；L673-684 找敌方重单位：可部署、`e.name in TANK_CARDS` 或「character 且 `elixir >= 5.0`」（L677-680），且 `3.5 <= x <= 14.5` 且 `y <= BRIDGE_Y + 2.5 = 18.5`（L681-682），取第一个；无 → `None`（L685-686）；L687-695 在 4 槽找 `type in ("character","building")`、`1.0 <= elixir <= 3.0`、圣水够、非 Mirror 的卡，返回 `PlanToken(macro_intent="king_activate", focus_region="own_center", suggested_card=i+1, target_kind="unit", placement_hint="king_front", elixir_budget=0.35, risk_profile=0.5, value_estimate=0.8)`。注意 `Card(e.name)`（L677）未做 KeyError 防护，但其前置 `_deployable_entity` 已保证 `name in card_data`（L127）。
 - 置信度: 已确认
 
-##### 2.104.20.11 BeliefPlanner._save_ace [L698-732]
+##### 2.110.20.11 BeliefPlanner._save_ace [L698-732]
 - 类型: method
 - 签名: `def _save_ace(self, battle, p, threat, belief):`
 - 作用: 藏终结卡：手牌有 ace（`ACE_CARDS` = Lightning/Vines/Freeze/Rocket）且当前不是最强一波窗口时，用 `hold_mask` 指名别出该槽、留费。
@@ -13523,7 +13913,7 @@
 - 实现: L701-706 用 `_hand_slot` 收集所有在手 ace 槽位，空 → `None`；若无压境威胁则不硬藏：有压境威胁时返回 `None`（L708-710，注释「防守中 ace 可能当解牌用」）；L711-716 若我方有 `TANK_CARDS` 单位且 `y >= 10.0`（推进窗口）也返回 `None`（让 ace 出场）；L717-719 把 ace 槽位折成 `hold` 位掩码：`hold |= 1 << (slot - 1)`；L720-727 再从 4 槽里找一张非 ace、`c.elixir <= p.elixir`、`c.type != "spell"`、非 Mirror 的普通卡作 `suggested`（找不到保持 `None`）；返回 `PlanToken(macro_intent="save_ace", focus_region="own_center", suggested_card=suggested, target_kind="none", placement_hint="none", elixir_budget=0.4, risk_profile=0.4, hold_mask=hold, value_estimate=-0.3)`（L728-732）。
 - 置信度: 已确认
 
-##### 2.104.20.12 BeliefPlanner._anti_spell [L734-751]
+##### 2.110.20.12 BeliefPlanner._anti_spell [L734-751]
 - 类型: method
 - 签名: `def _anti_spell(self, battle, p, threat, belief):`
 - 作用: 防法术：信念显示对手高概率有强法术时，建议一张中费角色卡并给出防溅射站位提示。
@@ -13533,7 +13923,7 @@
 - 实现: `kind = _opp_spell_threat_of(belief)`，`None` → `None`（L736-738）；有压境威胁 → `None`（L739-741，`_closest_threat` 调两次）；L742-745 在 4 槽找 `type == "character"`、`3.0 <= elixir <= 6.0`、圣水够、非 `TANK_CARDS` 的卡；命中返回 `PlanToken(macro_intent="anti_spell", focus_region="own_center", suggested_card=i+1, target_kind="none", placement_hint="anti_spell_zone", opp_spell_threat=kind, elixir_budget=0.5, risk_profile=0.4, value_estimate=0.0)`。
 - 置信度: 已确认
 
-##### 2.104.20.13 BeliefPlanner._cycle_small [L753-768]
+##### 2.110.20.13 BeliefPlanner._cycle_small [L753-768]
 - 类型: method
 - 签名: `def _cycle_small(self, battle, p, threat, belief):`
 - 作用: 过牌：无压力且手牌有 1-2 费小牌、圣水有余量时，下小费轮转手牌质量。
@@ -13543,7 +13933,7 @@
 - 实现: `threat >= PRESSURE_THRESHOLD` → `None`（L755-756）；有压境威胁 → `None`（L757-759）；L760-762 在 4 槽找 `c.elixir <= 2.0`、`p.elixir >= c.elixir + 3.0`、非 Mirror 的卡，返回 `PlanToken(macro_intent="cycle_small", focus_region="own_center", suggested_card=i+1, target_kind="none", placement_hint="none", elixir_budget=0.25, risk_profile=0.3, value_estimate=0.2)`。
 - 置信度: 已确认
 
-##### 2.104.20.14 BeliefPlanner.plan [L772-849]
+##### 2.110.20.14 BeliefPlanner.plan [L772-849]
 - 类型: method
 - 签名: `def plan(self, battle, belief: BeliefState, obs=None) -> PlanToken:`
 - 作用: 主入口：按紧急度优先链依次尝试 12 个意图检测器，返回第一个非 `None` 的 `PlanToken`；全部未命中则走旧 8 意图回退（defend/push/king 判定 + 后验调节 risk + 拦截几何 hint）。
@@ -13558,7 +13948,7 @@
 
 ---
 
-### 2.105 `src/clasher_new/rl/config.py`
+### 2.111 `src/clasher_new/rl/config.py`
 
 - **分析组**：G026　**行数**：412　**AST 符号数**：23
 
@@ -13572,7 +13962,7 @@
   - `DEFAULT_OPP_MIX = {"frozen": 0.1, "hist": 0.6, "defend": 0.2, "rand_anchor": 0.1}`（L94）— solo 训练对手池配比，注释给出 frozen 0.7→0.5→0.4→0.1、hist 0.2→0.3→0.6、新增 `rand_anchor` 槽的整改沿革与兼容约定（旧式三槽 dict 仍合法，`rand_anchor` 概率为 0）（L71-93）。
 - 顶层数据表/字典: 三张模块级字典（见上）——`DEFAULT_REWARD`（奖励键→权重）、`MODEL_REWARD_OVERRIDES`（模型 id→奖励覆盖）、`DEFAULT_OPP_MIX`（对手类别→采样概率）。此外无其他顶层表。
 
-#### 2.105.1 TrainConfig [L98-396]
+#### 2.111.1 TrainConfig [L98-396]
 - 类型: class（`@dataclass` 装饰，L97）
 - 签名: `class TrainConfig:`
 - 作用: 训练/评估的超参、奖励权重、运行时与路径的统一配置载体；提供路径派生（全部落在 `out_dir/<name>/` 下）、JSON 序列化/反序列化、7 个命名预设与带覆盖的解析。
@@ -13640,7 +14030,7 @@
 - `folder()` 只依赖 `out_dir` + `name`，因此改名即改全部产物路径（L244-245）。
 - `reward` 字段在**直接构造**时不做默认合并（例如 `presets()` 里 `cls(reward={...})` 会把 `reward` 整体替换为所给字典，实测 `aggressive.reward` 仅 7 键…见下 `presets` 条目实测：`aggressive` 仅 6 键）；只有在 `from_dict`（L305-307）或 `reward_to_env`/`model_reward_weights`（L401、L410）路径上才与 `DEFAULT_REWARD` 合并。
 
-##### 2.105.1.1 TrainConfig.folder [L244-245]
+##### 2.111.1.1 TrainConfig.folder [L244-245]
 - 类型: method
 - 签名: `folder(self)`
 - 作用: 返回该配置的输出目录路径 `out_dir/<name>`。
@@ -13650,7 +14040,7 @@
 - 调用: 被同类的 `state_path`（L248）、`solo_state_path`（L251）、`solo_main_path`（L254）、`solo_ckpt_path`（L258）、`solo_opt_path`（L262）、`run_state_path`（L265）、`gates_path`（L269）、`config_path`（L272）、`replays_dir`（L275）、`main_final_path`（L278）、`ckpt_path`（L281）、`opt_path`（L284）、`ensure_dirs`（L287-288）调用。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.2 TrainConfig.state_path [L247-248]
+##### 2.111.1.2 TrainConfig.state_path [L247-248]
 - 类型: method
 - 签名: `state_path(self)`
 - 作用: 返回联赛状态文件路径 `<folder>/league_state.json`。
@@ -13660,7 +14050,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.3 TrainConfig.solo_state_path [L250-251]
+##### 2.111.1.3 TrainConfig.solo_state_path [L250-251]
 - 类型: method
 - 签名: `solo_state_path(self)`
 - 作用: 返回 solo 训练状态文件路径 `<folder>/solo_state.json`。
@@ -13670,7 +14060,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.4 TrainConfig.solo_main_path [L253-254]
+##### 2.111.1.4 TrainConfig.solo_main_path [L253-254]
 - 类型: method
 - 签名: `solo_main_path(self)`
 - 作用: 返回 solo 主模型当前权重文件路径 `<folder>/solo_main.pt`。
@@ -13680,7 +14070,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.5 TrainConfig.solo_ckpt_path [L256-258]
+##### 2.111.1.5 TrainConfig.solo_ckpt_path [L256-258]
 - 类型: method
 - 签名: `solo_ckpt_path(self, step)`
 - 作用: 返回某步的 solo 历史检查点路径。
@@ -13690,7 +14080,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.6 TrainConfig.solo_opt_path [L260-262]
+##### 2.111.1.6 TrainConfig.solo_opt_path [L260-262]
 - 类型: method
 - 签名: `solo_opt_path(self)`
 - 作用: 返回 solo 优化器状态文件路径。
@@ -13700,7 +14090,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.7 TrainConfig.run_state_path [L264-265]
+##### 2.111.1.7 TrainConfig.run_state_path [L264-265]
 - 类型: method
 - 签名: `run_state_path(self)`
 - 作用: 返回运行状态文件路径 `<folder>/run_state.json`。
@@ -13710,7 +14100,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.8 TrainConfig.gates_path [L267-269]
+##### 2.111.1.8 TrainConfig.gates_path [L267-269]
 - 类型: method
 - 签名: `gates_path(self)`
 - 作用: 返回行为指标门禁报告路径。
@@ -13720,7 +14110,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.9 TrainConfig.config_path [L271-272]
+##### 2.111.1.9 TrainConfig.config_path [L271-272]
 - 类型: method
 - 签名: `config_path(self)`
 - 作用: 返回该配置自身的 JSON 存档路径 `<folder>/config.json`。
@@ -13730,7 +14120,7 @@
 - 调用: 调用 `self.folder()`；被同类 `save()` 调用（L295）。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.10 TrainConfig.replays_dir [L274-275]
+##### 2.111.1.10 TrainConfig.replays_dir [L274-275]
 - 类型: method
 - 签名: `replays_dir(self)`
 - 作用: 返回联赛录像目录路径 `<folder>/replays`。
@@ -13740,7 +14130,7 @@
 - 调用: 调用 `self.folder()`；被同类 `ensure_dirs()` 调用（L288）。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.11 TrainConfig.main_final_path [L277-278]
+##### 2.111.1.11 TrainConfig.main_final_path [L277-278]
 - 类型: method
 - 签名: `main_final_path(self)`
 - 作用: 返回 main 模型最终权重文件路径 `<folder>/main_final.pt`。
@@ -13750,7 +14140,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.12 TrainConfig.ckpt_path [L280-281]
+##### 2.111.1.12 TrainConfig.ckpt_path [L280-281]
 - 类型: method
 - 签名: `ckpt_path(self, step)`
 - 作用: 返回某步的联赛检查点路径 `<folder>/main_ckpt_<step>.pt`。
@@ -13760,7 +14150,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.13 TrainConfig.opt_path [L283-284]
+##### 2.111.1.13 TrainConfig.opt_path [L283-284]
 - 类型: method
 - 签名: `opt_path(self, step)`
 - 作用: 返回某步的联赛优化器状态路径 `<folder>/main_opt_<step>.pt`。
@@ -13770,7 +14160,7 @@
 - 调用: 调用 `self.folder()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.14 TrainConfig.ensure_dirs [L286-288]
+##### 2.111.1.14 TrainConfig.ensure_dirs [L286-288]
 - 类型: method
 - 签名: `ensure_dirs(self)`
 - 作用: 幂等创建输出目录与录像目录。
@@ -13780,7 +14170,7 @@
 - 调用: 调用 `self.folder()` 与 `self.replays_dir()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.15 TrainConfig.to_dict [L291-292]
+##### 2.111.1.15 TrainConfig.to_dict [L291-292]
 - 类型: method
 - 签名: `to_dict(self)`
 - 作用: 把配置实例转成普通 dict。
@@ -13790,7 +14180,7 @@
 - 调用: 被同类 `save()`（L297）与 `resolve()`（L385）调用。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.16 TrainConfig.save [L294-298]
+##### 2.111.1.16 TrainConfig.save [L294-298]
 - 类型: method
 - 签名: `save(self, path=None)`
 - 作用: 把配置以 UTF-8 JSON（`ensure_ascii=False`、缩进 2）写入文件，并返回实际写入路径。
@@ -13800,7 +14190,7 @@
 - 调用: 调用 `self.config_path()` 与 `self.to_dict()`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.17 TrainConfig.from_dict [L301-308]
+##### 2.111.1.17 TrainConfig.from_dict [L301-308]
 - 类型: classmethod
 - 签名: `from_dict(cls, d)`
 - 作用: 由 dict 构造配置，过滤未知键，并把 `reward` 与 `DEFAULT_REWARD` 合并成完整键集。
@@ -13810,7 +14200,7 @@
 - 调用: 被同类 `load()`（L313）与 `resolve()`（L385）调用。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.18 TrainConfig.load [L310-313]
+##### 2.111.1.18 TrainConfig.load [L310-313]
 - 类型: classmethod
 - 签名: `load(cls, path)`
 - 作用: 从 JSON 文件读入并构造配置。
@@ -13820,7 +14210,7 @@
 - 调用: 被同类 `resolve()` 在 `load_config` 分支调用（L379）。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.19 TrainConfig.presets [L317-369]
+##### 2.111.1.19 TrainConfig.presets [L317-369]
 - 类型: classmethod
 - 签名: `presets(cls)`
 - 作用: 返回 7 个命名预设配置的字典（含各自 `reward` 覆盖与个别超参覆盖）。
@@ -13837,7 +14227,7 @@
 - 调用: 每次调用都新建实例（无缓存）；被同类 `resolve()` 调用（L383）。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-##### 2.105.1.20 TrainConfig.resolve [L371-396]
+##### 2.111.1.20 TrainConfig.resolve [L371-396]
 - 类型: classmethod
 - 签名: `resolve(cls, preset, load_config=None, **overrides)`
 - 作用: 按预设名或 JSON 文件解析出配置，再应用命令行覆盖（只覆盖合法字段）。
@@ -13847,7 +14237,7 @@
 - 调用: 调用 `cls.load`、`cls.presets`、`cls.from_dict`、`presets[preset].to_dict`。外部调用方未读 ⇒ 待确认。
 - 置信度: 已确认
 
-#### 2.105.2 reward_to_env [L399-401]
+#### 2.111.2 reward_to_env [L399-401]
 - 类型: function
 - 签名: `def reward_to_env(cfg: TrainConfig) -> dict:`
 - 作用: 把配置的奖励权重转成 `RLEnv` 接受的 `reward_weights` 字典（以 `DEFAULT_REWARD` 为底、用 `cfg.reward` 覆盖）。
@@ -13858,7 +14248,7 @@
 - 调用: 调用了模块级 `DEFAULT_REWARD`。作为参数类型引用 `TrainConfig`。外部调用方未读 ⇒ 待确认（原因：硬约束只允许读本组文件与它 import 的模块）。
 - 置信度: 已确认
 
-#### 2.105.3 model_reward_weights [L404-412]
+#### 2.111.3 model_reward_weights [L404-412]
 - 类型: function
 - 签名: `def model_reward_weights(model_id: str, cfg: TrainConfig) -> dict:`
 - 作用: 在所选预设的奖励权重之上，按流派模型 id 叠加 `MODEL_REWARD_OVERRIDES`，得到该模型的最终奖励字典。
@@ -13872,7 +14262,7 @@
 
 ---
 
-### 2.106 `src/clasher_new/rl/dashboard.py`
+### 2.112 `src/clasher_new/rl/dashboard.py`
 
 - **分析组**：G003　**行数**：2365　**AST 符号数**：27
 
@@ -13891,7 +14281,7 @@
   - `_HTML`（L558-1992）= `r"""..."""` 原始字符串常量，整份前端页面：`<style>`（L564-667，深色主题、`.strategy-card`/`.solo-layout`/`.player-grid`/`table.cards` 等类）、`<body>` 结构（L669-821：Elo 图 `#chart`、排名表 `#tbody`、`#sweepCard`、`#soloCard`、`#playCard`、最近回放列表 `#replaysList`、`#statsCard`、回放播放器 `#playerCard`），以及 `<script>`（L823-1989）内的全部前端逻辑：`COLORS`/`LABELS`/`colorOf`、`refresh()`（3s 轮询 `/api/state|/api/sweep|/api/solo`）、`drawChart()`（Elo 折线 + 误差棒 + tooltip）、`renderSweep()`/`drawSweepChart()`、`renderSolo()`/`drawSoloChart()`（含 EV / `h_std` / `gru_n_abs` / `value_std_ratio` 的着色阈值 L1197-1212）、人机对战 `refreshPlay`/`renderPlay`/`selectPlaySlot` 与场地点击 POST `/api/play/action`、回放列表与播放器（`openReplay`/`openGame`/`computeTowerMax`/`loop`/`drawInterpOn`/`drawElixir`/`displayName` 中英名映射 L1678-1696）、卡牌统计表 `loadCardStats`/`renderCardStats`，最后是事件绑定与 `setInterval(refresh, 3000)`（L1984-1988）。作用：整个 UI 的唯一来源，无外部 CDN 资源（docstring L12）。
 - 顶层数据表/字典: 上述 `MODEL_COLORS`、`MODEL_LABELS` 两个映射表；`_HTML` 内部的 JS 常量 `COLORS`(L824-829)、`LABELS`(L830-834)、`displayName` 的 `M` 映射(L1679-1692，内部实体英文名→中文名，如 `"LogProjectileRolling"/"LogProjectile"` → `"滚木"`、`"ArrowsSpell"` → `"箭雨"`)、`towerMax`(L1364)/`towerPos`(L1365-1368) 塔位表。模块级 Python 侧无其它数据表。
 
-#### 2.106.1 load_state [L71-75]
+#### 2.112.1 load_state [L71-75]
 - 类型: function
 - 签名: `load_state(path)`
 - 作用: 读一个 UTF-8 JSON 文件；不存在返回 `None`。
@@ -13902,7 +14292,7 @@
 - 调用: 被 `build_payload`(L84)、`build_sweep_payload`(L154)、`build_solo_payload`(L186) 调用；本身调用 `os.path.exists`、`json.load`。
 - 置信度: 已确认
 
-#### 2.106.2 build_payload [L78-111]
+#### 2.112.2 build_payload [L78-111]
 - 类型: function
 - 签名: `build_payload(path)`
 - 作用: 把联赛状态 JSON 转成前端所需 payload（模型列表按 Elo 降序 + Elo 历史 + 轮内估计）。
@@ -13913,7 +14303,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/state` 路由调用(L2055)；被 `rl/selftest.py` 导入使用（selftest.py L539 `from rl.dashboard import build_payload`）。调用 `load_state`、`MODEL_LABELS`、`os`、`datetime`。
 - 置信度: 已确认
 
-#### 2.106.3 scan_sweep_dirs [L122-140]
+#### 2.112.3 scan_sweep_dirs [L122-140]
 - 类型: function
 - 签名: `scan_sweep_dirs(root)`
 - 作用: 把 sweep 根目录解析成 `flow_sweep_*` 策略目录列表并排序。
@@ -13924,7 +14314,7 @@
 - 调用: 被 `build_sweep_payload`(L147) 调用；无其它同仓调用点（在无 import 该模块处未发现）。
 - 置信度: 已确认
 
-#### 2.106.4 build_sweep_payload [L143-175]
+#### 2.112.4 build_sweep_payload [L143-175]
 - 类型: function
 - 签名: `build_sweep_payload(sweep_root)`
 - 作用: 读取各 `flow_sweep_<strategy>/summary.json`，组装进度 + 曲线 payload。
@@ -13935,7 +14325,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/sweep` 路由调用(L2058)。调用 `load_state`、`scan_sweep_dirs`。
 - 置信度: 已确认
 
-#### 2.106.5 build_solo_payload [L182-203]
+#### 2.112.5 build_solo_payload [L182-203]
 - 类型: function
 - 签名: `build_solo_payload(path)`
 - 作用: 把 `solo_state.json` 转成胜率曲线/进度/卡组 payload。
@@ -13946,7 +14336,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/solo` 路由调用(L2061)。调用 `load_state`。
 - 置信度: 已确认
 
-#### 2.106.6 _parse_replay_step [L210-212]
+#### 2.112.6 _parse_replay_step [L210-212]
 - 类型: function
 - 签名: `_parse_replay_step(fn)`
 - 作用: 从回放文件名 `league_<数字>.pkl` 中抽出训练步数。
@@ -13957,7 +14347,7 @@
 - 调用: 被 `scan_replays`(L248) 调用。
 - 置信度: 已确认
 
-#### 2.106.7 _replay_n_games [L215-230]
+#### 2.112.7 _replay_n_games [L215-230]
 - 类型: function
 - 签名: `_replay_n_games(path, mtime_ts, size)`
 - 作用: 返回回放文件包含的对局数，带 `(mtime,size)` 缓存避免重复反序列化。
@@ -13970,7 +14360,7 @@
 - 调用: 被 `scan_replays`(L252) 调用。
 - 置信度: 已确认
 
-#### 2.106.8 scan_replays [L233-255]
+#### 2.112.8 scan_replays [L233-255]
 - 类型: function
 - 签名: `scan_replays(replays_dir, limit=30)`
 - 作用: 扫描回放目录，返回按修改时间倒序的最近 `limit` 个 `league_*.pkl` 元数据。
@@ -13982,7 +14372,7 @@
 - 调用: 被 `build_replays_payload`(L261)、`build_card_stats_payload`(L445) 调用。调用 `_parse_replay_step`、`_replay_n_games`。
 - 置信度: 已确认
 
-#### 2.106.9 build_replays_payload [L258-267]
+#### 2.112.9 build_replays_payload [L258-267]
 - 类型: function
 - 签名: `build_replays_payload(replays_dir)`
 - 作用: 组装回放列表 API payload。
@@ -13993,7 +14383,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/replays` 路由调用(L2075)。
 - 置信度: 已确认
 
-#### 2.106.10 load_replay_payload [L270-313]
+#### 2.112.10 load_replay_payload [L270-313]
 - 类型: function
 - 签名: `load_replay_payload(replays_dir, filename, game_idx=None)`
 - 作用: 加载单个回放文件：`game_idx=None` 返回对局元数据列表，指定索引则返回该局完整帧。
@@ -14006,7 +14396,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/replay` 路由调用(L2081)。
 - 置信度: 已确认
 
-#### 2.106.11 _agent_label [L330-334]
+#### 2.112.11 _agent_label [L330-334]
 - 类型: function
 - 签名: `_agent_label(mid)`
 - 作用: 模型 id → 友好中文名，`frozen_copy` 特判为 main 的冻结副本。
@@ -14017,7 +14407,7 @@
 - 调用: 被 `_new_agent`(L351) 调用。
 - 置信度: 已确认
 
-#### 2.106.12 _other_side_id [L337-347]
+#### 2.112.12 _other_side_id [L337-347]
 - 类型: function
 - 签名: `_other_side_id(meta)`
 - 作用: 由 `meta.pair` / `meta.side0` 推出 player-1 一侧的模型 id（`opp_played` 的归属方）。
@@ -14028,7 +14418,7 @@
 - 调用: 被 `_stat_file_cards`(L384) 调用。
 - 置信度: 已确认
 
-#### 2.106.13 _new_agent [L350-352]
+#### 2.112.13 _new_agent [L350-352]
 - 类型: function
 - 签名: `_new_agent(mid)`
 - 作用: 造一个空的按模型聚合的卡牌统计累加器。
@@ -14039,7 +14429,7 @@
 - 调用: 被 `_stat_file_cards`(L378)、`build_card_stats_payload`(L459) 调用。
 - 置信度: 已确认
 
-#### 2.106.14 _stat_file_cards [L355-427]
+#### 2.112.14 _stat_file_cards [L355-427]
 - 类型: function
 - 签名: `_stat_file_cards(path)`
 - 作用: 统计单个回放文件里"每个模型打了哪些牌"（双侧归属 + 卡组构成），带 `(mtime,size)` 缓存。
@@ -14050,7 +14440,7 @@
 - 调用: 被 `build_card_stats_payload`(L451) 调用。调用 `_new_agent`、`_other_side_id`。
 - 置信度: 已确认
 
-#### 2.106.15 build_card_stats_payload [L430-499]
+#### 2.112.15 build_card_stats_payload [L430-499]
 - 类型: function
 - 签名: `build_card_stats_payload(replays_dir, filename=None, n_files=3)`
 - 作用: 汇总回放的卡牌使用统计（单文件或最近 N 个文件），产出前端矩阵所需数据。
@@ -14063,7 +14453,7 @@
 - 调用: 被 `Handler.do_GET` 的 `/api/cardstats` 路由调用(L2089)；被 `rl/selftest.py` 的 `test_dashboard_card_stats`(L1137) 使用。调用 `scan_replays`、`_stat_file_cards`、`_new_agent`。
 - 置信度: 已确认
 
-#### 2.106.16 make_demo_replays [L502-551]
+#### 2.112.16 make_demo_replays [L502-551]
 - 类型: function
 - 签名: `make_demo_replays(replays_dir, n_games=2, n_frames=40)`
 - 作用: 生成演示用合成联赛录像 `league_demo.pkl`（`--demo` 下预览回放播放器）。
@@ -14076,7 +14466,7 @@
 - 调用: 被 `main`(L2328) 在 `--demo` 下调用；调用 `rl.replay.save_league_replays`(replay.py L128，签名 `save_league_replays(games, path)`，写入 `{"schema":…, "games": games}`)。
 - 置信度: 已确认
 
-#### 2.106.17 Handler [L1995-2138]
+#### 2.112.17 Handler [L1995-2138]
 - 类型: class
 - 签名: `class Handler(BaseHTTPRequestHandler)`
 - 作用: HTTP 请求处理器：静态返回 `_HTML` 页面，并把 7 个 `/api/*` 路由分发到上面的 payload 构造函数或人机对战 session。
@@ -14086,7 +14476,7 @@
 - 调用: 被 `main`(L2347 `ThreadingHTTPServer((args.host, args.port), Handler)`) 使用；被 `rl/selftest.py` 以模块方式导入（`import rl.dashboard as dash`，L1022/L1140）但未直接实例化 Handler。
 - 置信度: 已确认
 
-##### 2.106.17.1 Handler._ensure_play [L2008-2024]
+##### 2.112.17.1 Handler._ensure_play [L2008-2024]
 - 类型: method
 - 签名: `_ensure_play(self)`
 - 作用: 懒加载人机对战 session（首次 `/api/play/*` 请求时初始化）。
@@ -14096,7 +14486,7 @@
 - 实现: L2010-2011 若已记过 `Handler.play_error` 直接返回 `None`（不重试）。L2012 仅在 `play_session is None and play_policy_path` 为真时初始化。L2014-2015 延迟导入 `rl.human_play.HumanPlaySession/load_policy/DEFAULT_PLAY_DECK` 与 `rl.config.TrainConfig`；L2016 `cfg = Handler.play_cfg or TrainConfig.resolve("standard")`；L2017 `load_policy(Handler.play_policy_path, hidden_dim=cfg.hidden_dim)`（human_play.py L58 签名 `load_policy(path, hidden_dim=128)`）。L2018-2020 构造 `HumanPlaySession(pol, cfg=cfg, deck=DEFAULT_PLAY_DECK, seed=Handler.play_seed, max_steps=600, out_dir=Handler.play_out_dir)`。L2021-2023 任何异常都记 `Handler.play_error = f"{type(e).__name__}: {e}"` 并返回 `None`（`# noqa: BLE001` 注释：初始化失败给出可见错误）。L2024 返回 session。
 - 置信度: 已确认
 
-##### 2.106.17.2 Handler._read_body [L2026-2036]
+##### 2.112.17.2 Handler._read_body [L2026-2036]
 - 类型: method
 - 签名: `_read_body(self)`
 - 作用: 读取并解析 POST 请求体 JSON。
@@ -14106,7 +14496,7 @@
 - 实现: L2028-2030 读 `Content-Length` 头并 `int()`，`ValueError` 时置 0；L2031-2032 长度 `<=0` 返回 `{}`；L2033-2036 读 length 字节、按 UTF-8 解码后 `json.loads`，捕获 `(ValueError, UnicodeDecodeError)` 返回 `{}`。
 - 置信度: 已确认
 
-##### 2.106.17.3 Handler._send [L2038-2046]
+##### 2.112.17.3 Handler._send [L2038-2046]
 - 类型: method
 - 签名: `_send(self, code, body, ctype)`
 - 作用: 统一的响应发送（含禁缓存头与 Content-Length）。
@@ -14119,7 +14509,7 @@
 - 实现: L2039-2045 `send_response(code)`，依次写 `Content-Type`、`Cache-Control: no-store, no-cache, must-revalidate`、`Pragma: no-cache`、`Expires: 0`、`Content-Length`(字节长度)，`end_headers()`；L2046 `self.wfile.write(body)`。
 - 置信度: 已确认
 
-##### 2.106.17.4 Handler.do_GET [L2048-2097]
+##### 2.112.17.4 Handler.do_GET [L2048-2097]
 - 类型: method
 - 签名: `do_GET(self)`
 - 作用: GET 路由：返回页面与 7 个 API，含 `/favicon.ico` 空 204。
@@ -14129,7 +14519,7 @@
 - 实现: L2049-2051 用 `urlparse` 拆 path 与 query（`parse_qs`）。路由表：`/` 与 `/index.html` 返回 `_HTML.encode("utf-8")`，类型 `text/html; charset=utf-8`(L2052-2053)；`/api/state` → `build_payload(self.state_path)`(L2054-2056)；`/api/sweep` → `build_sweep_payload(self.sweep_root)`(L2057-2059)；`/api/solo` → `build_solo_payload(self.solo_path)`(L2060-2062)；`/api/play/state`(L2063-2073) 先 `_ensure_play()`，按 `play_error` / `sess is None` / 正常三态分别返回错误 JSON 或 `sess.state()`；`/api/replays` → `build_replays_payload(self.replays_dir)`(L2074-2076)；`/api/replay`(L2077-2083) 取 `file`、`game` 查询参数（`gi = int(game[0]) if game and game[0].isdigit() else None`）后调 `load_replay_payload`；`/api/cardstats`(L2084-2091) 取 `file`（空串归一为 `None`）与 `files`（非数字或缺省取 3）后调 `build_card_stats_payload`；`/favicon.ico` 返回 204 空体(L2092-2095，注释说明仅为消除浏览器 404 噪音)；其余 404 `b"not found"`(L2096-2097)。所有 JSON 响应均 `json.dumps(...)` 后 UTF-8 编码。
 - 置信度: 已确认
 
-##### 2.106.17.5 Handler.log_message [L2099-2100]
+##### 2.112.17.5 Handler.log_message [L2099-2100]
 - 类型: method
 - 签名: `log_message(self, fmt, *args)`
 - 作用: 覆盖默认访问日志，把格式化消息写 stderr。
@@ -14141,7 +14531,7 @@
 - 实现: L2100 `sys.stderr.write("[dashboard] %s\n" % (fmt % args))`。
 - 置信度: 已确认
 
-##### 2.106.17.6 Handler.do_POST [L2102-2138]
+##### 2.112.17.6 Handler.do_POST [L2102-2138]
 - 类型: method
 - 签名: `do_POST(self)`
 - 作用: POST 路由：人机对战的出牌（`/api/play/action`）与开新局（`/api/play/new`）。
@@ -14151,7 +14541,7 @@
 - 实现: L2103-2104 解析 path。`/api/play/action`(L2105-2120)：先 `_ensure_play()`，`play_error` 或 `sess is None` 时返回错误 JSON 并 `return`；否则 `_read_body()` 后 `sess.act(int(body["slot"]), int(body["x"]), int(body["y"]))`，`(TypeError, ValueError)`（含字段缺失/非数字）时返回 `{"ok": False, "error": "参数需为 slot,x,y 整数"}`；结果 JSON 回写。`/api/play/new`(L2121-2136)：`_ensure_play()` 为 `None` 时返回"未指定 --play 策略"；否则延迟导入 `HumanPlaySession`，先 `sess.save(out_dir=Handler.play_out_dir)` 结束并保存上一局（L2128 注释）、`play_games_saved += 1`、`play_seed += 1`，再用上一局的 `sess.policy`/`sess.deck`/`sess.max_steps` 与 `Handler.play_cfg`、新 seed 重建 session，并把新 `state()` 回写。其它路径 404 `b"not found"`(L2137-2138)。注意：这里重建 session 传的是 `cfg=Handler.play_cfg`（而 `_ensure_play` 里用 `Handler.play_cfg or TrainConfig.resolve("standard")`）。
 - 置信度: 已确认
 
-#### 2.106.18 make_demo_state [L2141-2189]
+#### 2.112.18 make_demo_state [L2141-2189]
 - 类型: function
 - 签名: `make_demo_state(path, n_points=10, seed=0)`
 - 作用: 生成演示用联赛状态 JSON（5 卡组模型 + main + 合成 Elo 历史与轮内 SE）。
@@ -14164,7 +14554,7 @@
 - 调用: 被 `main`(L2299) 在 `--demo` 且状态文件不存在时调用。
 - 置信度: 已确认
 
-#### 2.106.19 make_demo_sweep [L2192-2236]
+#### 2.112.19 make_demo_sweep [L2192-2236]
 - 类型: function
 - 签名: `make_demo_sweep(root, seed=1)`
 - 作用: 生成两份演示 flow-sweep `summary.json`（`stream` 20 轮 / `games5` 4 轮）。
@@ -14176,7 +14566,7 @@
 - 调用: 被 `main`(L2305) 在 `--demo` 且 sweep 目录不存在时调用。
 - 置信度: 已确认
 
-#### 2.106.20 make_demo_solo [L2239-2267]
+#### 2.112.20 make_demo_solo [L2239-2267]
 - 类型: function
 - 签名: `make_demo_solo(path, n_points=10, seed=3)`
 - 作用: 生成一份演示 `solo_state.json`（胜率上升曲线）。
@@ -14189,7 +14579,7 @@
 - 调用: 被 `main`(L2314) 在 `--demo` 且 `solo_state.json` 不存在时调用。
 - 置信度: 已确认
 
-#### 2.106.21 main [L2270-2361]
+#### 2.112.21 main [L2270-2361]
 - 类型: function
 - 签名: `main()`
 - 作用: 解析 CLI 参数，按需生成 demo 数据，解析各面板路径，装配 `Handler` 类属性并启动 `ThreadingHTTPServer`。
@@ -14201,7 +14591,7 @@
 
 ---
 
-### 2.107 `src/clasher_new/rl/decks.py`
+### 2.113 `src/clasher_new/rl/decks.py`
 
 - **分析组**：G044　**行数**：139　**AST 符号数**：7
 
@@ -14213,7 +14603,7 @@
 - 顶层数据表/字典: `CARD_ALIASES` — 键为数据集风格英文卡名，值为引擎卡名，共 4 条，仅用于 `normalize_card` 的兜底查找（L63-64）。
 - 模块级路径注入: L21-23 把 `src/clasher_new` 插入 `sys.path`。
 
-#### 2.107.1 _engine_lookup [L42-50]
+#### 2.113.1 _engine_lookup [L42-50]
 - 类型: function
 - 签名: `_engine_lookup()`
 - 作用: 惰性构造并缓存"归一化卡名 → 引擎卡名"查找表（L44）。
@@ -14223,7 +14613,7 @@
 - 调用: 被本文件 `normalize_card` L60 调用。
 - 置信度: 已确认
 
-#### 2.107.2 normalize_card [L53-71]
+#### 2.113.2 normalize_card [L53-71]
 - 类型: function
 - 签名: `normalize_card(name: str)`
 - 作用: 数据集卡名 → 引擎卡名；无法映射返回 None（L54）。
@@ -14234,7 +14624,7 @@
 - 调用: 被本文件 `map_deck_cards` L83 调用；被 `rl/selftest.py:600` 直接 import 测试（`from rl.decks import load_classified_decks, decks_by_archetype, normalize_card`）。
 - 置信度: 已确认
 
-#### 2.107.3 map_deck_cards [L74-89]
+#### 2.113.3 map_deck_cards [L74-89]
 - 类型: function
 - 签名: `map_deck_cards(cards, seed=0)`
 - 作用: 映射一副 8 卡卡组；未命中的卡槽用引擎卡池补位（确定性）（L75）。
@@ -14246,7 +14636,7 @@
 - 调用: 被本文件 `load_classified_decks` L116 调用（seed=i，按卡组序号）。
 - 置信度: 已确认
 
-#### 2.107.4 _default_paths [L92-101]
+#### 2.113.4 _default_paths [L92-101]
 - 类型: function
 - 签名: `_default_paths()`
 - 作用: 给出 `leaderboard_decks_classified.json` 的候选路径列表（L92-101）。
@@ -14256,7 +14646,7 @@
 - 调用: 被本文件 `load_classified_decks` L109 调用。
 - 置信度: 已确认
 
-#### 2.107.5 load_classified_decks [L104-122]
+#### 2.113.5 load_classified_decks [L104-122]
 - 类型: function
 - 签名: `load_classified_decks(path=None)`
 - 作用: 加载三分类卡组 → `list[{"archetype", "cards"(8 张引擎卡), "missing"}]`（L105）。
@@ -14267,7 +14657,7 @@
 - 调用: 被 `rl/run_league.py:548`、`rl/flow_league.py:74`、`rl/selftest.py:600` 调用。
 - 置信度: 已确认
 
-#### 2.107.6 decks_by_archetype [L125-130]
+#### 2.113.6 decks_by_archetype [L125-130]
 - 类型: function
 - 签名: `decks_by_archetype(decks)`
 - 作用: 按 archetype 分组：`dict[str, list[deck]]`（L126）。
@@ -14278,7 +14668,7 @@
 - 调用: 被 `rl/run_league.py:552`、`rl/flow_league.py:75`、`rl/selftest.py:600` 调用。
 - 置信度: 已确认
 
-#### 2.107.7 classify_stats [L133-139]
+#### 2.113.7 classify_stats [L133-139]
 - 类型: function
 - 签名: `classify_stats(decks)`
 - 作用: 统计各分类卡组数 / 平均补位卡数（L134）。
@@ -14291,7 +14681,7 @@
 
 ---
 
-### 2.108 `src/clasher_new/rl/diagnostics.py`
+### 2.114 `src/clasher_new/rl/diagnostics.py`
 
 - **分析组**：G044　**行数**：163　**AST 符号数**：5
 
@@ -14306,7 +14696,7 @@
   - docstring 另给出未进 THRESHOLDS 的量纲口径说明（L14-26）：`h_std` 饱和 ~1e-5、健康 >0.05；`n_abs` 饱和 →1.0、健康 <0.9；比值分母 `r_std_batch`（每 128 帧一批取批内 std 再平均）与分子"最近 96 帧探针"帧集不同，是量级对照而非严格同帧配对（L24-26）。
 - 顶层数据表/字典: `THRESHOLDS`（见上，唯一模块级数据表）。
 
-#### 2.108.1 print_safe [L37-50]
+#### 2.114.1 print_safe [L37-50]
 - 类型: function
 - 签名: `print_safe(msg)`
 - 作用: print 兜底——编码不支持的字符降级为 `?`，而不是抛 UnicodeEncodeError（L38）。
@@ -14317,7 +14707,7 @@
 - 调用: 被 `rl/follower.py:95`、`rl/follower.py:101`、`rl/follower.py:147` 以惰性 import 方式调用（避免模块级依赖）；本文件内部无调用。
 - 置信度: 已确认
 
-#### 2.108.2 _gru_gate_stats [L59-76]
+#### 2.114.2 _gru_gate_stats [L59-76]
 - 类型: function
 - 签名: `_gru_gate_stats(policy, enc, h_prev)`
 - 作用: 手动复现 GRUCell 内部，返回候选 n 的 |·| 均值，作为饱和判据（L60）。
@@ -14330,7 +14720,7 @@
 - 调用: 被本文件 `gru_vitality` L108 调用；未在本文件外被调用。
 - 置信度: 已确认
 
-#### 2.108.3 gru_vitality [L80-121]
+#### 2.114.3 gru_vitality [L80-121]
 - 类型: function（带 `@torch.no_grad()` 装饰器，L79）
 - 签名: `gru_vitality(policy, frames, max_frames=96)`
 - 作用: 测 GRU / value_head 的"活力"（L81）。
@@ -14343,7 +14733,7 @@
 - 调用: 被 `rl/train_solo.py`（`from rl import diagnostics as _diag`，train_solo.py:38）与 `rl/selftest.py`（selftest.py:4207/4366/4455）调用；本文件 `check_vitality` 消费其输出。
 - 置信度: 已确认
 
-#### 2.108.4 check_vitality [L124-140]
+#### 2.114.4 check_vitality [L124-140]
 - 类型: function
 - 签名: `check_vitality(vit)`
 - 作用: 按 THRESHOLDS 返回告警列表（空 = 通过），P0-C 用（L125）。
@@ -14354,7 +14744,7 @@
 - 调用: 被 `rl/train_solo.py`（diagnostics 别名 `_diag`）与 `rl/selftest.py`（4207/4366/4455）调用；调用方另把 `value_std_ratio` 合进 vit（见模块 docstring L20-26）。
 - 置信度: 已确认
 
-#### 2.108.5 check_policy_architecture [L143-163]
+#### 2.114.5 check_policy_architecture [L143-163]
 - 类型: function
 - 签名: `check_policy_architecture(policy)`
 - 作用: **启动前检查**（v3 P0-C）——静态可判定的饱和病因护栏，返回告警列表（L144）。
@@ -14367,7 +14757,7 @@
 
 ---
 
-### 2.109 `src/clasher_new/rl/elo.py`
+### 2.115 `src/clasher_new/rl/elo.py`
 
 - **分析组**：G045　**行数**：59　**AST 符号数**：8
 
@@ -14378,7 +14768,7 @@
 - 关键模块级常量: `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（L11）— 包上一级目录；L12-13 条件插 `sys.path`。除此之外无模块级常量。
 - 顶层数据表/字典: 无（实例级 `self.ratings` 见下）
 
-#### 2.109.1 Elo [L16-59]
+#### 2.115.1 Elo [L16-59]
 - 类型: class
 - 签名: `class Elo:`
 - 作用: 维护 agent_id → 评分的字典并提供更新/查询/持久化。
@@ -14388,7 +14778,7 @@
 - 调用: `rl/league.py` L20 `from rl.elo import Elo`、L36 `Elo(k=elo_k)` 实例化；L50 `ensure`、L61 `update`、L142 `table`。`expected` 只被类内 `update`（L38）调用；`save`/`load` 在本仓库检索到的调用点为零（league.py 走自己的 `save_state`/`load_state`，L144-173 直接读写 `self.elo.ratings`）。
 - 置信度: 已确认
 
-##### 2.109.1.1 Elo.__init__ [L17-20]
+##### 2.115.1.1 Elo.__init__ [L17-20]
 - 类型: method
 - 签名: `__init__(self, k: float = 32.0, initial: float = 1500.0)`
 - 作用: 记录 K 因子与初始分并建空表。
@@ -14399,7 +14789,7 @@
 - 实现: L18-20 依次赋 `self.k`、`self.initial`、`self.ratings = {}`。
 - 置信度: 已确认
 
-##### 2.109.1.2 Elo.ensure [L22-25]
+##### 2.115.1.2 Elo.ensure [L22-25]
 - 类型: method
 - 签名: `ensure(self, agent_id) -> float`
 - 作用: 懒初始化某 agent 的评分并返回。
@@ -14409,7 +14799,7 @@
 - 实现: L23-24 若键不存在则写入 `self.initial`；L25 返回 `self.ratings[agent_id]`。
 - 置信度: 已确认
 
-##### 2.109.1.3 Elo.expected [L28-29]
+##### 2.115.1.3 Elo.expected [L28-29]
 - 类型: staticmethod（源码 L27 `@staticmethod`）
 - 签名: `expected(r_a: float, r_b: float) -> float`
 - 作用: 标准 Elo 期望得分。
@@ -14420,7 +14810,7 @@
 - 实现: L29 单行公式。
 - 置信度: 已确认
 
-##### 2.109.1.4 Elo.update [L31-42]
+##### 2.115.1.4 Elo.update [L31-42]
 - 类型: method
 - 签名: `update(self, agent_a, agent_b, score_a: float, n_games: int = 1)`
 - 作用: 按 a 的得分同时更新双方评分，K 按局数缩放。
@@ -14434,7 +14824,7 @@
 - 调用: `rl/league.py` L61 `self.elo.update(agent_a, agent_b, score_a, n_games=n_games)`。
 - 置信度: 已确认
 
-##### 2.109.1.5 Elo.table [L44-45]
+##### 2.115.1.5 Elo.table [L44-45]
 - 类型: method
 - 签名: `table(self)`
 - 作用: 按评分降序返回一份字典副本。
@@ -14444,7 +14834,7 @@
 - 调用: `rl/league.py` L142 `return self.elo.table()`。
 - 置信度: 已确认
 
-##### 2.109.1.6 Elo.save [L47-50]
+##### 2.115.1.6 Elo.save [L47-50]
 - 类型: method
 - 签名: `save(self, path)`
 - 作用: 把 K、初始分与评分表写 JSON。
@@ -14455,7 +14845,7 @@
 - 调用: 本仓库内未检索到调用点（league.py 用自己的 `save_state`，rl/league.py L144 起）。
 - 置信度: 已确认
 
-##### 2.109.1.7 Elo.load [L53-59]
+##### 2.115.1.7 Elo.load [L53-59]
 - 类型: classmethod（源码 L52 `@classmethod`）
 - 签名: `load(cls, path)`
 - 作用: 从 JSON 还原一个 Elo 实例。
@@ -14468,7 +14858,7 @@
 
 ---
 
-### 2.110 `src/clasher_new/rl/env_wrapper.py`
+### 2.116 `src/clasher_new/rl/env_wrapper.py`
 
 - **分析组**：G011　**行数**：731　**AST 符号数**：28
 
@@ -14494,7 +14884,7 @@
 
 ---
 
-#### 2.110.1 tower_total_hp [L74-76]
+#### 2.116.1 tower_total_hp [L74-76]
 - 类型: function
 - 签名: `tower_total_hp(troop_hp: float, king_hp: float) -> float`
 - 作用: 计算一方总塔血 = 2×公主塔血 + 国王塔血（塔血归一化的分母）。
@@ -14506,7 +14896,7 @@
 - 调用: 模块内被 `_TOWER_HP_ANCHOR` 计算（L84）调用；同仓库 `rl/selftest.py` L899 起 `from rl.env_wrapper import (TOWER_TROOP_HP_LV11, KING_TOWER_HP_LV11, ...)` 做参考表核对（该 import 行含 tower_total_hp 一类符号，具体取用行未逐字读完 ⇒ 部分待确认）。
 - 置信度: 已确认
 
-#### 2.110.2 tower_value_mult [L101-118]
+#### 2.116.2 tower_value_mult [L101-118]
 - 类型: function
 - 签名: `tower_value_mult(hp_ratio: float, *, king: bool, princesses_alive: int, k: float = DEFAULT_TOWER_PREMIUM_K, king_gate: float = DEFAULT_KING_GATE) -> float`
 - 作用: 给定塔的当前血比例，返回其「单位血价值倍数」（凹形残血溢价 + 王塔贬值闸门）。
@@ -14521,7 +14911,7 @@
 - 调用: 被本文件 `_per_tower_norm_dmg`（L157）调用；同仓库 `rl/action_mask.py` L204（惰性 `from rl.env_wrapper import tower_value_mult`，L215 使用 `king=False`）、`rl/belief_planner.py` L269（惰性 import，L299 使用）调用——用于让掩码/规划器法术估值与训练奖励量纲同源。
 - 置信度: 已确认
 
-#### 2.110.3 tower_premium_k [L121-123]
+#### 2.116.3 tower_premium_k [L121-123]
 - 类型: function
 - 签名: `tower_premium_k(rw) -> float`
 - 作用: 从奖励字典读取溢价强度 `tower_premium_k`，缺键回退到常量 2.0。
@@ -14532,7 +14922,7 @@
 - 调用: 被本文件 `compute_reward` L216 调用（`k_prem = tower_premium_k(rw)`）。
 - 置信度: 已确认
 
-#### 2.110.4 _princesses_alive [L126-128]
+#### 2.116.4 _princesses_alive [L126-128]
 - 类型: function
 - 签名: `_princesses_alive(hp_ratio_king, hp_ratio_left, hp_ratio_right) -> int`
 - 作用: 由三塔血比例数出存活公主塔数（比例 >0 = 未破）。
@@ -14544,7 +14934,7 @@
 - 调用: 被本文件 `_per_tower_norm_dmg` L145-148 调用（传入的国王塔比例被忽略）。
 - 置信度: 已确认
 
-#### 2.110.5 _per_tower_norm_dmg [L131-161]
+#### 2.116.5 _per_tower_norm_dmg [L131-161]
 - 类型: function
 - 签名: `_per_tower_norm_dmg(dmg_list, old_list, new_list, max_list, *, king, k, king_gate)`
 - 作用: 把三塔的「旧血−新血」逐塔乘以差异化价值倍数，再按各塔 lv11 锚归一化，返回加权伤害和（正=塔掉血）。
@@ -14560,7 +14950,7 @@
 - 调用: 被本文件 `compute_reward` L220-225（红方）与 L230-235（蓝方）调用；同仓库 `rl/mcts.py` L64/L71/L108-109 注释声明其每塔锚与归一化口径「与 env_wrapper._per_tower_norm_dmg 同源」（未直接调用该函数）。
 - 置信度: 已确认（`king` 形参未被使用这一点由 L157 显式传 `king=(i == 0)` 推得）
 
-#### 2.110.6 _phase_weights [L164-178]
+#### 2.116.6 _phase_weights [L164-178]
 - 类型: function
 - 签名: `_phase_weights(rw, battle_time)`
 - 作用: 返回 `(tower_opp, tower_self, edw_coef)`——按 120s 切换的两段离散奖励权重（塔伤/自损/资源账）。
@@ -14572,7 +14962,7 @@
 - 调用: 被本文件 `RLEnv.step` L672 调用；同仓库 `rl/flow_league.py` L40 import、L307 调用，`rl/mcts.py` L35 import、L114 调用（`tw_opp, tw_self, edw = _phase_weights(rw, battle.time)`）——保证搜索/联赛与训练奖励价格同源。
 - 置信度: 已确认
 
-#### 2.110.7 compute_reward [L181-263]
+#### 2.116.7 compute_reward [L181-263]
 - 类型: function
 - 签名: `compute_reward(rw, *, blue_hps_old, red_hps_old, blue_hps_new, red_hps_new, blue_left_old, red_left_old, blue_left_new, red_left_new, my_elixir_before, opp_elixir_before, my_elixir_after, opp_elixir_after, my_v_before=0.0, opp_v_before=0.0, my_v_after=0.0, opp_v_after=0.0, winner, invalid_count, blue_hps_max=None, red_hps_max=None, game_over=False, draw_penalty=None, blue_towers_old=None, red_towers_old=None, blue_towers_new=None, red_towers_new=None, blue_towers_max=None, red_towers_max=None)`
 - 作用: 逐决策帧奖励的纯函数：皇冠/塔血（含差异化定价与归一化）/圣水资源账 Φ/胜负或平局/非法动作五项之和；`RLEnv.step` 与 selftest 共用。
@@ -14595,14 +14985,14 @@
 
 ---
 
-#### 2.110.8 ActionBundleSpace [L268-286]
+#### 2.116.8 ActionBundleSpace [L268-286]
 - 类型: class（bases=['gym.spaces.Space']）
 - 签名: `class ActionBundleSpace(gym.spaces.Space):`
 - 作用: `ActionBundle` 的 gym 空间占位（自定义训练用，不参与 SB3 标准优化）；只提供 sample/contains/repr。
 - 元信息: docstring L269 明示「自定义训练用，不参与 SB3 标准优化」；无类级常量；`__init__` 用 `shape=None, dtype=object` 调 `super().__init__`（L272）。
 - 置信度: 已确认
 
-##### 2.110.8.1 ActionBundleSpace.__init__ [L271-273]
+##### 2.116.8.1 ActionBundleSpace.__init__ [L271-273]
 - 类型: method
 - 签名: `__init__(self, k_max: int = K_MAX)`
 - 作用: 初始化空间，记录每步最多子动作数 `k_max`。
@@ -14612,7 +15002,7 @@
 - 实现: L272 `super().__init__(shape=None, dtype=object)`；L273 `self.k_max = k_max`。
 - 置信度: 已确认
 
-##### 2.110.8.2 ActionBundleSpace.sample [L275-280]
+##### 2.116.8.2 ActionBundleSpace.sample [L275-280]
 - 类型: method
 - 签名: `sample(self, mask=None, rng=None)`
 - 作用: 采样一个随机的 `ActionBundle`（子动作数 0..k_max，slot 与格子坐标随机）。
@@ -14623,7 +15013,7 @@
 - 实现: L276 `rng = rng or random`；L277 `n = rng.randint(0, self.k_max)`；L278-279 列表推导构造 n 个 SubAction（x∈[0,17]、y∈[0,31]，对应 GRID_W=18/GRID_H=32 的本地格）；L280 返回 `ActionBundle(sub_actions=sub)`。**注意 sample 未做合法性校验**（slot 可为 0 或 >K_MAX 范围内任意值，格子不一定合法）。
 - 置信度: 已确认
 
-##### 2.110.8.3 ActionBundleSpace.contains [L282-283]
+##### 2.116.8.3 ActionBundleSpace.contains [L282-283]
 - 类型: method
 - 签名: `contains(self, x)`
 - 作用: 判断 x 是否为合法 ActionBundle 且子动作数不超上限。
@@ -14633,7 +15023,7 @@
 - 实现: 单行布尔表达式，不做逐子动作校验。
 - 置信度: 已确认
 
-##### 2.110.8.4 ActionBundleSpace.__repr__ [L285-286]
+##### 2.116.8.4 ActionBundleSpace.__repr__ [L285-286]
 - 类型: method
 - 签名: `__repr__(self)`
 - 作用: 返回类名与 k_max 的字符串表示。
@@ -14644,14 +15034,14 @@
 
 ---
 
-#### 2.110.9 RLEnv [L289-723]
+#### 2.116.9 RLEnv [L289-723]
 - 类型: class（bases=['gym.Env']）
 - 签名: `class RLEnv(gym.Env):`
 - 作用: 对局环境的 gym 包装器：维护 `battle.BattleState`、观测/动作掩码、对手执行、部署份额记账，并在 `step` 中做「整包校验→整包提交→对手动作→统一推进决策帧→算奖励」的闭环。
 - 元信息: `metadata = {"render_modes": []}`（L290）；类属性 `_NON_UNIT_ENTITY`（L547-548）；实例属性在 `__init__` 建立（见下）；无类级常量其他。
 - 置信度: 已确认
 
-##### 2.110.9.1 RLEnv.__init__ [L292-346]
+##### 2.116.9.1 RLEnv.__init__ [L292-346]
 - 类型: method
 - 签名: `__init__(self, opponent: Optional[Callable] = None, deck0: Optional[list] = None, deck1: Optional[list] = None, deck0_factory: Optional[Callable[[], list]] = None, deck1_factory: Optional[Callable[[], list]] = None, visualize: bool = False, speed: float = 1.0, decision_frames: int = 30, dt: float = 1 / 60, record_hidden: bool = True, seed: int = 0, reward_weights: Optional[dict] = None, card_level: Optional[int] = None)`
 - 作用: 配置奖励权重、双方卡组（固定或每局工厂）、对手、可视化/帧率/隐藏态开关与随机种子，并建立 gym 观测/动作空间与资源账状态。
@@ -14671,7 +15061,7 @@
 - 实现: L309-310 校验 speed>0；L312-314 建立 `self.reward_weights` 并 update；L315-319 记 deck/factory；L320-327 记 opponent/visualize/speed/decision_frames/dt/record_hidden/seed/card_level；L329-335 建 `observation_space`：Dict(grid Box(GRID_H,GRID_W,GRID_C) float32、hand Box(0.._NUM_IDS,(5,)) int32、elixir Box(0..10,(1,)) float32、next_card Box(0.._NUM_IDS,(1,)) int32、time Box(0..400,(1,)) float32)；L336 `action_space = ActionBundleSpace()`；L338-340 `self.battle=None`、`_visualizer=None`、`self._rng = random.Random(seed)`；L341-342 掩码缓存 `_mask_fp/_mask_cells` 置 None；L344-346 资源账状态：`_v_share={0:{},1:{}}`、`_active_v=[0.0,0.0]`、`_seen_max_id=0`。
 - 置信度: 已确认
 
-##### 2.110.9.2 RLEnv.reset [L348-386]
+##### 2.116.9.2 RLEnv.reset [L348-386]
 - 类型: method
 - 签名: `reset(self, *, seed=None, options=None)`
 - 作用: 开始新一局：确定并**洗牌**双方卡组、新建 `BattleState`、同步真实塔血、记录本局塔血基准与 per-tower 满血、清空掩码缓存与资源账；返回 `(obs, {})`。
@@ -14693,7 +15083,7 @@
 - 可复现性影响（本组要点，源码依据 + 调用点依据）: 固定 `seed` 只固定 RNG 流；同一实例的**第 n 次 reset 的牌序还取决于此前 reset 次数**与构造时传入的 `deck0/deck1` 初值（L351-357 链式洗牌 + L349 不传 seed 不重播）。因此两个进程/实例即使同 seed，只要 reset 次数不同或构造牌序不同，同一「第 k 局」的起点牌序就不同。同仓库调用点印证：`rl/train_solo.py` L968 在启动并行评估时把**父训练进程当下**的牌序快照进 `env_kwargs["deck0"]=list(env.deck0)`（父进程已多次 reset，`env.deck0` 是被反复覆盖后的当前值），worker（L813/L831）用 `RLEnv(seed=worker_id + 777, deck0=list(env_kwargs["deck0"]), ...)` 构造，故 worker 的**起点牌序随父进程 reset 历史漂移**，固定种子只固定该 worker 内部 40 局之间的相对洗牌序列（L853-871 注释：「先按当前 env.deck1（上一局牌序）构造信念，再 reset 换牌序」）。⇒ 「每评估点重打同样 40 局」在该实现下不成立；锚点读数是 `(权重, 父进程牌序链状态)` 的函数。
 - 置信度: 已确认（洗牌链式性由 L349-357 直接可读；父进程→worker 牌序传递由 `rl/train_solo.py` L968/L831 证实）
 
-##### 2.110.9.3 RLEnv.observe [L390-391]
+##### 2.116.9.3 RLEnv.observe [L390-391]
 - 类型: method
 - 签名: `observe(self, player_id: int = 0) -> dict`
 - 作用: 返回指定玩家视角的观测字典。
@@ -14704,7 +15094,7 @@
 - 调用: 被本文件 `reset` L386、`step` L723、`_run_opponent` L495 调用。
 - 置信度: 已确认
 
-##### 2.110.9.4 RLEnv.get_hidden_state [L393-394]
+##### 2.116.9.4 RLEnv.get_hidden_state [L393-394]
 - 类型: method
 - 签名: `get_hidden_state(self) -> dict`
 - 作用: 返回训练期特权隐含状态标签（固定玩家 0 视角）。
@@ -14714,7 +15104,7 @@
 - 调用: 被本文件 `step` L722（`info["hidden"]`）调用。
 - 置信度: 已确认
 
-##### 2.110.9.5 RLEnv.get_prophet_state [L396-413]
+##### 2.116.9.5 RLEnv.get_prophet_state [L396-413]
 - 类型: method
 - 签名: `get_prophet_state(self) -> dict`
 - 作用: 返回先知规划器用的特权完整状态摘要（上帝视角）。
@@ -14723,7 +15113,7 @@
 - 实现: L398 取 `p0, p1 = self.battle.players`；L399-413 逐个键构造字面量 dict；`entities` 用列表推导过滤 `e.is_alive`（L411）。不做异常/空 battle 保护。
 - 置信度: 已确认
 
-##### 2.110.9.6 RLEnv.get_action_mask [L417-419]
+##### 2.116.9.6 RLEnv.get_action_mask [L417-419]
 - 类型: method
 - 签名: `get_action_mask(self, partial_bundle: Optional[ActionBundle] = None) -> dict`
 - 作用: 返回玩家 0（agent）的动态动作掩码。
@@ -14733,7 +15123,7 @@
 - 实现: 单行转发，player_id 固定 0。
 - 置信度: 已确认
 
-##### 2.110.9.7 RLEnv.get_action_mask_for [L421-486]
+##### 2.116.9.7 RLEnv.get_action_mask_for [L421-486]
 - 类型: method
 - 签名: `get_action_mask_for(self, player_id: int, partial_bundle: Optional[ActionBundle] = None) -> dict`
 - 作用: 为指定玩家算动态掩码：槽位可出性、每槽合法格子、技能可出性与剩余资源，支持 autoregressive bundle head 用 partial_bundle 递增扣费。
@@ -14745,7 +15135,7 @@
 - 调用: 被本文件 `get_action_mask`（L419）与 `_random_opponent`（L526）调用；同仓库 `rl/train_solo.py` L813/L831 附近的评估/训练循环使用（由 env_wrapper 的调用点 grep 确认 `RLEnv(` 在 train_solo 中被构造；掩码具体调用行未逐行读完 ⇒ 待确认）。
 - 置信度: 已确认
 
-##### 2.110.9.8 RLEnv._run_opponent [L490-522]
+##### 2.116.9.8 RLEnv._run_opponent [L490-522]
 - 类型: method
 - 签名: `_run_opponent(self) -> list`
 - 作用: 执行对手动作，返回结构化 played 列表 `[{card, x, y}, ...]`（技能记为 `__ability__`）。
@@ -14755,7 +15145,7 @@
 - 调用: 被本文件 `RLEnv.step` L645 调用。
 - 置信度: 已确认
 
-##### 2.110.9.9 RLEnv._random_opponent [L524-542]
+##### 2.116.9.9 RLEnv._random_opponent [L524-542]
 - 类型: method
 - 签名: `_random_opponent(self) -> list`
 - 作用: 用修复后的掩码采样一个合法槽位与合法格子作为对手动作（不再落禁区）。
@@ -14765,7 +15155,7 @@
 - 调用: 被本文件 `_run_opponent` L494 调用。
 - 置信度: 已确认
 
-##### 2.110.9.10 RLEnv._unit_hp_map [L550-559]
+##### 2.116.9.10 RLEnv._unit_hp_map [L550-559]
 - 类型: method
 - 签名: `_unit_hp_map(self)`
 - 作用: 生成「存活部署单位」的 hp 快照 `{entity_id: (player, hp)}`，用于单位受伤 shaping 的帧间对比。
@@ -14775,7 +15165,7 @@
 - 调用: 被本文件 `step` L614 调用（`hp_map_before`）。
 - 置信度: 已确认
 
-##### 2.110.9.11 RLEnv._deploy_ledger [L561-581]
+##### 2.116.9.11 RLEnv._deploy_ledger [L561-581]
 - 类型: method
 - 签名: `_deploy_ledger(self, pid, elixir_before, card_name)`
 - 作用: 部署记账：把本卡实际花费按份额分摊给本帧新增的部署实体（Troop/Building），并累加到该方场上份额 `_active_v`。
@@ -14788,7 +15178,7 @@
 - 调用: 被本文件 `_run_opponent` L520、`_random_opponent` L541、`step` L633 调用。
 - 置信度: 已确认
 
-##### 2.110.9.12 RLEnv._collect_deaths [L583-591]
+##### 2.116.9.12 RLEnv._collect_deaths [L583-591]
 - 类型: method
 - 签名: `_collect_deaths(self)`
 - 作用: 注销已死亡/已移除实体的部署份额（份额固定，不做 HP 折价）。
@@ -14798,7 +15188,7 @@
 - 调用: 被本文件 `step` L660 调用（推进段死亡在每步末统一清理）。
 - 置信度: 已确认
 
-##### 2.110.9.13 RLEnv._tower_snapshot [L594-596]
+##### 2.116.9.13 RLEnv._tower_snapshot [L594-596]
 - 类型: staticmethod
 - 签名: `_tower_snapshot(p) -> list`（带 `@staticmethod` 装饰器，L593）
 - 作用: 取某玩家三塔血量快照 `[king, left, right]`，作为塔血差异化定价的 per-tower 输入。
@@ -14809,7 +15199,7 @@
 - 调用: 被本文件 `reset` L374-375、`step` L605-606 与 L665-666 调用。
 - 置信度: 已确认
 
-##### 2.110.9.14 RLEnv.step [L598-723]
+##### 2.116.9.14 RLEnv.step [L598-723]
 - 类型: method
 - 签名: `step(self, action_bundle: ActionBundle)`
 - 作用: 执行一个决策步：整包校验→（通过则）整包提交→对手动作→统一推进 `decision_frames` 帧→结算奖励（含 per-tower/资源账/单位受伤 shaping）→返回 gym 五元组。
@@ -14831,7 +15221,7 @@
 - 调用: 被同仓库训练/评估循环调用——`rl/train_solo.py` L30 import `RLEnv`（`solo_env` L157-161 构造，L813/L831 评估 worker 构造）；`rl/run_league.py` L52/L416/L580；`rl/evaluate.py` L24/L170/L479；`rl/flow_league.py` L40/L389；`rl/human_play.py` L36/L53；`rl/export_replay.py` L17/L32；`rl/selftest.py` 多处。具体 `env.step(...)` 调用点分布在上述循环中（未逐个读完 ⇒ 部分待确认）。
 - 置信度: 已确认
 
-#### 2.110.10 legacy_action_to_bundle [L726-731]
+#### 2.116.10 legacy_action_to_bundle [L726-731]
 - 类型: function
 - 签名: `legacy_action_to_bundle(act) -> ActionBundle`
 - 作用: 把旧接口动作 `(slot, y, x)` 转成 `ActionBundle`。
@@ -14846,7 +15236,7 @@
 
 ---
 
-### 2.111 `src/clasher_new/rl/evaluate.py`
+### 2.117 `src/clasher_new/rl/evaluate.py`
 
 - **分析组**：G016　**行数**：557　**AST 符号数**：11
 
@@ -14872,7 +15262,7 @@
   - 分支顺序：L544 先判 `--belief-only`，否则 L547 判 `--ablation == "all"`，否则 L554-557 走单次 `run_eval`。注意 `--ablation` 的三个单值选项只在 `elif` 之外的最后分支生效（L555-557 会把 `args.ablation` 传下去）。
 - 顶层数据表/字典: 无模块级数据表/字典。字典均在各函数体内构造：`run_eval` 的 `stats`（L178-186：胜/负/平、累计 reward、bundle_sizes、bundle_illegal/bundle_total、next_hits/next_total/next_brier、hand_hits/hand_total、elixir_spent、plan_intents、adoption、crown_diff、tower_diff、belief_conf、belief_correct）、`_adoption_seed()` 的计数种子字典（L83-86）、`run_ablation` 的 `results`/`deltas`/`adoption_vs_off`/`adoption_aggregate`（L327/L351/L358/L427）。
 
-#### 2.111.1 _overtime_open [L35-38]
+#### 2.117.1 _overtime_open [L35-38]
 - 类型: function
 - 签名: `def _overtime_open(battle):`
 - 作用: 惰性转发到 `rl.run_league.overtime_open`，判断该局是否处在加时窗口内（从而允许越过 `max_steps` 继续跑）。
@@ -14883,7 +15273,7 @@
 - 调用: 被同文件 `run_eval`（L195 的 while 条件）使用；`run_league.py:66` 显示 `overtime_open` 实际定义/导出于 `rl.overtime`（`run_league` 只是再导出），故此处是经 run_league 的二跳转发。
 - 置信度: 已确认
 
-#### 2.111.2 _ece [L41-49]
+#### 2.117.2 _ece [L41-49]
 - 类型: function
 - 签名: `def _ece(conf, acc, n_bins=10):`
 - 作用: 计算期望校准误差（Expected Calibration Error）：把置信度分箱后，按各箱样本占比加权「箱内平均置信度 − 箱内准确率」的绝对值之和。
@@ -14896,7 +15286,7 @@
 - 调用: 被 `run_eval`（L284）与 `evaluate_belief`（L519）调用。它自身只调用了 numpy。
 - 置信度: 已确认
 
-#### 2.111.3 _plan_region_hit [L52-79]
+#### 2.117.3 _plan_region_hit [L52-79]
 - 类型: function
 - 签名: `def _plan_region_hit(region: str, x: float, y: float):`
 - 作用: 判断「首个部署格 (x, y)」（player0 本地坐标）是否落在 plan 指定的 focus_region 的粗粒度区域里；region 无法识别时返回 None（表示不计入统计）。
@@ -14909,7 +15299,7 @@
 - 调用: 仅被同文件 `_record_adoption` 调用（L127），用于 region_rate 探针；docstring L57 声明「不参与训练/判分」。未在全仓检索到其它调用点（本次仅在 evaluate.py 内 grep 确认）。
 - 置信度: 已确认
 
-#### 2.111.4 _adoption_seed [L82-86]
+#### 2.117.4 _adoption_seed [L82-86]
 - 类型: function
 - 签名: `def _adoption_seed():`
 - 作用: 返回单个 macro_intent 的采纳率计数器初始字典（全 0）。
@@ -14919,7 +15309,7 @@
 - 调用: 被 `_record_adoption`（L120，`setdefault(plan.macro_intent, _adoption_seed())`）调用。
 - 置信度: 已确认
 
-#### 2.111.5 _adoption_summary [L89-108]
+#### 2.117.5 _adoption_summary [L89-108]
 - 类型: function
 - 签名: `def _adoption_summary(adoption):`
 - 作用: 把逐意图的原始计数字典转成可落盘的摘要字典：把 hit/frames 折算成 4 个 rate（样本为 0 时该 rate 为 None），并保留原始帧数。
@@ -14930,7 +15320,7 @@
 - 调用: 被 `run_eval` 调用（L292），结果放进返回值的 `adoption` 字段（L297），进而被 `run_ablation` 的 `results[...]["adoption"]` 与 CSV 落盘使用（L423、L452-459）。
 - 置信度: 已确认
 
-#### 2.111.6 _record_adoption [L111-154]
+#### 2.117.6 _record_adoption [L111-154]
 - 类型: function
 - 签名: `def _record_adoption(stats, plan, bundle, obs=None):`
 - 作用: 逐意图采纳探针：在当前帧的 plan 意图标签下，累计「模型本帧动作与 plan 建议是否吻合」的 4 类计数（region 几何吻合、save_ace 的 hold 服从、7h 对牌采纳、7h 预算服从）。docstring L118 说明 full vs plan-off 的 Δ 即 plan 注入的因果采纳。
@@ -14944,7 +15334,7 @@
 - 调用: 被 `run_eval` 在每帧策略出牌后调用（L209，注释标明「plan 意图（注入前/置零前同标签）vs 模型本帧动作」）；其内部调用 `_adoption_seed`（L120）、`_plan_region_hit`（L127）、`Card`（L145）。
 - 置信度: 已确认
 
-#### 2.111.7 _make_opponent [L157-165]
+#### 2.117.7 _make_opponent [L157-165]
 - 类型: function
 - 签名: `def _make_opponent(env, opponent, opponent_policy=None, rng=None):`
 - 作用: 按对手类型字符串构造对手对象：`heuristic` ⇒ 脚本对手；`checkpoint` ⇒ 用 `FollowerOpponent` 包装加载的策略；其它（含 `random`）⇒ 返回 None（由环境内置随机对手接管）。
@@ -14958,7 +15348,7 @@
 - 调用: 被 `run_eval` 调用（L172，赋值给 `env.opponent`）。它调用了 `heuristic_opponent`、`load_checkpoint`、`FollowerOpponent`（三者分别定义于 `rl/train_follower.py:33`、`rl/follower.py:67`、`rl/train_follower.py:52`）。
 - 置信度: 已确认
 
-#### 2.111.8 run_eval [L168-301]
+#### 2.117.8 run_eval [L168-301]
 - 类型: function
 - 签名: `def run_eval(policy_path, n_games=50, opponent="random", seed=0, hidden_dim=None, max_steps=300, opponent_policy=None, ablation=None):`
 - 作用: 主评测入口：跑 `n_games` 局对局，累计胜负/回报/bundle 合法率/圣水效率/Plan 意图分布/逐意图采纳率/皇冠与塔血差/信念指标，打印人类可读报告并返回汇总字典（含 winrate 与二项 SE）。
@@ -14976,7 +15366,7 @@
 - 调用: 被 `run_ablation` 逐变体调用（L331）；CLI 的 else 分支调用（L555）。它调用了 `_overtime_open`、`_record_adoption`、`_adoption_summary`、`_ece`、`_make_opponent`、`load_policy`、`RLEnv`、`BeliefInference`、`BeliefPlanner`、`Card`、`K_MAX`、`ENTITY_NAMES`、`rl.run_league.timeout_winner`。仓内其它调用点未逐一检索（未确认是否还有别的模块直接调用 run_eval）。
 - 置信度: 已确认
 
-#### 2.111.9 run_ablation [L316-470]
+#### 2.117.9 run_ablation [L316-470]
 - 类型: function
 - 签名: `def run_ablation(policy_path, n_games=200, opponent="random", seed=0, hidden_dim=None, max_steps=300, opponent_policy=None, out_path=None):`
 - 作用: 跑 full / plan-off / belief-off / both-off 四种 belief/plan 注入消融变体，计算各变体 winrate±SE、相对 full 的 delta/delta SE/z、以及逐意图与合计的采纳率对比，打印并可选落盘 JSON + CSV。
@@ -14994,7 +15384,7 @@
 - 调用: CLI `--ablation all` 分支调用（L550-553）；仓内 `rl/selftest.py:1458` 有 `from rl.evaluate import run_ablation`（已确认的另一个调用方）。它调用了 `run_eval` 与 `math.hypot`。
 - 置信度: 已确认
 
-#### 2.111.10 load_policy [L473-474]
+#### 2.117.10 load_policy [L473-474]
 - 类型: function
 - 签名: `def load_policy(path, hidden_dim=None):`
 - 作用: 策略加载薄封装，直接转发到 `rl.follower.load_checkpoint`（docstring L4 说明这是 P0-5 修复：从 checkpoint 元数据读维度，不再硬编码 belief_dim）。
@@ -15006,7 +15396,7 @@
 - 调用: 被 `run_eval`（L174）与 `evaluate_belief`（L480）调用。注意 `_make_opponent` 里的 checkpoint 对手**不**经此函数（L163 直接调 `load_checkpoint`）。
 - 置信度: 已确认
 
-#### 2.111.11 evaluate_belief [L477-523]
+#### 2.117.11 evaluate_belief [L477-523]
 - 类型: function
 - 签名: `def evaluate_belief(policy_path, n_games=500, seed=0, hidden_dim=None, max_steps=300):`
 - 作用: 独立信念评测协议（docstring L478 自称「只统计信念预测 vs 特权标签（N=500，规格 §11.2）」）：跑对局只累计 Next-Card 命中/Brier/ECE 三项，并打印 uniform 先验 Brier 基线。
@@ -15023,7 +15413,7 @@
 
 ---
 
-### 2.112 `src/clasher_new/rl/export_replay.py`
+### 2.118 `src/clasher_new/rl/export_replay.py`
 
 - **分析组**：G045　**行数**：66　**AST 符号数**：1
 
@@ -15034,7 +15424,7 @@
 - 关键模块级常量: `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（L13）— 包上一级目录；L14-15 条件插 `sys.path`。除此之外无模块级常量。
 - 顶层数据表/字典: 无
 
-#### 2.112.1 main [L23-62]
+#### 2.118.1 main [L23-62]
 - 类型: function
 - 签名: `main()`
 - 作用: 采集 N 局 replay 并 pickle 保存。
@@ -15046,7 +15436,7 @@
 
 ---
 
-### 2.113 `src/clasher_new/rl/flow_league.py`
+### 2.119 `src/clasher_new/rl/flow_league.py`
 
 - **分析组**：G014　**行数**：613　**AST 符号数**：18
 
@@ -15061,7 +15451,7 @@
   - `SWEEP_STRATEGIES` (L470-475) — 键为策略名，值为 dict：`"stream"` → `{n_runs: 20, games_per_pair: 1, desc: "每对 1 局（忠实流式）× 20 次完整训练"}`；`"games5"` → `{n_runs: 4, games_per_pair: 5, desc: "每对 5 局 × 4 次完整训练"}`。供 `run_flow_sweep` 取默认轮数/每对局数。
   - 运行时局部表（非模块级，此处仅登记）：`models` / `trainers` / `model_rewards` 均为按 `FLOW_MODEL_IDS` 为键的 dict。
 
-#### 2.113.1 build_flow_pools [L67-87]
+#### 2.119.1 build_flow_pools [L67-87]
 - 类型: function
 - 签名: `build_flow_pools(cfg, n_random_decks=30)`
 - 作用: 构建 6 个卡组池，返回 `OrderedDict[id -> (label, [deck, ...])]`。
@@ -15073,7 +15463,7 @@
 - 调用: 被 `run_flow` L387（缺省路径）、`run_flow_sweep` L555 调用；`rl/selftest.py:1409` 的 `test_flow_league_smoke` 直接调用并断言全配对 = 148800。
 - 置信度: 已确认
 
-#### 2.113.2 flow_pair_games [L90-97]
+#### 2.119.2 flow_pair_games [L90-97]
 - 类型: function
 - 签名: `flow_pair_games(pools)`
 - 作用: 按全配对规则统计一次训练的总对局数 `Σ_{i<j} |pool_i|×|pool_j|`。
@@ -15084,7 +15474,7 @@
 - 调用: 被 `run_flow_sweep` L557 用于算每轮局数；被 `rl/selftest.py` 用来断言真实池 148800、mini 池 50。
 - 置信度: 已确认
 
-#### 2.113.3 scale_pools [L100-117]
+#### 2.119.3 scale_pools [L100-117]
 - 类型: function
 - 签名: `scale_pools(pools, factor)`
 - 作用: 把每个卡组池按 `factor` 缩小，每池截断到 `max(1, round(len×factor))`，用固定种子抽样保证可复现。
@@ -15096,7 +15486,7 @@
 - 调用: 被 `run_flow_sweep` L556 调用。
 - 置信度: 已确认
 
-#### 2.113.4 build_flow_models [L124-144]
+#### 2.119.4 build_flow_models [L124-144]
 - 类型: function
 - 签名: `build_flow_models(cfg, device, belief_dim)`
 - 作用: 构建 6 个 `FollowerPolicy` 及各自的 `PPOTrainer`；main 可用 `cfg.main_init` 预训练初始化。
@@ -15109,7 +15499,7 @@
 - 调用: 被 `run_flow` L412 调用。
 - 置信度: 已确认
 
-#### 2.113.5 save_flow_models [L147-150]
+#### 2.119.5 save_flow_models [L147-150]
 - 类型: function
 - 签名: `save_flow_models(cfg, models)`
 - 作用: 把 6 个模型分别保存到 `cfg.folder()/flow_<id>.pt`。
@@ -15121,7 +15511,7 @@
 - 调用: 被 `run_flow` L458（每对完成时，`save=True`）与 L461（结束时）调用。
 - 置信度: 已确认
 
-#### 2.113.6 _flow_progress_path [L153-154]
+#### 2.119.6 _flow_progress_path [L153-154]
 - 类型: function
 - 签名: `_flow_progress_path(cfg)`
 - 作用: 返回 flow 断点文件的固定路径 `cfg.folder()/flow_run_state.json`。
@@ -15132,7 +15522,7 @@
 - 调用: 被 `_save_flow_progress` L159、`_load_flow_resume` L168 调用。
 - 置信度: 已确认
 
-#### 2.113.7 _save_flow_progress [L157-163]
+#### 2.119.7 _save_flow_progress [L157-163]
 - 类型: function
 - 签名: `_save_flow_progress(cfg, pair_ix, game_ix, total_games, trainers)`
 - 作用: 落盘 flow 断点：对进度（pair_ix/game_ix）+ 6 个优化器状态。
@@ -15147,7 +15537,7 @@
 - 调用: 被 `run_flow` L459 调用（`save=True` 时每对完成后）。
 - 置信度: 已确认
 
-#### 2.113.8 _load_flow_resume [L166-199]
+#### 2.119.8 _load_flow_resume [L166-199]
 - 类型: function
 - 签名: `_load_flow_resume(cfg, device)`
 - 作用: resume 时从磁盘恢复 `(models, trainers, pair_start, game_ix_start)`；任何不完整/失败情形返回 `None`。
@@ -15159,7 +15549,7 @@
 - 调用: 被 `run_flow` L405 调用（`resume=True` 时）。
 - 置信度: 已确认
 
-#### 2.113.9 _hp_state [L206-210]
+#### 2.119.9 _hp_state [L206-210]
 - 类型: function
 - 签名: `_hp_state(p)`
 - 作用: 返回 `(总塔血, 剩余皇冠数, 圣水)`，供双视角 reward 镜像计算。
@@ -15170,7 +15560,7 @@
 - 调用: 被 `_play_one` L291-292（step 前）与 L299-300（step 后）调用。
 - 置信度: 已确认
 
-#### 2.113.10 _tower_state [L213-215]
+#### 2.119.10 _tower_state [L213-215]
 - 类型: function
 - 签名: `_tower_state(p)`
 - 作用: 返回三塔血量列表 `[king, left, right]`（塔血差异化定价 per-tower 镜像输入）。
@@ -15181,7 +15571,7 @@
 - 调用: 被 `_play_one` L293-294、L301-302 调用，结果作为 `compute_reward` 的 `blue_towers_*`/`red_towers_*` 参数（L326-327）。
 - 置信度: 已确认
 
-#### 2.113.11 new_ep_buf [L218-220]
+#### 2.119.11 new_ep_buf [L218-220]
 - 类型: function
 - 签名: `new_ep_buf()`
 - 作用: 新建一局轨迹缓冲 dict，键固定为 11 个空列表。
@@ -15191,7 +15581,7 @@
 - 调用: 被 `_play_one` L274-275 分别为 A/B 两侧新建缓冲。
 - 置信度: 已确认
 
-#### 2.113.12 _flush_episode [L223-239]
+#### 2.119.12 _flush_episode [L223-239]
 - 类型: function
 - 签名: `_flush_episode(buf, ep, policy, last_obs, last_belief, last_plan, last_hidden, truncated, cfg)`
 - 作用: 对整局做 GAE 计算，并把逐帧 transition 追加进跨局缓冲 `buf`（与 run_league 主训练一致）。
@@ -15207,7 +15597,7 @@
 - 调用: 被 `_play_one` L352-353（A 侧）与 L354-356（B 侧）调用。
 - 置信度: 已确认
 
-#### 2.113.13 _drain [L242-249]
+#### 2.119.13 _drain [L242-249]
 - 类型: function
 - 签名: `_drain(buf, trainer, batch_size)`
 - 作用: 流式消费缓冲：按 `batch_size` 分批训练，训练完即从 buf 删除以释放内存；剩余不足一批也训一次并清空。
@@ -15220,7 +15610,7 @@
 - 调用: 被 `run_flow` L447/L449（达 `cfg.update_interval` 时）与 L450-451（每对结束时）调用。
 - 置信度: 已确认
 
-#### 2.113.14 _play_one [L252-357]
+#### 2.119.14 _play_one [L252-357]
 - 类型: function
 - 签名: `_play_one(env, pol_a, pol_b, deckA, deckB, cfg, seed, max_steps, buf_a, buf_b, bp, prophet, rng, rw_a, rw_b)`
 - 作用: 让 `deckA→pol_a`（player-0）、`deckB→pol_b`（player-1）打 1 局且不换边，双侧都收集探索轨迹，返回 `winner`（0/1/None）。
@@ -15253,7 +15643,7 @@
 - 调用: 被 `run_flow` L441-444 调用（每副 deckA×deckB×games_per_deck_pair）。它调用了 `BeliefInference`、`FollowerOpponent`、`BeliefPlanner.plan`、`ProphetPlanner.plan`、`FollowerPolicy.act`、`_bundle_cards`、`env.step`、`_hp_state`、`_tower_state`、`_phase_weights`、`compute_reward`、`overtime_open`、`_flush_episode`。
 - 置信度: 已确认
 
-#### 2.113.15 run_flow [L364-463]
+#### 2.119.15 run_flow [L364-463]
 - 类型: function
 - 签名: `run_flow(cfg, resume=False, n_random_decks=30, pools=None, max_pairs=None, games_per_deck_pair=1, save=True, seed=None, quiet=False)`
 - 作用: 全配对分流派联赛主循环：构建/恢复 6 模型，按 15 对依次对局并对内流式训练，返回 `(total_games, models, trainers)`。
@@ -15282,7 +15672,7 @@
 - 调用: 被 `rl/run_league.py:1352-1353`（`--mode flow`）调用；被 `run_flow_sweep` L569 调用（`save=False`、逐轮换 seed、`quiet=True`）；被 `rl/selftest.py` 的 `test_flow_league_smoke`(L1432) 与 resume 测试(L1549/L1553) 调用；`__main__` L613 调用。
 - 置信度: 已确认
 
-#### 2.113.16 _sweep_trend [L478-488]
+#### 2.119.16 _sweep_trend [L478-488]
 - 类型: function
 - 签名: `_sweep_trend(rows)`
 - 作用: 用首轮 vs 末轮（当前累计）的 `main` 轮内估计做趋势判定，`|Δ|/SE ≥ 2σ` 才算上涨/下跌。
@@ -15293,7 +15683,7 @@
 - 调用: 被 `_write_sweep` L510 调用；`run_flow_sweep` L597 从 summary 里取 `trend` 打印。
 - 置信度: 已确认
 
-#### 2.113.17 _write_sweep [L491-525]
+#### 2.119.17 _write_sweep [L491-525]
 - 类型: function
 - 签名: `_write_sweep(out_dir, spec, strategy, pool_scale, sizes, n_runs, games_per_pair, per_run, total_budget, eval_games, device, rows, status, elapsed_s)`
 - 作用: 把当前累计 `rows` 落盘为 `summary.json` + `summary.csv`（含进度字段，供 dashboard 实时轮询）。
@@ -15310,7 +15700,7 @@
 - 调用: 被 `run_flow_sweep` L589 每轮调用一次。
 - 置信度: 已确认
 
-#### 2.113.18 run_flow_sweep [L528-607]
+#### 2.119.18 run_flow_sweep [L528-607]
 - 类型: function
 - 签名: `run_flow_sweep(cfg, strategy="stream", n_runs=None, games_per_pair=None, pool_scale=0.1, n_random_decks=30, pools=None, eval_games=None)`
 - 作用: 缩小 10× 卡组池的 flow 数据效率 A/B 实验：跑 `n_runs` 轮完整 flow 训练，每轮后对 6 模型做一轮全配对换边评估，记录轮内聚合估计与趋势判定。
@@ -15337,7 +15727,7 @@
 
 ---
 
-### 2.114 `src/clasher_new/rl/follower.py`
+### 2.120 `src/clasher_new/rl/follower.py`
 
 - **分析组**：G010　**行数**：766　**AST 符号数**：21
 
@@ -15361,7 +15751,7 @@
 - 顶层数据表/字典:
   - `_REGION_CENTERS`（L48-52）：`focus_region` 名称 → 本地网格中心 `(cx, cy)`。键为 8 个区域名，值分别是 `own_left(4,20) / own_center(9,20) / own_right(14,20) / bridge_left(4,16) / bridge_right(14,16) / enemy_left(4,12) / enemy_center(9,12) / enemy_right(14,12)`；注释注明与 `train_bc.REGION_CENTERS` 同口径。取值时用 `_REGION_CENTERS.get(name, (9,20))` 兜底（L369）。
 
-#### 2.114.1 save_checkpoint [L55-64]
+#### 2.120.1 save_checkpoint [L55-64]
 - 类型: function
 - 签名: `save_checkpoint(policy, path)`
 - 作用: 把策略权重与其架构元数据一起存盘，供后续加载时重建同构网络。
@@ -15373,7 +15763,7 @@
 - 调用: 被训练/评估侧多处调用（同仓 `rl/train_solo.py`、`rl/train_follower.py`、`rl/train_bc.py`、`rl/run_league.py`、`rl/selftest.py` 等均有引用该名字）；本身只调用 `torch.save`。
 - 置信度: 已确认
 
-#### 2.114.2 load_checkpoint [L67-151]
+#### 2.120.2 load_checkpoint [L67-151]
 - 类型: function
 - 签名: `load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None, value_bypass=None, value_independent=None)`
 - 作用: 从 checkpoint 重建并返回 `FollowerPolicy`；优先用元数据推维度/架构标志，旧格式按显式参数或常量回退，并对多种「旧 ckpt 形状更窄」的键做「清零后拷贝前缀」的兼容加载，同时对新架构 LayerNorm 键缺失发告警。
@@ -15389,7 +15779,7 @@
 - 调用: 被同仓 `rl/train_solo.py`、`rl/evaluate.py`、`rl/train_follower.py`、`rl/human_play.py`、`rl/selftest.py` 等加载 ckpt 的入口调用；内部调用 `torch.load`、`FollowerPolicy(...)`、`state_dict/load_state_dict`、惰性 `rl.diagnostics.print_safe`。
 - 置信度: 已确认
 
-#### 2.114.3 FollowerPolicy [L154-766]
+#### 2.120.3 FollowerPolicy [L154-766]
 - 类型: class（基类 `nn.Module`）
 - 签名: `class FollowerPolicy(nn.Module):`
 - 作用: 策略/价值网络本体：多模态编码（CNN 网格 + 实体嵌入手牌/卡牌 + 标量 + plan/belief MLP）→ 共享编码器 → GRU 逐步解码出动作 bundle，并给出 value 与 logprob/entropy（可微重放）。
@@ -15415,7 +15805,7 @@
   方法清单（共 18 个）见下；除 `to_device`、`act`、`masks_for`、`act_parallel`、`value`、`evaluate` 外均为内部辅助（前缀 `_`），`_mask_or_fallback` 为 `@staticmethod`。
 - 置信度: 已确认
 
-##### 2.114.3.1 FollowerPolicy.__init__ [L155-261]
+##### 2.120.3.1 FollowerPolicy.__init__ [L155-261]
 - 限定名: FollowerPolicy.__init__
 - 类型: method
 - 签名: `__init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY, stop_logit_bias=-1.0, value_bypass=False, value_independent=False)`
@@ -15432,7 +15822,7 @@
 - 实现: L183-184 无 `plan_dim`/`belief_dim` 时抛 `ValueError`（注释称禁止魔法默认值，P0-5）。L185 `super().__init__()`。L186-190 记录 `hidden_dim/plan_dim/belief_dim` 与两个 bool 标志。L192-250 逐层构建（维度见上「实现」列表）。L200-203 用假输入前向推导 `cnn_out`，不建图。L253-255 在 `torch.no_grad()` 下改 `slot_head.bias[STOP_IDX]`。L257/L261 设 `device` 与 `plan_biases_enabled`。`__init__` 的 docstring（L157-182）给出 bypass/independent 的实验依据与 STOP 偏置的动机（打破「开局双双 STOP → 无事件 → 无梯度」自锁）。
 - 置信度: 已确认
 
-##### 2.114.3.2 FollowerPolicy.to_device [L263-266]
+##### 2.120.3.2 FollowerPolicy.to_device [L263-266]
 - 限定名: FollowerPolicy.to_device
 - 类型: method
 - 签名: `to_device(self, device)`
@@ -15443,7 +15833,7 @@
 - 实现: L264 设 `self.device = device`（后续 `_encode_parts` 等用它做张量搬运）；L265 `self.to(device)`；L266 `return self`。
 - 置信度: 已确认
 
-##### 2.114.3.3 FollowerPolicy._encode_parts [L268-298]
+##### 2.120.3.3 FollowerPolicy._encode_parts [L268-298]
 - 限定名: FollowerPolicy._encode_parts
 - 类型: method
 - 签名: `_encode_parts(self, obs, belief_token, plan_token)`
@@ -15457,7 +15847,7 @@
 - 调用: 被 `_encode`（L301）、`act`（L440）、`value`（L707）、`evaluate`（L719）调用。
 - 置信度: 已确认
 
-##### 2.114.3.4 FollowerPolicy._encode [L300-301]
+##### 2.120.3.4 FollowerPolicy._encode [L300-301]
 - 限定名: FollowerPolicy._encode
 - 类型: method
 - 签名: `_encode(self, obs, belief_token, plan_token)`
@@ -15468,7 +15858,7 @@
 - 调用: 同仓检索未见 `._encode(` 形式的调用点（`_encode_parts`/`_encode_batch` 被使用）；调用者待确认。
 - 置信度: 待确认（原因：本文件内无调用点，未逐文件检索全仓 `self._encode(` 用法）
 
-##### 2.114.3.5 FollowerPolicy._value_from [L303-314]
+##### 2.120.3.5 FollowerPolicy._value_from [L303-314]
 - 限定名: FollowerPolicy._value_from
 - 类型: method
 - 签名: `_value_from(self, enc, h, fused)`
@@ -15482,7 +15872,7 @@
 - 调用: 被 `act`（L444）、`act_parallel`（L527）、`evaluate_batch`（L625）、`value`（L711）、`evaluate`（L724）调用。
 - 置信度: 已确认
 
-##### 2.114.3.6 FollowerPolicy._slot_mask_tensor [L316-330]
+##### 2.120.3.6 FollowerPolicy._slot_mask_tensor [L316-330]
 - 限定名: FollowerPolicy._slot_mask_tensor
 - 类型: method
 - 签名: `_slot_mask_tensor(self, mask)`
@@ -15494,7 +15884,7 @@
 - 调用: 被 `act`（L453）、`act_parallel`（L544）、`evaluate_batch`（L640）、`evaluate`（L731/L760）调用。
 - 置信度: 已确认
 
-##### 2.114.3.7 FollowerPolicy._plan_biases [L332-376]
+##### 2.120.3.7 FollowerPolicy._plan_biases [L332-376]
 - 限定名: FollowerPolicy._plan_biases
 - 类型: method
 - 签名: `_plan_biases(self, plan_token)`
@@ -15506,7 +15896,7 @@
 - 调用: 被 `act`（L449）、`act_parallel`（L534）、`evaluate_batch`（L632）、`evaluate`（L728）调用。
 - 置信度: 已确认
 
-##### 2.114.3.8 FollowerPolicy._mask_or_fallback [L379-385]
+##### 2.120.3.8 FollowerPolicy._mask_or_fallback [L379-385]
 - 限定名: FollowerPolicy._mask_or_fallback
 - 类型: staticmethod
 - 签名: `_mask_or_fallback(masks, j)`
@@ -15519,7 +15909,7 @@
 - 调用: 被 `act_parallel`（L544、L568）、`evaluate_batch`（L640、L667）调用。
 - 置信度: 已确认
 
-##### 2.114.3.9 FollowerPolicy._sub_vec [L387-392]
+##### 2.120.3.9 FollowerPolicy._sub_vec [L387-392]
 - 限定名: FollowerPolicy._sub_vec
 - 类型: method
 - 签名: `_sub_vec(self, option_idx, x=0.0, y=0.0)`
@@ -15533,7 +15923,7 @@
 - 调用: 仅被 `_sub_update`（L395）调用（`act_parallel` 与 `evaluate_batch` 内联重建了等价张量，见 L598-605、L689-696）。
 - 置信度: 已确认
 
-##### 2.114.3.10 FollowerPolicy._sub_update [L394-395]
+##### 2.120.3.10 FollowerPolicy._sub_update [L394-395]
 - 限定名: FollowerPolicy._sub_update
 - 类型: method
 - 签名: `_sub_update(self, h, option_idx, x=0.0, y=0.0)`
@@ -15547,7 +15937,7 @@
 - 调用: 被 `act`（L468、L483）与 `evaluate`（L740、L753）调用。
 - 置信度: 已确认
 
-##### 2.114.3.11 FollowerPolicy._encode_batch_parts [L397-428]
+##### 2.120.3.11 FollowerPolicy._encode_batch_parts [L397-428]
 - 限定名: FollowerPolicy._encode_batch_parts
 - 类型: method
 - 签名: `_encode_batch_parts(self, obs_list, belief_list, plan_list)`
@@ -15561,7 +15951,7 @@
 - 调用: 被 `_encode_batch`（L431）、`act_parallel`（L518）、`evaluate_batch`（L619）调用。
 - 置信度: 已确认
 
-##### 2.114.3.12 FollowerPolicy._encode_batch [L430-431]
+##### 2.120.3.12 FollowerPolicy._encode_batch [L430-431]
 - 限定名: FollowerPolicy._encode_batch
 - 类型: method
 - 签名: `_encode_batch(self, obs_list, belief_list, plan_list)`
@@ -15572,7 +15962,7 @@
 - 调用: 本文件内无调用点，调用者待确认。
 - 置信度: 待确认（原因：本文件内未见调用，未逐文件检索全仓）
 
-##### 2.114.3.13 FollowerPolicy.act [L433-484]
+##### 2.120.3.13 FollowerPolicy.act [L433-484]
 - 限定名: FollowerPolicy.act
 - 类型: method
 - 签名: `act(self, obs, belief_token, plan_token, get_mask, hidden=None, deterministic=False)`
@@ -15588,7 +15978,7 @@
 - 调用: 被同仓 `rl/train_solo.py`、`rl/evaluate.py`、`rl/human_play.py`、`rl/selftest.py` 等 rollout 侧调用；内部调用 `_encode_parts/_plan_biases/_slot_mask_tensor/_sub_update/_value_from`。
 - 置信度: 已确认
 
-##### 2.114.3.14 FollowerPolicy.masks_for [L486-502]
+##### 2.120.3.14 FollowerPolicy.masks_for [L486-502]
 - 限定名: FollowerPolicy.masks_for
 - 类型: method
 - 签名: `masks_for(self, obs, belief_token, plan_token, bundle, get_mask)`
@@ -15602,7 +15992,7 @@
 - 调用: 被同仓 `rl/train_bc.py`、`rl/selftest.py` 等引用；内部只调用 `get_mask` 与 `ActionBundle.add/add_ability`。
 - 置信度: 已确认
 
-##### 2.114.3.15 FollowerPolicy.act_parallel [L504-608]
+##### 2.120.3.15 FollowerPolicy.act_parallel [L504-608]
 - 限定名: FollowerPolicy.act_parallel
 - 类型: method
 - 签名: `act_parallel(self, obs_list, belief_list, plan_list, get_mask_list, hidden_list=None, deterministic=False, get_masks_batch=None)`
@@ -15618,7 +16008,7 @@
 - 调用: 被同仓 `rl/train_solo.py`、`rl/run_league.py`、`rl/flow_league.py` 等并行 rollout 侧调用；内部调用 `_encode_batch_parts/_value_from/_plan_biases/_slot_mask_tensor/_mask_or_fallback/sub_emb/gru_cell`。
 - 置信度: 已确认
 
-##### 2.114.3.16 FollowerPolicy.evaluate_batch [L610-702]
+##### 2.120.3.16 FollowerPolicy.evaluate_batch [L610-702]
 - 限定名: FollowerPolicy.evaluate_batch
 - 类型: method
 - 签名: `evaluate_batch(self, obs_list, belief_list, plan_list, bundle_list, masks_list, hidden_list=None)`
@@ -15633,7 +16023,7 @@
 - 调用: 被同仓 `rl/ppo.py`、`rl/train_solo.py` 等 PPO 更新侧调用。
 - 置信度: 已确认
 
-##### 2.114.3.17 FollowerPolicy.value [L704-711]
+##### 2.120.3.17 FollowerPolicy.value [L704-711]
 - 限定名: FollowerPolicy.value
 - 类型: method
 - 签名: `value(self, obs, belief_token, plan_token, hidden=None) -> float`
@@ -15646,7 +16036,7 @@
 - 调用: 被同仓 rollout/GAE 侧（如 `rl/train_solo.py`）调用。
 - 置信度: 已确认
 
-##### 2.114.3.18 FollowerPolicy.evaluate [L713-766]
+##### 2.120.3.18 FollowerPolicy.evaluate [L713-766]
 - 限定名: FollowerPolicy.evaluate
 - 类型: method
 - 签名: `evaluate(self, obs, belief_token, plan_token, bundle, masks, hidden=None)`
@@ -15663,7 +16053,7 @@
 
 ---
 
-### 2.115 `src/clasher_new/rl/human_play.py`
+### 2.121 `src/clasher_new/rl/human_play.py`
 
 - **分析组**：G041　**行数**：354　**AST 符号数**：13
 
@@ -15690,7 +16080,7 @@
   `session_<session_id>.json`（元数据，L184-186）。**注意**：`load_bc_samples` 只匹配
   `bc_*.pkl`、`export_data` 只匹配 `episode_*.pkl`（L198、L245），与命名一致。
 
-#### 2.115.1 _make_env [L52-55]
+#### 2.121.1 _make_env [L52-55]
 - 类型: function
 - 签名: `def _make_env(cfg, deck, seed)`
 - 作用: 建一个双方同卡组、记录 hidden、无内建对手的 `RLEnv`。
@@ -15706,7 +16096,7 @@
 - 调用: `HumanPlaySession.__init__`（L74）。
 - 置信度: 已确认
 
-#### 2.115.2 load_policy [L58-60]
+#### 2.121.2 load_policy [L58-60]
 - 类型: function
 - 签名: `def load_policy(path, hidden_dim=128)`
 - 作用: 加载带元数据的 `FollowerPolicy` checkpoint（docstring L59）。
@@ -15718,7 +16108,7 @@
 - 调用: `human_play.main`（L327）与 `rl/dashboard.py:2014` 的 `--play` 接入。
 - 置信度: 已确认
 
-#### 2.115.3 HumanPlaySession [L63-187]
+#### 2.121.3 HumanPlaySession [L63-187]
 - 类型: class
 - 作用: 一局人机对战的状态机：人出 `ActionBundle`、模型对手每 tick 应对、全程记录训练数据。
 - 实现: `__init__` 建环境/对手/双份 `BeliefInference`/`BeliefPlanner`/`EpisodeReplay`
@@ -15727,7 +16117,7 @@
   （`test_human_play_session`）；本文件内 `drive_games`（L265）与 `main`（L334）也构造。
 - 置信度: 已确认
 
-##### 2.115.3.1 HumanPlaySession.__init__ [L66-90]
+##### 2.121.3.1 HumanPlaySession.__init__ [L66-90]
 - 类型: method
 - 签名: `def __init__(self, policy, cfg=None, deck=None, seed=0, max_steps=600, out_dir=None, session_id=None)`
 - 作用: 组装一局对战所需的全部对象，并立刻开局。
@@ -15752,7 +16142,7 @@
   `rl/train_follower.py:70`）。
 - 置信度: 已确认
 
-##### 2.115.3.2 HumanPlaySession.start [L94-99]
+##### 2.121.3.2 HumanPlaySession.start [L94-99]
 - 类型: method
 - 签名: `def start(self)`
 - 作用: 重置环境与人侧信念，开始记录回放。
@@ -15765,7 +16155,7 @@
   `start()` 不会清零这些累计量（本文件内只有 `__init__` 调用它一次）。
 - 置信度: 已确认
 
-##### 2.115.3.3 HumanPlaySession.state [L101-120]
+##### 2.121.3.3 HumanPlaySession.state [L101-120]
 - 类型: method
 - 签名: `def state(self)`
 - 作用: 组装给前端的战场帧 + 手牌 + 合法落点 + 计分信息。
@@ -15783,7 +16173,7 @@
 - 调用: `act`（L160）、`start`（L99）、`drive_games`（L270）。
 - 置信度: 已确认
 
-##### 2.115.3.4 HumanPlaySession.act [L124-160]
+##### 2.121.3.4 HumanPlaySession.act [L124-160]
 - 类型: method
 - 签名: `def act(self, slot, x, y)`
 - 作用: 人类出一次牌（或空过），推进一帧并把该帧记入两类数据。
@@ -15818,7 +16208,7 @@
 - 调用: `drive_games`（L274、L280）、`main` 交互模式（L343）、dashboard 的动作接口。
 - 置信度: 已确认
 
-##### 2.115.3.5 HumanPlaySession.save [L164-187]
+##### 2.121.3.5 HumanPlaySession.save [L164-187]
 - 类型: method
 - 签名: `def save(self, out_dir=None, keep_bc=True)`
 - 作用: 把本局回放、BC 样本与元数据落盘（docstring L165）。
@@ -15835,7 +16225,7 @@
 - 调用: `drive_games`（L283）、`main`（L348）。
 - 置信度: 已确认
 
-#### 2.115.4 load_bc_samples [L194-202]
+#### 2.121.4 load_bc_samples [L194-202]
 - 类型: function
 - 签名: `def load_bc_samples(data_dir)`
 - 作用: 读取目录下所有 `bc_*.pkl` 并合并成单个样本列表（docstring L195）。
@@ -15849,7 +16239,7 @@
 - 调用: `train_bc_from_human`（L209）与 `export_data`（L252）。
 - 置信度: 已确认
 
-#### 2.115.5 train_bc_from_human [L205-233]
+#### 2.121.5 train_bc_from_human [L205-233]
 - 类型: function
 - 签名: `def train_bc_from_human(data_dir, out="follower_human.pt", epochs=5, lr=1e-3, hidden_dim=128, seed=0)`
 - 作用: 在人类 BC 样本上做行为克隆（模仿学习预训练），产物可 `--init-from` 给 PPO
@@ -15879,7 +16269,7 @@
 - 调用: `main`（L321）的 `--bc-train` 分支。
 - 置信度: 已确认
 
-#### 2.115.6 export_data [L236-256]
+#### 2.121.6 export_data [L236-256]
 - 类型: function
 - 签名: `def export_data(data_dir, out_belief=None, out_bc=None)`
 - 作用: 把 `human_data` 目录导出成可直接训练的文件：信念回放列表与合并后的 BC 样本
@@ -15898,7 +16288,7 @@
 - 调用: `main`（L316）与 `rl/selftest.py:1620`。
 - 置信度: 已确认
 
-#### 2.115.7 drive_games [L259-288]
+#### 2.121.7 drive_games [L259-288]
 - 类型: function
 - 签名: `def drive_games(policy, n_games, seed=0, max_steps=600, out_dir=None, cfg=None, deck=None)`
 - 作用: 无 UI 冒烟：用随机合法动作驱动 n 局，验证数据采集链路（docstring L261）。
@@ -15923,7 +16313,7 @@
 - 调用: `main`（L330）与 `rl/selftest.py:1615`。
 - 置信度: 已确认
 
-#### 2.115.8 main [L291-350]
+#### 2.121.8 main [L291-350]
 - 类型: function
 - 签名: `def main()`
 - 作用: CLI 入口：导出 / BC 训练 / 无 UI 冒烟 / 标准输入交互对战四种模式。
@@ -15948,7 +16338,7 @@
 
 ---
 
-### 2.116 `src/clasher_new/rl/launcher_menu.py`
+### 2.122 `src/clasher_new/rl/launcher_menu.py`
 
 - **分析组**：G042　**行数**：323　**AST 符号数**：9
 
@@ -15966,7 +16356,7 @@
   - `CONFIGS` (L33-35) — 7 个配置预设名字符串列表，顺序：`standard, aggressive, defensive, lockdown, elixir, economy, fast`
   - `DEFAULTS` (L38-57) — 参数预设字典（键 → 值）：`out_dir="runs"`、`total_steps=20000`、`steps_per_eval=2000`、`n_eval_games=16`、`max_ep_steps=360`、`eval_workers=16`、`solo_copy_every=2000`、`n_envs=1`、`gae_lambda=0.99`、`ent_coef=0.01`、`device="auto"`、`config_name=""`（空 = 用配置名）、`load_config=""`（空 = 命名预设）、`fresh=False`（False = 默认自动续训）、`keep_snapshot=False`、`only_vs_main=False`、`with_dashboard=True`、`port=DEFAULT_PORT`
 
-#### 2.116.1 ask [L60-78]
+#### 2.122.1 ask [L60-78]
 - 类型: function
 - 签名: `ask(prompt, default, cast=str, allow_back=True)`
 - 作用: 逐项问答并做类型转换；回车取默认值，输入 `b/B` 返回上一步（返回字符串 `".."`），`q/Q` 直接退出进程。
@@ -15980,7 +16370,7 @@
 - 调用: 被本模块 `ask_yesno`(L84)、`collect_params`(L136-176 共 13 处)、`main`(L286) 调用；无外部调用者（全仓 grep `state_arg`/本文件仅 `start_rl.bat:237` 以脚本方式调用本模块）。
 - 置信度: 已确认
 
-#### 2.116.2 ask_yesno [L81-89]
+#### 2.122.2 ask_yesno [L81-89]
 - 类型: function
 - 签名: `ask_yesno(prompt, default=True)`
 - 作用: `ask` 的 y/n 封装，把回答归一成布尔；输入 `..` 时把"返回上一步"信号透传。
@@ -15992,7 +16382,7 @@
 - 调用: 本模块 `collect_params`(L176,181,186) 与 `main`(L256,294)；无外部调用者。
 - 置信度: 已确认
 
-#### 2.116.3 pick [L92-117]
+#### 2.122.3 pick [L92-117]
 - 类型: function
 - 签名: `pick(label, options, default_idx=0, extra=None)`
 - 作用: 打印带序号的选项表，按序号返回被选项的 key；回车返回默认项；`extra` 提供"额外的一行"选项（被选中时返回 `None`）。
@@ -16006,7 +16396,7 @@
 - 调用: 本模块 `pick_config`(L122) 与 `main`(L243,265,290)。
 - 置信度: 已确认
 
-#### 2.116.4 pick_config [L120-131]
+#### 2.122.4 pick_config [L120-131]
 - 类型: function
 - 签名: `pick_config()`
 - 作用: 第二层——选配置预设，或选"自定义 JSON"后循环索取已存在的文件路径。
@@ -16016,7 +16406,7 @@
 - 调用: 本模块 `main`(L244)；内部调用 `pick`(L122)。
 - 置信度: 已确认
 
-#### 2.116.5 collect_params [L134-197]
+#### 2.122.5 collect_params [L134-197]
 - 类型: function
 - 签名: `collect_params(mode)`
 - 作用: 第三层——逐项问答收集训练参数，按模式（solo 才有 eval_workers / solo_copy_every；run 才有 keep_snapshot / only_vs_main）条件提问，任意一问答 `b` 即整体放弃返回 `".."`。
@@ -16027,7 +16417,7 @@
 - 调用: 本模块 `main`(L262) 的 `while True` 循环；内部调用 `ask`/`ask_yesno`。
 - 置信度: 已确认
 
-#### 2.116.6 build_cmd [L200-226]
+#### 2.122.6 build_cmd [L200-226]
 - 类型: function
 - 签名: `build_cmd(mode, config, load_config, p)`
 - 作用: 把用户选择拼成 `run_league.py` 的 argv 列表（不外传 `with_dashboard`/`port`）。
@@ -16041,7 +16431,7 @@
 - 调用: 本模块 `main`(L252,283)；产出的命令由 `launch` 执行（`RUN_LEAGUE_WRAP` 是 `runpy` wrapper）。
 - 置信度: 已确认
 
-#### 2.116.7 state_arg [L229-236]
+#### 2.122.7 state_arg [L229-236]
 - 类型: function
 - 签名: `state_arg(mode, p)`
 - 作用: 返回 `(输出根目录, 配置名或 None)`，注释自称是"最终目录提示"，真正 state 路径由 run_league 侧保持一致。
@@ -16053,7 +16443,7 @@
 - 调用: 无（未接线；`main` 里用的是 `os.path.join(p["out_dir"], folder)` 内联写法，L301/303/305）。
 - 置信度: 已确认
 
-#### 2.116.8 main [L239-312]
+#### 2.122.8 main [L239-312]
 - 类型: function
 - 签名: `main()`
 - 作用: 向导主流程：打印头部说明 → 选模式 → 选配置 → （flow 直通 / 其余进入参数循环）→ 打印确认信息与命令 → 确认后启动训练，随后启动 dashboard 并打开浏览器。
@@ -16063,7 +16453,7 @@
 - 调用: 由模块底部 `if __name__ == "__main__": main()`（L322-323）触发；外部由 `start_rl.bat:237` 以子进程方式执行本文件。内部调用 `pick`/`pick_config`/`collect_params`/`build_cmd`/`ask`/`ask_yesno`/`launch`。
 - 置信度: 已确认
 
-#### 2.116.9 launch [L315-319]
+#### 2.122.9 launch [L315-319]
 - 类型: function
 - 签名: `launch(cmd)`
 - 作用: 启动子进程：Windows 下新开独立控制台窗口，其它平台普通前台子进程。
@@ -16076,7 +16466,7 @@
 
 ---
 
-### 2.117 `src/clasher_new/rl/league.py`
+### 2.123 `src/clasher_new/rl/league.py`
 
 - **分析组**：G043　**行数**：181　**AST 符号数**：15
 
@@ -16087,7 +16477,7 @@
 - 关键模块级常量: 无
 - 顶层数据表/字典: 无
 
-#### 2.117.1 LeagueAgent [L24-29]
+#### 2.123.1 LeagueAgent [L24-29]
 - 类型: class（`@dataclass`，L23）
 - 签名: `class LeagueAgent:`
 - 作用: 联赛成员的数据记录（id / 类别 / 策略对象 / checkpoint 路径 / Elo）。
@@ -16097,7 +16487,7 @@
 - 调用: 被 `League.add_agent`（L49）构造；被 `League.load_state`（L178-180）构造（此时同样不传 `elo`）。
 - 置信度: 已确认
 
-#### 2.117.2 League [L32-181]
+#### 2.123.2 League [L32-181]
 - 类型: class
 - 签名: `class League:`
 - 作用: 联赛：成员表 + PFSP 采样器 + Elo 表 + 历史/统计持久化。
@@ -16106,7 +16496,7 @@
 - 实现: 方法：`__init__`、`add_agent`、`sample_opponent`、`record_match`、`register_checkpoint`、`refresh_snapshot`、`record_elo_history`、`record_round_stats`、`add_exploiter`、`remove_agent`（+ 别名 `retire = remove_agent`，L139）、`elo_table`、`save_state`、`load_state`。
 - 置信度: 已确认
 
-##### 2.117.2.1 League.__init__ [L33-42]
+##### 2.123.2.1 League.__init__ [L33-42]
 - 类型: method
 - 签名: `def __init__(self, pfsp_beta: float = 1.0, elo_k: float = 32.0, seed: int = 0):`
 - 作用: 初始化成员表、PFSP、Elo 与各类记录容器。
@@ -16118,7 +16508,7 @@
 - 实现: L34 `self.agents = {}`；L35 `self.pfsp = PFSP(beta=pfsp_beta, seed=seed)`；L36 `self.elo = Elo(k=elo_k)`；L37 `self.history = []`（记录 `(agent_a, agent_b, score_a)` 元组）；L38 `_exploiter_counter = 0`；L39 `_ckpt_counter = {}`；L40 `elo_history = {}`（agent_id → [(step, elo)]，供训练网页 UI 画曲线）；L41 `round_stats = []`（每评估轮 `{step, est, games}`）；L42 `total_steps = 0`。
 - 置信度: 已确认
 
-##### 2.117.2.2 League.add_agent [L44-50]
+##### 2.123.2.2 League.add_agent [L44-50]
 - 类型: method
 - 签名: `def add_agent(self, agent_id, kind="main", policy=None, path=None, replace=False):`
 - 作用: 新增成员；同 id 且未 `replace` 时抛异常。
@@ -16132,7 +16522,7 @@
 - 实现: L45-48 已存在且不 replace → `raise ValueError`，replace 则 `pop`；L49 建 `LeagueAgent(...)`；L50 `self.elo.ensure(agent_id)`（不存在则初始化 1500.0）。
 - 置信度: 已确认
 
-##### 2.117.2.3 League.sample_opponent [L52-57]
+##### 2.123.2.3 League.sample_opponent [L52-57]
 - 类型: method
 - 签名: `def sample_opponent(self, agent_id) -> LeagueAgent:`
 - 作用: 为 `agent_id` 用 PFSP 采一个对手成员。
@@ -16142,7 +16532,7 @@
 - 实现: L53 候选 = 除自己外的所有 `self.agents` 键；L54-55 空则 `RuntimeError("联赛至少需要 2 个 agent")`；L56 `op_id = self.pfsp.sample(agent_id, opponents)`；L57 返回 `self.agents[op_id]`。PFSP 权重语义见下方"对手池与脚本对手采样逻辑"节。
 - 置信度: 已确认
 
-##### 2.117.2.4 League.record_match [L59-64]
+##### 2.123.2.4 League.record_match [L59-64]
 - 类型: method
 - 签名: `def record_match(self, agent_a, agent_b, score_a: float, n_games: int = 1):`
 - 作用: 回填一场（或聚合多局）比赛：更新 Elo + 双向 PFSP 胜率 + 追加历史。
@@ -16154,7 +16544,7 @@
 - 实现: L61 `self.elo.update(agent_a, agent_b, score_a, n_games=n_games)`；L62-63 双向 `pfsp.update_winrate`（b 对 a 记 `1 - score_a`）；L64 `self.history.append((agent_a, agent_b, score_a))`。
 - 置信度: 已确认
 
-##### 2.117.2.5 League.register_checkpoint [L66-84]
+##### 2.123.2.5 League.register_checkpoint [L66-84]
 - 类型: method
 - 签名: `def register_checkpoint(self, agent_id, policy, path=None, metadata=None):`
 - 作用: 把当前策略的**权重副本**注册成新的 historical 成员，返回新 id。
@@ -16167,7 +16557,7 @@
 - 实现: L71 函数内 `from rl.follower import FollowerPolicy`；L72-74 取/递增 `_ckpt_counter[agent_id]` 并拼 id；L75-78 用源策略的 `hidden_dim` / `plan_dim` / `belief_dim` 与 `value_bypass`、`value_independent`（`getattr` 兜底 False）构造 `FollowerPolicy` 快照；L79 `load_state_dict(policy.state_dict())`；L80 `snap.eval()`；L81-82 全部参数 `requires_grad_(False)`；L83 `add_agent(new_id, kind="historical", policy=snap, path=path)`；L84 返回 id。原 main 条目完全不动（P1-9）。
 - 置信度: 已确认（实现）；`FollowerPolicy` 侧行为待确认（原因：未读 `rl/follower.py`）
 
-##### 2.117.2.6 League.refresh_snapshot [L86-102]
+##### 2.123.2.6 League.refresh_snapshot [L86-102]
 - 类型: method
 - 签名: `def refresh_snapshot(self, agent_id, policy, path=None):`
 - 作用: 把 main 的权重副本刷到**固定槽位** `f"{agent_id}_ckpt"`（维持 5 模型稳定结构，替换不重置 Elo）。
@@ -16179,7 +16569,7 @@
 - 实现: L91 `from rl.follower import FollowerPolicy`；L92 `new_id = f"{agent_id}_ckpt"`；L93-97 与 `register_checkpoint` 同构地建快照并 `load_state_dict`；L98-100 `eval()` + 冻结梯度；L101 `add_agent(new_id, kind="historical", policy=snap, path=path, replace=True)`（**replace=True** ⇒ 复用槽位，Elo 保留）；L102 返回 new_id。
 - 置信度: 已确认
 
-##### 2.117.2.7 League.record_elo_history [L104-109]
+##### 2.123.2.7 League.record_elo_history [L104-109]
 - 类型: method
 - 签名: `def record_elo_history(self, step: int = None):`
 - 作用: 记录当前各成员的 (step, elo) 快照。
@@ -16189,7 +16579,7 @@
 - 实现: L106-107 单调抬升 `total_steps`；L108-109 遍历 `self.elo.ratings.items()`，对每个 id 追加 `(self.total_steps, float(rating))` 到 `elo_history`（`setdefault` 惰性建列表）。
 - 置信度: 已确认
 
-##### 2.117.2.8 League.record_round_stats [L111-123]
+##### 2.123.2.8 League.record_round_stats [L111-123]
 - 类型: method
 - 签名: `def record_round_stats(self, step, stats):`
 - 作用: 记录一轮评估的聚合测量（供曲线画噪声误差棒）。
@@ -16200,7 +16590,7 @@
 - 实现: docstring（L112-118）说明 `round_est` 是轮内聚合估计（BT-lite，SE≈347.5/√n），与运行中逐局 Elo（有限记忆、1σ≈±40 饱和）区分；L119-123 把 `step`/`est`/`games` 规整为 `{int, {str: [float, float]}, {str: int}}` 后 append 到 `round_stats`。**缺字段不报错**（`.get(..., {})`）。
 - 置信度: 已确认
 
-##### 2.117.2.9 League.add_exploiter [L125-129]
+##### 2.123.2.9 League.add_exploiter [L125-129]
 - 类型: method
 - 签名: `def add_exploiter(self, policy, path=None):`
 - 作用: 用递增计数器新增一个 exploiter 成员。
@@ -16211,7 +16601,7 @@
 - 实现: L126-127 拼 id 并递增；L128 `add_agent(aid, kind="exploiter", policy=policy, path=path)`；L129 返回。
 - 置信度: 已确认
 
-##### 2.117.2.10 League.remove_agent [L131-137]
+##### 2.123.2.10 League.remove_agent [L131-137]
 - 类型: method
 - 签名: `def remove_agent(self, agent_id):`
 - 作用: 移除成员并清理其 Elo 与 PFSP 胜率键。
@@ -16221,7 +16611,7 @@
 - 实现: L132-133 不存在直接 False；L134 `agents.pop`；L135 `elo.ratings.pop`；L136 过滤 `pfsp.winrates`，丢弃键中含该 id 的条目（键是 `(a, b)` 元组，故用 `agent_id not in k` 子串判断）；L137 返回 True。另有类级别名 `retire = remove_agent`（L139）。
 - 置信度: 已确认
 
-##### 2.117.2.11 League.elo_table [L141-142]
+##### 2.123.2.11 League.elo_table [L141-142]
 - 类型: method
 - 签名: `def elo_table(self):`
 - 作用: 返回按 Elo 降序的评分表。
@@ -16230,7 +16620,7 @@
 - 实现: 单行 `return self.elo.table()`（L142）。
 - 置信度: 已确认
 
-##### 2.117.2.12 League.save_state [L146-160]
+##### 2.123.2.12 League.save_state [L146-160]
 - 类型: method
 - 签名: `def save_state(self, path):`
 - 作用: 把 Elo / PFSP / 成员元信息 / 历史 / 计数器 / 曲线数据写成 JSON。
@@ -16240,7 +16630,7 @@
 - 实现: L147 函数内 `import json`；L148-158 组 state 字典：`ratings`（Elo 拷贝）、`winrates`（`(a,b)` 元组键扁平化为 `"a|b"`）、`agents`（仅 `agent_id`/`kind`/`path`，**不含策略本体**）、`history`、`exploiter_counter`、`ckpt_counter`、`elo_history`（元组→list）、`round_stats`、`total_steps`；L159-160 `json.dump(state, f)`，`encoding="utf-8"`（未设 `ensure_ascii=False`）。
 - 置信度: 已确认
 
-##### 2.117.2.13 League.load_state [L162-181]
+##### 2.123.2.13 League.load_state [L162-181]
 - 类型: method
 - 签名: `def load_state(self, path, policies=None):`
 - 作用: 恢复联赛状态；可选用 `policies` 字典重新挂载策略本体。
@@ -16253,7 +16643,7 @@
 
 ---
 
-### 2.118 `src/clasher_new/rl/mcts.py`
+### 2.124 `src/clasher_new/rl/mcts.py`
 
 - **分析组**：G024　**行数**：480　**AST 符号数**：23
 
@@ -16269,7 +16659,7 @@
 
 ---
 
-#### 2.118.1 MCTSConfig [L43-57]
+#### 2.124.1 MCTSConfig [L43-57]
 - 类型: class（`@dataclass`，无基类、无自定义方法）
 - 签名: `class MCTSConfig:`
 - 作用: 承载浅 MCTS 的全部超参数与奖励权重默认值。
@@ -16290,7 +16680,7 @@
 
 ---
 
-#### 2.118.2 _tower_premium_loss [L68-96]
+#### 2.124.2 _tower_premium_loss [L68-96]
 - 类型: function
 - 签名: `def _tower_premium_loss(player: PlayerState) -> float:`
 - 作用: 把某玩家的三塔当前血量折算成"差异化定价后的累计塔损"标量（存量视角，返回正 = 该玩家已累计损失的塔血价值）。
@@ -16303,7 +16693,7 @@
 
 ---
 
-#### 2.118.3 node_value [L99-125]
+#### 2.124.3 node_value [L99-125]
 - 类型: function
 - 签名: `def node_value(battle, player_id: int, cfg: MCTSConfig) -> float:`
 - 作用: 从 `player_id` 视角给当前战场打分（越大对我方越好）：塔损差 + 皇冠差 + 手牌圣水差，权重按双倍期相位切换。
@@ -16318,7 +16708,7 @@
 
 ---
 
-#### 2.118.4 leaf_value [L128-136]
+#### 2.124.4 leaf_value [L128-136]
 - 类型: function
 - 签名: `def leaf_value(battle, player_id: int, cfg: MCTSConfig) -> float:`
 - 作用: 叶估值：把战场深拷贝后确定性推演 `leaf_horizon_s` 秒（双方都不再部署），再调 `node_value`。
@@ -16333,7 +16723,7 @@
 
 ---
 
-#### 2.118.5 enumerate_bundles [L143-198]
+#### 2.124.5 enumerate_bundles [L143-198]
 - 类型: function
 - 签名: `def enumerate_bundles(battle, player_id: int, cfg: MCTSConfig, priors: Optional[dict] = None) -> list:`
 - 作用: 枚举当前决策帧的可执行单卡 bundle（逐槽位 × 合法格），每个候选都过 `validate_bundle`，并按先验或启发式格序截断。
@@ -16349,7 +16739,7 @@
 
 ---
 
-#### 2.118.6 validate_slots [L201-204]
+#### 2.124.6 validate_slots [L201-204]
 - 类型: function
 - 签名: `def validate_slots(p: PlayerState) -> np.ndarray:`
 - 作用: 手牌槽圣水掩码的薄包装（直接转调 `rl.action_mask.slot_mask`）。
@@ -16362,7 +16752,7 @@
 
 ---
 
-#### 2.118.7 _cells_by_threat [L207-235]
+#### 2.124.7 _cells_by_threat [L207-235]
 - 类型: function
 - 签名: `def _cells_by_threat(battle, player_id: int) -> np.ndarray:`
 - 作用: 无先验时部队卡的缺省格序：按"到最近敌方单位的加权距离"升序（近者排前，残血敌塔等效距离被压短）。
@@ -16376,7 +16766,7 @@
 
 ---
 
-#### 2.118.8 _foe_priority [L238-245]
+#### 2.124.8 _foe_priority [L238-245]
 - 类型: function
 - 签名: `def _foe_priority(e) -> float:`
 - 作用: 算单个敌方实体的目标优先级（≥1）：血量比例越低优先级越高（残血塔 = 斩杀目标）。
@@ -16389,7 +16779,7 @@
 
 ---
 
-#### 2.118.9 _is_spell_card [L248-250]
+#### 2.124.9 _is_spell_card [L248-250]
 - 类型: function
 - 签名: `def _is_spell_card(card_name: str) -> bool:`
 - 作用: 判断卡牌是否为法术（决定用哪种格序启发式）。
@@ -16402,7 +16792,7 @@
 
 ---
 
-#### 2.118.10 _cells_by_spell_value [L253-283]
+#### 2.124.10 _cells_by_spell_value [L253-283]
 - 类型: function
 - 签名: `def _cells_by_spell_value(battle, player_id: int, card_name: str) -> np.ndarray:`
 - 作用: 法术卡的格序：按"该格溅射半径内罩住的敌方总价值"降序（罩到多/可击杀目标者排前）。
@@ -16417,7 +16807,7 @@
 
 ---
 
-#### 2.118.11 _spell_target_value [L286-298]
+#### 2.124.11 _spell_target_value [L286-298]
 - 类型: function
 - 签名: `def _spell_target_value(e, spell_damage: float) -> float:`
 - 作用: 法术视角下单目标价值：`min(hp, 法术伤)` 的近似；可击杀目标再加固定击杀加成（塔加成远大于部队）。
@@ -16431,7 +16821,7 @@
 
 ---
 
-#### 2.118.12 _Node [L305-320]
+#### 2.124.12 _Node [L305-320]
 - 类型: class
 - 签名: `class _Node:`
 - 作用: MCTS 树节点：持有战场副本、待行动方、父/子指针、惰性候选列表与访问统计。
@@ -16441,7 +16831,7 @@
 - 调用: 由 `RLMCTS.search` 建根节点（L348）与 `RLMCTS._apply` 建子节点（L466）实例化。
 - 置信度: 已确认
 
-##### 2.118.12.1 _Node.__init__ [L309-317]
+##### 2.124.12.1 _Node.__init__ [L309-317]
 - 类型: method
 - 签名: `def __init__(self, battle, to_act, parent=None, action=None):`
 - 作用: 初始化节点字段。
@@ -16454,7 +16844,7 @@
 - 实现: 依次赋值 `self.battle = battle`、`self.to_act = to_act`、`self.parent = parent`、`self.action = action`、`self.children = []`（空列表）、`self.untried = None`（`None` 表示"尚未惰性枚举"，空列表表示"枚举过但没有候选"）、`self.n_visits = 0`、`self.sum_value = 0.0`（L310-317）。
 - 置信度: 已确认
 
-##### 2.118.12.2 _Node.q [L319-320]
+##### 2.124.12.2 _Node.q [L319-320]
 - 类型: method
 - 签名: `def q(self) -> float:`
 - 作用: 返回该节点的平均回传价值。
@@ -16466,7 +16856,7 @@
 
 ---
 
-#### 2.118.13 RLMCTS [L330-480]
+#### 2.124.13 RLMCTS [L330-480]
 - 类型: class
 - 签名: `class RLMCTS:`
 - 作用: MCTS 主搜索器；每次决策帧调一次 `search()`，返回 `(ActionBundle, info)`。
@@ -16476,7 +16866,7 @@
 - 调用: 同仓唯一使用点是 `rl/selftest.py`（grep：L2983、L3075 导入，L3005/L3017/L3062/L3088 实例化并调 `search`）。未发现 `rl/evaluate.py` 或训练入口的调用点（同仓 grep 无命中）。
 - 置信度: 已确认
 
-##### 2.118.13.1 RLMCTS.__init__ [L333-337]
+##### 2.124.13.1 RLMCTS.__init__ [L333-337]
 - 类型: method
 - 签名: `def __init__(self, policy=None, opponent_fn: Optional[OpponentFn] = None, cfg: Optional[MCTSConfig] = None):`
 - 作用: 保存策略（先验来源）、对手回调与配置。
@@ -16488,7 +16878,7 @@
 - 实现: `self.policy = policy`；`self.opponent_fn = opponent_fn`；`self.cfg = cfg or MCTSConfig()`（L335-337）。注意 `self._player_id` 未在此处（或全文件任何位置）赋值，见 `_root_player` 条目。
 - 置信度: 已确认
 
-##### 2.118.13.2 RLMCTS.search [L341-387]
+##### 2.124.13.2 RLMCTS.search [L341-387]
 - 类型: method
 - 签名: `def search(self, battle, player_id: int, obs=None) -> tuple:`
 - 作用: 执行 `n_simulations` 次 UCT 模拟，返回根节点的最优 bundle 与统计信息；原 `battle` 不被修改（全部在 deepcopy 上推演）。
@@ -16501,7 +16891,7 @@
 - 调用: 被同仓 `rl/selftest.py` 调用（grep：L3017、L3062、L3088）。内部调用 `_expand_actions`（L349、L360）、`_uct_select`（L356）、`_apply`（L363）、`leaf_value`（L367）。
 - 置信度: 已确认（`obs` 参数未使用为源码事实）
 
-##### 2.118.13.3 RLMCTS._expand_actions [L391-406]
+##### 2.124.13.3 RLMCTS._expand_actions [L391-406]
 - 类型: method
 - 签名: `def _expand_actions(self, node: _Node) -> list:`
 - 作用: 枚举本节点行动方的候选动作列表：`[None]`（等待）加上我方单卡 bundle 列表，或对手节点的单个回调 bundle。
@@ -16512,7 +16902,7 @@
 - 调用: 被 `search` 调两次（L349 根、L360 惰性扩展）；内部调用 `_priors`（L394）、`enumerate_bundles`（L396）、`_opponent_bundle`（L399）、`_root_player`（L395）。
 - 置信度: 已确认
 
-##### 2.118.13.4 RLMCTS._root_player [L408-409]
+##### 2.124.13.4 RLMCTS._root_player [L408-409]
 - 类型: method
 - 签名: `def _root_player(self) -> int:`
 - 作用: 返回根视角玩家编号（供判断节点是否为我方决策节点）。
@@ -16522,7 +16912,7 @@
 - 调用: 被 `_expand_actions`（L395）、`_apply`（L450、L468）调用。
 - 置信度: 已确认（未赋值与恒返回 0 为源码事实；外部是否注入 `_player_id` 无法确认）
 
-##### 2.118.13.5 RLMCTS._priors [L411-425]
+##### 2.124.13.5 RLMCTS._priors [L411-425]
 - 类型: method
 - 签名: `def _priors(self, node: _Node) -> Optional[dict]:`
 - 作用: 从策略网络提取 `(slot, cell)` logits 先验；任何异常都吞掉并返回 `None`。
@@ -16533,7 +16923,7 @@
 - 调用: 只被 `_expand_actions` 调用（L394，且仅当 `self.policy is not None`）。
 - 置信度: 已确认（先验张量到 numpy 的转换已确认；`slot_head` 输出维度与 `enumerate_bundles` 的 `[:K_MAX]` 切片兼容性依据 follower.py:37-39 与 action_bundle K_MAX=4）
 
-##### 2.118.13.6 RLMCTS._opponent_bundle [L427-433]
+##### 2.124.13.6 RLMCTS._opponent_bundle [L427-433]
 - 类型: method
 - 签名: `def _opponent_bundle(self, battle, opp_id: int) -> Optional[ActionBundle]:`
 - 作用: 调外部对手回调取一个对手 bundle；未配置回调或回调抛异常时返回 `None`。
@@ -16545,7 +16935,7 @@
 - 调用: 被 `_expand_actions`（L399）与 `_apply`（L451）调用。
 - 置信度: 已确认
 
-##### 2.118.13.7 RLMCTS._apply [L435-469]
+##### 2.124.13.7 RLMCTS._apply [L435-469]
 - 类型: method
 - 签名: `def _apply(self, node: _Node, action) -> _Node:`
 - 作用: 把动作应用到节点战场的副本上（含我方部署、我方节点时的对手响应、推进一决策帧），返回新子节点。
@@ -16557,7 +16947,7 @@
 - 调用: 只被 `search` 调用（L363）。内部调用 `validate_bundle`（L442、L453）、`_opponent_bundle`（L451）、`_root_player`（L450、L468）。
 - 置信度: 已确认（`to_act` 局部变量未使用与 `if False else` 死分支均为源码事实）
 
-##### 2.118.13.8 RLMCTS._uct_select [L471-480]
+##### 2.124.13.8 RLMCTS._uct_select [L471-480]
 - 类型: method
 - 签名: `def _uct_select(self, node: _Node) -> _Node:`
 - 作用: 在节点的子节点中按 UCT 公式选一个（exploit = 子节点 q，explore = c_uct × √(ln N_parent / n_child)）。
@@ -16572,7 +16962,7 @@
 
 ---
 
-### 2.119 `src/clasher_new/rl/observation.py`
+### 2.125 `src/clasher_new/rl/observation.py`
 
 - **分析组**：G043　**行数**：172　**AST 符号数**：2
 
@@ -16588,7 +16978,7 @@
   - `GRID_H, GRID_W = 32, 18`（L83）、`GRID_C = 15`（L84）— 网格形状常量。
 - 顶层数据表/字典: `_TYPE_ALIAS`（引擎 type → 4 类归并）；`ENTITY_NAMES` 是列表但起词表字典的索引作用（`ENTITY_NAMES.index(name)` 即 id）。
 
-#### 2.119.1 observe [L87-144]
+#### 2.125.1 observe [L87-144]
 - 类型: function
 - 签名: `def observe(battle, player_id: int = 0) -> dict:`
 - 作用: 返回玩家 `player_id` 的可见观测字典（grid 张量 + 手牌 id + 圣水 + 下一张 + 时间）。
@@ -16600,7 +16990,7 @@
 - 调用: 未被本组其他文件调用。被 follower/信念模块链路使用待确认（原因：未读 `rl/follower.py`、`rl/belief.py` 等）。
 - 置信度: 已确认（实现与返回结构）
 
-#### 2.119.2 hidden_labels [L147-172]
+#### 2.125.2 hidden_labels [L147-172]
 - 类型: function
 - 签名: `def hidden_labels(battle, player_id: int = 0) -> dict:`
 - 作用: 返回特权隐藏状态标签（对手真实手牌/牌序/圣水/王冠/塔血 + 我方圣水/手牌 + 时间），只允许训练期使用。
@@ -16637,7 +17027,7 @@
 
 ---
 
-### 2.120 `src/clasher_new/rl/opponents.py`
+### 2.126 `src/clasher_new/rl/opponents.py`
 
 - **分析组**：G043　**行数**：208　**AST 符号数**：14
 
@@ -16651,7 +17041,7 @@
   - `_PARENT`（L15-17，局部模块级变量）— 把 `src/clasher_new` 目录插入 `sys.path`，使 `card_utils` / `rl.*` 可导入。
 - 顶层数据表/字典: 无（`FOUR_DECK_SET` 是列表常量，不是字典）。
 
-#### 2.120.1 build_card_pool [L49-68]
+#### 2.126.1 build_card_pool [L49-68]
 - 类型: function
 - 签名: `def build_card_pool() -> list:`
 - 作用: 遍历引擎卡表 `card_data.keys()`，返回**可部署**的卡名排序列表。
@@ -16661,7 +17051,7 @@
 - 调用: 本组文件内无调用点。被 `observation.py` 的注释（L68）声明为手牌/卡名词表的集合来源之一；`rl/selftest.py` 中 `pol.deck()` 类测试间接涉及卡池（未在本组文件中确认直接调用点）⇒ 具体调用方待确认（原因：仅读了本组文件与被 import 的 `rl/pfsp.py`、`rl/elo.py`、`simulate_exchange.py` 片段，未全仓检索 `build_card_pool(`）。
 - 置信度: 已确认（实现与返回值）；调用方"待确认"
 
-#### 2.120.2 sample_deck [L71-73]
+#### 2.126.2 sample_deck [L71-73]
 - 类型: function
 - 签名: `def sample_deck(rng, pool) -> list:`
 - 作用: 从卡池里无放回随机抽 8 张互不相同的卡。
@@ -16673,7 +17063,7 @@
 - 调用: 被 `ScriptedPolicy.deck()` 在 `self.pool is not None` 时调用（L102）。
 - 置信度: 已确认
 
-#### 2.120.3 ScriptedPolicy [L76-122]
+#### 2.126.3 ScriptedPolicy [L76-122]
 - 类型: class
 - 签名: `class ScriptedPolicy:`
 - 作用: 掩码采样合法动作的脚本策略，可作任意一侧对手。docstring（L77-84）声明 `pool` 语义（None→固定默认卡组；list→每局从卡池重采样 8 张）与 `deck_pool` 语义（list[deck]→每局随机抽一副完整卡组）。
@@ -16683,7 +17073,7 @@
 - 调用: 被 `rl/selftest.py`（L617 附近，`[pol.deck() for _ in range(5)]`）使用；本组文件内不被调用。
 - 置信度: 已确认
 
-##### 2.120.3.1 ScriptedPolicy.__init__ [L86-94]
+##### 2.126.3.1 ScriptedPolicy.__init__ [L86-94]
 - 类型: method
 - 签名: `def __init__(self, mode="random", pool=None, deck_pool=None, seed=0, env=None):`
 - 作用: 校验 mode 并保存随机源/卡池/env。
@@ -16697,7 +17087,7 @@
 - 实现: L87-88 mode 白名单校验；L89-94 依次赋 `mode`/`pool`/`deck_pool`/`seed`/`rng`/`env`。docstring 明确 mode="heuristic" 当前与 "random" 等价（都是掩码采样，L5）。
 - 置信度: 已确认
 
-##### 2.120.3.2 ScriptedPolicy.deck [L96-103]
+##### 2.126.3.2 ScriptedPolicy.deck [L96-103]
 - 类型: method
 - 签名: `def deck(self):`
 - 作用: 返回本局使用的卡组（三类来源的优先级选择）。
@@ -16707,7 +17097,7 @@
 - 调用: `rl/selftest.py` L617 调用（每次调用都会消耗 rng 并重采样）。**本组范围内的训练对手池 `_OpponentPool` 未在 `sample()` 中调用它**（`rl/train_solo.py` L436-477 只选择对手对象）⇒ 运行期实际谁调用 `deck()` 待确认（原因：未全仓检索）。
 - 置信度: 已确认
 
-##### 2.120.3.3 ScriptedPolicy.play [L105-116]
+##### 2.126.3.3 ScriptedPolicy.play [L105-116]
 - 类型: method
 - 签名: `def play(self, env, player_id: int) -> ActionBundle:`
 - 作用: 从 `player_id` 的合法动作掩码里随机选一个「卡槽 + 落点」子动作。
@@ -16719,7 +17109,7 @@
 - 调用: 被 `__call__`（L122）调用；调用 `env.get_action_mask_for` 与 `ActionBundle.noop/from_single`。
 - 置信度: 已确认
 
-##### 2.120.3.4 ScriptedPolicy.__call__ [L118-122]
+##### 2.126.3.4 ScriptedPolicy.__call__ [L118-122]
 - 类型: method
 - 签名: `def __call__(self, obs):`
 - 作用: player-1 对手的调用接口（忽略 obs，直接用注入的 env）。
@@ -16729,7 +17119,7 @@
 - 实现: L120-121 `self.env is None` 抛 `RuntimeError("ScriptedPolicy 需要先注入 env（.env = ...）")`；L122 返回 `self.play(self.env, 1)`——**硬编码 player_id=1**。
 - 置信度: 已确认
 
-#### 2.120.4 SelfDefenderPolicy [L125-208]
+#### 2.126.4 SelfDefenderPolicy [L125-208]
 - 类型: class
 - 签名: `class SelfDefenderPolicy:`
 - 作用: 真防守脚本对手（9j，A 层对手池组件）：威胁出现时用 `script_defender` 的确定性反制（挑 (DPS+HP/15)/费 最优反制部队 + 塔前迎击落点），无威胁时按 `passive_prob` 低频缓出。docstring（L126-136）强调与 `ScriptedPolicy(mode="heuristic")`（= mask 随机）的本质区别是会把部队放在过河敌军的行进路线上。
@@ -16739,7 +17129,7 @@
 - 调用: 被 `rl/train_solo.py` `_OpponentPool.__init__` 导入并实例化（L338、L346-347：`SelfDefenderPolicy(seed=cfg.seed + 7, env=env, deck_pool=defender_deck_pool)`），作为对手池的 "defend" 槽。
 - 置信度: 已确认
 
-##### 2.120.4.1 SelfDefenderPolicy.__init__ [L138-146]
+##### 2.126.4.1 SelfDefenderPolicy.__init__ [L138-146]
 - 类型: method
 - 签名: `def __init__(self, seed=0, env=None, passive_prob: float = 0.6, deck_pool=None):`
 - 作用: 保存随机源、env、停手概率与卡组集合。
@@ -16752,7 +17142,7 @@
 - 实现: L140-146 六次赋值，无校验（`passive_prob` 未做 [0,1] 断言）。
 - 置信度: 已确认
 
-##### 2.120.4.2 SelfDefenderPolicy.deck [L148-153]
+##### 2.126.4.2 SelfDefenderPolicy.deck [L148-153]
 - 类型: method
 - 签名: `def deck(self):`
 - 作用: 本局卡组：有 deck_pool 抽一副完整卡组，否则返回 None（固定默认）。
@@ -16761,7 +17151,7 @@
 - 实现: L150-152 与 `ScriptedPolicy.deck` 的后半段同构：`rng.choice(deck_pool)`，dict 取 `["cards"]`。
 - 置信度: 已确认
 
-##### 2.120.4.3 SelfDefenderPolicy._defend_action [L155-179]
+##### 2.126.4.3 SelfDefenderPolicy._defend_action [L155-179]
 - 类型: method
 - 签名: `def _defend_action(self, player_id: int):`
 - 作用: 调 `script_defender` 拿反制候选，返回第一个「手牌里且前 4 槽内」候选的**本地网格坐标**三元组。
@@ -16771,7 +17161,7 @@
 - 实现: L157 函数内 `from simulate_exchange import script_defender`；L158 取候选 `acts`（元素为 `(card, pos)`）；L159-160 空则 None；L161 取 `env.battle.players[player_id]`；L162-178 逐个候选：L163 `p.can_play_card(card)` 不通过则 `continue`；L166-167 卡必须在 `p.cycle[:4]`（部署要求在手牌前 4），否则跳过；L168 `slot = p.cycle.index(card) + 1`（1..4）；L171-177 **世界坐标→本地网格逆变换**：player_id==1 时 `gx = round(17.0 - wx)`、`gy = round(31.0 - wy)`（P1 有镜像），否则 `gx = round(wx - 0.5)`、`gy = round(wy - 0.5)`；L178 返回首个通过者。注释（L169-170）说明 `script_defender` 返回世界坐标（喂 `sim.deploy_card` 口径），而 `ActionBundle` 要本地网格坐标。
 - 置信度: 已确认（镜像公式与 `observation.py` L121-123 的 `x=17-x, y=31-y` 一致）
 
-##### 2.120.4.4 SelfDefenderPolicy._random_action [L181-191]
+##### 2.126.4.4 SelfDefenderPolicy._random_action [L181-191]
 - 类型: method
 - 签名: `def _random_action(self, player_id: int):`
 - 作用: 掩码随机选一个 (slot, x, y)，与 `ScriptedPolicy.play` 的采样同构（但**不改槽位 +1**，返回原始 slot，由 `play` 统一转换）。
@@ -16781,7 +17171,7 @@
 - 实现: L182 `env.get_action_mask_for`；L183-185 空槽→None；L186 选槽；L187-189 空格→None；L190 选格；L191 返回 `(slot, cell % 18, cell // 18)`。
 - 置信度: 已确认
 
-##### 2.120.4.5 SelfDefenderPolicy.play [L193-203]
+##### 2.126.4.5 SelfDefenderPolicy.play [L193-203]
 - 类型: method
 - 签名: `def play(self, env, player_id: int = 1) -> ActionBundle:`
 - 作用: 单帧决策：先按 `passive_prob` 决定是否尝试低缓出，否则/失败时走真防守反制。
@@ -16792,7 +17182,7 @@
 - 实现: L194 `self.env = env`；L196-197 `rng.random() >= passive_prob` 时才调用 `_random_action`（即 **passive_prob 概率停手**）；L198-199 若未拿到动作则 `_defend_action`；L200-201 仍为 None → noop；L202-203 解包三元组并 `ActionBundle.from_single(slot, int(x), int(y))`。注意此处 slot **不 +1**（与 `ScriptedPolicy.play` 的 `slot + 1` 不同）——`_defend_action` 已返回 1..4，而 `_random_action` 返回的 0 基槽位在此处直接使用。
 - 置信度: 已确认（slot 基数差异照实记录，未推测意图）
 
-##### 2.120.4.6 SelfDefenderPolicy.__call__ [L205-208]
+##### 2.126.4.6 SelfDefenderPolicy.__call__ [L205-208]
 - 类型: method
 - 签名: `def __call__(self, obs):`
 - 作用: player-1 对手接口。
@@ -16804,7 +17194,7 @@
 
 ---
 
-### 2.121 `src/clasher_new/rl/overtime.py`
+### 2.127 `src/clasher_new/rl/overtime.py`
 
 - **分析组**：G045　**行数**：38　**AST 符号数**：1
 
@@ -16817,7 +17207,7 @@
   - `OVERTIME_END_S = 300.0`（L27）— 加时硬顶（秒）；到达后不再延长，按 `timeout_winner` 的最低塔血百分比裁决。
 - 顶层数据表/字典: 无
 
-#### 2.121.1 overtime_open [L30-38]
+#### 2.127.1 overtime_open [L30-38]
 - 类型: function
 - 签名: `overtime_open(battle)`
 - 作用: 回答「现在是否仍处于应继续的加时窗口」，用于绕过 `max_ep_steps` 在常规时间末的截断。
@@ -16830,7 +17220,7 @@
 
 ---
 
-### 2.122 `src/clasher_new/rl/pfsp.py`
+### 2.128 `src/clasher_new/rl/pfsp.py`
 
 - **分析组**：G045　**行数**：71　**AST 符号数**：5
 
@@ -16841,7 +17231,7 @@
 - 关键模块级常量: `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（L22）— 包上一级目录；L23-24 条件插 `sys.path`。除此之外无模块级常量。
 - 顶层数据表/字典: 无（实例级字典 `self.winrates` 见下）
 
-#### 2.122.1 PFSP [L29-71]
+#### 2.128.1 PFSP [L29-71]
 - 类型: class
 - 签名: `class PFSP:`
 - 作用: 维护 (agent, opponent) → EMA 胜率表，并据此给对手集合算权重与采样。
@@ -16851,7 +17241,7 @@
 - 调用: 由 `rl/league.py` L19 导入、L35 `PFSP(beta=pfsp_beta, seed=seed)` 实例化（L56 `sample`、L62-63 `update_winrate`）；由 `rl/train_solo.py` L41 `from rl.pfsp import PFSP as _PFSP`、L360 实例化（L454 `sample`、L485 `update_winrate`）；`rl/selftest.py` L4098 导入并逐项断言。
 - 置信度: 已确认
 
-##### 2.122.1.1 PFSP.__init__ [L30-44]
+##### 2.128.1.1 PFSP.__init__ [L30-44]
 - 类型: method
 - 签名: `__init__(self, beta: float = 1.0, seed: int = 0, alpha: float = 0.05, gate_hi: float = 1.0, gate_penalty: float = 1.0)`
 - 作用: 校验参数并初始化随机源与胜率表。
@@ -16865,7 +17255,7 @@
 - 实现: L32-37 三个前置校验；L38-42 保存 `beta`/`alpha`/`gate_hi`/`gate_penalty`（三者用 `float()` 转换）并建 `self.rng = random.Random(seed)`；L44 初始化空 `winrates` 字典。
 - 置信度: 已确认
 
-##### 2.122.1.2 PFSP.update_winrate [L46-51]
+##### 2.128.1.2 PFSP.update_winrate [L46-51]
 - 类型: method
 - 签名: `update_winrate(self, agent_a, agent_b, score_a: float, alpha: float = None)`
 - 作用: 用 EMA 更新 (a 对 b) 的胜率。
@@ -16879,7 +17269,7 @@
 - 调用: `rl/league.py` L62-63（对 a→b 与 b→a 分别以 `score_a` 与 `1 - score_a` 更新）；`rl/train_solo.py` L485；selftest L4099+。
 - 置信度: 已确认
 
-##### 2.122.1.3 PFSP.weights [L53-64]
+##### 2.128.1.3 PFSP.weights [L53-64]
 - 类型: method
 - 签名: `weights(self, agent_id, opponents) -> np.ndarray`
 - 作用: 逐个对手算采样权重，返回 float64 numpy 数组。
@@ -16891,7 +17281,7 @@
 - 调用: 由 `sample` L69 调用；仓库内未见其它直接调用点（`league.py` L56 用的是 `sample`）。
 - 置信度: 已确认
 
-##### 2.122.1.4 PFSP.sample [L66-71]
+##### 2.128.1.4 PFSP.sample [L66-71]
 - 类型: method
 - 签名: `sample(self, agent_id, opponents) -> str`
 - 作用: 按 `weights` 归一化后随机抽一个对手 id。
@@ -16905,7 +17295,7 @@
 
 ---
 
-### 2.123 `src/clasher_new/rl/plan_space.py`
+### 2.129 `src/clasher_new/rl/plan_space.py`
 
 - **分析组**：G043　**行数**：188　**AST 符号数**：7
 
@@ -16926,7 +17316,7 @@
   - `_OLD_PLAN_DIM = 21`（L188）— 旧布局维度。
 - 顶层数据表/字典: 无（全部为 list 常量）。`dataclass` 是数据容器，不是顶层字典。
 
-#### 2.123.1 _one_hot [L89-95]
+#### 2.129.1 _one_hot [L89-95]
 - 类型: function
 - 签名: `def _one_hot(name, choices, default_idx=0, dtype=np.float32) -> np.ndarray:`
 - 作用: 把类别名转成 one-hot 向量；不在候选中则置 `default_idx` 位为 1。
@@ -16940,7 +17330,7 @@
 - 调用: 被 `PlanToken.to_vector` 三次调用（L150-152：target/hint/threat）以及 region 一次（L141-142，`default_idx=FOCUS_REGIONS.index("own_center")`）。
 - 置信度: 已确认
 
-#### 2.123.2 PlanToken [L99-183]
+#### 2.129.2 PlanToken [L99-183]
 - 类型: class（`@dataclass` 装饰，L98）
 - 签名: `class PlanToken:`
 - 作用: 战术意图 token 的数据容器 + 到固定长度向量的编解码。
@@ -16950,7 +17340,7 @@
 - 调用: 被 `rl/follower.py` 相关链路与 `rl/selftest.py` 使用（本组未确认具体行号）⇒ 待确认（原因：未读 `rl/follower.py`）。
 - 置信度: 已确认（字段与默认值已逐条核对源码）
 
-##### 2.123.2.1 PlanToken.intent [L117-118]
+##### 2.129.2.1 PlanToken.intent [L117-118]
 - 类型: classmethod（`@classmethod`，L116）
 - 签名: `def intent(cls, name, region="own_center", **kw) -> "PlanToken":`
 - 作用: 便捷构造：用意图名 + 区域 + 任意额外字段建 PlanToken。
@@ -16962,7 +17352,7 @@
 - 实现: 单行返回（L118）；无校验（未知 kwargs 由 dataclass `__init__` 抛 TypeError）。
 - 置信度: 已确认
 
-##### 2.123.2.2 PlanToken.hold_slots [L120-122]
+##### 2.129.2.2 PlanToken.hold_slots [L120-122]
 - 类型: method
 - 签名: `def hold_slots(self) -> List[int]:`
 - 作用: 解出 hold_mask 命中的槽位列表（1 基）。
@@ -16971,7 +17361,7 @@
 - 实现: 列表推导 `[i + 1 for i in range(4) if (self.hold_mask >> i) & 1]`（L122），即 bit0→槽 1、bit1→槽 2、bit2→槽 3、bit3→槽 4。
 - 置信度: 已确认
 
-##### 2.123.2.3 PlanToken.to_vector [L124-160]
+##### 2.129.2.3 PlanToken.to_vector [L124-160]
 - 类型: method
 - 签名: `def to_vector(self) -> np.ndarray:`
 - 作用: 把 token 离散化为定长向量，前 21 维严格等于旧布局。
@@ -16981,7 +17371,7 @@
 - 调用: 被模块尾 `PLAN_DIM = int(len(PlanToken().to_vector()))`（L187）调用；调用 `_one_hot`（L141、L150-152）。
 - 置信度: 已确认（代码实算长度 58；源码注释 L12 与 L186 写 57，属源码内注释与实现的**数字不一致**，照实记录，不代为解释）
 
-##### 2.123.2.4 PlanToken.from_old_layout [L163-179]
+##### 2.129.2.4 PlanToken.from_old_layout [L163-179]
 - 类型: classmethod（`@classmethod`，L162）
 - 签名: `def from_old_layout(cls, old_vec: np.ndarray) -> "PlanToken":`
 - 作用: 把旧 21 维向量反解析回 token（v1 新字段取默认）。
@@ -16992,7 +17382,7 @@
 - 调用: 源码注释（L13）称旧 ckpt 经 `rl.follower.load_checkpoint` 前 21 列拷贝加载；本组文件内无调用点 ⇒ 调用方待确认（原因：未读 `rl/follower.py`）。
 - 置信度: 已确认（实现）；调用方"待确认"
 
-##### 2.123.2.5 PlanToken.zeros [L182-183]
+##### 2.129.2.5 PlanToken.zeros [L182-183]
 - 类型: classmethod（`@classmethod`，L181）
 - 签名: `def zeros(cls) -> "PlanToken":`
 - 作用: 返回全默认字段的 token。
@@ -17003,7 +17393,7 @@
 
 ---
 
-### 2.124 `src/clasher_new/rl/ppo.py`
+### 2.130 `src/clasher_new/rl/ppo.py`
 
 - **分析组**：G017　**行数**：547　**AST 符号数**：17
 
@@ -17015,7 +17405,7 @@
   - `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))` (L32) — 本文件所在目录 `rl/` 的父目录（即 `src/clasher_new`）；L33-34 在 `_PARENT` 不在 `sys.path` 时把它插到 `sys.path[0]`，使 `import rl.xxx` 可用。这是本模块唯一的模块级赋值常量。
 - 顶层数据表/字典: 无（模块级只有两个类定义与上述路径常量）
 
-#### 2.124.1 ReturnScaler [L41-83]
+#### 2.130.1 ReturnScaler [L41-83]
 - 类型: class
 - 签名: `class ReturnScaler:`
 - 作用: 维护回报（return）标量的在线运行均值/方差（Welford 算法），供价值损失做量纲对齐；只做统计、不改变任何返回值域。
@@ -17025,7 +17415,7 @@
 - 调用: 由 `PPOTrainer.__init__`（L123）默认新建，或在断点续训时由外部传入已恢复实例；`PPOTrainer.update` L242-243 调用 `update()`+`scale()`。仓库内直接使用它的位置（grep 确认）：`src/clasher_new/rl/train_solo.py:37` import、`train_solo.py:1152-1156` 用 `from_dict` 恢复并打印、`train_solo.py:1452` 用 `to_dict` 落盘。
 - 置信度: 已确认
 
-##### 2.124.1.1 ReturnScaler.__init__ [L48-52]
+##### 2.130.1.1 ReturnScaler.__init__ [L48-52]
 - 类型: method
 - 签名: `def __init__(self, eps=1e-6):`
 - 作用: 初始化 Welford 统计状态与退化阈值。
@@ -17035,7 +17425,7 @@
 - 实现: `self.eps = float(eps)`（L49）；`self.count = 0`（L50，样本计数）；`self.mean = 0.0`（L51）；`self.m2 = 0.0`（L52，平方差累积量，方差 = m2/(count-1)）。
 - 置信度: 已确认
 
-##### 2.124.1.2 ReturnScaler.update [L54-60]
+##### 2.130.1.2 ReturnScaler.update [L54-60]
 - 类型: method
 - 签名: `def update(self, values):`
 - 作用: 把一批回报逐个喂入 Welford 在线更新（list/np.ndarray 均可）。
@@ -17046,7 +17436,7 @@
 - 调用: 被 `PPOTrainer.update` 在 `value_norm == "running"` 时调用一次（L242，整份 rollout 调用一次，不按 minibatch）。
 - 置信度: 已确认
 
-##### 2.124.1.3 ReturnScaler.var [L62-63]
+##### 2.130.1.3 ReturnScaler.var [L62-63]
 - 类型: method
 - 签名: `def var(self):`
 - 作用: 返回当前样本方差（无偏，除以 count-1）。
@@ -17055,7 +17445,7 @@
 - 实现: L63 单行三元表达式：`return self.m2 / (self.count - 1) if self.count > 1 else 0.0`。count ≤ 1 时返回 0.0（避免除零）。
 - 置信度: 已确认
 
-##### 2.124.1.4 ReturnScaler.std [L65-66]
+##### 2.130.1.4 ReturnScaler.std [L65-66]
 - 类型: method
 - 签名: `def std(self):`
 - 作用: 返回标准差（对方差做非负截断后开方）。
@@ -17065,7 +17455,7 @@
 - 调用: 被 `scale()`（L70）与外部日志（`train_solo.py:1156` 打印 `ppo.ret_scaler.std()`）使用。
 - 置信度: 已确认
 
-##### 2.124.1.5 ReturnScaler.scale [L68-71]
+##### 2.130.1.5 ReturnScaler.scale [L68-71]
 - 类型: method
 - 签名: `def scale(self):`
 - 作用: 返回值损失的除数 s；统计未建立或方差过小时返回 0.0 表示"不缩放"。
@@ -17074,7 +17464,7 @@
 - 实现: docstring（L69）明确"价值损失的除数 s（v_loss /= s²）。统计未建立/方差过小 → 0.0 表示不缩放"。L70-71 两行实现。注意返回 0.0 是一个哨兵值，调用方（`PPOTrainer.update` L243-244）据此把 `v_scale` 设为 1.0。
 - 置信度: 已确认
 
-##### 2.124.1.6 ReturnScaler.to_dict [L73-74]
+##### 2.130.1.6 ReturnScaler.to_dict [L73-74]
 - 类型: method
 - 签名: `def to_dict(self):`
 - 作用: 导出统计状态用于 checkpoint 落盘。
@@ -17084,7 +17474,7 @@
 - 调用: `train_solo.py:1452` 把 `ppo.ret_scaler.to_dict()` 写进 run_state。
 - 置信度: 已确认
 
-##### 2.124.1.7 ReturnScaler.from_dict [L77-83]
+##### 2.130.1.7 ReturnScaler.from_dict [L77-83]
 - 类型: classmethod
 - 签名: `@classmethod` / `def from_dict(cls, d):`
 - 作用: 从字典恢复统计状态（断点续训时不重置回报尺度统计）。
@@ -17095,7 +17485,7 @@
 - 调用: `train_solo.py:1154` 恢复 `ppo.ret_scaler`；测试 `src/clasher_new/rl/selftest.py:3847`（往返一致）与 `:3850`（`from_dict(None).count == 0`）。
 - 置信度: 已确认
 
-#### 2.124.2 PPOTrainer [L86-547]
+#### 2.130.2 PPOTrainer [L86-547]
 - 类型: class
 - 签名: `class PPOTrainer:`
 - 作用: PPO 训练器：持有 policy 与 Adam 优化器，提供 GAE 计算、EV 计算、以及 `update()` 主入口（优势归一化 → 价值尺度 → 单 pass 旧分支 或 多轮×小批新分支 → 反传/裁剪/`opt.step`）。
@@ -17105,7 +17495,7 @@
 - 调用: 被 `rl/run_league.py:585`、`rl/flow_league.py:139`/`:189`、`rl/train_follower.py:149`、`rl/train_solo.py:1138` 构造（grep 确认），并被 `scripts/` 下多个只读诊断脚本 import（`diag_critic_ev.py:51`、`diag_gru_ablation.py:35`、`pomdp_ceiling_probe.py:44`、`probe_reward_composition.py:44`、`probe_value_ln.py:54`、`_probe_value_collapse.py:38`、`_probe_value_path.py:38`）以及 `rl/selftest.py` 多处测试使用。
 - 置信度: 已确认
 
-##### 2.124.2.1 PPOTrainer.__init__ [L87-142]
+##### 2.130.2.1 PPOTrainer.__init__ [L87-142]
 - 类型: method
 - 签名: `def __init__(self, policy, lr=3e-4, gamma=0.99, gae_lambda=0.95, clip=0.2,` / `             vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5, adv_norm="batch",` / `             value_norm="none", diagnose_every=0, ret_scaler=None,` / `             n_epochs=1, minibatch_size=0, shuffle=False, seed=12345):`（源码分 4 行书写，见 L87-90）
 - 作用: 保存全部 PPO 超参、建立 Adam 优化器与统计/诊断状态；默认值即"旧行为"，新能力必须显式开启。
@@ -17128,7 +17518,7 @@
 - 实现: docstring（L91-111）分三段：`value_norm`/`diagnose_every`/`ret_scaler` 语义（L91-94）；F′ 更新预算的动机（L96-104，旧实现 = 1 forward/1 backward/1 step，而喂入的是同一局连续 128 帧、相邻帧 corr≈0.99，导致 20k 步只有 156 次梯度步）；兼容性红线（L105-110：`n_epochs=1, minibatch_size=0, shuffle=False` 时走原单一 pass 分支、loss 仍为 `sum` 口径、逐位等于旧实现；只有显式开启才切到"多轮×打乱×小批 + `mean` 口径"；并声明开启后 `ratio` 会离开 1.000、`clip_frac` 会 >0 是正常的）。赋值顺序：policy/opt（L112-113）→ 六个标量超参（L114-119）→ `adv_norm`/`value_norm`/`diagnose_every`/`ret_scaler`（L120-123）→ `self.updates = 0`（L124，累计 update 次数）→ F′ 三参数 + `rng`（L126-129）→ `self.grad_steps = 0`（L132，累计 `opt.step()` 次数，注释 L130-131 说明旧实现恒等于 `updates`、是判读"梯度步够不够"的硬指标）→ `self.last_ev_pairs = None`（L137，最近一次 update 的逐帧 `(value_pred, return)`，供训练环按评估窗口池化算 EV）→ `self.last_ev_pre = None`（L139，**更新前**整批预测算出的 EV，对外报出口径）→ `self._adv_inert_stats = {}`（L141）与 `self.last_adv_inert_grad = None`（L142，惰性检验用）。
 - 置信度: 已确认
 
-##### 2.124.2.2 PPOTrainer.explained_variance [L145-165]
+##### 2.130.2.2 PPOTrainer.explained_variance [L145-165]
 - 类型: staticmethod
 - 签名: `@staticmethod` / `def explained_variance(values, returns):`
 - 作用: 计算 critic 对回报的解释方差 `EV = 1 − MSE(v, R) / Var(R)`；无量纲，是判读 critic 是否在学的口径。
@@ -17140,7 +17530,7 @@
 - 调用: 内部被 `update`（L335-336 更新前口径、L402 旧分支）、`_update_epochs`（L534）调用；外部被 `train_solo.py:1294`（全体帧池化）与 `:1298`（分块）调用，并被 `selftest.py:4635` 断言与 `last_ev_pre` 一致。
 - 置信度: 已确认
 
-##### 2.124.2.3 PPOTrainer.compute_gae [L168-192]
+##### 2.130.2.3 PPOTrainer.compute_gae [L168-192]
 - 类型: staticmethod
 - 签名: `@staticmethod` / `def compute_gae(rewards, values, dones, gamma=0.99, lam=0.95, truncated=None, last_value=0.0):`
 - 作用: 反向递推计算 GAE 优势与回报（returns = advantages + values）。
@@ -17157,7 +17547,7 @@
 - 调用（grep 确认）: `rl/flow_league.py:232`、`rl/run_league.py:767`/`:898`/`:1091`、`rl/train_follower.py:211`、`rl/train_solo.py:1228`（真实价值）与 `:1234`（用常数 `c = float(ppo.ret_scaler.mean)` 作 values 的 V≡常数对照）、`scripts/diag_critic_ev.py:200`、`scripts/diag_gru_ablation.py:147`、`scripts/pomdp_ceiling_probe.py:163`、`scripts/probe_value_ln.py:288`、`scripts/_probe_value_collapse.py:152`、`scripts/_probe_value_path.py:168`、`selftest.py:4876`/`:4879`。
 - 置信度: 已确认
 
-##### 2.124.2.4 PPOTrainer.update [L194-356]
+##### 2.130.2.4 PPOTrainer.update [L194-356]
 - 类型: method
 - 签名: `def update(self, transitions, ent_coef=None, adv_norm=None, adv_alt=None):`
 - 作用: 一次 PPO 更新主入口：对一批 transition 做优势归一化、价值尺度计算、旧分支或多轮分支的梯度更新，返回统计字典。
@@ -17181,7 +17571,7 @@
 - 调用: 由 `rl/train_solo.py:1653`（`ppo.update(batch, adv_alt=_adv_alt)`）、`rl/run_league.py`/`flow_league.py`/`train_follower.py`、以及 `selftest.py` 多处测试调用（grep 确认 PPOTrainer 构造点见类条目）。
 - 置信度: 已确认
 
-##### 2.124.2.5 PPOTrainer._loss_pass [L361-407]
+##### 2.130.2.5 PPOTrainer._loss_pass [L361-407]
 - 类型: method
 - 签名: `def _loss_pass(self, transitions, idx, advs, rets_np, coef, v_scale, reduction='mean'):`
 - 作用: 在 `idx` 指定的样本子集上做一次前向并算出 PPO loss 与各项诊断量（旧单 pass 分支与新多轮分支共用）。
@@ -17198,7 +17588,7 @@
 - 调用: 被 `update`（L300-305，`reduction="sum"`）与 `_update_epochs`（L505-506 与 L512-513，`reduction="mean"`）调用。
 - 置信度: 已确认
 
-##### 2.124.2.6 PPOTrainer._apply_grad [L409-465]
+##### 2.130.2.6 PPOTrainer._apply_grad [L409-465]
 - 类型: method
 - 签名: `def _apply_grad(self, pack, diag_on=False, pack_alt=None):`
 - 作用: 对一次 loss pack 做 backward（可选先做梯度成分分解与替代优势梯度余弦诊断）→ 全局梯度裁剪 → `opt.step()`，即"一次梯度步"。
@@ -17211,7 +17601,7 @@
 - 调用: 被 `update`（L306，legacy 分支）与 `_update_epochs`（L514）调用。
 - 置信度: 已确认
 
-##### 2.124.2.7 PPOTrainer._plan_batches [L467-475]
+##### 2.130.2.7 PPOTrainer._plan_batches [L467-475]
 - 类型: method
 - 签名: `def _plan_batches(self, n):`
 - 作用: 规划一轮内的样本顺序切分（可选打乱；小批不足则退化为整批）。
@@ -17222,7 +17612,7 @@
 - 调用: 被 `_update_epochs` 每轮调用一次（L499）。
 - 置信度: 已确认
 
-##### 2.124.2.8 PPOTrainer._update_epochs [L477-547]
+##### 2.130.2.8 PPOTrainer._update_epochs [L477-547]
 - 类型: method
 - 签名: `def _update_epochs(self, transitions, advs, rets_np, coef, v_scale, diag_on, advs_alt=None):`
 - 作用: F′ 主循环——`n_epochs` 轮 × 小批 ×（可选）打乱，每小批一次 `opt.step()`，并聚合统计。
@@ -17236,7 +17626,7 @@
 
 ---
 
-### 2.125 `src/clasher_new/rl/prophet.py`
+### 2.131 `src/clasher_new/rl/prophet.py`
 
 - **分析组**：G021　**行数**：516　**AST 符号数**：28
 
@@ -17247,7 +17637,7 @@
 - 关键模块级常量: 无（本文件未定义模块级常量；`_PARENT = ...` 在 L29 是导入路径修正的局部模块变量，非业务常量）。模块内使用的常量均由 `rl.belief_planner` 提供，已核实取值（依据 `src/clasher_new/rl/belief_planner.py`）：`PRESSURE_THRESHOLD = 2.0`(L51)、`BRIDGE_Y = 16.0`(L54)、`OWN_HALF_EDGE = 15.0`(L55)、`LANE_SPLIT_X = 9.0`(L56)、`LATE_S = 120.0`(L57)、`KING_ACTIVATE_PRINCESS_HP = 800.0`(L104)
 - 顶层数据表/字典: 无（`_region_from_intent` 内的 `mapping` 字典是函数局部变量，见 L50-59；`_SPELL_THREAT_KIND` 是 belief_planner 的顶层表，键=卡名、值=法术威胁枚举，取值 `Fireball→fireball / Poison→poison / Lightning→lightning / Freeze|Vines|Tornado→freeze / Rocket|Earthquake|Void→big_unknown`，依据 belief_planner.py L110-115）
 
-#### 2.125.1 _is_tower [L45-46]
+#### 2.131.1 _is_tower [L45-46]
 - 类型: function
 - 签名: `def _is_tower(name: str) -> bool:`
 - 作用: 判断实体名字里是否含子串 `Tower`，用于把静态塔从压力/单位统计中排除。
@@ -17258,7 +17648,7 @@
 - 调用: 被 `_units`(L69) 与 `_threat_and_my_pressure`(L82) 调用；不调用其它函数。
 - 置信度: 已确认
 
-#### 2.125.2 _region_from_intent [L49-60]
+#### 2.131.2 _region_from_intent [L49-60]
 - 类型: function
 - 签名: `def _region_from_intent(intent: str) -> str:`
 - 作用: 把旧的 macro_intent 字符串映射为 `PlanToken.focus_region` 枚举（P1-15 修复：不再用风险标量线性映射）。
@@ -17269,7 +17659,7 @@
 - 调用: 被 `ProphetPlanner.plan`(L506) 调用。
 - 置信度: 已确认
 
-#### 2.125.3 _units [L63-70]
+#### 2.131.3 _units [L63-70]
 - 类型: function
 - 签名: `def _units(fs, player_id: int):`
 - 作用: 从特权状态实体表中筛出指定玩家的非塔、且在卡表内（card_data）的部署实体。
@@ -17281,7 +17671,7 @@
 - 调用: 被 `_closest_enemy`(L95)、`_pressing_enemy`(L104)、`_protect_backline`(L209/217)、`_pull`(L256)、`_punish`(L285/289)、`_push_commit`(L304)、`_setup_wait`(L352)、`_king_activate`(L370)、`_save_ace`(L427)、`plan`(L479) 调用；自身调用 `_is_tower`。
 - 置信度: 已确认
 
-#### 2.125.4 _mean_x [L73-75]
+#### 2.131.4 _mean_x [L73-75]
 - 类型: function
 - 签名: `def _mean_x(units) -> float:`
 - 作用: 计算一组实体 x 坐标的均值；无实体时返回默认 9.0。
@@ -17292,7 +17682,7 @@
 - 调用: 被 `_punish`(L287/289) 与 `plan`(L479) 调用；调用 `np.mean`。
 - 置信度: 已确认
 
-#### 2.125.5 _threat_and_my_pressure [L78-89]
+#### 2.131.5 _threat_and_my_pressure [L78-89]
 - 类型: function
 - 签名: `def _threat_and_my_pressure(fs):`
 - 作用: 遍历全部实体累计敌方威胁度与我方压力度两个标量（塔被跳过，P1-4 修复）。
@@ -17303,7 +17693,7 @@
 - 调用: 被 `_setup_wait`(L349)、`_cycle_small`(L448)、`plan`(L466) 调用；调用 `_is_tower`。
 - 置信度: 已确认
 
-#### 2.125.6 _closest_enemy [L92-99]
+#### 2.131.6 _closest_enemy [L92-99]
 - 类型: function
 - 签名: `def _closest_enemy(fs):`
 - 作用: 找出权重最高（最接近我方塔）的敌方部署单位；无则返回 None。
@@ -17314,7 +17704,7 @@
 - 调用: 被 `_soft_control`(L169) 与 `_spell_trade`(L184) 调用；调用 `_units`。
 - 置信度: 已确认
 
-#### 2.125.7 _pressing_enemy [L102-104]
+#### 2.131.7 _pressing_enemy [L102-104]
 - 类型: function
 - 签名: `def _pressing_enemy(fs) -> bool:`
 - 作用: 判断是否存在已进入我方半场/桥头的敌方单位（y ≤ 河中心+1）→ 触发防守优先。
@@ -17325,7 +17715,7 @@
 - 调用: 被 `_protect_backline`(L229)、`_punish`(L283)、`_setup_wait`(L350)、`_anti_spell`(L394)、`_save_ace`(L422)、`_cycle_small`(L449) 调用；调用 `_units`。
 - 置信度: 已确认
 
-#### 2.125.8 _side [L107-108]
+#### 2.131.8 _side [L107-108]
 - 类型: function
 - 签名: `def _side(x: float) -> str:`
 - 作用: 按 x 是否小于 `LANE_SPLIT_X` 判定左/右路。
@@ -17336,7 +17726,7 @@
 - 调用: 被 `_own_region`(L112)、`_enemy_region`(L116) 调用。
 - 置信度: 已确认
 
-#### 2.125.9 _own_region [L111-112]
+#### 2.131.9 _own_region [L111-112]
 - 类型: function
 - 签名: `def _own_region(x: float) -> str:`
 - 作用: 把 x 坐标映射为我方半场 region（`own_left`/`own_right`）。
@@ -17347,7 +17737,7 @@
 - 调用: 被 4 个意图方法调用（L177/200/248/319）；调用 `_side`。
 - 置信度: 已确认
 
-#### 2.125.10 _enemy_region [L115-116]
+#### 2.131.10 _enemy_region [L115-116]
 - 类型: function
 - 签名: `def _enemy_region(x: float) -> str:`
 - 作用: 把 x 坐标映射为敌方半场 region（`enemy_left`/`enemy_right`）。
@@ -17358,7 +17748,7 @@
 - 调用: 本文件内无调用者（依据：`grep -n _enemy_region rl/prophet.py` 仅命中 L115/L116）；调用 `_side`。
 - 置信度: 已确认
 
-#### 2.125.11 _opposite_enemy_region [L119-121]
+#### 2.131.11 _opposite_enemy_region [L119-121]
 - 类型: function
 - 签名: `def _opposite_enemy_region(x: float) -> str:`
 - 作用: 已知敌方重心在 x 时，返回建议进攻的**另一路**敌方 region（punish 用）。
@@ -17369,7 +17759,7 @@
 - 调用: 被 `_punish`(L287) 调用。
 - 置信度: 已确认
 
-#### 2.125.12 _hand_slot [L124-125]
+#### 2.131.12 _hand_slot [L124-125]
 - 类型: function
 - 签名: `def _hand_slot(cycle, card_name):`
 - 作用: 在对手卡序中查某卡是否在手牌 4 张内，返回 1..4 槽位；不在则 None。
@@ -17381,7 +17771,7 @@
 - 调用: 被 5 个意图方法调用（L173/196/339/355/417）。
 - 置信度: 已确认
 
-#### 2.125.13 _spell_threat_in [L128-137]
+#### 2.131.13 _spell_threat_in [L128-137]
 - 类型: function
 - 签名: `def _spell_threat_in(cycle, depth: int = 6):`
 - 作用: 在对手 cycle 前 depth 张（手牌+进手序）里找第一张强法术，返回其 `OPP_SPELL_THREATS` 枚举值。
@@ -17393,7 +17783,7 @@
 - 调用: 被 `_anti_spell`(L396) 与 `_save_ace`(L429) 调用；依赖 belief_planner 的 `_SPELL_THREAT_KIND`（belief_planner.py L110-115）。
 - 置信度: 已确认
 
-#### 2.125.14 _pick_suggested [L140-160]
+#### 2.131.14 _pick_suggested [L140-160]
 - 类型: function
 - 签名: `def _pick_suggested(fs, intent: str):`
 - 作用: 从可出手牌（前 4 张、费用够、非 Mirror）里按意图相关启发式打分选一张，返回槽位。
@@ -17405,7 +17795,7 @@
 - 调用: 被 `plan`(L492) 调用；调用 `Card(...).elixir` / `Card(...).type`（card_utils.py `Card.__init__` L217 起，`self.elixir = self.data.get('manaCost', 0)`、`self.type = self.data.get('tidType','').split('_')[-1].lower()`）。
 - 置信度: 已确认
 
-#### 2.125.15 ProphetPlanner [L163-516]
+#### 2.131.15 ProphetPlanner [L163-516]
 - 类型: class
 - 签名: `class ProphetPlanner:`（无显式基类，L163）
 - 作用: 特权状态启发式先知：12 个意图检测方法 + 主入口 `plan`，输出 `PlanToken`。
@@ -17415,7 +17805,7 @@
 - 调用: 由 `rl/run_league.py`（L60 import、L709/L816 构造、L733/L854 调用 `plan`）、`rl/flow_league.py`（L47 import、L414 构造、L283 调用 `plan`）、`rl/train_follower.py`（L26 import、L140 构造）使用；`rl/selftest.py` L384/L1263/L1301/L2408/L2448 在测试中构造并调用（依据对全仓 `*.py` 的 grep）。
 - 置信度: 已确认
 
-##### 2.125.15.1 ProphetPlanner._soft_control [L168-181]
+##### 2.131.15.1 ProphetPlanner._soft_control [L168-181]
 - 类型: method
 - 签名: `def _soft_control(self, fs):`
 - 作用: 敌方单位已进入我方半场时，用手牌里的软控法术（`SOFT_CONTROL_CARDS`）出 `soft_control` 计划。
@@ -17425,7 +17815,7 @@
 - 实现: 先 `tu = _closest_enemy(fs)`；若 `tu is None` 或其 `pos[1] > BRIDGE_Y + 1.0`（未到桥头及以内）则返回 None（L169-171）。按 `SOFT_CONTROL_CARDS` 顺序找手牌槽位 `_hand_slot(fs["my_cycle"], card)`，且 `fs["my_elixir"] >= Card(card).elixir`（L172-174）。命中即构造 `PlanToken`：`macro_intent="soft_control"`、`focus_region=_own_region(tu x)`、`suggested_card=slot`、`target_kind="unit"`、`placement_hint="none"`、`elixir_budget=0.4`、`risk_profile=0.6`、`value_estimate=-2.0`（L175-180）。注意只加固定常量字段，未用到 `bundle_size_hint`/`combo_hint`/`opp_spell_threat`/`hold_mask`（走 PlanToken 默认值）。
 - 置信度: 已确认
 
-##### 2.125.15.2 ProphetPlanner._spell_trade [L183-204]
+##### 2.131.15.2 ProphetPlanner._spell_trade [L183-204]
 - 类型: method
 - 签名: `def _spell_trade(self, fs):`
 - 作用: 敌方高费单体（≥3 费、非血牛）深入我方半场时，用法术换掉它。
@@ -17435,7 +17825,7 @@
 - 实现: `tu = _closest_enemy(fs)`；`None` 或 `pos[1] > OWN_HALF_EDGE + 1.5`（即 y>16.5）则 None（L184-186）。若 `tu["name"] in PULL_TARGET_CARDS`（血牛）则 None，注释说明"血牛解法术亏 → 交给 _pull/单位"（L187-188）。`Card(tu["name"]).elixir` 用 `try/except KeyError` 包住，非卡名实体（弹道等）返回 None（L189-192）。费用 `< 3.0` 返回 None（L193-194）。按 `TRADE_SPELL_CARDS` 顺序找手牌槽位并要求费用够（L195-197）；命中构造 PlanToken：intent `spell_trade`、region 由目标 x 定、`target_kind="unit"`、`elixir_budget=0.5`、`risk_profile=0.5`、`value_estimate=float(min(cost, 6.0)) * 0.5`（L198-203）。注意 `Card(tu["name"])` 的 `KeyError` 来源是 `card_data[card_name]`（card_utils.py L222）。
 - 置信度: 已确认
 
-##### 2.125.15.3 ProphetPlanner._protect_backline [L206-252]
+##### 2.131.15.3 ProphetPlanner._protect_backline [L206-252]
 - 类型: method
 - 签名: `def _protect_backline(self, fs):`
 - 作用: 保后排：a) 敌方近战已贴近我方后排 → 放单位吸仇恨；b) pp 预判版——对手手牌有切后排单位且我方后排暴露 → 提前保护。
@@ -17445,7 +17835,7 @@
 - 实现: docstring 说明两分支（L207-208）。先取我方单位 `my_units = _units(fs, 0)`（L209），筛出 `pos[1] <= OWN_HALF_EDGE + 0.5`（y≤15.5）且卡名在 `BACKLINE_CARDS` 的后排单位 `backlines`（L210-212）。初值 `predictive=False, target=None`（L213-214）。对每个后排 bl，遍历 `_units(fs, 1)`：跳过 `PULL_TARGET_CARDS`（血牛交给 `_pull`，L218-219）、跳过 `pos[1] > BRIDGE_Y + 1.5`（y>17.5 未压境，L220-221）；算 `dx/dy` 并判平方距离 `<= 36.0`（距离 ≤6，L222-224），命中则 `target = bl` 并 break（L225-226），外层再 break（L227-228）。若 `target is None and backlines and not _pressing_enemy(fs)`（L229）进入预判：若 `fs["opp_cycle"][:4]` 里任一张 `Card(c).type == "character"`、`elixir <= 4.0` 且 `c in BACKLINE_HARASSER_CARDS`（L231-234），再从 backlines 里取 `pos[1] >= 9.0`（已暴露、前压）的第一个作为 target 并置 `predictive=True`（L236-239）。`target is None` 则 None（L240-241）。最后按 `fs["my_cycle"][:4]` 顺序找 `c.type in ("character","building")`、`1.0 <= c.elixir <= 4.0`、费用够、非 Mirror 的卡（L242-245），返回 PlanToken（`focus_region` 由 target x 定、`target_kind="my_backline"`、`elixir_budget=0.4`、`risk_profile=0.5`、`value_estimate=0.3 if predictive else 0.5`，L246-251）；无合适卡返回 None（L252）。
 - 置信度: 已确认
 
-##### 2.125.15.4 ProphetPlanner._pull [L254-277]
+##### 2.131.15.4 ProphetPlanner._pull [L254-277]
 - 类型: method
 - 签名: `def _pull(self, fs):`
 - 作用: 敌方血牛进入中场区间时，用低费单位（1~3 费 character/building）拉仇恨/拉过中线。
@@ -17455,7 +17845,7 @@
 - 实现: 遍历 `_units(fs, 1)`，只考虑 `e["name"] in PULL_TARGET_CARDS`（L256-258）；取 `y = float(e["pos"][1])`，若 `OWN_HALF_EDGE - 4.0 <= y <= BRIDGE_Y + 2.0`（即 11.0 ≤ y ≤ 18.0）则选为 target 并 break（L259-262）。target 为 None 返回 None（L263-264）。按手牌顺序找 `c.type in ("character","building")`、`1.0 <= c.elixir <= 3.0`、费用够、非 Mirror（L265-268）；命中后算 `near_edge = target x < LANE_SPLIT_X - 4.0 or target x > LANE_SPLIT_X + 4.0`（x<5 或 x>13，即远离中轴、贴边，L269-270），返回 PlanToken：`focus_region="own_center"`、`target_kind="unit"`、`placement_hint="pull_across" if near_edge else "pull_aggro"`、`elixir_budget=0.3`、`risk_profile=0.5`、`value_estimate=-1.0`（L271-276）。无合适卡返回 None（L277）。
 - 置信度: 已确认
 
-##### 2.125.15.5 ProphetPlanner._punish [L279-300]
+##### 2.131.15.5 ProphetPlanner._punish [L279-300]
 - 类型: method
 - 签名: `def _punish(self, fs):`
 - 作用: 趁虚打另一路（pp 特权精确版）：对手圣水 <2.5 且未压境时，出坦克/高费单位打敌方重心反侧。
@@ -17465,7 +17855,7 @@
 - 实现: docstring（L280）。门槛：`float(fs["opp_elixir"]) >= 2.5` → None（L281-282）；`_pressing_enemy(fs)` → None（压境先防，L283-284）。`enemy_units = _units(fs, 1)`（L285）；若有敌方部署单位，`region = _opposite_enemy_region(_mean_x(enemy_units))`（打敌人重心另一路，L286-287）；否则用我方重心 `my_x = _mean_x(_units(fs, 0))`，`region = "enemy_left" if my_x >= LANE_SPLIT_X else "enemy_right"`（L288-290，与我方重心同侧的路）。按手牌顺序找 `card in TANK_CARDS or (c.type == "character" and c.elixir >= 5.0)` 且费用够（L291-294），返回 PlanToken：`target_kind="tower"`、`elixir_budget=0.7`、`risk_profile=0.8`、`value_estimate=2.0`（L295-299）。无则 None（L300）。
 - 置信度: 已确认
 
-##### 2.125.15.6 ProphetPlanner._push_commit [L302-323]
+##### 2.131.15.6 ProphetPlanner._push_commit [L302-323]
 - 类型: method
 - 签名: `def _push_commit(self, fs):`
 - 作用: 我方坦克位于 y∈[8,22] 时，补一张 3~6 费非坦克 character 支援（`support_zone`）。
@@ -17475,7 +17865,7 @@
 - 实现: 遍历 `_units(fs, 0)` 找第一个 `e["name"] in TANK_CARDS` 且 `8.0 <= y <= 22.0` 的坦克（L304-310）；无则 None（L311-312）。按手牌顺序找 `c.type == "character"`、`3.0 <= c.elixir <= 6.0`、`card not in TANK_CARDS`、费用够（L313-316），返回 PlanToken：`focus_region=_own_region(tank x)`、`target_kind="unit"`、`placement_hint="support_zone"`、`elixir_budget=0.6`、`risk_profile=0.7`、`value_estimate=1.5`（L317-322）。无则 None（L323）。注意 region 用的是**坦克**位置（我方半场坐标）却映射为 `own_*`，不是 `enemy_*`。
 - 置信度: 已确认
 
-##### 2.125.15.7 ProphetPlanner._spell_finish [L325-346]
+##### 2.131.15.7 ProphetPlanner._spell_finish [L325-346]
 - 类型: method
 - 签名: `def _spell_finish(self, fs):`
 - 作用: 比赛后期（time ≥ `LATE_S`）敌方公主塔残血（≤1200）时，用斩杀法术补最后一击。
@@ -17485,7 +17875,7 @@
 - 实现: `float(fs["time"]) < LATE_S`（120.0，belief_planner L57）→ None（L326-327）。候选列表：`opp_towers[1] > 0` 时加 `("enemy_left", hp)`（L329-330），`opp_towers[2] > 0` 时加 `("enemy_right", hp)`（L331-332）；无候选 None（L333-334）。用 `min(candidates, key=lambda kv: kv[1])` 选血最少的塔 `(region, hp)`（L335）。`hp > 1200.0` → None（L336-337）。按 `FINISH_SPELL_CARDS` 顺序找手牌槽位且费用够（L338-340），返回 PlanToken：`target_kind="tower"`、`elixir_budget=0.45`、`risk_profile=0.6`、`value_estimate=1.2`（L341-345）。无则 None（L346）。注意 `opp_towers` 按索引 1/2 取，具体索引语义未在本文件内定义 ⇒ 无法确认（原因：本文件未给出 `opp_towers` 结构说明，且未读 env_wrapper.get_prophet_state 的定义文档；只能确认代码按 [1]/[2] 读取两个公主塔 HP）。
 - 置信度: 待确认(opp_towers 索引 1/2 的字段语义未在本文件或已读依赖中定义)
 
-##### 2.125.15.8 ProphetPlanner._setup_wait [L348-362]
+##### 2.131.15.8 ProphetPlanner._setup_wait [L348-362]
 - 类型: method
 - 签名: `def _setup_wait(self, fs):`
 - 作用: 无威胁且手上无坦克在场时，若手牌已有坦克则出 `setup_wait` 计划（提前布置）。
@@ -17495,7 +17885,7 @@
 - 实现: `threat, _ = _threat_and_my_pressure(fs)`（L349）；`threat >= PRESSURE_THRESHOLD`（2.0，belief_planner L51）或 `_pressing_enemy(fs)` → None（L350-351）。若场上已有我方 `TANK_CARDS` 单位 → None，注释"已有坦克在场上 → 轮不到 setup"（L352-353）。按 `TANK_CARDS` 顺序找手牌槽位且 `fs["my_elixir"] >= Card(card).elixir - 0.5`（允许差 0.5 费，L354-356），返回 PlanToken：`focus_region="own_center"`、`target_kind="none"`、`placement_hint="none"`、`elixir_budget=0.6`、`risk_profile=0.4`、`value_estimate=0.5`（L357-361）。无则 None（L362）。
 - 置信度: 已确认
 
-##### 2.125.15.9 ProphetPlanner._king_activate [L364-390]
+##### 2.131.15.9 ProphetPlanner._king_activate [L364-390]
 - 类型: method
 - 签名: `def _king_activate(self, fs):`
 - 作用: 公主塔残血/被破且有敌方血牛/大单位接近国王塔中轴时，用低费单位激活国王塔。
@@ -17505,7 +17895,7 @@
 - 实现: docstring（L365）。`min(float(fs["my_towers"][1]), float(fs["my_towers"][2])) > KING_ACTIVATE_PRINCESS_HP`（800.0）→ None（L366-368），即两公主塔都还健康则不激活。遍历 `_units(fs, 1)`，取 `c = Card(e["name"])`，跳过"既不在 `TANK_CARDS` 且非（character 且 elixir≥5）"的实体（L370-374）；命中的再判 `3.5 <= x <= 14.5 and y <= BRIDGE_Y + 2.5`（y≤18.5，L375-376），满足则 `heavy = e` 并 break（L377-378）。`heavy is None` → None（L379-380）。按手牌顺序找 `c.type in ("character","building")`、`1.0 <= c.elixir <= 3.0`、费用够、非 Mirror（L381-384），返回 PlanToken：`focus_region="own_center"`、`target_kind="unit"`、`placement_hint="king_front"`、`elixir_budget=0.35`、`risk_profile=0.5`、`value_estimate=0.8`（L385-389）。无则 None（L390）。
 - 置信度: 已确认
 
-##### 2.125.15.10 ProphetPlanner._anti_spell [L392-408]
+##### 2.131.15.10 ProphetPlanner._anti_spell [L392-408]
 - 类型: method
 - 签名: `def _anti_spell(self, fs):`
 - 作用: 防法术（pp 特权精确版）：直读对手手牌+进手序里的强法术，出中等费非坦克单位走 `anti_spell_zone` 并写入 `opp_spell_threat`。
@@ -17515,7 +17905,7 @@
 - 实现: docstring（L393）。`_pressing_enemy(fs)` → None（L394-395）。`kind = _spell_threat_in(fs["opp_cycle"])`（默认 depth=6）；None → None（L396-398）。按手牌顺序找 `c.type == "character"`、`3.0 <= c.elixir <= 6.0`、费用够、`card not in TANK_CARDS`（L399-402），返回 PlanToken：`focus_region="own_center"`、`target_kind="none"`、`placement_hint="anti_spell_zone"`、`opp_spell_threat=kind`（把检测到的法术类型透传进 token）、`elixir_budget=0.5`、`risk_profile=0.4`、`value_estimate=0.0`（L403-407）。
 - 置信度: 已确认
 
-##### 2.125.15.11 ProphetPlanner._save_ace [L410-445]
+##### 2.131.15.11 ProphetPlanner._save_ace [L410-445]
 - 类型: method
 - 签名: `def _save_ace(self, fs):`
 - 作用: 藏终结卡（pp 时机版）：满足"最强一波"条件时返回 None（解除藏，让后续意图/模型出 ace），否则产出带 `hold_mask` 的 `save_ace` token 指名别出 ace 并留费。
@@ -17525,7 +17915,7 @@
 - 实现: docstring（L411-412）。`fs["my_cycle"]` 为空 → None（L413-414）。按 `ACE_CARDS` 收集手牌槽位 `ace_slots`（L415-419）；空 → None（L420-421）。`_pressing_enemy(fs)` → None，注释"防守中 ace 可能当解牌用，不硬藏"（L422-423）。最强一波判定：`tank_pushing = any(e["name"] in TANK_CARDS and pos[1] >= 10.0 for e in _units(fs,0))`（L425-427），若 `tank_pushing and opp_elixir < 3.0 and _spell_threat_in(fs["opp_cycle"]) is None` → 返回 None 解除藏（L428-430）。否则把 ace 槽位编码进 `hold = 0; for slot in ace_slots: hold |= 1 << (slot - 1)`（L431-433）。找 `suggested`：手牌中非 ace 槽、费用够、`c.type != "spell"`、非 Mirror 的第一个（L434-440）。返回 PlanToken：`focus_region="own_center"`、`suggested_card=suggested`（可能为 None）、`target_kind="none"`、`placement_hint="none"`、`elixir_budget=0.4`、`risk_profile=0.4`、`hold_mask=hold`、`value_estimate=-0.3`（L441-445）。`hold_mask` 语义见 `rl/plan_space.py` L112 注释："4 bit：bit(slot-1)=1 → 本帧别出该槽"。
 - 置信度: 已确认
 
-##### 2.125.15.12 ProphetPlanner._cycle_small [L447-460]
+##### 2.131.15.12 ProphetPlanner._cycle_small [L447-460]
 - 类型: method
 - 签名: `def _cycle_small(self, fs):`
 - 作用: 无威胁且圣水充裕（≥低费卡费+3）时，出 ≤2 费卡过牌。
@@ -17535,7 +17925,7 @@
 - 实现: `threat, _ = _threat_and_my_pressure(fs)`（L448）；`threat >= PRESSURE_THRESHOLD` 或 `_pressing_enemy(fs)` → None（L449-450）。按手牌顺序找 `c.elixir <= 2.0`、`fs["my_elixir"] >= c.elixir + 3.0`（留 3 费余量）、非 Mirror（L451-454），返回 PlanToken：`focus_region="own_center"`、`target_kind="none"`、`placement_hint="none"`、`elixir_budget=0.25`、`risk_profile=0.3`、`value_estimate=0.2`（L455-459）。无则 None（L460）。
 - 置信度: 已确认
 
-##### 2.125.15.13 ProphetPlanner.plan [L464-516]
+##### 2.131.15.13 ProphetPlanner.plan [L464-516]
 - 类型: method
 - 签名: `def plan(self, full_state: dict) -> PlanToken:`
 - 作用: 主入口：按固定优先链依次调用 12 个意图检测器，命中即返回；全部未命中则回退旧 8 意图逻辑并构造 `PlanToken`。
@@ -17548,7 +17938,7 @@
 
 ---
 
-### 2.126 `src/clasher_new/rl/replay.py`
+### 2.132 `src/clasher_new/rl/replay.py`
 
 - **分析组**：G044　**行数**：143　**AST 符号数**：10
 
@@ -17560,14 +17950,14 @@
 - 顶层数据表/字典: 无（两个 schema 常量 + 一个 dataclass）。
 - 模块级路径注入: L14-16 把 `src/clasher_new` 插入 `sys.path`。
 
-#### 2.126.1 EpisodeReplay [L22-76]
+#### 2.132.1 EpisodeReplay [L22-76]
 - 类型: class（`@dataclass` 装饰，L21）
 - 签名: `class EpisodeReplay:`
 - 作用: 单局 replay 容器：逐步记录 (obs, bundle, reward, opp_played, time, hidden)，可保存/加载/转信念监督样本。
 - 实现: 字段（L23-26）`record_hidden: bool = True`、`steps: list = field(default_factory=list)`、`schema: int = SCHEMA_VERSION (=2)`、`_active: bool = False`。注意 `schema` 是 dataclass 实例字段，而 `end()` 落盘时用的是模块常量 `SCHEMA_VERSION` 而非 `self.schema`（L49），因此 v1 旧容器经 `load` 读入的 `schema=1` 不会回写到落盘 dict。类本身无 docstring。
 - 置信度: 已确认
 
-##### 2.126.1.1 EpisodeReplay.start [L28-30]
+##### 2.132.1.1 EpisodeReplay.start [L28-30]
 - 类型: method
 - 签名: `start(self)`
 - 作用: 开始记录：清空 steps 并置 active。
@@ -17576,7 +17966,7 @@
 - 实现: L29 `self.steps = []`；L30 `self._active = True`。`_active` 此后仅被 `end()` 置回 False，无其他读取点（源码内无 `_active` 判断分支）。
 - 置信度: 已确认
 
-##### 2.126.1.2 EpisodeReplay.record_step [L32-45]
+##### 2.132.1.2 EpisodeReplay.record_step [L32-45]
 - 类型: method
 - 签名: `record_step(self, obs, bundle, reward, info, hidden=None)`
 - 作用: 记录一个决策步。
@@ -17590,7 +17980,7 @@
 - 实现: L33 `hid = hidden if hidden is not None else info.get("hidden")`；L34-35 若 `self.record_hidden` 为真而 `hid is None`，用 `warnings.warn("record_hidden=True 但本步无 hidden 标签，该步将丢失监督信号")` 显式告警（P1-21 修复点，不再静默丢数据）；L36-42 组 step dict：`obs`、`bundle`（列表推导把每个子动作压成 `(sa.kind, sa.slot, sa.x, sa.y)` 四元组）、`reward`、`opp_played=info.get("opp_played")`、`time=info.get("battle_time")`；L43-44 仅当 `record_hidden` 为真才写 `step["hidden"] = hid`；L45 追加进 `self.steps`。
 - 置信度: 已确认
 
-##### 2.126.1.3 EpisodeReplay.end [L47-49]
+##### 2.132.1.3 EpisodeReplay.end [L47-49]
 - 类型: method
 - 签名: `end(self) -> dict`
 - 作用: 结束记录并返回统一容器格式。
@@ -17599,7 +17989,7 @@
 - 实现: L48 `self._active = False`；L49 返回上述 dict（`schema` 取模块常量 2，非 `self.schema`）。
 - 置信度: 已确认
 
-##### 2.126.1.4 EpisodeReplay.save [L51-54]
+##### 2.132.1.4 EpisodeReplay.save [L51-54]
 - 类型: method
 - 签名: `save(self, path)`
 - 作用: 把 `end()` 的容器 pickle 落盘。
@@ -17609,7 +17999,7 @@
 - 实现: L52 函数内 `import pickle`；L53 `open(path, "wb")`；L54 `pickle.dump(self.end(), f)`。注意调用 save 会顺带把 `_active` 置 False（副作用来自 end）。
 - 置信度: 已确认
 
-##### 2.126.1.5 EpisodeReplay.load [L57-67]
+##### 2.132.1.5 EpisodeReplay.load [L57-67]
 - 类型: classmethod（`@classmethod`，L56）
 - 签名: `load(cls, path) -> "EpisodeReplay"`
 - 作用: 从 pickle 读回 replay，兼容 v1 裸容器。
@@ -17619,7 +18009,7 @@
 - 实现: L58 惰性 `import pickle`；L59-60 读入 data；L62-66 若 data 是 dict 且含 `"steps"` 键，则 `cls(record_hidden=data.get("record_hidden", True), schema=data.get("schema", 1))` 构造实例并把 `ep.steps = data["steps"]`，返回；L67 否则 `raise ValueError(f"无法识别的 replay 格式: {type(data)}")`。docstring/注释 L61 标明兼容 v1 裸 `{"steps": ...}` 容器。
 - 置信度: 已确认
 
-##### 2.126.1.6 EpisodeReplay.to_belief_dataset [L69-76]
+##### 2.132.1.6 EpisodeReplay.to_belief_dataset [L69-76]
 - 类型: method
 - 签名: `to_belief_dataset(self)`
 - 作用: 把 replay 转成信念监督样本列表：`[(obs, opp_played, hidden), ...]`（L70）。
@@ -17628,7 +18018,7 @@
 - 实现: L71 建空 list；L72-75 遍历 `self.steps`，`hidden = st.get("hidden")`，仅当 `hidden is not None` 时 `out.append((st["obs"], st["opp_played"], hidden))`——即缺 hidden 的步被静默跳过（与 `record_step` 的显式 warn 配套）；L76 返回 out。
 - 置信度: 已确认
 
-#### 2.126.2 battle_snapshot [L85-125]
+#### 2.132.2 battle_snapshot [L85-125]
 - 类型: function
 - 签名: `battle_snapshot(battle, bundle, reward, info)`
 - 作用: 把一个决策步压缩成轻量帧（不含 32×18 观测网格，体积可控）（L86）。
@@ -17642,7 +18032,7 @@
 - 调用: 被 `rl/run_league.py:129`（`from rl.replay import battle_snapshot, save_league_replays`，run_league.py:67）、`rl/human_play.py:103`（human_play.py:43）调用。
 - 置信度: 已确认
 
-#### 2.126.3 save_league_replays [L128-133]
+#### 2.132.3 save_league_replays [L128-133]
 - 类型: function
 - 签名: `save_league_replays(games, path)`
 - 作用: 保存联赛录像集合：games = `[{meta, winner, frames}, ...]`（L129）。
@@ -17654,7 +18044,7 @@
 - 调用: 被 `rl/run_league.py:647`、`rl/dashboard.py:550`、`rl/selftest.py:991/1023/1141` 调用。
 - 置信度: 已确认
 
-#### 2.126.4 load_league_replays [L136-143]
+#### 2.132.4 load_league_replays [L136-143]
 - 类型: function
 - 签名: `load_league_replays(path)`
 - 作用: 读取联赛录像集合；兼容旧容器（L137）。
@@ -17667,7 +18057,7 @@
 
 ---
 
-### 2.127 `src/clasher_new/rl/run_league.py`
+### 2.133 `src/clasher_new/rl/run_league.py`
 
 - **分析组**：G006　**行数**：1375　**AST 符号数**：39
 
@@ -17681,7 +18071,7 @@
   - 另有模块级副作用语句：L45-47 把 `src/clasher_new`（`__file__` 的上两级）插入 `sys.path`（`_PARENT`，未暴露为大写常量）。
 - 顶层数据表/字典: 无（模块级无字典/列表字面量；`agents5` 等字典均在函数内部构造）
 
-#### 2.127.1 _cuda_hint [L70-91]
+#### 2.133.1 _cuda_hint [L70-91]
 - 类型: function
 - 签名: `def _cuda_hint() -> str:`
 - 作用: 生成 CUDA 不可用时的多行中文诊断提示，用于区分「装的是 CPU 构建」与「有 CUDA 但驱动不支持」两类成因。
@@ -17692,7 +18082,7 @@
 - 调用: 本文件内仅 `resolve_device` 调用（L103）。全仓其它调用点未在本组范围内逐一检索。
 - 置信度: 已确认
 
-#### 2.127.2 resolve_device [L94-105]
+#### 2.133.2 resolve_device [L94-105]
 - 类型: function
 - 签名: `def resolve_device(device: str) -> str:`
 - 作用: 把 `--device` 的字符串（`cpu`/`cuda`/`auto`）解析成实际可用设备字符串，`auto` = cuda 可用则 cuda，且显式要求 cuda 但不可用时打印诊断并回退 cpu。
@@ -17703,7 +18093,7 @@
 - 调用: 本文件内被 `evaluate_league`(L517)、`_run_single`(L698)、`_run_vec`(L804)、`_run_mp`(L951) 调用；被 `rl/flow_league.py:51` 显式 import（在该文件 L377/L552 使用）。
 - 置信度: 已确认
 
-#### 2.127.3 LeagueGameRecorder [L108-138]
+#### 2.133.3 LeagueGameRecorder [L108-138]
 - 类型: class
 - 签名: `class LeagueGameRecorder:`
 - 作用: 逐局录像采集器：把每个决策步压缩成轻量帧（复用 `rl.replay.battle_snapshot`），供每个评估周期保存 `replays/league_<step>.pkl`；同时携带对阵元信息（pair / side0 / max_steps / steps / decks）。
@@ -17712,7 +18102,7 @@
 - 实现: 类 docstring（L109）说明用途。实例状态有三个：`self.meta`（L112 起的元信息字典）、`self.frames`（L121，逐帧列表）、`self.winner`（L122，终局获胜方）。`meta` 的键含义：`pair=[a_id,b_id]`、`side0`（本局哪一方坐在 player-0）、`max_steps`；可选 `steps=[a_step,b_step]`（双方模型各自训练步，脚本对手为 None）、`decks=[deck0,deck1]`。类不参与训练语义，只产出可被 dashboard 读取的数据结构。
 - 置信度: 已确认
 
-##### 2.127.3.1 LeagueGameRecorder.__init__ [L111-122]
+##### 2.133.3.1 LeagueGameRecorder.__init__ [L111-122]
 - 类型: method
 - 签名: `def __init__(self, a_id, b_id, side0, max_steps, steps=None, decks=None):`
 - 作用: 初始化对阵元信息与空帧列表。
@@ -17727,7 +18117,7 @@
 - 实现: L112 先建 `self.meta`；L115-116 可选写入 `steps`；L119-120 可选写入 `decks`（经 `set_decks`）；L121-122 初始化 `self.frames = []` 与 `self.winner = None`。
 - 置信度: 已确认
 
-##### 2.127.3.2 LeagueGameRecorder.set_decks [L124-126]
+##### 2.133.3.2 LeagueGameRecorder.set_decks [L124-126]
 - 类型: method
 - 签名: `def set_decks(self, deck0, deck1):`
 - 作用: 记录本局双方实际卡组（卡名列表的副本）。
@@ -17738,7 +18128,7 @@
 - 实现: L126 把 `meta["decks"]` 设为 `[list(deck0), list(deck1)]`（做浅拷贝，避免后续 env 原地洗牌改到录像里）。docstring 说明调用时机：`play_pair` 复用 env 时，卡组要等 `reset()` 之后才可知（L125）。
 - 置信度: 已确认
 
-##### 2.127.3.3 LeagueGameRecorder.record [L128-134]
+##### 2.133.3.3 LeagueGameRecorder.record [L128-134]
 - 类型: method
 - 签名: `def record(self, env, bundle, reward, info, cards=None):`
 - 作用: 采集单个决策步的多模态信息为一帧（经 `battle_snapshot`）并追加到 `frames`。
@@ -17753,7 +18143,7 @@
 - 调用: 被 `_run_side0`(L300) 与 `_run_side0_scripted`(L331) 调用。它调用 `rl.replay.battle_snapshot`。
 - 置信度: 已确认
 
-##### 2.127.3.4 LeagueGameRecorder.done [L136-138]
+##### 2.133.3.4 LeagueGameRecorder.done [L136-138]
 - 类型: method
 - 签名: `def done(self, winner):`
 - 作用: 收尾本局：记录获胜方并返回可序列化的整局录像字典。
@@ -17764,7 +18154,7 @@
 - 调用: 被 `play_pair` 调用（L427、L436）；其返回值经 `save_league_replays` 落盘。
 - 置信度: 已确认
 
-#### 2.127.4 towers_hp [L149-154]
+#### 2.133.4 towers_hp [L149-154]
 - 类型: function
 - 签名: `def towers_hp(env):`
 - 作用: 返回双方三塔血量（国王塔+左塔+右塔，共 6 个数字）的合计值，供僵局检测用。
@@ -17775,7 +18165,7 @@
 - 调用: 被 `_stall_probe`(L257) 调用。
 - 置信度: 已确认
 
-#### 2.127.5 _min_alive_tower_pct [L157-176]
+#### 2.133.5 _min_alive_tower_pct [L157-176]
 - 类型: function
 - 签名: `def _min_alive_tower_pct(battle, player_id):`
 - 作用: 计算指定玩家所有存活塔中最低的血量百分比（真实 CR 加时末裁决口径）；实体不可得时返回 None。
@@ -17787,7 +18177,7 @@
 - 调用: 被 `timeout_winner`(L202-203) 与 `settle_stall`(L247-248) 调用。
 - 置信度: 已确认（实体 id→玩家的对应关系只依据 L166 字面量，未到引擎侧核对语义）
 
-#### 2.127.6 timeout_winner [L179-210]
+#### 2.133.6 timeout_winner [L179-210]
 - 类型: function
 - 签名: `def timeout_winner(battle, hp_tiebreak=None):`
 - 作用: 截断/早停时的到期结算兜底：先比皇冠数，皇冠相同则比双方存活塔最低血量百分比，低者输，完全相等记平局。
@@ -17799,7 +18189,7 @@
 - 调用: 本文件内被 `_run_side0`(L309)、`_run_side0_scripted`(L339)、`_run_single`(L753)、`_run_vec`(L884) 调用；`rl/evaluate.py:248-249` 惰性 import 后调用。
 - 置信度: 已确认
 
-#### 2.127.7 settle_stall_from_counts [L213-237]
+#### 2.133.7 settle_stall_from_counts [L213-237]
 - 类型: function
 - 签名: `def settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05):`
 - 作用: 早停局的「低置信裁定降噪」纯函数（C'，2026-09-12）：与 `timeout_winner` 同口径，但对皇冠相同时的塔血%细差加置信门槛，细差小于 margin 的掷硬币级裁定改记平局。
@@ -17814,7 +18204,7 @@
 - 调用: 本文件内仅 `settle_stall`(L249) 调用；docstring 自称「纯函数，可单测」。
 - 置信度: 已确认
 
-#### 2.127.8 settle_stall [L240-249]
+#### 2.133.8 settle_stall [L240-249]
 - 类型: function
 - 签名: `def settle_stall(battle, margin=0.05):`
 - 作用: `settle_stall_from_counts` 的战场对象包装：从 battle 读出皇冠数与双方最低存活塔%，再转调纯函数。
@@ -17826,7 +18216,7 @@
 - 调用: 本文件内未见调用点（用文本检索本文件 1375 行，仅 L240 定义处出现）；`rl/config.py:162-167` 的注释提到「早停（stall）局按 timeout_winner 结算」，未直接调用本函数。⇒ 调用方待确认（可能在 rl/train_solo.py 等本组范围外文件中）。
 - 置信度: 待确认（本文件内无调用点；未检索全部仓库）
 
-#### 2.127.9 _stall_probe [L252-265]
+#### 2.133.9 _stall_probe [L252-265]
 - 类型: function
 - 签名: `def _stall_probe(env, last_hp, stall_count):`
 - 作用: 僵局探针：比较当前双方塔血合计与上次记录值，维护「连续零变化次数」，连续 `STALL_LIMIT` 次（=100 步）则报告提前结束。
@@ -17839,7 +18229,7 @@
 - 调用: 被 `_run_side0`(L290) 与 `_run_side0_scripted`(L324) 每 `STALL_WINDOW` 步调用一次；`rl/selftest.py:1662` 显式 import `_stall_probe` 与 `STALL_LIMIT`。
 - 置信度: 已确认
 
-#### 2.127.10 _run_side0 [L268-310]
+#### 2.133.10 _run_side0 [L268-310]
 - 类型: function
 - 签名: `def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed=None):`
 - 作用: 让 `policy` 以 player-0 身份打完整一局并返回 winner（0/1/None）；支持 FollowerPolicy（完整信念/plan 链路）与 ScriptedPolicy（转调 scripted 版本）；可选逐帧录像与僵局早停。
@@ -17856,7 +18246,7 @@
 - 调用: 被 `play_pair`(L424、L433) 调用；它调用 `_stall_probe`、`bp.plan`、`belief.encode/update`、`policy.act`、`_bundle_cards`、`env.step`、`timeout_winner`、`overtime_open`、`recorder.record`。
 - 置信度: 已确认
 
-#### 2.127.11 _run_side0_scripted [L313-340]
+#### 2.133.11 _run_side0_scripted [L313-340]
 - 类型: function
 - 签名: `def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None):`
 - 作用: `_run_side0` 的无信念/无 plan 分支：用 `policy.play(env, 0)` 直接出招，其余循环、僵局早停、录像、补判逻辑完全相同。
@@ -17871,7 +18261,7 @@
 - 调用: 被 `_run_side0`(L277) 调用。注意本函数不接受 `belief`/`bp` 参数，与 `_run_side0` 的调用签名不同（L277 按位置传 `max_steps, recorder, reset_seed=reset_seed`）。
 - 置信度: 已确认
 
-#### 2.127.12 _bundle_cards [L343-350]
+#### 2.133.12 _bundle_cards [L343-350]
 - 类型: function
 - 签名: `def _bundle_cards(bundle, obs):`
 - 作用: 从 `ActionBundle` 与观测里还原本步我方实际打出的卡名列表（只取 deploy 且 slot 在 1..K_MAX 的子动作）。
@@ -17883,7 +18273,7 @@
 - 调用: 本文件内被 `_run_side0`(L297)、`_run_side0_scripted`(L328) 调用；被 `rl/flow_league.py:51` 与 `rl/human_play.py:45` 显式 import。
 - 置信度: 已确认
 
-#### 2.127.13 _deck_factory_of [L353-363]
+#### 2.133.13 _deck_factory_of [L353-363]
 - 类型: function
 - 签名: `def _deck_factory_of(policy):`
 - 作用: 为脚本策略返回「每局换卡组」的工厂函数（`policy.deck`）；非脚本策略或没有卡池时返回 None（= 用固定卡组）。
@@ -17894,7 +18284,7 @@
 - 调用: 本文件内被 `_make_opp`(L373)、`_prepare_env`(L387)、`_sample_opponent_for`(L663) 调用；`rl/selftest.py:1105` 显式 import `_deck_factory_of` 与 `_prepare_env`。
 - 置信度: 已确认
 
-#### 2.127.14 _make_opp [L366-377]
+#### 2.133.14 _make_opp [L366-377]
 - 类型: function
 - 签名: `def _make_opp(policy, env, deck):`
 - 作用: 把 player-1 对手策略装配到 env 上：None → 内置随机；ScriptedPolicy → 直接设为 env.opponent 并注入 `deck1_factory`；学习型策略 → 包成 `FollowerOpponent`（带独立信念）。
@@ -17907,7 +18297,7 @@
 - 调用: 被 `_prepare_env`(L388) 调用。
 - 置信度: 已确认
 
-#### 2.127.15 _prepare_env [L380-390]
+#### 2.133.15 _prepare_env [L380-390]
 - 类型: function
 - 签名: `def _prepare_env(env, side0_pol, side1_pol, deck0_prior=None):`
 - 作用: 在 `reset()` 之前按双方策略类型装配 env（player-0 的随机卡组工厂 + player-1 对手）。
@@ -17921,7 +18311,7 @@
 - 调用: 被 `play_pair`(L421、L430) 调用；`rl/selftest.py:1105` 显式 import。
 - 置信度: 已确认
 
-#### 2.127.16 _pair_seed_offset [L393-403]
+#### 2.133.16 _pair_seed_offset [L393-403]
 - 类型: function
 - 签名: `def _pair_seed_offset(idx, a, b):`
 - 作用: 为同一评估周期内的每个 pair 生成独立的整数种子偏移，避免不同 pair 用同一条 RNG 流。
@@ -17934,7 +18324,7 @@
 - 调用: 被 `eval_round_robin`(L488) 与 `evaluate_league`(L522) 调用。
 - 置信度: 已确认
 
-#### 2.127.17 play_pair [L406-445]
+#### 2.133.17 play_pair [L406-445]
 - 类型: function
 - 签名: `def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False):`
 - 作用: a vs b 换边打 n 局（偶数局 a 先手、奇数局 b 先手），逐局把结果写进 `league.record_match`（驱动逐局 Elo/PFSP）；可选采集逐局录像。
@@ -17953,7 +18343,7 @@
 - 调用: 被 `eval_round_robin`(L489-491) 与 `evaluate_league`(L521-522) 调用；`rl/selftest.py:1697` 显式 import。它调用 `RLEnv`、`_prepare_env`、`BeliefInference`、`LeagueGameRecorder`、`_run_side0`、`BeliefPlanner`、`league.record_match`。
 - 置信度: 已确认
 
-#### 2.127.18 _round_estimates [L448-473]
+#### 2.133.18 _round_estimates [L448-473]
 - 类型: function
 - 签名: `def _round_estimates(pair_results):`
 - 作用: 用 BT-lite + Laplace 平滑在「轮内」聚合出一个 Elo 估计与标准误（曲线可信度上限），因为逐局 K=32 的运行 Elo 是有限记忆跟踪器，加评估局数不会收紧。
@@ -17964,7 +18354,7 @@
 - 调用: 被 `eval_round_robin`(L496) 与 `evaluate_league`(L526) 调用；`rl/selftest.py:536` 显式 import。
 - 置信度: 已确认
 
-#### 2.127.19 eval_round_robin [L476-503]
+#### 2.133.19 eval_round_robin [L476-503]
 - 类型: function
 - 签名: `def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False, record=False):`
 - 作用: 全轮转评估：所有持有策略的 agent 两两换边对战，逐局更新 Elo，轮内聚合估计并写入历史曲线与轮统计。
@@ -17981,7 +18371,7 @@
 - 调用: 被 `_eval_and_snapshot`(L643) 调用；被 `rl/flow_league.py:51` 显式 import。
 - 置信度: 已确认
 
-#### 2.127.20 evaluate_league [L510-532]
+#### 2.133.20 evaluate_league [L510-532]
 - 类型: function
 - 签名: `def evaluate_league(policies, kinds, n_games, seed, hidden_dim, max_steps=600, device="auto"):`
 - 作用: `--mode eval` 入口：载入若干 checkpoint 作为 agent，做全配对整个轮转对战，写轮统计与 Elo 历史后打印 Elo 表。
@@ -17998,7 +18388,7 @@
 - 调用: 被 `main()`(L1301) 在 `args.mode == "eval"` 时调用。
 - 置信度: 已确认
 
-#### 2.127.21 build_five_agents [L539-576]
+#### 2.133.21 build_five_agents [L539-576]
 - 类型: function
 - 签名: `def build_five_agents(league, main, seed, decks_path=None):`
 - 作用: 注册 5 个卡组模型到 league（三分类×3 + 全 200 卡组 + 全随机）；找不到三分类数据集时退回旧的随机/启发式 5 槽位；总是以 `replace=True` 注册 `main`。
@@ -18012,7 +18402,7 @@
 - 调用: 被 `_build_league`(L689) 调用。它调用 `build_card_pool`、`load_classified_decks`、`decks_by_archetype`、`classify_stats`、`ScriptedPolicy`、`league.add_agent`。
 - 置信度: 已确认
 
-#### 2.127.22 _make_env [L579-581]
+#### 2.133.22 _make_env [L579-581]
 - 类型: function
 - 签名: `def _make_env(cfg, seed):`
 - 作用: 按配置创建一个无对手的 `RLEnv`（奖励权重与卡牌等级来自 cfg）。
@@ -18024,7 +18414,7 @@
 - 调用: 被 `_build_league`(L677)、`_run_vec`(L826) 调用。
 - 置信度: 已确认
 
-#### 2.127.23 _make_trainer [L584-587]
+#### 2.133.23 _make_trainer [L584-587]
 - 类型: function
 - 签名: `def _make_trainer(main, cfg):`
 - 作用: 用配置里的 PPO 超参构造 `PPOTrainer`。
@@ -18036,7 +18426,7 @@
 - 调用: 被 `_restore`(L602、L611) 调用。
 - 置信度: 已确认
 
-#### 2.127.24 _load_run_state [L590-597]
+#### 2.133.24 _load_run_state [L590-597]
 - 类型: function
 - 签名: `def _load_run_state(cfg):`
 - 作用: 读取 `cfg.run_state_path()` 指向的 JSON；文件不存在或解析失败返回 None。
@@ -18047,7 +18437,7 @@
 - 调用: 被 `_restore`(L605) 调用。
 - 置信度: 已确认
 
-#### 2.127.25 _restore [L600-624]
+#### 2.133.25 _restore [L600-624]
 - 类型: function
 - 签名: `def _restore(league, cfg, main, device, resume):`
 - 作用: 恢复联赛/训练进度：resume 且存在 run_state 时从 `main_ckpt` 重建 main、从 `opt_ckpt` 恢复 Adam 状态、从 `state_path()` 恢复联赛状态并返回 start_step；否则只尝试载入联赛状态。
@@ -18062,7 +18452,7 @@
 - 调用: 被 `_build_league`(L688) 调用。
 - 置信度: 已确认
 
-#### 2.127.26 _save_snapshot [L627-639]
+#### 2.133.26 _save_snapshot [L627-639]
 - 类型: function
 - 签名: `def _save_snapshot(league, main, ppo, cfg, step, device):`
 - 作用: 保存 main 权重与优化器状态、可选刷新联赛快照、持久化联赛状态，并写出 run_state.json。
@@ -18078,7 +18468,7 @@
 - 调用: 被 `_eval_and_snapshot`(L649) 调用。
 - 置信度: 已确认
 
-#### 2.127.27 _eval_and_snapshot [L642-652]
+#### 2.133.27 _eval_and_snapshot [L642-652]
 - 类型: function
 - 签名: `def _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays):`
 - 作用: 一个评估周期的一站式动作：跑全轮转评估 → 可选保存联赛录像 pkl → 保存快照 → 打印 Elo 表。
@@ -18094,7 +18484,7 @@
 - 调用: 被 `_run_single`(L715)、`_run_vec`(L820)、`_run_mp`(L964) 的嵌套函数 `eval_and_snapshot` 调用。
 - 置信度: 已确认
 
-#### 2.127.28 _sample_opponent_for [L655-669]
+#### 2.133.28 _sample_opponent_for [L655-669]
 - 类型: function
 - 签名: `def _sample_opponent_for(league, env, seed):`
 - 作用: 从联赛 PFSP 采样一个对手并装配到 env 上（训练数据收集用），按对手类型选择三种装配方式。
@@ -18107,7 +18497,7 @@
 - 调用: 被 `_run_single` 的嵌套 `sample_training_opponent`(L712)、`_run_vec`(L832)、`_run_mp` 的 `next_spec` 间接（经 `league.sample_opponent`，L979）调用。
 - 置信度: 已确认
 
-#### 2.127.29 _build_league [L672-690]
+#### 2.133.29 _build_league [L672-690]
 - 类型: function
 - 签名: `def _build_league(cfg, device, resume):`
 - 作用: 三个主循环的公共前缀：创建 env/belief/main/ppo/league 并注册 5 个 agent。
@@ -18120,7 +18510,7 @@
 - 调用: 被 `_run_single`(L706)、`_run_vec`(L814)、`_run_mp`(L961) 调用。
 - 置信度: 已确认
 
-#### 2.127.30 _run_single [L697-796]
+#### 2.133.30 _run_single [L697-796]
 - 类型: function
 - 签名: `def _run_single(cfg: TrainConfig, resume=False, record_replays=True):`
 - 作用: 单 env 主循环（n_envs<=1，旧行为/默认/兜底）：逐决策帧采样动作、逐局 GAE、按 update_interval 做 PPO 更新、按 steps_per_eval 评估并落快照。
@@ -18133,7 +18523,7 @@
 - 调用: 被 `run_league`(L1149) 与 `_run_mp`(L994，worker 启动失败降级) 调用；`rl/selftest.py` 多处通过 `rl_mod.run_league` 间接触发。它调用 `_build_league`、`_sample_opponent_for`、`_eval_and_snapshot`、`ProphetPlanner`、`BeliefPlanner`、`main.act/value`、`env.step/reset`、`belief.*`、`PPOTrainer.compute_gae`、`ppo.update`、`timeout_winner`、`reward_to_env`、`save_checkpoint`。
 - 置信度: 已确认
 
-#### 2.127.31 _run_vec [L803-935]
+#### 2.133.31 _run_vec [L803-935]
 - 类型: function
 - 签名: `def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):`
 - 作用: 单进程多 env 批量化主循环（n_envs>1 且 `parallel=="proc"`）：每轮统一规划/编码 → `main.act_parallel` 一次前向 → 逐 env 推进一步 → 批量 PPO 更新；按 env-steps 计步（step += n）并按 steps_per_eval 分块触发评估。
@@ -18146,7 +18536,7 @@
 - 调用: 被 `run_league`(L1147) 在 `cfg.parallel == "proc"` 时调用。它调用 `_build_league`、`_sample_opponent_for`、`_eval_and_snapshot`、`main.act_parallel/value`、`PPOTrainer.compute_gae`、`ppo.update`、`timeout_winner`、`save_checkpoint`。
 - 置信度: 已确认
 
-#### 2.127.32 _run_mp [L942-1140]
+#### 2.133.32 _run_mp [L942-1140]
 - 类型: function
 - 签名: `def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):`
 - 作用: 跨进程并行主循环（n_envs>1 且 parallel=mp）：env+信念+规划在独立 worker 进程跑（绕开 GIL），主进程只做批量 GPU 推理与 PPO；含 worker 启动失败降级与 worker 死亡检测。
@@ -18159,7 +18549,7 @@
 - 调用: 被 `run_league`(L1148) 在非 `"proc"` 时调用。它调用 `worker_main`(rl.workers)、`main.act_parallel/value`、`PPOTrainer.compute_gae`、`ppo.update`、`_run_single`（降级）、`_eval_and_snapshot`、`reward_to_env`、`save_checkpoint`。
 - 置信度: 已确认
 
-#### 2.127.33 run_league [L1143-1149]
+#### 2.133.33 run_league [L1143-1149]
 - 类型: function
 - 签名: `def run_league(cfg: TrainConfig, resume=False, record_replays=True):`
 - 作用: 联赛主循环入口：按 `n_envs` 与 `parallel` 分派到 `_run_vec` / `_run_mp` / `_run_single`。
@@ -18172,7 +18562,7 @@
 - 调用: 被本文件 `main()`(L1371) 调用；`rl/selftest.py` 多处（L584/L634/L967/L976/L1366/L1383）以 `rl_mod.run_league(cfg, resume=..., record_replays=False)` 调用；`scripts/rl/run_league.py` 为外部包装脚本（由 `rl/launcher_menu.py:24` 的 `RUN_LEAGUE_WRAP` 指向，未读其内容）。
 - 置信度: 已确认
 
-#### 2.127.34 _force_utf8_stdout [L1152-1165]
+#### 2.133.34 _force_utf8_stdout [L1152-1165]
 - 类型: function
 - 签名: `def _force_utf8_stdout():`
 - 作用: 把 `sys.stdout`/`sys.stderr` 重新配置为 UTF-8 且 `errors="replace"`，避免 Windows 中文/emoji 日志触发 UnicodeEncodeError 并二次抛出崩训练。
@@ -18183,7 +18573,7 @@
 - 调用: 被 `main()`(L1169) 首行调用。
 - 置信度: 已确认
 
-#### 2.127.35 main [L1168-1371]
+#### 2.133.35 main [L1168-1371]
 - 类型: function
 - 签名: `def main():`
 - 作用: CLI 入口：定义全部 argparse 参数、把命令行覆盖合成 `TrainConfig`，然后按 `--mode` 分发到 eval / flow / flow-sweep / solo / run_league 五条路径。
@@ -18251,7 +18641,7 @@
 
 ---
 
-### 2.128 `src/clasher_new/rl/selftest.py`
+### 2.134 `src/clasher_new/rl/selftest.py`
 
 - **分析组**：G001　**行数**：4983　**AST 符号数**：95
 
@@ -18262,7 +18652,7 @@
 - 关键模块级常量: 无（本文件零个模块级常量赋值；唯一模块级可执行逻辑是 `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))` + `sys.path.insert(0, _PARENT)`（L28-30），作用是把 `src/clasher_new` 塞进 `sys.path` 以便 `import battle/player/core`。所有阈值/配比常量都写在被测模块里，本文件只以断言引用它们）
 - 顶层数据表/字典: 无（文件内出现的 dict 全是测试函数内的局部构造，如 `legacy = {...}` 旧奖励公式对照 L752、合成回放帧 `frame()` 的 base 字典 L1026/L1144）
 
-#### 2.128.1 test_action_bundle_same_tick [L37-63]
+#### 2.134.1 test_action_bundle_same_tick [L37-63]
 - 类型: function
 - 签名: `def test_action_bundle_same_tick():`
 - 作用: 验证同一决策 tick 内一次提交两张卡时，「掩码校验得到的落点解析结果」与「真正打出后引擎循环里前两张卡」一致，且整包原子拒绝。
@@ -18272,7 +18662,7 @@
 - 调用: 被 `main()` 调（L4889）；内部调用 RLEnv / ActionBundle / validate_bundle
 - 置信度: 已确认
 
-#### 2.128.2 test_action_bundle_ability [L66-95]
+#### 2.134.2 test_action_bundle_ability [L66-95]
 - 类型: function
 - 签名: `def test_action_bundle_ability():`
 - 作用: 验证英雄技能哨兵动作（`__ability__`）与出牌能放进同一 bundle、按序解析，且无就绪英雄时纯技能包被原子拒绝。
@@ -18282,7 +18672,7 @@
 - 调用: 被 `main()` 调（L4890）；内部调用 `ability_legal` / `Troop` / `_spawn_entity`
 - 置信度: 已确认
 
-#### 2.128.3 test_bayes_filter [L98-119]
+#### 2.134.3 test_bayes_filter [L98-119]
 - 类型: function
 - 签名: `def test_bayes_filter():`
 - 作用: 验证粒子滤波 `CycleBayesFilter` 在我方真实出牌序列驱动下后验收敛（手牌概率和为 4、真实下一张进 top3）。
@@ -18292,7 +18682,7 @@
 - 调用: 被 `main()` 调（L4891）；内部调用 CycleBayesFilter.update / hand_probs / next_probs
 - 置信度: 已确认
 
-#### 2.128.4 _make_policy_and_tokens [L122-127]
+#### 2.134.4 _make_policy_and_tokens [L122-127]
 - 类型: function
 - 签名: `def _make_policy_and_tokens(env, seed=0):`
 - 作用: 测试辅助工厂：按给定环境的对手卡组建信念模块，并返回「信念对象 + belief token + 零 plan 向量 + PLAN_DIM」四元组。
@@ -18304,7 +18694,7 @@
 - 调用: 被 `test_hidden_replay_consistency`(L138)、`test_entropy_positive_and_sign`(L161)、`test_exploiter_loads_main_checkpoint`(L253)、`test_register_checkpoint_isolated`(L312)、`test_bundle_cap_no_crash`(L339) 调用
 - 置信度: 已确认
 
-#### 2.128.5 test_hidden_replay_consistency [L130-150]
+#### 2.134.5 test_hidden_replay_consistency [L130-150]
 - 类型: function
 - 签名: `def test_hidden_replay_consistency():`
 - 作用: P0-1 回归：`FollowerPolicy.evaluate` 用 rollout 时记录的 hidden 重放，逐步的 logprob 与原始 `act` 的 logprob 差 < 1e-3。
@@ -18314,7 +18704,7 @@
 - 调用: 被 `main()` 调（L4893）；依赖 `_make_policy_and_tokens`
 - 置信度: 已确认
 
-#### 2.128.6 test_entropy_positive_and_sign [L153-177]
+#### 2.134.6 test_entropy_positive_and_sign [L153-177]
 - 类型: function
 - 签名: `def test_entropy_positive_and_sign():`
 - 作用: P0-2 回归：熵非负；正优势且未超 clip 时，一次 PPO 更新后已选动作的 logprob 上升（即策略往正确方向走）。
@@ -18324,7 +18714,7 @@
 - 调用: 被 `main()` 调（L4894）
 - 置信度: 已确认
 
-#### 2.128.7 test_mask_validate_invariant_both_sides [L180-220]
+#### 2.134.7 test_mask_validate_invariant_both_sides [L180-220]
 - 类型: function
 - 签名: `def test_mask_validate_invariant_both_sides():`
 - 作用: P0-3/P0-4 回归：掩码合法 ⟹ `validate_bundle` 必通过（P0/P1 双侧），且掩码缓存指纹含 `player_id`、两侧手牌不同时缓存不得串用。
@@ -18334,7 +18724,7 @@
 - 调用: 被 `main()` 调（L4895）
 - 置信度: 已确认
 
-#### 2.128.8 test_heuristic_opponent_actually_plays [L223-242]
+#### 2.134.8 test_heuristic_opponent_actually_plays [L223-242]
 - 类型: function
 - 签名: `def test_heuristic_opponent_actually_plays():`
 - 作用: P0-3/P0-4 回归：heuristic 对手出牌率不再塌到 0.5%（50 决策帧内至少 25 次出牌）。
@@ -18344,7 +18734,7 @@
 - 调用: 被 `main()` 调（L4896）；依赖 `rl.train_follower.heuristic_opponent`
 - 置信度: 已确认
 
-#### 2.128.9 test_exploiter_loads_main_checkpoint [L245-264]
+#### 2.134.9 test_exploiter_loads_main_checkpoint [L245-264]
 - 类型: function
 - 签名: `def test_exploiter_loads_main_checkpoint():`
 - 作用: P0-5 回归：`load_checkpoint` 对新格式（带元数据）与旧格式（裸 `state_dict`）两条路径都能恢复正确的 `plan_dim`/`belief_dim`。
@@ -18354,7 +18744,7 @@
 - 调用: 被 `main()` 调（L4897）
 - 置信度: 已确认
 
-#### 2.128.10 test_belief_survives_ability [L267-286]
+#### 2.134.10 test_belief_survives_ability [L267-286]
 - 类型: function
 - 签名: `def test_belief_survives_ability():`
 - 作用: P0-6 回归：英雄技能哨兵 `__ability__` 进入信念 update 后被过滤，既不崩溃也不把信念重置回均匀先验。
@@ -18364,7 +18754,7 @@
 - 调用: 被 `main()` 调（L4898）
 - 置信度: 已确认
 
-#### 2.128.11 test_belief_multi_card_update [L289-301]
+#### 2.134.11 test_belief_multi_card_update [L289-301]
 - 类型: function
 - 签名: `def test_belief_multi_card_update():`
 - 作用: P1-5 回归：同一 tick 对手打出两张牌时，信念对**两张**都做排除（手牌概率都被压到 < 0.1）。
@@ -18374,7 +18764,7 @@
 - 调用: 被 `main()` 调（L4899）
 - 置信度: 已确认
 
-#### 2.128.12 test_register_checkpoint_isolated [L304-325]
+#### 2.134.12 test_register_checkpoint_isolated [L304-325]
 - 类型: function
 - 签名: `def test_register_checkpoint_isolated():`
 - 作用: P1-9 回归：`League.register_checkpoint` 产生的历史快照必须是独立对象，其参数不随 main 继续训练而漂移。
@@ -18384,7 +18774,7 @@
 - 调用: 被 `main()` 调（L4900）
 - 置信度: 已确认
 
-#### 2.128.13 test_bundle_cap_no_crash [L328-353]
+#### 2.134.13 test_bundle_cap_no_crash [L328-353]
 - 类型: function
 - 签名: `def test_bundle_cap_no_crash():`
 - 作用: P1-18 回归：10 费 + 低费卡局面下，follower 连续 15 步都产出合法 bundle（`size <= K_MAX`）且不崩溃。
@@ -18394,7 +18784,7 @@
 - 调用: 被 `main()` 调（L4901）；依赖 `rl.action_bundle.K_MAX`
 - 置信度: 已确认
 
-#### 2.128.14 test_replay_roundtrip [L356-378]
+#### 2.134.14 test_replay_roundtrip [L356-378]
 - 类型: function
 - 签名: `def test_replay_roundtrip():`
 - 作用: P1-21 回归：`EpisodeReplay` 的 save→load→`to_belief_dataset` 非空，且监督样本里的 `opp_next` 特权标签与原始 `info["hidden"]` 对齐。
@@ -18404,7 +18794,7 @@
 - 调用: 被 `main()` 调（L4902）
 - 置信度: 已确认
 
-#### 2.128.15 test_prophet_empty_board_not_defend [L381-390]
+#### 2.134.15 test_prophet_empty_board_not_defend [L381-390]
 - 类型: function
 - 签名: `def test_prophet_empty_board_not_defend():`
 - 作用: P1-4 回归：空场开局时 `ProphetPlanner` 不应给出 `defend_*` 意图。
@@ -18414,7 +18804,7 @@
 - 调用: 被 `main()` 调（L4903）
 - 置信度: 已确认
 
-#### 2.128.16 _mk_env [L393-395]
+#### 2.134.16 _mk_env [L393-395]
 - 类型: function
 - 签名: `def _mk_env():`
 - 作用: 测试辅助：返回一个无对手、seed=0 的 `RLEnv`。
@@ -18424,7 +18814,7 @@
 - 调用: 被 `test_exploiter_loads_main_checkpoint`(L252)、`test_register_checkpoint_isolated`(L311) 调用
 - 置信度: 已确认
 
-#### 2.128.17 test_random_deck_model [L398-423]
+#### 2.134.17 test_random_deck_model [L398-423]
 - 类型: function
 - 签名: `def test_random_deck_model():`
 - 作用: 验证「卡组完全随机」模型：每局 8 卡重新采样且互不相同，脚本策略动作合法。
@@ -18434,7 +18824,7 @@
 - 调用: 被 `main()` 调（L4904）；依赖 `rl.opponents.build_card_pool/sample_deck/ScriptedPolicy`
 - 置信度: 已确认
 
-#### 2.128.18 test_league_elo_history [L426-449]
+#### 2.134.18 test_league_elo_history [L426-449]
 - 类型: function
 - 签名: `def test_league_elo_history():`
 - 作用: 验证联赛 Elo 历史（训练网页 UI 数据源）按 step 记录两个时间点，并能 save/load 往返。
@@ -18444,7 +18834,7 @@
 - 调用: 被 `main()` 调（L4905）
 - 置信度: 已确认
 
-#### 2.128.19 test_winrate_streams_independent [L452-521]
+#### 2.134.19 test_winrate_streams_independent [L452-521]
 - 类型: function
 - 签名: `def test_winrate_streams_independent():`
 - 作用: 锁定 PFSP 胜率流的正确性契约：不同 pair 各维护独立 EMA 流、双向互补、互不污染、save/load 不串 key（防「各 pair 共享同一 EMA 流」类写入 bug）。
@@ -18454,7 +18844,7 @@
 - 调用: 被 `main()` 调（L4906）；依赖 `rl.league.League.pfsp.winrates`
 - 置信度: 已确认
 
-#### 2.128.20 test_elo_eval_granularity [L524-595]
+#### 2.134.20 test_elo_eval_granularity [L524-595]
 - 类型: function
 - 签名: `def test_elo_eval_granularity():`
 - 作用: 验证评估粒度的统计契约：Elo 噪声地板闭式 SE=347.5/√N、轮内聚合估计无偏、`_round_estimates` 聚合逻辑、以及 round_stats→state→dashboard payload 全链路。
@@ -18464,7 +18854,7 @@
 - 调用: 被 `main()` 调（L4907）；依赖 `rl.run_league._round_estimates`、`rl.dashboard.build_payload`、`TrainConfig`
 - 置信度: 已确认
 
-#### 2.128.21 test_classified_decks [L598-620]
+#### 2.134.21 test_classified_decks [L598-620]
 - 类型: function
 - 签名: `def test_classified_decks():`
 - 作用: 验证三分类卡组数据集：200 副、60/120/20 分布、卡名全部可映射到引擎卡表、`normalize_card` 别名映射、`deck_pool` 随机抽取整副卡组。
@@ -18474,7 +18864,7 @@
 - 调用: 被 `main()` 调（L4908）；依赖 `rl.decks.load_classified_decks/decks_by_archetype/normalize_card`
 - 置信度: 已确认
 
-#### 2.128.22 test_league_training_loop [L623-637]
+#### 2.134.22 test_league_training_loop [L623-637]
 - 类型: function
 - 签名: `def test_league_training_loop():`
 - 作用: 回归 `ep_*` 列表重置 bug：联赛主循环能跑完 6 步、触发结束/截断重置并落盘 state 与 main 权重。
@@ -18484,7 +18874,7 @@
 - 调用: 被 `main()` 调（L4909）
 - 置信度: 已确认
 
-#### 2.128.23 test_config_reward_weights [L640-679]
+#### 2.134.23 test_config_reward_weights [L640-679]
 - 类型: function
 - 签名: `def test_config_reward_weights():`
 - 作用: 验证命名预设解析互不影响、七个预设的塔血不对称基线（挨打 0.0012 > 打人 0.001、被破塔 10 > 破塔 8）、奖励权重能注入 `RLEnv` 生效、config.json 往返。
@@ -18494,7 +18884,7 @@
 - 调用: 被 `main()` 调（L4911）；依赖 `TrainConfig.resolve/reward_to_env/model_reward_weights`
 - 置信度: 已确认
 
-#### 2.128.24 test_model_reward_overrides [L682-709]
+#### 2.134.24 test_model_reward_overrides [L682-709]
 - 类型: function
 - 签名: `def test_model_reward_overrides():`
 - 作用: 验证按流派覆盖奖惩：main/all_decks/random_deck 同基线（费差 0.5），推进 0.7 > 基线 > 防反 0.3 > 自闭 0.05，未知模型回退基线。
@@ -18504,7 +18894,7 @@
 - 调用: 被 `main()` 调（L4912）
 - 置信度: 已确认
 
-#### 2.128.25 test_reward_economy_preset [L712-742]
+#### 2.134.25 test_reward_economy_preset [L712-742]
 - 类型: function
 - 签名: `def test_reward_economy_preset():`
 - 作用: 验证费差默认打开：standard 与 economy 都带 `normalize_tower_dmg` 与费差=0.5，按流派覆盖生效，注入 RLEnv 后生效，JSON 往返保留布尔键与费差权重。
@@ -18514,7 +18904,7 @@
 - 调用: 被 `main()` 调（L4913）
 - 置信度: 已确认
 
-#### 2.128.26 test_reward_economy_level_invariance [L745-779]
+#### 2.134.26 test_reward_economy_level_invariance [L745-779]
 - 类型: function
 - 签名: `def test_reward_economy_level_invariance():`
 - 作用: 验证塔损按塔血百分比归一化后，同一「塔血%事件」在 lv11 与 lv16 给同一奖励，而旧公式随等级漂移。
@@ -18524,7 +18914,7 @@
 - 调用: 被 `main()` 调（L4914）
 - 置信度: 已确认
 
-#### 2.128.27 test_reward_economy_elixir_diff [L782-817]
+#### 2.134.27 test_reward_economy_elixir_diff [L782-817]
 - 类型: function
 - 签名: `def test_reward_economy_elixir_diff():`
 - 作用: 验证费差项把圣水显式定价（1 圣水≈500 血 @lv11）：花 4 费 = −2.0、对方花 4 费 = +2.0，且该项是 potential-style（闭环累计归零）；旧公式无此定价。
@@ -18534,7 +18924,7 @@
 - 调用: 被 `main()` 调（L4915）
 - 置信度: 已确认
 
-#### 2.128.28 test_reward_economy_trade_pricing [L820-869]
+#### 2.134.28 test_reward_economy_trade_pricing [L820-869]
 - 类型: function
 - 签名: `def test_reward_economy_trade_pricing():`
 - 作用: 验证费差与塔血之间的真实 trade 定价：1 费换 500 血≈中性、600 血为正、4 费只磨 4.3% 塔血或白花为负、挨 1% 塔血换 2 费差为正；旧公式在最后一种情形为负（缺陷回归）。
@@ -18544,7 +18934,7 @@
 - 调用: 被 `main()` 调（L4916）
 - 置信度: 已确认
 
-#### 2.128.29 test_rlenv_card_level [L872-894]
+#### 2.134.29 test_rlenv_card_level [L872-894]
 - 类型: function
 - 签名: `def test_rlenv_card_level():`
 - 作用: 验证 `RLEnv` 支持 11–16 卡牌等级：reset 后 `PlayerState` 塔血与真实实体 HP 同步，lv16 取数据表 5726/9816、lv11 取引擎默认 3052/4824。
@@ -18554,7 +18944,7 @@
 - 调用: 被 `main()` 调（L4926）
 - 置信度: 已确认
 
-#### 2.128.30 test_tower_troop_hp_reference [L897-953]
+#### 2.134.30 test_tower_troop_hp_reference [L897-953]
 - 类型: function
 - 签名: `def test_tower_troop_hp_reference():`
 - 作用: 验证塔血参考表（国王塔恒定 4824、四种公主塔 lv11 各异）与归一化对塔型不变；并验证「同绝对伤害打更弱的塔更值钱」。
@@ -18564,7 +18954,7 @@
 - 调用: 被 `main()` 调（L4927）
 - 置信度: 已确认
 
-#### 2.128.31 test_league_resume [L956-980]
+#### 2.134.31 test_league_resume [L956-980]
 - 类型: function
 - 签名: `def test_league_resume():`
 - 作用: 验证联赛断点续训：`run_state` 落盘、resume 后从旧 step 续跑到新 `total_steps` 并写出新 checkpoint。
@@ -18574,7 +18964,7 @@
 - 调用: 被 `main()` 调（L4928）
 - 置信度: 已确认
 
-#### 2.128.32 test_league_replays [L983-1016]
+#### 2.134.32 test_league_replays [L983-1016]
 - 类型: function
 - 签名: `def test_league_replays():`
 - 作用: 验证每评估周期的联赛录像：`eval_round_robin(record=True)` 逐局采集、字段结构正确、save/load 往返。
@@ -18584,7 +18974,7 @@
 - 调用: 被 `main()` 调（L4929）
 - 置信度: 已确认
 
-#### 2.128.33 test_dashboard_replays [L1019-1096]
+#### 2.134.33 test_dashboard_replays [L1019-1096]
 - 类型: function
 - 签名: `def test_dashboard_replays():`
 - 作用: 验证仪表盘回放接口全链路：列表扫描、对局列表（不含帧）、单局帧、非法文件名/越界防护、demo 生成、页面元素防回归。
@@ -18594,7 +18984,7 @@
 - 调用: 被 `main()` 调（L4930）
 - 置信度: 已确认
 
-#### 2.128.34 test_deck_pool_factory [L1099-1134]
+#### 2.134.34 test_deck_pool_factory [L1099-1134]
 - 类型: function
 - 签名: `def test_deck_pool_factory():`
 - 作用: 验证「卡组工厂」修复：`deck_pool`（而非只有 `pool`）策略必须产出每局卡组工厂，且工厂跨 pair 必须清空。
@@ -18604,7 +18994,7 @@
 - 调用: 被 `main()` 调（L4931）；依赖 `rl.run_league._deck_factory_of/_prepare_env`
 - 置信度: 已确认
 
-#### 2.128.35 test_dashboard_card_stats [L1137-1200]
+#### 2.134.35 test_dashboard_card_stats [L1137-1200]
 - 类型: function
 - 签名: `def test_dashboard_card_stats():`
 - 作用: 验证仪表盘卡牌使用统计：双侧归属（`opp_played` 与 `frames["cards"]`）、旧录像降级标记 partial、多文件汇总、非法输入防护、页面元素。
@@ -18614,7 +19004,7 @@
 - 调用: 被 `main()` 调（L4932）
 - 置信度: 已确认
 
-#### 2.128.36 test_battle_clone_fix [L1203-1220]
+#### 2.134.36 test_battle_clone_fix [L1203-1220]
 - 类型: function
 - 签名: `def test_battle_clone_fix():`
 - 作用: 回归「克隆法术克隆冰法时 `on_spawn` 访问 `battle_state` 为 None 崩溃」（注释指向 battle.py:1400 修复）。
@@ -18624,7 +19014,7 @@
 - 调用: 被 `main()` 调（L4933）
 - 置信度: 已确认
 
-#### 2.128.37 test_cuda_device_support [L1223-1255]
+#### 2.134.37 test_cuda_device_support [L1223-1255]
 - 类型: function
 - 签名: `def test_cuda_device_support():`
 - 作用: 验证设备支持：cpu 必跑；CUDA 可用时额外在 cuda 上跑一遍 act + validate + PPO update（cu130）。
@@ -18634,7 +19024,7 @@
 - 调用: 被 `main()` 调（L4934）
 - 置信度: 已确认
 
-#### 2.128.38 test_belief_follower_ppo_league [L1258-1312]
+#### 2.134.38 test_belief_follower_ppo_league [L1258-1312]
 - 类型: function
 - 签名: `def test_belief_follower_ppo_league():`
 - 作用: 端到端串起四层：follower 的 autoregressive bundle 动作全程合法且 PPO 更新收敛（含熵），BeliefPlanner/ProphetPlanner 输出合法 intent，联赛 PFSP 采样 + Elo 更新。
@@ -18644,7 +19034,7 @@
 - 调用: 被 `main()` 调（L4910）
 - 置信度: 已确认
 
-#### 2.128.39 test_parallel_batch_equivalence [L1315-1352]
+#### 2.134.39 test_parallel_batch_equivalence [L1315-1352]
 - 类型: function
 - 签名: `def test_parallel_batch_equivalence():`
 - 作用: 验证批量路径与单条路径逐位等价：`act_parallel` vs `act`（lp/value/bundle/masks）、`evaluate_batch` vs `evaluate`（lp/value/entropy）。
@@ -18654,7 +19044,7 @@
 - 调用: 被 `main()` 调（L4935）
 - 置信度: 已确认
 
-#### 2.128.40 test_parallel_training_loop [L1355-1369]
+#### 2.134.40 test_parallel_training_loop [L1355-1369]
 - 类型: function
 - 签名: `def test_parallel_training_loop():`
 - 作用: 验证并行多 env 的**单进程批量化**路径（`n_envs=2, parallel="proc"`）训练主循环能跑通并落盘。
@@ -18664,7 +19054,7 @@
 - 调用: 被 `main()` 调（L4936）
 - 置信度: 已确认
 
-#### 2.128.41 test_mp_training_loop [L1372-1386]
+#### 2.134.41 test_mp_training_loop [L1372-1386]
 - 类型: function
 - 签名: `def test_mp_training_loop():`
 - 作用: 验证跨进程 worker 并行（`n_envs=2, parallel="mp"`）训练主循环能跑通并落盘。
@@ -18674,7 +19064,7 @@
 - 调用: 被 `main()` 调（L4937）
 - 置信度: 已确认
 
-#### 2.128.42 _intents [L1389-1391]
+#### 2.134.42 _intents [L1389-1391]
 - 类型: function
 - 签名: `def _intents():`
 - 作用: 测试辅助：返回合法的宏意图名单 `MACRO_INTENTS`。
@@ -18684,7 +19074,7 @@
 - 调用: 被 `test_belief_follower_ppo_league`(L1304) 调用
 - 置信度: 已确认
 
-#### 2.128.43 test_flow_league_smoke [L1394-1444]
+#### 2.134.43 test_flow_league_smoke [L1394-1444]
 - 类型: function
 - 签名: `def test_flow_league_smoke():`
 - 作用: flow（全配对分流派联赛）冒烟：真实池计数 = 148,800 局、mini 池 50 局跑通、双侧轨迹都训练过、6 个模型落盘。
@@ -18694,7 +19084,7 @@
 - 调用: 被 `main()` 调（L4938）；依赖 `rl.flow_league.build_flow_pools/flow_pair_games/run_flow/FLOW_MODEL_IDS`
 - 置信度: 已确认
 
-#### 2.128.44 test_ablation_recorded [L1447-1480]
+#### 2.134.44 test_ablation_recorded [L1447-1480]
 - 类型: function
 - 签名: `def test_ablation_recorded():`
 - 作用: 验证 belief/plan 输入消融通路会落盘可追溯产出：4 变体、delta/z 判定、JSON+CSV 双落盘。
@@ -18704,7 +19094,7 @@
 - 调用: 被 `main()` 调（L4939）；依赖 `rl.evaluate.run_ablation`
 - 置信度: 已确认
 
-#### 2.128.45 test_flow_sweep_smoke [L1483-1520]
+#### 2.134.45 test_flow_sweep_smoke [L1483-1520]
 - 类型: function
 - 签名: `def test_flow_sweep_smoke():`
 - 作用: flow 数据效率 A/B 的缩小通路冒烟：mini 池 1 轮 `run_flow_sweep` 产出 rows/summary 并落盘 JSON+CSV+模型。
@@ -18714,7 +19104,7 @@
 - 调用: 被 `main()` 调（L4940）
 - 置信度: 已确认
 
-#### 2.128.46 test_flow_resume [L1523-1556]
+#### 2.134.46 test_flow_resume [L1523-1556]
 - 类型: function
 - 签名: `def test_flow_resume():`
 - 作用: 验证 flow 断点续练：先跑前 N 对、再 resume 全跑，总局数等于全量且不重打已完成对。
@@ -18724,7 +19114,7 @@
 - 调用: 被 `main()` 调（L4941）
 - 置信度: 已确认
 
-#### 2.128.47 test_solo_mode_smoke [L1559-1596]
+#### 2.134.47 test_solo_mode_smoke [L1559-1596]
 - 类型: function
 - 签名: `def test_solo_mode_smoke():`
 - 作用: solo 自对弈冒烟 + 泄漏回归哨兵：固定卡组镜像 + 周期冻结副本 + `solo_state.json`/checkpoint 落盘，且 solo 不写联赛状态；同时用 monkeypatch 计数器证明 `ep_*` 缓冲区不跨局泄漏。
@@ -18734,7 +19124,7 @@
 - 调用: 被 `main()` 调（L4942）
 - 置信度: 已确认
 
-#### 2.128.48 test_human_play_session [L1599-1629]
+#### 2.134.48 test_human_play_session [L1599-1629]
 - 类型: function
 - 签名: `def test_human_play_session():`
 - 作用: 验证人机对战通路：随机动作驱动能产出步数/BC 样本、EpisodeReplay 与 BC 文件落盘、`export_data` 导出的数据可喂信念训练与 BC 训练。
@@ -18744,7 +19134,7 @@
 - 调用: 被 `main()` 调（L4944）
 - 置信度: 已确认
 
-#### 2.128.49 test_solo_resume [L1632-1657]
+#### 2.134.49 test_solo_resume [L1632-1657]
 - 类型: function
 - 签名: `def test_solo_resume():`
 - 作用: 验证 solo 断点续练：恢复 step/权重/优化器/历史曲线，续训不重复评估已跑过的评估点。
@@ -18754,7 +19144,7 @@
 - 调用: 被 `main()` 调（L4943）
 - 置信度: 已确认
 
-#### 2.128.50 test_stall_probe [L1660-1688]
+#### 2.134.50 test_stall_probe [L1660-1688]
 - 类型: function
 - 签名: `def test_stall_probe():`
 - 作用: 验证僵局早停探针 `_stall_probe`：连续 `STALL_LIMIT` 次零塔血变化触发早停，出现塔损则计数清零。
@@ -18764,7 +19154,7 @@
 - 调用: 被 `main()` 调（L4945）
 - 置信度: 已确认
 
-#### 2.128.51 test_play_pair_env_reuse [L1691-1714]
+#### 2.134.51 test_play_pair_env_reuse [L1691-1714]
 - 类型: function
 - 签名: `def test_play_pair_env_reuse():`
 - 作用: 验证评估加速用的 `play_pair`（复用单个 env、每局 `reset(seed=...)`）在换边 4 局下局数守恒且 Elo/PFSP 已更新。
@@ -18774,7 +19164,7 @@
 - 调用: 被 `main()` 调（L4946）
 - 置信度: 已确认
 
-#### 2.128.52 test_eval_stall_early_stop [L1717-1740]
+#### 2.134.52 test_eval_stall_early_stop [L1717-1740]
 - 类型: function
 - 签名: `def test_eval_stall_early_stop():`
 - 作用: 僵局早停的集成验证：双方都只出 noop 时，评估在一秒级时间内判平，远早于打满 `max_steps`。
@@ -18784,7 +19174,7 @@
 - 调用: 被 `main()` 调（L4947）
 - 置信度: 已确认
 
-#### 2.128.53 test_draw_penalty_as_loss [L1743-1803]
+#### 2.134.53 test_draw_penalty_as_loss [L1743-1803]
 - 类型: function
 - 签名: `def test_draw_penalty_as_loss():`
 - 作用: 验证「平局=失败」：只有引擎终局平局（`game_over=True, winner=None`）才按 `lose_penalty` 惩罚，普通进行中步不误伤；并验证 solo 评估中僵局平局的 `mean_reward` 确实已扣该惩罚。
@@ -18794,7 +19184,7 @@
 - 调用: 被 `main()` 调（L4917）
 - 置信度: 已确认
 
-#### 2.128.54 test_reward_v2_ledger [L1806-1872]
+#### 2.134.54 test_reward_v2_ledger [L1806-1872]
 - 类型: function
 - 签名: `def test_reward_v2_ledger():`
 - 作用: 验证 reward v2 资源账（economy）：部署当帧不被罚（E−c 与 V+c 抵消）、份额入账/死亡注销、有目标法术为花费型惩罚、双倍期（t≥120）edw 换档、单位受伤 shaping 生效。
@@ -18804,7 +19194,7 @@
 - 调用: 被 `main()` 调（L4918）
 - 置信度: 已确认
 
-#### 2.128.55 test_spell_empty_value_gate [L1875-1931]
+#### 2.134.55 test_spell_empty_value_gate [L1875-1931]
 - 类型: function
 - 签名: `def test_spell_empty_value_gate():`
 - 作用: 验证 8h「空砸闸门」：伤害型法术（Arrows）没有任何可罩敌方目标的格子是非法格，mask 与 validate 双拒；敌人进入溅射半径后该格恢复合法；P0/P1 对称。
@@ -18814,7 +19204,7 @@
 - 调用: 被 `main()` 调（L4919）
 - 置信度: 已确认
 
-#### 2.128.56 test_spell_tower_ev_gate [L1934-1990]
+#### 2.134.56 test_spell_tower_ev_gate [L1934-1990]
 - 类型: function
 - 签名: `def test_spell_tower_ev_gate():`
 - 作用: 验证 9h「前段法术对塔 EV 闸门」：双倍期前只罩对手公主塔、无部队/建筑可溅的落点 mask+validate 双拒（Arrows 3 费 25 伤 < 0.5×3×500 折费线）；塔旁有敌方部队则放行；双倍期放行；P1 镜像同拒。
@@ -18824,7 +19214,7 @@
 - 调用: 被 `main()` 调（L4920）
 - 置信度: 已确认
 
-#### 2.128.57 test_no_solo_commit_without_lead [L1993-2061]
+#### 2.134.57 test_no_solo_commit_without_lead [L1993-2061]
 - 类型: function
 - 签名: `def test_no_solo_commit_without_lead():`
 - 作用: 验证 8h「不裸下」闸门：对手能出手且我方无 +3 费差时，MiniPekka/Giant 这类高承诺单位作为空 bundle 首卡会整槽禁掉、validate 整包拒绝；有费差、对手无法出手、被压境防守、同刻多卡协同四种情形放行。
@@ -18834,7 +19224,7 @@
 - 调用: 被 `main()` 调（L4921）
 - 置信度: 已确认
 
-#### 2.128.58 test_tank_backline_geometry [L2064-2147]
+#### 2.134.58 test_tank_backline_geometry [L2064-2147]
 - 类型: function
 - 签名: `def test_tank_backline_geometry():`
 - 作用: 验证 8h「坦克后屯兵」几何门：坦克推进时后排（Musketeer/Archer/Minions/MiniPekka）只能放在坦克身后且纵向间距 ≥ 攻击距离（快单位更靠后）；坦克前/贴身位非法；坦克消失恢复；落点附近有敌军时放行；P0/P1 镜像一致。
@@ -18844,7 +19234,7 @@
 - 调用: 被 `main()` 调（L4922）
 - 置信度: 已确认
 
-#### 2.128.59 test_plan_v1_layout [L2150-2220]
+#### 2.134.59 test_plan_v1_layout [L2150-2220]
 - 类型: function
 - 签名: `def test_plan_v1_layout():`
 - 作用: 验证 PlanToken v1 尾部扩展：旧 21 维布局逐位兼容、新意图进尾部新组、target/hint/threat/budget/hold_mask 落位正确、`load_checkpoint` 对旧维 ckpt 补零扩展。
@@ -18854,7 +19244,7 @@
 - 调用: 被 `main()` 调（L4923）
 - 置信度: 已确认
 
-#### 2.128.60 test_bp_new_intent_rules [L2223-2398]
+#### 2.134.60 test_bp_new_intent_rules [L2223-2398]
 - 类型: function
 - 签名: `def test_bp_new_intent_rules():`
 - 作用: 逐场景验证 `BeliefPlanner` Phase2 v1 的 12 个意图 + 守卫 + 旧回退（S1–S15 共约 25 个场景，每场景独立 battle）。
@@ -18864,7 +19254,7 @@
 - 调用: 被 `main()` 调（L4924）
 - 置信度: 已确认
 
-#### 2.128.61 test_pp_new_intent_rules [L2401-2533]
+#### 2.134.61 test_pp_new_intent_rules [L2401-2533]
 - 类型: function
 - 签名: `def test_pp_new_intent_rules():`
 - 作用: 验证 `ProphetPlanner` 的特权意图组（punish/spell_finish/anti_spell/save_ace/king_activate/protect_backline）并与 bp 的同链标签对齐（S1–S13）。
@@ -18874,7 +19264,7 @@
 - 调用: 被 `main()` 调（L4925）
 - 置信度: 已确认
 
-#### 2.128.62 test_bayes_queue_lock [L2536-2613]
+#### 2.134.62 test_bayes_queue_lock [L2536-2613]
 - 类型: function
 - 签名: `def test_bayes_queue_lock():`
 - 作用: 验证 `CycleBayesFilter` v2 的 O(1) 队列锁定定理：8 张内容已知 + 出牌全观测时，第 4 张起手牌与下一张可精确锁定（0/1 概率、熵 0，与开局排列无关）；异常观测退回粒子相后，连续 4 张合法出牌自动重锁且必须与真实队列同步（无伪锁）；同 seed 确定性。
@@ -18884,7 +19274,7 @@
 - 调用: 被 `main()` 调（L4892）
 - 置信度: 已确认
 
-#### 2.128.63 test_eval_solo_parallel [L2616-2650]
+#### 2.134.63 test_eval_solo_parallel [L2616-2650]
 - 类型: function
 - 签名: `def test_eval_solo_parallel():`
 - 作用: 验证并行评估与串行评估同种子结果完全一致（进程池正确性），并打印两者耗时对照。
@@ -18894,7 +19284,7 @@
 - 调用: 被 `main()` 调（L4948）
 - 置信度: 已确认
 
-#### 2.128.64 test_overtime_window [L2653-2721]
+#### 2.134.64 test_overtime_window [L2653-2721]
 - 类型: function
 - 签名: `def test_overtime_window():`
 - 作用: 验证 180s 皇冠平进入加时窗口（`overtime_open`）而不是按塔血提前终局，以及到 300s 硬顶后由 `timeout_winner` 按最低塔血百分比裁决。
@@ -18904,7 +19294,7 @@
 - 调用: 被 `main()` 调（L4949）；依赖 `rl.run_league.overtime_open/timeout_winner`
 - 置信度: 已确认
 
-#### 2.128.65 test_tower_threat_calc [L2724-2773]
+#### 2.134.65 test_tower_threat_calc [L2724-2773]
 - 类型: function
 - 签名: `def test_tower_threat_calc():`
 - 作用: 验证外置工具①塔伤威胁计算器：deepcopy + 引擎推演，在「双方不再部署」语义下估算敌方现存部队对我方各塔的伤害；空场为 0、威胁只落在行进路线对应的塔上、调用不污染原局面、确定性、P0/P1 双向可用。
@@ -18914,7 +19304,7 @@
 - 调用: 被 `main()` 调（L4950）；依赖模块 `threat_calc.estimate_tower_threat`
 - 置信度: 已确认
 
-#### 2.128.66 test_simulate_exchange [L2776-2863]
+#### 2.134.66 test_simulate_exchange [L2776-2863]
 - 类型: function
 - 签名: `def test_simulate_exchange():`
 - 作用: 验证外置工具②交换模拟器：deepcopy + 真部署 + 确定性推演；none 模式等价于「无人响应」口径，script 模式对手真的会花圣水防守并把塔损压低，fn 模式可注入对手回调；非法部署正确报 `legal=False`；不污染原局面、确定性、法术候选与 P1 镜像可用。
@@ -18924,7 +19314,7 @@
 - 调用: 被 `main()` 调（L4951）；依赖模块 `simulate_exchange.simulate_exchange`
 - 置信度: 已确认
 
-#### 2.128.67 test_spell_module [L2866-2967]
+#### 2.134.67 test_spell_module [L2866-2967]
 - 类型: function
 - 签名: `def test_spell_module():`
 - 作用: 验证外置工具③法术知识模块：伤害数字来自引擎标定；`evaluate_cast` 的静态预测与 `engine_resolution` 实测逐目标 ±2 一致；击杀判定与引擎一致；`best_cast` 覆盖目标簇；BarbLog 部署区限制正确上报；缓存复用、无污染。
@@ -18934,7 +19324,7 @@
 - 调用: 被 `main()` 调（L4952）；依赖模块 `spell_module.*`
 - 置信度: 已确认
 
-#### 2.128.68 test_mcts_basic [L2970-3065]
+#### 2.134.68 test_mcts_basic [L2970-3065]
 - 类型: function
 - 签名: `def test_mcts_basic():`
 - 作用: 验证推理时浅 MCTS（`RLMCTS`）五项：空场搜索返回合法动作且零污染、确定性、值函数量纲正确（空场砸王塔负 EV、双倍期残血塔斩杀优于 WAIT）、预算控制。
@@ -18944,7 +19334,7 @@
 - 调用: 被 `main()` 调（L4953）；依赖 `rl.mcts.RLMCTS/MCTSConfig/leaf_value`
 - 置信度: 已确认
 
-#### 2.128.69 test_mcts_defense_and_wait [L3068-3095]
+#### 2.134.69 test_mcts_defense_and_wait [L3068-3095]
 - 类型: function
 - 签名: `def test_mcts_defense_and_wait():`
 - 作用: 验证浅 MCTS 行为方向：Knight 压境时搜索结果合法且可解释，耗时可控；纯空场大圣水时不再返回空砸（负 EV 候选）。
@@ -18954,7 +19344,7 @@
 - 调用: 被 `main()` 调（L4954）
 - 置信度: 已确认
 
-#### 2.128.70 test_opp_event_token [L3098-3148]
+#### 2.134.70 test_opp_event_token [L3098-3148]
 - 类型: function
 - 签名: `def test_opp_event_token():`
 - 作用: 验证 9j B 层「对手出牌事件通道」（belief token 尾部 3×16 维）：维度追加与旧 ckpt 尾部零拷贝兼容、事件入历史、Δt 陈旧度随时间增长并 clamp 到 1.0、reset 清空、哨兵不误入。
@@ -18964,7 +19354,7 @@
 - 调用: 被 `main()` 调（L4955）
 - 置信度: 已确认
 
-#### 2.128.71 test_crossed_river_defend_plan [L3151-3212]
+#### 2.134.71 test_crossed_river_defend_plan [L3151-3212]
 - 类型: function
 - 签名: `def test_crossed_river_defend_plan():`
 - 作用: 验证 9j C 层：敌军过河（y<16）即触发 `defend_*` + 落点提示；单远程单位过河（threat 低于阈值）也建议防守且对准威胁路；有法术可解时 `spell_trade` 优先级不变；未过河/空场不误触发；深威胁按单位类型分派 hint。
@@ -18974,7 +19364,7 @@
 - 调用: 被 `main()` 调（L4956）
 - 置信度: 已确认
 
-#### 2.128.72 test_death_damage_scaling [L3215-3267]
+#### 2.134.72 test_death_damage_scaling [L3215-3267]
 - 类型: function
 - 签名: `def test_death_damage_scaling():`
 - 作用: 验证 2026-09-09 亡语等级缩放与 IceGolemite 死亡减速圈（FirstLight 对账）：death_damage 按 `1.1^(lv-1)` 缩放，冰人死亡生成 DeathSlowZone 秒杀同级小骷髅、存活单位吃 0.65×2s 减速。
@@ -18984,7 +19374,7 @@
 - 调用: 被 `main()` 调（L4958）
 - 置信度: 已确认
 
-#### 2.128.73 test_vines_snare_fl_duration [L3270-3298]
+#### 2.134.73 test_vines_snare_fl_duration [L3270-3298]
 - 类型: function
 - 签名: `def test_vines_snare_fl_duration():`
 - 作用: 验证 Vines 束缚口径（FirstLight 优先）：束缚 2.0s（EXT SpawnTime=2000，覆盖旧 gamedata buffData 2500ms），总伤等效 306（153×2 跳）。
@@ -18994,7 +19384,7 @@
 - 调用: 被 `main()` 调（L4959）
 - 置信度: 已确认
 
-#### 2.128.74 test_log_rolling_direction [L3301-3367]
+#### 2.134.74 test_log_rolling_direction [L3301-3367]
 - 类型: function
 - 签名: `def test_log_rolling_direction():`
 - 作用: 验证 2026-09-10 滚木/野蛮人滚筒口径：两者凭空出现在部署点（无第一段飞行弹）、只沿 y 轴纵向滚动（蓝方 +y、红方 −y、x 恒定）、Firecracker 爆裂弹不受影响。
@@ -19004,7 +19394,7 @@
 - 调用: 被 `main()` 调（L4960）
 - 置信度: 已确认
 
-#### 2.128.75 test_behavioral_metrics [L3370-3425]
+#### 2.134.75 test_behavioral_metrics [L3370-3425]
 - 类型: function
 - 签名: `def test_behavioral_metrics():`
 - 作用: 用两局合成回放验证 `behavioral_metrics` 的各项行为指标判定：防守投入率、接敌率、拦截率、单边堆牌率、组波率、每局 deploy 数、圣水均值、响应延迟。
@@ -19014,7 +19404,7 @@
 - 调用: 被 `main()` 调（L4961）
 - 置信度: 已确认
 
-#### 2.128.76 test_mk_spawn_damage_and_iw_slow_fl [L3428-3487]
+#### 2.134.76 test_mk_spawn_damage_and_iw_slow_fl [L3428-3487]
 - 类型: function
 - 签名: `def test_mk_spawn_damage_and_iw_slow_fl():`
 - 作用: 验证落地触发族（FirstLight 对账）：① MegaKnight 落地溅射弹（`MegaKnightAppear`）存在且伤害达标、仅打地面；② IceWizard 落地冰雾减速 2.5s、速度与攻速双 −35%（0.65）、塔不吃，且脱离源后按时解除。并说明 `on_spawn` 只打部署瞬间在场敌人（后部署邻居不吃）。
@@ -19024,7 +19414,7 @@
 - 调用: 被 `main()` 调（L4962）
 - 置信度: 已确认
 
-#### 2.128.77 test_tower_value_mult [L3490-3519]
+#### 2.134.77 test_tower_value_mult [L3490-3519]
 - 类型: function
 - 签名: `def test_tower_value_mult():`
 - 作用: 验证塔血差异化定价曲线 `tower_value_mult`：凹形溢价、满血 = 1.0（旧行为不变）、中点 = 1.5、残血 5% = 2.805、王塔在两公主塔存活时 ×0.05、一破后恢复全价、塔破（ratio≤0）返回 1.0、`k` 可调。
@@ -19034,7 +19424,7 @@
 - 调用: 被 `main()` 调（L4963）；依赖 `rl.env_wrapper.tower_value_mult`
 - 置信度: 已确认
 
-#### 2.128.78 test_reward_tower_premium [L3522-3592]
+#### 2.134.78 test_reward_tower_premium [L3522-3592]
 - 类型: function
 - 签名: `def test_reward_tower_premium():`
 - 作用: 验证塔血差异化定价接入 `compute_reward`：打敌方低血塔更值钱、我方低血塔挨打惩罚更大（双向同曲线）、王塔贬值精确 ×0.05 且一破后全价、旧调用（无 per-tower 参数）逐位不变。
@@ -19044,7 +19434,7 @@
 - 调用: 被 `main()` 调（L4964）
 - 置信度: 已确认
 
-#### 2.128.79 test_reward_tower_premium_rlenv_flow [L3595-3668]
+#### 2.134.79 test_reward_tower_premium_rlenv_flow [L3595-3668]
 - 类型: function
 - 签名: `def test_reward_tower_premium_rlenv_flow():`
 - 作用: 验证塔血溢价不仅能算，还经 `RLEnv.step` 真实链路生效（每塔 max 数组已记录），且 MCTS 的 `node_value` 与训练奖励**同源**（敌残血塔推高我方估值、王塔闸门生效）。
@@ -19054,7 +19444,7 @@
 - 调用: 被 `main()` 调（L4965）
 - 置信度: 已确认
 
-#### 2.128.80 test_opponent_pool_mix [L3671-3743]
+#### 2.134.80 test_opponent_pool_mix [L3671-3743]
 - 类型: function
 - 签名: `def test_opponent_pool_mix():`
 - 作用: 验证 9j A 层训练对手池（frozen/hist/defend 混合）+ `SelfDefenderPolicy` 反制：真实旧 ckpt 可加载进 hist 槽、采样分布接近名义配比、败局回填不崩、纯防守模式面对过河威胁真的出合法反制。
@@ -19064,7 +19454,7 @@
 - 调用: 被 `main()` 调（L4957）
 - 置信度: 已确认
 
-#### 2.128.81 _tiny_rollout_transitions [L3746-3763]
+#### 2.134.81 _tiny_rollout_transitions [L3746-3763]
 - 类型: function
 - 签名: `def _tiny_rollout_transitions(pol, env, belief, tok, plan, n=4):`
 - 作用: 测试辅助工厂：构造 n 条最小 transition，优势正负交替（+1/−1），回报比 value 多 `3.0×符号` 的离散度，供 PPO/诊断类测试使用。
@@ -19080,7 +19470,7 @@
 - 调用: 被 `test_value_channel_norm_and_gnorm_split`(L3790)、`test_ppo_multi_epoch_minibatch`(L4562)、`test_adv_inert_probe_and_const_baseline`(L4804) 调用
 - 置信度: 已确认
 
-#### 2.128.82 test_value_channel_norm_and_gnorm_split [L3766-3854]
+#### 2.134.82 test_value_channel_norm_and_gnorm_split [L3766-3854]
 - 类型: function
 - 签名: `def test_value_channel_norm_and_gnorm_split():`
 - 作用: P0-1 审计整改回归：① `value_norm="none"` 时 `v_loss` 逐位等于外部复算的原始 MSE 且 stats 无诊断键；①b `explained_variance` 的定义性行为与外部复算一致；② 单轮 on-policy 重放 ratio≡1、clip≡0（结构性）；③ 诊断真能分辨谁在推动更新（value_head ×1000 后 v_gnorm 抬升两个数量级）；④ `diagnose_every=0` 时不产生诊断键；⑤ `ReturnScaler` 存取一致。
@@ -19090,7 +19480,7 @@
 - 调用: 被 `main()` 调（L4966）
 - 置信度: 已确认
 
-#### 2.128.83 test_history_dedup_and_gates [L3857-3902]
+#### 2.134.83 test_history_dedup_and_gates [L3857-3902]
 - 类型: function
 - 签名: `def test_history_dedup_and_gates():`
 - 作用: P0-2 回归：history 按 step 去重（同 step 覆盖旧点、同 step 全清）；行为指标门禁改为「相对本 run 首点」且首点只建基线不判定，越界只报警不中断；并验证 `ghost_rate` 确实进了行为指标。
@@ -19100,7 +19490,7 @@
 - 调用: 被 `main()` 调（L4967）
 - 置信度: 已确认
 
-#### 2.128.84 test_opponent_pool_mix_multi_dir [L3905-3961]
+#### 2.134.84 test_opponent_pool_mix_multi_dir [L3905-3961]
 - 类型: function
 - 签名: `def test_opponent_pool_mix_multi_dir():`
 - 作用: P1-1 回归：本 run 目录没有 ckpt 时从 `--hist-seed-dir`（`extra_dirs`）补种以恢复 hist 槽；本目录有 ckpt 时优先且排在前。
@@ -19110,7 +19500,7 @@
 - 调用: 被 `main()` 调（L4971）
 - 置信度: 已确认
 
-#### 2.128.85 test_opponent_pool_rand_anchor [L3964-4083]
+#### 2.134.85 test_opponent_pool_rand_anchor [L3964-4083]
 - 类型: function
 - 签名: `def test_opponent_pool_rand_anchor():`
 - 作用: E2 回归（固定随机锚点进训练对手池第 4 槽）：默认配比含 `rand_anchor=0.1` 且 `DEFAULT_OPP_MIX` 与 `_OPP_MIX` 同步、有 hist 时分布接近名义、锚点 side 权重与评估侧 `_make_rand_anchor` 同种子逐位一致、record 为 no-op 不污染 PFSP、无 hist 时按剩余概率归一化（含旧 bug 指纹钉住）、旧式三槽 mix 兼容。
@@ -19120,7 +19510,7 @@
 - 调用: 被 `main()` 调（L4970）
 - 置信度: 已确认
 
-#### 2.128.86 test_pfsp_gate_and_dynamic_hist [L4086-4183]
+#### 2.134.86 test_pfsp_gate_and_dynamic_hist [L4086-4183]
 - 类型: function
 - 签名: `def test_pfsp_gate_and_dynamic_hist():`
 - 作用: D1 回归三件事：① `rl/pfsp.py` 默认参数与旧行为逐位等价（新参数都是 opt-in）；② `alpha` 与门禁按语义生效（α=0.2 一局把 EMA 0.5→0.6；EMA 胜率 > `gate_hi` 的权重 ×`gate_penalty`；非法参数报 `ValueError`）；③ `_OpponentPool` 走 D1 参数且 `refresh_hist()` 纳入本 run 新快照、同时已入池 ckpt 的 PFSP id 保持不变。
@@ -19130,7 +19520,7 @@
 - 调用: 被 `main()` 调（L4972）
 - 置信度: 已确认
 
-#### 2.128.87 test_enc_layernorm_gru_vitality [L4186-4316]
+#### 2.134.87 test_enc_layernorm_gru_vitality [L4186-4316]
 - 类型: function
 - 签名: `def test_enc_layernorm_gru_vitality():`
 - 作用: v3 P0-A 回归：`enc_ln` 必须让 GRU 解冻并吸收 `enc_fc` 的量级漂移；同时验证 `grid_ln` 把 grid 分量每元素 RMS 拉到 ~1、启动前静态护栏能拦缺失/被替换的归一化层、`value_std_ratio` 门槛生效。
@@ -19140,7 +19530,7 @@
 - 调用: 被 `main()` 调（L4973）；依赖 `rl.diagnostics.gru_vitality/check_vitality/check_policy_architecture/THRESHOLDS`
 - 置信度: 已确认
 
-#### 2.128.88 test_value_bypass [L4319-4401]
+#### 2.134.88 test_value_bypass [L4319-4401]
 - 类型: function
 - 签名: `def test_value_bypass():`
 - 作用: B′ 落地回归：`value_bypass=True` 时 value 走 `value_head(enc)`（跳过 GRU）而策略头仍走 GRU；checkpoint 元数据保存/恢复该标志；显式覆盖与元数据不一致时告警不静默；并钉住诊断口径必须走真实 value 通路。
@@ -19150,7 +19540,7 @@
 - 调用: 被 `main()` 调（L4974）
 - 置信度: 已确认
 
-#### 2.128.89 test_stall_settlement_margin [L4404-4434]
+#### 2.134.89 test_stall_settlement_margin [L4404-4434]
 - 类型: function
 - 签名: `def test_stall_settlement_margin():`
 - 作用: C′ 回归（纯函数层）：早停低置信裁定降噪——皇冠不同 → 决定性 0/1；皇冠相同且塔血%差 ≥ margin → 保留 0/1；差 < margin → 返回 None（记平局=失败）；实体信息缺失 → None；`margin=0` 退化为 `timeout_winner` 语义。
@@ -19160,7 +19550,7 @@
 - 调用: 被 `main()` 调（L4977）；依赖 `rl.run_league.settle_stall_from_counts/settle_stall`
 - 置信度: 已确认
 
-#### 2.128.90 test_value_independent_encoder [L4437-4527]
+#### 2.134.90 test_value_independent_encoder [L4437-4527]
 - 类型: function
 - 签名: `def test_value_independent_encoder():`
 - 作用: E′ 回归（独立价值编码器 + 非线性价值头）：通路确实等于 `value_head_mlp(value_enc_ln(relu(value_enc_fc(fused))))`、与共享/bypass 通路不同（参数独立）、策略头语义不变、ckpt 元数据往返与不一致告警、`gru_vitality` 的 value_std 走独立通路。
@@ -19170,7 +19560,7 @@
 - 调用: 被 `main()` 调（L4975）
 - 置信度: 已确认
 
-#### 2.128.91 test_ppo_multi_epoch_minibatch [L4530-4644]
+#### 2.134.91 test_ppo_multi_epoch_minibatch [L4530-4644]
 - 类型: function
 - 签名: `def test_ppo_multi_epoch_minibatch():`
 - 作用: F′ 回归（真正的 PPO 更新预算：多轮 × 打乱 × 小批）七条可证伪断言：默认参数 = 旧行为、梯度步数 = 轮数×批数、`_plan_batches` 是划分且打乱可复现、多轮真的更拟合、ratio 离开 1、ratio 聚合只除末轮样本数、EV 用更新前口径。
@@ -19180,7 +19570,7 @@
 - 调用: 被 `main()` 调（L4976）；依赖 `_tiny_rollout_transitions`
 - 置信度: 已确认
 
-#### 2.128.92 test_solo_rand_anchor [L4648-4692]
+#### 2.134.92 test_solo_rand_anchor [L4648-4692]
 - 类型: function
 - 签名: `def test_solo_rand_anchor():`
 - 作用: E1 回归（固定随机锚点）：同一种子构造两次权重逐位一致（跨评估点/跨 run 可复现）、不同种子权重不同、构造过程不扰动调用方 torch RNG、`_rand_anchor_warns` 报警线（<0.35 报警，≥0.35/None 不报警）。
@@ -19190,7 +19580,7 @@
 - 调用: 被 `main()` 调（L4968）；依赖 `rl.train_solo.RAND_ANCHOR_SEED/RAND_ANCHOR_WARN_FLOOR/_rand_anchor_warns`
 - 置信度: 已确认
 
-#### 2.128.93 test_anchor_light_point_state [L4695-4768]
+#### 2.134.93 test_anchor_light_point_state [L4695-4768]
 - 类型: function
 - 签名: `def test_anchor_light_point_state():`
 - 作用: C 方案回归（`--anchor-every` 轻量锚点评估点）：默认关闭（=旧行为）、CLI flag 真的接进 overrides、轻点与全点对照条目共存且按 step 可复原、同 step 重复写幂等。
@@ -19200,7 +19590,7 @@
 - 调用: 被 `main()` 调（L4969）；依赖 `TrainConfig.anchor_every`、`train_solo.write_solo_state`
 - 置信度: 已确认
 
-#### 2.128.94 test_adv_inert_probe_and_const_baseline [L4771-4882]
+#### 2.134.94 test_adv_inert_probe_and_const_baseline [L4771-4882]
 - 类型: function
 - 签名: `def test_adv_inert_probe_and_const_baseline():`
 - 作用: critic 惰性检验回归：`adv_alt` 探针必须**零副作用**（不改参数、默认路径键集不变）、`adv_alt==adv` 与纯缩放都给出 `grad_cos=+1`、反号/随机优势给出 `grad_cos` 显著偏离 1（探针有分辨力）、退化情形不崩、以及 `V≡常数 c` 的 GAE 恒等式 `ret_c == adv_c + c`。
@@ -19210,7 +19600,7 @@
 - 调用: 被 `main()` 调（L4978）
 - 置信度: 已确认
 
-#### 2.128.95 main [L4885-4979]
+#### 2.134.95 main [L4885-4979]
 - 类型: function
 - 签名: `def main():`
 - 作用: 自检入口：先统一 UTF-8 stdout，然后按固定顺序**顺序调用全部 test_\* 函数**（无独立测试框架），最后打印 `ALL SELFTESTS PASSED`。
@@ -19222,7 +19612,7 @@
 
 ---
 
-### 2.129 `src/clasher_new/rl/train_baseline.py`
+### 2.135 `src/clasher_new/rl/train_baseline.py`
 
 - **分析组**：G045　**行数**：102　**AST 符号数**：9
 
@@ -19233,7 +19623,7 @@
 - 关键模块级常量: `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（L10）— 包上一级目录；L11-12 条件插入 `sys.path`。除此之外无模块级常量。注意 L14 导入的 `np` 与 L23 导入的 `ActionBundle` 在文件正文中未被实际使用（文本检索无其它引用）。
 - 顶层数据表/字典: 无
 
-#### 2.129.1 SingleCardAdapter [L26-42]
+#### 2.135.1 SingleCardAdapter [L26-42]
 - 类型: class（基类 `gym.Env`）
 - 签名: `class SingleCardAdapter(gym.Env)`
 - 作用: 把 `RLEnv` 包装成 SB3 可用的单卡离散动作环境。
@@ -19243,7 +19633,7 @@
 - 调用: 仅在本文件 `main` L89 实例化；下游 SB3 `PPO("MultiInputPolicy", env)`（L90-91）消费其 gym 接口。
 - 置信度: 已确认
 
-##### 2.129.1.1 SingleCardAdapter.__init__ [L29-32]
+##### 2.135.1.1 SingleCardAdapter.__init__ [L29-32]
 - 类型: method
 - 签名: `__init__(self, **env_kwargs)`
 - 作用: 构造内部 `RLEnv` 并暴露观测/动作空间。
@@ -19253,7 +19643,7 @@
 - 实现: L30 `self.env = RLEnv(**env_kwargs)`；L31 `self.observation_space = self.env.observation_space`（直接用 RLEnv 的 Dict 空间）；L32 `self.action_space = gym.spaces.MultiDiscrete([5, 32, 18])`，即 (slot∈0..4，row∈0..31，col∈0..17)。
 - 置信度: 已确认
 
-##### 2.129.1.2 SingleCardAdapter.reset [L34-35]
+##### 2.135.1.2 SingleCardAdapter.reset [L34-35]
 - 类型: method
 - 签名: `reset(self, *, seed=None, options=None)`
 - 作用: 透传到内部 `RLEnv.reset`。
@@ -19264,7 +19654,7 @@
 - 实现: L35 单行转发。
 - 置信度: 已确认
 
-##### 2.129.1.3 SingleCardAdapter.step [L37-39]
+##### 2.135.1.3 SingleCardAdapter.step [L37-39]
 - 类型: method
 - 签名: `step(self, action)`
 - 作用: 把旧的单卡动作转成 `ActionBundle` 再步进环境。
@@ -19274,7 +19664,7 @@
 - 实现: L38 `bundle = legacy_action_to_bundle(action)`；L39 转发 `self.env.step(bundle)`。`legacy_action_to_bundle` 定义于 rl/env_wrapper.py:726-731：解出 `(slot, y, x)`，`slot == 0` 返回 `ActionBundle.noop()`，否则 `ActionBundle.from_single(slot, x, y)`（即输入的 y 作行、x 作列）。
 - 置信度: 已确认
 
-##### 2.129.1.4 SingleCardAdapter.__getattr__ [L41-42]
+##### 2.135.1.4 SingleCardAdapter.__getattr__ [L41-42]
 - 类型: method
 - 签名: `__getattr__(self, name)`
 - 作用: 属性转发到内部 env。
@@ -19284,7 +19674,7 @@
 - 实现: L42 单行转发；因为 `self.env` 在 `__init__` 已赋值，正常路径不会因此递归（源码未做防递归保护）。
 - 置信度: 已确认
 
-#### 2.129.2 CRFeatureExtractor [L45-77]
+#### 2.135.2 CRFeatureExtractor [L45-77]
 - 类型: class（基类 `BaseFeaturesExtractor`）
 - 签名: `class CRFeatureExtractor(BaseFeaturesExtractor)`
 - 作用: SB3 的自定义特征提取器：把 Dict 观测里的 grid（展开为通道图）+ 手牌 embedding + elixir/next_card/time 拼成一个向量。
@@ -19294,7 +19684,7 @@
 - 调用: 由 SB3 在 `PPO(..., policy_kwargs={"features_extractor_class": CRFeatureExtractor})`（L92）时实例化并前向。
 - 置信度: 已确认
 
-##### 2.129.2.1 CRFeatureExtractor.__init__ [L46-60]
+##### 2.135.2.1 CRFeatureExtractor.__init__ [L46-60]
 - 类型: method
 - 签名: `__init__(self, observation_space: gym.spaces.Dict, features_dim: int = 256)`
 - 作用: 建 entity embedding、3 层卷积与末端线性层，并推断卷积输出维度。
@@ -19305,7 +19695,7 @@
 - 实现: L47 `super().__init__(observation_space, features_dim)`；L49 `self.entity_emb = nn.Embedding(13, 8)`（13 类 id → 8 维）；L50 `in_ch = (grid_shape[-1] - 1) + 8 + 4`，即去掉首通道（card id）后再加 embedding 8 维与卡类型 one-hot 4 维；L51-56 卷积栈 `Conv2d(in_ch,32,3,pad1)→ReLU→Conv2d(32,64,3,pad1,stride2)→ReLU→Conv2d(64,64,3,pad1,stride2)→ReLU→Flatten`；L57-59 用 `torch.zeros(1, in_ch, 32, 18)` 的 dummy 前向取 `shape[1]` 得到 `cnn_out`（注意此处 H/W 硬编码 32/18，未用 `grid_shape`）；L60 `self.fc = nn.Linear(cnn_out + 5 * 8 + 3, features_dim)`（+40 为手牌 5 槽×8 维，+3 为 elixir/next_card/time）。
 - 置信度: 已确认
 
-##### 2.129.2.2 CRFeatureExtractor.forward [L62-77]
+##### 2.135.2.2 CRFeatureExtractor.forward [L62-77]
 - 类型: method
 - 签名: `forward(self, observation)`
 - 作用: 按上述通道拼接规则算特征向量，末端过 ReLU。
@@ -19315,7 +19705,7 @@
 - 实现: L63-65 取 `grid`，并把 `hand` 转 `.long()`、取 `elixir`；L66-67 `extra = cat([elixir, observation["next_card"].float(), observation["time"].float()], dim=1)`（3 列）。L69-74：`card_ids = grid[..., 0].long()` 过 `entity_emb`；`rest = grid[..., 1:]`；`card_type = rest[..., 2].long()`（L72 注释「真实卡类型通道（P2 4.4）」）做 4 类 one-hot；三者按最后一维 cat 后 `permute(0, 3, 1, 2).float()` 变 NCHW。L75 `grid_feat = self.cnn(x)`；L76 `hand_feat = self.entity_emb(hand).flatten(1)`（5×8=40）；L77 拼 `[grid_feat, hand_feat, extra]` 过 fc 与 ReLU。
 - 置信度: 已确认
 
-#### 2.129.3 main [L80-98]
+#### 2.135.3 main [L80-98]
 - 类型: function
 - 签名: `main()`
 - 作用: 解析命令行、建 SB3 PPO 与适配环境、训练并保存模型。
@@ -19327,7 +19717,7 @@
 
 ---
 
-### 2.130 `src/clasher_new/rl/train_bc.py`
+### 2.136 `src/clasher_new/rl/train_bc.py`
 
 - **分析组**：G044　**行数**：131　**AST 符号数**：3
 
@@ -19339,7 +19729,7 @@
 - 顶层数据表/字典: `REGION_CENTERS`（见上）。另有函数内字面量（非模块级）：`expert_bundle` 中 `abs(c % 18 ...)`/`abs(c // 18 ...)` 的 **18**（与 GRID_W 同值但为硬编码）、`collect` 的 `n_particles=128`、`while ... steps < max_steps` 用的 `max_steps`。
 - 模块级路径注入: L18-20 把 `src/clasher_new` 插入 `sys.path`。
 
-#### 2.130.1 expert_bundle [L40-57]
+#### 2.136.1 expert_bundle [L40-57]
 - 类型: function
 - 签名: `expert_bundle(env, belief, bp, obs, rng)`
 - 作用: 规则专家：plan → suggested_card → focus_region 中心最近合法格（L41）。
@@ -19354,7 +19744,7 @@
 - 调用: 被本文件 `collect` L72 调用。
 - 置信度: 已确认
 
-#### 2.130.2 collect [L60-83]
+#### 2.136.2 collect [L60-83]
 - 类型: function
 - 签名: `collect(n_games, seed, policy, max_steps=600)`
 - 作用: 用规则专家跑 n_games 局，收集 `(obs, belief_tok, plan_vec, bundle, masks)` 样本（L60-83）。
@@ -19368,7 +19758,7 @@
 - 调用: 被本文件 `train_bc` L97 调用。
 - 置信度: 已确认
 
-#### 2.130.3 train_bc [L86-116]
+#### 2.136.3 train_bc [L86-116]
 - 类型: function
 - 签名: `train_bc(n_games=50, epochs=3, lr=1e-3, hidden_dim=128, seed=0, out="follower_bc.pt", max_steps=600)`
 - 作用: BC 主流程：建策略 → 采集专家样本 → 多轮最大化 logprob → 存 checkpoint（L86-116）。
@@ -19387,7 +19777,7 @@
 
 ---
 
-### 2.131 `src/clasher_new/rl/train_belief.py`
+### 2.137 `src/clasher_new/rl/train_belief.py`
 
 - **分析组**：G042　**行数**：260　**AST 符号数**：9
 
@@ -19400,7 +19790,7 @@
   - `DEFAULT_DECK_1 = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant", "Fireball", "Arrows", "Knight"]` (L29-30) — 当 replay 未携带 `deck` 时用作手牌标签维度的默认卡组（8 张）
 - 顶层数据表/字典: 无（`DEFAULT_DECK_1` 为列表，见上）
 
-#### 2.131.1 sample_bundle [L33-46]
+#### 2.137.1 sample_bundle [L33-46]
 - 类型: function
 - 签名: `sample_bundle(mask, rng)`
 - 作用: 从动作掩码里随机抽一个可出的 slot 与合法格子，组成单卡 `ActionBundle`；无合法动作返回空 bundle。
@@ -19412,7 +19802,7 @@
 - 调用: 仅本模块 `collect_replays`(L61)。
 - 置信度: 已确认
 
-#### 2.131.2 collect_replays [L49-69]
+#### 2.137.2 collect_replays [L49-69]
 - 类型: function
 - 签名: `collect_replays(n_games, seed, opponent=None, max_steps=600)`
 - 作用: 用 `sample_bundle` 的随机策略跑 `n_games` 局，逐局录成含隐藏标签的 `EpisodeReplay` 字典（并附 `deck`）。
@@ -19426,7 +19816,7 @@
 - 调用: 本模块 `train`(L155)；无其它仓库调用点（全仓 grep `collect_replays` 仅本文件）。
 - 置信度: 已确认（源码路径）；其中 `--opponent heuristic` 的运行期后果为待确认（未运行验证）
 
-#### 2.131.3 _episode_arrays [L72-87]
+#### 2.137.3 _episode_arrays [L72-87]
 - 类型: function
 - 签名: `_episode_arrays(ep)`
 - 作用: 把一局 replay 容器转成 `(特征序列, 下一张牌标签, 手牌多热标签)` 三个数组，缺隐藏标签的步被跳过。
@@ -19437,7 +19827,7 @@
 - 调用: 本模块 `build_episodes`(L97)；无其它仓库调用点。
 - 置信度: 已确认（除上述两处运行期后果待确认）
 
-#### 2.131.4 build_episodes [L90-100]
+#### 2.137.4 build_episodes [L90-100]
 - 类型: function
 - 签名: `build_episodes(replays)`
 - 作用: 把 replay 列表逐局转成数组三元组列表，并确定手牌标签用的卡组。
@@ -19448,7 +19838,7 @@
 - 调用: 本模块 `train`(L156)。
 - 置信度: 已确认
 
-#### 2.131.5 brier_of [L103-107]
+#### 2.137.5 brier_of [L103-107]
 - 类型: function
 - 签名: `brier_of(probs, y)`
 - 作用: 计算多分类平均 Brier 分数（对各样本类别维求和平方误差再取均值）。
@@ -19460,7 +19850,7 @@
 - 调用: 本模块 `train` 的 `eval_metrics` 闭包（L187）。
 - 置信度: 已确认
 
-#### 2.131.6 nll_of [L110-114]
+#### 2.137.6 nll_of [L110-114]
 - 类型: function
 - 签名: `nll_of(logits, y)`
 - 作用: 用交叉熵计算多分类负对数似然（内部把 numpy 转 torch）。
@@ -19472,7 +19862,7 @@
 - 调用: 本模块 `train` 的 `eval_metrics`（L192）。
 - 置信度: 已确认
 
-#### 2.131.7 ece_of [L117-129]
+#### 2.137.7 ece_of [L117-129]
 - 类型: function
 - 签名: `ece_of(probs, y, n_bins=10)`
 - 作用: 按预测置信度分箱计算期望校准误差（ECE）。
@@ -19485,7 +19875,7 @@
 - 调用: 本模块 `train` 的 `eval_metrics`（L193）。
 - 置信度: 已确认
 
-#### 2.131.8 fit_temperature [L132-142]
+#### 2.137.8 fit_temperature [L132-142]
 - 类型: function
 - 签名: `fit_temperature(logits, y)`
 - 作用: 在验证集上以固定网格搜索温度 T（最小化 NLL），返回最优 T。
@@ -19497,7 +19887,7 @@
 - 调用: 本模块 `train`(L228)。
 - 置信度: 已确认
 
-#### 2.131.9 train [L145-244]
+#### 2.137.9 train [L145-244]
 - 类型: function
 - 签名: `train(epochs=10, lr=1e-3, batch_size=64, n_games=50, seed=0, out="belief_encoder.pt", replays_path=None, opponent=None, val_frac=0.2, max_steps=600)`
 - 作用: 信念编码器的监督训练主函数：取数据 → 按局切分验证集 → 逐 epoch 用"整局前向 + 逐步损失"训练 GRU/两个头 → 报告验证指标 → 温度缩放并保存 checkpoint。
@@ -19519,7 +19909,7 @@
 
 ---
 
-### 2.132 `src/clasher_new/rl/train_exploiter.py`
+### 2.138 `src/clasher_new/rl/train_exploiter.py`
 
 - **分析组**：G044　**行数**：137　**AST 符号数**：3
 
@@ -19531,7 +19921,7 @@
 - 顶层数据表/字典: 无。
 - 模块级路径注入: L13-15 把 `src/clasher_new` 插入 `sys.path`。
 
-#### 2.132.1 _play_side0 [L27-53]
+#### 2.138.1 _play_side0 [L27-53]
 - 类型: function
 - 签名: `_play_side0(env, policy, belief, bp, max_steps=300)`
 - 作用: policy 以 player-0 身份打完整对局，返回 `(winner, opp_side)`（L28）。
@@ -19546,7 +19936,7 @@
 - 调用: 被本文件 `evaluate_winrate` L66 与 L80 调用。
 - 置信度: 已确认
 
-#### 2.132.2 evaluate_winrate [L56-86]
+#### 2.138.2 evaluate_winrate [L56-86]
 - 类型: function
 - 签名: `evaluate_winrate(exploiter, main, n_games=10, seed=0, max_steps=300)`
 - 作用: 换边评估：exploiter 先手 n/2 局 + 后手 n/2 局，返回 exploiter 胜率（含平局为 0.5 计）（L57）。
@@ -19561,7 +19951,7 @@
 - 调用: 被本文件 `main` L119 调用（`n_games=args.n_eval_games`）。
 - 置信度: 已确认
 
-#### 2.132.3 main [L89-133]
+#### 2.138.3 main [L89-133]
 - 类型: function
 - 签名: `main()`
 - 作用: CLI 入口：训练 exploiter → 换边测胜率 → 达标则写入联赛状态。
@@ -19573,7 +19963,7 @@
 
 ---
 
-### 2.133 `src/clasher_new/rl/train_follower.py`
+### 2.139 `src/clasher_new/rl/train_follower.py`
 
 - **分析组**：G042　**行数**：283　**AST 符号数**：9
 
@@ -19584,7 +19974,7 @@
 - 关键模块级常量: 无（仅模块级变量 `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`，L15，用于把 `src/clasher_new` 插进 `sys.path`）
 - 顶层数据表/字典: 无
 
-#### 2.133.1 heuristic_opponent [L33-49]
+#### 2.139.1 heuristic_opponent [L33-49]
 - 类型: function
 - 签名: `heuristic_opponent(env, rng=None)`
 - 作用: 返回一个"脚本对手"闭包：从 player-1 的动作掩码里随机抽一个可出的 slot 与合法格子，组成单卡 `ActionBundle`；无合法动作时返回空 bundle（noop）。
@@ -19596,7 +19986,7 @@
 - 调用: 被 `rl/evaluate.py:159`（`return heuristic_opponent(env, rng)`）、`rl/export_replay.py:20,43-44`、`rl/selftest.py:227,230` 调用；模块内 `run_training` 在 `opponent=="heuristic"` 时使用（L130-131）。
 - 置信度: 已确认
 
-#### 2.133.2 FollowerOpponent [L52-114]
+#### 2.139.2 FollowerOpponent [L52-114]
 - 类型: class
 - 签名: `class FollowerOpponent:`
 - 作用: 把 `FollowerPolicy` 包装成 `RLEnv` 的 player-1 对手，自带独立的 `BeliefInference`（追踪 player-0 出牌）+ `BeliefPlanner`，并在每步记录完整轨迹供 flow 联赛双侧收集。
@@ -19606,7 +19996,7 @@
 - 调用: 被 `rl/evaluate.py:29,164`、`rl/flow_league.py:45,266`、`rl/run_league.py:58,376,667`、`rl/train_solo.py:40,818`、`rl/human_play.py:44,76`、`rl/selftest.py:3683/3913/3986/4104` 引用；本模块内 `run_training` 在 `opponent=="main_policy"` 时构造（L135）。
 - 置信度: 已确认
 
-##### 2.133.2.1 FollowerOpponent.__init__ [L60-72]
+##### 2.139.2.1 FollowerOpponent.__init__ [L60-72]
 - 类型: method
 - 签名: `__init__(self, policy, env, belief=None, planner=None, deterministic=True, use_plan_biases=False)`
 - 作用: 绑定策略与环境，缺省构造独立信念/规划器，并按 `use_plan_biases` 决定是否开启策略侧 plan 软偏置。
@@ -19621,7 +20011,7 @@
 - 实现: 逐字段赋值（L62-67）；`self.hidden = None`（L66）；`self.policy.plan_biases_enabled = bool(use_plan_biases)`（L70）；`self._last_step = None`（L72，注释说明每步在 `__call__` 刷新）。
 - 置信度: 已确认
 
-##### 2.133.2.2 FollowerOpponent.observe_opponent_played [L74-77]
+##### 2.139.2.2 FollowerOpponent.observe_opponent_played [L74-77]
 - 类型: method
 - 签名: `observe_opponent_played(self, played_cards)`
 - 作用: 用 player-0（训练侧 agent）本 tick 打出的卡名列表更新对手信念。
@@ -19631,7 +20021,7 @@
 - 实现: `for c in played_cards: self.belief.update(None, c)`（L76-77）——第一参数传 `None`（本类无 obs 参与该更新）。
 - 置信度: 已确认
 
-##### 2.133.2.3 FollowerOpponent.reset [L79-82]
+##### 2.139.2.3 FollowerOpponent.reset [L79-82]
 - 类型: method
 - 签名: `reset(self)`
 - 作用: 清空隐状态、信念与上一步轨迹记录（每局开始/结束时调用）。
@@ -19640,7 +20030,7 @@
 - 实现: `self.hidden = None`、`self.belief.reset()`、`self._last_step = None`（L80-82）。
 - 置信度: 已确认
 
-##### 2.133.2.4 FollowerOpponent.__call__ [L84-110]
+##### 2.139.2.4 FollowerOpponent.__call__ [L84-110]
 - 类型: method
 - 签名: `__call__(self, obs)`
 - 作用: 对一个 player-1 观测产出 `ActionBundle`（供 `RLEnv._run_opponent` 调用），并缓存本步完整轨迹。
@@ -19651,7 +20041,7 @@
 - 调用: 由 `RLEnv._run_opponent` 以 `self.opponent(obs1)` 形式调用（`env_wrapper.py:496`）；内部调用 `BeliefInference.encode/state`、`BeliefPlanner.plan`、`FollowerPolicy.act`。
 - 置信度: 已确认
 
-##### 2.133.2.5 FollowerOpponent.take_last_step [L112-114]
+##### 2.139.2.5 FollowerOpponent.take_last_step [L112-114]
 - 类型: method
 - 签名: `take_last_step(self)`
 - 作用: 取出最近一步的 player-1 侧轨迹 dict（flow 双侧收集用）。
@@ -19660,7 +20050,7 @@
 - 实现: 直接 `return self._last_step`（L114）。
 - 置信度: 已确认
 
-#### 2.133.3 run_training [L117-239]
+#### 2.139.3 run_training [L117-239]
 - 类型: function
 - 签名: `run_training(total_steps, n_envs=1, batch_size=128, update_interval=128, lr=3e-4, gamma=0.99, gae_lambda=0.95, clip=0.2, plan_prophet_prob=0.3, plan_dropout=0.1, belief_dropout=0.1, seed=0, opponent="random", main_policy_path=None, hidden_dim=128, save="follower.pt", eval_every=2000, max_ep_steps=600, prophet_model=None, init_from=None)`
 - 作用: 单环境在线 PPO 训练循环：按 step 采集 `ActionBundle`、记录 transition（含 init_hidden/掩码/优势/回报），跨局累积到 `update_interval` 后更新策略，周期性评估并最终保存 checkpoint。
@@ -19687,7 +20077,7 @@
 - 调用: 模块底部 CLI（L266-283）与 `rl/train_exploiter.py:105-113`（`opponent="main_policy"`）调用；内部调用 `heuristic_opponent`、`FollowerOpponent`、`BeliefInference`、`BeliefPlanner`、`ProphetPlanner`、`FollowerPolicy`、`PPOTrainer`、`save_checkpoint`/`load_checkpoint`、`evaluate`。
 - 置信度: 已确认
 
-#### 2.133.4 evaluate [L242-262]
+#### 2.139.4 evaluate [L242-262]
 - 类型: function
 - 签名: `evaluate(policy, belief, belief_planner, n_games=5, seed=0)`
 - 作用: 用确定性动作、`BeliefPlanner` 计划、随机对手跑 `n_games` 局，返回胜率与平均累计奖励。
@@ -19704,7 +20094,7 @@
 
 ---
 
-### 2.134 `src/clasher_new/rl/train_prophet.py`
+### 2.140 `src/clasher_new/rl/train_prophet.py`
 
 - **分析组**：G044　**行数**：158　**AST 符号数**：12
 
@@ -19716,7 +20106,7 @@
 - 顶层数据表/字典: 无。
 - 模块级路径注入: L16-18 把 `src/clasher_new`（`__file__` 上两级）插入 `sys.path` 以便 `import rl.*`。
 
-#### 2.134.1 _build_priv [L35-43]
+#### 2.140.1 _build_priv [L35-43]
 - 类型: function
 - 签名: `_build_priv(env, obs)`
 - 作用: 归一化特权向量（P2：塔血/圣水/牌序都压到 0..1）（L36）。
@@ -19728,14 +20118,14 @@
 - 调用: 被本文件 `ProphetEnv._augment` L67 与 `prophet_policy_to_plan` L118 调用。
 - 置信度: 已确认
 
-#### 2.134.2 ProphetEnv [L46-75]
+#### 2.140.2 ProphetEnv [L46-75]
 - 类型: class（bases=['gym.Env']）
 - 签名: `class ProphetEnv(gym.Env):`
 - 作用: 给先知用的特权环境：观测 = 标准 obs + priv 向量，动作 = 单卡（L47）。
 - 实现: 内部持有 `self.env = RLEnv(**env_kwargs)`（L50），重建 observation_space 在标准 grid/hand/elixir/next_card/time 之上追加 `priv` Box（L52-59），动作空间为 `MultiDiscrete([5, GRID_H, GRID_W])`（L60），即 slot(0..4) × y × x。其余属性经 `__getattr__` 透传（L74-75）。
 - 置信度: 已确认
 
-##### 2.134.2.1 ProphetEnv.__init__ [L49-60]
+##### 2.140.2.1 ProphetEnv.__init__ [L49-60]
 - 类型: method
 - 签名: `__init__(self, **env_kwargs)`
 - 作用: 构造内层 RLEnv 并构造特权观测/动作空间。
@@ -19745,7 +20135,7 @@
 - 实现: L50 建内层 env；L51 取内层 `observation_space["grid"].shape` 存入局部 `grid_shape`（该局部变量后续未被使用）；L52-59 用 `gym.spaces.Dict` 重建 observation_space，逐键复用内层 grid/hand/elixir/next_card/time 空间，并新增 `"priv": gym.spaces.Box(low=0.0, high=1.0, shape=(PRIV_DIM,), dtype=np.float32)`；L60 设 `action_space = gym.spaces.MultiDiscrete([5, GRID_H, GRID_W])`。
 - 置信度: 已确认
 
-##### 2.134.2.2 ProphetEnv.reset [L62-64]
+##### 2.140.2.2 ProphetEnv.reset [L62-64]
 - 类型: method
 - 签名: `reset(self, *, seed=None, options=None)`
 - 作用: 重置内层 env 并把观测增强出 priv。
@@ -19756,7 +20146,7 @@
 - 实现: L63 调 `self.env.reset(seed=seed, options=options)` 得 `(obs, info)`；L64 返回 `self._augment(obs), info`。
 - 置信度: 已确认
 
-##### 2.134.2.3 ProphetEnv._augment [L66-67]
+##### 2.140.2.3 ProphetEnv._augment [L66-67]
 - 类型: method
 - 签名: `_augment(self, obs)`
 - 作用: 把 priv 向量并入观测 dict。
@@ -19766,7 +20156,7 @@
 - 实现: L67 用 dict 解包复制 obs 并追加 `"priv": _build_priv(self.env, obs)`，不改动原 obs。
 - 置信度: 已确认
 
-##### 2.134.2.4 ProphetEnv.step [L69-72]
+##### 2.140.2.4 ProphetEnv.step [L69-72]
 - 类型: method
 - 签名: `step(self, action)`
 - 作用: 把 MultiDiscrete 单卡动作转 ActionBundle 提交给内层 env，并增强返回观测。
@@ -19776,7 +20166,7 @@
 - 实现: L70 `bundle = legacy_action_to_bundle(action)`（来自 `rl.env_wrapper`）；L71 调内层 `self.env.step(bundle)`；L72 用 `self._augment(obs)` 增强后连同 r/term/trunc/info 返回。
 - 置信度: 已确认
 
-##### 2.134.2.5 ProphetEnv.__getattr__ [L74-75]
+##### 2.140.2.5 ProphetEnv.__getattr__ [L74-75]
 - 类型: method
 - 签名: `__getattr__(self, name)`
 - 作用: 未定义属性全部透传给内层 `self.env`。
@@ -19786,14 +20176,14 @@
 - 实现: L75 单行透传。注意 `__init__` 中任何在 `self.env` 赋值之前对被访问属性的查找都会递归进入此方法（潜在 AttributeError 风险），源码未做防护。
 - 置信度: 已确认
 
-#### 2.134.3 ProphetExtractor [L78-109]
+#### 2.140.3 ProphetExtractor [L78-109]
 - 类型: class（bases=['BaseFeaturesExtractor']）
 - 签名: `class ProphetExtractor(BaseFeaturesExtractor):`
 - 作用: SB3 特征提取器：把特权 Dict 观测（grid/hand/elixir/next_card/time/priv）编码成 features_dim 维向量。
 - 实现: 实体嵌入 `nn.Embedding(len(ENTITY_NAMES), 8)`（L81）；输入通道 `in_ch = (GRID_C - 1) + 8 + 4`（L82，即去掉原始 card id 通道后接 8 维嵌入与 4 类卡类型 one-hot）；三层 CNN（32→64→64，两次 stride=2，Flatten）（L83-88）；用 dummy 张量前向探测 cnn 输出维度（L89-91）；全连接 `fc = nn.Linear(cnn_out + 5 * 8 + 3 + PRIV_DIM, features_dim)`（L92，手牌 5 张 × 8 维嵌入 + 3 维 extra + PRIV_DIM）。
 - 置信度: 已确认
 
-##### 2.134.3.1 ProphetExtractor.__init__ [L79-92]
+##### 2.140.3.1 ProphetExtractor.__init__ [L79-92]
 - 类型: method
 - 签名: `__init__(self, observation_space: gym.spaces.Dict, features_dim: int = 256)`
 - 作用: 构造实体嵌入、CNN 与全连接层。
@@ -19804,7 +20194,7 @@
 - 实现: L80 `super().__init__(observation_space, features_dim)`；L81 建 Embedding；L82 计算 in_ch；L83-88 CNN 定义（各 Conv2d 后接 ReLU）；L89-91 `with torch.no_grad()` 下用 `torch.zeros(1, in_ch, GRID_H, GRID_W)` 前向取 `self.cnn(dummy).shape[1]` 得 cnn_out；L92 建 fc。GRID_H/GRID_W/GRID_C 从 `rl/observation.py` 导入（该处 L83-84 定义 `GRID_H, GRID_W = 32, 18`、`GRID_C = 15`）。
 - 置信度: 已确认
 
-##### 2.134.3.2 ProphetExtractor.forward [L94-109]
+##### 2.140.3.2 ProphetExtractor.forward [L94-109]
 - 类型: method
 - 签名: `forward(self, observation)`
 - 作用: 前向拼接 grid CNN 特征、手牌嵌入、extra 与 priv，过 fc+ReLU 输出。
@@ -19814,7 +20204,7 @@
 - 实现: L95-98 取 grid/hand(long)/elixir/priv；L99-100 `extra = cat([elixir, next_card.float(), time.float()], dim=1)`；L101-102 取 `grid[..., 0]` 为 card_ids 并做嵌入；L103 `rest = grid[..., 1:]`；L104 取 `rest[..., 2]` 为真实卡类型通道（注释标 P2 4.4）；L105 做 `num_classes=4` 的 one-hot；L106 拼 `[rest, card_vecs, ct_oh]` 并 `permute(0,3,1,2)` 转成 NCHW；L107 过 CNN；L108 手牌嵌入 flatten；L109 拼接后过 fc 再 ReLU 返回。
 - 置信度: 已确认
 
-#### 2.134.4 prophet_policy_to_plan [L112-138]
+#### 2.140.4 prophet_policy_to_plan [L112-138]
 - 类型: function
 - 签名: `prophet_policy_to_plan(model, obs, env) -> PlanToken`
 - 作用: 把 RL 先知（SB3 PPO）输出适配成 PlanToken，供 follower 蒸馏（P1-13）（L113）。
@@ -19827,7 +20217,7 @@
 - 调用: 被 `rl/train_follower.py:153` 以惰性 import 方式调用（`from rl.train_prophet import prophet_policy_to_plan`），用于 make_plan 蒸馏链路。
 - 置信度: 已确认
 
-#### 2.134.5 main [L141-154]
+#### 2.140.5 main [L141-154]
 - 类型: function
 - 签名: `main()`
 - 作用: 命令行入口：建特权环境并用 SB3 PPO 训练先知，最后 save。
@@ -19839,7 +20229,7 @@
 
 ---
 
-### 2.135 `src/clasher_new/rl/train_solo.py`
+### 2.141 `src/clasher_new/rl/train_solo.py`
 
 - **分析组**：G005　**行数**：1745　**AST 符号数**：25
 
@@ -19862,7 +20252,7 @@
   - `_PFSP_GATE_PENALTY = 0.2` — L154；门禁降权系数
 - 顶层数据表/字典: `_OPP_MIX`（L145）是唯一模块级字典：键为对手类型（`frozen`/`hist`/`defend`/`rand_anchor`），值为采样概率权重；另 `DEFAULT_SOLO_DECK`（L56）是模块级列表，元素为引擎卡名。其余模块级名字均为标量常量或函数别名。
 
-#### 2.135.1 _rand_anchor_warns [L72-77]
+#### 2.141.1 _rand_anchor_warns [L72-77]
 - 类型: function
 - 签名: `_rand_anchor_warns(winrate, floor=RAND_ANCHOR_WARN_FLOOR)`
 - 作用: 判断"vs 固定随机锚点胜率"是否低于报警线，返回告警字符串列表（空 = 通过）。
@@ -19874,7 +20264,7 @@
 - 调用: 被 `run_solo` 内的 `eval_and_write`（L1405）与 `anchor_point`（L1472）调用；被 `rl/selftest.py:4688` 直接调用做单测。
 - 置信度: 已确认
 
-#### 2.135.2 _make_rand_anchor [L80-104]
+#### 2.141.2 _make_rand_anchor [L80-104]
 - 类型: function
 - 签名: `_make_rand_anchor(cfg, belief_dim, device=None)`
 - 作用: 用固定种子构造一个随机初始化的 `FollowerPolicy` 作为"固定随机锚点"策略，构造过程不扰动调用方的 torch CPU 随机序列。
@@ -19887,7 +20277,7 @@
 - 调用: 被 `_OpponentPool.__init__`（L377）与 `run_solo`（L1196）调用；被 `rl/selftest.py:3981` 与 L4662 附近测试导入使用。
 - 置信度: 已确认
 
-#### 2.135.3 resolve_deck_set [L107-126]
+#### 2.141.3 resolve_deck_set [L107-126]
 - 类型: function
 - 签名: `resolve_deck_set(deck_set: str)`
 - 作用: 把 `cfg.deck_set` 字符串解析为 `(镜像卡组, defend 对手卡组池)` 二元组。
@@ -19898,7 +20288,7 @@
 - 调用: 被 `run_solo`（L1062）调用，结果分别用作 `solo_env(deck0=, deck1=)` 与 `_OpponentPool(defender_deck_pool=)`。
 - 置信度: 已确认
 
-#### 2.135.4 solo_env [L157-161]
+#### 2.141.4 solo_env [L157-161]
 - 类型: function
 - 签名: `solo_env(cfg, seed, deck0=None, deck1=None)`
 - 作用: 构造一个无内置对手、双方固定卡组的镜像 `RLEnv`。
@@ -19912,7 +20302,7 @@
 - 调用: 被 `run_solo`（L1064）调用；被 `rl/selftest.py:1788` 与 `2636/2641` 用于串并行评估一致性测试。
 - 置信度: 已确认
 
-#### 2.135.5 _draw_penalty [L164-167]
+#### 2.141.5 _draw_penalty [L164-167]
 - 类型: function
 - 签名: `_draw_penalty(cfg) -> float`
 - 作用: 取"平局惩罚"数值，"平局 = 失败"语义下平局不再免费。
@@ -19923,7 +20313,7 @@
 - 调用: 被 `run_solo` 中三处使用：僵局早停补结算（L1559）、局末截断结算（L1613）、以及 `eval_solo`（L769）的截断结算。
 - 置信度: 已确认
 
-#### 2.135.6 _sync_frozen_copy [L170-172]
+#### 2.141.6 _sync_frozen_copy [L170-172]
 - 类型: function
 - 签名: `_sync_frozen_copy(main, opp)`
 - 作用: 把 main 当前权重整体拷给目标策略（冻结副本同步）。
@@ -19935,7 +20325,7 @@
 - 调用: 被 `run_solo` 调用（L1136 开局、L1242-1243 对照组初始化、L1388 baseline_prev 推进、L1727 周期同步）；被 `rl/selftest.py:1795/2631` 调用。
 - 置信度: 已确认
 
-#### 2.135.7 _collect_hist_ckpts [L175-221]
+#### 2.141.7 _collect_hist_ckpts [L175-221]
 - 类型: function
 - 签名: `_collect_hist_ckpts(folder, max_n=_HIST_POOL_MAX, extra_dirs=None)`
 - 作用: 收集 solo 输出目录（及可选补种目录）里的 `solo_main_<step>.pt` 历史 checkpoint 路径，本目录优先、整体上限 `max_n`。
@@ -19948,7 +20338,7 @@
 - 调用: 被 `_OpponentPool.__init__`（L354）与 `_OpponentPool.refresh_hist`（L422）调用；被 `rl/selftest.py:3678/3909` 导入用于测试。
 - 置信度: 已确认
 
-#### 2.135.8 _dedup_history [L224-231]
+#### 2.141.8 _dedup_history [L224-231]
 - 类型: function
 - 签名: `_dedup_history(history, step)`
 - 作用: 从历史曲线列表中剔除与当前 `step` 相同的条目（同 step 只留一条），供评估落盘前调用。
@@ -19960,7 +20350,7 @@
 - 调用: 被 `run_solo` 的 `eval_and_write`（L1284）调用；被 `rl/selftest.py:3861` 导入用于测试。
 - 置信度: 已确认
 
-#### 2.135.9 _check_gates [L234-306]
+#### 2.141.9 _check_gates [L234-306]
 - 类型: function
 - 签名: `_check_gates(stats, cfg, path=None)`
 - 作用: 按 `cfg.gates` 对行为指标做门禁/报警检查：首个评估点只建立基线，后续点与基线比较，**只报警不中断训练**，并把报告写进 `gates.json`。
@@ -19973,7 +20363,7 @@
 - 调用: 被 `run_solo` 的 `eval_and_write`（L1386）调用；被 `rl/selftest.py:3861` 导入用于测试。实现内调用 `_write_gate_report`（L270、L300）。
 - 置信度: 已确认
 
-#### 2.135.10 _write_gate_report [L309-317]
+#### 2.141.10 _write_gate_report [L309-317]
 - 类型: function
 - 签名: `_write_gate_report(path, report)`
 - 作用: 把门禁报告 JSON 写盘（目录不存在则创建），写失败只打印不抛。
@@ -19985,7 +20375,7 @@
 - 调用: 仅被 `_check_gates`（L270、L300）调用。
 - 置信度: 已确认
 
-#### 2.135.11 _OpponentPool [L321-510]
+#### 2.141.11 _OpponentPool [L321-510]
 - 类型: class
 - 签名: `class _OpponentPool:`
 - 作用: 训练对手选择器，按 `opp_mix` 概率在 frozen / hist / defend / rand_anchor 四类对手间采样，维护 hist checkpoint 池与其 PFSP 胜率统计，并统计各类型累计局数。
@@ -19994,7 +20384,7 @@
 - 实现: 类 docstring（L322-334）说明四类对手语义：frozen 返回主冻结副本；hist 从历史池 PFSP 采样并载入专用策略后包 `FollowerOpponent`；defend 是真防守脚本 `SelfDefenderPolicy`；rand_anchor 是固定随机锚点、确定性决策、永不参与训练/同步/PFSP。实例属性在 `__init__` 中建立：`cfg/env/frozen_side/rng/device/defender/mix/hist_seed_dirs/hist_paths/pfsp_*/_pfsp/_hist_policy/_hist_side/_loaded_path/_last_kind/_last_hist_id/kind_counts/rand_anchor_side`，其中 `rand_anchor_side` 仅在 `mix["rand_anchor"] > 0` 时构造。类内方法：`_reindex_hist`（稳定 id）、`refresh_hist`（重扫磁盘）、`sample`（计数+出口）、`_sample_kind`（概率分支）、`record`（PFSP 回填）、`_ensure_hist`（惰性载入 hist ckpt）。
 - 置信度: 已确认
 
-##### 2.135.11.1 _OpponentPool.__init__ [L336-401]
+##### 2.141.11.1 _OpponentPool.__init__ [L336-401]
 - 类型: method
 - 签名: `__init__(self, cfg, env, frozen_side, rng, device, defender_deck_pool=None, hist_seed_dirs=None)`
 - 作用: 建立四类对手所需的全部状态：防守脚本、hist 路径池、PFSP 实例、可选随机锚点，并打印对手池构成。
@@ -20010,7 +20400,7 @@
 - 实现: L338 局部导入 `SelfDefenderPolicy`；L339-343 绑定 `cfg/env/frozen_side/rng/device`；L346-347 用 `seed=cfg.seed + 7` 构造 `self.defender`；L349-350 解析补种目录；L352 `self.mix = dict(cfg.opp_mix or _OPP_MIX)`；L354 用 `_collect_hist_ckpts(cfg.folder(), extra_dirs=seed_dirs)` 建初始 hist 池；L356-359 从 cfg 读 PFSP 参数并各自回退 `_PFSP_*`；L360-362 构造 `_PFSP(beta=1.0, seed=cfg.seed+11, alpha=, gate_hi=, gate_penalty=)`；L363 `_reindex_hist()`；L364-370 初始化 `_hist_policy/_hist_side/_loaded_path/_last_kind/_last_hist_id/kind_counts`。L373-382：若 `mix["rand_anchor"] > 0`，先用 `BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0).encode(None,None)` 的长度测 belief 维度，再 `_make_rand_anchor(cfg, _ab_dim, device=device)` 建锚点策略，并用 `seed=cfg.seed+13` 的 belief 包成确定性 `FollowerOpponent` 存入 `rand_anchor_side`。L383-401 打印：有 hist 时打印 ckpt 数与其中来自补种目录的个数及四类 mix 值；无 hist 时打印退化后的归一化配比（除以 `1 - mix["hist"]`，L393）；最后打印 PFSP 门禁参数与 hist 重扫间隔。
 - 置信度: 已确认
 
-##### 2.135.11.2 _OpponentPool._reindex_hist [L403-412]
+##### 2.141.11.2 _OpponentPool._reindex_hist [L403-412]
 - 类型: method
 - 签名: `_reindex_hist(self)`
 - 作用: 把 hist 池里每个路径映射到**稳定 id**（父目录名 + 文件名中段步数），供 PFSP 统计跨刷新保留。
@@ -20019,7 +20409,7 @@
 - 实现: L409-412 单个 dict 推导：对 `self.hist_paths` 每个 `p`，取 `os.path.basename(os.path.dirname(p))` 与 `os.path.basename(p)[len("solo_main_"):-len(".pt")]` 拼接。docstring L404-408 说明动机：旧实现用 `hist_<下标>`，池动态增长后下标与 ckpt 对应关系错位 ⇒ PFSP 胜率张冠李戴。
 - 置信度: 已确认
 
-##### 2.135.11.3 _OpponentPool.refresh_hist [L414-434]
+##### 2.141.11.3 _OpponentPool.refresh_hist [L414-434]
 - 类型: method
 - 签名: `refresh_hist(self, step=None)`
 - 作用: 重扫磁盘把本 run 自己的新快照纳入 hist 池（原实现只在 `__init__` 扫一次，`--fresh` 时本目录为空 ⇒ 整个 run 的 hist 槽全是外部旧 ckpt）。
@@ -20029,7 +20419,7 @@
 - 实现: L421 `old = set(self.hist_paths)`；L422 重新 `_collect_hist_ckpts(cfg.folder(), extra_dirs=self.hist_seed_dirs)`；L423 求差集得 `added`；L424-425 若既无新增且路径总数不变则提前返回 0；L426-427 更新 `hist_paths` 并 `_reindex_hist()`；L428-430 统计属于本目录的 ckpt 数（同时比较 `os.path.abspath` 与原始字符串两种形式）；L431-433 用 `_print_safe` 打印刷新信息与 `kind_counts` 累计对手局；L434 返回新增数。
 - 置信度: 已确认
 
-##### 2.135.11.4 _OpponentPool.sample [L436-446]
+##### 2.141.11.4 _OpponentPool.sample [L436-446]
 - 类型: method
 - 签名: `sample(self)`
 - 作用: 为本局选对手，并累加该类型的局数计数。
@@ -20038,7 +20428,7 @@
 - 实现: L444 调 `_sample_kind()` 取三元组；L445 把 `kind` 计入 `self.kind_counts`；L446 返回。docstring L439-442 记录 E2 的修复点：无 hist ckpt 时按剩余概率归一化，并修复旧实现缺陷——旧 `r < hist+defend` 未受 hist 保护，把 hist 空间误分给 defend（实测空目录 defend 0.78 / frozen 0.22，而打印宣称 0.286/0.714）。
 - 置信度: 已确认
 
-##### 2.135.11.5 _OpponentPool._sample_kind [L448-477]
+##### 2.141.11.5 _OpponentPool._sample_kind [L448-477]
 - 类型: method
 - 签名: `_sample_kind(self)`
 - 作用: 按 `opp_mix` 概率从四类对手中抽一类，返回 `(kind, side, hist_id)` 并记录 `_last_kind` / `_last_hist_id`（供 `record` 回填 PFSP）。
@@ -20047,7 +20437,7 @@
 - 实现: L449 `r = self.rng.random()`；L451 取 `r_anchor`。有 hist 池分支（L452-467）：`r < mix["hist"]` ⇒ `self._pfsp.sample("main", list(self.hist_paths))` 选一个路径、`_ensure_hist(opp_id)` 载入、返回 `("hist", self._hist_side, self._hist_id[opp_id])`（L453-457）；否则 `r -= mix["hist"]` 后在剩余空间依次判 `mix["defend"]`（L459-461）、`mix["defend"] + r_anchor`（且需 `r_anchor > 0` 且 `rand_anchor_side` 非 None，L462-465），都不中则 frozen（L466-467）。无 hist 池分支（L468-477）：`denom = 1.0 - mix["hist"]`，用 `mix["defend"]/denom` 与 `(mix["defend"]+r_anchor)/denom` 两个归一化门槛判 defend / rand_anchor / frozen。两个分支都在返回前设置 `_last_kind` 与 `_last_hist_id`。
 - 置信度: 已确认
 
-##### 2.135.11.6 _OpponentPool.record [L479-485]
+##### 2.141.11.6 _OpponentPool.record [L479-485]
 - 类型: method
 - 签名: `record(self, winner)`
 - 作用: 上一局结束后把结果回填给 PFSP（仅当上一局对手是 hist；frozen/defend/rand_anchor 局无操作）。
@@ -20057,7 +20447,7 @@
 - 实现: L483 条件 `self._last_kind == "hist" and self._last_hist_id is not None`；L484 用查表 `{0: 1.0, 1: 0.0}.get(winner, 0.5)` 把胜负映射为得分（平局/None ⇒ 0.5，顺带把其它非法值也映射为 0.5）；L485 `self._pfsp.update_winrate("main", self._last_hist_id, score)`。已核对 `rl/pfsp.py:46-51`：EMA 更新 `prev*(1-a) + score*a`。
 - 置信度: 已确认
 
-##### 2.135.11.7 _OpponentPool._ensure_hist [L487-510]
+##### 2.141.11.7 _OpponentPool._ensure_hist [L487-510]
 - 类型: method
 - 签名: `_ensure_hist(self, path)`
 - 作用: 惰性载入 hist checkpoint 为策略并包装成 `FollowerOpponent`；只有目标路径变化才重新 `load_checkpoint`。
@@ -20067,7 +20457,7 @@
 - 实现: L494 若 `self._loaded_path != path`：L495-497 先算 `bd`——若已有 `_hist_policy` 用其 `belief_dim`（尾部零拷贝兼容旧 23 维口径），否则用 `BeliefInference(opp_deck=env.deck1, n_particles=128, seed=0).encode(None,None)` 的长度；L498 `load_checkpoint(path, plan_dim=PLAN_DIM, belief_dim=bd)`（**直接用返回值**，docstring L490-492 强调不要"默认架构建网再 load_state_dict"，否则 hist 目录指向 E'/bypass 架构 run 时键集不匹配会崩，称"同类 bug 第三次"）；L499 `to_device`；L500-501 更新 `_loaded_path` 并把 `_hist_side` 置 None 以便重建。L502-507 若 `_hist_side` 为 None，用 `seed=cfg.seed+3` 的 `BeliefInference` 与 `deterministic=True` 包成 `FollowerOpponent`；L508-509 否则复用已有对手对象只换 `policy`。L510 `self._hist_side.reset()` 清 hidden。
 - 置信度: 已确认
 
-#### 2.135.12 write_solo_state [L513-547]
+#### 2.141.12 write_solo_state [L513-547]
 - 类型: function
 - 签名: `write_solo_state(path, cfg, history, step, status="running", deck=None, copy_every=None, target_steps=None, controls=None)`
 - 作用: 增量写 solo 训练状态 JSON（`solo_state.json`），供 dashboard `--solo` 实时读取；`controls` 会按 step 去重后累积进 `_controls_history`。
@@ -20086,7 +20476,7 @@
 - 调用: 被 `run_solo` 的 `eval_and_write`（L1382）与 `anchor_point`（L1475）调用；被 `rl/selftest.py:4739/4744/4753/4758` 用于测试对照组累积去重。
 - 置信度: 已确认
 
-#### 2.135.13 behavioral_metrics [L550-710]
+#### 2.141.13 behavioral_metrics [L550-710]
 - 类型: function
 - 签名: `behavioral_metrics(games)`
 - 作用: 从回放 games（我方 = player 0）计算三组行为质量指标（防守质量 / 进攻效率 / 资源组织），用于替代在镜像自对弈下恒 ≈0.5 的胜率曲线。
@@ -20097,7 +20487,7 @@
 - 调用: 被 `eval_solo`（L793，包在 try/except 里）与 `eval_solo_parallel`（L1030，同样 try/except）调用；被 `rl/selftest.py:3380/3861/3899` 导入用于测试。
 - 置信度: 已确认
 
-#### 2.135.14 eval_solo [L713-799]
+#### 2.141.14 eval_solo [L713-799]
 - 类型: function
 - 签名: `eval_solo(env, main, opp, n_games, max_steps, seed, cfg, record_replays=False, replays_dir=None, step=None, frozen_step=None, save_replays=True)`
 - 作用: 串行评估：main（确定性）对给定对手 `opp`（确定性）打 `n_games` 局，返回统计与回放（step 非 None 且 `save_replays` 时落盘 `league_<step>.pkl`）。
@@ -20119,7 +20509,7 @@
 - 调用: 被 `run_solo` 的 `eval_control`（L1260）与 `eval_and_write`（L1278）在 `eval_workers <= 1` 时调用；被 `eval_solo_parallel` 作为降级路径调用（L958、L998）；被 `rl/selftest.py:1796/2638` 调用。
 - 置信度: 已确认
 
-#### 2.135.15 _eval_worker_main [L802-913]
+#### 2.141.15 _eval_worker_main [L802-913]
 - 类型: function
 - 签名: `_eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs, seed_base, max_steps, n_particles, record, out_q)`
 - 作用: 并行评估的 spawn 子进程入口：自建 env/策略（权重从主进程 `state_dict` 载入），逐局走完 reset 链但只打分配到的局，结果经队列回传。
@@ -20138,7 +20528,7 @@
 - 调用: 被 `eval_solo_parallel` 作为 `ctx.Process(target=...)` 的 target（L982-984）启动。
 - 置信度: 已确认
 
-#### 2.135.16 _collect_worker_results [L916-938]
+#### 2.141.16 _collect_worker_results [L916-938]
 - 类型: function
 - 签名: `_collect_worker_results(procs, out_q, expected)`
 - 作用: 收齐 `expected` 份 worker 消息；用"超时 + 存活探针"兜住 worker 静默死亡导致的永久阻塞。
@@ -20151,7 +20541,7 @@
 - 调用: 被 `eval_solo_parallel`（L992）调用。
 - 置信度: 已确认
 
-#### 2.135.17 eval_solo_parallel [L941-1036]
+#### 2.141.17 eval_solo_parallel [L941-1036]
 - 类型: function
 - 签名: `eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg, n_workers=8, record_replays=False, replays_dir=None, step=None, frozen_step=None, save_replays=True)`
 - 作用: `eval_solo` 的进程池并行版：把 n_games 局按 `games[i::n_workers]` 交错分给 n_workers 个 spawn 进程，汇总统计与回放；任一 worker 失败则整体降级串行 `eval_solo`。
@@ -20162,7 +20552,7 @@
 - 调用: 被 `run_solo` 的 `eval_control`（L1254）与 `eval_and_write`（L1271）在 `cfg.eval_workers > 1` 时调用；被 `rl/selftest.py:2643` 用于与串行结果一致性测试。
 - 置信度: 已确认
 
-#### 2.135.18 run_solo [L1039-1740]
+#### 2.141.18 run_solo [L1039-1740]
 - 类型: function
 - 签名: `run_solo(cfg, resume=False, record_replays=True)`
 - 作用: 单人自对弈训练的完整主循环：建环境/策略/PPO/对手池，训练 `cfg.total_steps` 步，按周期评估、写盘、同步冻结副本，并在 ends 时补一次收尾评估。
@@ -20186,7 +20576,7 @@
 
 ---
 
-### 2.136 `src/clasher_new/rl/workers.py`
+### 2.142 `src/clasher_new/rl/workers.py`
 
 - **分析组**：G045　**行数**：107　**AST 符号数**：3
 
@@ -20197,7 +20587,7 @@
 - 关键模块级常量: `_PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))`（L33）— 本包上一级目录（`src/clasher_new`）；L34-35 若不在 `sys.path` 则插到 0 号位，保证子进程内能用扁平 `rl.*` import。除此之外无模块级常量。
 - 顶层数据表/字典: 无
 
-#### 2.136.1 _payload [L45-51]
+#### 2.142.1 _payload [L45-51]
 - 类型: function
 - 签名: `_payload(env, belief, bp, prophet, obs, rng)`
 - 作用: 用本地 env/信念/规划器算出下一个决策步要回传给主进程的三元组。
@@ -20213,7 +20603,7 @@
 - 调用: 被 `worker_main` 在 L91（reset 分支）与 L96（step 分支）调用；它调用 `env.get_prophet_state()`、`prophet.plan()`、`bp.plan()`、`belief.state()`、`belief.encode()`、`plan.to_vector()`。`PlanToken.to_vector` 定义在 `rl/plan_space.py:124`。
 - 置信度: 已确认
 
-#### 2.136.2 _apply_opponent [L54-68]
+#### 2.142.2 _apply_opponent [L54-68]
 - 类型: function
 - 签名: `_apply_opponent(env, spec)`
 - 作用: 按主进程传来的对手 spec 在本进程重建脚本对手并绑定到 env。
@@ -20225,7 +20615,7 @@
 - 调用: 被 `worker_main` 在 L88（"reset" 消息）调用；它调用 `ScriptedPolicy(...)`（rl/opponents.py:76-103，其 `deck()` 在 L96-103 按 deck_pool/pool 决定卡组）。
 - 置信度: 已确认
 
-#### 2.136.3 worker_main [L71-107]
+#### 2.142.3 worker_main [L71-107]
 - 类型: function
 - 签名: `worker_main(worker_id, seed, reward_weights, in_q, out_q, card_level=None)`
 - 作用: 子进程主循环：建 env/信念/规划器，然后严格按「一条消息进、一条消息出」同步处理 mask/reset/step/close 四类指令。
@@ -20243,7 +20633,7 @@
 
 ---
 
-### 2.137 `src/clasher_new/run_raw_capture.py`
+### 2.143 `src/clasher_new/run_raw_capture.py`
 
 - **分析组**：G038　**行数**：72　**AST 符号数**：2
 
@@ -20265,7 +20655,7 @@
   - `player_identity = None`（L39）— 同上，只被 `global` 声明，函数体内未赋值（实际赋值的是 `visualizer.local_player_index`，L55）。
 - 顶层数据表/字典: `entities = {}`（L37）为空 dict，无键值语义可述。
 
-#### 2.137.1 run_raw_capture.adb [L7-13]
+#### 2.143.1 run_raw_capture.adb [L7-13]
 - 类型: function
 - 签名: `adb(*args)`
 - 作用: 以 `check=True, text=True, capture_output=True` 调用 `adb` 并把给定参数逐个透传。
@@ -20276,7 +20666,7 @@
 - 调用: 被模块顶层调用 4 次：L23（forward 27042）、L24（chmod 755 frida-server）、L25（后台启动 frida-server）、L27（pidof）。
 - 置信度: 已确认
 
-#### 2.137.2 run_raw_capture.mainloop [L41-69]
+#### 2.143.2 run_raw_capture.mainloop [L41-69]
 - 类型: function
 - 签名: `mainloop(visualizer=None)`
 - 作用: 创建 frida script、注册消息回调挂机 `SECONDS` 秒，然后 detach。
@@ -20291,7 +20681,7 @@
 
 ---
 
-### 2.138 `src/clasher_new/runs/_tmp_behavior_recount.py`
+### 2.144 `src/clasher_new/runs/_tmp_behavior_recount.py`
 
 - **分析组**：G046　**行数**：200　**AST 符号数**：7
 
@@ -20310,7 +20700,7 @@
   - `SUPPORT = {'Archer', 'IceWizard', 'Tesla', 'Skeletons'}` — 「后排/建筑」集合（L132）
 - 顶层数据表/字典: `A`（L22 建、L67-71 逐文件填充）是核心聚合表，键 = 回放文件名，值 = dict，字段含义：`games` 局数、`nframes` 总帧数、`ndeploys` 部署动作总数、`ndepframes` 含至少一个 deploy 的帧数、`nmulti` 同帧 ≥2 个 deploy 的帧数、`cards` 卡名→次数 Counter、`y_by_card` 卡名→落点 y 列表、`y_all` 全部落点 y、`elix_all` 每帧 `elixir0`、`elix_at` 部署帧的 `elixir0`、`game_peak` 每局 `elixir0` 峰值、`waits` 无部署连续帧段长度、`dep_events` 部署事件四元组列表 `(gi, t, card, x=idx2, y=idx3)`、`diffs` 帧间隔 `round(t-prev_t,3)` → 次数。另有局部统计字典：`h`（y 值直方图，L123）、`bygame`（局号→(t,x) 列表，L172）。回放 pickle 的顶层键经实测为 `{'schema', 'games'}`，每个 game 的键为 `{'meta','winner','frames'}`，每个 frame 的键为 `{'t','bundle','reward','opp_played','towers0','towers1','elixir0','elixir1','crown0','crown1','entities','cards'}`。
 
-#### 2.138.1 lane_of [L16-17]
+#### 2.144.1 lane_of [L16-17]
 - 类型: function
 - 签名: `lane_of(x)`
 - 作用: 把本地横坐标 x 粗判成左路 `'L'` 或右路 `'R'`。
@@ -20321,7 +20711,7 @@
 - 调用: 被 `seq`（L141）与「同路连续两次部署间隔」段（L178）调用。它不调用任何函数。
 - 置信度: 已确认
 
-#### 2.138.2 load [L19-20]
+#### 2.144.2 load [L19-20]
 - 类型: function
 - 签名: `load(fn)`
 - 作用: 按文件名从 `FULL` 取路径，读出回放 pickle 里的 `games` 列表。
@@ -20332,7 +20722,7 @@
 - 调用: 被主聚合循环（L24 `games = load(fn)`）和末尾「17 连空帧」检查（L187 `load(FOCUS)`）调用。它调用 `pickle.load`。
 - 置信度: 已确认
 
-#### 2.138.3 med [L73-73]
+#### 2.144.3 med [L73-73]
 - 类型: function
 - 签名: `med(v)`
 - 作用: 求中位数，空列表返回 NaN。
@@ -20343,7 +20733,7 @@
 - 调用: 被 `report` 多次调用（L98、L100、L103、L104、L108、L110）以及「同路连续部署间隔」段（L181）。它调用 `statistics.median`。
 - 置信度: 已确认
 
-#### 2.138.4 pct [L74-75]
+#### 2.144.4 pct [L74-75]
 - 类型: function
 - 签名: `pct(v, q)`
 - 作用: 取排序后「就近下取整索引」的分位数（不是插值分位数）。
@@ -20355,7 +20745,7 @@
 - 调用: 被 `report` 调用（L101 的 6 个分位、L104 的 p90/p99）与"同路连续部署间隔"段（L182 的 p10/p90）调用。它调用内置 `sorted`。
 - 置信度: 已确认
 
-#### 2.138.5 frac [L76-76]
+#### 2.144.5 frac [L76-76]
 - 类型: function
 - 签名: `frac(v, p)`
 - 作用: 求序列中满足谓词 `p` 的元素占比（百分数）。
@@ -20367,7 +20757,7 @@
 - 调用: 被 `report` 调用（L102 三个阈值、L109 两个 y 阈值、L110 一个 y 阈值）。它调用内置 `sum` 与谓词 `p`。
 - 置信度: 已确认
 
-#### 2.138.6 report [L84-110]
+#### 2.144.6 report [L84-110]
 - 类型: function
 - 签名: `report(names, label)`
 - 作用: 把 `A` 中指定若干回放文件的行为统计合并后打印成一张报表。
@@ -20379,7 +20769,7 @@
 - 调用: 模块顶层两次调用 `report([FOCUS], 'SCOPE L = ...')`（L112）与 `report(NAMES, 'SCOPE ALL = 11 files')`（L113）。它调用 `med`、`pct`、`frac`、`collections.Counter`、`statistics.mean`。
 - 置信度: 已确认
 
-#### 2.138.7 seq [L133-147]
+#### 2.144.7 seq [L133-147]
 - 类型: function
 - 签名: `seq(names, card0set, card1set, max_dt=10.0, margin=1, same_lane=True)`
 - 作用: 在指定文件的部署事件里找「先出 `card0set` 中的卡，随后 `max_dt` 秒内又在同一路更靠后（y 更小）出 `card1set` 中的卡」的配对。
@@ -20406,7 +20796,7 @@
 
 ---
 
-### 2.139 `src/clasher_new/runs/_tmp_ln_geom.py`
+### 2.145 `src/clasher_new/runs/_tmp_ln_geom.py`
 
 - **分析组**：G046　**行数**：148　**AST 符号数**：3
 
@@ -20419,7 +20809,7 @@
   - `out = []` — L136 建立的汇总列表，L143 append `analyze(...)` 结果，L148 `json.dumps` 打印
 - 顶层数据表/字典: `out` 为结果列表；L137-138 迭代 `(run, ck)` 两组：`("d1_long_100k","solo_main_100000.pt")`、`("critic_inert_probe_20k","solo_main_20000.pt")`；L141 额外取元数据 `meta = {k: md.get(k) for k in ("value_independent","value_bypass","hidden_dim")}`（仅当 `md` 是 dict）。`analyze` 返回的 dict 键见下。
 
-#### 2.139.1 load_sd [L30-33]
+#### 2.145.1 load_sd [L30-33]
 - 类型: function
 - 签名: `load_sd(run, name='solo_main_100000.pt')`
 - 作用: 同 `_tmp_ln_geom3.load_sd`，但默认文件名是 100k 的 ckpt。
@@ -20431,7 +20821,7 @@
 - 调用: 被模块顶层调用（L140 `sd, md = load_sd(run, ck)`）。它调用 `torch.load`。
 - 置信度: 已确认
 
-#### 2.139.2 frank_wolfe [L36-71]
+#### 2.145.2 frank_wolfe [L36-71]
 - 类型: function
 - 签名: `frank_wolfe(G, s, c, R, iters=40000)`
 - 作用: 在 64 维单纯形上最小化 `R*sqrt(max(λᵀGλ - (sᵀλ)²/K, 0)) + cᵀλ`（即 M 的对偶目标）。
@@ -20446,7 +20836,7 @@
 - 调用: 被 `analyze` 调用一次（L89 `lam, M_ball = frank_wolfe(G, s, c, R)`）。它调用内部 `obj`。
 - 置信度: 已确认
 
-#### 2.139.3 analyze [L74-133]
+#### 2.145.3 analyze [L74-133]
 - 类型: function
 - 签名: `analyze(state, tag)`
 - 作用: 从 state_dict 取 value 通路权重，算 M 的对偶值 `M_ball`、用对偶方向构造的 primal 对手 `M_sphere`，并打印可诊断量与 ALL-DEAD 判据。
@@ -20464,7 +20854,7 @@
 
 ---
 
-### 2.140 `src/clasher_new/runs/_tmp_ln_geom2.py`
+### 2.146 `src/clasher_new/runs/_tmp_ln_geom2.py`
 
 - **分析组**：G046　**行数**：133　**AST 符号数**：4
 
@@ -20477,7 +20867,7 @@
   - `res = []` — L118 建立的汇总列表，L128 append，L133 `json.dumps` 打印
 - 顶层数据表/字典: `res` 为结果列表；L119-123 迭代 5 组 `(run, ck)`（与 `_tmp_ln_geom3.py` 完全相同的 5 组）；L126 取 `meta` 三键（`value_independent`/`value_bypass`/`hidden_dim`）。`analyze` 返回 dict 键为 `tag / M_dual / M_primal / M_unit / per_unit_min_max / b2 / c_min / c_max`（L113-115）。
 
-#### 2.140.1 load_sd [L23-26]
+#### 2.146.1 load_sd [L23-26]
 - 类型: function
 - 签名: `load_sd(run, name)`
 - 作用: 加载 ckpt 并同时返回 state_dict 与原始对象（与 `_tmp_ln_geom3.load_sd` 同构）。
@@ -20489,7 +20879,7 @@
 - 调用: 被模块顶层调用（L125）。它调用 `torch.load`。
 - 置信度: 已确认
 
-#### 2.140.2 solve_dual [L29-58]
+#### 2.146.2 solve_dual [L29-58]
 - 类型: function
 - 签名: `solve_dual(G, s, cvec, R, iters=3000, tern=60)`
 - 作用: 向量化 Frank-Wolfe 求 M 的对偶最小值（`min_λ R*sqrt(λᵀGλ-(sᵀλ)²/K) + λᵀc`）。
@@ -20505,7 +20895,7 @@
 - 调用: 被 `analyze` 调用一次（L94 `lam, M_dual = solve_dual(G, s, c, R)`）。它调用内部 `obj_batch`。
 - 置信度: 已确认
 
-#### 2.140.3 solve_primal [L61-79]
+#### 2.146.3 solve_primal [L61-79]
 - 类型: function
 - 签名: `solve_primal(r, cvec, R, iters=60000, lr=0.05)`
 - 作用: 用投影次梯度上升求 `max_{||u||<=R, Σu=0} min_i (r_i·u + c_i)`，即 M 的原问题值。
@@ -20520,7 +20910,7 @@
 - 调用: 被 `analyze` 调用一次（L95 `M_primal, u = solve_primal(r, c, R)`）。它不调用其它自定义函数。
 - 置信度: 已确认
 
-#### 2.140.4 analyze [L82-115]
+#### 2.146.4 analyze [L82-115]
 - 类型: function
 - 签名: `analyze(sd, tag)`
 - 作用: 取 value 通路权重，同时算 M 的对偶解与原问题解（含 gap）、对偶方向构造的 M_unit，以及两条判据。
@@ -20538,7 +20928,7 @@
 
 ---
 
-### 2.141 `src/clasher_new/runs/_tmp_ln_geom3.py`
+### 2.147 `src/clasher_new/runs/_tmp_ln_geom3.py`
 
 - **分析组**：G046　**行数**：162　**AST 符号数**：3
 
@@ -20551,7 +20941,7 @@
   - `res = []` — L146 建立的汇总列表，L159 逐个 append `analyze(...)` 的返回 dict，L162 `json.dumps` 打印
 - 顶层数据表/字典: `res` 为结果列表（L146-159）。迭代元组 `(run, ck)` 共 5 组（L147-151）：`("d1_long_100k","solo_main_100000.pt")`、`("critic_inert_probe_20k","solo_main_20000.pt")`、`("d1_league_20k","solo_main_20000.pt")`、`("d1_league_20k_r2","solo_main_20000.pt")`、`("d1_league_20k_r3","solo_main_20000.pt")`。
 
-#### 2.141.1 load_sd [L32-34]
+#### 2.147.1 load_sd [L32-34]
 - 类型: function
 - 签名: `load_sd(run, name)`
 - 作用: 加载 `runs/<run>/<name>` ckpt，兼容「带 state_dict 的元数据 dict」与「裸 state_dict」两种格式，并把两者都返回。
@@ -20563,7 +20953,7 @@
 - 调用: 被模块顶层循环调用（L152 `sd, md = load_sd(run, ck)`）。它调用 `torch.load`。第二个返回值 `md` 在 L152 之后**未被使用**（本文件不打印元数据）。
 - 置信度: 已确认
 
-#### 2.141.2 fw_simplex [L37-60]
+#### 2.147.2 fw_simplex [L37-60]
 - 类型: function
 - 签名: `fw_simplex(fn_val, fn_grad, n_lam, sign, iters=1200, tern=40)`
 - 作用: 在概率单纯形上做带精确线搜索的 Frank-Wolfe，求 `fn` 的最小值（`sign=+1`）或最大值（`sign=-1`）。
@@ -20579,7 +20969,7 @@
 - 调用: 被 `analyze` 调用两次（L101 `fw_simplex(f_M, g_M, m, +1)`、L102 `fw_simplex(f_N, g_N, m, -1)`）。它调用 `fn_val`、`fn_grad`。
 - 置信度: 已确认
 
-#### 2.141.3 analyze [L63-143]
+#### 2.147.3 analyze [L63-143]
 - 类型: function
 - 签名: `analyze(W, b, gamma, beta, W2, b2, n, tag, use_affine=True)`
 - 作用: 用 Sion 对偶 + FW 求「合法 LN 输出方向下 64 个预激活的最大值下确界 N」与「最小值上确界 M」，并用原问题方向前向、独立次梯度下降核对 N。
@@ -20605,7 +20995,7 @@
 
 ---
 
-### 2.142 `src/clasher_new/runs/_tmp_metric_id.py`
+### 2.148 `src/clasher_new/runs/_tmp_metric_id.py`
 
 - **分析组**：G046　**行数**：57　**AST 符号数**：1
 
@@ -20619,7 +21009,7 @@
   - `REPORT = [4.59, 3.50, 0.89, 3.19, 0.75, 2.11, 8.18, 5.16, 1.89, 0.69, 0.84, 0.73, 0.19, 0.00]` — 待复现的 14 个报告值（L13）
 - 顶层数据表/字典: `Ws`（L22）是 15 个 step 的 `value_enc_fc.weight` numpy 数组列表；`cand`（L24-26）是候选度量名 → 逐窗数值列表的 dict，键共 11 个：`frob/frob`、`frob/spec`、`spec/spec`、`frob/l1`、`maxabs/maxabs`、`rowwise_rms`、`frob/frobW0`、`frob/specW0`、`perElem_mean`、`frob/(frob/sqrt(mn))`、`rowsum_ratio`。
 
-#### 2.142.1 load [L16-19]
+#### 2.148.1 load [L16-19]
 - 类型: function
 - 签名: `load(step)`
 - 作用: 加载指定步数的 ckpt，取出 `value_enc_fc.weight`，转 float64 numpy 返回。
@@ -20645,7 +21035,7 @@
 
 ---
 
-### 2.143 `src/clasher_new/runs/_tmp_mm_debug.py`
+### 2.149 `src/clasher_new/runs/_tmp_mm_debug.py`
 
 - **分析组**：G047　**行数**：55　**AST 符号数**：1
 
@@ -20664,7 +21054,7 @@
   - `K = 400000` (L22)、批量 `20000` (L28, L29)、`torch.manual_seed(0)` (L21)、`lam_u = torch.full((64,), 1.0 / 64, ...)` (L44)、`rand_lam = ...Dirichlet(...).sample((20000,))` (L52) — 采样规模与固定种子；**`64` 是硬编码的整数**（L44, L49, L52），未从 `W.shape[0]` 推导
 - 顶层数据表/字典: 无（无模块级 dict/list 字面量；`sd` 是被载入的外部 state_dict）
 
-#### 2.143.1 f [L45-47]
+#### 2.149.1 f [L45-47]
 - 类型: function
 - 签名: `def f(lam):`（原文无类型注解、无返回注解）
 - 作用: 计算对偶侧目标值 —— 给定权重向量 `λ`（长度 64），返回 `R * ||x − mean(x)|| + c·λ`，其中 `x = rᵀ λ`；`x` 去均值后取 L2 范数即「以半径 R 的零和方向」对偶化后的那一项。
@@ -20677,7 +21067,7 @@
 
 ---
 
-### 2.144 `src/clasher_new/runs/_tmp_probe_maxpre.py`
+### 2.150 `src/clasher_new/runs/_tmp_probe_maxpre.py`
 
 - **分析组**：G046　**行数**：85　**AST 符号数**：0
 
@@ -20719,7 +21109,7 @@
 
 ---
 
-### 2.145 `src/clasher_new/runs/_tmp_scan_disp.py`
+### 2.151 `src/clasher_new/runs/_tmp_scan_disp.py`
 
 - **分析组**：G046　**行数**：113　**AST 符号数**：2
 
@@ -20735,7 +21125,7 @@
   - `prev = None`、`rows = []`、`all_names = None` — 扫描循环状态（L34-36）
 - 顶层数据表/字典: `rows` 是逐窗记录列表，每个元素 dict 的键：`win`（字符串 `"起->止"`）、`i`（窗序号）、`start`、`end`（步数）、`zero`（张量名→bool，是否逐位零位移）、`ratio_fro`（‖Δ‖/‖W_prev‖）、`ratio_curr`（‖Δ‖/‖W_curr‖）、`maxabs`（max|Δ|）、`relmax`（max(|Δ|/(|W_prev|+1e-12))）。该列表最终 `json.dump` 到 `runs/_tmp_disp_rows.json`（L112）。另有 `cnt`（L81，`(零位移窗数, 张量名)` 的列表，用于排序打印）。
 
-#### 2.145.1 load_sd [L15-19]
+#### 2.151.1 load_sd [L15-19]
 - 类型: function
 - 签名: `load_sd(step)`
 - 作用: 加载 `runs/d1_long_100k/solo_main_<step>.pt` 并只返回 state_dict。
@@ -20746,7 +21136,7 @@
 - 调用: 被模块顶层扫描循环调用（L38 `sd = load_sd(st)`）。它调用 `torch.load`。
 - 置信度: 已确认
 
-#### 2.145.2 frob [L22-23]
+#### 2.151.2 frob [L22-23]
 - 类型: function
 - 签名: `frob(t)`
 - 作用: 求张量的 Frobenius 范数（先转 float64 再取 norm）。
@@ -20769,7 +21159,7 @@
 
 ---
 
-### 2.146 `src/clasher_new/runs/_tmp_value_params.py`
+### 2.152 `src/clasher_new/runs/_tmp_value_params.py`
 
 - **分析组**：G047　**行数**：23　**AST 符号数**：0
 
@@ -20794,7 +21184,7 @@
 
 ---
 
-### 2.147 `src/clasher_new/runs/_tmp_variants.py`
+### 2.153 `src/clasher_new/runs/_tmp_variants.py`
 
 - **分析组**：G046　**行数**：92　**AST 符号数**：4
 
@@ -20810,7 +21200,7 @@
   - `SUP={'Archer','IceWizard','Tesla','Skeletons'}` — 后排/建筑集合（L57）
 - 顶层数据表/字典: `ev`（L27 建、L34 append）是焦点文件的部署事件列表，元素为 `(gi, fi, t, card, slot, x, y)`——注意这里的第 5 项 `b[1]` 是 **slot**，与 `_tmp_behavior_recount.py` 的四元组不同；`alive`（L27、L36）是 `(gi,fi) → 存活玩家 0 实体名集合` 的字典，由 `fr['entities']` 中满足 `len(e)>4 and e[4]==0 and e[3]>0` 的元素名构成；`kinds`（L13）是 bundle kind 计数 Counter。
 
-#### 2.147.1 load [L10-10]
+#### 2.153.1 load [L10-10]
 - 类型: function
 - 签名: `load(fn)`
 - 作用: 按文件名读取回放 pickle 的 `games` 列表。
@@ -20821,7 +21211,7 @@
 - 调用: 被两处调用：L15 `for g in load(fn)`（配对校验遍历全部文件）与 L26 `games=load(FOCUS)`。它调用 `pickle.load`。
 - 置信度: 已确认
 
-#### 2.147.2 ev_of [L38-38]
+#### 2.153.2 ev_of [L38-38]
 - 类型: function
 - 签名: `ev_of(gi, fi)`
 - 作用: 按局号过滤出该局的部署事件列表（形参 `fi` 未被使用）。
@@ -20833,7 +21223,7 @@
 - 调用: 无调用者（死代码）；它不调用其它自定义函数。
 - 置信度: 已确认
 
-#### 2.147.3 lane [L39-39]
+#### 2.153.3 lane [L39-39]
 - 类型: function
 - 签名: `lane(x)`
 - 作用: 把横坐标粗判成左路 `'L'` 或右路 `'R'`（与 `_tmp_behavior_recount.lane_of` 同逻辑）。
@@ -20844,7 +21234,7 @@
 - 调用: 被 `count` 调用（L50 `if samelane and lane(ax1)!=lane(ax0)`）。它不调用其它自定义函数。
 - 置信度: 已确认
 
-#### 2.147.4 count [L41-55]
+#### 2.153.4 count [L41-55]
 - 类型: function
 - 签名: `count(margin, cardset=None, swap=False, need_alive=False, max_dt=10.0, samelane=True)`
 - 作用: 按可调口径统计「Knight 之后 `max_dt` 秒内、同路、落在更靠后位置」的配对数，用于检验原断言的 0 是否由口径造成。
@@ -20868,7 +21258,7 @@
 
 ---
 
-### 2.148 `src/clasher_new/runs/_tmp_window.py`
+### 2.154 `src/clasher_new/runs/_tmp_window.py`
 
 - **分析组**：G047　**行数**：50　**AST 符号数**：1
 
@@ -20888,7 +21278,7 @@
   - 注释中出现的数字 `骑士=145` (L20)、`733 次部署` (L35) 为**字面量标签**：145/733 未在代码中由数据推出，L37 的百分比分母直接写死 `733`
 - 顶层数据表/字典: `FN`（basename → 路径，L7）；`SUP`（卡名集合，L19）；`bygame`（局号 → `(t, x)` 列表，L40 的 `collections.defaultdict(list)`）
 
-#### 2.148.1 lane [L18-18]
+#### 2.154.1 lane [L18-18]
 - 类型: function
 - 签名: `def lane(x): return 'L' if x<=8 else 'R'`
 - 作用: 把一维坐标 `x` 按阈值 8 二值化成路别标签：`x <= 8` 归 `'L'`，否则归 `'R'`。
@@ -20901,7 +21291,7 @@
 
 ---
 
-### 2.149 `src/clasher_new/server.py`
+### 2.155 `src/clasher_new/server.py`
 
 - **分析组**：G037　**行数**：107　**AST 符号数**：7
 
@@ -20915,7 +21305,7 @@
   - **注意**：L2 导入的 `Building` 在全文中**未被引用**（**已确认**：`Building` 仅 L2 出现）——冗余导入。
 - 顶层数据表/字典: 无
 
-#### 2.149.1 GameServer [L9-104]
+#### 2.155.1 GameServer [L9-104]
 - 类型: class
 - 作用: 双人联机对战服务端：接受 2 个连接 → 收齐双方卡组 → 建局 → 60Hz 主循环消费输入、推进模拟、广播状态。
 - 参数: 无（类本身）
@@ -20924,7 +21314,7 @@
 - 调用: 本仓内无其他模块引用 `GameServer`（**已确认**：全仓 grep 仅命中本文件 L9 与 L107）。属独立工具/实验代码。
 - 置信度: 已确认
 
-##### 2.149.1.1 GameServer.__init__ [L10-16]
+##### 2.155.1.1 GameServer.__init__ [L10-16]
 - 类型: method
 - 签名: `def __init__(self, host='10.235.130.132', port=9999):`
 - 作用: 记录监听地址并初始化连接表、输入队列、锁与战斗/卡组占位。
@@ -20936,7 +21326,7 @@
 - 调用: `__main__` L107。
 - 置信度: 已确认
 
-##### 2.149.1.2 GameServer.send [L18-20]
+##### 2.155.1.2 GameServer.send [L18-20]
 - 类型: method
 - 签名: `def send(self, conn, msg):`
 - 作用: 把一个消息对象以「JSON + 换行」编码后整包发出。
@@ -20948,7 +21338,7 @@
 - 调用: `broadcast` L24 与 `run` L72 调用。
 - 置信度: 已确认
 
-##### 2.149.1.3 GameServer.broadcast [L22-25]
+##### 2.155.1.3 GameServer.broadcast [L22-25]
 - 类型: method
 - 签名: `def broadcast(self, msg):`
 - 作用: 向所有已连接客户端逐个发送同一消息，单个失败静默忽略。
@@ -20959,7 +21349,7 @@
 - 调用: `run` L85、L99、L103 调用。
 - 置信度: 已确认
 
-##### 2.149.1.4 GameServer.get_state [L27-41]
+##### 2.155.1.4 GameServer.get_state [L27-41]
 - 类型: method
 - 签名: `def get_state(self):`
 - 作用: 把当前战斗快照序列化成可 JSON 化的 dict（供广播）。
@@ -20969,7 +21359,7 @@
 - 调用: `run` L99、L103 调用；结果被 `{**self.get_state()}` 展开进 `state` 消息。
 - 置信度: 已确认
 
-##### 2.149.1.5 GameServer.handle_client [L43-59]
+##### 2.155.1.5 GameServer.handle_client [L43-59]
 - 类型: method
 - 签名: `def handle_client(self, conn, player_id):`
 - 作用: 单连接读循环：按换行切分 JSON 消息，`deck` 消息写入卡组，其余消息压入该玩家的输入队列。
@@ -20981,7 +21371,7 @@
 - 调用: `run` L73 以 `threading.Thread(..., daemon=True).start()` 每客户端一线程。
 - 置信度: 已确认
 
-##### 2.149.1.6 GameServer.run [L61-104]
+##### 2.155.1.6 GameServer.run [L61-104]
 - 类型: method
 - 签名: `def run(self):`
 - 作用: 服务端主流程：监听并等到 2 名玩家、等双方卡组、建局、然后进入 60Hz 固定步长主循环消费输入并广播状态。
@@ -20995,7 +21385,7 @@
 
 ---
 
-### 2.150 `src/clasher_new/simulate_exchange.py`
+### 2.156 `src/clasher_new/simulate_exchange.py`
 
 - **分析组**：G035　**行数**：323　**AST 符号数**：4
 
@@ -21013,7 +21403,7 @@
   - `_ILLEGAL = {...}`（L157-160）— 部署失败时的空壳返回 dict，字段：`legal:False`、`reason:"deploy_failed"`、`card:None`、`pos:None`、`my_cost:0.0`、`opp_cost:0.0`、`my_towers:{}`、`opp_towers:{}`、`towers_lost:{"mine":[],"opp":[]}`、`my_units:{}`、`opp_units:{}`、`sim_time:0.0`（函数内 L182 用 `dict(_ILLEGAL)` 浅拷贝，随后 L183 单独重建 `towers_lost` 以避免共享内层 list）
 - 顶层数据表/字典: `_TOWER_IDS` / `_TOWER_NAMES` / `_PRINCESS` / `_ILLEGAL`（均见上，均为常量映射，非游戏数值表）
 
-#### 2.150.1 _tower_report [L50-56]
+#### 2.156.1 _tower_report [L50-56]
 - 类型: function
 - 签名: `_tower_report(sim, player_id)`
 - 作用: 报告 `player_id` 各塔的**当前血量绝对值**（注释说明：相对开打前快照的累计掉血由调用方自行记录）。
@@ -21025,7 +21415,7 @@
 - 调用: 本组文件内无调用点（`simulate_exchange` 用内嵌 `_report`）；跨模块调用点未在允许范围内确认 ⇒ 待确认
 - 置信度: 已确认（函数体与无内部调用点）
 
-#### 2.150.2 _threats_to [L59-77]
+#### 2.156.2 _threats_to [L59-77]
 - 类型: function
 - 签名: `_threats_to(sim, defender_id, dist_to_tower=10.0)`
 - 作用: 找出对 `defender_id` 构成威胁的敌方部队——已过河进入我方半场，或逼近我方存活公主塔。
@@ -21038,7 +21428,7 @@
 - 调用: 只被 `script_defender`（L90）调用。
 - 置信度: 已确认
 
-#### 2.150.3 script_defender [L80-154]
+#### 2.156.3 script_defender [L80-154]
 - 类型: function
 - 签名: `script_defender(sim, defender_id)`
 - 作用: 确定性基线防守（纯函数，无副作用）：威胁出现时从手牌选性价比最高的可出反制部队，给出「塔前迎击」候选落点（按优先级排序）。
@@ -21050,7 +21440,7 @@
 - 调用: 被 `simulate_exchange`（L242）在 `defender == "script"` 时按 tick 调用；`rl/opponents.py:126/157` 的「真防守脚本对手（9j A 层对手池组件）」import 它，注释说明候选落点由该类经 `env.battle` 的合法性真实执行。它调用了 `_threats_to`、`Card`、`p.can_play_card`。
 - 置信度: 已确认
 
-#### 2.150.4 simulate_exchange [L163-306]
+#### 2.156.4 simulate_exchange [L163-306]
 - 类型: function
 - 签名: `simulate_exchange(battle, player_id: int, card: str, pos, horizon: float = EXCHANGE_HORIZON_S, defender: str = "script", opponent_fn=None, dt: float = 1 / 60, defender_tick: float = DEFENDER_TICK_S)`
 - 作用: 推演「我方现在打出 `card@pos`」到 `horizon` 秒的交换结果（双方塔损 / 部队伤亡 / 圣水花销）；原 `battle` 不被修改。
@@ -21077,7 +21467,7 @@
 
 ---
 
-### 2.151 `src/clasher_new/special_eval.py`
+### 2.157 `src/clasher_new/special_eval.py`
 
 - **分析组**：G039　**行数**：18　**AST 符号数**：0
 
@@ -21097,12 +21487,12 @@
 - 调用: 被直接执行的脚本；同仓库内未见被 import（待确认是否存在外部调用方）。它调用了 `evaluate.SequentialEvalEnv`、`stable_baselines3.PPO.load`、`PPO.predict`、`PPO.policy.obs_to_tensor`、`PPO.policy.predict_values`、`torch.no_grad`。
 - 置信度: 已确认（"未被任何模块 import"这一点为待确认：未做全仓反向检索）
 
-#### 2.151.1 （无） [L-]
+#### 2.157.1 （无） [L-]
 - 本文件无函数/类定义（简报亦记为 0 符号）；上述模块级语句即其全部内容，已逐行说明。
 
 ---
 
-### 2.152 `src/clasher_new/spell_module.py`
+### 2.158 `src/clasher_new/spell_module.py`
 
 - **分析组**：G035　**行数**：358　**AST 符号数**：12
 
@@ -21122,7 +21512,7 @@
   - `TROOP_HP_PER_ELIXIR = 650.0`（L303）— 落点评分权重：部队血量 ≈ 650 HP/费（注释：Knight 1766/3≈590、Giant 3968/5≈794 的折中）
 - 顶层数据表/字典: 仅 `_PROFILE_CACHE`（L41，见上，是缓存而非静态数据表）。法术的原始数据表不在此模块，而来自 `card_utils.spells`（`{name: row}`，由 `card_utils.py:13` 从 spells JSON 构建）
 
-#### 2.152.1 _deals_damage [L54-61]
+#### 2.158.1 _deals_damage [L54-61]
 - 类型: function
 - 签名: `_deals_damage(card_name)`
 - 作用: 判断某张法术是否输出伤害（口径同 `rl/action_mask`，另补 `spells` 行的 damage / DOT）。
@@ -21133,7 +21523,7 @@
 - 调用: 被 `_calibrate`（L181）调用。`rl/action_mask.py` 有同口径逻辑（该文件 L117-119 注释明确「对塔伤害 = spell_module 引擎标定」并复用 `TOWER_HP_PER_ELIXIR_EARLY = 500.0` 与 `spell_module.TOWER_HP_PER_ELIXIR` 一致）。
 - 置信度: 已确认
 
-#### 2.152.2 _radius_m [L64-75]
+#### 2.158.2 _radius_m [L64-75]
 - 类型: function
 - 签名: `_radius_m(card_name)`
 - 作用: 返回溅射半径（世界单位 = 格），引擎口径：AreaEffect 用 `spells` 行 radius，弹道法术用 `projectileData.radius`。
@@ -21144,7 +21534,7 @@
 - 调用: 被 `_calibrate`（L182）调用，结果存入档案 `radius`，再被 `evaluate_cast`（L273）与 `best_cast`（L321）使用。`rl/action_mask.py:79` 定义同名私有函数 `_spell_radius_m`（本组未逐行核对其实现体，仅确认存在与注释所指的在位）。
 - 置信度: 已确认
 
-#### 2.152.3 _spell_effects [L78-92]
+#### 2.158.3 _spell_effects [L78-92]
 - 类型: function
 - 签名: `_spell_effects(card_name)`
 - 作用: 抽取 gamedata 能力标志（值伤之外的非伤害效果），供「什么情况用」层消费。
@@ -21155,7 +21545,7 @@
 - 调用: 被 `_calibrate`（L186）调用后存入档案 `effects`。本模块内无其它消费者（注释说供上层「什么情况用」层消费；具体消费者未在本组文件内出现 ⇒ 待确认）。
 - 置信度: 已确认
 
-#### 2.152.4 engine_resolution [L95-139]
+#### 2.158.4 engine_resolution [L95-139]
 - 类型: function
 - 签名: `engine_resolution(battle, player_id: int, card_name: str, pos, max_t: float = 15.0, dt: float = 1 / 60)`
 - 作用: 引擎实测口径——deepcopy 战场 → 真的 deploy 该法术 → 推演到法术实体消亡（DOT 走满生命周期）→ 逐实体比 hp 差；作为对账老师 / 数据集标签，原 battle 不被修改。
@@ -21171,7 +21561,7 @@
 - 调用: 被 `_measure`（L160）调用（标定老师）；被本文件 `__main__` 演示调用（L357）。模块 docstring 声明它是「对账老师 / 数据集标签」；`rl/selftest.py:2874` 的 `test_spell_module` 明确 import 了它（L2874 附近的 import 列表含 `get_spell_profile, evaluate_cast, best_cast` 与 engine_resolution 一并）以验证「evaluate_cast 预测 ≈ engine_resolution 实测」。它调用了 `sim.deploy_card`（`battle.py:2806`）与 `sim.step`（`battle.py:2652`）。
 - 置信度: 已确认
 
-#### 2.152.5 _measure [L142-169]
+#### 2.158.5 _measure [L142-169]
 - 类型: function
 - 签名: `_measure(card_name, level, dummy, spots, tower_target=False)`
 - 作用: 单场景标定：在一个新建的一次性战场里摆好靶子后施法，返回该场景下引擎实测的总伤害；部署/施法非法则换下一个候选位，全失败返回 0.0。
@@ -21186,7 +21576,7 @@
 - 调用: 被 `_calibrate` 三次调用（L194 部队靶 / L196 塔靶 / L198 建筑靶）。它调用了 `battle.BattleState`、`player.PlayerState`、`BattleState.deploy_card`、`engine_resolution`。
 - 置信度: 已确认
 
-#### 2.152.6 _calibrate [L172-201]
+#### 2.158.6 _calibrate [L172-201]
 - 类型: function
 - 签名: `_calibrate(card_name, level)`
 - 作用: 为一张法术构建完整能力档案：卡面元信息 + 三个场景的引擎实测伤害 + DOT 判定 + 非伤害效果标志。
@@ -21198,7 +21588,7 @@
 - 调用: 只被 `get_spell_profile`（L209）调用，结果进 `_PROFILE_CACHE`。它调用了 `_deals_damage`、`_radius_m`、`_spell_effects`、`_measure`。
 - 置信度: 已确认
 
-#### 2.152.7 get_spell_profile [L204-210]
+#### 2.158.7 get_spell_profile [L204-210]
 - 类型: function
 - 签名: `get_spell_profile(card_name, level=None, refresh=False)`
 - 作用: 法术能力档案查询（含引擎标定伤害），按 `(卡名, 等级)` 惰性缓存。
@@ -21211,7 +21601,7 @@
 - 调用: 外部消费者确认有：`rl/action_mask.py:131`（`from spell_module import get_spell_profile`）、`rl/belief_planner.py:268`（与 `best_cast`、`TOWER_HP_PER_ELIXIR` 一起 import）、`rl/mcts.py:262`。模块内被 `evaluate_cast`（L251）与 `best_cast`（L316）调用。
 - 置信度: 已确认
 
-#### 2.152.8 clear_profile_cache [L213-214]
+#### 2.158.8 clear_profile_cache [L213-214]
 - 类型: function
 - 签名: `clear_profile_cache()`
 - 作用: 清空标定缓存（强制下次查询重新标定）。
@@ -21221,7 +21611,7 @@
 - 调用: 在 `__all__` 中（L35）属公开 API。本组文件内无调用点；跨模块调用点未在本组范围内检索 ⇒ 待确认（未在本次允许范围内全仓确认）。
 - 置信度: 已确认（函数体）；调用方待确认
 
-#### 2.152.9 _hits_filters [L221-232]
+#### 2.158.9 _hits_filters [L221-232]
 - 类型: function
 - 签名: `_hits_filters(info, e)`
 - 作用: 判定引擎溅射的空中/地面过滤口径（对应引擎 `_deal_splash_damage`）是否命中实体 `e`。
@@ -21233,7 +21623,7 @@
 - 调用: 只被 `evaluate_cast`（L270）调用。是「静态估值」与「引擎真实结算」在空/地口径上对齐的关键函数。
 - 置信度: 已确认
 
-#### 2.152.10 evaluate_cast [L235-296]
+#### 2.158.10 evaluate_cast [L235-296]
 - 类型: function
 - 签名: `evaluate_cast(battle, player_id: int, card_name: str, pos)`
 - 作用: 静态落点估值——罩到哪些敌方实体、各吃多少伤（标定口径）、谁被砸死、击杀折多少费；零推演成本，原 battle 不被修改。
@@ -21247,7 +21637,7 @@
 - 调用: 被 `best_cast`（L332）调用；被 `rl/selftest.py:2874` 的 `test_spell_module` 直接测试（与 `engine_resolution` 对账）；模块 docstring 示例（L21）公开推荐用法。它调用了 `get_spell_profile`、`Card`、`_hits_filters`、`battle.arena.can_deploy_at`、`players[i].can_play_card`。docstring L14 声明其消费方为「规划器 / 观测特征批量调用」。
 - 置信度: 已确认
 
-#### 2.152.11 _score [L306-308]
+#### 2.158.11 _score [L306-308]
 - 类型: function
 - 签名: `_score(ev)`
 - 作用: 把 `evaluate_cast` 的返回字典折算成单一标量分数（击杀折费 + 塔/部队伤害折费）。
@@ -21258,7 +21648,7 @@
 - 调用: 只被 `best_cast`（L335）调用。`rl/action_mask.py:119` 另有同值常量 `TOWER_HP_PER_ELIXIR_EARLY = 500.0` 并注明与本模块一致（跨文件汇率同源，但本组未核对是否运行期 import 该常量）。
 - 置信度: 已确认
 
-#### 2.152.12 best_cast [L311-338]
+#### 2.158.12 best_cast [L311-338]
 - 类型: function
 - 签名: `best_cast(battle, player_id: int, card_name: str, grid: float = 1.0)`
 - 作用: 在敌方实体的包围盒（外扩半径）上做粗网格扫描，返回最高分落点。
@@ -21280,7 +21670,7 @@
 
 ---
 
-### 2.153 `src/clasher_new/threat_calc.py`
+### 2.159 `src/clasher_new/threat_calc.py`
 
 - **分析组**：G038　**行数**：106　**AST 符号数**：2
 
@@ -21295,7 +21685,7 @@
   - `_TOWER_NAMES = {3: "left", 4: "right", 6: "king", 1: "left", 2: "right", 5: "king"}`（L34）— 塔 id → 输出键名（left/right/king）。
 - 顶层数据表/字典: 无（上述两个 dict 为常量映射，非可增长数据表）。
 
-#### 2.153.1 threat_calc._hostiles_present [L37-48]
+#### 2.159.1 threat_calc._hostiles_present [L37-48]
 - 类型: function
 - 签名: `_hostiles_present(battle, player_id)`
 - 作用: 判断盘面上是否还存在「仍可能威胁我方塔」的敌方存活实体（排除双方塔本身）。
@@ -21307,7 +21697,7 @@
 - 调用: 被本模块 `estimate_tower_threat` 调用两次（L61、L74）。未在本组文件之外发现调用者（仓库内 `grep _hostiles_present` 仅命中本文件）。
 - 置信度: 已确认
 
-#### 2.153.2 threat_calc.estimate_tower_threat [L51-90]
+#### 2.159.2 threat_calc.estimate_tower_threat [L51-90]
 - 类型: function
 - 签名: `estimate_tower_threat(battle, player_id: int, horizon: float = THREAT_HORIZON_S, dt: float = 1 / 60)`
 - 作用: 返回某玩家在「双方不再部署」假设下未来 `horizon` 秒内的塔损预估 dict。
@@ -21326,7 +21716,7 @@
 
 ---
 
-### 2.154 `src/clasher_new/timing.py`
+### 2.160 `src/clasher_new/timing.py`
 
 - **分析组**：G039　**行数**：20　**AST 符号数**：0
 
@@ -21348,12 +21738,12 @@
 - 调用: 该文件是**被直接执行的脚本**（顶层即跑逻辑），在同仓库内未被任何模块 import（本组范围内未见引用；未做全仓反向检索，故不排除有外部调用方）。它调用了 `battle.BattleState`、`battle.BattleState.deploy_card`、`battle.BattleState.step`、`player.PlayerState`、`core.Position` 与标准库 `random`/`time`。
 - 置信度: 已确认
 
-#### 2.154.1 （无） [L-]
+#### 2.160.1 （无） [L-]
 - 本文件无函数/类定义（简报亦记为 0 符号）；上述模块级语句即其全部内容，已逐行说明。
 
 ---
 
-### 2.155 `src/clasher_new/tmp_formation_test.py`
+### 2.161 `src/clasher_new/tmp_formation_test.py`
 
 - **分析组**：G038　**行数**：53　**AST 符号数**：1
 
@@ -21366,7 +21756,7 @@
 - 顶层数据表/字典: 无
 - 顶层执行段（L51-53，非符号，附带说明）: `run("弓箭手@模型角落", "Archer", 16, 5)`、`run("弓箭手@桥头后方", "Archer", 14, 13)`、`run("骑士(单体对照)", "Knight", 14, 13)` 三次调用。
 
-#### 2.155.1 tmp_formation_test.run [L12-48]
+#### 2.161.1 tmp_formation_test.run [L12-48]
 - 类型: function
 - 签名: `run(name, card, x, y, tmax=30)`
 - 作用: 部署单卡，先跑 1s 等召唤类卡的多单位全部生成，再每 0.5s 采样前两只存活单位的横向 x 间距与 y 差，最后给出间距均值/最小值与塔伤。
@@ -21384,7 +21774,7 @@
 
 ---
 
-### 2.156 `src/clasher_new/tmp_path_debug.py`
+### 2.162 `src/clasher_new/tmp_path_debug.py`
 
 - **分析组**：G038　**行数**：37　**AST 符号数**：1
 
@@ -21399,7 +21789,7 @@
   - `FILLER = ['Knight', 'Musketeer', 'Fireball', 'Giant', 'Archer', 'MiniPekka', 'Arrows']`（L20）— 填充卡组。
 - 顶层数据表/字典: 无（`LOG` 是调试日志列表，非数据表）
 
-#### 2.156.1 tmp_path_debug.patched [L12-16]
+#### 2.162.1 tmp_path_debug.patched [L12-16]
 - 类型: function（运行期被当作 `Troop` 的方法使用）
 - 签名: `patched(self, position, dt, can_overshoot=False)`
 - 作用: 包装原 `Troop.move_towards`，在调用前后记录位置并追加进全局 `LOG`。
@@ -21419,7 +21809,7 @@
 
 ---
 
-### 2.157 `src/clasher_new/tmp_spell_forensics.py`
+### 2.163 `src/clasher_new/tmp_spell_forensics.py`
 
 - **分析组**：G038　**行数**：70　**AST 符号数**：1
 
@@ -21434,7 +21824,7 @@
   - `COST = {c: Card(c).elixir for c in DECK}`（L10）— 卡费表；`Card.elixir` = `data.get('manaCost', 0)`（`card_utils.py:227`）。
 - 顶层数据表/字典: 上述 4 个 dict/set 即数据表：`SPELLS`（卡名集合）、`RADIUS`（卡名→半径格）、`COST`（卡名→费用）。
 
-#### 2.157.1 tmp_spell_forensics.analyze [L12-57]
+#### 2.163.1 tmp_spell_forensics.analyze [L12-57]
 - 类型: function
 - 签名: `analyze(path)`
 - 作用: 读回放 pickle，按「每局重排手牌循环」的规则把每个 deploy 动作还原成卡名，对法术卡统计落点附近敌方 troop 帧数与疑似击杀、塔伤，返回逐次施放的元组列表。
@@ -21450,7 +21840,7 @@
 
 ---
 
-### 2.158 `src/clasher_new/tmp_target_verify.py`
+### 2.164 `src/clasher_new/tmp_target_verify.py`
 
 - **分析组**：G038　**行数**：56　**AST 符号数**：1
 
@@ -21463,7 +21853,7 @@
 - 顶层数据表/字典: 无
 - 顶层执行段（L46-56，非符号，附带说明）: 三组场景——左桥头 x∈[2.0,3.5,4.2,4.5,4.9] 破左塔(id=1)（L47-48）；镜像右桥头 x∈[13.1,14.5,15.9] 破右塔(id=2)（L50-51）；破左塔后用 Musketeer/Giant/MiniPekka 三兵种（L53-54）；最后对照「两塔全」不复位（L56）。塔 id 与「左=1/右=2」的对应与 `battle.py:2556-2557`（RED_LEFT=1、RED_RIGHT=2）一致。
 
-#### 2.158.1 tmp_target_verify.run [L12-43]
+#### 2.164.1 tmp_target_verify.run [L12-43]
 - 类型: function
 - 签名: `run(name, card, wx, wy, dead_towers)`
 - 作用: 构造一个指定卡在指定世界坐标部署的对局（可预先把若干塔置死），推进最多 25s，记录该单位首个有效目标的塔名与终点位置，并按「首目标是否 KingTower」打印 OK/`!!!`。
@@ -21481,7 +21871,7 @@
 
 ---
 
-### 2.159 `src/clasher_new/tmp_tower_chip_test.py`
+### 2.165 `src/clasher_new/tmp_tower_chip_test.py`
 
 - **分析组**：G038　**行数**：55　**AST 符号数**：1
 
@@ -21494,7 +21884,7 @@
 - 顶层数据表/字典: 无
 - 顶层执行段（L50-55，非符号，附带说明）: 6 个场景 = {Minions, Archer, Knight} × {「模型角落」(16,5), 「桥头后方」(14,13)}；注意 docstring 说测 3 费单位，实际 `run` 里没做费用断言，费用只用于最后 `total/cost` 的换算（L47）。
 
-#### 2.159.1 tmp_tower_chip_test.run [L12-47]
+#### 2.165.1 tmp_tower_chip_test.run [L12-47]
 - 类型: function
 - 签名: `run(name, card, local_x, local_y, max_t=60.0)`
 - 作用: 从本地网格坐标部署单卡并推演最多 `max_t` 秒，统计首次对塔命中时刻、结束时存活数与对 P1 右塔+国王塔的累计伤害、每费伤害。
@@ -21512,7 +21902,7 @@
 
 ---
 
-### 2.160 `src/clasher_new/train.py`
+### 2.166 `src/clasher_new/train.py`
 
 - **分析组**：G037　**行数**：136　**AST 符号数**：10
 
@@ -21523,7 +21913,7 @@
 - 关键模块级常量: 无（`n_envs`/`n_steps` 等在 `__main__` 内为局部变量，见 L107/L110）
 - 顶层数据表/字典: 无
 
-#### 2.160.1 CRFeatureExtractor [L17-58]
+#### 2.166.1 CRFeatureExtractor [L17-58]
 - 类型: class
 - 签名: `class CRFeatureExtractor(BaseFeaturesExtractor):`（基类 `BaseFeaturesExtractor`）
 - 作用: SB3 自定义特征提取器：把 15 通道网格做实体 id 嵌入 + 卡类型 one-hot 后送 3 层 CNN，再与 5 张手牌嵌入和圣水拼接成一个 `features_dim` 维向量。
@@ -21533,7 +21923,7 @@
 - 调用: `train.py:117` 经 `policy_kwargs={"features_extractor_class": CRFeatureExtractor}` 交给 PPO；`train_autoregressive.py:9` 导入。
 - 置信度: 已确认
 
-##### 2.160.1.1 CRFeatureExtractor.__init__ [L18-32]
+##### 2.166.1.1 CRFeatureExtractor.__init__ [L18-32]
 - 类型: method
 - 签名: `def __init__(self, observation_space: spaces.Box, features_dim: int = 256):`
 - 作用: 建嵌入层与 CNN 主干，并用假张量前推一次自动算出 CNN 展平后的维度以确定全连接输入宽度。
@@ -21545,7 +21935,7 @@
 - 调用: 由 SB3 在构造 policy 时实例化（`train.py:117`）。
 - 置信度: 已确认
 
-##### 2.160.1.2 CRFeatureExtractor.forward [L34-58]
+##### 2.166.1.2 CRFeatureExtractor.forward [L34-58]
 - 类型: method
 - 签名: `def forward(self, observation):`
 - 作用: 组装 25 通道输入张量 → CNN；把手牌嵌入展平并与 CNN 特征、圣水拼接 → 全连接 → ReLU。
@@ -21556,7 +21946,7 @@
 - 调用: 由 SB3 前向调用（`MultiInputPolicy` 的 features extractor）。
 - 置信度: 已确认
 
-#### 2.160.2 WeightsCopyingCallback [L61-68]
+#### 2.166.2 WeightsCopyingCallback [L61-68]
 - 类型: class
 - 签名: `class WeightsCopyingCallback(BaseCallback):`（基类 `BaseCallback`）
 - 作用: 每 50000 步把当前策略权重拷给一个名为 `opponent` 的全局对象（**该全局在本文件中未定义**）。
@@ -21566,7 +21956,7 @@
 - 调用: 本文件内未见实例化（**已确认**：`WeightsCopyingCallback` 仅 L61 定义处出现）。属未接线/未完成的骨架代码。
 - 置信度: 已确认
 
-##### 2.160.2.1 WeightsCopyingCallback.__init__ [L62-63]
+##### 2.166.2.1 WeightsCopyingCallback.__init__ [L62-63]
 - 类型: method
 - 签名: `def __init__(self, verbose=0):`
 - 作用: 仅把 `verbose` 透传给基类。
@@ -21576,7 +21966,7 @@
 - 实现: L63 `super().__init__(verbose)`。
 - 置信度: 已确认
 
-##### 2.160.2.2 WeightsCopyingCallback._on_step [L65-68]
+##### 2.166.2.2 WeightsCopyingCallback._on_step [L65-68]
 - 类型: method
 - 签名: `def _on_step(self):`
 - 作用: 每到 50000 步的整数倍时，用当前模型策略的 `state_dict` 覆盖全局 `opponent.policy` 的权重。
@@ -21586,7 +21976,7 @@
 - 调用: SB3 回调机制在每步调用（若注册）；未注册到 `__main__`。
 - 置信度: 已确认
 
-#### 2.160.3 RandomEvalCallback [L70-90]
+#### 2.166.3 RandomEvalCallback [L70-90]
 - 类型: class
 - 签名: `class RandomEvalCallback(BaseCallback):`（基类 `BaseCallback`）
 - 作用: 每 50000 步用「打随机策略」的固定 5 局评估当前模型，并把平均回报记进 tensorboard。
@@ -21596,7 +21986,7 @@
 - 调用: 本文件内未见实例化（**已确认**：`RandomEvalCallback` 仅 L70 定义处出现）。
 - 置信度: 已确认
 
-##### 2.160.3.1 RandomEvalCallback.__init__ [L71-72]
+##### 2.166.3.1 RandomEvalCallback.__init__ [L71-72]
 - 类型: method
 - 签名: `def __init__(self, verbose=0):`
 - 作用: 仅透传 `verbose`。
@@ -21606,7 +21996,7 @@
 - 实现: L72 `super().__init__(verbose)`。
 - 置信度: 已确认
 
-##### 2.160.3.2 RandomEvalCallback._on_step [L74-90]
+##### 2.166.3.2 RandomEvalCallback._on_step [L74-90]
 - 类型: method
 - 签名: `def _on_step(self) -> bool:`
 - 作用: 每到 50000 步，跑 5 局对随机策略的评估并记录 `eval/mean_reward_vs_random`。
@@ -21616,7 +22006,7 @@
 - 调用: SB3 回调机制（若注册）；本文件未注册。
 - 置信度: 已确认
 
-#### 2.160.4 make_env [L93-103]
+#### 2.166.4 make_env [L93-103]
 - 类型: function
 - 签名: `def make_env(rank):`
 - 作用: 返回一个 thunk（环境工厂）：设置本进程 RNG 与 torch 线程数，加载 `opponent_pool` 目录下全部 PPO 模型作为对手函数池，构造一个 `CREnv`。
@@ -21631,7 +22021,7 @@
 
 ---
 
-### 2.161 `src/clasher_new/train_autoregressive.py`
+### 2.167 `src/clasher_new/train_autoregressive.py`
 
 - **分析组**：G038　**行数**：36　**AST 符号数**：1
 
@@ -21647,7 +22037,7 @@
   - `model = PPO("MultiInputPolicy", env, n_steps=n_steps, batch_size=256, policy_kwargs={"features_extractor_class": CRFeatureExtractor}, device="cuda", verbose=1)`（L28-36）— 构造 PPO；`CRFeatureExtractor` 已确认存在（`train.py:17`，`class CRFeatureExtractor(BaseFeaturesExtractor)`，输出 `features_dim=256`），且其 `__init__` 里用 `self.cnn = ...; dummy = torch.zeros(1, self.in_channels, 32, 18)`（`train.py:23-31`）⇒ 期望的观测是 32×18 的网格。
 - 顶层数据表/字典: 无
 
-#### 2.161.1 train_autoregressive.make_env [L15-21]
+#### 2.167.1 train_autoregressive.make_env [L15-21]
 - 类型: function
 - 签名: `make_env(rank)`
 - 作用: 返回一个无参工厂函数；该工厂在子进程内先固定随机种子与线程数，再创建 `CREnv`（对手为 `random_strategy`）。
@@ -21662,7 +22052,7 @@
 
 ---
 
-### 2.162 `src/clasher_new/watch_random_models.py`
+### 2.168 `src/clasher_new/watch_random_models.py`
 
 - **分析组**：G039　**行数**：17　**AST 符号数**：0
 
@@ -21680,12 +22070,12 @@
 - 调用: 被直接执行的脚本；同仓库内未见被 import（待确认是否存在外部调用方）。它调用了 `stable_baselines3.PPO.load`、`PPO.predict`、`environment.CREnv`、`CREnv.reset`、`CREnv.step`、`BattleState.winner`。
 - 置信度: 已确认
 
-#### 2.162.1 （无） [L-]
+#### 2.168.1 （无） [L-]
 - 本文件无函数/类定义（简报亦记为 0 符号）；上述模块级语句即其全部内容，已逐行说明。
 
 ---
 
-### 2.163 `start_rl.bat`
+### 2.169 `start_rl.bat`
 
 - **分析组**：GX02　**行数**：322　**AST 符号数**：不适用（非 .py）
 
@@ -21737,7 +22127,7 @@
 - 调用: 由用户双击/命令行执行。它 `call :probe_python`（L198），并 `goto` 各标签。
 - 置信度: 已确认
 
-#### 2.163.1 parse [L65-L110]
+#### 2.169.1 parse [L65-L110]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 无块（block-free）命令行解析循环，逐个识别参数并写入对应变量。
@@ -21747,7 +22137,7 @@
 - 调用: 从顶层 L64 处顺序进入；自身 `goto parse` 循环（L110）；出口 `goto parse_done`（L66）。
 - 置信度: 已确认（**注意**：源码未定义未知参数的处理分支 ⇒ 传入未识别参数时会被 `shift` 静默丢弃，这是 L108 后直接 `shift` 的直接后果）
 
-#### 2.163.2 parse_done [L111-L114]
+#### 2.169.2 parse_done [L111-L114]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 参数解析结束后的 help 分发点。
@@ -21757,7 +22147,7 @@
 - 调用: 由 `:parse` 的 L66 跳入；跳往 `:show_help` 或 `:help_done`。
 - 置信度: 已确认
 
-#### 2.163.3 show_help [L116-L146]
+#### 2.169.3 show_help [L116-L146]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 打印完整帮助文本（模式/配置/训练/看板/安装/环境变量六组）。
@@ -21767,7 +22157,7 @@
 - 调用: 由 `:parse_done`（L113）跳入。
 - 置信度: 已确认
 
-#### 2.163.4 help_done [L148]
+#### 2.169.4 help_done [L148]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 空标签，仅作为 `goto` 落点（紧随其后的 L150 起即主流程）。
@@ -21777,7 +22167,7 @@
 - 调用: 由 `:parse_done`（L114）跳入。
 - 置信度: 已确认
 
-#### 2.163.5 do_setup [L172-L184]
+#### 2.169.5 do_setup [L172-L184]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 创建 `.venv` 并安装训练依赖（torch 按 `TORCH_INDEX`）。
@@ -21787,7 +22177,7 @@
 - 调用: 由顶层 L168（显式 `--setup`/`--setup-cuda`）或 L169（venv 不存在）跳入。它调用外部 `python` 与 `pip`。
 - 置信度: 已确认
 
-#### 2.163.6 setup_failed [L186-L189]
+#### 2.169.6 setup_failed [L186-L189]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: venv 创建失败的错误出口。
@@ -21797,7 +22187,7 @@
 - 调用: 仅由 `:do_setup` 的 L177 跳入。
 - 置信度: 已确认
 
-#### 2.163.7 setup_done [L191-L203]
+#### 2.169.7 setup_done [L191-L203]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 打印环境信息，探测关键包，并分发自检。
@@ -21807,7 +22197,7 @@
 - 调用: 由顶层 L170 或 `:do_setup` L184 跳入；调用 `:probe_python`（L198）。
 - 置信度: 已确认
 
-#### 2.163.8 run_selftest [L205-L209]
+#### 2.169.8 run_selftest [L205-L209]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 训练前跑全量自检。
@@ -21817,7 +22207,7 @@
 - 调用: 由顶层 L202（`--selftest`）跳入；调用 `scripts\rl\selftest.py`。
 - 置信度: 已确认
 
-#### 2.163.9 selftest_failed [L211-L214]
+#### 2.169.9 selftest_failed [L211-L214]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 自检失败出口，阻断训练。
@@ -21827,7 +22217,7 @@
 - 调用: 仅由 `:run_selftest` 的 L208 跳入。
 - 置信度: 已确认
 
-#### 2.163.10 probe_failed [L216-L220]
+#### 2.169.10 probe_failed [L216-L220]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 找不到可用解释器的错误出口。
@@ -21837,7 +22227,7 @@
 - 调用: 仅由 `:setup_done` 的 L199 跳入。
 - 置信度: 已确认
 
-#### 2.163.11 selftest_done [L222-L227]
+#### 2.169.11 selftest_done [L222-L227]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 自检阶段收束 + 向导/快速路径分发。
@@ -21847,7 +22237,7 @@
 - 调用: 由 `:run_selftest` L209 跳入；跳往 `:wizard` 或 `:build_args`。
 - 置信度: 已确认
 
-#### 2.163.12 wizard [L229-L240]
+#### 2.169.12 wizard [L229-L240]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 启动 Python 多级交互向导，向导结束后本批处理直接退出。
@@ -21857,7 +22247,7 @@
 - 调用: 由 `:selftest_done` 的 L225/L226 跳入；调用 `src\clasher_new\rl\launcher_menu.py`。
 - 置信度: 已确认
 
-#### 2.163.13 build_args [L242-L287]
+#### 2.169.13 build_args [L242-L287]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 拼装 `TRAIN_ARGS`、`STATE_DIR`、`DASH_ARGS`，打印启动横幅，并按 `--dry-run`/看板开关走到启动或仅打印。
@@ -21867,7 +22257,7 @@
 - 调用: 由 `:selftest_done` L227（以及顶层顺序流）跳入；跳往 `:dry_run`（L273）、`:start_dashboard`（L279）、`:started`（L280）。它调用 `scripts\rl\run_league.py`（L276）。
 - 置信度: 已确认
 
-#### 2.163.14 start_dashboard [L282-L287]
+#### 2.169.14 start_dashboard [L282-L287]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 在新窗口起看板服务并打开浏览器。
@@ -21877,7 +22267,7 @@
 - 调用: 由 `:build_args` 的 L279 跳入；调用 `scripts\rl\dashboard.py`。
 - 置信度: 已确认
 
-#### 2.163.15 dry_run [L289-L299]
+#### 2.169.15 dry_run [L289-L299]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 只打印将要执行的命令，不启动任何进程。
@@ -21887,7 +22277,7 @@
 - 调用: 由 `:build_args` 的 L273 跳入。
 - 置信度: 已确认
 
-#### 2.163.16 probe_python [L301-L316]
+#### 2.169.16 probe_python [L301-L316]
 - 类型: 批处理标签(:LABEL)（子程序，经 `call` 调用）
 - 签名: 不适用（无参数；读写调用方的 `PY`/`PY_FALLBACK`/`PY_SAVED`）
 - 作用: 用 `import torch, numpy, gymnasium` 探测当前 `PY` 是否可用；不可用则回退 PATH 上的 `python`。
@@ -21897,7 +22287,7 @@
 - 调用: 由 `:setup_done` 的 L198 `call :probe_python` 调用。
 - 置信度: 已确认
 
-#### 2.163.17 started [L318-L322]
+#### 2.169.17 started [L318-L322]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 启动完成后的收尾提示。
@@ -21911,7 +22301,7 @@
 
 ---
 
-### 2.164 `start_training.bat`
+### 2.170 `start_training.bat`
 
 - **分析组**：GX02　**行数**：211　**AST 符号数**：不适用（非 .py）
 
@@ -21956,7 +22346,7 @@
 - 调用: 用户直接执行。跳往 `:do_setup`/`:setup_done`/`:start_dashboard`/`:started`；调用 `scripts\rl\run_league.py`（L195）。
 - 置信度: 已确认（**注意**：本文件**没有** `cd /d "%ROOT%"`，`start` 也**没有** `/d "%ROOT%"`——`start_rl.bat` 在 L32 与 L276/L284 两处都做了锚定；因此 `start_training.bat` 启动的子进程工作目录 = 调用者当前目录，源码未对此做任何处理）
 
-#### 2.164.1 parse [L51-L86]
+#### 2.170.1 parse [L51-L86]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 参数解析循环（与 `start_rl.bat` 同风格但选项更少）。
@@ -21966,7 +22356,7 @@
 - 调用: 由顶层 L50 顺序进入；自身 `goto parse`（L86）；出口 `goto parse_done`（L52）。
 - 置信度: 已确认（未识别参数会被静默 `shift` 丢弃，源码无 else 分支）
 
-#### 2.164.2 parse_done [L87-L90]
+#### 2.170.2 parse_done [L87-L90]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: help 分发点。
@@ -21976,7 +22366,7 @@
 - 调用: 由 `:parse` L52 跳入。
 - 置信度: 已确认
 
-#### 2.164.3 show_help [L92-L114]
+#### 2.170.3 show_help [L92-L114]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 打印帮助文本。
@@ -21986,7 +22376,7 @@
 - 调用: 由 `:parse_done` L89 跳入。
 - 置信度: 已确认（帮助文本未提及 `--mode`，与 L175 硬编码 `--mode run` 一致）
 
-#### 2.164.4 help_done [L116]
+#### 2.170.4 help_done [L116]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 空标签，仅作 `goto` 落点。
@@ -21996,7 +22386,7 @@
 - 调用: 由 `:parse_done` L90 跳入。
 - 置信度: 已确认
 
-#### 2.164.5 do_setup [L132-L144]
+#### 2.170.5 do_setup [L132-L144]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 建 `.venv` 并安装依赖。
@@ -22006,7 +22396,7 @@
 - 调用: 由顶层 L128/L129 跳入；调用外部 `python`/`pip`。
 - 置信度: 已确认
 
-#### 2.164.6 setup_failed [L146-L149]
+#### 2.170.6 setup_failed [L146-L149]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: venv 创建失败出口。
@@ -22016,7 +22406,7 @@
 - 调用: 仅由 `:do_setup` L137 跳入。
 - 置信度: 已确认
 
-#### 2.164.7 setup_done [L151-L159]
+#### 2.170.7 setup_done [L151-L159]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 打印环境信息并分发自检。
@@ -22026,7 +22416,7 @@
 - 调用: 由顶层 L130 或 `:do_setup` L144 跳入。
 - 置信度: 已确认
 
-#### 2.164.8 run_selftest [L161-L165]
+#### 2.170.8 run_selftest [L161-L165]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 训练前跑自检。
@@ -22036,7 +22426,7 @@
 - 调用: 由 `:setup_done` L158 跳入；调用 `scripts\rl\selftest.py`。
 - 置信度: 已确认
 
-#### 2.164.9 selftest_failed [L167-L170]
+#### 2.170.9 selftest_failed [L167-L170]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 自检失败出口。
@@ -22046,7 +22436,7 @@
 - 调用: 仅由 `:run_selftest` L164 跳入。
 - 置信度: 已确认
 
-#### 2.164.10 selftest_done [L172-L181]
+#### 2.170.10 selftest_done [L172-L181]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 拼装训练参数。
@@ -22056,7 +22446,7 @@
 - 调用: 由 `:run_selftest` L165 或顶层 L159 顺序到达；随后执行 L183-L199 的主流程。
 - 置信度: 已确认
 
-#### 2.164.11 start_dashboard [L201-L205]
+#### 2.170.11 start_dashboard [L201-L205]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 起看板并开浏览器。
@@ -22066,7 +22456,7 @@
 - 调用: 由顶层 L198 跳入；调用 `scripts\rl\dashboard.py`。
 - 置信度: 已确认
 
-#### 2.164.12 started [L207-L211]
+#### 2.170.12 started [L207-L211]
 - 类型: 批处理标签(:LABEL)
 - 签名: 不适用
 - 作用: 收尾提示。
@@ -23604,8 +23994,8 @@
 
 | 抽检项 | 结果 |
 |---|---|
-| 对账的符号数 | 1453 |
-| 定义行号区间不符 | 2 |
+| 对账的符号数 | 1479 |
+| 定义行号区间不符 | 7 |
 | 类型（function/class/method）不符 | 0 |
 | 参数名缺失（素材签名里找不到 AST 的参数） | 0 |
 | AST 中查无此符号 | 30（其中非 `.py` 文件的 JS 符号占绝大多数，见下）|
@@ -23620,8 +24010,13 @@
 |---|---|---|---|
 | `G026.md:src/clasher_new/rl/config.py:TrainConfig.load` | L310-313 | L311-313 | 素材把**装饰器行**也算进定义区间，比 AST 的 `def` 行更完整 ⇒ 不是错误 |
 | `G026.md:src/clasher_new/rl/config.py:TrainConfig.resolve` | L371-396 | L372-396 | 素材把**装饰器行**也算进定义区间，比 AST 的 `def` 行更完整 ⇒ 不是错误 |
+| `GX03.md:scripts/_survey_merge.py:main` | L125-465 | L125-468 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
+| `GX03.md:scripts/_survey_merge_docs.py:read_draft` | L79-82 | L80-83 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
+| `GX03.md:scripts/_survey_merge_docs.py:shift_headings` | L85-98 | L86-99 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
+| `GX03.md:scripts/_survey_merge_docs.py:extract_pending` | L101-125 | L102-126 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
+| `GX03.md:scripts/_survey_merge_docs.py:main` | L128-260 | L129-261 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
 
-**结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致；未发现编造的函数或参数。**
+**结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致（类型 0 处不符、参数 0 处缺失、AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**
 
 ---
 
@@ -23635,623 +24030,632 @@
 | `<顶层执行段>` | `ideas/pz_test.py` | class(素材) | §2.8 |
 | `<顶层执行段>` | `runs/analyze_curve.py` | class(素材) | §2.10 |
 | `<顶层执行段>` | `runs/watch_100k.py` | class(素材) | §2.12 |
-| `FollowerOpponent.__call__` | `src/clasher_new/rl/train_follower.py:84` | function | §2.133 |
-| `ScriptedPolicy.__call__` | `src/clasher_new/rl/opponents.py:118` | function | §2.120 |
-| `SelfDefenderPolicy.__call__` | `src/clasher_new/rl/opponents.py:205` | function | §2.120 |
-| `ProphetEnv.__getattr__` | `src/clasher_new/rl/train_prophet.py:74` | function | §2.134 |
-| `SingleCardAdapter.__getattr__` | `src/clasher_new/rl/train_baseline.py:41` | function | §2.129 |
-| `ActionBundleSpace.__init__` | `src/clasher_new/rl/env_wrapper.py:271` | function | §2.110 |
-| `AreaEffect.__init__` | `src/clasher_new/battle.py:1728` | function | §2.77 |
-| `AreaEffectData.__init__` | `src/clasher_new/card_utils.py:508` | function | §2.81 |
-| `AreaEffectData.__init__` | `src/clasher_new/client_side/card_utils.py:166` | function | §2.83 |
-| `Assassin.__init__` | `src/clasher_new/card_mechanics.py:728` | function | §2.80 |
-| `BasicCharacter.__init__` | `src/clasher_new/core.py:17` | function | §2.87 |
-| `BattleState.__init__` | `src/clasher_new/battle.py:2539` | function | §2.77 |
-| `BeliefInference.__init__` | `src/clasher_new/rl/belief.py:261` | function | §2.103 |
-| `BeliefPlanner.__init__` | `src/clasher_new/rl/belief_planner.py:344` | function | §2.104 |
-| `BlankEntity.__init__` | `src/clasher_new/core.py:13` | function | §2.87 |
-| `Building.__init__` | `src/clasher_new/battle.py:1234` | function | §2.77 |
-| `CREnv.__init__` | `src/clasher_new/environment.py:34` | function | §2.89 |
-| `CRFeatureExtractor.__init__` | `src/clasher_new/rl/train_baseline.py:46` | function | §2.129 |
-| `CRFeatureExtractor.__init__` | `src/clasher_new/train.py:18` | function | §2.160 |
-| `Card.__init__` | `src/clasher_new/card_utils.py:222` | function | §2.81 |
-| `Card.__init__` | `src/clasher_new/client_side/card_utils.py:56` | function | §2.83 |
-| `CycleBayesFilter.__init__` | `src/clasher_new/rl/bayes_filter.py:45` | function | §2.102 |
-| `DeathSlowZone.__init__` | `src/clasher_new/battle.py:2189` | function | §2.77 |
-| `Elo.__init__` | `src/clasher_new/rl/elo.py:17` | function | §2.109 |
-| `Entity.__init__` | `src/clasher_new/battle.py:14` | function | §2.77 |
-| `EntityPathfinder.__init__` | `src/clasher_new/pathfinding.py:35` | function | §2.96 |
-| `EntityPathfinder.__init__` | `src/clasher_new/pathfinding_heap.py:37` | function | §2.97 |
-| `EvoEffectZone.__init__` | `src/clasher_new/battle.py:1952` | function | §2.77 |
-| `EvoZapZone.__init__` | `src/clasher_new/battle.py:2333` | function | §2.77 |
-| `Fisherman.__init__` | `src/clasher_new/card_mechanics.py:273` | function | §2.80 |
-| `FollowerOpponent.__init__` | `src/clasher_new/rl/train_follower.py:60` | function | §2.133 |
-| `FollowerPolicy.__init__` | `src/clasher_new/rl/follower.py:155` | function | §2.114 |
-| `GameServer.__init__` | `src/clasher_new/server.py:10` | function | §2.149 |
-| `GenericBomb.__init__` | `src/clasher_new/battle.py:1895` | function | §2.77 |
-| `Ghost.__init__` | `src/clasher_new/card_mechanics.py:17` | function | §2.80 |
-| `GiantSkeleton.__init__` | `src/clasher_new/card_mechanics.py:167` | function | §2.80 |
-| `GoblinGiant.__init__` | `src/clasher_new/card_mechanics.py:1764` | function | §2.80 |
-| `HealAuraZone.__init__` | `src/clasher_new/battle.py:2043` | function | §2.77 |
-| `HeroBerserker.__init__` | `src/clasher_new/card_mechanics.py:1310` | function | §2.80 |
-| `HeroBowler.__init__` | `src/clasher_new/card_mechanics.py:1107` | function | §2.80 |
-| `HeroEliteArcher.__init__` | `src/clasher_new/card_mechanics.py:1498` | function | §2.80 |
-| `HeroGoblins.__init__` | `src/clasher_new/card_mechanics.py:1202` | function | §2.80 |
-| `HeroIceWizard.__init__` | `src/clasher_new/card_mechanics.py:1453` | function | §2.80 |
-| `HeroKnight.__init__` | `src/clasher_new/card_mechanics.py:904` | function | §2.80 |
-| `HeroMegaMinion.__init__` | `src/clasher_new/card_mechanics.py:1237` | function | §2.80 |
-| `HeroMiniPekka.__init__` | `src/clasher_new/card_mechanics.py:953` | function | §2.80 |
-| `HeroTombstone.__init__` | `src/clasher_new/card_mechanics.py:1283` | function | §2.80 |
-| `HeroValkyrie.__init__` | `src/clasher_new/card_mechanics.py:994` | function | §2.80 |
-| `HeroWizard.__init__` | `src/clasher_new/card_mechanics.py:1056` | function | §2.80 |
-| `HumanPlaySession.__init__` | `src/clasher_new/rl/human_play.py:66` | function | §2.115 |
-| `IceGolemiteSnowZone.__init__` | `src/clasher_new/battle.py:2492` | function | §2.77 |
-| `King_ChefTowers.__init__` | `src/clasher_new/card_mechanics.py:1853` | function | §2.80 |
-| `King_KnifeTowers.__init__` | `src/clasher_new/card_mechanics.py:1815` | function | §2.80 |
-| `League.__init__` | `src/clasher_new/rl/league.py:33` | function | §2.117 |
-| `LeagueGameRecorder.__init__` | `src/clasher_new/rl/run_league.py:111` | function | §2.127 |
-| `MegaKnight.__init__` | `src/clasher_new/card_mechanics.py:524` | function | §2.80 |
-| `Miner.__init__` | `src/clasher_new/card_mechanics.py:203` | function | §2.80 |
-| `Musketeer.__init__` | `src/clasher_new/card_mechanics.py:644` | function | §2.80 |
-| `NeuralBeliefEncoder.__init__` | `src/clasher_new/rl/belief.py:173` | function | §2.103 |
-| `PFSP.__init__` | `src/clasher_new/rl/pfsp.py:30` | function | §2.122 |
-| `PPOTrainer.__init__` | `src/clasher_new/rl/ppo.py:87` | function | §2.124 |
-| `PhoenixEgg.__init__` | `src/clasher_new/card_mechanics.py:1717` | function | §2.80 |
-| `PlayerState.__init__` | `src/clasher_new/client_side/player.py:6` | function | §2.86 |
-| `PlayerState.__init__` | `src/clasher_new/player.py:6` | function | §2.98 |
-| `Prince.__init__` | `src/clasher_new/card_mechanics.py:115` | function | §2.80 |
-| `Projectile.__init__` | `src/clasher_new/battle.py:1418` | function | §2.77 |
-| `Projectile.__init__` | `src/clasher_new/card_utils.py:446` | function | §2.81 |
-| `Projectile.__init__` | `src/clasher_new/client_side/card_utils.py:138` | function | §2.83 |
-| `ProphetEnv.__init__` | `src/clasher_new/rl/train_prophet.py:49` | function | §2.134 |
-| `ProphetExtractor.__init__` | `src/clasher_new/rl/train_prophet.py:79` | function | §2.134 |
-| `RLEnv.__init__` | `src/clasher_new/rl/env_wrapper.py:292` | function | §2.110 |
-| `RLMCTS.__init__` | `src/clasher_new/rl/mcts.py:333` | function | §2.118 |
-| `Rage.__init__` | `src/clasher_new/card_mechanics.py:219` | function | §2.80 |
-| `RandomEvalCallback.__init__` | `src/clasher_new/train.py:71` | function | §2.160 |
-| `ReturnScaler.__init__` | `src/clasher_new/rl/ppo.py:48` | function | §2.124 |
-| `Ronin.__init__` | `src/clasher_new/card_mechanics.py:682` | function | §2.80 |
-| `ScriptedPolicy.__init__` | `src/clasher_new/rl/opponents.py:86` | function | §2.120 |
-| `SelfDefenderPolicy.__init__` | `src/clasher_new/rl/opponents.py:138` | function | §2.120 |
-| `SequentialEvalEnv.__init__` | `src/clasher_new/evaluate.py:14` | function | §2.90 |
-| `SingleCardAdapter.__init__` | `src/clasher_new/rl/train_baseline.py:29` | function | §2.129 |
-| `SkeletonKing.__init__` | `src/clasher_new/card_mechanics.py:322` | function | §2.80 |
-| `Skeletrooper.__init__` | `src/clasher_new/card_mechanics.py:1401` | function | §2.80 |
-| `SpawnProjectile.__init__` | `src/clasher_new/battle.py:1660` | function | §2.77 |
-| `StatisticalBelief.__init__` | `src/clasher_new/rl/belief.py:133` | function | §2.103 |
-| `TimedExplosive.__init__` | `src/clasher_new/battle.py:2378` | function | §2.77 |
-| `TimedExplosiveData.__init__` | `src/clasher_new/card_utils.py:498` | function | §2.81 |
-| `TimedExplosiveData.__init__` | `src/clasher_new/client_side/card_utils.py:156` | function | §2.83 |
-| `Troop.__init__` | `src/clasher_new/battle.py:760` | function | §2.77 |
-| `VinesSnareZone.__init__` | `src/clasher_new/battle.py:2101` | function | §2.77 |
-| `Visualizer.__init__` | `src/clasher_new/minimal_visualizer.py:68` | function | §2.94 |
-| `Visualizer.__init__` | `src/clasher_new/new_visualization.py:20` | function | §2.95 |
-| `WeightsCopyingCallback.__init__` | `src/clasher_new/train.py:62` | function | §2.160 |
-| `Witch.__init__` | `src/clasher_new/card_mechanics.py:67` | function | §2.80 |
-| `_BombShim.__init__` | `src/clasher_new/battle.py:1878` | function | §2.77 |
-| `_EffectShim.__init__` | `src/clasher_new/battle.py:1709` | function | §2.77 |
-| `_Node.__init__` | `src/clasher_new/rl/mcts.py:309` | function | §2.118 |
-| `_OpponentPool.__init__` | `src/clasher_new/rl/train_solo.py:336` | function | §2.135 |
-| `_ProjectileShim.__init__` | `src/clasher_new/battle.py:1641` | function | §2.77 |
-| `ActionBundle.__post_init__` | `src/clasher_new/rl/action_bundle.py:79` | function | §2.100 |
-| `ActionBundleSpace.__repr__` | `src/clasher_new/rl/env_wrapper.py:285` | function | §2.110 |
-| `_ab` | `src/clasher_new/card_mechanics.py:867` | function | §2.80 |
-| `_active_push_tanks` | `src/clasher_new/rl/action_mask.py:292` | function | §2.101 |
-| `_adoption_seed` | `src/clasher_new/rl/evaluate.py:82` | function | §2.111 |
-| `_adoption_summary` | `src/clasher_new/rl/evaluate.py:89` | function | §2.111 |
-| `_agent_label` | `src/clasher_new/rl/dashboard.py:330` | function | §2.106 |
+| `FollowerOpponent.__call__` | `src/clasher_new/rl/train_follower.py:84` | function | §2.139 |
+| `ScriptedPolicy.__call__` | `src/clasher_new/rl/opponents.py:118` | function | §2.126 |
+| `SelfDefenderPolicy.__call__` | `src/clasher_new/rl/opponents.py:205` | function | §2.126 |
+| `ProphetEnv.__getattr__` | `src/clasher_new/rl/train_prophet.py:74` | function | §2.140 |
+| `SingleCardAdapter.__getattr__` | `src/clasher_new/rl/train_baseline.py:41` | function | §2.135 |
+| `ActionBundleSpace.__init__` | `src/clasher_new/rl/env_wrapper.py:271` | function | §2.116 |
+| `AreaEffect.__init__` | `src/clasher_new/battle.py:1728` | function | §2.83 |
+| `AreaEffectData.__init__` | `src/clasher_new/card_utils.py:508` | function | §2.87 |
+| `AreaEffectData.__init__` | `src/clasher_new/client_side/card_utils.py:166` | function | §2.89 |
+| `Assassin.__init__` | `src/clasher_new/card_mechanics.py:728` | function | §2.86 |
+| `BasicCharacter.__init__` | `src/clasher_new/core.py:17` | function | §2.93 |
+| `BattleState.__init__` | `src/clasher_new/battle.py:2539` | function | §2.83 |
+| `BeliefInference.__init__` | `src/clasher_new/rl/belief.py:261` | function | §2.109 |
+| `BeliefPlanner.__init__` | `src/clasher_new/rl/belief_planner.py:344` | function | §2.110 |
+| `BlankEntity.__init__` | `src/clasher_new/core.py:13` | function | §2.93 |
+| `Building.__init__` | `src/clasher_new/battle.py:1234` | function | §2.83 |
+| `CREnv.__init__` | `src/clasher_new/environment.py:34` | function | §2.95 |
+| `CRFeatureExtractor.__init__` | `src/clasher_new/rl/train_baseline.py:46` | function | §2.135 |
+| `CRFeatureExtractor.__init__` | `src/clasher_new/train.py:18` | function | §2.166 |
+| `Card.__init__` | `src/clasher_new/card_utils.py:222` | function | §2.87 |
+| `Card.__init__` | `src/clasher_new/client_side/card_utils.py:56` | function | §2.89 |
+| `CycleBayesFilter.__init__` | `src/clasher_new/rl/bayes_filter.py:45` | function | §2.108 |
+| `DeathSlowZone.__init__` | `src/clasher_new/battle.py:2189` | function | §2.83 |
+| `Elo.__init__` | `src/clasher_new/rl/elo.py:17` | function | §2.115 |
+| `Entity.__init__` | `src/clasher_new/battle.py:14` | function | §2.83 |
+| `EntityPathfinder.__init__` | `src/clasher_new/pathfinding.py:35` | function | §2.102 |
+| `EntityPathfinder.__init__` | `src/clasher_new/pathfinding_heap.py:37` | function | §2.103 |
+| `EvoEffectZone.__init__` | `src/clasher_new/battle.py:1952` | function | §2.83 |
+| `EvoZapZone.__init__` | `src/clasher_new/battle.py:2333` | function | §2.83 |
+| `Fisherman.__init__` | `src/clasher_new/card_mechanics.py:273` | function | §2.86 |
+| `FollowerOpponent.__init__` | `src/clasher_new/rl/train_follower.py:60` | function | §2.139 |
+| `FollowerPolicy.__init__` | `src/clasher_new/rl/follower.py:155` | function | §2.120 |
+| `GameServer.__init__` | `src/clasher_new/server.py:10` | function | §2.155 |
+| `GenericBomb.__init__` | `src/clasher_new/battle.py:1895` | function | §2.83 |
+| `Ghost.__init__` | `src/clasher_new/card_mechanics.py:17` | function | §2.86 |
+| `GiantSkeleton.__init__` | `src/clasher_new/card_mechanics.py:167` | function | §2.86 |
+| `GoblinGiant.__init__` | `src/clasher_new/card_mechanics.py:1764` | function | §2.86 |
+| `HealAuraZone.__init__` | `src/clasher_new/battle.py:2043` | function | §2.83 |
+| `HeroBerserker.__init__` | `src/clasher_new/card_mechanics.py:1310` | function | §2.86 |
+| `HeroBowler.__init__` | `src/clasher_new/card_mechanics.py:1107` | function | §2.86 |
+| `HeroEliteArcher.__init__` | `src/clasher_new/card_mechanics.py:1498` | function | §2.86 |
+| `HeroGoblins.__init__` | `src/clasher_new/card_mechanics.py:1202` | function | §2.86 |
+| `HeroIceWizard.__init__` | `src/clasher_new/card_mechanics.py:1453` | function | §2.86 |
+| `HeroKnight.__init__` | `src/clasher_new/card_mechanics.py:904` | function | §2.86 |
+| `HeroMegaMinion.__init__` | `src/clasher_new/card_mechanics.py:1237` | function | §2.86 |
+| `HeroMiniPekka.__init__` | `src/clasher_new/card_mechanics.py:953` | function | §2.86 |
+| `HeroTombstone.__init__` | `src/clasher_new/card_mechanics.py:1283` | function | §2.86 |
+| `HeroValkyrie.__init__` | `src/clasher_new/card_mechanics.py:994` | function | §2.86 |
+| `HeroWizard.__init__` | `src/clasher_new/card_mechanics.py:1056` | function | §2.86 |
+| `HumanPlaySession.__init__` | `src/clasher_new/rl/human_play.py:66` | function | §2.121 |
+| `IceGolemiteSnowZone.__init__` | `src/clasher_new/battle.py:2492` | function | §2.83 |
+| `King_ChefTowers.__init__` | `src/clasher_new/card_mechanics.py:1853` | function | §2.86 |
+| `King_KnifeTowers.__init__` | `src/clasher_new/card_mechanics.py:1815` | function | §2.86 |
+| `League.__init__` | `src/clasher_new/rl/league.py:33` | function | §2.123 |
+| `LeagueGameRecorder.__init__` | `src/clasher_new/rl/run_league.py:111` | function | §2.133 |
+| `MegaKnight.__init__` | `src/clasher_new/card_mechanics.py:524` | function | §2.86 |
+| `Miner.__init__` | `src/clasher_new/card_mechanics.py:203` | function | §2.86 |
+| `Musketeer.__init__` | `src/clasher_new/card_mechanics.py:644` | function | §2.86 |
+| `NeuralBeliefEncoder.__init__` | `src/clasher_new/rl/belief.py:173` | function | §2.109 |
+| `PFSP.__init__` | `src/clasher_new/rl/pfsp.py:30` | function | §2.128 |
+| `PPOTrainer.__init__` | `src/clasher_new/rl/ppo.py:87` | function | §2.130 |
+| `PhoenixEgg.__init__` | `src/clasher_new/card_mechanics.py:1717` | function | §2.86 |
+| `PlayerState.__init__` | `src/clasher_new/client_side/player.py:6` | function | §2.92 |
+| `PlayerState.__init__` | `src/clasher_new/player.py:6` | function | §2.104 |
+| `Prince.__init__` | `src/clasher_new/card_mechanics.py:115` | function | §2.86 |
+| `Projectile.__init__` | `src/clasher_new/battle.py:1418` | function | §2.83 |
+| `Projectile.__init__` | `src/clasher_new/card_utils.py:446` | function | §2.87 |
+| `Projectile.__init__` | `src/clasher_new/client_side/card_utils.py:138` | function | §2.89 |
+| `ProphetEnv.__init__` | `src/clasher_new/rl/train_prophet.py:49` | function | §2.140 |
+| `ProphetExtractor.__init__` | `src/clasher_new/rl/train_prophet.py:79` | function | §2.140 |
+| `RLEnv.__init__` | `src/clasher_new/rl/env_wrapper.py:292` | function | §2.116 |
+| `RLMCTS.__init__` | `src/clasher_new/rl/mcts.py:333` | function | §2.124 |
+| `Rage.__init__` | `src/clasher_new/card_mechanics.py:219` | function | §2.86 |
+| `RandomEvalCallback.__init__` | `src/clasher_new/train.py:71` | function | §2.166 |
+| `ReturnScaler.__init__` | `src/clasher_new/rl/ppo.py:48` | function | §2.130 |
+| `Ronin.__init__` | `src/clasher_new/card_mechanics.py:682` | function | §2.86 |
+| `ScriptedPolicy.__init__` | `src/clasher_new/rl/opponents.py:86` | function | §2.126 |
+| `SelfDefenderPolicy.__init__` | `src/clasher_new/rl/opponents.py:138` | function | §2.126 |
+| `SequentialEvalEnv.__init__` | `src/clasher_new/evaluate.py:14` | function | §2.96 |
+| `SingleCardAdapter.__init__` | `src/clasher_new/rl/train_baseline.py:29` | function | §2.135 |
+| `SkeletonKing.__init__` | `src/clasher_new/card_mechanics.py:322` | function | §2.86 |
+| `Skeletrooper.__init__` | `src/clasher_new/card_mechanics.py:1401` | function | §2.86 |
+| `SpawnProjectile.__init__` | `src/clasher_new/battle.py:1660` | function | §2.83 |
+| `StatisticalBelief.__init__` | `src/clasher_new/rl/belief.py:133` | function | §2.109 |
+| `TimedExplosive.__init__` | `src/clasher_new/battle.py:2378` | function | §2.83 |
+| `TimedExplosiveData.__init__` | `src/clasher_new/card_utils.py:498` | function | §2.87 |
+| `TimedExplosiveData.__init__` | `src/clasher_new/client_side/card_utils.py:156` | function | §2.89 |
+| `Troop.__init__` | `src/clasher_new/battle.py:760` | function | §2.83 |
+| `VinesSnareZone.__init__` | `src/clasher_new/battle.py:2101` | function | §2.83 |
+| `Visualizer.__init__` | `src/clasher_new/minimal_visualizer.py:68` | function | §2.100 |
+| `Visualizer.__init__` | `src/clasher_new/new_visualization.py:20` | function | §2.101 |
+| `WeightsCopyingCallback.__init__` | `src/clasher_new/train.py:62` | function | §2.166 |
+| `Witch.__init__` | `src/clasher_new/card_mechanics.py:67` | function | §2.86 |
+| `_BombShim.__init__` | `src/clasher_new/battle.py:1878` | function | §2.83 |
+| `_EffectShim.__init__` | `src/clasher_new/battle.py:1709` | function | §2.83 |
+| `_Node.__init__` | `src/clasher_new/rl/mcts.py:309` | function | §2.124 |
+| `_OpponentPool.__init__` | `src/clasher_new/rl/train_solo.py:336` | function | §2.141 |
+| `_ProjectileShim.__init__` | `src/clasher_new/battle.py:1641` | function | §2.83 |
+| `ActionBundle.__post_init__` | `src/clasher_new/rl/action_bundle.py:79` | function | §2.106 |
+| `ActionBundleSpace.__repr__` | `src/clasher_new/rl/env_wrapper.py:285` | function | §2.116 |
+| `_ab` | `src/clasher_new/card_mechanics.py:867` | function | §2.86 |
+| `_active_push_tanks` | `src/clasher_new/rl/action_mask.py:292` | function | §2.107 |
+| `_adoption_seed` | `src/clasher_new/rl/evaluate.py:82` | function | §2.117 |
+| `_adoption_summary` | `src/clasher_new/rl/evaluate.py:89` | function | §2.117 |
+| `_agent_label` | `src/clasher_new/rl/dashboard.py:330` | function | §2.112 |
 | `_analyze_pkl` | `scripts/_forensics_cycling.py:43` | function | §2.13 |
-| `BeliefPlanner._anti_spell` | `src/clasher_new/rl/belief_planner.py:734` | function | §2.104 |
-| `ProphetPlanner._anti_spell` | `src/clasher_new/rl/prophet.py:392` | function | §2.125 |
-| `RLMCTS._apply` | `src/clasher_new/rl/mcts.py:435` | function | §2.118 |
-| `Troop._apply_evolution` | `src/clasher_new/battle.py:782` | function | §2.77 |
-| `PPOTrainer._apply_grad` | `src/clasher_new/rl/ppo.py:409` | function | §2.124 |
-| `_apply_opponent` | `src/clasher_new/rl/workers.py:54` | function | §2.136 |
-| `Projectile._arrival_direction` | `src/clasher_new/battle.py:1440` | function | §2.77 |
-| `King_ChefTowers._attack_extension` | `src/clasher_new/card_mechanics.py:1858` | function | §2.80 |
-| `_AttackStunMixin` | `src/clasher_new/card_mechanics.py:1603` | class | §2.80 |
-| `ProphetEnv._augment` | `src/clasher_new/rl/train_prophet.py:66` | function | §2.134 |
-| `_backline_min_gap_m` | `src/clasher_new/rl/action_mask.py:326` | function | §2.101 |
-| `_backline_placement_illegal` | `src/clasher_new/rl/action_mask.py:338` | function | §2.101 |
-| `_barb_log_reroll_effect` | `src/clasher_new/battle.py:2440` | function | §2.77 |
-| `Entity._bind_tower_rect` | `src/clasher_new/battle.py:170` | function | §2.77 |
-| `_blank` | `scripts/forensics_card_usage.py:130` | function | §2.39 |
-| `_BombShim` | `src/clasher_new/battle.py:1876` | class | §2.77 |
-| `_build_index` | `src/clasher_new/card_aliases.py:426` | function | §2.79 |
-| `_build_league` | `src/clasher_new/rl/run_league.py:672` | function | §2.127 |
-| `_build_priv` | `src/clasher_new/rl/train_prophet.py:35` | function | §2.134 |
-| `_bundle_cards` | `src/clasher_new/rl/run_league.py:343` | function | §2.127 |
-| `_bypass_gru` | `scripts/diag_critic_ev.py:535` | function | §2.33 |
-| `_calibrate` | `src/clasher_new/spell_module.py:172` | function | §2.152 |
-| `_capture_parts` | `scripts/probe_value_ln.py:123` | function | §2.50 |
-| `_card_cached` | `src/clasher_new/rl/action_mask.py:317` | function | §2.101 |
-| `_card_cost` | `src/clasher_new/rl/action_mask.py:30` | function | §2.101 |
-| `BattleState._cast_lightning` | `src/clasher_new/battle.py:2783` | function | §2.77 |
-| `_cells_by_spell_value` | `src/clasher_new/rl/mcts.py:253` | function | §2.118 |
-| `_cells_by_threat` | `src/clasher_new/rl/mcts.py:207` | function | §2.118 |
-| `Projectile._chain` | `src/clasher_new/battle.py:1534` | function | §2.77 |
-| `_check_gates` | `src/clasher_new/rl/train_solo.py:234` | function | §2.135 |
-| `_closest_enemy` | `src/clasher_new/rl/prophet.py:92` | function | §2.125 |
-| `_closest_threat` | `src/clasher_new/rl/belief_planner.py:309` | function | §2.104 |
-| `RLEnv._collect_deaths` | `src/clasher_new/rl/env_wrapper.py:583` | function | §2.110 |
-| `_collect_hist_ckpts` | `src/clasher_new/rl/train_solo.py:175` | function | §2.135 |
-| `_collect_worker_results` | `src/clasher_new/rl/train_solo.py:916` | function | §2.135 |
-| `Entity._collector_tick` | `src/clasher_new/battle.py:231` | function | §2.77 |
-| `CycleBayesFilter._consistent` | `src/clasher_new/rl/bayes_filter.py:108` | function | §2.102 |
-| `_cuda_hint` | `src/clasher_new/rl/run_league.py:70` | function | §2.127 |
-| `_curve` | `src/clasher_new/elite17_data.py:29` | function | §2.88 |
-| `BeliefPlanner._cycle_small` | `src/clasher_new/rl/belief_planner.py:753` | function | §2.104 |
-| `ProphetPlanner._cycle_small` | `src/clasher_new/rl/prophet.py:447` | function | §2.125 |
-| `Projectile._damage` | `src/clasher_new/battle.py:1436` | function | §2.77 |
-| `HeroValkyrie._dash` | `src/clasher_new/card_mechanics.py:1007` | function | §2.80 |
-| `VinesSnareZone._deal_hit` | `src/clasher_new/battle.py:2151` | function | §2.77 |
-| `Projectile._deal_splash_damage` | `src/clasher_new/battle.py:1596` | function | §2.77 |
-| `_deals_damage` | `src/clasher_new/spell_module.py:54` | function | §2.152 |
-| `Entity._death_elixir_gift` | `src/clasher_new/battle.py:325` | function | §2.77 |
-| `_deck_factory_of` | `src/clasher_new/rl/run_league.py:353` | function | §2.127 |
-| `_dedup_history` | `src/clasher_new/rl/train_solo.py:224` | function | §2.135 |
-| `_default_paths` | `src/clasher_new/rl/decks.py:92` | function | §2.107 |
-| `SelfDefenderPolicy._defend_action` | `src/clasher_new/rl/opponents.py:155` | function | §2.120 |
-| `CycleBayesFilter._degrade` | `src/clasher_new/rl/bayes_filter.py:102` | function | §2.102 |
-| `BattleHealer._deploy_heal` | `src/clasher_new/card_mechanics.py:824` | function | §2.80 |
-| `RLEnv._deploy_ledger` | `src/clasher_new/rl/env_wrapper.py:561` | function | §2.110 |
-| `_deployable_entity` | `src/clasher_new/rl/belief_planner.py:122` | function | §2.104 |
-| `_doc_first_line` | `scripts/_survey_inventory.py:96` | function | §2.19 |
-| `_drain` | `src/clasher_new/rl/flow_league.py:242` | function | §2.113 |
-| `_draw_penalty` | `src/clasher_new/rl/train_solo.py:164` | function | §2.135 |
-| `_ece` | `src/clasher_new/rl/evaluate.py:41` | function | §2.111 |
-| `_effective_card` | `src/clasher_new/rl/action_mask.py:39` | function | §2.101 |
-| `_EffectShim` | `src/clasher_new/battle.py:1707` | class | §2.77 |
-| `FollowerPolicy._encode` | `src/clasher_new/rl/follower.py:300` | function | §2.114 |
-| `FollowerPolicy._encode_batch` | `src/clasher_new/rl/follower.py:430` | function | §2.114 |
-| `FollowerPolicy._encode_batch_parts` | `src/clasher_new/rl/follower.py:397` | function | §2.114 |
-| `FollowerPolicy._encode_parts` | `src/clasher_new/rl/follower.py:268` | function | §2.114 |
-| `HeroWizard._end_fly` | `src/clasher_new/card_mechanics.py:1065` | function | §2.80 |
-| `_enemy_in_my_half` | `src/clasher_new/rl/action_mask.py:241` | function | §2.101 |
-| `_enemy_main_x` | `src/clasher_new/rl/belief_planner.py:176` | function | §2.104 |
-| `_enemy_pressure` | `src/clasher_new/rl/belief_planner.py:159` | function | §2.104 |
-| `_enemy_region` | `src/clasher_new/rl/belief_planner.py:211` | function | §2.104 |
-| `_enemy_region` | `src/clasher_new/rl/prophet.py:115` | function | §2.125 |
-| `_engine_lookup` | `src/clasher_new/rl/decks.py:42` | function | §2.107 |
-| `_OpponentPool._ensure_hist` | `src/clasher_new/rl/train_solo.py:487` | function | §2.135 |
-| `Handler._ensure_play` | `src/clasher_new/rl/dashboard.py:2008` | function | §2.106 |
-| `HeroBowler._enter_siege` | `src/clasher_new/card_mechanics.py:1114` | function | §2.80 |
-| `_episode_arrays` | `src/clasher_new/rl/train_belief.py:72` | function | §2.131 |
-| `_eval_and_snapshot` | `src/clasher_new/rl/run_league.py:642` | function | §2.127 |
-| `_eval_worker_main` | `src/clasher_new/rl/train_solo.py:802` | function | §2.135 |
-| `_event_row` | `src/clasher_new/rl/belief.py:52` | function | §2.103 |
-| `Troop._evo2025_ensure_gerry` | `src/clasher_new/battle.py:851` | function | §2.77 |
-| `Troop._evo2025_gust_tick` | `src/clasher_new/battle.py:868` | function | §2.77 |
-| `Ghost._evo2025_summon_souldiers` | `src/clasher_new/card_mechanics.py:47` | function | §2.80 |
-| `Building._evo_building_tick` | `src/clasher_new/battle.py:1331` | function | §2.77 |
-| `Troop._evo_giant_tick` | `src/clasher_new/battle.py:1058` | function | §2.77 |
-| `Projectile._evo_impact` | `src/clasher_new/battle.py:1480` | function | §2.77 |
-| `Troop._evo_on_attack` | `src/clasher_new/battle.py:890` | function | §2.77 |
-| `Building._evo_on_death` | `src/clasher_new/battle.py:1311` | function | §2.77 |
-| `Troop._evo_on_death` | `src/clasher_new/battle.py:981` | function | §2.77 |
-| `HeroBowler._exit_siege` | `src/clasher_new/card_mechanics.py:1127` | function | §2.80 |
-| `RLMCTS._expand_actions` | `src/clasher_new/rl/mcts.py:391` | function | §2.118 |
-| `_finetune_critic` | `scripts/diag_critic_ev.py:451` | function | §2.33 |
-| `BattleState._finish_deploy` | `src/clasher_new/battle.py:2728` | function | §2.77 |
-| `_flow_progress_path` | `src/clasher_new/rl/flow_league.py:153` | function | §2.113 |
-| `_flush_episode` | `src/clasher_new/rl/flow_league.py:223` | function | §2.113 |
-| `_fmt` | `scripts/judge_critic_inertia.py:51` | function | §2.42 |
-| `_fmt_arg` | `scripts/_survey_inventory.py:39` | function | §2.19 |
-| `_fmt_default` | `scripts/_survey_inventory.py:30` | function | §2.19 |
-| `_foe_priority` | `src/clasher_new/rl/mcts.py:238` | function | §2.118 |
-| `_force_utf8_stdout` | `scripts/probe_value_ln.py:116` | function | §2.50 |
-| `_force_utf8_stdout` | `src/clasher_new/rl/run_league.py:1152` | function | §2.127 |
-| `Entity._generic_death_spawn` | `src/clasher_new/battle.py:276` | function | §2.77 |
-| `_goblin_brigade_effect` | `src/clasher_new/card_mechanics.py:886` | function | §2.80 |
-| `_grouped_split` | `scripts/diag_critic_ev.py:364` | function | §2.33 |
-| `_gru_gate_stats` | `src/clasher_new/rl/diagnostics.py:59` | function | §2.108 |
-| `_hand_slot` | `src/clasher_new/rl/belief_planner.py:249` | function | §2.104 |
-| `_hand_slot` | `src/clasher_new/rl/prophet.py:124` | function | §2.125 |
-| `Entity._hero_taunt_override` | `src/clasher_new/battle.py:729` | function | §2.77 |
-| `_HeroBase` | `src/clasher_new/card_mechanics.py:315` | class | §2.80 |
-| `NeuralBeliefEncoder._history_tensor` | `src/clasher_new/rl/belief.py:195` | function | §2.103 |
-| `BasicCharacter._hit_by_area` | `src/clasher_new/core.py:25` | function | §2.87 |
-| `_hits_dead_enemy_tower` | `src/clasher_new/rl/action_mask.py:367` | function | §2.101 |
-| `_hits_filters` | `src/clasher_new/spell_module.py:221` | function | §2.152 |
-| `_hostiles_present` | `src/clasher_new/threat_calc.py:37` | function | §2.153 |
-| `_hp_state` | `src/clasher_new/rl/flow_league.py:206` | function | §2.113 |
-| `AreaEffect._in_radius` | `src/clasher_new/battle.py:1785` | function | §2.77 |
-| `_install_recorder` | `scripts/probe_reward_composition.py:51` | function | §2.47 |
-| `_intents` | `src/clasher_new/rl/selftest.py:1389` | function | §2.128 |
-| `_is_front_tank_name` | `src/clasher_new/rl/belief_planner.py:151` | function | §2.104 |
-| `_is_spell_card` | `src/clasher_new/rl/mcts.py:248` | function | §2.118 |
-| `_is_tower` | `src/clasher_new/rl/belief_planner.py:118` | function | §2.104 |
-| `_is_tower` | `src/clasher_new/rl/prophet.py:45` | function | §2.125 |
-| `TileGrid._is_tower_alive` | `src/clasher_new/arena.py:121` | function | §2.76 |
-| `BeliefPlanner._king_activate` | `src/clasher_new/rl/belief_planner.py:668` | function | §2.104 |
-| `ProphetPlanner._king_activate` | `src/clasher_new/rl/prophet.py:364` | function | §2.125 |
-| `Skeletrooper._land` | `src/clasher_new/card_mechanics.py:1411` | function | §2.80 |
-| `_load_flow_resume` | `src/clasher_new/rl/flow_league.py:166` | function | §2.113 |
-| `_load_run_state` | `src/clasher_new/rl/run_league.py:590` | function | §2.127 |
-| `CycleBayesFilter._lock_from_tail` | `src/clasher_new/rl/bayes_filter.py:76` | function | §2.102 |
-| `VinesSnareZone._lock_targets` | `src/clasher_new/battle.py:2126` | function | §2.77 |
-| `_loss_metrics` | `scripts/duel_search.py:129` | function | §2.37 |
-| `PPOTrainer._loss_pass` | `src/clasher_new/rl/ppo.py:361` | function | §2.124 |
-| `_make_env` | `src/clasher_new/rl/human_play.py:52` | function | §2.115 |
-| `_make_env` | `src/clasher_new/rl/run_league.py:579` | function | §2.127 |
-| `_make_opp` | `src/clasher_new/rl/run_league.py:366` | function | §2.127 |
-| `_make_opponent` | `src/clasher_new/rl/evaluate.py:157` | function | §2.111 |
-| `_make_policy_and_tokens` | `src/clasher_new/rl/selftest.py:122` | function | §2.128 |
-| `_make_rand_anchor` | `src/clasher_new/rl/train_solo.py:80` | function | §2.135 |
-| `_make_trainer` | `src/clasher_new/rl/run_league.py:584` | function | §2.127 |
-| `HeroMegaMinion._mark` | `src/clasher_new/card_mechanics.py:1242` | function | §2.80 |
-| `FollowerPolicy._mask_or_fallback` | `src/clasher_new/rl/follower.py:379` | function | §2.114 |
-| `_mean_x` | `src/clasher_new/rl/prophet.py:73` | function | §2.125 |
-| `_measure` | `src/clasher_new/spell_module.py:142` | function | §2.152 |
-| `_median` | `scripts/judge_critic_inertia.py:43` | function | §2.42 |
-| `_min_alive_tower_pct` | `src/clasher_new/rl/run_league.py:157` | function | §2.127 |
-| `_mk_env` | `src/clasher_new/rl/selftest.py:393` | function | §2.128 |
-| `_mm_battle` | `scripts/test_m5_data.py:198` | function | §2.71 |
-| `_mm_forms` | `scripts/test_m5_data.py:206` | function | §2.71 |
-| `Projectile._move_towards` | `src/clasher_new/battle.py:1630` | function | §2.77 |
-| `_my_main_x` | `src/clasher_new/rl/belief_planner.py:182` | function | §2.104 |
-| `Assassin._nearest_enemy` | `src/clasher_new/card_mechanics.py:734` | function | §2.80 |
-| `_new_agent` | `src/clasher_new/rl/dashboard.py:350` | function | §2.106 |
-| `_Node` | `src/clasher_new/rl/mcts.py:305` | class | §2.118 |
-| `BeliefInference._now` | `src/clasher_new/rl/belief.py:330` | function | §2.103 |
-| `Projectile._on_arrive` | `src/clasher_new/battle.py:1445` | function | §2.77 |
-| `Entity._on_attack_done` | `src/clasher_new/battle.py:490` | function | §2.77 |
-| `RandomEvalCallback._on_step` | `src/clasher_new/train.py:74` | function | §2.160 |
-| `WeightsCopyingCallback._on_step` | `src/clasher_new/train.py:65` | function | §2.160 |
-| `_one_hot` | `src/clasher_new/rl/plan_space.py:89` | function | §2.123 |
-| `_opp_min_hand_cost` | `src/clasher_new/rl/action_mask.py:231` | function | §2.101 |
-| `_opp_spell_threat_of` | `src/clasher_new/rl/belief_planner.py:326` | function | §2.104 |
-| `RLMCTS._opponent_bundle` | `src/clasher_new/rl/mcts.py:427` | function | §2.118 |
-| `_OpponentPool` | `src/clasher_new/rl/train_solo.py:321` | class | §2.135 |
-| `_opposite_enemy_region` | `src/clasher_new/rl/belief_planner.py:216` | function | §2.104 |
-| `_opposite_enemy_region` | `src/clasher_new/rl/prophet.py:119` | function | §2.125 |
-| `_other_side_id` | `src/clasher_new/rl/dashboard.py:337` | function | §2.106 |
-| `_outcome_target` | `scripts/diag_critic_ev.py:237` | function | §2.33 |
-| `_overtime_open` | `src/clasher_new/rl/evaluate.py:35` | function | §2.111 |
-| `_own_deploy_cells` | `scripts/duel_search.py:46` | function | §2.37 |
-| `_own_region` | `src/clasher_new/rl/belief_planner.py:206` | function | §2.104 |
-| `_own_region` | `src/clasher_new/rl/prophet.py:111` | function | §2.125 |
-| `_pair_seed_offset` | `src/clasher_new/rl/run_league.py:393` | function | §2.127 |
-| `_parse_log` | `scripts/summarize_solo_run.py:59` | function | §2.66 |
-| `_parse_replay_step` | `src/clasher_new/rl/dashboard.py:210` | function | §2.106 |
-| `_payload` | `src/clasher_new/rl/workers.py:45` | function | §2.136 |
-| `_per_tower_norm_dmg` | `src/clasher_new/rl/env_wrapper.py:131` | function | §2.110 |
-| `_phase_weights` | `src/clasher_new/rl/env_wrapper.py:164` | function | §2.110 |
-| `_pick_suggested` | `src/clasher_new/rl/prophet.py:140` | function | §2.125 |
-| `_pick_suggested_card` | `src/clasher_new/rl/belief_planner.py:221` | function | §2.104 |
-| `PPOTrainer._plan_batches` | `src/clasher_new/rl/ppo.py:467` | function | §2.124 |
-| `FollowerPolicy._plan_biases` | `src/clasher_new/rl/follower.py:332` | function | §2.114 |
-| `_plan_region_hit` | `src/clasher_new/rl/evaluate.py:52` | function | §2.111 |
-| `CycleBayesFilter._play` | `src/clasher_new/rl/bayes_filter.py:72` | function | §2.102 |
-| `_play_one` | `src/clasher_new/rl/flow_league.py:252` | function | §2.113 |
-| `_play_side0` | `src/clasher_new/rl/train_exploiter.py:27` | function | §2.132 |
-| `_pmap` | `scripts/duel_search.py:463` | function | §2.37 |
-| `_position_legal` | `src/clasher_new/rl/action_mask.py:382` | function | §2.101 |
-| `_prepare_env` | `src/clasher_new/rl/run_league.py:380` | function | §2.127 |
-| `_pressing_enemy` | `src/clasher_new/rl/prophet.py:102` | function | §2.125 |
-| `_princesses_alive` | `src/clasher_new/rl/env_wrapper.py:126` | function | §2.110 |
-| `RLMCTS._priors` | `src/clasher_new/rl/mcts.py:411` | function | §2.118 |
-| `_probe_ev` | `scripts/diag_critic_ev.py:355` | function | §2.33 |
-| `_ProjectileShim` | `src/clasher_new/battle.py:1639` | class | §2.77 |
-| `BeliefPlanner._protect_backline` | `src/clasher_new/rl/belief_planner.py:399` | function | §2.104 |
-| `ProphetPlanner._protect_backline` | `src/clasher_new/rl/prophet.py:206` | function | §2.125 |
-| `BeliefPlanner._pull` | `src/clasher_new/rl/belief_planner.py:449` | function | §2.104 |
-| `ProphetPlanner._pull` | `src/clasher_new/rl/prophet.py:254` | function | §2.125 |
-| `AreaEffect._pulse` | `src/clasher_new/battle.py:1788` | function | §2.77 |
-| `HealAuraZone._pulse` | `src/clasher_new/battle.py:2078` | function | §2.77 |
-| `BeliefPlanner._punish` | `src/clasher_new/rl/belief_planner.py:510` | function | §2.104 |
-| `ProphetPlanner._punish` | `src/clasher_new/rl/prophet.py:279` | function | §2.125 |
-| `BeliefPlanner._push_commit` | `src/clasher_new/rl/belief_planner.py:534` | function | §2.104 |
-| `ProphetPlanner._push_commit` | `src/clasher_new/rl/prophet.py:302` | function | §2.125 |
-| `BattleState._push_troop_out_of_tower` | `src/clasher_new/battle.py:3115` | function | §2.77 |
-| `_radius_m` | `src/clasher_new/spell_module.py:64` | function | §2.152 |
-| `_rand_anchor_warns` | `src/clasher_new/rl/train_solo.py:72` | function | §2.135 |
-| `SelfDefenderPolicy._random_action` | `src/clasher_new/rl/opponents.py:181` | function | §2.120 |
-| `RLEnv._random_opponent` | `src/clasher_new/rl/env_wrapper.py:524` | function | §2.110 |
-| `_rarity_level_index` | `src/clasher_new/card_utils.py:182` | function | §2.81 |
-| `Handler._read_body` | `src/clasher_new/rl/dashboard.py:2026` | function | §2.106 |
-| `_ready_ability_cost` | `src/clasher_new/rl/action_mask.py:479` | function | §2.101 |
-| `_record_adoption` | `src/clasher_new/rl/evaluate.py:111` | function | §2.111 |
-| `_region_from_intent` | `src/clasher_new/rl/belief_planner.py:188` | function | §2.104 |
-| `_region_from_intent` | `src/clasher_new/rl/prophet.py:49` | function | §2.125 |
-| `_register` | `src/clasher_new/evo_2025_data.py:173` | function | §2.91 |
-| `_register_derived_character` | `src/clasher_new/card_utils.py:72` | function | §2.81 |
-| `_OpponentPool._reindex_hist` | `src/clasher_new/rl/train_solo.py:403` | function | §2.135 |
-| `_replay_n_games` | `src/clasher_new/rl/dashboard.py:215` | function | §2.106 |
-| `CycleBayesFilter._resample_uniform` | `src/clasher_new/rl/bayes_filter.py:89` | function | §2.102 |
-| `Entity._resolve_attack_seq` | `src/clasher_new/battle.py:459` | function | §2.77 |
-| `_restore` | `src/clasher_new/rl/run_league.py:600` | function | §2.127 |
-| `RLMCTS._root_player` | `src/clasher_new/rl/mcts.py:408` | function | §2.118 |
-| `_round_estimates` | `src/clasher_new/rl/run_league.py:448` | function | §2.127 |
-| `_run_1v1_worker` | `scripts/duel_search.py:456` | function | §2.37 |
-| `_run_2v1_worker` | `scripts/duel_search.py:235` | function | §2.37 |
-| `_run_2v2_worker` | `scripts/duel_search.py:291` | function | §2.37 |
+| `BeliefPlanner._anti_spell` | `src/clasher_new/rl/belief_planner.py:734` | function | §2.110 |
+| `ProphetPlanner._anti_spell` | `src/clasher_new/rl/prophet.py:392` | function | §2.131 |
+| `RLMCTS._apply` | `src/clasher_new/rl/mcts.py:435` | function | §2.124 |
+| `Troop._apply_evolution` | `src/clasher_new/battle.py:782` | function | §2.83 |
+| `PPOTrainer._apply_grad` | `src/clasher_new/rl/ppo.py:409` | function | §2.130 |
+| `_apply_opponent` | `src/clasher_new/rl/workers.py:54` | function | §2.142 |
+| `Projectile._arrival_direction` | `src/clasher_new/battle.py:1440` | function | §2.83 |
+| `King_ChefTowers._attack_extension` | `src/clasher_new/card_mechanics.py:1858` | function | §2.86 |
+| `_AttackStunMixin` | `src/clasher_new/card_mechanics.py:1603` | class | §2.86 |
+| `ProphetEnv._augment` | `src/clasher_new/rl/train_prophet.py:66` | function | §2.140 |
+| `_backline_min_gap_m` | `src/clasher_new/rl/action_mask.py:326` | function | §2.107 |
+| `_backline_placement_illegal` | `src/clasher_new/rl/action_mask.py:338` | function | §2.107 |
+| `_barb_log_reroll_effect` | `src/clasher_new/battle.py:2440` | function | §2.83 |
+| `Entity._bind_tower_rect` | `src/clasher_new/battle.py:170` | function | §2.83 |
+| `_blank` | `scripts/forensics_card_usage.py:130` | function | §2.45 |
+| `_BombShim` | `src/clasher_new/battle.py:1876` | class | §2.83 |
+| `_build_index` | `src/clasher_new/card_aliases.py:426` | function | §2.85 |
+| `_build_league` | `src/clasher_new/rl/run_league.py:672` | function | §2.133 |
+| `_build_priv` | `src/clasher_new/rl/train_prophet.py:35` | function | §2.140 |
+| `_bundle_cards` | `src/clasher_new/rl/run_league.py:343` | function | §2.133 |
+| `_bypass_gru` | `scripts/diag_critic_ev.py:535` | function | §2.39 |
+| `_calibrate` | `src/clasher_new/spell_module.py:172` | function | §2.158 |
+| `_capture_parts` | `scripts/probe_value_ln.py:123` | function | §2.56 |
+| `_card_cached` | `src/clasher_new/rl/action_mask.py:317` | function | §2.107 |
+| `_card_cost` | `src/clasher_new/rl/action_mask.py:30` | function | §2.107 |
+| `BattleState._cast_lightning` | `src/clasher_new/battle.py:2783` | function | §2.83 |
+| `_cells_by_spell_value` | `src/clasher_new/rl/mcts.py:253` | function | §2.124 |
+| `_cells_by_threat` | `src/clasher_new/rl/mcts.py:207` | function | §2.124 |
+| `Projectile._chain` | `src/clasher_new/battle.py:1534` | function | §2.83 |
+| `_check_gates` | `src/clasher_new/rl/train_solo.py:234` | function | §2.141 |
+| `_closest_enemy` | `src/clasher_new/rl/prophet.py:92` | function | §2.131 |
+| `_closest_threat` | `src/clasher_new/rl/belief_planner.py:309` | function | §2.110 |
+| `RLEnv._collect_deaths` | `src/clasher_new/rl/env_wrapper.py:583` | function | §2.116 |
+| `_collect_hist_ckpts` | `src/clasher_new/rl/train_solo.py:175` | function | §2.141 |
+| `_collect_worker_results` | `src/clasher_new/rl/train_solo.py:916` | function | §2.141 |
+| `Entity._collector_tick` | `src/clasher_new/battle.py:231` | function | §2.83 |
+| `CycleBayesFilter._consistent` | `src/clasher_new/rl/bayes_filter.py:108` | function | §2.108 |
+| `_cuda_hint` | `src/clasher_new/rl/run_league.py:70` | function | §2.133 |
+| `_curve` | `src/clasher_new/elite17_data.py:29` | function | §2.94 |
+| `BeliefPlanner._cycle_small` | `src/clasher_new/rl/belief_planner.py:753` | function | §2.110 |
+| `ProphetPlanner._cycle_small` | `src/clasher_new/rl/prophet.py:447` | function | §2.131 |
+| `Projectile._damage` | `src/clasher_new/battle.py:1436` | function | §2.83 |
+| `HeroValkyrie._dash` | `src/clasher_new/card_mechanics.py:1007` | function | §2.86 |
+| `VinesSnareZone._deal_hit` | `src/clasher_new/battle.py:2151` | function | §2.83 |
+| `Projectile._deal_splash_damage` | `src/clasher_new/battle.py:1596` | function | §2.83 |
+| `_deals_damage` | `src/clasher_new/spell_module.py:54` | function | §2.158 |
+| `Entity._death_elixir_gift` | `src/clasher_new/battle.py:325` | function | §2.83 |
+| `_deck_factory_of` | `src/clasher_new/rl/run_league.py:353` | function | §2.133 |
+| `_dedup_history` | `src/clasher_new/rl/train_solo.py:224` | function | §2.141 |
+| `_default_paths` | `src/clasher_new/rl/decks.py:92` | function | §2.113 |
+| `SelfDefenderPolicy._defend_action` | `src/clasher_new/rl/opponents.py:155` | function | §2.126 |
+| `CycleBayesFilter._degrade` | `src/clasher_new/rl/bayes_filter.py:102` | function | §2.108 |
+| `BattleHealer._deploy_heal` | `src/clasher_new/card_mechanics.py:824` | function | §2.86 |
+| `RLEnv._deploy_ledger` | `src/clasher_new/rl/env_wrapper.py:561` | function | §2.116 |
+| `_deployable_entity` | `src/clasher_new/rl/belief_planner.py:122` | function | §2.110 |
+| `_doc_first_line` | `scripts/_survey_inventory.py:96` | function | §2.21 |
+| `_drain` | `src/clasher_new/rl/flow_league.py:242` | function | §2.119 |
+| `_draw_penalty` | `src/clasher_new/rl/train_solo.py:164` | function | §2.141 |
+| `_ece` | `src/clasher_new/rl/evaluate.py:41` | function | §2.117 |
+| `_effective_card` | `src/clasher_new/rl/action_mask.py:39` | function | §2.107 |
+| `_EffectShim` | `src/clasher_new/battle.py:1707` | class | §2.83 |
+| `FollowerPolicy._encode` | `src/clasher_new/rl/follower.py:300` | function | §2.120 |
+| `FollowerPolicy._encode_batch` | `src/clasher_new/rl/follower.py:430` | function | §2.120 |
+| `FollowerPolicy._encode_batch_parts` | `src/clasher_new/rl/follower.py:397` | function | §2.120 |
+| `FollowerPolicy._encode_parts` | `src/clasher_new/rl/follower.py:268` | function | §2.120 |
+| `HeroWizard._end_fly` | `src/clasher_new/card_mechanics.py:1065` | function | §2.86 |
+| `_enemy_in_my_half` | `src/clasher_new/rl/action_mask.py:241` | function | §2.107 |
+| `_enemy_main_x` | `src/clasher_new/rl/belief_planner.py:176` | function | §2.110 |
+| `_enemy_pressure` | `src/clasher_new/rl/belief_planner.py:159` | function | §2.110 |
+| `_enemy_region` | `src/clasher_new/rl/belief_planner.py:211` | function | §2.110 |
+| `_enemy_region` | `src/clasher_new/rl/prophet.py:115` | function | §2.131 |
+| `_engine_lookup` | `src/clasher_new/rl/decks.py:42` | function | §2.113 |
+| `_OpponentPool._ensure_hist` | `src/clasher_new/rl/train_solo.py:487` | function | §2.141 |
+| `Handler._ensure_play` | `src/clasher_new/rl/dashboard.py:2008` | function | §2.112 |
+| `HeroBowler._enter_siege` | `src/clasher_new/card_mechanics.py:1114` | function | §2.86 |
+| `_episode_arrays` | `src/clasher_new/rl/train_belief.py:72` | function | §2.137 |
+| `_eval_and_snapshot` | `src/clasher_new/rl/run_league.py:642` | function | §2.133 |
+| `_eval_worker_main` | `src/clasher_new/rl/train_solo.py:802` | function | §2.141 |
+| `_event_row` | `src/clasher_new/rl/belief.py:52` | function | §2.109 |
+| `Troop._evo2025_ensure_gerry` | `src/clasher_new/battle.py:851` | function | §2.83 |
+| `Troop._evo2025_gust_tick` | `src/clasher_new/battle.py:868` | function | §2.83 |
+| `Ghost._evo2025_summon_souldiers` | `src/clasher_new/card_mechanics.py:47` | function | §2.86 |
+| `Building._evo_building_tick` | `src/clasher_new/battle.py:1331` | function | §2.83 |
+| `Troop._evo_giant_tick` | `src/clasher_new/battle.py:1058` | function | §2.83 |
+| `Projectile._evo_impact` | `src/clasher_new/battle.py:1480` | function | §2.83 |
+| `Troop._evo_on_attack` | `src/clasher_new/battle.py:890` | function | §2.83 |
+| `Building._evo_on_death` | `src/clasher_new/battle.py:1311` | function | §2.83 |
+| `Troop._evo_on_death` | `src/clasher_new/battle.py:981` | function | §2.83 |
+| `HeroBowler._exit_siege` | `src/clasher_new/card_mechanics.py:1127` | function | §2.86 |
+| `RLMCTS._expand_actions` | `src/clasher_new/rl/mcts.py:391` | function | §2.124 |
+| `_finetune_critic` | `scripts/diag_critic_ev.py:451` | function | §2.39 |
+| `BattleState._finish_deploy` | `src/clasher_new/battle.py:2728` | function | §2.83 |
+| `_flow_progress_path` | `src/clasher_new/rl/flow_league.py:153` | function | §2.119 |
+| `_flush_episode` | `src/clasher_new/rl/flow_league.py:223` | function | §2.119 |
+| `_fmt` | `scripts/judge_critic_inertia.py:51` | function | §2.48 |
+| `_fmt_arg` | `scripts/_survey_inventory.py:39` | function | §2.21 |
+| `_fmt_default` | `scripts/_survey_inventory.py:30` | function | §2.21 |
+| `_foe_priority` | `src/clasher_new/rl/mcts.py:238` | function | §2.124 |
+| `_force_utf8_stdout` | `scripts/probe_value_ln.py:116` | function | §2.56 |
+| `_force_utf8_stdout` | `src/clasher_new/rl/run_league.py:1152` | function | §2.133 |
+| `Entity._generic_death_spawn` | `src/clasher_new/battle.py:276` | function | §2.83 |
+| `_goblin_brigade_effect` | `src/clasher_new/card_mechanics.py:886` | function | §2.86 |
+| `_grouped_split` | `scripts/diag_critic_ev.py:364` | function | §2.39 |
+| `_gru_gate_stats` | `src/clasher_new/rl/diagnostics.py:59` | function | §2.114 |
+| `_hand_slot` | `src/clasher_new/rl/belief_planner.py:249` | function | §2.110 |
+| `_hand_slot` | `src/clasher_new/rl/prophet.py:124` | function | §2.131 |
+| `Entity._hero_taunt_override` | `src/clasher_new/battle.py:729` | function | §2.83 |
+| `_HeroBase` | `src/clasher_new/card_mechanics.py:315` | class | §2.86 |
+| `NeuralBeliefEncoder._history_tensor` | `src/clasher_new/rl/belief.py:195` | function | §2.109 |
+| `BasicCharacter._hit_by_area` | `src/clasher_new/core.py:25` | function | §2.93 |
+| `_hits_dead_enemy_tower` | `src/clasher_new/rl/action_mask.py:367` | function | §2.107 |
+| `_hits_filters` | `src/clasher_new/spell_module.py:221` | function | §2.158 |
+| `_hostiles_present` | `src/clasher_new/threat_calc.py:37` | function | §2.159 |
+| `_hp_state` | `src/clasher_new/rl/flow_league.py:206` | function | §2.119 |
+| `AreaEffect._in_radius` | `src/clasher_new/battle.py:1785` | function | §2.83 |
+| `_install_recorder` | `scripts/probe_reward_composition.py:51` | function | §2.53 |
+| `_intents` | `src/clasher_new/rl/selftest.py:1389` | function | §2.134 |
+| `_is_front_tank_name` | `src/clasher_new/rl/belief_planner.py:151` | function | §2.110 |
+| `_is_spell_card` | `src/clasher_new/rl/mcts.py:248` | function | §2.124 |
+| `_is_tower` | `src/clasher_new/rl/belief_planner.py:118` | function | §2.110 |
+| `_is_tower` | `src/clasher_new/rl/prophet.py:45` | function | §2.131 |
+| `TileGrid._is_tower_alive` | `src/clasher_new/arena.py:121` | function | §2.82 |
+| `BeliefPlanner._king_activate` | `src/clasher_new/rl/belief_planner.py:668` | function | §2.110 |
+| `ProphetPlanner._king_activate` | `src/clasher_new/rl/prophet.py:364` | function | §2.131 |
+| `Skeletrooper._land` | `src/clasher_new/card_mechanics.py:1411` | function | §2.86 |
+| `_load_flow_resume` | `src/clasher_new/rl/flow_league.py:166` | function | §2.119 |
+| `_load_run_state` | `src/clasher_new/rl/run_league.py:590` | function | §2.133 |
+| `CycleBayesFilter._lock_from_tail` | `src/clasher_new/rl/bayes_filter.py:76` | function | §2.108 |
+| `VinesSnareZone._lock_targets` | `src/clasher_new/battle.py:2126` | function | §2.83 |
+| `_loss_metrics` | `scripts/duel_search.py:129` | function | §2.43 |
+| `PPOTrainer._loss_pass` | `src/clasher_new/rl/ppo.py:361` | function | §2.130 |
+| `_make_env` | `src/clasher_new/rl/human_play.py:52` | function | §2.121 |
+| `_make_env` | `src/clasher_new/rl/run_league.py:579` | function | §2.133 |
+| `_make_opp` | `src/clasher_new/rl/run_league.py:366` | function | §2.133 |
+| `_make_opponent` | `src/clasher_new/rl/evaluate.py:157` | function | §2.117 |
+| `_make_policy_and_tokens` | `src/clasher_new/rl/selftest.py:122` | function | §2.134 |
+| `_make_rand_anchor` | `src/clasher_new/rl/train_solo.py:80` | function | §2.141 |
+| `_make_trainer` | `src/clasher_new/rl/run_league.py:584` | function | §2.133 |
+| `HeroMegaMinion._mark` | `src/clasher_new/card_mechanics.py:1242` | function | §2.86 |
+| `FollowerPolicy._mask_or_fallback` | `src/clasher_new/rl/follower.py:379` | function | §2.120 |
+| `_mean_x` | `src/clasher_new/rl/prophet.py:73` | function | §2.131 |
+| `_measure` | `src/clasher_new/spell_module.py:142` | function | §2.158 |
+| `_median` | `scripts/judge_critic_inertia.py:43` | function | §2.48 |
+| `_min_alive_tower_pct` | `src/clasher_new/rl/run_league.py:157` | function | §2.133 |
+| `_mk_env` | `src/clasher_new/rl/selftest.py:393` | function | §2.134 |
+| `_mm_battle` | `scripts/test_m5_data.py:198` | function | §2.77 |
+| `_mm_forms` | `scripts/test_m5_data.py:206` | function | §2.77 |
+| `Projectile._move_towards` | `src/clasher_new/battle.py:1630` | function | §2.83 |
+| `_my_main_x` | `src/clasher_new/rl/belief_planner.py:182` | function | §2.110 |
+| `Assassin._nearest_enemy` | `src/clasher_new/card_mechanics.py:734` | function | §2.86 |
+| `_new_agent` | `src/clasher_new/rl/dashboard.py:350` | function | §2.112 |
+| `_Node` | `src/clasher_new/rl/mcts.py:305` | class | §2.124 |
+| `BeliefInference._now` | `src/clasher_new/rl/belief.py:330` | function | §2.109 |
+| `Projectile._on_arrive` | `src/clasher_new/battle.py:1445` | function | §2.83 |
+| `Entity._on_attack_done` | `src/clasher_new/battle.py:490` | function | §2.83 |
+| `RandomEvalCallback._on_step` | `src/clasher_new/train.py:74` | function | §2.166 |
+| `WeightsCopyingCallback._on_step` | `src/clasher_new/train.py:65` | function | §2.166 |
+| `_one_hot` | `src/clasher_new/rl/plan_space.py:89` | function | §2.129 |
+| `_opp_min_hand_cost` | `src/clasher_new/rl/action_mask.py:231` | function | §2.107 |
+| `_opp_spell_threat_of` | `src/clasher_new/rl/belief_planner.py:326` | function | §2.110 |
+| `RLMCTS._opponent_bundle` | `src/clasher_new/rl/mcts.py:427` | function | §2.124 |
+| `_OpponentPool` | `src/clasher_new/rl/train_solo.py:321` | class | §2.141 |
+| `_opposite_enemy_region` | `src/clasher_new/rl/belief_planner.py:216` | function | §2.110 |
+| `_opposite_enemy_region` | `src/clasher_new/rl/prophet.py:119` | function | §2.131 |
+| `_other_side_id` | `src/clasher_new/rl/dashboard.py:337` | function | §2.112 |
+| `_outcome_target` | `scripts/diag_critic_ev.py:237` | function | §2.39 |
+| `_overtime_open` | `src/clasher_new/rl/evaluate.py:35` | function | §2.117 |
+| `_own_deploy_cells` | `scripts/duel_search.py:46` | function | §2.43 |
+| `_own_region` | `src/clasher_new/rl/belief_planner.py:206` | function | §2.110 |
+| `_own_region` | `src/clasher_new/rl/prophet.py:111` | function | §2.131 |
+| `_pair_seed_offset` | `src/clasher_new/rl/run_league.py:393` | function | §2.133 |
+| `_parse_log` | `scripts/summarize_solo_run.py:59` | function | §2.72 |
+| `_parse_replay_step` | `src/clasher_new/rl/dashboard.py:210` | function | §2.112 |
+| `_payload` | `src/clasher_new/rl/workers.py:45` | function | §2.142 |
+| `_per_tower_norm_dmg` | `src/clasher_new/rl/env_wrapper.py:131` | function | §2.116 |
+| `_phase_weights` | `src/clasher_new/rl/env_wrapper.py:164` | function | §2.116 |
+| `_pick_suggested` | `src/clasher_new/rl/prophet.py:140` | function | §2.131 |
+| `_pick_suggested_card` | `src/clasher_new/rl/belief_planner.py:221` | function | §2.110 |
+| `PPOTrainer._plan_batches` | `src/clasher_new/rl/ppo.py:467` | function | §2.130 |
+| `FollowerPolicy._plan_biases` | `src/clasher_new/rl/follower.py:332` | function | §2.120 |
+| `_plan_region_hit` | `src/clasher_new/rl/evaluate.py:52` | function | §2.117 |
+| `CycleBayesFilter._play` | `src/clasher_new/rl/bayes_filter.py:72` | function | §2.108 |
+| `_play_one` | `src/clasher_new/rl/flow_league.py:252` | function | §2.119 |
+| `_play_side0` | `src/clasher_new/rl/train_exploiter.py:27` | function | §2.138 |
+| `_pmap` | `scripts/duel_search.py:463` | function | §2.43 |
+| `_position_legal` | `src/clasher_new/rl/action_mask.py:382` | function | §2.107 |
+| `_prepare_env` | `src/clasher_new/rl/run_league.py:380` | function | §2.133 |
+| `_pressing_enemy` | `src/clasher_new/rl/prophet.py:102` | function | §2.131 |
+| `_princesses_alive` | `src/clasher_new/rl/env_wrapper.py:126` | function | §2.116 |
+| `RLMCTS._priors` | `src/clasher_new/rl/mcts.py:411` | function | §2.124 |
+| `_probe_ev` | `scripts/diag_critic_ev.py:355` | function | §2.39 |
+| `_ProjectileShim` | `src/clasher_new/battle.py:1639` | class | §2.83 |
+| `BeliefPlanner._protect_backline` | `src/clasher_new/rl/belief_planner.py:399` | function | §2.110 |
+| `ProphetPlanner._protect_backline` | `src/clasher_new/rl/prophet.py:206` | function | §2.131 |
+| `BeliefPlanner._pull` | `src/clasher_new/rl/belief_planner.py:449` | function | §2.110 |
+| `ProphetPlanner._pull` | `src/clasher_new/rl/prophet.py:254` | function | §2.131 |
+| `AreaEffect._pulse` | `src/clasher_new/battle.py:1788` | function | §2.83 |
+| `HealAuraZone._pulse` | `src/clasher_new/battle.py:2078` | function | §2.83 |
+| `BeliefPlanner._punish` | `src/clasher_new/rl/belief_planner.py:510` | function | §2.110 |
+| `ProphetPlanner._punish` | `src/clasher_new/rl/prophet.py:279` | function | §2.131 |
+| `BeliefPlanner._push_commit` | `src/clasher_new/rl/belief_planner.py:534` | function | §2.110 |
+| `ProphetPlanner._push_commit` | `src/clasher_new/rl/prophet.py:302` | function | §2.131 |
+| `BattleState._push_troop_out_of_tower` | `src/clasher_new/battle.py:3115` | function | §2.83 |
+| `_radius_m` | `src/clasher_new/spell_module.py:64` | function | §2.158 |
+| `_rand_anchor_warns` | `src/clasher_new/rl/train_solo.py:72` | function | §2.141 |
+| `SelfDefenderPolicy._random_action` | `src/clasher_new/rl/opponents.py:181` | function | §2.126 |
+| `RLEnv._random_opponent` | `src/clasher_new/rl/env_wrapper.py:524` | function | §2.116 |
+| `_rarity_level_index` | `src/clasher_new/card_utils.py:182` | function | §2.87 |
+| `Handler._read_body` | `src/clasher_new/rl/dashboard.py:2026` | function | §2.112 |
+| `_ready_ability_cost` | `src/clasher_new/rl/action_mask.py:479` | function | §2.107 |
+| `_record_adoption` | `src/clasher_new/rl/evaluate.py:111` | function | §2.117 |
+| `_region_from_intent` | `src/clasher_new/rl/belief_planner.py:188` | function | §2.110 |
+| `_region_from_intent` | `src/clasher_new/rl/prophet.py:49` | function | §2.131 |
+| `_register` | `src/clasher_new/evo_2025_data.py:173` | function | §2.97 |
+| `_register_derived_character` | `src/clasher_new/card_utils.py:72` | function | §2.87 |
+| `_OpponentPool._reindex_hist` | `src/clasher_new/rl/train_solo.py:403` | function | §2.141 |
+| `_replay_n_games` | `src/clasher_new/rl/dashboard.py:215` | function | §2.112 |
+| `CycleBayesFilter._resample_uniform` | `src/clasher_new/rl/bayes_filter.py:89` | function | §2.108 |
+| `Entity._resolve_attack_seq` | `src/clasher_new/battle.py:459` | function | §2.83 |
+| `_restore` | `src/clasher_new/rl/run_league.py:600` | function | §2.133 |
+| `RLMCTS._root_player` | `src/clasher_new/rl/mcts.py:408` | function | §2.124 |
+| `_round_estimates` | `src/clasher_new/rl/run_league.py:448` | function | §2.133 |
+| `_run_1v1_worker` | `scripts/duel_search.py:456` | function | §2.43 |
+| `_run_2v1_worker` | `scripts/duel_search.py:235` | function | §2.43 |
+| `_run_2v2_worker` | `scripts/duel_search.py:291` | function | §2.43 |
 | `_run_matchup` | `scripts/_forensics_cycling.py:69` | function | §2.13 |
-| `_run_mp` | `src/clasher_new/rl/run_league.py:942` | function | §2.127 |
-| `RLEnv._run_opponent` | `src/clasher_new/rl/env_wrapper.py:490` | function | §2.110 |
-| `_run_side0` | `src/clasher_new/rl/run_league.py:268` | function | §2.127 |
-| `_run_side0_scripted` | `src/clasher_new/rl/run_league.py:313` | function | §2.127 |
-| `_run_single` | `src/clasher_new/rl/run_league.py:697` | function | §2.127 |
-| `_run_vec` | `src/clasher_new/rl/run_league.py:803` | function | §2.127 |
-| `_OpponentPool._sample_kind` | `src/clasher_new/rl/train_solo.py:448` | function | §2.135 |
-| `_sample_opponent_for` | `src/clasher_new/rl/run_league.py:655` | function | §2.127 |
-| `BeliefPlanner._save_ace` | `src/clasher_new/rl/belief_planner.py:698` | function | §2.104 |
-| `ProphetPlanner._save_ace` | `src/clasher_new/rl/prophet.py:410` | function | §2.125 |
-| `_save_flow_progress` | `src/clasher_new/rl/flow_league.py:157` | function | §2.113 |
-| `_save_snapshot` | `src/clasher_new/rl/run_league.py:627` | function | §2.127 |
-| `_scan_and_register` | `src/clasher_new/card_utils.py:115` | function | §2.81 |
-| `_score` | `src/clasher_new/spell_module.py:306` | function | §2.152 |
-| `Handler._send` | `src/clasher_new/rl/dashboard.py:2038` | function | §2.106 |
-| `BeliefPlanner._setup_wait` | `src/clasher_new/rl/belief_planner.py:617` | function | §2.104 |
-| `ProphetPlanner._setup_wait` | `src/clasher_new/rl/prophet.py:348` | function | §2.125 |
-| `Entity._should_switch_target` | `src/clasher_new/battle.py:651` | function | §2.77 |
-| `_side` | `src/clasher_new/rl/belief_planner.py:202` | function | §2.104 |
-| `_side` | `src/clasher_new/rl/prophet.py:107` | function | §2.125 |
-| `_signature` | `scripts/_survey_inventory.py:49` | function | §2.19 |
-| `FollowerPolicy._slot_mask_tensor` | `src/clasher_new/rl/follower.py:316` | function | §2.114 |
-| `_slot_playable` | `src/clasher_new/rl/action_mask.py:46` | function | §2.101 |
-| `BeliefPlanner._soft_control` | `src/clasher_new/rl/belief_planner.py:350` | function | §2.104 |
-| `ProphetPlanner._soft_control` | `src/clasher_new/rl/prophet.py:168` | function | §2.125 |
-| `_spawn_action_character` | `src/clasher_new/battle.py:2250` | function | §2.77 |
-| `BattleHealer._spawn_aura` | `src/clasher_new/card_mechanics.py:827` | function | §2.80 |
-| `BattleState._spawn_entity` | `src/clasher_new/battle.py:2603` | function | §2.77 |
-| `_spell_cast_value` | `src/clasher_new/rl/belief_planner.py:253` | function | §2.104 |
-| `_spell_covers_non_tower` | `src/clasher_new/rl/action_mask.py:141` | function | §2.101 |
-| `_spell_deals_damage` | `src/clasher_new/rl/action_mask.py:89` | function | §2.101 |
-| `_spell_effects` | `src/clasher_new/spell_module.py:78` | function | §2.152 |
-| `BeliefPlanner._spell_finish` | `src/clasher_new/rl/belief_planner.py:582` | function | §2.104 |
-| `ProphetPlanner._spell_finish` | `src/clasher_new/rl/prophet.py:325` | function | §2.125 |
-| `_spell_has_enemy_target` | `src/clasher_new/rl/action_mask.py:97` | function | §2.101 |
-| `_spell_radius_m` | `src/clasher_new/rl/action_mask.py:79` | function | §2.101 |
-| `_spell_target_value` | `src/clasher_new/rl/mcts.py:286` | function | §2.118 |
-| `_spell_threat_in` | `src/clasher_new/rl/prophet.py:128` | function | §2.125 |
-| `_spell_tower_damage` | `src/clasher_new/rl/action_mask.py:125` | function | §2.101 |
-| `_spell_tower_ev_illegal` | `src/clasher_new/rl/action_mask.py:158` | function | §2.101 |
-| `BeliefPlanner._spell_trade` | `src/clasher_new/rl/belief_planner.py:366` | function | §2.104 |
-| `ProphetPlanner._spell_trade` | `src/clasher_new/rl/prophet.py:183` | function | §2.125 |
-| `_stall_probe` | `src/clasher_new/rl/run_league.py:252` | function | §2.127 |
-| `_stat` | `scripts/probe_reward_composition.py:78` | function | §2.47 |
-| `_stat_file_cards` | `src/clasher_new/rl/dashboard.py:355` | function | §2.106 |
-| `_std` | `scripts/_probe_value_collapse.py:59` | function | §2.15 |
-| `FollowerPolicy._sub_update` | `src/clasher_new/rl/follower.py:394` | function | §2.114 |
-| `FollowerPolicy._sub_vec` | `src/clasher_new/rl/follower.py:387` | function | §2.114 |
-| `_sv` | `src/clasher_new/card_mechanics.py:872` | function | §2.80 |
-| `_sweep_trend` | `src/clasher_new/rl/flow_league.py:478` | function | §2.113 |
-| `_sym` | `scripts/_survey_inventory.py:103` | function | §2.19 |
-| `_sync_frozen_copy` | `src/clasher_new/rl/train_solo.py:170` | function | §2.135 |
-| `_tanky_or_melee` | `src/clasher_new/rl/belief_planner.py:141` | function | §2.104 |
-| `EntityPathfinder._target_footprint_radius` | `src/clasher_new/pathfinding_heap.py:52` | function | §2.97 |
-| `_tesla_evo_pulse` | `src/clasher_new/battle.py:2308` | function | §2.77 |
-| `_threat_and_my_pressure` | `src/clasher_new/rl/prophet.py:78` | function | §2.125 |
-| `_threat_unit_is_pressing` | `src/clasher_new/rl/belief_planner.py:321` | function | §2.104 |
-| `_threats_to` | `src/clasher_new/simulate_exchange.py:59` | function | §2.150 |
-| `_three_layer_predictability` | `scripts/diag_critic_ev.py:254` | function | §2.33 |
-| `BeliefInference._tick_elixir` | `src/clasher_new/rl/belief.py:288` | function | §2.103 |
-| `_tiny_rollout_transitions` | `src/clasher_new/rl/selftest.py:3746` | function | §2.128 |
-| `BattleState._tower_footprint_blocks` | `src/clasher_new/battle.py:3062` | function | §2.77 |
-| `_tower_premium_loss` | `src/clasher_new/rl/mcts.py:68` | function | §2.118 |
-| `_tower_report` | `src/clasher_new/simulate_exchange.py:50` | function | §2.150 |
-| `RLEnv._tower_snapshot` | `src/clasher_new/rl/env_wrapper.py:594` | function | §2.110 |
-| `_tower_state` | `src/clasher_new/rl/flow_league.py:213` | function | §2.113 |
-| `Entity._troop_spawner_tick` | `src/clasher_new/battle.py:247` | function | §2.77 |
-| `RLMCTS._uct_select` | `src/clasher_new/rl/mcts.py:471` | function | §2.118 |
-| `_unit_card` | `src/clasher_new/rl/belief_planner.py:133` | function | §2.104 |
-| `RLEnv._unit_hp_map` | `src/clasher_new/rl/env_wrapper.py:550` | function | §2.110 |
-| `_units` | `src/clasher_new/rl/prophet.py:63` | function | §2.125 |
-| `PPOTrainer._update_epochs` | `src/clasher_new/rl/ppo.py:477` | function | §2.124 |
-| `_value_at_level` | `src/clasher_new/card_utils.py:196` | function | §2.81 |
-| `FollowerPolicy._value_from` | `src/clasher_new/rl/follower.py:303` | function | §2.114 |
-| `_walk` | `scripts/_survey_inventory.py:120` | function | §2.19 |
-| `BattleState._wrap` | `src/clasher_new/battle.py:2610` | function | §2.77 |
-| `_write_gate_report` | `src/clasher_new/rl/train_solo.py:309` | function | §2.135 |
-| `_write_sweep` | `src/clasher_new/rl/flow_league.py:491` | function | §2.113 |
-| `SubAction.ability` | `src/clasher_new/rl/action_bundle.py:59` | function | §2.100 |
-| `ability_legal` | `src/clasher_new/rl/action_mask.py:500` | function | §2.101 |
-| `ability_mana` | `src/clasher_new/rl/action_mask.py:516` | function | §2.101 |
-| `FollowerPolicy.act` | `src/clasher_new/rl/follower.py:433` | function | §2.114 |
-| `HumanPlaySession.act` | `src/clasher_new/rl/human_play.py:124` | function | §2.115 |
-| `FollowerPolicy.act_parallel` | `src/clasher_new/rl/follower.py:504` | function | §2.114 |
-| `ActionBundle` | `src/clasher_new/rl/action_bundle.py:76` | class | §2.100 |
-| `ActionBundleSpace` | `src/clasher_new/rl/env_wrapper.py:268` | class | §2.110 |
-| `adb` | `src/clasher_new/run_raw_capture.py:7` | function | §2.137 |
-| `ActionBundle.add` | `src/clasher_new/rl/action_bundle.py:83` | function | §2.100 |
-| `ActionBundle.add_ability` | `src/clasher_new/rl/action_bundle.py:87` | function | §2.100 |
-| `League.add_agent` | `src/clasher_new/rl/league.py:44` | function | §2.117 |
-| `League.add_exploiter` | `src/clasher_new/rl/league.py:125` | function | §2.117 |
-| `alpha_curve` | `scripts/probe_v3_mono_check.py:56` | function | §2.48 |
-| `alpha_curve` | `scripts/probe_v4_ln_pair.py:62` | function | §2.49 |
+| `_run_mp` | `src/clasher_new/rl/run_league.py:942` | function | §2.133 |
+| `RLEnv._run_opponent` | `src/clasher_new/rl/env_wrapper.py:490` | function | §2.116 |
+| `_run_side0` | `src/clasher_new/rl/run_league.py:268` | function | §2.133 |
+| `_run_side0_scripted` | `src/clasher_new/rl/run_league.py:313` | function | §2.133 |
+| `_run_single` | `src/clasher_new/rl/run_league.py:697` | function | §2.133 |
+| `_run_vec` | `src/clasher_new/rl/run_league.py:803` | function | §2.133 |
+| `_OpponentPool._sample_kind` | `src/clasher_new/rl/train_solo.py:448` | function | §2.141 |
+| `_sample_opponent_for` | `src/clasher_new/rl/run_league.py:655` | function | §2.133 |
+| `BeliefPlanner._save_ace` | `src/clasher_new/rl/belief_planner.py:698` | function | §2.110 |
+| `ProphetPlanner._save_ace` | `src/clasher_new/rl/prophet.py:410` | function | §2.131 |
+| `_save_flow_progress` | `src/clasher_new/rl/flow_league.py:157` | function | §2.119 |
+| `_save_snapshot` | `src/clasher_new/rl/run_league.py:627` | function | §2.133 |
+| `_scan_and_register` | `src/clasher_new/card_utils.py:115` | function | §2.87 |
+| `_score` | `src/clasher_new/spell_module.py:306` | function | §2.158 |
+| `Handler._send` | `src/clasher_new/rl/dashboard.py:2038` | function | §2.112 |
+| `BeliefPlanner._setup_wait` | `src/clasher_new/rl/belief_planner.py:617` | function | §2.110 |
+| `ProphetPlanner._setup_wait` | `src/clasher_new/rl/prophet.py:348` | function | §2.131 |
+| `Entity._should_switch_target` | `src/clasher_new/battle.py:651` | function | §2.83 |
+| `_side` | `src/clasher_new/rl/belief_planner.py:202` | function | §2.110 |
+| `_side` | `src/clasher_new/rl/prophet.py:107` | function | §2.131 |
+| `_signature` | `scripts/_survey_inventory.py:49` | function | §2.21 |
+| `FollowerPolicy._slot_mask_tensor` | `src/clasher_new/rl/follower.py:316` | function | §2.120 |
+| `_slot_playable` | `src/clasher_new/rl/action_mask.py:46` | function | §2.107 |
+| `BeliefPlanner._soft_control` | `src/clasher_new/rl/belief_planner.py:350` | function | §2.110 |
+| `ProphetPlanner._soft_control` | `src/clasher_new/rl/prophet.py:168` | function | §2.131 |
+| `_spawn_action_character` | `src/clasher_new/battle.py:2250` | function | §2.83 |
+| `BattleHealer._spawn_aura` | `src/clasher_new/card_mechanics.py:827` | function | §2.86 |
+| `BattleState._spawn_entity` | `src/clasher_new/battle.py:2603` | function | §2.83 |
+| `_spell_cast_value` | `src/clasher_new/rl/belief_planner.py:253` | function | §2.110 |
+| `_spell_covers_non_tower` | `src/clasher_new/rl/action_mask.py:141` | function | §2.107 |
+| `_spell_deals_damage` | `src/clasher_new/rl/action_mask.py:89` | function | §2.107 |
+| `_spell_effects` | `src/clasher_new/spell_module.py:78` | function | §2.158 |
+| `BeliefPlanner._spell_finish` | `src/clasher_new/rl/belief_planner.py:582` | function | §2.110 |
+| `ProphetPlanner._spell_finish` | `src/clasher_new/rl/prophet.py:325` | function | §2.131 |
+| `_spell_has_enemy_target` | `src/clasher_new/rl/action_mask.py:97` | function | §2.107 |
+| `_spell_radius_m` | `src/clasher_new/rl/action_mask.py:79` | function | §2.107 |
+| `_spell_target_value` | `src/clasher_new/rl/mcts.py:286` | function | §2.124 |
+| `_spell_threat_in` | `src/clasher_new/rl/prophet.py:128` | function | §2.131 |
+| `_spell_tower_damage` | `src/clasher_new/rl/action_mask.py:125` | function | §2.107 |
+| `_spell_tower_ev_illegal` | `src/clasher_new/rl/action_mask.py:158` | function | §2.107 |
+| `BeliefPlanner._spell_trade` | `src/clasher_new/rl/belief_planner.py:366` | function | §2.110 |
+| `ProphetPlanner._spell_trade` | `src/clasher_new/rl/prophet.py:183` | function | §2.131 |
+| `_stall_probe` | `src/clasher_new/rl/run_league.py:252` | function | §2.133 |
+| `_stat` | `scripts/probe_reward_composition.py:78` | function | §2.53 |
+| `_stat_file_cards` | `src/clasher_new/rl/dashboard.py:355` | function | §2.112 |
+| `_std` | `scripts/_probe_value_collapse.py:59` | function | §2.16 |
+| `FollowerPolicy._sub_update` | `src/clasher_new/rl/follower.py:394` | function | §2.120 |
+| `FollowerPolicy._sub_vec` | `src/clasher_new/rl/follower.py:387` | function | §2.120 |
+| `_sv` | `src/clasher_new/card_mechanics.py:872` | function | §2.86 |
+| `_sweep_trend` | `src/clasher_new/rl/flow_league.py:478` | function | §2.119 |
+| `_sym` | `scripts/_survey_inventory.py:103` | function | §2.21 |
+| `_sync_frozen_copy` | `src/clasher_new/rl/train_solo.py:170` | function | §2.141 |
+| `_tanky_or_melee` | `src/clasher_new/rl/belief_planner.py:141` | function | §2.110 |
+| `EntityPathfinder._target_footprint_radius` | `src/clasher_new/pathfinding_heap.py:52` | function | §2.103 |
+| `_tesla_evo_pulse` | `src/clasher_new/battle.py:2308` | function | §2.83 |
+| `_threat_and_my_pressure` | `src/clasher_new/rl/prophet.py:78` | function | §2.131 |
+| `_threat_unit_is_pressing` | `src/clasher_new/rl/belief_planner.py:321` | function | §2.110 |
+| `_threats_to` | `src/clasher_new/simulate_exchange.py:59` | function | §2.156 |
+| `_three_layer_predictability` | `scripts/diag_critic_ev.py:254` | function | §2.39 |
+| `BeliefInference._tick_elixir` | `src/clasher_new/rl/belief.py:288` | function | §2.109 |
+| `_tiny_rollout_transitions` | `src/clasher_new/rl/selftest.py:3746` | function | §2.134 |
+| `BattleState._tower_footprint_blocks` | `src/clasher_new/battle.py:3062` | function | §2.83 |
+| `_tower_premium_loss` | `src/clasher_new/rl/mcts.py:68` | function | §2.124 |
+| `_tower_report` | `src/clasher_new/simulate_exchange.py:50` | function | §2.156 |
+| `RLEnv._tower_snapshot` | `src/clasher_new/rl/env_wrapper.py:594` | function | §2.116 |
+| `_tower_state` | `src/clasher_new/rl/flow_league.py:213` | function | §2.119 |
+| `Entity._troop_spawner_tick` | `src/clasher_new/battle.py:247` | function | §2.83 |
+| `RLMCTS._uct_select` | `src/clasher_new/rl/mcts.py:471` | function | §2.124 |
+| `_unit_card` | `src/clasher_new/rl/belief_planner.py:133` | function | §2.110 |
+| `RLEnv._unit_hp_map` | `src/clasher_new/rl/env_wrapper.py:550` | function | §2.116 |
+| `_units` | `src/clasher_new/rl/prophet.py:63` | function | §2.131 |
+| `PPOTrainer._update_epochs` | `src/clasher_new/rl/ppo.py:477` | function | §2.130 |
+| `_value_at_level` | `src/clasher_new/card_utils.py:196` | function | §2.87 |
+| `FollowerPolicy._value_from` | `src/clasher_new/rl/follower.py:303` | function | §2.120 |
+| `_walk` | `scripts/_survey_inventory.py:120` | function | §2.21 |
+| `BattleState._wrap` | `src/clasher_new/battle.py:2610` | function | §2.83 |
+| `_write_gate_report` | `src/clasher_new/rl/train_solo.py:309` | function | §2.141 |
+| `_write_sweep` | `src/clasher_new/rl/flow_league.py:491` | function | §2.119 |
+| `SubAction.ability` | `src/clasher_new/rl/action_bundle.py:59` | function | §2.106 |
+| `ability_legal` | `src/clasher_new/rl/action_mask.py:500` | function | §2.107 |
+| `ability_mana` | `src/clasher_new/rl/action_mask.py:516` | function | §2.107 |
+| `FollowerPolicy.act` | `src/clasher_new/rl/follower.py:433` | function | §2.120 |
+| `HumanPlaySession.act` | `src/clasher_new/rl/human_play.py:124` | function | §2.121 |
+| `FollowerPolicy.act_parallel` | `src/clasher_new/rl/follower.py:504` | function | §2.120 |
+| `ActionBundle` | `src/clasher_new/rl/action_bundle.py:76` | class | §2.106 |
+| `ActionBundleSpace` | `src/clasher_new/rl/env_wrapper.py:268` | class | §2.116 |
+| `adb` | `src/clasher_new/run_raw_capture.py:7` | function | §2.143 |
+| `ActionBundle.add` | `src/clasher_new/rl/action_bundle.py:83` | function | §2.106 |
+| `ActionBundle.add_ability` | `src/clasher_new/rl/action_bundle.py:87` | function | §2.106 |
+| `League.add_agent` | `src/clasher_new/rl/league.py:44` | function | §2.123 |
+| `League.add_exploiter` | `src/clasher_new/rl/league.py:125` | function | §2.123 |
+| `add_inline` | `scripts/_survey_md_to_docx.py:106` | function | §2.22 |
+| `add_toc_field` | `scripts/_survey_md_to_docx.py:84` | function | §2.22 |
+| `alpha_curve` | `scripts/probe_v3_mono_check.py:56` | function | §2.54 |
+| `alpha_curve` | `scripts/probe_v4_ln_pair.py:62` | function | §2.55 |
 | `analyze` | `runs/forensics_100k.py` | class(素材) | §2.11 |
-| `analyze` | `src/clasher_new/runs/_tmp_ln_geom.py:74` | function | §2.139 |
-| `analyze` | `src/clasher_new/runs/_tmp_ln_geom2.py:82` | function | §2.140 |
-| `analyze` | `src/clasher_new/runs/_tmp_ln_geom3.py:63` | function | §2.141 |
-| `analyze` | `src/clasher_new/tmp_spell_forensics.py:12` | function | §2.157 |
-| `anchor_series` | `scripts/judge_critic_inertia.py:66` | function | §2.42 |
-| `apply` | `src/clasher_new/elite17_data.py:257` | function | §2.88 |
-| `apply` | `src/clasher_new/evo_2025_data.py:185` | function | §2.91 |
-| `Entity.apply_buff` | `src/clasher_new/battle.py:102` | function | §2.77 |
-| `apply_hero_overlay` | `src/clasher_new/battle.py:2409` | function | §2.77 |
-| `apply_m7` | `src/clasher_new/evo_2025_data.py:245` | function | §2.91 |
-| `apply_smoke` | `scripts/coverage.py:279` | function | §2.32 |
-| `ArcherQueen` | `src/clasher_new/card_mechanics.py:355` | class | §2.80 |
-| `AreaEffect` | `src/clasher_new/battle.py:1723` | class | §2.77 |
-| `AreaEffectData` | `src/clasher_new/card_utils.py:507` | class | §2.81 |
-| `AreaEffectData` | `src/clasher_new/client_side/card_utils.py:165` | class | §2.83 |
-| `ask` | `src/clasher_new/rl/launcher_menu.py:60` | function | §2.116 |
-| `ask_yesno` | `src/clasher_new/rl/launcher_menu.py:81` | function | §2.116 |
-| `Assassin` | `src/clasher_new/card_mechanics.py:715` | class | §2.80 |
-| `Balloon` | `src/clasher_new/card_mechanics.py:89` | class | §2.80 |
-| `basic_stats_lv11` | `scripts/coverage.py:126` | function | §2.32 |
-| `BasicCharacter` | `src/clasher_new/core.py:16` | class | §2.87 |
-| `batch_ev` | `scripts/diag_critic_ev.py:339` | function | §2.33 |
-| `battle_snapshot` | `src/clasher_new/rl/replay.py:85` | function | §2.126 |
-| `BattleHealer` | `src/clasher_new/card_mechanics.py:810` | class | §2.80 |
-| `BattleRam` | `src/clasher_new/card_mechanics.py:158` | class | §2.80 |
-| `BattleState` | `src/clasher_new/battle.py:2538` | class | §2.77 |
-| `behavioral_metrics` | `src/clasher_new/rl/train_solo.py:550` | function | §2.135 |
-| `TileGrid.behind_king_zone` | `src/clasher_new/arena.py:86` | function | §2.76 |
-| `belief_token_dim` | `src/clasher_new/rl/belief.py:36` | function | §2.103 |
-| `BeliefInference` | `src/clasher_new/rl/belief.py:258` | class | §2.103 |
-| `BeliefPlanner` | `src/clasher_new/rl/belief_planner.py:341` | class | §2.104 |
-| `BeliefState` | `src/clasher_new/rl/belief.py:108` | class | §2.103 |
-| `best_cast` | `src/clasher_new/spell_module.py:311` | function | §2.152 |
-| `BlankEntity` | `src/clasher_new/core.py:11` | class | §2.87 |
-| `block_worst` | `scripts/judge_critic_inertia.py:77` | function | §2.42 |
-| `blocks_of` | `scripts/judge_anchor_blocks.py:91` | function | §2.41 |
-| `BossBandit` | `src/clasher_new/card_mechanics.py:477` | class | §2.80 |
-| `brier_of` | `src/clasher_new/rl/train_belief.py:103` | function | §2.131 |
-| `GameServer.broadcast` | `src/clasher_new/server.py:22` | function | §2.149 |
-| `build_args` | `start_rl.bat` | class(素材) | §2.163 |
-| `build_card_pool` | `src/clasher_new/rl/opponents.py:49` | function | §2.120 |
-| `build_card_stats_payload` | `src/clasher_new/rl/dashboard.py:430` | function | §2.106 |
-| `build_cmd` | `src/clasher_new/rl/launcher_menu.py:200` | function | §2.116 |
-| `build_episodes` | `src/clasher_new/rl/train_belief.py:90` | function | §2.131 |
-| `build_feature` | `src/clasher_new/rl/belief.py:232` | function | §2.103 |
-| `build_five_agents` | `src/clasher_new/rl/run_league.py:539` | function | §2.127 |
-| `build_flow_models` | `src/clasher_new/rl/flow_league.py:124` | function | §2.113 |
-| `build_flow_pools` | `src/clasher_new/rl/flow_league.py:67` | function | §2.113 |
-| `build_payload` | `src/clasher_new/rl/dashboard.py:78` | function | §2.106 |
-| `build_questions` | `scripts/question_bank_poc.py:134` | function | §2.51 |
-| `build_registry` | `scripts/coverage.py:162` | function | §2.32 |
-| `build_replays_payload` | `src/clasher_new/rl/dashboard.py:258` | function | §2.106 |
-| `build_solo_payload` | `src/clasher_new/rl/dashboard.py:182` | function | §2.106 |
+| `analyze` | `src/clasher_new/runs/_tmp_ln_geom.py:74` | function | §2.145 |
+| `analyze` | `src/clasher_new/runs/_tmp_ln_geom2.py:82` | function | §2.146 |
+| `analyze` | `src/clasher_new/runs/_tmp_ln_geom3.py:63` | function | §2.147 |
+| `analyze` | `src/clasher_new/tmp_spell_forensics.py:12` | function | §2.163 |
+| `anchor_series` | `scripts/judge_critic_inertia.py:66` | function | §2.48 |
+| `apply` | `src/clasher_new/elite17_data.py:257` | function | §2.94 |
+| `apply` | `src/clasher_new/evo_2025_data.py:185` | function | §2.97 |
+| `Entity.apply_buff` | `src/clasher_new/battle.py:102` | function | §2.83 |
+| `apply_hero_overlay` | `src/clasher_new/battle.py:2409` | function | §2.83 |
+| `apply_m7` | `src/clasher_new/evo_2025_data.py:245` | function | §2.97 |
+| `apply_smoke` | `scripts/coverage.py:279` | function | §2.38 |
+| `ArcherQueen` | `src/clasher_new/card_mechanics.py:355` | class | §2.86 |
+| `AreaEffect` | `src/clasher_new/battle.py:1723` | class | §2.83 |
+| `AreaEffectData` | `src/clasher_new/card_utils.py:507` | class | §2.87 |
+| `AreaEffectData` | `src/clasher_new/client_side/card_utils.py:165` | class | §2.89 |
+| `ask` | `src/clasher_new/rl/launcher_menu.py:60` | function | §2.122 |
+| `ask_yesno` | `src/clasher_new/rl/launcher_menu.py:81` | function | §2.122 |
+| `Assassin` | `src/clasher_new/card_mechanics.py:715` | class | §2.86 |
+| `Balloon` | `src/clasher_new/card_mechanics.py:89` | class | §2.86 |
+| `basic_stats_lv11` | `scripts/coverage.py:126` | function | §2.38 |
+| `BasicCharacter` | `src/clasher_new/core.py:16` | class | §2.93 |
+| `batch_ev` | `scripts/diag_critic_ev.py:339` | function | §2.39 |
+| `battle_snapshot` | `src/clasher_new/rl/replay.py:85` | function | §2.132 |
+| `BattleHealer` | `src/clasher_new/card_mechanics.py:810` | class | §2.86 |
+| `BattleRam` | `src/clasher_new/card_mechanics.py:158` | class | §2.86 |
+| `BattleState` | `src/clasher_new/battle.py:2538` | class | §2.83 |
+| `behavioral_metrics` | `src/clasher_new/rl/train_solo.py:550` | function | §2.141 |
+| `TileGrid.behind_king_zone` | `src/clasher_new/arena.py:86` | function | §2.82 |
+| `belief_token_dim` | `src/clasher_new/rl/belief.py:36` | function | §2.109 |
+| `BeliefInference` | `src/clasher_new/rl/belief.py:258` | class | §2.109 |
+| `BeliefPlanner` | `src/clasher_new/rl/belief_planner.py:341` | class | §2.110 |
+| `BeliefState` | `src/clasher_new/rl/belief.py:108` | class | §2.109 |
+| `best_cast` | `src/clasher_new/spell_module.py:311` | function | §2.158 |
+| `BlankEntity` | `src/clasher_new/core.py:11` | class | §2.93 |
+| `block_worst` | `scripts/judge_critic_inertia.py:77` | function | §2.48 |
+| `blocks_of` | `scripts/judge_anchor_blocks.py:91` | function | §2.47 |
+| `BossBandit` | `src/clasher_new/card_mechanics.py:477` | class | §2.86 |
+| `brier_of` | `src/clasher_new/rl/train_belief.py:103` | function | §2.137 |
+| `GameServer.broadcast` | `src/clasher_new/server.py:22` | function | §2.155 |
+| `build_args` | `start_rl.bat` | class(素材) | §2.169 |
+| `build_card_pool` | `src/clasher_new/rl/opponents.py:49` | function | §2.126 |
+| `build_card_stats_payload` | `src/clasher_new/rl/dashboard.py:430` | function | §2.112 |
+| `build_cmd` | `src/clasher_new/rl/launcher_menu.py:200` | function | §2.122 |
+| `build_episodes` | `src/clasher_new/rl/train_belief.py:90` | function | §2.137 |
+| `build_feature` | `src/clasher_new/rl/belief.py:232` | function | §2.109 |
+| `build_five_agents` | `src/clasher_new/rl/run_league.py:539` | function | §2.133 |
+| `build_flow_models` | `src/clasher_new/rl/flow_league.py:124` | function | §2.119 |
+| `build_flow_pools` | `src/clasher_new/rl/flow_league.py:67` | function | §2.119 |
+| `build_payload` | `src/clasher_new/rl/dashboard.py:78` | function | §2.112 |
+| `build_questions` | `scripts/question_bank_poc.py:134` | function | §2.57 |
+| `build_registry` | `scripts/coverage.py:162` | function | §2.38 |
+| `build_replays_payload` | `src/clasher_new/rl/dashboard.py:258` | function | §2.112 |
+| `build_solo_payload` | `src/clasher_new/rl/dashboard.py:182` | function | §2.112 |
 | `build_states` | `scripts/_mask_diff_snapshot.py:20` | function | §2.14 |
-| `build_sweep_payload` | `src/clasher_new/rl/dashboard.py:143` | function | §2.106 |
-| `Building` | `src/clasher_new/battle.py:1233` | class | §2.77 |
-| `EntityPathfinder.calculate` | `src/clasher_new/pathfinding.py:51` | function | §2.96 |
-| `EntityPathfinder.calculate` | `src/clasher_new/pathfinding_heap.py:65` | function | §2.97 |
-| `BattleState.calculate_building_cache` | `src/clasher_new/battle.py:3031` | function | §2.77 |
-| `TileGrid.can_deploy_at` | `src/clasher_new/arena.py:173` | function | §2.76 |
-| `PlayerState.can_play_card` | `src/clasher_new/client_side/player.py:16` | function | §2.86 |
-| `PlayerState.can_play_card` | `src/clasher_new/player.py:36` | function | §2.98 |
-| `Card` | `src/clasher_new/card_utils.py:217` | class | §2.81 |
-| `Card` | `src/clasher_new/client_side/card_utils.py:55` | class | §2.83 |
-| `Card_base_damage` | `scripts/test_m4_evo7.py:233` | function | §2.70 |
-| `SubAction.card_name` | `src/clasher_new/rl/action_bundle.py:62` | function | §2.100 |
-| `card_selection_screen` | `src/clasher_new/client_side/client.py:56` | function | §2.84 |
-| `cell_to_position` | `src/clasher_new/pathfinding.py:16` | function | §2.96 |
-| `cell_to_position` | `src/clasher_new/pathfinding_heap.py:17` | function | §2.97 |
-| `check` | `scripts/test_m1.py:18` | function | §2.67 |
-| `check` | `scripts/test_m2.py:15` | function | §2.68 |
-| `check` | `scripts/test_m3_evo.py:17` | function | §2.69 |
-| `check` | `scripts/test_m4_evo7.py:23` | function | §2.70 |
-| `check` | `scripts/test_m5_data.py:25` | function | §2.71 |
-| `check` | `scripts/test_m6_elite.py:22` | function | §2.72 |
-| `check_policy_architecture` | `src/clasher_new/rl/diagnostics.py:143` | function | §2.108 |
-| `check_vitality` | `src/clasher_new/rl/diagnostics.py:124` | function | §2.108 |
-| `checkpoint_quiz` | `scripts/question_bank_poc.py:174` | function | §2.51 |
-| `TrainConfig.ckpt_path` | `src/clasher_new/rl/config.py:280` | function | §2.105 |
-| `classify` | `scripts/coverage.py:144` | function | §2.32 |
-| `classify_games` | `scripts/forensics_response.py:39` | function | §2.40 |
-| `classify_stats` | `src/clasher_new/rl/decks.py:133` | function | §2.107 |
-| `clear_profile_cache` | `src/clasher_new/spell_module.py:213` | function | §2.152 |
-| `clock_perm` | `scripts/pomdp_ceiling_probe.py:252` | function | §2.46 |
-| `collect` | `src/clasher_new/rl/train_bc.py:60` | function | §2.130 |
-| `collect_evo_mechanics` | `src/clasher_new/evolutions.py:70` | function | §2.92 |
-| `collect_params` | `src/clasher_new/rl/launcher_menu.py:134` | function | §2.116 |
-| `collect_replays` | `src/clasher_new/rl/train_belief.py:49` | function | §2.131 |
-| `PPOTrainer.compute_gae` | `src/clasher_new/rl/ppo.py:168` | function | §2.124 |
-| `compute_reward` | `src/clasher_new/rl/env_wrapper.py:181` | function | §2.110 |
-| `TrainConfig.config_path` | `src/clasher_new/rl/config.py:271` | function | §2.105 |
-| `ActionBundleSpace.contains` | `src/clasher_new/rl/env_wrapper.py:282` | function | §2.110 |
-| `ActionBundle.contains_card` | `src/clasher_new/rl/action_bundle.py:109` | function | §2.100 |
-| `count` | `src/clasher_new/runs/_tmp_variants.py:41` | function | §2.147 |
-| `Entity.create_projectile` | `src/clasher_new/battle.py:738` | function | §2.77 |
-| `CREnv` | `src/clasher_new/environment.py:33` | class | §2.89 |
-| `CRFeatureExtractor` | `src/clasher_new/rl/train_baseline.py:45` | class | §2.129 |
-| `CRFeatureExtractor` | `src/clasher_new/train.py:17` | class | §2.160 |
-| `CycleBayesFilter` | `src/clasher_new/rl/bayes_filter.py:42` | class | §2.102 |
-| `DarkPrince` | `src/clasher_new/card_mechanics.py:155` | class | §2.80 |
-| `DarkPrinceHeroRhino` | `src/clasher_new/card_mechanics.py:1367` | class | §2.80 |
-| `Assassin.dash_tick` | `src/clasher_new/card_mechanics.py:774` | function | §2.80 |
-| `BattleState.deal_area_damage` | `src/clasher_new/battle.py:3250` | function | §2.77 |
-| `DeathSlowZone` | `src/clasher_new/battle.py:2184` | class | §2.77 |
-| `ScriptedPolicy.deck` | `src/clasher_new/rl/opponents.py:96` | function | §2.120 |
-| `SelfDefenderPolicy.deck` | `src/clasher_new/rl/opponents.py:148` | function | §2.120 |
-| `decks_by_archetype` | `src/clasher_new/rl/decks.py:125` | function | §2.107 |
-| `BattleState.delayed_spawn` | `src/clasher_new/battle.py:2637` | function | §2.77 |
-| `Visualizer.deploy` | `src/clasher_new/new_visualization.py:31` | function | §2.95 |
-| `BattleState.deploy_card` | `src/clasher_new/battle.py:2806` | function | §2.77 |
-| `deploy_evo_spell` | `scripts/test_m3_evo.py:49` | function | §2.69 |
-| `deploy_hero` | `scripts/test_m6_elite.py:47` | function | §2.72 |
-| `derive_evolved_stats` | `src/clasher_new/evolutions.py:98` | function | §2.92 |
-| `Entity.die` | `src/clasher_new/battle.py:200` | function | §2.77 |
-| `SpawnProjectile.die` | `src/clasher_new/battle.py:1700` | function | §2.77 |
-| `TileGrid.dist_to_rect` | `src/clasher_new/arena.py:49` | function | §2.76 |
-| `Position.distance_to` | `src/clasher_new/core.py:8` | function | §2.87 |
-| `Handler.do_GET` | `src/clasher_new/rl/dashboard.py:2048` | function | §2.106 |
-| `Handler.do_POST` | `src/clasher_new/rl/dashboard.py:2102` | function | §2.106 |
-| `do_setup` | `start_rl.bat` | class(素材) | §2.163 |
-| `do_setup` | `start_training.bat` | class(素材) | §2.164 |
-| `LeagueGameRecorder.done` | `src/clasher_new/rl/run_league.py:136` | function | §2.127 |
-| `Visualizer.draw_arena` | `src/clasher_new/minimal_visualizer.py:79` | function | §2.94 |
-| `Visualizer.draw_arena` | `src/clasher_new/new_visualization.py:37` | function | §2.95 |
-| `draw_arena` | `src/clasher_new/client_side/client.py:165` | function | §2.84 |
-| `draw_elixir_bar` | `src/clasher_new/client_side/client.py:250` | function | §2.84 |
-| `Visualizer.draw_entities` | `src/clasher_new/minimal_visualizer.py:92` | function | §2.94 |
-| `Visualizer.draw_entities` | `src/clasher_new/new_visualization.py:50` | function | §2.95 |
-| `draw_entities` | `src/clasher_new/client_side/client.py:176` | function | §2.84 |
-| `draw_hand` | `src/clasher_new/client_side/client.py:235` | function | §2.84 |
-| `Visualizer.draw_ui` | `src/clasher_new/minimal_visualizer.py:177` | function | §2.94 |
-| `Visualizer.draw_ui` | `src/clasher_new/new_visualization.py:74` | function | §2.95 |
-| `draw_ui` | `src/clasher_new/client_side/client.py:193` | function | §2.84 |
-| `drive_games` | `src/clasher_new/rl/human_play.py:259` | function | §2.115 |
-| `dry_run` | `start_rl.bat` | class(素材) | §2.163 |
-| `ece_of` | `src/clasher_new/rl/train_belief.py:117` | function | §2.131 |
-| `Entity.edge_distance_from` | `src/clasher_new/battle.py:152` | function | §2.77 |
-| `ElectroGiant` | `src/clasher_new/card_mechanics.py:1584` | class | §2.80 |
-| `ElectroSpirit` | `src/clasher_new/card_mechanics.py:1630` | class | §2.80 |
-| `ElectroWizard` | `src/clasher_new/card_mechanics.py:1613` | class | §2.80 |
-| `Elo` | `src/clasher_new/rl/elo.py:16` | class | §2.109 |
-| `League.elo_table` | `src/clasher_new/rl/league.py:141` | function | §2.117 |
-| `BeliefInference.encode` | `src/clasher_new/rl/belief.py:344` | function | §2.103 |
-| `NeuralBeliefEncoder.encode` | `src/clasher_new/rl/belief.py:204` | function | §2.103 |
-| `EpisodeReplay.end` | `src/clasher_new/rl/replay.py:47` | function | §2.126 |
-| `enemy_path_checkpoints` | `scripts/duel_search.py:118` | function | §2.37 |
-| `enemy_timeline` | `scripts/duel_search.py:61` | function | §2.37 |
-| `engine_resolution` | `src/clasher_new/spell_module.py:95` | function | §2.152 |
-| `Elo.ensure` | `src/clasher_new/rl/elo.py:22` | function | §2.109 |
-| `TrainConfig.ensure_dirs` | `src/clasher_new/rl/config.py:286` | function | §2.105 |
-| `BattleState.ensure_walkability` | `src/clasher_new/battle.py:2579` | function | §2.77 |
-| `Entity` | `src/clasher_new/battle.py:13` | class | §2.77 |
-| `EntityPathfinder` | `src/clasher_new/pathfinding.py:34` | class | §2.96 |
-| `EntityPathfinder` | `src/clasher_new/pathfinding_heap.py:36` | class | §2.97 |
-| `CycleBayesFilter.entropy` | `src/clasher_new/rl/bayes_filter.py:178` | function | §2.102 |
-| `enumerate_bundles` | `src/clasher_new/rl/mcts.py:143` | function | §2.118 |
-| `EpisodeReplay` | `src/clasher_new/rl/replay.py:22` | class | §2.126 |
-| `estimate_tower_threat` | `src/clasher_new/threat_calc.py:51` | function | §2.153 |
-| `ev` | `scripts/diag_critic_ev.py:329` | function | §2.33 |
-| `ev` | `scripts/diag_gru_ablation.py:41` | function | §2.35 |
-| `ev` | `scripts/pomdp_ceiling_probe.py:196` | function | §2.46 |
-| `ev_of` | `scripts/judge_probe_v3.py:55` | function | §2.43 |
-| `ev_of` | `scripts/question_bank_poc.py:105` | function | §2.51 |
-| `ev_of` | `src/clasher_new/runs/_tmp_variants.py:38` | function | §2.147 |
-| `ev_win128_med` | `scripts/pomdp_ceiling_probe.py:227` | function | §2.46 |
-| `ev_within` | `scripts/pomdp_ceiling_probe.py:202` | function | §2.46 |
-| `ev_within_raw` | `scripts/pomdp_ceiling_probe.py:216` | function | §2.46 |
-| `eval_round_robin` | `src/clasher_new/rl/run_league.py:476` | function | §2.127 |
-| `eval_solo` | `src/clasher_new/rl/train_solo.py:713` | function | §2.135 |
-| `eval_solo_parallel` | `src/clasher_new/rl/train_solo.py:941` | function | §2.135 |
-| `FollowerPolicy.evaluate` | `src/clasher_new/rl/follower.py:713` | function | §2.114 |
-| `evaluate` | `scripts/judge_anchor_blocks.py:119` | function | §2.41 |
-| `evaluate` | `src/clasher_new/rl/train_follower.py:242` | function | §2.133 |
-| `FollowerPolicy.evaluate_batch` | `src/clasher_new/rl/follower.py:610` | function | §2.114 |
-| `evaluate_belief` | `src/clasher_new/rl/evaluate.py:477` | function | §2.111 |
-| `evaluate_cast` | `src/clasher_new/spell_module.py:235` | function | §2.152 |
-| `evaluate_league` | `src/clasher_new/rl/run_league.py:510` | function | §2.127 |
-| `evaluate_winrate` | `src/clasher_new/rl/train_exploiter.py:56` | function | §2.132 |
-| `EvoEffectZone` | `src/clasher_new/battle.py:1946` | class | §2.77 |
-| `evolution_state` | `src/clasher_new/evolutions.py:89` | function | §2.92 |
-| `EvoZapZone` | `src/clasher_new/battle.py:2328` | class | §2.77 |
-| `extractPage.send.executor（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.25 |
-| `extractPage.send.executor（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.26 |
-| `extractPage.send.executor（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.28 |
-| `extractPage.send.executor（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.31 |
-| `Elo.expected` | `src/clasher_new/rl/elo.py:28` | function | §2.109 |
-| `expected` | `src/clasher_new/agent_pool.py:12` | function | §2.75 |
-| `expert_bundle` | `src/clasher_new/rl/train_bc.py:40` | function | §2.130 |
-| `PPOTrainer.explained_variance` | `src/clasher_new/rl/ppo.py:145` | function | §2.124 |
-| `export_data` | `src/clasher_new/rl/human_play.py:236` | function | §2.115 |
-| `extend_array` | `scripts/extend_level16.py:18` | function | §2.38 |
+| `build_sweep_payload` | `src/clasher_new/rl/dashboard.py:143` | function | §2.112 |
+| `Building` | `src/clasher_new/battle.py:1233` | class | §2.83 |
+| `EntityPathfinder.calculate` | `src/clasher_new/pathfinding.py:51` | function | §2.102 |
+| `EntityPathfinder.calculate` | `src/clasher_new/pathfinding_heap.py:65` | function | §2.103 |
+| `BattleState.calculate_building_cache` | `src/clasher_new/battle.py:3031` | function | §2.83 |
+| `TileGrid.can_deploy_at` | `src/clasher_new/arena.py:173` | function | §2.82 |
+| `PlayerState.can_play_card` | `src/clasher_new/client_side/player.py:16` | function | §2.92 |
+| `PlayerState.can_play_card` | `src/clasher_new/player.py:36` | function | §2.104 |
+| `Card` | `src/clasher_new/card_utils.py:217` | class | §2.87 |
+| `Card` | `src/clasher_new/client_side/card_utils.py:55` | class | §2.89 |
+| `Card_base_damage` | `scripts/test_m4_evo7.py:233` | function | §2.76 |
+| `SubAction.card_name` | `src/clasher_new/rl/action_bundle.py:62` | function | §2.106 |
+| `card_selection_screen` | `src/clasher_new/client_side/client.py:56` | function | §2.90 |
+| `cell_shade` | `scripts/_survey_md_to_docx.py:75` | function | §2.22 |
+| `cell_to_position` | `src/clasher_new/pathfinding.py:16` | function | §2.102 |
+| `cell_to_position` | `src/clasher_new/pathfinding_heap.py:17` | function | §2.103 |
+| `check` | `scripts/test_m1.py:18` | function | §2.73 |
+| `check` | `scripts/test_m2.py:15` | function | §2.74 |
+| `check` | `scripts/test_m3_evo.py:17` | function | §2.75 |
+| `check` | `scripts/test_m4_evo7.py:23` | function | §2.76 |
+| `check` | `scripts/test_m5_data.py:25` | function | §2.77 |
+| `check` | `scripts/test_m6_elite.py:22` | function | §2.78 |
+| `check_policy_architecture` | `src/clasher_new/rl/diagnostics.py:143` | function | §2.114 |
+| `check_vitality` | `src/clasher_new/rl/diagnostics.py:124` | function | §2.114 |
+| `checkpoint_quiz` | `scripts/question_bank_poc.py:174` | function | §2.57 |
+| `TrainConfig.ckpt_path` | `src/clasher_new/rl/config.py:280` | function | §2.111 |
+| `classify` | `scripts/coverage.py:144` | function | §2.38 |
+| `classify_games` | `scripts/forensics_response.py:39` | function | §2.46 |
+| `classify_stats` | `src/clasher_new/rl/decks.py:133` | function | §2.113 |
+| `clear_profile_cache` | `src/clasher_new/spell_module.py:213` | function | §2.158 |
+| `clock_perm` | `scripts/pomdp_ceiling_probe.py:252` | function | §2.52 |
+| `collect` | `src/clasher_new/rl/train_bc.py:60` | function | §2.136 |
+| `collect_evo_mechanics` | `src/clasher_new/evolutions.py:70` | function | §2.98 |
+| `collect_noncode` | `scripts/_survey_merge.py:109` | function | §2.23 |
+| `collect_params` | `src/clasher_new/rl/launcher_menu.py:134` | function | §2.122 |
+| `collect_replays` | `src/clasher_new/rl/train_belief.py:49` | function | §2.137 |
+| `PPOTrainer.compute_gae` | `src/clasher_new/rl/ppo.py:168` | function | §2.130 |
+| `compute_reward` | `src/clasher_new/rl/env_wrapper.py:181` | function | §2.116 |
+| `TrainConfig.config_path` | `src/clasher_new/rl/config.py:271` | function | §2.111 |
+| `configure_styles` | `scripts/_survey_md_to_docx.py:126` | function | §2.22 |
+| `ActionBundleSpace.contains` | `src/clasher_new/rl/env_wrapper.py:282` | function | §2.116 |
+| `ActionBundle.contains_card` | `src/clasher_new/rl/action_bundle.py:109` | function | §2.106 |
+| `convert` | `scripts/_survey_md_to_docx.py:151` | function | §2.22 |
+| `count` | `src/clasher_new/runs/_tmp_variants.py:41` | function | §2.153 |
+| `Entity.create_projectile` | `src/clasher_new/battle.py:738` | function | §2.83 |
+| `CREnv` | `src/clasher_new/environment.py:33` | class | §2.95 |
+| `CRFeatureExtractor` | `src/clasher_new/rl/train_baseline.py:45` | class | §2.135 |
+| `CRFeatureExtractor` | `src/clasher_new/train.py:17` | class | §2.166 |
+| `CycleBayesFilter` | `src/clasher_new/rl/bayes_filter.py:42` | class | §2.108 |
+| `DarkPrince` | `src/clasher_new/card_mechanics.py:155` | class | §2.86 |
+| `DarkPrinceHeroRhino` | `src/clasher_new/card_mechanics.py:1367` | class | §2.86 |
+| `Assassin.dash_tick` | `src/clasher_new/card_mechanics.py:774` | function | §2.86 |
+| `BattleState.deal_area_damage` | `src/clasher_new/battle.py:3250` | function | §2.83 |
+| `DeathSlowZone` | `src/clasher_new/battle.py:2184` | class | §2.83 |
+| `ScriptedPolicy.deck` | `src/clasher_new/rl/opponents.py:96` | function | §2.126 |
+| `SelfDefenderPolicy.deck` | `src/clasher_new/rl/opponents.py:148` | function | §2.126 |
+| `decks_by_archetype` | `src/clasher_new/rl/decks.py:125` | function | §2.113 |
+| `BattleState.delayed_spawn` | `src/clasher_new/battle.py:2637` | function | §2.83 |
+| `Visualizer.deploy` | `src/clasher_new/new_visualization.py:31` | function | §2.101 |
+| `BattleState.deploy_card` | `src/clasher_new/battle.py:2806` | function | §2.83 |
+| `deploy_evo_spell` | `scripts/test_m3_evo.py:49` | function | §2.75 |
+| `deploy_hero` | `scripts/test_m6_elite.py:47` | function | §2.78 |
+| `derive_evolved_stats` | `src/clasher_new/evolutions.py:98` | function | §2.98 |
+| `Entity.die` | `src/clasher_new/battle.py:200` | function | §2.83 |
+| `SpawnProjectile.die` | `src/clasher_new/battle.py:1700` | function | §2.83 |
+| `disk_lines` | `scripts/_survey_merge.py:47` | function | §2.23 |
+| `TileGrid.dist_to_rect` | `src/clasher_new/arena.py:49` | function | §2.82 |
+| `Position.distance_to` | `src/clasher_new/core.py:8` | function | §2.93 |
+| `Handler.do_GET` | `src/clasher_new/rl/dashboard.py:2048` | function | §2.112 |
+| `Handler.do_POST` | `src/clasher_new/rl/dashboard.py:2102` | function | §2.112 |
+| `do_setup` | `start_rl.bat` | class(素材) | §2.169 |
+| `do_setup` | `start_training.bat` | class(素材) | §2.170 |
+| `LeagueGameRecorder.done` | `src/clasher_new/rl/run_league.py:136` | function | §2.133 |
+| `Visualizer.draw_arena` | `src/clasher_new/minimal_visualizer.py:79` | function | §2.100 |
+| `Visualizer.draw_arena` | `src/clasher_new/new_visualization.py:37` | function | §2.101 |
+| `draw_arena` | `src/clasher_new/client_side/client.py:165` | function | §2.90 |
+| `draw_elixir_bar` | `src/clasher_new/client_side/client.py:250` | function | §2.90 |
+| `Visualizer.draw_entities` | `src/clasher_new/minimal_visualizer.py:92` | function | §2.100 |
+| `Visualizer.draw_entities` | `src/clasher_new/new_visualization.py:50` | function | §2.101 |
+| `draw_entities` | `src/clasher_new/client_side/client.py:176` | function | §2.90 |
+| `draw_hand` | `src/clasher_new/client_side/client.py:235` | function | §2.90 |
+| `Visualizer.draw_ui` | `src/clasher_new/minimal_visualizer.py:177` | function | §2.100 |
+| `Visualizer.draw_ui` | `src/clasher_new/new_visualization.py:74` | function | §2.101 |
+| `draw_ui` | `src/clasher_new/client_side/client.py:193` | function | §2.90 |
+| `drive_games` | `src/clasher_new/rl/human_play.py:259` | function | §2.121 |
+| `dry_run` | `start_rl.bat` | class(素材) | §2.169 |
+| `ece_of` | `src/clasher_new/rl/train_belief.py:117` | function | §2.137 |
+| `Entity.edge_distance_from` | `src/clasher_new/battle.py:152` | function | §2.83 |
+| `ElectroGiant` | `src/clasher_new/card_mechanics.py:1584` | class | §2.86 |
+| `ElectroSpirit` | `src/clasher_new/card_mechanics.py:1630` | class | §2.86 |
+| `ElectroWizard` | `src/clasher_new/card_mechanics.py:1613` | class | §2.86 |
+| `Elo` | `src/clasher_new/rl/elo.py:16` | class | §2.115 |
+| `League.elo_table` | `src/clasher_new/rl/league.py:141` | function | §2.123 |
+| `BeliefInference.encode` | `src/clasher_new/rl/belief.py:344` | function | §2.109 |
+| `NeuralBeliefEncoder.encode` | `src/clasher_new/rl/belief.py:204` | function | §2.109 |
+| `EpisodeReplay.end` | `src/clasher_new/rl/replay.py:47` | function | §2.132 |
+| `enemy_path_checkpoints` | `scripts/duel_search.py:118` | function | §2.43 |
+| `enemy_timeline` | `scripts/duel_search.py:61` | function | §2.43 |
+| `engine_accepts` | `scripts/_mask_vs_engine_reconcile.py:54` | function | §2.15 |
+| `engine_resolution` | `src/clasher_new/spell_module.py:95` | function | §2.158 |
+| `Elo.ensure` | `src/clasher_new/rl/elo.py:22` | function | §2.115 |
+| `TrainConfig.ensure_dirs` | `src/clasher_new/rl/config.py:286` | function | §2.111 |
+| `BattleState.ensure_walkability` | `src/clasher_new/battle.py:2579` | function | §2.83 |
+| `Entity` | `src/clasher_new/battle.py:13` | class | §2.83 |
+| `EntityPathfinder` | `src/clasher_new/pathfinding.py:34` | class | §2.102 |
+| `EntityPathfinder` | `src/clasher_new/pathfinding_heap.py:36` | class | §2.103 |
+| `CycleBayesFilter.entropy` | `src/clasher_new/rl/bayes_filter.py:178` | function | §2.108 |
+| `enumerate_bundles` | `src/clasher_new/rl/mcts.py:143` | function | §2.124 |
+| `EpisodeReplay` | `src/clasher_new/rl/replay.py:22` | class | §2.132 |
+| `estimate_tower_threat` | `src/clasher_new/threat_calc.py:51` | function | §2.159 |
+| `ev` | `scripts/diag_critic_ev.py:329` | function | §2.39 |
+| `ev` | `scripts/diag_gru_ablation.py:41` | function | §2.41 |
+| `ev` | `scripts/pomdp_ceiling_probe.py:196` | function | §2.52 |
+| `ev_of` | `scripts/judge_probe_v3.py:55` | function | §2.49 |
+| `ev_of` | `scripts/question_bank_poc.py:105` | function | §2.57 |
+| `ev_of` | `src/clasher_new/runs/_tmp_variants.py:38` | function | §2.153 |
+| `ev_win128_med` | `scripts/pomdp_ceiling_probe.py:227` | function | §2.52 |
+| `ev_within` | `scripts/pomdp_ceiling_probe.py:202` | function | §2.52 |
+| `ev_within_raw` | `scripts/pomdp_ceiling_probe.py:216` | function | §2.52 |
+| `eval_round_robin` | `src/clasher_new/rl/run_league.py:476` | function | §2.133 |
+| `eval_solo` | `src/clasher_new/rl/train_solo.py:713` | function | §2.141 |
+| `eval_solo_parallel` | `src/clasher_new/rl/train_solo.py:941` | function | §2.141 |
+| `FollowerPolicy.evaluate` | `src/clasher_new/rl/follower.py:713` | function | §2.120 |
+| `evaluate` | `scripts/judge_anchor_blocks.py:119` | function | §2.47 |
+| `evaluate` | `src/clasher_new/rl/train_follower.py:242` | function | §2.139 |
+| `FollowerPolicy.evaluate_batch` | `src/clasher_new/rl/follower.py:610` | function | §2.120 |
+| `evaluate_belief` | `src/clasher_new/rl/evaluate.py:477` | function | §2.117 |
+| `evaluate_cast` | `src/clasher_new/spell_module.py:235` | function | §2.158 |
+| `evaluate_league` | `src/clasher_new/rl/run_league.py:510` | function | §2.133 |
+| `evaluate_winrate` | `src/clasher_new/rl/train_exploiter.py:56` | function | §2.138 |
+| `EvoEffectZone` | `src/clasher_new/battle.py:1946` | class | §2.83 |
+| `evolution_state` | `src/clasher_new/evolutions.py:89` | function | §2.98 |
+| `EvoZapZone` | `src/clasher_new/battle.py:2328` | class | §2.83 |
+| `extractPage.send.executor（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.31 |
+| `extractPage.send.executor（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.32 |
+| `extractPage.send.executor（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.34 |
+| `extractPage.send.executor（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.37 |
+| `Elo.expected` | `src/clasher_new/rl/elo.py:28` | function | §2.115 |
+| `expected` | `src/clasher_new/agent_pool.py:12` | function | §2.81 |
+| `expert_bundle` | `src/clasher_new/rl/train_bc.py:40` | function | §2.136 |
+| `PPOTrainer.explained_variance` | `src/clasher_new/rl/ppo.py:145` | function | §2.130 |
+| `export_data` | `src/clasher_new/rl/human_play.py:236` | function | §2.121 |
+| `extend_array` | `scripts/extend_level16.py:18` | function | §2.44 |
+| `extract_pending` | `scripts/_survey_merge_docs.py:102` | function | §2.24 |
 | `extractPage` | `docs/.cdp109.js` | class(素材) | §2.1 |
 | `extractPage` | `docs/.cdp111.js` | class(素材) | §2.2 |
 | `extractPage` | `docs/.cdp113.js` | class(素材) | §2.3 |
@@ -24259,909 +24663,926 @@
 | `extractPage` | `docs/.cdp_extract_110.js` | class(素材) | §2.5 |
 | `extractPage` | `docs/.cdp_extract_b05.js` | class(素材) | §2.6 |
 | `extractPage` | `docs/_cdp_extract140.js` | class(素材) | §2.7 |
-| `extractPage` | `scripts/cdp_evo.js` | class(素材) | §2.25 |
-| `extractPage` | `scripts/cdp_extract.js` | class(素材) | §2.26 |
-| `extractPage` | `scripts/cdp_hero.js` | class(素材) | §2.28 |
-| `extractPage` | `scripts/cdp_spell.js` | class(素材) | §2.31 |
-| `f` | `src/clasher_new/runs/_tmp_mm_debug.py:45` | function | §2.143 |
-| `f32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `feat_hidden` | `scripts/pomdp_ceiling_probe.py:70` | function | §2.46 |
-| `feat_obs` | `scripts/pomdp_ceiling_probe.py:51` | function | §2.46 |
-| `find_training_pids` | `scripts/stop_solo_training_2200.py:32` | function | §2.64 |
-| `Fisherman` | `src/clasher_new/card_mechanics.py:269` | class | §2.80 |
-| `fit` | `scripts/run_probe_v3.sh` | class(素材) | §2.63 |
-| `fit_layer` | `scripts/probe_value_ln.py:333` | function | §2.50 |
-| `fit_mlp` | `scripts/pomdp_ceiling_probe.py:378` | function | §2.46 |
-| `fit_ridge` | `scripts/pomdp_ceiling_probe.py:344` | function | §2.46 |
-| `fit_temperature` | `src/clasher_new/rl/train_belief.py:132` | function | §2.131 |
-| `flow_pair_games` | `src/clasher_new/rl/flow_league.py:90` | function | §2.113 |
-| `TrainConfig.folder` | `src/clasher_new/rl/config.py:244` | function | §2.105 |
-| `FollowerOpponent` | `src/clasher_new/rl/train_follower.py:52` | class | §2.133 |
-| `FollowerPolicy` | `src/clasher_new/rl/follower.py:154` | class | §2.114 |
-| `CRFeatureExtractor.forward` | `src/clasher_new/rl/train_baseline.py:62` | function | §2.129 |
-| `CRFeatureExtractor.forward` | `src/clasher_new/train.py:34` | function | §2.160 |
-| `ProphetExtractor.forward` | `src/clasher_new/rl/train_prophet.py:94` | function | §2.134 |
-| `frac` | `src/clasher_new/runs/_tmp_behavior_recount.py:76` | function | §2.138 |
-| `frank_wolfe` | `src/clasher_new/runs/_tmp_ln_geom.py:36` | function | §2.139 |
-| `frob` | `src/clasher_new/runs/_tmp_scan_disp.py:22` | function | §2.145 |
-| `ReturnScaler.from_dict` | `src/clasher_new/rl/ppo.py:77` | function | §2.124 |
-| `TrainConfig.from_dict` | `src/clasher_new/rl/config.py:301` | function | §2.105 |
-| `PlanToken.from_old_layout` | `src/clasher_new/rl/plan_space.py:163` | function | §2.123 |
-| `ActionBundle.from_single` | `src/clasher_new/rl/action_bundle.py:102` | function | §2.100 |
-| `fw_simplex` | `src/clasher_new/runs/_tmp_ln_geom3.py:37` | function | §2.141 |
-| `GameServer` | `src/clasher_new/server.py:9` | class | §2.149 |
-| `TrainConfig.gates_path` | `src/clasher_new/rl/config.py:267` | function | §2.105 |
-| `GenericBomb` | `src/clasher_new/battle.py:1892` | class | §2.77 |
-| `RLEnv.get_action_mask` | `src/clasher_new/rl/env_wrapper.py:417` | function | §2.110 |
-| `RLEnv.get_action_mask_for` | `src/clasher_new/rl/env_wrapper.py:421` | function | §2.110 |
-| `PlayerState.get_crown_count` | `src/clasher_new/client_side/player.py:33` | function | §2.86 |
-| `PlayerState.get_crown_count` | `src/clasher_new/player.py:54` | function | §2.98 |
-| `TileGrid.get_deploy_zones` | `src/clasher_new/arena.py:145` | function | §2.76 |
-| `get_hand_rects` | `src/clasher_new/client_side/client.py:226` | function | §2.84 |
-| `RLEnv.get_hidden_state` | `src/clasher_new/rl/env_wrapper.py:393` | function | §2.110 |
-| `Entity.get_nearest_target` | `src/clasher_new/battle.py:618` | function | §2.77 |
-| `get_neighboring_points` | `src/clasher_new/pathfinding.py:25` | function | §2.96 |
-| `get_neighboring_points` | `src/clasher_new/pathfinding_heap.py:23` | function | §2.97 |
-| `PlayerState.get_next_card` | `src/clasher_new/client_side/player.py:29` | function | §2.86 |
-| `PlayerState.get_next_card` | `src/clasher_new/player.py:50` | function | §2.98 |
-| `RLEnv.get_prophet_state` | `src/clasher_new/rl/env_wrapper.py:396` | function | §2.110 |
-| `get_spawn_position` | `src/clasher_new/battle.py:2524` | function | §2.77 |
-| `get_spell_profile` | `src/clasher_new/spell_module.py:204` | function | §2.152 |
-| `GameServer.get_state` | `src/clasher_new/server.py:27` | function | §2.149 |
-| `TileGrid.get_tower_blocked_x_ranges` | `src/clasher_new/arena.py:193` | function | §2.76 |
-| `Ghost` | `src/clasher_new/card_mechanics.py:8` | class | §2.80 |
-| `GiantSkeleton` | `src/clasher_new/card_mechanics.py:166` | class | §2.80 |
-| `give` | `scripts/test_m2.py:28` | function | §2.68 |
-| `GoblinGiant` | `src/clasher_new/card_mechanics.py:1761` | class | §2.80 |
-| `GoldenKnight` | `src/clasher_new/card_mechanics.py:375` | class | §2.80 |
-| `Golem` | `src/clasher_new/card_mechanics.py:95` | class | §2.80 |
-| `BattleState.ground_walkable` | `src/clasher_new/battle.py:3058` | function | §2.77 |
-| `gru_vitality` | `src/clasher_new/rl/diagnostics.py:80` | function | §2.108 |
-| `CycleBayesFilter.hand_probs` | `src/clasher_new/rl/bayes_filter.py:151` | function | §2.102 |
-| `handle` | `scripts/cdp_forward.py:41` | function | §2.27 |
-| `GameServer.handle_client` | `src/clasher_new/server.py:43` | function | §2.149 |
-| `Handler` | `src/clasher_new/rl/dashboard.py:1995` | class | §2.106 |
-| `HealAuraZone` | `src/clasher_new/battle.py:2038` | class | §2.77 |
-| `heatmap` | `scripts/duel_search.py:523` | function | §2.37 |
-| `help_done` | `start_rl.bat` | class(素材) | §2.163 |
-| `help_done` | `start_training.bat` | class(素材) | §2.164 |
-| `HeroBalloon` | `src/clasher_new/card_mechanics.py:1373` | class | §2.80 |
-| `HeroBerserker` | `src/clasher_new/card_mechanics.py:1305` | class | §2.80 |
-| `HeroBowler` | `src/clasher_new/card_mechanics.py:1102` | class | §2.80 |
-| `HeroDarkPrince` | `src/clasher_new/card_mechanics.py:1343` | class | §2.80 |
-| `HeroEliteArcher` | `src/clasher_new/card_mechanics.py:1494` | class | §2.80 |
-| `HeroGiant` | `src/clasher_new/card_mechanics.py:1158` | class | §2.80 |
-| `HeroGoblins` | `src/clasher_new/card_mechanics.py:1197` | class | §2.80 |
-| `HeroIceGolemite` | `src/clasher_new/card_mechanics.py:1542` | class | §2.80 |
-| `HeroIceWizard` | `src/clasher_new/card_mechanics.py:1447` | class | §2.80 |
-| `HeroKnight` | `src/clasher_new/card_mechanics.py:900` | class | §2.80 |
-| `HeroMegaMinion` | `src/clasher_new/card_mechanics.py:1233` | class | §2.80 |
-| `HeroMiniPekka` | `src/clasher_new/card_mechanics.py:948` | class | §2.80 |
-| `HeroMusketeer` | `src/clasher_new/card_mechanics.py:932` | class | §2.80 |
-| `HeroTombstone` | `src/clasher_new/card_mechanics.py:1278` | class | §2.80 |
-| `HeroValkyrie` | `src/clasher_new/card_mechanics.py:989` | class | §2.80 |
-| `HeroWizard` | `src/clasher_new/card_mechanics.py:1051` | class | §2.80 |
-| `EntityPathfinder.heuristic` | `src/clasher_new/pathfinding.py:44` | function | §2.96 |
-| `EntityPathfinder.heuristic` | `src/clasher_new/pathfinding_heap.py:47` | function | §2.97 |
-| `heuristic` | `src/clasher_new/pathfinding.py:22` | function | §2.96 |
-| `heuristic_opponent` | `src/clasher_new/rl/train_follower.py:33` | function | §2.133 |
-| `hidden_labels` | `src/clasher_new/rl/observation.py:147` | function | §2.119 |
-| `PlanToken.hold_slots` | `src/clasher_new/rl/plan_space.py:120` | function | §2.123 |
-| `HumanPlaySession` | `src/clasher_new/rl/human_play.py:63` | class | §2.115 |
-| `hval` | `src/clasher_new/elite17_data.py:36` | function | §2.88 |
-| `i32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `IceGolemiteSnowZone` | `src/clasher_new/battle.py:2484` | class | §2.77 |
-| `IceWizard` | `src/clasher_new/card_mechanics.py:175` | class | §2.80 |
-| `Entity.in_attack_range` | `src/clasher_new/battle.py:586` | function | §2.77 |
-| `BattleState.in_river` | `src/clasher_new/battle.py:2573` | function | §2.77 |
-| `Entity.in_sight_range` | `src/clasher_new/battle.py:605` | function | §2.77 |
-| `PlanToken.intent` | `src/clasher_new/rl/plan_space.py:117` | function | §2.123 |
-| `interpret_action_group` | `src/clasher_new/battle.py:2268` | function | §2.77 |
-| `ip_input_screen` | `src/clasher_new/client_side/client.py:95` | function | §2.84 |
-| `TileGrid.is_behind_king` | `src/clasher_new/arena.py:96` | function | §2.76 |
-| `TileGrid.is_blocked_tile` | `src/clasher_new/arena.py:103` | function | §2.76 |
-| `BattleState.is_position_occupied_by_building` | `src/clasher_new/battle.py:3072` | function | §2.77 |
-| `TileGrid.is_tower_tile` | `src/clasher_new/arena.py:131` | function | §2.76 |
-| `TileGrid.is_valid_position` | `src/clasher_new/arena.py:100` | function | §2.76 |
-| `TileGrid.is_walkable` | `src/clasher_new/arena.py:106` | function | §2.76 |
-| `jload` | `scripts/coverage.py:63` | function | §2.32 |
-| `keepAlive` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `kill_blue_towers` | `scripts/test_m3_evo.py:30` | function | §2.69 |
-| `kill_blue_towers` | `scripts/test_m4_evo7.py:36` | function | §2.70 |
-| `kill_princess_towers` | `scripts/test_m5_data.py:36` | function | §2.71 |
-| `kill_red_towers` | `scripts/test_m2.py:34` | function | §2.68 |
-| `kill_towers` | `scripts/test_m6_elite.py:32` | function | §2.72 |
-| `kill_tree` | `scripts/stop_solo_training_2200.py:58` | function | §2.64 |
-| `King_ChefTowers` | `src/clasher_new/card_mechanics.py:1842` | class | §2.80 |
-| `King_KnifeTowers` | `src/clasher_new/card_mechanics.py:1807` | class | §2.80 |
-| `lane` | `src/clasher_new/runs/_tmp_variants.py:39` | function | §2.147 |
-| `lane` | `src/clasher_new/runs/_tmp_window.py:18` | function | §2.148 |
-| `lane_of` | `src/clasher_new/runs/_tmp_behavior_recount.py:16` | function | §2.138 |
-| `launch` | `src/clasher_new/rl/launcher_menu.py:315` | function | §2.116 |
-| `LavaHound` | `src/clasher_new/card_mechanics.py:105` | class | §2.80 |
-| `layer_magstats` | `scripts/probe_value_ln.py:369` | function | §2.50 |
-| `layer_norm` | `scripts/probe_v4_ln_pair.py:84` | function | §2.49 |
-| `layer_stats` | `scripts/_probe_value_path.py:41` | function | §2.16 |
-| `leaf_value` | `src/clasher_new/rl/mcts.py:128` | function | §2.118 |
-| `League` | `src/clasher_new/rl/league.py:32` | class | §2.117 |
-| `LeagueAgent` | `src/clasher_new/rl/league.py:24` | class | §2.117 |
-| `LeagueGameRecorder` | `src/clasher_new/rl/run_league.py:108` | class | §2.127 |
-| `legacy_action_to_bundle` | `src/clasher_new/rl/env_wrapper.py:726` | function | §2.110 |
-| `legal_cells` | `src/clasher_new/rl/action_mask.py:441` | function | §2.101 |
-| `level_scale` | `src/clasher_new/card_utils.py:210` | function | §2.81 |
-| `lin_probe` | `scripts/diag_critic_ev.py:381` | function | §2.33 |
-| `LittlePrince` | `src/clasher_new/card_mechanics.py:461` | class | §2.80 |
-| `Elo.load` | `src/clasher_new/rl/elo.py:53` | function | §2.109 |
-| `EpisodeReplay.load` | `src/clasher_new/rl/replay.py:57` | function | §2.126 |
-| `NeuralBeliefEncoder.load` | `src/clasher_new/rl/belief.py:216` | function | §2.103 |
-| `TrainConfig.load` | `src/clasher_new/rl/config.py:311` | function | §2.105 |
-| `load` | `scripts/_survey_brief.py:26` | function | §2.17 |
-| `load` | `scripts/judge_probe_v3.py:47` | function | §2.43 |
-| `load` | `src/clasher_new/runs/_tmp_behavior_recount.py:19` | function | §2.138 |
-| `load` | `src/clasher_new/runs/_tmp_metric_id.py:16` | function | §2.142 |
-| `load` | `src/clasher_new/runs/_tmp_variants.py:10` | function | §2.147 |
-| `load_anchors_from_log` | `scripts/judge_anchor_blocks.py:70` | function | §2.41 |
-| `load_anchors_from_state` | `scripts/judge_anchor_blocks.py:54` | function | §2.41 |
-| `load_bc_samples` | `src/clasher_new/rl/human_play.py:194` | function | §2.115 |
-| `load_checkpoint` | `src/clasher_new/rl/follower.py:67` | function | §2.114 |
-| `load_ckpts` | `scripts/value_displacement_scan.py:34` | function | §2.73 |
-| `load_classified_decks` | `src/clasher_new/rl/decks.py:104` | function | §2.107 |
-| `load_cost_map` | `scripts/forensics_card_usage.py:74` | function | §2.39 |
-| `load_files` | `scripts/forensics_card_usage.py:112` | function | §2.39 |
-| `load_games` | `scripts/forensics_response.py:26` | function | §2.40 |
-| `load_league_replays` | `src/clasher_new/rl/replay.py:136` | function | §2.126 |
-| `load_npz` | `scripts/pomdp_ceiling_probe.py:292` | function | §2.46 |
-| `load_policy` | `src/clasher_new/rl/evaluate.py:473` | function | §2.111 |
-| `load_policy` | `src/clasher_new/rl/human_play.py:58` | function | §2.115 |
-| `load_replay_payload` | `src/clasher_new/rl/dashboard.py:270` | function | §2.106 |
-| `load_run_cfg` | `scripts/diag_critic_ev.py:57` | function | §2.33 |
-| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom.py:30` | function | §2.139 |
-| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom2.py:23` | function | §2.140 |
-| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom3.py:32` | function | §2.141 |
-| `load_sd` | `src/clasher_new/runs/_tmp_scan_disp.py:15` | function | §2.145 |
-| `load_sources` | `scripts/coverage.py:68` | function | §2.32 |
-| `League.load_state` | `src/clasher_new/rl/league.py:162` | function | §2.117 |
-| `load_state` | `src/clasher_new/rl/dashboard.py:71` | function | §2.106 |
-| `CycleBayesFilter.locked` | `src/clasher_new/rl/bayes_filter.py:57` | function | §2.102 |
-| `log` | `scripts/stop_solo_training_2200.py:25` | function | §2.64 |
-| `Handler.log_message` | `src/clasher_new/rl/dashboard.py:2099` | function | §2.106 |
+| `extractPage` | `scripts/cdp_evo.js` | class(素材) | §2.31 |
+| `extractPage` | `scripts/cdp_extract.js` | class(素材) | §2.32 |
+| `extractPage` | `scripts/cdp_hero.js` | class(素材) | §2.34 |
+| `extractPage` | `scripts/cdp_spell.js` | class(素材) | §2.37 |
+| `f` | `src/clasher_new/runs/_tmp_mm_debug.py:45` | function | §2.149 |
+| `f32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `feat_hidden` | `scripts/pomdp_ceiling_probe.py:70` | function | §2.52 |
+| `feat_obs` | `scripts/pomdp_ceiling_probe.py:51` | function | §2.52 |
+| `find_training_pids` | `scripts/stop_solo_training_2200.py:32` | function | §2.70 |
+| `Fisherman` | `src/clasher_new/card_mechanics.py:269` | class | §2.86 |
+| `fit` | `scripts/run_probe_v3.sh` | class(素材) | §2.69 |
+| `fit_layer` | `scripts/probe_value_ln.py:333` | function | §2.56 |
+| `fit_mlp` | `scripts/pomdp_ceiling_probe.py:378` | function | §2.52 |
+| `fit_ridge` | `scripts/pomdp_ceiling_probe.py:344` | function | §2.52 |
+| `fit_temperature` | `src/clasher_new/rl/train_belief.py:132` | function | §2.137 |
+| `flow_pair_games` | `src/clasher_new/rl/flow_league.py:90` | function | §2.119 |
+| `TrainConfig.folder` | `src/clasher_new/rl/config.py:244` | function | §2.111 |
+| `FollowerOpponent` | `src/clasher_new/rl/train_follower.py:52` | class | §2.139 |
+| `FollowerPolicy` | `src/clasher_new/rl/follower.py:154` | class | §2.120 |
+| `CRFeatureExtractor.forward` | `src/clasher_new/rl/train_baseline.py:62` | function | §2.135 |
+| `CRFeatureExtractor.forward` | `src/clasher_new/train.py:34` | function | §2.166 |
+| `ProphetExtractor.forward` | `src/clasher_new/rl/train_prophet.py:94` | function | §2.140 |
+| `frac` | `src/clasher_new/runs/_tmp_behavior_recount.py:76` | function | §2.144 |
+| `frank_wolfe` | `src/clasher_new/runs/_tmp_ln_geom.py:36` | function | §2.145 |
+| `frob` | `src/clasher_new/runs/_tmp_scan_disp.py:22` | function | §2.151 |
+| `ReturnScaler.from_dict` | `src/clasher_new/rl/ppo.py:77` | function | §2.130 |
+| `TrainConfig.from_dict` | `src/clasher_new/rl/config.py:301` | function | §2.111 |
+| `PlanToken.from_old_layout` | `src/clasher_new/rl/plan_space.py:163` | function | §2.129 |
+| `ActionBundle.from_single` | `src/clasher_new/rl/action_bundle.py:102` | function | §2.106 |
+| `fw_simplex` | `src/clasher_new/runs/_tmp_ln_geom3.py:37` | function | §2.147 |
+| `GameServer` | `src/clasher_new/server.py:9` | class | §2.155 |
+| `TrainConfig.gates_path` | `src/clasher_new/rl/config.py:267` | function | §2.111 |
+| `GenericBomb` | `src/clasher_new/battle.py:1892` | class | §2.83 |
+| `RLEnv.get_action_mask` | `src/clasher_new/rl/env_wrapper.py:417` | function | §2.116 |
+| `RLEnv.get_action_mask_for` | `src/clasher_new/rl/env_wrapper.py:421` | function | §2.116 |
+| `PlayerState.get_crown_count` | `src/clasher_new/client_side/player.py:33` | function | §2.92 |
+| `PlayerState.get_crown_count` | `src/clasher_new/player.py:54` | function | §2.104 |
+| `TileGrid.get_deploy_zones` | `src/clasher_new/arena.py:145` | function | §2.82 |
+| `get_hand_rects` | `src/clasher_new/client_side/client.py:226` | function | §2.90 |
+| `RLEnv.get_hidden_state` | `src/clasher_new/rl/env_wrapper.py:393` | function | §2.116 |
+| `Entity.get_nearest_target` | `src/clasher_new/battle.py:618` | function | §2.83 |
+| `get_neighboring_points` | `src/clasher_new/pathfinding.py:25` | function | §2.102 |
+| `get_neighboring_points` | `src/clasher_new/pathfinding_heap.py:23` | function | §2.103 |
+| `PlayerState.get_next_card` | `src/clasher_new/client_side/player.py:29` | function | §2.92 |
+| `PlayerState.get_next_card` | `src/clasher_new/player.py:50` | function | §2.104 |
+| `RLEnv.get_prophet_state` | `src/clasher_new/rl/env_wrapper.py:396` | function | §2.116 |
+| `get_spawn_position` | `src/clasher_new/battle.py:2524` | function | §2.83 |
+| `get_spell_profile` | `src/clasher_new/spell_module.py:204` | function | §2.158 |
+| `GameServer.get_state` | `src/clasher_new/server.py:27` | function | §2.155 |
+| `TileGrid.get_tower_blocked_x_ranges` | `src/clasher_new/arena.py:193` | function | §2.82 |
+| `Ghost` | `src/clasher_new/card_mechanics.py:8` | class | §2.86 |
+| `GiantSkeleton` | `src/clasher_new/card_mechanics.py:166` | class | §2.86 |
+| `give` | `scripts/test_m2.py:28` | function | §2.74 |
+| `GoblinGiant` | `src/clasher_new/card_mechanics.py:1761` | class | §2.86 |
+| `GoldenKnight` | `src/clasher_new/card_mechanics.py:375` | class | §2.86 |
+| `Golem` | `src/clasher_new/card_mechanics.py:95` | class | §2.86 |
+| `BattleState.ground_walkable` | `src/clasher_new/battle.py:3058` | function | §2.83 |
+| `gru_vitality` | `src/clasher_new/rl/diagnostics.py:80` | function | §2.114 |
+| `CycleBayesFilter.hand_probs` | `src/clasher_new/rl/bayes_filter.py:151` | function | §2.108 |
+| `handle` | `scripts/cdp_forward.py:41` | function | §2.33 |
+| `GameServer.handle_client` | `src/clasher_new/server.py:43` | function | §2.155 |
+| `Handler` | `src/clasher_new/rl/dashboard.py:1995` | class | §2.112 |
+| `HealAuraZone` | `src/clasher_new/battle.py:2038` | class | §2.83 |
+| `heatmap` | `scripts/duel_search.py:523` | function | §2.43 |
+| `help_done` | `start_rl.bat` | class(素材) | §2.169 |
+| `help_done` | `start_training.bat` | class(素材) | §2.170 |
+| `HeroBalloon` | `src/clasher_new/card_mechanics.py:1373` | class | §2.86 |
+| `HeroBerserker` | `src/clasher_new/card_mechanics.py:1305` | class | §2.86 |
+| `HeroBowler` | `src/clasher_new/card_mechanics.py:1102` | class | §2.86 |
+| `HeroDarkPrince` | `src/clasher_new/card_mechanics.py:1343` | class | §2.86 |
+| `HeroEliteArcher` | `src/clasher_new/card_mechanics.py:1494` | class | §2.86 |
+| `HeroGiant` | `src/clasher_new/card_mechanics.py:1158` | class | §2.86 |
+| `HeroGoblins` | `src/clasher_new/card_mechanics.py:1197` | class | §2.86 |
+| `HeroIceGolemite` | `src/clasher_new/card_mechanics.py:1542` | class | §2.86 |
+| `HeroIceWizard` | `src/clasher_new/card_mechanics.py:1447` | class | §2.86 |
+| `HeroKnight` | `src/clasher_new/card_mechanics.py:900` | class | §2.86 |
+| `HeroMegaMinion` | `src/clasher_new/card_mechanics.py:1233` | class | §2.86 |
+| `HeroMiniPekka` | `src/clasher_new/card_mechanics.py:948` | class | §2.86 |
+| `HeroMusketeer` | `src/clasher_new/card_mechanics.py:932` | class | §2.86 |
+| `HeroTombstone` | `src/clasher_new/card_mechanics.py:1278` | class | §2.86 |
+| `HeroValkyrie` | `src/clasher_new/card_mechanics.py:989` | class | §2.86 |
+| `HeroWizard` | `src/clasher_new/card_mechanics.py:1051` | class | §2.86 |
+| `EntityPathfinder.heuristic` | `src/clasher_new/pathfinding.py:44` | function | §2.102 |
+| `EntityPathfinder.heuristic` | `src/clasher_new/pathfinding_heap.py:47` | function | §2.103 |
+| `heuristic` | `src/clasher_new/pathfinding.py:22` | function | §2.102 |
+| `heuristic_opponent` | `src/clasher_new/rl/train_follower.py:33` | function | §2.139 |
+| `hidden_labels` | `src/clasher_new/rl/observation.py:147` | function | §2.125 |
+| `PlanToken.hold_slots` | `src/clasher_new/rl/plan_space.py:120` | function | §2.129 |
+| `HumanPlaySession` | `src/clasher_new/rl/human_play.py:63` | class | §2.121 |
+| `hval` | `src/clasher_new/elite17_data.py:36` | function | §2.94 |
+| `i32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `IceGolemiteSnowZone` | `src/clasher_new/battle.py:2484` | class | §2.83 |
+| `IceWizard` | `src/clasher_new/card_mechanics.py:175` | class | §2.86 |
+| `Entity.in_attack_range` | `src/clasher_new/battle.py:586` | function | §2.83 |
+| `BattleState.in_river` | `src/clasher_new/battle.py:2573` | function | §2.83 |
+| `Entity.in_sight_range` | `src/clasher_new/battle.py:605` | function | §2.83 |
+| `PlanToken.intent` | `src/clasher_new/rl/plan_space.py:117` | function | §2.129 |
+| `interpret_action_group` | `src/clasher_new/battle.py:2268` | function | §2.83 |
+| `ip_input_screen` | `src/clasher_new/client_side/client.py:95` | function | §2.90 |
+| `TileGrid.is_behind_king` | `src/clasher_new/arena.py:96` | function | §2.82 |
+| `TileGrid.is_blocked_tile` | `src/clasher_new/arena.py:103` | function | §2.82 |
+| `BattleState.is_position_occupied_by_building` | `src/clasher_new/battle.py:3072` | function | §2.83 |
+| `TileGrid.is_tower_tile` | `src/clasher_new/arena.py:131` | function | §2.82 |
+| `TileGrid.is_valid_position` | `src/clasher_new/arena.py:100` | function | §2.82 |
+| `TileGrid.is_walkable` | `src/clasher_new/arena.py:106` | function | §2.82 |
+| `jload` | `scripts/coverage.py:63` | function | §2.38 |
+| `keepAlive` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `kill_blue_towers` | `scripts/test_m3_evo.py:30` | function | §2.75 |
+| `kill_blue_towers` | `scripts/test_m4_evo7.py:36` | function | §2.76 |
+| `kill_princess_towers` | `scripts/test_m5_data.py:36` | function | §2.77 |
+| `kill_red_towers` | `scripts/test_m2.py:34` | function | §2.74 |
+| `kill_towers` | `scripts/test_m6_elite.py:32` | function | §2.78 |
+| `kill_tree` | `scripts/stop_solo_training_2200.py:58` | function | §2.70 |
+| `King_ChefTowers` | `src/clasher_new/card_mechanics.py:1842` | class | §2.86 |
+| `King_KnifeTowers` | `src/clasher_new/card_mechanics.py:1807` | class | §2.86 |
+| `lane` | `src/clasher_new/runs/_tmp_variants.py:39` | function | §2.153 |
+| `lane` | `src/clasher_new/runs/_tmp_window.py:18` | function | §2.154 |
+| `lane_of` | `src/clasher_new/runs/_tmp_behavior_recount.py:16` | function | §2.144 |
+| `launch` | `src/clasher_new/rl/launcher_menu.py:315` | function | §2.122 |
+| `LavaHound` | `src/clasher_new/card_mechanics.py:105` | class | §2.86 |
+| `layer_magstats` | `scripts/probe_value_ln.py:369` | function | §2.56 |
+| `layer_norm` | `scripts/probe_v4_ln_pair.py:84` | function | §2.55 |
+| `layer_stats` | `scripts/_probe_value_path.py:41` | function | §2.17 |
+| `leaf_value` | `src/clasher_new/rl/mcts.py:128` | function | §2.124 |
+| `League` | `src/clasher_new/rl/league.py:32` | class | §2.123 |
+| `LeagueAgent` | `src/clasher_new/rl/league.py:24` | class | §2.123 |
+| `LeagueGameRecorder` | `src/clasher_new/rl/run_league.py:108` | class | §2.133 |
+| `legacy_action_to_bundle` | `src/clasher_new/rl/env_wrapper.py:726` | function | §2.116 |
+| `legal_cells` | `src/clasher_new/rl/action_mask.py:441` | function | §2.107 |
+| `level_scale` | `src/clasher_new/card_utils.py:210` | function | §2.87 |
+| `lin_probe` | `scripts/diag_critic_ev.py:381` | function | §2.39 |
+| `LittlePrince` | `src/clasher_new/card_mechanics.py:461` | class | §2.86 |
+| `Elo.load` | `src/clasher_new/rl/elo.py:53` | function | §2.115 |
+| `EpisodeReplay.load` | `src/clasher_new/rl/replay.py:57` | function | §2.132 |
+| `NeuralBeliefEncoder.load` | `src/clasher_new/rl/belief.py:216` | function | §2.109 |
+| `TrainConfig.load` | `src/clasher_new/rl/config.py:311` | function | §2.111 |
+| `load` | `scripts/_survey_brief.py:26` | function | §2.19 |
+| `load` | `scripts/_survey_merge.py:42` | function | §2.23 |
+| `load` | `scripts/_survey_verify.py:37` | function | §2.25 |
+| `load` | `scripts/judge_probe_v3.py:47` | function | §2.49 |
+| `load` | `src/clasher_new/runs/_tmp_behavior_recount.py:19` | function | §2.144 |
+| `load` | `src/clasher_new/runs/_tmp_metric_id.py:16` | function | §2.148 |
+| `load` | `src/clasher_new/runs/_tmp_variants.py:10` | function | §2.153 |
+| `load_anchors_from_log` | `scripts/judge_anchor_blocks.py:70` | function | §2.47 |
+| `load_anchors_from_state` | `scripts/judge_anchor_blocks.py:54` | function | §2.47 |
+| `load_bc_samples` | `src/clasher_new/rl/human_play.py:194` | function | §2.121 |
+| `load_checkpoint` | `src/clasher_new/rl/follower.py:67` | function | §2.120 |
+| `load_ckpts` | `scripts/value_displacement_scan.py:34` | function | §2.79 |
+| `load_classified_decks` | `src/clasher_new/rl/decks.py:104` | function | §2.113 |
+| `load_cost_map` | `scripts/forensics_card_usage.py:74` | function | §2.45 |
+| `load_files` | `scripts/forensics_card_usage.py:112` | function | §2.45 |
+| `load_games` | `scripts/forensics_response.py:26` | function | §2.46 |
+| `load_league_replays` | `src/clasher_new/rl/replay.py:136` | function | §2.132 |
+| `load_npz` | `scripts/pomdp_ceiling_probe.py:292` | function | §2.52 |
+| `load_policy` | `src/clasher_new/rl/evaluate.py:473` | function | §2.117 |
+| `load_policy` | `src/clasher_new/rl/human_play.py:58` | function | §2.121 |
+| `load_replay_payload` | `src/clasher_new/rl/dashboard.py:270` | function | §2.112 |
+| `load_run_cfg` | `scripts/diag_critic_ev.py:57` | function | §2.39 |
+| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom.py:30` | function | §2.145 |
+| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom2.py:23` | function | §2.146 |
+| `load_sd` | `src/clasher_new/runs/_tmp_ln_geom3.py:32` | function | §2.147 |
+| `load_sd` | `src/clasher_new/runs/_tmp_scan_disp.py:15` | function | §2.151 |
+| `load_sources` | `scripts/coverage.py:68` | function | §2.38 |
+| `League.load_state` | `src/clasher_new/rl/league.py:162` | function | §2.123 |
+| `load_state` | `src/clasher_new/rl/dashboard.py:71` | function | §2.112 |
+| `CycleBayesFilter.locked` | `src/clasher_new/rl/bayes_filter.py:57` | function | §2.108 |
+| `log` | `scripts/stop_solo_training_2200.py:25` | function | §2.70 |
+| `Handler.log_message` | `src/clasher_new/rl/dashboard.py:2099` | function | §2.112 |
 | `main` | `scripts/_forensics_cycling.py:84` | function | §2.13 |
 | `main` | `scripts/_mask_diff_snapshot.py:74` | function | §2.14 |
-| `main` | `scripts/_probe_value_collapse.py:63` | function | §2.15 |
-| `main` | `scripts/_probe_value_path.py:54` | function | §2.16 |
-| `main` | `scripts/_survey_brief.py:31` | function | §2.17 |
-| `main` | `scripts/_survey_groups.py:40` | function | §2.18 |
-| `main` | `scripts/_survey_inventory.py:159` | function | §2.19 |
-| `main` | `scripts/assassin_vs_sparky.py:96` | function | §2.22 |
-| `main` | `scripts/batch_smoke.py:72` | function | §2.23 |
-| `main` | `scripts/bench_train_speed.py:35` | function | §2.24 |
-| `main` | `scripts/cdp_forward.py:52` | function | §2.27 |
-| `main` | `scripts/diag_critic_ev.py:667` | function | §2.33 |
-| `main` | `scripts/diag_encoder_scale.py:30` | function | §2.34 |
-| `main` | `scripts/diag_gru_ablation.py:71` | function | §2.35 |
-| `main` | `scripts/diag_value_head.py:33` | function | §2.36 |
-| `main` | `scripts/duel_search.py:532` | function | §2.37 |
-| `main` | `scripts/extend_level16.py:41` | function | §2.38 |
-| `main` | `scripts/forensics_card_usage.py:149` | function | §2.39 |
-| `main` | `scripts/judge_anchor_blocks.py:165` | function | §2.41 |
-| `main` | `scripts/judge_critic_inertia.py:95` | function | §2.42 |
-| `main` | `scripts/judge_probe_v3.py:60` | function | §2.43 |
-| `main` | `scripts/judge_probe_v4.py:32` | function | §2.44 |
-| `main` | `scripts/pomdp_ceiling_probe.py:426` | function | §2.46 |
-| `main` | `scripts/probe_reward_composition.py:91` | function | §2.47 |
-| `main` | `scripts/probe_v3_mono_check.py:80` | function | §2.48 |
-| `main` | `scripts/probe_v4_ln_pair.py:91` | function | §2.49 |
-| `main` | `scripts/probe_value_ln.py:404` | function | §2.50 |
-| `main` | `scripts/rl/run_league.py:9` | function | §2.55 |
-| `main` | `scripts/stop_solo_training_2200.py:71` | function | §2.64 |
-| `main` | `scripts/summarize_probe_v3_mono.py:78` | function | §2.65 |
-| `main` | `scripts/summarize_solo_run.py:122` | function | §2.66 |
-| `main` | `scripts/value_displacement_scan.py:101` | function | §2.73 |
-| `main` | `src/clasher_new/benchmark_speed.py:54` | function | §2.78 |
-| `main` | `src/clasher_new/rl/dashboard.py:2270` | function | §2.106 |
-| `main` | `src/clasher_new/rl/export_replay.py:23` | function | §2.112 |
-| `main` | `src/clasher_new/rl/human_play.py:291` | function | §2.115 |
-| `main` | `src/clasher_new/rl/launcher_menu.py:239` | function | §2.116 |
-| `main` | `src/clasher_new/rl/run_league.py:1168` | function | §2.127 |
-| `main` | `src/clasher_new/rl/selftest.py:4885` | function | §2.128 |
-| `main` | `src/clasher_new/rl/train_baseline.py:80` | function | §2.129 |
-| `main` | `src/clasher_new/rl/train_exploiter.py:89` | function | §2.132 |
-| `main` | `src/clasher_new/rl/train_prophet.py:141` | function | §2.134 |
-| `TrainConfig.main_final_path` | `src/clasher_new/rl/config.py:277` | function | §2.105 |
-| `mainloop` | `src/clasher_new/run_raw_capture.py:41` | function | §2.137 |
-| `make_battle` | `scripts/question_bank_poc.py:46` | function | §2.51 |
-| `make_battle` | `scripts/test_m1.py:23` | function | §2.67 |
-| `make_battle` | `scripts/test_m2.py:20` | function | §2.68 |
-| `make_battle` | `scripts/test_m3_evo.py:22` | function | §2.69 |
-| `make_battle` | `scripts/test_m4_evo7.py:28` | function | §2.70 |
-| `make_battle` | `scripts/test_m5_data.py:30` | function | §2.71 |
-| `make_battle` | `scripts/test_m6_elite.py:27` | function | §2.72 |
-| `make_demo_replays` | `src/clasher_new/rl/dashboard.py:502` | function | §2.106 |
-| `make_demo_solo` | `src/clasher_new/rl/dashboard.py:2239` | function | §2.106 |
-| `make_demo_state` | `src/clasher_new/rl/dashboard.py:2141` | function | §2.106 |
-| `make_demo_sweep` | `src/clasher_new/rl/dashboard.py:2192` | function | §2.106 |
-| `make_env` | `src/clasher_new/benchmark_speed.py:28` | function | §2.78 |
-| `make_env` | `src/clasher_new/train.py:93` | function | §2.160 |
-| `make_env` | `src/clasher_new/train_autoregressive.py:15` | function | §2.161 |
-| `make_hidden_mapper` | `scripts/pomdp_ceiling_probe.py:61` | function | §2.46 |
-| `make_positive_control` | `scripts/pomdp_ceiling_probe.py:303` | function | §2.46 |
-| `map_deck_cards` | `src/clasher_new/rl/decks.py:74` | function | §2.107 |
-| `FollowerPolicy.masks_for` | `src/clasher_new/rl/follower.py:486` | function | §2.114 |
-| `MCTSConfig` | `src/clasher_new/rl/mcts.py:43` | class | §2.118 |
-| `measurement_line` | `scripts/_probe_value_collapse.py:42` | function | §2.15 |
-| `med` | `src/clasher_new/runs/_tmp_behavior_recount.py:73` | function | §2.138 |
-| `MegaKnight` | `src/clasher_new/card_mechanics.py:509` | class | §2.80 |
-| `MightyMiner` | `src/clasher_new/card_mechanics.py:435` | class | §2.80 |
-| `Miner` | `src/clasher_new/card_mechanics.py:202` | class | §2.80 |
-| `MiniSparkys` | `src/clasher_new/card_mechanics.py:1626` | class | §2.80 |
-| `mlp_probe` | `scripts/diag_critic_ev.py:403` | function | §2.33 |
-| `model_reward_weights` | `src/clasher_new/rl/config.py:404` | function | §2.105 |
-| `Monk` | `src/clasher_new/card_mechanics.py:416` | class | §2.80 |
-| `Troop.move_towards` | `src/clasher_new/battle.py:1087` | function | §2.77 |
-| `MovingCannon` | `src/clasher_new/card_mechanics.py:1672` | class | §2.80 |
-| `Musketeer` | `src/clasher_new/card_mechanics.py:639` | class | §2.80 |
-| `Entity.near_river` | `src/clasher_new/battle.py:755` | function | §2.77 |
-| `NeuralBeliefEncoder` | `src/clasher_new/rl/belief.py:167` | class | §2.103 |
-| `new_ep_buf` | `src/clasher_new/rl/flow_league.py:218` | function | §2.113 |
-| `CycleBayesFilter.next_probs` | `src/clasher_new/rl/bayes_filter.py:167` | function | §2.102 |
-| `nll_of` | `src/clasher_new/rl/train_belief.py:110` | function | §2.131 |
-| `node_value` | `src/clasher_new/rl/mcts.py:99` | function | §2.118 |
-| `ActionBundle.noop` | `src/clasher_new/rl/action_bundle.py:106` | function | §2.100 |
-| `norm` | `scripts/coverage.py:59` | function | §2.32 |
-| `BeliefState.normalize` | `src/clasher_new/rl/belief.py:118` | function | §2.103 |
-| `normalize_card` | `src/clasher_new/rl/decks.py:53` | function | §2.107 |
-| `normalize_played` | `src/clasher_new/rl/belief.py:82` | function | §2.103 |
-| `normalize_query` | `src/clasher_new/card_aliases.py:408` | function | §2.79 |
-| `CREnv.observe` | `src/clasher_new/environment.py:124` | function | §2.89 |
-| `RLEnv.observe` | `src/clasher_new/rl/env_wrapper.py:390` | function | §2.110 |
-| `observe` | `src/clasher_new/rl/observation.py:87` | function | §2.119 |
-| `FollowerOpponent.observe_opponent_played` | `src/clasher_new/rl/train_follower.py:74` | function | §2.133 |
-| `BasicCharacter.on_attack` | `src/clasher_new/core.py:30` | function | §2.87 |
-| `BattleHealer.on_attack` | `src/clasher_new/card_mechanics.py:850` | function | §2.80 |
-| `BossBandit.on_attack` | `src/clasher_new/card_mechanics.py:498` | function | §2.80 |
-| `ElectroSpirit.on_attack` | `src/clasher_new/card_mechanics.py:1633` | function | §2.80 |
-| `Fisherman.on_attack` | `src/clasher_new/card_mechanics.py:277` | function | §2.80 |
-| `Ghost.on_attack` | `src/clasher_new/card_mechanics.py:31` | function | §2.80 |
-| `HeroBowler.on_attack` | `src/clasher_new/card_mechanics.py:1152` | function | §2.80 |
-| `HeroEliteArcher.on_attack` | `src/clasher_new/card_mechanics.py:1534` | function | §2.80 |
-| `HeroIceWizard.on_attack` | `src/clasher_new/card_mechanics.py:1488` | function | §2.80 |
-| `HeroMiniPekka.on_attack` | `src/clasher_new/card_mechanics.py:967` | function | §2.80 |
-| `HeroValkyrie.on_attack` | `src/clasher_new/card_mechanics.py:1044` | function | §2.80 |
-| `HeroWizard.on_attack` | `src/clasher_new/card_mechanics.py:1087` | function | §2.80 |
-| `King_ChefTowers.on_attack` | `src/clasher_new/card_mechanics.py:1862` | function | §2.80 |
-| `King_KnifeTowers.on_attack` | `src/clasher_new/card_mechanics.py:1821` | function | §2.80 |
-| `MegaKnight.on_attack` | `src/clasher_new/card_mechanics.py:630` | function | §2.80 |
-| `Musketeer.on_attack` | `src/clasher_new/card_mechanics.py:661` | function | §2.80 |
-| `Prince.on_attack` | `src/clasher_new/card_mechanics.py:138` | function | §2.80 |
-| `RamRider.on_attack` | `src/clasher_new/card_mechanics.py:1665` | function | §2.80 |
-| `Skeletrooper.on_attack` | `src/clasher_new/card_mechanics.py:1440` | function | §2.80 |
-| `_AttackStunMixin.on_attack` | `src/clasher_new/card_mechanics.py:1606` | function | §2.80 |
-| `Entity.on_both_sides_of_river` | `src/clasher_new/battle.py:748` | function | §2.77 |
-| `ElectroGiant.on_damaged` | `src/clasher_new/card_mechanics.py:1587` | function | §2.80 |
-| `Balloon.on_death` | `src/clasher_new/card_mechanics.py:90` | function | §2.80 |
-| `BasicCharacter.on_death` | `src/clasher_new/core.py:23` | function | §2.87 |
-| `BattleRam.on_death` | `src/clasher_new/card_mechanics.py:159` | function | §2.80 |
-| `BattleState.on_death` | `src/clasher_new/battle.py:3148` | function | §2.77 |
-| `GiantSkeleton.on_death` | `src/clasher_new/card_mechanics.py:169` | function | §2.80 |
-| `GoblinGiant.on_death` | `src/clasher_new/card_mechanics.py:1794` | function | §2.80 |
-| `Golem.on_death` | `src/clasher_new/card_mechanics.py:96` | function | §2.80 |
-| `HeroGoblins.on_death` | `src/clasher_new/card_mechanics.py:1218` | function | §2.80 |
-| `HeroTombstone.on_death` | `src/clasher_new/card_mechanics.py:1293` | function | §2.80 |
-| `LavaHound.on_death` | `src/clasher_new/card_mechanics.py:106` | function | §2.80 |
-| `Phoenix.on_death` | `src/clasher_new/card_mechanics.py:1695` | function | §2.80 |
-| `RageBarbarian.on_death` | `src/clasher_new/card_mechanics.py:262` | function | §2.80 |
-| `BasicCharacter.on_spawn` | `src/clasher_new/core.py:21` | function | §2.87 |
-| `BattleHealer.on_spawn` | `src/clasher_new/card_mechanics.py:839` | function | §2.80 |
-| `ElectroWizard.on_spawn` | `src/clasher_new/card_mechanics.py:1615` | function | §2.80 |
-| `IceWizard.on_spawn` | `src/clasher_new/card_mechanics.py:181` | function | §2.80 |
-| `MegaKnight.on_spawn` | `src/clasher_new/card_mechanics.py:533` | function | §2.80 |
-| `HeroBerserker.on_take_damage` | `src/clasher_new/card_mechanics.py:1334` | function | §2.80 |
-| `Ronin.on_take_damage` | `src/clasher_new/card_mechanics.py:695` | function | §2.80 |
-| `ArcherQueen.on_tick` | `src/clasher_new/card_mechanics.py:366` | function | §2.80 |
-| `Assassin.on_tick` | `src/clasher_new/card_mechanics.py:745` | function | §2.80 |
-| `BasicCharacter.on_tick` | `src/clasher_new/core.py:22` | function | §2.87 |
-| `BattleHealer.on_tick` | `src/clasher_new/card_mechanics.py:844` | function | §2.80 |
-| `BossBandit.on_tick` | `src/clasher_new/card_mechanics.py:490` | function | §2.80 |
-| `Fisherman.on_tick` | `src/clasher_new/card_mechanics.py:281` | function | §2.80 |
-| `Ghost.on_tick` | `src/clasher_new/card_mechanics.py:23` | function | §2.80 |
-| `GoblinGiant.on_tick` | `src/clasher_new/card_mechanics.py:1768` | function | §2.80 |
-| `GoldenKnight.on_tick` | `src/clasher_new/card_mechanics.py:386` | function | §2.80 |
-| `HeroBerserker.on_tick` | `src/clasher_new/card_mechanics.py:1325` | function | §2.80 |
-| `HeroBowler.on_tick` | `src/clasher_new/card_mechanics.py:1139` | function | §2.80 |
-| `HeroIceWizard.on_tick` | `src/clasher_new/card_mechanics.py:1469` | function | §2.80 |
-| `HeroKnight.on_tick` | `src/clasher_new/card_mechanics.py:924` | function | §2.80 |
-| `HeroMegaMinion.on_tick` | `src/clasher_new/card_mechanics.py:1254` | function | §2.80 |
-| `HeroMiniPekka.on_tick` | `src/clasher_new/card_mechanics.py:958` | function | §2.80 |
-| `HeroValkyrie.on_tick` | `src/clasher_new/card_mechanics.py:1023` | function | §2.80 |
-| `HeroWizard.on_tick` | `src/clasher_new/card_mechanics.py:1071` | function | §2.80 |
-| `King_ChefTowers.on_tick` | `src/clasher_new/card_mechanics.py:1868` | function | §2.80 |
-| `King_KnifeTowers.on_tick` | `src/clasher_new/card_mechanics.py:1833` | function | §2.80 |
-| `MegaKnight.on_tick` | `src/clasher_new/card_mechanics.py:552` | function | §2.80 |
-| `MightyMiner.on_tick` | `src/clasher_new/card_mechanics.py:450` | function | §2.80 |
-| `Miner.on_tick` | `src/clasher_new/card_mechanics.py:210` | function | §2.80 |
-| `Monk.on_tick` | `src/clasher_new/card_mechanics.py:426` | function | §2.80 |
-| `MovingCannon.on_tick` | `src/clasher_new/card_mechanics.py:1675` | function | §2.80 |
-| `Musketeer.on_tick` | `src/clasher_new/card_mechanics.py:648` | function | §2.80 |
-| `PhoenixEgg.on_tick` | `src/clasher_new/card_mechanics.py:1721` | function | §2.80 |
-| `Prince.on_tick` | `src/clasher_new/card_mechanics.py:120` | function | §2.80 |
-| `Rage.on_tick` | `src/clasher_new/card_mechanics.py:236` | function | §2.80 |
-| `Ronin.on_tick` | `src/clasher_new/card_mechanics.py:690` | function | §2.80 |
-| `SkeletonKing.on_tick` | `src/clasher_new/card_mechanics.py:335` | function | §2.80 |
-| `Skeletrooper.on_tick` | `src/clasher_new/card_mechanics.py:1421` | function | §2.80 |
-| `ThreeMusketeers.on_tick` | `src/clasher_new/card_mechanics.py:1741` | function | §2.80 |
-| `Witch.on_tick` | `src/clasher_new/card_mechanics.py:70` | function | §2.80 |
-| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.25 |
-| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.26 |
-| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.28 |
-| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.31 |
-| `open_goblin_window` | `src/clasher_new/card_mechanics.py:877` | function | §2.80 |
-| `opp_event_token` | `src/clasher_new/rl/belief.py:63` | function | §2.103 |
-| `CREnv.opponent_action` | `src/clasher_new/environment.py:65` | function | §2.89 |
-| `SequentialEvalEnv.opponent_action` | `src/clasher_new/evaluate.py:30` | function | §2.90 |
-| `TrainConfig.opt_path` | `src/clasher_new/rl/config.py:283` | function | §2.105 |
-| `overtime_open` | `src/clasher_new/rl/overtime.py:30` | function | §2.121 |
-| `p64` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `parse` | `scripts/summarize_probe_v3_mono.py:27` | function | §2.65 |
-| `parse` | `start_rl.bat` | class(素材) | §2.163 |
-| `parse` | `start_training.bat` | class(素材) | §2.164 |
-| `parse_args` | `src/clasher_new/benchmark_speed.py:38` | function | §2.78 |
-| `parse_done` | `start_rl.bat` | class(素材) | §2.163 |
-| `parse_done` | `start_training.bat` | class(素材) | §2.164 |
-| `parse_log` | `scripts/judge_critic_inertia.py:55` | function | §2.42 |
-| `patched` | `src/clasher_new/tmp_path_debug.py:12` | function | §2.156 |
-| `BattleState.pathfind_ground_walkable` | `src/clasher_new/battle.py:3053` | function | §2.77 |
-| `pct` | `src/clasher_new/runs/_tmp_behavior_recount.py:74` | function | §2.138 |
-| `PFSP` | `src/clasher_new/rl/pfsp.py:29` | class | §2.122 |
-| `Phoenix` | `src/clasher_new/card_mechanics.py:1692` | class | §2.80 |
-| `PhoenixEgg` | `src/clasher_new/card_mechanics.py:1715` | class | §2.80 |
-| `pick` | `src/clasher_new/rl/launcher_menu.py:92` | function | §2.116 |
-| `pick_config` | `src/clasher_new/rl/launcher_menu.py:120` | function | §2.116 |
-| `pipe` | `scripts/cdp_forward.py:25` | function | §2.27 |
-| `BeliefPlanner.plan` | `src/clasher_new/rl/belief_planner.py:772` | function | §2.104 |
-| `ProphetPlanner.plan` | `src/clasher_new/rl/prophet.py:464` | function | §2.125 |
-| `PlanToken` | `src/clasher_new/rl/plan_space.py:99` | class | §2.123 |
-| `ScriptedPolicy.play` | `src/clasher_new/rl/opponents.py:105` | function | §2.120 |
-| `SelfDefenderPolicy.play` | `src/clasher_new/rl/opponents.py:193` | function | §2.120 |
-| `PlayerState.play_card` | `src/clasher_new/client_side/player.py:21` | function | §2.86 |
-| `PlayerState.play_card` | `src/clasher_new/player.py:41` | function | §2.98 |
-| `play_pair` | `src/clasher_new/rl/run_league.py:406` | function | §2.127 |
-| `PlayerState` | `src/clasher_new/client_side/player.py:5` | class | §2.86 |
-| `PlayerState` | `src/clasher_new/player.py:5` | class | §2.98 |
-| `Position` | `src/clasher_new/core.py:5` | class | §2.87 |
-| `position_to_cell` | `src/clasher_new/pathfinding.py:12` | function | §2.96 |
-| `position_to_cell` | `src/clasher_new/pathfinding_heap.py:13` | function | §2.97 |
-| `PPOTrainer` | `src/clasher_new/rl/ppo.py:86` | class | §2.124 |
-| `TrainConfig.presets` | `src/clasher_new/rl/config.py:317` | function | §2.105 |
-| `Prince` | `src/clasher_new/card_mechanics.py:113` | class | §2.80 |
-| `print_run` | `scripts/judge_anchor_blocks.py:141` | function | §2.41 |
-| `print_safe` | `src/clasher_new/rl/diagnostics.py:37` | function | §2.108 |
-| `probe_failed` | `start_rl.bat` | class(素材) | §2.163 |
-| `probe_python` | `start_rl.bat` | class(素材) | §2.163 |
-| `StatisticalBelief.probs` | `src/clasher_new/rl/belief.py:160` | function | §2.103 |
+| `main` | `scripts/_mask_vs_engine_reconcile.py:68` | function | §2.15 |
+| `main` | `scripts/_probe_value_collapse.py:63` | function | §2.16 |
+| `main` | `scripts/_probe_value_path.py:54` | function | §2.17 |
+| `main` | `scripts/_survey_audit.py:47` | function | §2.18 |
+| `main` | `scripts/_survey_brief.py:31` | function | §2.19 |
+| `main` | `scripts/_survey_groups.py:40` | function | §2.20 |
+| `main` | `scripts/_survey_inventory.py:159` | function | §2.21 |
+| `main` | `scripts/_survey_md_to_docx.py:329` | function | §2.22 |
+| `main` | `scripts/_survey_merge.py:125` | function | §2.23 |
+| `main` | `scripts/_survey_merge_docs.py:129` | function | §2.24 |
+| `main` | `scripts/_survey_verify.py:42` | function | §2.25 |
+| `main` | `scripts/assassin_vs_sparky.py:96` | function | §2.28 |
+| `main` | `scripts/batch_smoke.py:72` | function | §2.29 |
+| `main` | `scripts/bench_train_speed.py:35` | function | §2.30 |
+| `main` | `scripts/cdp_forward.py:52` | function | §2.33 |
+| `main` | `scripts/diag_critic_ev.py:667` | function | §2.39 |
+| `main` | `scripts/diag_encoder_scale.py:30` | function | §2.40 |
+| `main` | `scripts/diag_gru_ablation.py:71` | function | §2.41 |
+| `main` | `scripts/diag_value_head.py:33` | function | §2.42 |
+| `main` | `scripts/duel_search.py:532` | function | §2.43 |
+| `main` | `scripts/extend_level16.py:41` | function | §2.44 |
+| `main` | `scripts/forensics_card_usage.py:149` | function | §2.45 |
+| `main` | `scripts/judge_anchor_blocks.py:165` | function | §2.47 |
+| `main` | `scripts/judge_critic_inertia.py:95` | function | §2.48 |
+| `main` | `scripts/judge_probe_v3.py:60` | function | §2.49 |
+| `main` | `scripts/judge_probe_v4.py:32` | function | §2.50 |
+| `main` | `scripts/pomdp_ceiling_probe.py:426` | function | §2.52 |
+| `main` | `scripts/probe_reward_composition.py:91` | function | §2.53 |
+| `main` | `scripts/probe_v3_mono_check.py:80` | function | §2.54 |
+| `main` | `scripts/probe_v4_ln_pair.py:91` | function | §2.55 |
+| `main` | `scripts/probe_value_ln.py:404` | function | §2.56 |
+| `main` | `scripts/rl/run_league.py:9` | function | §2.61 |
+| `main` | `scripts/stop_solo_training_2200.py:71` | function | §2.70 |
+| `main` | `scripts/summarize_probe_v3_mono.py:78` | function | §2.71 |
+| `main` | `scripts/summarize_solo_run.py:122` | function | §2.72 |
+| `main` | `scripts/value_displacement_scan.py:101` | function | §2.79 |
+| `main` | `src/clasher_new/benchmark_speed.py:54` | function | §2.84 |
+| `main` | `src/clasher_new/rl/dashboard.py:2270` | function | §2.112 |
+| `main` | `src/clasher_new/rl/export_replay.py:23` | function | §2.118 |
+| `main` | `src/clasher_new/rl/human_play.py:291` | function | §2.121 |
+| `main` | `src/clasher_new/rl/launcher_menu.py:239` | function | §2.122 |
+| `main` | `src/clasher_new/rl/run_league.py:1168` | function | §2.133 |
+| `main` | `src/clasher_new/rl/selftest.py:4885` | function | §2.134 |
+| `main` | `src/clasher_new/rl/train_baseline.py:80` | function | §2.135 |
+| `main` | `src/clasher_new/rl/train_exploiter.py:89` | function | §2.138 |
+| `main` | `src/clasher_new/rl/train_prophet.py:141` | function | §2.140 |
+| `TrainConfig.main_final_path` | `src/clasher_new/rl/config.py:277` | function | §2.111 |
+| `mainloop` | `src/clasher_new/run_raw_capture.py:41` | function | §2.143 |
+| `make` | `scripts/_mask_vs_engine_reconcile.py:45` | function | §2.15 |
+| `make_battle` | `scripts/question_bank_poc.py:46` | function | §2.57 |
+| `make_battle` | `scripts/test_m1.py:23` | function | §2.73 |
+| `make_battle` | `scripts/test_m2.py:20` | function | §2.74 |
+| `make_battle` | `scripts/test_m3_evo.py:22` | function | §2.75 |
+| `make_battle` | `scripts/test_m4_evo7.py:28` | function | §2.76 |
+| `make_battle` | `scripts/test_m5_data.py:30` | function | §2.77 |
+| `make_battle` | `scripts/test_m6_elite.py:27` | function | §2.78 |
+| `make_demo_replays` | `src/clasher_new/rl/dashboard.py:502` | function | §2.112 |
+| `make_demo_solo` | `src/clasher_new/rl/dashboard.py:2239` | function | §2.112 |
+| `make_demo_state` | `src/clasher_new/rl/dashboard.py:2141` | function | §2.112 |
+| `make_demo_sweep` | `src/clasher_new/rl/dashboard.py:2192` | function | §2.112 |
+| `make_env` | `src/clasher_new/benchmark_speed.py:28` | function | §2.84 |
+| `make_env` | `src/clasher_new/train.py:93` | function | §2.166 |
+| `make_env` | `src/clasher_new/train_autoregressive.py:15` | function | §2.167 |
+| `make_hidden_mapper` | `scripts/pomdp_ceiling_probe.py:61` | function | §2.52 |
+| `make_positive_control` | `scripts/pomdp_ceiling_probe.py:303` | function | §2.52 |
+| `map_deck_cards` | `src/clasher_new/rl/decks.py:74` | function | §2.113 |
+| `FollowerPolicy.masks_for` | `src/clasher_new/rl/follower.py:486` | function | §2.120 |
+| `MCTSConfig` | `src/clasher_new/rl/mcts.py:43` | class | §2.124 |
+| `measurement_line` | `scripts/_probe_value_collapse.py:42` | function | §2.16 |
+| `med` | `src/clasher_new/runs/_tmp_behavior_recount.py:73` | function | §2.144 |
+| `MegaKnight` | `src/clasher_new/card_mechanics.py:509` | class | §2.86 |
+| `MightyMiner` | `src/clasher_new/card_mechanics.py:435` | class | §2.86 |
+| `Miner` | `src/clasher_new/card_mechanics.py:202` | class | §2.86 |
+| `MiniSparkys` | `src/clasher_new/card_mechanics.py:1626` | class | §2.86 |
+| `mlp_probe` | `scripts/diag_critic_ev.py:403` | function | §2.39 |
+| `model_reward_weights` | `src/clasher_new/rl/config.py:404` | function | §2.111 |
+| `Monk` | `src/clasher_new/card_mechanics.py:416` | class | §2.86 |
+| `Troop.move_towards` | `src/clasher_new/battle.py:1087` | function | §2.83 |
+| `MovingCannon` | `src/clasher_new/card_mechanics.py:1672` | class | §2.86 |
+| `Musketeer` | `src/clasher_new/card_mechanics.py:639` | class | §2.86 |
+| `Entity.near_river` | `src/clasher_new/battle.py:755` | function | §2.83 |
+| `NeuralBeliefEncoder` | `src/clasher_new/rl/belief.py:167` | class | §2.109 |
+| `new_ep_buf` | `src/clasher_new/rl/flow_league.py:218` | function | §2.119 |
+| `CycleBayesFilter.next_probs` | `src/clasher_new/rl/bayes_filter.py:167` | function | §2.108 |
+| `nll_of` | `src/clasher_new/rl/train_belief.py:110` | function | §2.137 |
+| `node_value` | `src/clasher_new/rl/mcts.py:99` | function | §2.124 |
+| `ActionBundle.noop` | `src/clasher_new/rl/action_bundle.py:106` | function | §2.106 |
+| `norm` | `scripts/coverage.py:59` | function | §2.38 |
+| `norm_sig` | `scripts/_survey_audit.py:40` | function | §2.18 |
+| `BeliefState.normalize` | `src/clasher_new/rl/belief.py:118` | function | §2.109 |
+| `normalize_card` | `src/clasher_new/rl/decks.py:53` | function | §2.113 |
+| `normalize_played` | `src/clasher_new/rl/belief.py:82` | function | §2.109 |
+| `normalize_query` | `src/clasher_new/card_aliases.py:408` | function | §2.85 |
+| `CREnv.observe` | `src/clasher_new/environment.py:124` | function | §2.95 |
+| `RLEnv.observe` | `src/clasher_new/rl/env_wrapper.py:390` | function | §2.116 |
+| `observe` | `src/clasher_new/rl/observation.py:87` | function | §2.125 |
+| `FollowerOpponent.observe_opponent_played` | `src/clasher_new/rl/train_follower.py:74` | function | §2.139 |
+| `BasicCharacter.on_attack` | `src/clasher_new/core.py:30` | function | §2.93 |
+| `BattleHealer.on_attack` | `src/clasher_new/card_mechanics.py:850` | function | §2.86 |
+| `BossBandit.on_attack` | `src/clasher_new/card_mechanics.py:498` | function | §2.86 |
+| `ElectroSpirit.on_attack` | `src/clasher_new/card_mechanics.py:1633` | function | §2.86 |
+| `Fisherman.on_attack` | `src/clasher_new/card_mechanics.py:277` | function | §2.86 |
+| `Ghost.on_attack` | `src/clasher_new/card_mechanics.py:31` | function | §2.86 |
+| `HeroBowler.on_attack` | `src/clasher_new/card_mechanics.py:1152` | function | §2.86 |
+| `HeroEliteArcher.on_attack` | `src/clasher_new/card_mechanics.py:1534` | function | §2.86 |
+| `HeroIceWizard.on_attack` | `src/clasher_new/card_mechanics.py:1488` | function | §2.86 |
+| `HeroMiniPekka.on_attack` | `src/clasher_new/card_mechanics.py:967` | function | §2.86 |
+| `HeroValkyrie.on_attack` | `src/clasher_new/card_mechanics.py:1044` | function | §2.86 |
+| `HeroWizard.on_attack` | `src/clasher_new/card_mechanics.py:1087` | function | §2.86 |
+| `King_ChefTowers.on_attack` | `src/clasher_new/card_mechanics.py:1862` | function | §2.86 |
+| `King_KnifeTowers.on_attack` | `src/clasher_new/card_mechanics.py:1821` | function | §2.86 |
+| `MegaKnight.on_attack` | `src/clasher_new/card_mechanics.py:630` | function | §2.86 |
+| `Musketeer.on_attack` | `src/clasher_new/card_mechanics.py:661` | function | §2.86 |
+| `Prince.on_attack` | `src/clasher_new/card_mechanics.py:138` | function | §2.86 |
+| `RamRider.on_attack` | `src/clasher_new/card_mechanics.py:1665` | function | §2.86 |
+| `Skeletrooper.on_attack` | `src/clasher_new/card_mechanics.py:1440` | function | §2.86 |
+| `_AttackStunMixin.on_attack` | `src/clasher_new/card_mechanics.py:1606` | function | §2.86 |
+| `Entity.on_both_sides_of_river` | `src/clasher_new/battle.py:748` | function | §2.83 |
+| `ElectroGiant.on_damaged` | `src/clasher_new/card_mechanics.py:1587` | function | §2.86 |
+| `Balloon.on_death` | `src/clasher_new/card_mechanics.py:90` | function | §2.86 |
+| `BasicCharacter.on_death` | `src/clasher_new/core.py:23` | function | §2.93 |
+| `BattleRam.on_death` | `src/clasher_new/card_mechanics.py:159` | function | §2.86 |
+| `BattleState.on_death` | `src/clasher_new/battle.py:3148` | function | §2.83 |
+| `GiantSkeleton.on_death` | `src/clasher_new/card_mechanics.py:169` | function | §2.86 |
+| `GoblinGiant.on_death` | `src/clasher_new/card_mechanics.py:1794` | function | §2.86 |
+| `Golem.on_death` | `src/clasher_new/card_mechanics.py:96` | function | §2.86 |
+| `HeroGoblins.on_death` | `src/clasher_new/card_mechanics.py:1218` | function | §2.86 |
+| `HeroTombstone.on_death` | `src/clasher_new/card_mechanics.py:1293` | function | §2.86 |
+| `LavaHound.on_death` | `src/clasher_new/card_mechanics.py:106` | function | §2.86 |
+| `Phoenix.on_death` | `src/clasher_new/card_mechanics.py:1695` | function | §2.86 |
+| `RageBarbarian.on_death` | `src/clasher_new/card_mechanics.py:262` | function | §2.86 |
+| `BasicCharacter.on_spawn` | `src/clasher_new/core.py:21` | function | §2.93 |
+| `BattleHealer.on_spawn` | `src/clasher_new/card_mechanics.py:839` | function | §2.86 |
+| `ElectroWizard.on_spawn` | `src/clasher_new/card_mechanics.py:1615` | function | §2.86 |
+| `IceWizard.on_spawn` | `src/clasher_new/card_mechanics.py:181` | function | §2.86 |
+| `MegaKnight.on_spawn` | `src/clasher_new/card_mechanics.py:533` | function | §2.86 |
+| `HeroBerserker.on_take_damage` | `src/clasher_new/card_mechanics.py:1334` | function | §2.86 |
+| `Ronin.on_take_damage` | `src/clasher_new/card_mechanics.py:695` | function | §2.86 |
+| `ArcherQueen.on_tick` | `src/clasher_new/card_mechanics.py:366` | function | §2.86 |
+| `Assassin.on_tick` | `src/clasher_new/card_mechanics.py:745` | function | §2.86 |
+| `BasicCharacter.on_tick` | `src/clasher_new/core.py:22` | function | §2.93 |
+| `BattleHealer.on_tick` | `src/clasher_new/card_mechanics.py:844` | function | §2.86 |
+| `BossBandit.on_tick` | `src/clasher_new/card_mechanics.py:490` | function | §2.86 |
+| `Fisherman.on_tick` | `src/clasher_new/card_mechanics.py:281` | function | §2.86 |
+| `Ghost.on_tick` | `src/clasher_new/card_mechanics.py:23` | function | §2.86 |
+| `GoblinGiant.on_tick` | `src/clasher_new/card_mechanics.py:1768` | function | §2.86 |
+| `GoldenKnight.on_tick` | `src/clasher_new/card_mechanics.py:386` | function | §2.86 |
+| `HeroBerserker.on_tick` | `src/clasher_new/card_mechanics.py:1325` | function | §2.86 |
+| `HeroBowler.on_tick` | `src/clasher_new/card_mechanics.py:1139` | function | §2.86 |
+| `HeroIceWizard.on_tick` | `src/clasher_new/card_mechanics.py:1469` | function | §2.86 |
+| `HeroKnight.on_tick` | `src/clasher_new/card_mechanics.py:924` | function | §2.86 |
+| `HeroMegaMinion.on_tick` | `src/clasher_new/card_mechanics.py:1254` | function | §2.86 |
+| `HeroMiniPekka.on_tick` | `src/clasher_new/card_mechanics.py:958` | function | §2.86 |
+| `HeroValkyrie.on_tick` | `src/clasher_new/card_mechanics.py:1023` | function | §2.86 |
+| `HeroWizard.on_tick` | `src/clasher_new/card_mechanics.py:1071` | function | §2.86 |
+| `King_ChefTowers.on_tick` | `src/clasher_new/card_mechanics.py:1868` | function | §2.86 |
+| `King_KnifeTowers.on_tick` | `src/clasher_new/card_mechanics.py:1833` | function | §2.86 |
+| `MegaKnight.on_tick` | `src/clasher_new/card_mechanics.py:552` | function | §2.86 |
+| `MightyMiner.on_tick` | `src/clasher_new/card_mechanics.py:450` | function | §2.86 |
+| `Miner.on_tick` | `src/clasher_new/card_mechanics.py:210` | function | §2.86 |
+| `Monk.on_tick` | `src/clasher_new/card_mechanics.py:426` | function | §2.86 |
+| `MovingCannon.on_tick` | `src/clasher_new/card_mechanics.py:1675` | function | §2.86 |
+| `Musketeer.on_tick` | `src/clasher_new/card_mechanics.py:648` | function | §2.86 |
+| `PhoenixEgg.on_tick` | `src/clasher_new/card_mechanics.py:1721` | function | §2.86 |
+| `Prince.on_tick` | `src/clasher_new/card_mechanics.py:120` | function | §2.86 |
+| `Rage.on_tick` | `src/clasher_new/card_mechanics.py:236` | function | §2.86 |
+| `Ronin.on_tick` | `src/clasher_new/card_mechanics.py:690` | function | §2.86 |
+| `SkeletonKing.on_tick` | `src/clasher_new/card_mechanics.py:335` | function | §2.86 |
+| `Skeletrooper.on_tick` | `src/clasher_new/card_mechanics.py:1421` | function | §2.86 |
+| `ThreeMusketeers.on_tick` | `src/clasher_new/card_mechanics.py:1741` | function | §2.86 |
+| `Witch.on_tick` | `src/clasher_new/card_mechanics.py:70` | function | §2.86 |
+| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.31 |
+| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.32 |
+| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.34 |
+| `extractPage.ws.onmessage（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.37 |
+| `open_goblin_window` | `src/clasher_new/card_mechanics.py:877` | function | §2.86 |
+| `opp_event_token` | `src/clasher_new/rl/belief.py:63` | function | §2.109 |
+| `CREnv.opponent_action` | `src/clasher_new/environment.py:65` | function | §2.95 |
+| `SequentialEvalEnv.opponent_action` | `src/clasher_new/evaluate.py:30` | function | §2.96 |
+| `TrainConfig.opt_path` | `src/clasher_new/rl/config.py:283` | function | §2.111 |
+| `overtime_open` | `src/clasher_new/rl/overtime.py:30` | function | §2.127 |
+| `p64` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `parse` | `scripts/summarize_probe_v3_mono.py:27` | function | §2.71 |
+| `parse` | `start_rl.bat` | class(素材) | §2.169 |
+| `parse` | `start_training.bat` | class(素材) | §2.170 |
+| `parse_args` | `src/clasher_new/benchmark_speed.py:38` | function | §2.84 |
+| `parse_done` | `start_rl.bat` | class(素材) | §2.169 |
+| `parse_done` | `start_training.bat` | class(素材) | §2.170 |
+| `parse_log` | `scripts/judge_critic_inertia.py:55` | function | §2.48 |
+| `patched` | `src/clasher_new/tmp_path_debug.py:12` | function | §2.162 |
+| `BattleState.pathfind_ground_walkable` | `src/clasher_new/battle.py:3053` | function | §2.83 |
+| `pct` | `src/clasher_new/runs/_tmp_behavior_recount.py:74` | function | §2.144 |
+| `PFSP` | `src/clasher_new/rl/pfsp.py:29` | class | §2.128 |
+| `Phoenix` | `src/clasher_new/card_mechanics.py:1692` | class | §2.86 |
+| `PhoenixEgg` | `src/clasher_new/card_mechanics.py:1715` | class | §2.86 |
+| `pick` | `src/clasher_new/rl/launcher_menu.py:92` | function | §2.122 |
+| `pick_config` | `src/clasher_new/rl/launcher_menu.py:120` | function | §2.122 |
+| `pipe` | `scripts/cdp_forward.py:25` | function | §2.33 |
+| `BeliefPlanner.plan` | `src/clasher_new/rl/belief_planner.py:772` | function | §2.110 |
+| `ProphetPlanner.plan` | `src/clasher_new/rl/prophet.py:464` | function | §2.131 |
+| `PlanToken` | `src/clasher_new/rl/plan_space.py:99` | class | §2.129 |
+| `ScriptedPolicy.play` | `src/clasher_new/rl/opponents.py:105` | function | §2.126 |
+| `SelfDefenderPolicy.play` | `src/clasher_new/rl/opponents.py:193` | function | §2.126 |
+| `PlayerState.play_card` | `src/clasher_new/client_side/player.py:21` | function | §2.92 |
+| `PlayerState.play_card` | `src/clasher_new/player.py:41` | function | §2.104 |
+| `play_pair` | `src/clasher_new/rl/run_league.py:406` | function | §2.133 |
+| `PlayerState` | `src/clasher_new/client_side/player.py:5` | class | §2.92 |
+| `PlayerState` | `src/clasher_new/player.py:5` | class | §2.104 |
+| `Position` | `src/clasher_new/core.py:5` | class | §2.93 |
+| `position_to_cell` | `src/clasher_new/pathfinding.py:12` | function | §2.102 |
+| `position_to_cell` | `src/clasher_new/pathfinding_heap.py:13` | function | §2.103 |
+| `PPOTrainer` | `src/clasher_new/rl/ppo.py:86` | class | §2.130 |
+| `TrainConfig.presets` | `src/clasher_new/rl/config.py:317` | function | §2.111 |
+| `Prince` | `src/clasher_new/card_mechanics.py:113` | class | §2.86 |
+| `print_run` | `scripts/judge_anchor_blocks.py:141` | function | §2.47 |
+| `print_safe` | `src/clasher_new/rl/diagnostics.py:37` | function | §2.114 |
+| `probe_failed` | `start_rl.bat` | class(素材) | §2.169 |
+| `probe_python` | `start_rl.bat` | class(素材) | §2.169 |
+| `StatisticalBelief.probs` | `src/clasher_new/rl/belief.py:160` | function | §2.109 |
 | `proc_alive` | `runs/watch_100k.py` | class(素材) | §2.12 |
-| `Visualizer.process_events` | `src/clasher_new/minimal_visualizer.py:190` | function | §2.94 |
-| `Visualizer.process_events` | `src/clasher_new/new_visualization.py:84` | function | §2.95 |
-| `Projectile` | `src/clasher_new/battle.py:1417` | class | §2.77 |
-| `Projectile` | `src/clasher_new/card_utils.py:445` | class | §2.81 |
-| `Projectile` | `src/clasher_new/client_side/card_utils.py:137` | class | §2.83 |
-| `projectile_from_row` | `src/clasher_new/card_utils.py:474` | function | §2.81 |
-| `prophet_policy_to_plan` | `src/clasher_new/rl/train_prophet.py:112` | function | §2.134 |
-| `ProphetEnv` | `src/clasher_new/rl/train_prophet.py:46` | class | §2.134 |
-| `ProphetExtractor` | `src/clasher_new/rl/train_prophet.py:78` | class | §2.134 |
-| `ProphetPlanner` | `src/clasher_new/rl/prophet.py:163` | class | §2.125 |
-| `BattleState.pull_enemies` | `src/clasher_new/battle.py:3191` | function | §2.77 |
-| `BattleState.push_enemies` | `src/clasher_new/battle.py:3180` | function | §2.77 |
-| `NeuralBeliefEncoder.push_frame` | `src/clasher_new/rl/belief.py:192` | function | §2.103 |
-| `_Node.q` | `src/clasher_new/rl/mcts.py:319` | function | §2.118 |
-| `question_candidates` | `scripts/question_bank_poc.py:71` | function | §2.51 |
-| `Rage` | `src/clasher_new/card_mechanics.py:218` | class | §2.80 |
-| `RageBarbarian` | `src/clasher_new/card_mechanics.py:261` | class | §2.80 |
-| `Entity.ramped_damage` | `src/clasher_new/battle.py:442` | function | §2.77 |
-| `RamRider` | `src/clasher_new/card_mechanics.py:1662` | class | §2.80 |
-| `random_strategy` | `src/clasher_new/environment.py:164` | function | §2.89 |
-| `RandomEvalCallback` | `src/clasher_new/train.py:70` | class | §2.160 |
-| `rarity_of` | `scripts/extend_level16.py:36` | function | §2.38 |
+| `Visualizer.process_events` | `src/clasher_new/minimal_visualizer.py:190` | function | §2.100 |
+| `Visualizer.process_events` | `src/clasher_new/new_visualization.py:84` | function | §2.101 |
+| `Projectile` | `src/clasher_new/battle.py:1417` | class | §2.83 |
+| `Projectile` | `src/clasher_new/card_utils.py:445` | class | §2.87 |
+| `Projectile` | `src/clasher_new/client_side/card_utils.py:137` | class | §2.89 |
+| `projectile_from_row` | `src/clasher_new/card_utils.py:474` | function | §2.87 |
+| `prophet_policy_to_plan` | `src/clasher_new/rl/train_prophet.py:112` | function | §2.140 |
+| `ProphetEnv` | `src/clasher_new/rl/train_prophet.py:46` | class | §2.140 |
+| `ProphetExtractor` | `src/clasher_new/rl/train_prophet.py:78` | class | §2.140 |
+| `ProphetPlanner` | `src/clasher_new/rl/prophet.py:163` | class | §2.131 |
+| `BattleState.pull_enemies` | `src/clasher_new/battle.py:3191` | function | §2.83 |
+| `BattleState.push_enemies` | `src/clasher_new/battle.py:3180` | function | §2.83 |
+| `NeuralBeliefEncoder.push_frame` | `src/clasher_new/rl/belief.py:192` | function | §2.109 |
+| `_Node.q` | `src/clasher_new/rl/mcts.py:319` | function | §2.124 |
+| `question_candidates` | `scripts/question_bank_poc.py:71` | function | §2.57 |
+| `Rage` | `src/clasher_new/card_mechanics.py:218` | class | §2.86 |
+| `RageBarbarian` | `src/clasher_new/card_mechanics.py:261` | class | §2.86 |
+| `Entity.ramped_damage` | `src/clasher_new/battle.py:442` | function | §2.83 |
+| `RamRider` | `src/clasher_new/card_mechanics.py:1662` | class | §2.86 |
+| `random_strategy` | `src/clasher_new/environment.py:164` | function | §2.95 |
+| `RandomEvalCallback` | `src/clasher_new/train.py:70` | class | §2.166 |
+| `rarity_of` | `scripts/extend_level16.py:36` | function | §2.44 |
 | `rate` | `runs/forensics_100k.py` | class(素材) | §2.11 |
+| `read_draft` | `scripts/_survey_merge_docs.py:80` | function | §2.24 |
 | `read_state` | `runs/watch_100k.py` | class(素材) | §2.12 |
-| `read_step` | `scripts/stop_solo_training_2200.py:49` | function | §2.64 |
-| `readBattleEntities` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `readEntity` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `readPlayerIdentity` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `receiver` | `src/clasher_new/client_side/client.py:136` | function | §2.84 |
-| `reconcile` | `scripts/question_bank_poc.py:152` | function | §2.51 |
+| `read_step` | `scripts/stop_solo_training_2200.py:49` | function | §2.70 |
+| `readBattleEntities` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `readEntity` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `readPlayerIdentity` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `receiver` | `src/clasher_new/client_side/client.py:136` | function | §2.90 |
+| `reconcile` | `scripts/question_bank_poc.py:152` | function | §2.57 |
 | `reconstruct` | `runs/forensics_100k.py` | class(素材) | §2.11 |
-| `LeagueGameRecorder.record` | `src/clasher_new/rl/run_league.py:128` | function | §2.127 |
-| `_OpponentPool.record` | `src/clasher_new/rl/train_solo.py:479` | function | §2.135 |
-| `League.record_elo_history` | `src/clasher_new/rl/league.py:104` | function | §2.117 |
-| `League.record_match` | `src/clasher_new/rl/league.py:59` | function | §2.117 |
-| `League.record_round_stats` | `src/clasher_new/rl/league.py:111` | function | §2.117 |
-| `EpisodeReplay.record_step` | `src/clasher_new/rl/replay.py:32` | function | §2.126 |
-| `BattleState.reflect_to_tower` | `src/clasher_new/battle.py:3170` | function | §2.77 |
-| `_OpponentPool.refresh_hist` | `src/clasher_new/rl/train_solo.py:414` | function | §2.135 |
-| `League.refresh_snapshot` | `src/clasher_new/rl/league.py:86` | function | §2.117 |
-| `TileGrid.refresh_tower_alive_cache` | `src/clasher_new/arena.py:55` | function | §2.76 |
-| `PlayerState.regenerate_elixir` | `src/clasher_new/client_side/player.py:12` | function | §2.86 |
-| `PlayerState.regenerate_elixir` | `src/clasher_new/player.py:32` | function | §2.98 |
-| `League.register_checkpoint` | `src/clasher_new/rl/league.py:66` | function | §2.117 |
-| `League.remove_agent` | `src/clasher_new/rl/league.py:131` | function | §2.117 |
-| `Visualizer.render_frame` | `src/clasher_new/minimal_visualizer.py:195` | function | §2.94 |
-| `Visualizer.render_frame` | `src/clasher_new/new_visualization.py:96` | function | §2.95 |
-| `TrainConfig.replays_dir` | `src/clasher_new/rl/config.py:274` | function | §2.105 |
-| `report` | `src/clasher_new/runs/_tmp_behavior_recount.py:84` | function | §2.138 |
-| `BeliefInference.reset` | `src/clasher_new/rl/belief.py:274` | function | §2.103 |
-| `CREnv.reset` | `src/clasher_new/environment.py:51` | function | §2.89 |
-| `CycleBayesFilter.reset` | `src/clasher_new/rl/bayes_filter.py:61` | function | §2.102 |
-| `FollowerOpponent.reset` | `src/clasher_new/rl/train_follower.py:79` | function | §2.133 |
-| `ProphetEnv.reset` | `src/clasher_new/rl/train_prophet.py:62` | function | §2.134 |
-| `RLEnv.reset` | `src/clasher_new/rl/env_wrapper.py:348` | function | §2.110 |
-| `SequentialEvalEnv.reset` | `src/clasher_new/evaluate.py:19` | function | §2.90 |
-| `SingleCardAdapter.reset` | `src/clasher_new/rl/train_baseline.py:34` | function | §2.129 |
-| `NeuralBeliefEncoder.reset_history` | `src/clasher_new/rl/belief.py:189` | function | §2.103 |
-| `TrainConfig.resolve` | `src/clasher_new/rl/config.py:372` | function | §2.105 |
-| `resolve_card` | `src/clasher_new/card_aliases.py:529` | function | §2.79 |
-| `BattleState.resolve_collisions` | `src/clasher_new/battle.py:3084` | function | §2.77 |
-| `resolve_deck_set` | `src/clasher_new/rl/train_solo.py:107` | function | §2.135 |
-| `resolve_device` | `src/clasher_new/rl/run_league.py:94` | function | §2.127 |
-| `ReturnScaler` | `src/clasher_new/rl/ppo.py:41` | class | §2.124 |
-| `reward_to_env` | `src/clasher_new/rl/config.py:399` | function | §2.105 |
-| `ridge_ev` | `scripts/diag_gru_ablation.py:49` | function | §2.35 |
-| `RLEnv` | `src/clasher_new/rl/env_wrapper.py:289` | class | §2.110 |
-| `RLMCTS` | `src/clasher_new/rl/mcts.py:330` | class | §2.118 |
-| `rollout` | `scripts/diag_critic_ev.py:73` | function | §2.33 |
-| `rollout` | `scripts/pomdp_ceiling_probe.py:96` | function | §2.46 |
-| `rollout` | `scripts/run_probe_v3.sh` | class(素材) | §2.63 |
-| `rollout_layers` | `scripts/probe_value_ln.py:170` | function | §2.50 |
-| `Ronin` | `src/clasher_new/card_mechanics.py:669` | class | §2.80 |
-| `GameServer.run` | `src/clasher_new/server.py:61` | function | §2.149 |
-| `Visualizer.run` | `src/clasher_new/minimal_visualizer.py:203` | function | §2.94 |
-| `Visualizer.run` | `src/clasher_new/new_visualization.py:103` | function | §2.95 |
-| `run` | `src/clasher_new/tmp_formation_test.py:12` | function | §2.155 |
-| `run` | `src/clasher_new/tmp_target_verify.py:12` | function | §2.158 |
-| `run` | `src/clasher_new/tmp_tower_chip_test.py:12` | function | §2.159 |
-| `run_ablation` | `src/clasher_new/rl/evaluate.py:316` | function | §2.111 |
-| `run_case` | `scripts/assassin_left_bridge_test.py:33` | function | §2.20 |
-| `run_case` | `scripts/assassin_vs_megaknight.py:33` | function | §2.21 |
-| `run_case` | `scripts/assassin_vs_sparky.py:38` | function | §2.22 |
-| `run_duel` | `scripts/duel_search.py:152` | function | §2.37 |
-| `run_duel_2v1` | `scripts/duel_search.py:188` | function | §2.37 |
-| `run_duel_2v2` | `scripts/duel_search.py:241` | function | §2.37 |
-| `run_eval` | `src/clasher_new/rl/evaluate.py:168` | function | §2.111 |
-| `run_flow` | `src/clasher_new/rl/flow_league.py:364` | function | §2.113 |
-| `run_flow_sweep` | `src/clasher_new/rl/flow_league.py:528` | function | §2.113 |
-| `run_league` | `src/clasher_new/rl/run_league.py:1143` | function | §2.127 |
-| `run_selftest` | `start_rl.bat` | class(素材) | §2.163 |
-| `run_selftest` | `start_training.bat` | class(素材) | §2.164 |
-| `run_solo` | `src/clasher_new/rl/train_solo.py:1039` | function | §2.135 |
-| `TrainConfig.run_state_path` | `src/clasher_new/rl/config.py:264` | function | §2.105 |
-| `run_training` | `src/clasher_new/rl/train_follower.py:117` | function | §2.133 |
-| `S` | `scripts/judge_probe_v4.py:24` | function | §2.44 |
-| `ActionBundleSpace.sample` | `src/clasher_new/rl/env_wrapper.py:275` | function | §2.110 |
-| `PFSP.sample` | `src/clasher_new/rl/pfsp.py:66` | function | §2.122 |
-| `_OpponentPool.sample` | `src/clasher_new/rl/train_solo.py:436` | function | §2.135 |
-| `sample_bundle` | `src/clasher_new/rl/train_belief.py:33` | function | §2.131 |
-| `sample_deck` | `src/clasher_new/rl/opponents.py:71` | function | §2.120 |
-| `League.sample_opponent` | `src/clasher_new/rl/league.py:52` | function | §2.117 |
-| `Elo.save` | `src/clasher_new/rl/elo.py:47` | function | §2.109 |
-| `EpisodeReplay.save` | `src/clasher_new/rl/replay.py:51` | function | §2.126 |
-| `HumanPlaySession.save` | `src/clasher_new/rl/human_play.py:164` | function | §2.115 |
-| `TrainConfig.save` | `src/clasher_new/rl/config.py:294` | function | §2.105 |
-| `save_checkpoint` | `src/clasher_new/rl/follower.py:55` | function | §2.114 |
-| `save_flow_models` | `src/clasher_new/rl/flow_league.py:147` | function | §2.113 |
-| `save_league_replays` | `src/clasher_new/rl/replay.py:128` | function | §2.126 |
-| `League.save_state` | `src/clasher_new/rl/league.py:146` | function | §2.117 |
-| `ReturnScaler.scale` | `src/clasher_new/rl/ppo.py:68` | function | §2.124 |
-| `scale_pools` | `src/clasher_new/rl/flow_league.py:100` | function | §2.113 |
-| `scan` | `scripts/value_displacement_scan.py:52` | function | §2.73 |
-| `scan_file` | `scripts/_survey_inventory.py:129` | function | §2.19 |
-| `scan_replays` | `src/clasher_new/rl/dashboard.py:233` | function | §2.106 |
-| `scan_sweep_dirs` | `src/clasher_new/rl/dashboard.py:122` | function | §2.106 |
-| `scramble_rows_by_clock` | `scripts/pomdp_ceiling_probe.py:269` | function | §2.46 |
-| `scramble_target_by_clock` | `scripts/pomdp_ceiling_probe.py:279` | function | §2.46 |
-| `script_defender` | `src/clasher_new/simulate_exchange.py:80` | function | §2.150 |
-| `ScriptedPolicy` | `src/clasher_new/rl/opponents.py:76` | class | §2.120 |
-| `RLMCTS.search` | `src/clasher_new/rl/mcts.py:341` | function | §2.118 |
-| `search_1v1` | `scripts/duel_search.py:478` | function | §2.37 |
-| `search_2v1` | `scripts/duel_search.py:370` | function | §2.37 |
-| `search_2v2` | `scripts/duel_search.py:297` | function | §2.37 |
-| `search_card` | `src/clasher_new/card_aliases.py:488` | function | §2.79 |
-| `search_card_candidates` | `src/clasher_new/card_aliases.py:510` | function | §2.79 |
+| `LeagueGameRecorder.record` | `src/clasher_new/rl/run_league.py:128` | function | §2.133 |
+| `_OpponentPool.record` | `src/clasher_new/rl/train_solo.py:479` | function | §2.141 |
+| `League.record_elo_history` | `src/clasher_new/rl/league.py:104` | function | §2.123 |
+| `League.record_match` | `src/clasher_new/rl/league.py:59` | function | §2.123 |
+| `League.record_round_stats` | `src/clasher_new/rl/league.py:111` | function | §2.123 |
+| `EpisodeReplay.record_step` | `src/clasher_new/rl/replay.py:32` | function | §2.132 |
+| `BattleState.reflect_to_tower` | `src/clasher_new/battle.py:3170` | function | §2.83 |
+| `_OpponentPool.refresh_hist` | `src/clasher_new/rl/train_solo.py:414` | function | §2.141 |
+| `League.refresh_snapshot` | `src/clasher_new/rl/league.py:86` | function | §2.123 |
+| `TileGrid.refresh_tower_alive_cache` | `src/clasher_new/arena.py:55` | function | §2.82 |
+| `PlayerState.regenerate_elixir` | `src/clasher_new/client_side/player.py:12` | function | §2.92 |
+| `PlayerState.regenerate_elixir` | `src/clasher_new/player.py:32` | function | §2.104 |
+| `League.register_checkpoint` | `src/clasher_new/rl/league.py:66` | function | §2.123 |
+| `League.remove_agent` | `src/clasher_new/rl/league.py:131` | function | §2.123 |
+| `Visualizer.render_frame` | `src/clasher_new/minimal_visualizer.py:195` | function | §2.100 |
+| `Visualizer.render_frame` | `src/clasher_new/new_visualization.py:96` | function | §2.101 |
+| `renumber_file_sections` | `scripts/_survey_merge.py:76` | function | §2.23 |
+| `TrainConfig.replays_dir` | `src/clasher_new/rl/config.py:274` | function | §2.111 |
+| `report` | `src/clasher_new/runs/_tmp_behavior_recount.py:84` | function | §2.144 |
+| `BeliefInference.reset` | `src/clasher_new/rl/belief.py:274` | function | §2.109 |
+| `CREnv.reset` | `src/clasher_new/environment.py:51` | function | §2.95 |
+| `CycleBayesFilter.reset` | `src/clasher_new/rl/bayes_filter.py:61` | function | §2.108 |
+| `FollowerOpponent.reset` | `src/clasher_new/rl/train_follower.py:79` | function | §2.139 |
+| `ProphetEnv.reset` | `src/clasher_new/rl/train_prophet.py:62` | function | §2.140 |
+| `RLEnv.reset` | `src/clasher_new/rl/env_wrapper.py:348` | function | §2.116 |
+| `SequentialEvalEnv.reset` | `src/clasher_new/evaluate.py:19` | function | §2.96 |
+| `SingleCardAdapter.reset` | `src/clasher_new/rl/train_baseline.py:34` | function | §2.135 |
+| `NeuralBeliefEncoder.reset_history` | `src/clasher_new/rl/belief.py:189` | function | §2.109 |
+| `TrainConfig.resolve` | `src/clasher_new/rl/config.py:372` | function | §2.111 |
+| `resolve_card` | `src/clasher_new/card_aliases.py:529` | function | §2.85 |
+| `BattleState.resolve_collisions` | `src/clasher_new/battle.py:3084` | function | §2.83 |
+| `resolve_deck_set` | `src/clasher_new/rl/train_solo.py:107` | function | §2.141 |
+| `resolve_device` | `src/clasher_new/rl/run_league.py:94` | function | §2.133 |
+| `ReturnScaler` | `src/clasher_new/rl/ppo.py:41` | class | §2.130 |
+| `reward_to_env` | `src/clasher_new/rl/config.py:399` | function | §2.111 |
+| `ridge_ev` | `scripts/diag_gru_ablation.py:49` | function | §2.41 |
+| `RLEnv` | `src/clasher_new/rl/env_wrapper.py:289` | class | §2.116 |
+| `RLMCTS` | `src/clasher_new/rl/mcts.py:330` | class | §2.124 |
+| `rollout` | `scripts/diag_critic_ev.py:73` | function | §2.39 |
+| `rollout` | `scripts/pomdp_ceiling_probe.py:96` | function | §2.52 |
+| `rollout` | `scripts/run_probe_v3.sh` | class(素材) | §2.69 |
+| `rollout_layers` | `scripts/probe_value_ln.py:170` | function | §2.56 |
+| `Ronin` | `src/clasher_new/card_mechanics.py:669` | class | §2.86 |
+| `GameServer.run` | `src/clasher_new/server.py:61` | function | §2.155 |
+| `Visualizer.run` | `src/clasher_new/minimal_visualizer.py:203` | function | §2.100 |
+| `Visualizer.run` | `src/clasher_new/new_visualization.py:103` | function | §2.101 |
+| `run` | `src/clasher_new/tmp_formation_test.py:12` | function | §2.161 |
+| `run` | `src/clasher_new/tmp_target_verify.py:12` | function | §2.164 |
+| `run` | `src/clasher_new/tmp_tower_chip_test.py:12` | function | §2.165 |
+| `run_ablation` | `src/clasher_new/rl/evaluate.py:316` | function | §2.117 |
+| `run_case` | `scripts/assassin_left_bridge_test.py:33` | function | §2.26 |
+| `run_case` | `scripts/assassin_vs_megaknight.py:33` | function | §2.27 |
+| `run_case` | `scripts/assassin_vs_sparky.py:38` | function | §2.28 |
+| `run_duel` | `scripts/duel_search.py:152` | function | §2.43 |
+| `run_duel_2v1` | `scripts/duel_search.py:188` | function | §2.43 |
+| `run_duel_2v2` | `scripts/duel_search.py:241` | function | §2.43 |
+| `run_eval` | `src/clasher_new/rl/evaluate.py:168` | function | §2.117 |
+| `run_flow` | `src/clasher_new/rl/flow_league.py:364` | function | §2.119 |
+| `run_flow_sweep` | `src/clasher_new/rl/flow_league.py:528` | function | §2.119 |
+| `run_league` | `src/clasher_new/rl/run_league.py:1143` | function | §2.133 |
+| `run_selftest` | `start_rl.bat` | class(素材) | §2.169 |
+| `run_selftest` | `start_training.bat` | class(素材) | §2.170 |
+| `run_solo` | `src/clasher_new/rl/train_solo.py:1039` | function | §2.141 |
+| `TrainConfig.run_state_path` | `src/clasher_new/rl/config.py:264` | function | §2.111 |
+| `run_training` | `src/clasher_new/rl/train_follower.py:117` | function | §2.139 |
+| `S` | `scripts/judge_probe_v4.py:24` | function | §2.50 |
+| `ActionBundleSpace.sample` | `src/clasher_new/rl/env_wrapper.py:275` | function | §2.116 |
+| `PFSP.sample` | `src/clasher_new/rl/pfsp.py:66` | function | §2.128 |
+| `_OpponentPool.sample` | `src/clasher_new/rl/train_solo.py:436` | function | §2.141 |
+| `sample_bundle` | `src/clasher_new/rl/train_belief.py:33` | function | §2.137 |
+| `sample_deck` | `src/clasher_new/rl/opponents.py:71` | function | §2.126 |
+| `League.sample_opponent` | `src/clasher_new/rl/league.py:52` | function | §2.123 |
+| `Elo.save` | `src/clasher_new/rl/elo.py:47` | function | §2.115 |
+| `EpisodeReplay.save` | `src/clasher_new/rl/replay.py:51` | function | §2.132 |
+| `HumanPlaySession.save` | `src/clasher_new/rl/human_play.py:164` | function | §2.121 |
+| `TrainConfig.save` | `src/clasher_new/rl/config.py:294` | function | §2.111 |
+| `save_checkpoint` | `src/clasher_new/rl/follower.py:55` | function | §2.120 |
+| `save_flow_models` | `src/clasher_new/rl/flow_league.py:147` | function | §2.119 |
+| `save_league_replays` | `src/clasher_new/rl/replay.py:128` | function | §2.132 |
+| `League.save_state` | `src/clasher_new/rl/league.py:146` | function | §2.123 |
+| `ReturnScaler.scale` | `src/clasher_new/rl/ppo.py:68` | function | §2.130 |
+| `scale_pools` | `src/clasher_new/rl/flow_league.py:100` | function | §2.119 |
+| `scan` | `scripts/value_displacement_scan.py:52` | function | §2.79 |
+| `scan_file` | `scripts/_survey_inventory.py:129` | function | §2.21 |
+| `scan_replays` | `src/clasher_new/rl/dashboard.py:233` | function | §2.112 |
+| `scan_sweep_dirs` | `src/clasher_new/rl/dashboard.py:122` | function | §2.112 |
+| `scramble_rows_by_clock` | `scripts/pomdp_ceiling_probe.py:269` | function | §2.52 |
+| `scramble_target_by_clock` | `scripts/pomdp_ceiling_probe.py:279` | function | §2.52 |
+| `script_defender` | `src/clasher_new/simulate_exchange.py:80` | function | §2.156 |
+| `ScriptedPolicy` | `src/clasher_new/rl/opponents.py:76` | class | §2.126 |
+| `RLMCTS.search` | `src/clasher_new/rl/mcts.py:341` | function | §2.124 |
+| `search_1v1` | `scripts/duel_search.py:478` | function | §2.43 |
+| `search_2v1` | `scripts/duel_search.py:370` | function | §2.43 |
+| `search_2v2` | `scripts/duel_search.py:297` | function | §2.43 |
+| `search_card` | `src/clasher_new/card_aliases.py:488` | function | §2.85 |
+| `search_card_candidates` | `src/clasher_new/card_aliases.py:510` | function | §2.85 |
 | `seg` | `runs/analyze_curve.py` | class(素材) | §2.10 |
-| `SelfDefenderPolicy` | `src/clasher_new/rl/opponents.py:125` | class | §2.120 |
-| `selftest_done` | `start_rl.bat` | class(素材) | §2.163 |
-| `selftest_done` | `start_training.bat` | class(素材) | §2.164 |
-| `selftest_failed` | `start_rl.bat` | class(素材) | §2.163 |
-| `selftest_failed` | `start_training.bat` | class(素材) | §2.164 |
-| `GameServer.send` | `src/clasher_new/server.py:18` | function | §2.149 |
-| `extractPage.send（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.25 |
-| `extractPage.send（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.26 |
-| `extractPage.send（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.28 |
-| `extractPage.send（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.31 |
-| `seq` | `src/clasher_new/runs/_tmp_behavior_recount.py:133` | function | §2.138 |
-| `SequentialEvalEnv` | `src/clasher_new/evaluate.py:13` | class | §2.90 |
-| `LeagueGameRecorder.set_decks` | `src/clasher_new/rl/run_league.py:124` | function | §2.127 |
-| `PlayerState.set_evolution_slots` | `src/clasher_new/player.py:17` | function | §2.98 |
-| `PlayerState.set_hero_slots` | `src/clasher_new/player.py:27` | function | §2.98 |
-| `Card.set_level` | `src/clasher_new/card_utils.py:347` | function | §2.81 |
-| `Card.set_level` | `src/clasher_new/client_side/card_utils.py:112` | function | §2.83 |
-| `PlayerState.set_tower_troop` | `src/clasher_new/player.py:21` | function | §2.98 |
-| `settle_stall` | `src/clasher_new/rl/run_league.py:240` | function | §2.127 |
-| `settle_stall_from_counts` | `src/clasher_new/rl/run_league.py:213` | function | §2.127 |
-| `setup_done` | `start_rl.bat` | class(素材) | §2.163 |
-| `setup_done` | `start_training.bat` | class(素材) | §2.164 |
-| `setup_failed` | `start_rl.bat` | class(素材) | §2.163 |
-| `setup_failed` | `start_training.bat` | class(素材) | §2.164 |
-| `show_help` | `start_rl.bat` | class(素材) | §2.163 |
-| `show_help` | `start_training.bat` | class(素材) | §2.164 |
-| `simulate_exchange` | `src/clasher_new/simulate_exchange.py:163` | function | §2.150 |
-| `SingleCardAdapter` | `src/clasher_new/rl/train_baseline.py:26` | class | §2.129 |
-| `ActionBundle.size` | `src/clasher_new/rl/action_bundle.py:92` | function | §2.100 |
-| `SkeletonKing` | `src/clasher_new/card_mechanics.py:319` | class | §2.80 |
-| `Skeletrooper` | `src/clasher_new/card_mechanics.py:1398` | class | §2.80 |
-| `slot_mask` | `src/clasher_new/rl/action_mask.py:59` | function | §2.101 |
-| `slot_to_screen` | `src/clasher_new/minimal_visualizer.py:34` | function | §2.94 |
-| `slug` | `scripts/_survey_groups.py:33` | function | §2.18 |
-| `smoke` | `scripts/batch_smoke.py:21` | function | §2.23 |
-| `TrainConfig.solo_ckpt_path` | `src/clasher_new/rl/config.py:256` | function | §2.105 |
-| `solo_commit_blocked` | `src/clasher_new/rl/action_mask.py:255` | function | §2.101 |
-| `solo_env` | `src/clasher_new/rl/train_solo.py:157` | function | §2.135 |
-| `TrainConfig.solo_main_path` | `src/clasher_new/rl/config.py:253` | function | §2.105 |
-| `TrainConfig.solo_opt_path` | `src/clasher_new/rl/config.py:260` | function | §2.105 |
-| `TrainConfig.solo_state_path` | `src/clasher_new/rl/config.py:250` | function | §2.105 |
-| `solve_dual` | `src/clasher_new/runs/_tmp_ln_geom2.py:29` | function | §2.140 |
-| `solve_primal` | `src/clasher_new/runs/_tmp_ln_geom2.py:61` | function | §2.140 |
-| `spawn` | `scripts/test_m6_elite.py:37` | function | §2.72 |
-| `BattleState.spawn_arrival_troops` | `src/clasher_new/battle.py:2775` | function | §2.77 |
-| `spawn_building` | `scripts/test_m3_evo.py:40` | function | §2.69 |
-| `spawn_building` | `scripts/test_m4_evo7.py:45` | function | §2.70 |
-| `spawn_evo_zone` | `src/clasher_new/battle.py:2006` | function | §2.77 |
-| `BattleState.spawn_projectile_chain` | `src/clasher_new/battle.py:2751` | function | §2.77 |
-| `spawn_troop` | `scripts/test_m2.py:43` | function | §2.68 |
-| `spawn_troop` | `scripts/test_m3_evo.py:35` | function | §2.69 |
-| `spawn_troop` | `scripts/test_m4_evo7.py:40` | function | §2.70 |
-| `spawn_troop` | `scripts/test_m5_data.py:41` | function | §2.71 |
-| `spawn_vines_zone` | `src/clasher_new/battle.py:2223` | function | §2.77 |
-| `SpawnProjectile` | `src/clasher_new/battle.py:1656` | class | §2.77 |
-| `special_fields` | `scripts/coverage.py:111` | function | §2.32 |
-| `split_masks` | `scripts/probe_v3_mono_check.py:42` | function | §2.48 |
-| `split_masks` | `scripts/probe_v4_ln_pair.py:49` | function | §2.49 |
-| `standardize` | `scripts/pomdp_ceiling_probe.py:337` | function | §2.46 |
-| `EpisodeReplay.start` | `src/clasher_new/rl/replay.py:28` | function | §2.126 |
-| `HumanPlaySession.start` | `src/clasher_new/rl/human_play.py:94` | function | §2.115 |
-| `start_dashboard` | `start_rl.bat` | class(素材) | §2.163 |
-| `start_dashboard` | `start_training.bat` | class(素材) | §2.164 |
-| `started` | `start_rl.bat` | class(素材) | §2.163 |
-| `started` | `start_training.bat` | class(素材) | §2.164 |
-| `BeliefInference.state` | `src/clasher_new/rl/belief.py:318` | function | §2.103 |
-| `HumanPlaySession.state` | `src/clasher_new/rl/human_play.py:101` | function | §2.115 |
-| `state_arg` | `src/clasher_new/rl/launcher_menu.py:229` | function | §2.116 |
-| `state_dict_of` | `scripts/value_displacement_scan.py:45` | function | §2.73 |
-| `TrainConfig.state_path` | `src/clasher_new/rl/config.py:247` | function | §2.105 |
-| `StatisticalBelief` | `src/clasher_new/rl/belief.py:130` | class | §2.103 |
-| `ReturnScaler.std` | `src/clasher_new/rl/ppo.py:65` | function | §2.124 |
-| `BattleState.step` | `src/clasher_new/battle.py:2652` | function | §2.77 |
-| `CREnv.step` | `src/clasher_new/environment.py:76` | function | §2.89 |
-| `ProphetEnv.step` | `src/clasher_new/rl/train_prophet.py:69` | function | §2.134 |
-| `RLEnv.step` | `src/clasher_new/rl/env_wrapper.py:598` | function | §2.110 |
-| `SingleCardAdapter.step` | `src/clasher_new/rl/train_baseline.py:37` | function | §2.129 |
-| `step_for` | `scripts/test_m1.py:31` | function | §2.67 |
-| `step_for` | `scripts/test_m2.py:39` | function | §2.68 |
-| `step_for` | `scripts/test_m3_evo.py:45` | function | §2.69 |
-| `step_for` | `scripts/test_m4_evo7.py:50` | function | §2.70 |
-| `step_for` | `scripts/test_m5_data.py:47` | function | §2.71 |
-| `step_for` | `scripts/test_m6_elite.py:43` | function | §2.72 |
-| `sub_position` | `src/clasher_new/rl/action_bundle.py:31` | function | §2.100 |
-| `SubAction` | `src/clasher_new/rl/action_bundle.py:43` | class | §2.100 |
-| `swipe` | `src/clasher_new/minimal_visualizer.py:40` | function | §2.94 |
-| `Elo.table` | `src/clasher_new/rl/elo.py:44` | function | §2.109 |
-| `Building.take_damage` | `src/clasher_new/battle.py:1266` | function | §2.77 |
-| `Entity.take_damage` | `src/clasher_new/battle.py:507` | function | §2.77 |
-| `EvoEffectZone.take_damage` | `src/clasher_new/battle.py:1998` | function | §2.77 |
-| `GenericBomb.take_damage` | `src/clasher_new/battle.py:1933` | function | §2.77 |
-| `TimedExplosive.take_damage` | `src/clasher_new/battle.py:2398` | function | §2.77 |
-| `VinesSnareZone.take_damage` | `src/clasher_new/battle.py:2176` | function | §2.77 |
-| `FollowerOpponent.take_last_step` | `src/clasher_new/rl/train_follower.py:112` | function | §2.133 |
-| `test_ablation_recorded` | `src/clasher_new/rl/selftest.py:1447` | function | §2.128 |
-| `test_action_bundle_ability` | `src/clasher_new/rl/selftest.py:66` | function | §2.128 |
-| `test_action_bundle_same_tick` | `src/clasher_new/rl/selftest.py:37` | function | §2.128 |
-| `test_action_interp_damage` | `scripts/test_m3_evo.py:62` | function | §2.69 |
-| `test_action_interp_spawn_giant` | `scripts/test_m3_evo.py:78` | function | §2.69 |
-| `test_adv_inert_probe_and_const_baseline` | `src/clasher_new/rl/selftest.py:4771` | function | §2.128 |
-| `test_anchor_light_point_state` | `src/clasher_new/rl/selftest.py:4695` | function | §2.128 |
-| `test_archer_queen` | `scripts/test_m2.py:168` | function | §2.68 |
-| `test_archer_special_range` | `scripts/test_m3_evo.py:385` | function | §2.69 |
-| `test_attack_seq_berserker` | `scripts/test_m2.py:377` | function | §2.68 |
-| `test_attack_seq_inferno_battle` | `scripts/test_m2.py:358` | function | §2.68 |
-| `test_attack_seq_inferno_evo` | `scripts/test_m2.py:339` | function | §2.68 |
-| `test_babydragon_gust` | `scripts/test_m4_evo7.py:206` | function | §2.70 |
-| `test_balloon` | `scripts/test_m6_elite.py:395` | function | §2.72 |
-| `test_barbarians_rage` | `scripts/test_m3_evo.py:360` | function | §2.69 |
-| `test_barblog` | `scripts/test_m6_elite.py:418` | function | §2.72 |
-| `test_bats_overheal` | `scripts/test_m3_evo.py:230` | function | §2.69 |
-| `test_battle_clone_fix` | `src/clasher_new/rl/selftest.py:1203` | function | §2.128 |
-| `test_battle_level_range` | `scripts/test_m2.py:424` | function | §2.68 |
-| `test_battleram_pushback` | `scripts/test_m3_evo.py:202` | function | §2.69 |
-| `test_bayes_filter` | `src/clasher_new/rl/selftest.py:98` | function | §2.128 |
-| `test_bayes_queue_lock` | `src/clasher_new/rl/selftest.py:2536` | function | §2.128 |
-| `test_behavioral_metrics` | `src/clasher_new/rl/selftest.py:3370` | function | §2.128 |
-| `test_belief_follower_ppo_league` | `src/clasher_new/rl/selftest.py:1258` | function | §2.128 |
-| `test_belief_multi_card_update` | `src/clasher_new/rl/selftest.py:289` | function | §2.128 |
-| `test_belief_survives_ability` | `src/clasher_new/rl/selftest.py:267` | function | §2.128 |
-| `test_berserker` | `scripts/test_m6_elite.py:352` | function | §2.72 |
-| `test_bomber_chain` | `scripts/test_m3_evo.py:407` | function | §2.69 |
-| `test_boss_bandit` | `scripts/test_m2.py:231` | function | §2.68 |
-| `test_bowler` | `scripts/test_m6_elite.py:208` | function | §2.72 |
-| `test_bp_new_intent_rules` | `src/clasher_new/rl/selftest.py:2223` | function | §2.128 |
-| `test_building_decay` | `scripts/test_m2.py:130` | function | §2.68 |
-| `test_bundle_cap_no_crash` | `src/clasher_new/rl/selftest.py:328` | function | §2.128 |
-| `test_champion_unaffected` | `scripts/test_m6_elite.py:489` | function | §2.72 |
-| `test_classified_decks` | `src/clasher_new/rl/selftest.py:598` | function | §2.128 |
-| `test_clone` | `scripts/test_m1.py:151` | function | §2.67 |
-| `test_config_reward_weights` | `src/clasher_new/rl/selftest.py:640` | function | §2.128 |
-| `test_crossed_river_defend_plan` | `src/clasher_new/rl/selftest.py:3151` | function | §2.128 |
-| `test_cuda_device_support` | `src/clasher_new/rl/selftest.py:1223` | function | §2.128 |
-| `test_cycle_trigger_path` | `scripts/test_m4_evo7.py:263` | function | §2.70 |
-| `test_darkprince` | `scripts/test_m6_elite.py:375` | function | §2.72 |
-| `test_dashboard_card_stats` | `src/clasher_new/rl/selftest.py:1137` | function | §2.128 |
-| `test_dashboard_replays` | `src/clasher_new/rl/selftest.py:1019` | function | §2.128 |
-| `test_data_layer` | `scripts/test_m6_elite.py:57` | function | §2.72 |
-| `test_death_damage_scaling` | `src/clasher_new/rl/selftest.py:3215` | function | §2.128 |
-| `test_deck_pool_factory` | `src/clasher_new/rl/selftest.py:1099` | function | §2.128 |
-| `test_draw_penalty_as_loss` | `src/clasher_new/rl/selftest.py:1743` | function | §2.128 |
-| `test_electro_dragon_chain` | `scripts/test_m3_evo.py:183` | function | §2.69 |
-| `test_elitearcher` | `scripts/test_m6_elite.py:441` | function | §2.72 |
-| `test_elo_eval_granularity` | `src/clasher_new/rl/selftest.py:524` | function | §2.128 |
-| `test_enc_layernorm_gru_vitality` | `src/clasher_new/rl/selftest.py:4186` | function | §2.128 |
-| `test_entropy_positive_and_sign` | `src/clasher_new/rl/selftest.py:153` | function | §2.128 |
-| `test_eval_solo_parallel` | `src/clasher_new/rl/selftest.py:2616` | function | §2.128 |
-| `test_eval_stall_early_stop` | `src/clasher_new/rl/selftest.py:1717` | function | §2.128 |
-| `test_evo_all_construct` | `scripts/test_m2.py:318` | function | §2.68 |
-| `test_evo_archer_double_shot` | `scripts/test_m2.py:297` | function | §2.68 |
-| `test_evo_cycle` | `scripts/test_m2.py:247` | function | §2.68 |
-| `test_evo_knight_fortify` | `scripts/test_m2.py:270` | function | §2.68 |
-| `test_evo_royal_giant_push` | `scripts/test_m2.py:307` | function | §2.68 |
-| `test_evo_skeletons_duplication` | `scripts/test_m2.py:280` | function | §2.68 |
-| `test_evo_wizard_shield` | `scripts/test_m2.py:291` | function | §2.68 |
-| `test_exploiter_loads_main_checkpoint` | `src/clasher_new/rl/selftest.py:245` | function | §2.128 |
-| `test_firecracker_chain` | `scripts/test_m1.py:106` | function | §2.67 |
-| `test_fisherman_hook` | `scripts/test_m2.py:141` | function | §2.68 |
-| `test_flow_league_smoke` | `src/clasher_new/rl/selftest.py:1394` | function | §2.128 |
-| `test_flow_resume` | `src/clasher_new/rl/selftest.py:1523` | function | §2.128 |
-| `test_flow_sweep_smoke` | `src/clasher_new/rl/selftest.py:1483` | function | §2.128 |
-| `test_freeze` | `scripts/test_m2.py:81` | function | §2.68 |
-| `test_furnace_hot_spawn` | `scripts/test_m4_evo7.py:240` | function | §2.70 |
-| `test_ghost_souldier_summon` | `scripts/test_m4_evo7.py:123` | function | §2.70 |
-| `test_giant` | `scripts/test_m6_elite.py:233` | function | §2.72 |
-| `test_goblin_barrel` | `scripts/test_m1.py:124` | function | §2.67 |
-| `test_goblin_giant_threshold` | `scripts/test_m3_evo.py:93` | function | §2.69 |
-| `test_goblinbarrel_decoy` | `scripts/test_m3_evo.py:217` | function | §2.69 |
-| `test_goblincage_capture` | `scripts/test_m3_evo.py:271` | function | §2.69 |
-| `test_goblindrill_hide` | `scripts/test_m3_evo.py:248` | function | §2.69 |
-| `test_goblins` | `scripts/test_m6_elite.py:258` | function | §2.72 |
-| `test_golden_knight_dash` | `scripts/test_m2.py:181` | function | §2.68 |
-| `test_graveyard` | `scripts/test_m1.py:136` | function | §2.67 |
-| `test_heal` | `scripts/test_m2.py:96` | function | §2.68 |
-| `test_heuristic_opponent_actually_plays` | `src/clasher_new/rl/selftest.py:223` | function | §2.128 |
-| `test_hidden_replay_consistency` | `src/clasher_new/rl/selftest.py:130` | function | §2.128 |
-| `test_history_dedup_and_gates` | `src/clasher_new/rl/selftest.py:3857` | function | §2.128 |
-| `test_human_play_session` | `src/clasher_new/rl/selftest.py:1599` | function | §2.128 |
-| `test_hunter_net` | `scripts/test_m3_evo.py:442` | function | §2.69 |
-| `test_icegolemite` | `scripts/test_m6_elite.py:465` | function | §2.72 |
-| `test_icespirits_zone` | `scripts/test_m3_evo.py:423` | function | §2.69 |
-| `test_icewizard` | `scripts/test_m6_elite.py:312` | function | §2.72 |
-| `test_knight` | `scripts/test_m6_elite.py:84` | function | §2.72 |
-| `test_league_elo_history` | `src/clasher_new/rl/selftest.py:426` | function | §2.128 |
-| `test_league_replays` | `src/clasher_new/rl/selftest.py:983` | function | §2.128 |
-| `test_league_resume` | `src/clasher_new/rl/selftest.py:956` | function | §2.128 |
-| `test_league_training_loop` | `src/clasher_new/rl/selftest.py:623` | function | §2.128 |
-| `test_level16_support` | `scripts/test_m2.py:400` | function | §2.68 |
-| `test_little_prince_guard` | `scripts/test_m2.py:207` | function | §2.68 |
-| `test_log_rolling_direction` | `src/clasher_new/rl/selftest.py:3301` | function | §2.128 |
-| `test_mask_validate_invariant_both_sides` | `src/clasher_new/rl/selftest.py:180` | function | §2.128 |
-| `test_mcts_basic` | `src/clasher_new/rl/selftest.py:2970` | function | §2.128 |
-| `test_mcts_defense_and_wait` | `src/clasher_new/rl/selftest.py:3068` | function | §2.128 |
-| `test_megaknight_dash` | `scripts/test_m3_evo.py:156` | function | §2.69 |
-| `test_megaknight_uppercut` | `scripts/test_m3_evo.py:170` | function | §2.69 |
-| `test_megaminion` | `scripts/test_m6_elite.py:284` | function | §2.72 |
-| `test_mergemaiden_data` | `scripts/test_m5_data.py:211` | function | §2.71 |
-| `test_mergemaiden_forms` | `scripts/test_m5_data.py:228` | function | §2.71 |
-| `test_mergemaiden_mirror` | `scripts/test_m5_data.py:266` | function | §2.71 |
-| `test_mighty_miner` | `scripts/test_m2.py:218` | function | §2.68 |
-| `test_min_range` | `scripts/test_m2.py:49` | function | §2.68 |
-| `test_minionhorde_first_hit_veil` | `scripts/test_m4_evo7.py:80` | function | §2.70 |
-| `test_minipekka` | `scripts/test_m6_elite.py:135` | function | §2.72 |
-| `test_mirror` | `scripts/test_m1.py:165` | function | §2.67 |
-| `test_mk_spawn_damage_and_iw_slow_fl` | `src/clasher_new/rl/selftest.py:3428` | function | §2.128 |
-| `test_model_reward_overrides` | `src/clasher_new/rl/selftest.py:682` | function | §2.128 |
-| `test_monk_reflect` | `scripts/test_m2.py:195` | function | §2.68 |
-| `test_mp_training_loop` | `src/clasher_new/rl/selftest.py:1372` | function | §2.128 |
-| `test_musketeer` | `scripts/test_m6_elite.py:112` | function | §2.72 |
-| `test_musketeer_snipe` | `scripts/test_m3_evo.py:306` | function | §2.69 |
-| `test_no_solo_commit_without_lead` | `src/clasher_new/rl/selftest.py:1993` | function | §2.128 |
-| `test_opp_event_token` | `src/clasher_new/rl/selftest.py:3098` | function | §2.128 |
-| `test_opponent_pool_mix` | `src/clasher_new/rl/selftest.py:3671` | function | §2.128 |
-| `test_opponent_pool_mix_multi_dir` | `src/clasher_new/rl/selftest.py:3905` | function | §2.128 |
-| `test_opponent_pool_rand_anchor` | `src/clasher_new/rl/selftest.py:3964` | function | §2.128 |
-| `test_overtime_window` | `src/clasher_new/rl/selftest.py:2653` | function | §2.128 |
-| `test_parallel_batch_equivalence` | `src/clasher_new/rl/selftest.py:1315` | function | §2.128 |
-| `test_parallel_training_loop` | `src/clasher_new/rl/selftest.py:1355` | function | §2.128 |
-| `test_pekka_heal_on_kill` | `scripts/test_m3_evo.py:141` | function | §2.69 |
-| `test_pekka_resurrect` | `scripts/test_m3_evo.py:106` | function | §2.69 |
-| `test_pekka_soul_bonus` | `scripts/test_m3_evo.py:129` | function | §2.69 |
-| `test_pfsp_gate_and_dynamic_hist` | `src/clasher_new/rl/selftest.py:4086` | function | §2.128 |
-| `test_plan_v1_layout` | `src/clasher_new/rl/selftest.py:2150` | function | §2.128 |
-| `test_play_pair_env_reuse` | `src/clasher_new/rl/selftest.py:1691` | function | §2.128 |
-| `test_pp_new_intent_rules` | `src/clasher_new/rl/selftest.py:2401` | function | §2.128 |
-| `test_ppo_multi_epoch_minibatch` | `src/clasher_new/rl/selftest.py:4530` | function | §2.128 |
-| `test_princess_slow_shot` | `scripts/test_m4_evo7.py:56` | function | §2.70 |
-| `test_prophet_empty_board_not_defend` | `src/clasher_new/rl/selftest.py:381` | function | §2.128 |
-| `test_rage` | `scripts/test_m2.py:107` | function | §2.68 |
-| `test_ramp_inferno_dragon` | `scripts/test_m1.py:37` | function | §2.67 |
-| `test_ramp_inferno_tower` | `scripts/test_m1.py:65` | function | §2.67 |
-| `test_ramp_reset` | `scripts/test_m1.py:91` | function | §2.67 |
-| `test_random_deck_model` | `src/clasher_new/rl/selftest.py:398` | function | §2.128 |
-| `test_register_checkpoint_isolated` | `src/clasher_new/rl/selftest.py:304` | function | §2.128 |
-| `test_replay_roundtrip` | `src/clasher_new/rl/selftest.py:356` | function | §2.128 |
-| `test_reward_economy_elixir_diff` | `src/clasher_new/rl/selftest.py:782` | function | §2.128 |
-| `test_reward_economy_level_invariance` | `src/clasher_new/rl/selftest.py:745` | function | §2.128 |
-| `test_reward_economy_preset` | `src/clasher_new/rl/selftest.py:712` | function | §2.128 |
-| `test_reward_economy_trade_pricing` | `src/clasher_new/rl/selftest.py:820` | function | §2.128 |
-| `test_reward_tower_premium` | `src/clasher_new/rl/selftest.py:3522` | function | §2.128 |
-| `test_reward_tower_premium_rlenv_flow` | `src/clasher_new/rl/selftest.py:3595` | function | §2.128 |
-| `test_reward_v2_ledger` | `src/clasher_new/rl/selftest.py:1806` | function | §2.128 |
-| `test_rlenv_card_level` | `src/clasher_new/rl/selftest.py:872` | function | §2.128 |
-| `test_ronin_cooldown_and_ranged` | `scripts/test_m5_data.py:82` | function | §2.71 |
-| `test_ronin_data` | `scripts/test_m5_data.py:54` | function | §2.71 |
-| `test_ronin_parry_reflect` | `scripts/test_m5_data.py:66` | function | §2.71 |
-| `test_royalhogs_flying_landing` | `scripts/test_m4_evo7.py:98` | function | §2.70 |
-| `test_simulate_exchange` | `src/clasher_new/rl/selftest.py:2776` | function | §2.128 |
-| `test_skeleton_king` | `scripts/test_m2.py:153` | function | §2.68 |
-| `test_skeletonarmy_general_gerry` | `scripts/test_m4_evo7.py:162` | function | §2.70 |
-| `test_smoke_regression` | `scripts/test_m1.py:183` | function | §2.67 |
-| `test_solo_mode_smoke` | `src/clasher_new/rl/selftest.py:1559` | function | §2.128 |
-| `test_solo_rand_anchor` | `src/clasher_new/rl/selftest.py:4648` | function | §2.128 |
-| `test_solo_resume` | `src/clasher_new/rl/selftest.py:1632` | function | §2.128 |
-| `test_spell_empty_value_gate` | `src/clasher_new/rl/selftest.py:1875` | function | §2.128 |
-| `test_spell_module` | `src/clasher_new/rl/selftest.py:2866` | function | §2.128 |
-| `test_spell_tower_ev_gate` | `src/clasher_new/rl/selftest.py:1934` | function | §2.128 |
-| `test_stall_probe` | `src/clasher_new/rl/selftest.py:1660` | function | §2.128 |
-| `test_stall_settlement_margin` | `src/clasher_new/rl/selftest.py:4404` | function | §2.128 |
-| `test_tank_backline_geometry` | `src/clasher_new/rl/selftest.py:2064` | function | §2.128 |
-| `test_tesla_pulse` | `scripts/test_m3_evo.py:371` | function | §2.69 |
-| `test_tombstone` | `scripts/test_m6_elite.py:331` | function | §2.72 |
-| `test_tornado_pull` | `scripts/test_m2.py:116` | function | §2.68 |
-| `test_tower_threat_calc` | `src/clasher_new/rl/selftest.py:2724` | function | §2.128 |
-| `test_tower_troop_hp_reference` | `src/clasher_new/rl/selftest.py:897` | function | §2.128 |
-| `test_tower_value_mult` | `src/clasher_new/rl/selftest.py:3490` | function | §2.128 |
-| `test_valkyrie` | `scripts/test_m6_elite.py:158` | function | §2.72 |
-| `test_valkyrie_tornado` | `scripts/test_m3_evo.py:327` | function | §2.69 |
-| `test_value_bypass` | `src/clasher_new/rl/selftest.py:4319` | function | §2.128 |
-| `test_value_channel_norm_and_gnorm_split` | `src/clasher_new/rl/selftest.py:3766` | function | §2.128 |
-| `test_value_independent_encoder` | `src/clasher_new/rl/selftest.py:4437` | function | §2.128 |
-| `test_vines_data_and_zone` | `scripts/test_m5_data.py:107` | function | §2.71 |
-| `test_vines_ground_snare_top3` | `scripts/test_m5_data.py:157` | function | §2.71 |
-| `test_vines_snare_fl_duration` | `src/clasher_new/rl/selftest.py:3270` | function | §2.128 |
-| `test_vines_two_hits_and_tower` | `scripts/test_m5_data.py:131` | function | §2.71 |
-| `test_wallbreakers_mini` | `scripts/test_m3_evo.py:456` | function | §2.69 |
-| `test_winrate_streams_independent` | `src/clasher_new/rl/selftest.py:452` | function | §2.128 |
-| `test_witchmother_curse` | `scripts/test_m2.py:452` | function | §2.68 |
-| `test_wizard` | `scripts/test_m6_elite.py:181` | function | §2.72 |
-| `test_wizard_shield_lost` | `scripts/test_m3_evo.py:347` | function | §2.69 |
-| `test_zap_evo_zone` | `scripts/test_m3_evo.py:287` | function | §2.69 |
-| `test_zap_stun` | `scripts/test_m2.py:66` | function | §2.68 |
-| `ThreeMusketeers` | `src/clasher_new/card_mechanics.py:1738` | class | §2.80 |
-| `tile_to_screen` | `src/clasher_new/minimal_visualizer.py:37` | function | §2.94 |
-| `TileGrid` | `src/clasher_new/arena.py:8` | class | §2.76 |
-| `TimedExplosive` | `src/clasher_new/battle.py:2377` | class | §2.77 |
-| `TimedExplosiveData` | `src/clasher_new/card_utils.py:497` | class | §2.81 |
-| `TimedExplosiveData` | `src/clasher_new/client_side/card_utils.py:155` | class | §2.83 |
-| `timeout_winner` | `src/clasher_new/rl/run_league.py:179` | function | §2.127 |
-| `EpisodeReplay.to_belief_dataset` | `src/clasher_new/rl/replay.py:69` | function | §2.126 |
-| `FollowerPolicy.to_device` | `src/clasher_new/rl/follower.py:263` | function | §2.114 |
-| `AreaEffect.to_dict` | `src/clasher_new/battle.py:1870` | function | §2.77 |
-| `Building.to_dict` | `src/clasher_new/battle.py:1261` | function | §2.77 |
-| `Entity.to_dict` | `src/clasher_new/battle.py:185` | function | §2.77 |
-| `EvoEffectZone.to_dict` | `src/clasher_new/battle.py:2000` | function | §2.77 |
-| `GenericBomb.to_dict` | `src/clasher_new/battle.py:1935` | function | §2.77 |
-| `Projectile.to_dict` | `src/clasher_new/battle.py:1543` | function | §2.77 |
-| `ReturnScaler.to_dict` | `src/clasher_new/rl/ppo.py:73` | function | §2.124 |
-| `SpawnProjectile.to_dict` | `src/clasher_new/battle.py:1695` | function | §2.77 |
-| `TrainConfig.to_dict` | `src/clasher_new/rl/config.py:291` | function | §2.105 |
-| `Troop.to_dict` | `src/clasher_new/battle.py:1082` | function | §2.77 |
-| `VinesSnareZone.to_dict` | `src/clasher_new/battle.py:2178` | function | §2.77 |
-| `SubAction.to_position` | `src/clasher_new/rl/action_bundle.py:67` | function | §2.100 |
-| `ActionBundle.to_tuple` | `src/clasher_new/rl/action_bundle.py:95` | function | §2.100 |
-| `SubAction.to_tuple` | `src/clasher_new/rl/action_bundle.py:70` | function | §2.100 |
-| `PlanToken.to_vector` | `src/clasher_new/rl/plan_space.py:124` | function | §2.123 |
-| `total_loss` | `scripts/duel_search.py:448` | function | §2.37 |
-| `tower_premium_k` | `src/clasher_new/rl/env_wrapper.py:121` | function | §2.110 |
-| `TileGrid.tower_rect_dist` | `src/clasher_new/arena.py:65` | function | §2.76 |
-| `tower_total_hp` | `src/clasher_new/rl/env_wrapper.py:74` | function | §2.110 |
-| `tower_value_mult` | `src/clasher_new/rl/env_wrapper.py:101` | function | §2.110 |
-| `towers_hp` | `src/clasher_new/rl/run_league.py:149` | function | §2.127 |
-| `train` | `src/clasher_new/rl/train_belief.py:145` | function | §2.131 |
-| `train_bc` | `src/clasher_new/rl/train_bc.py:86` | function | §2.130 |
-| `train_bc_from_human` | `src/clasher_new/rl/human_play.py:205` | function | §2.115 |
-| `TrainConfig` | `src/clasher_new/rl/config.py:98` | class | §2.105 |
-| `Troop` | `src/clasher_new/battle.py:759` | class | §2.77 |
-| `troop_list` | `scripts/forensics_response.py:35` | function | §2.40 |
-| `u32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.93 |
-| `AreaEffect.update` | `src/clasher_new/battle.py:1833` | function | §2.77 |
-| `BeliefInference.update` | `src/clasher_new/rl/belief.py:300` | function | §2.103 |
-| `Building.update` | `src/clasher_new/battle.py:1273` | function | §2.77 |
-| `CycleBayesFilter.update` | `src/clasher_new/rl/bayes_filter.py:116` | function | §2.102 |
-| `DeathSlowZone.update` | `src/clasher_new/battle.py:2201` | function | §2.77 |
-| `Elo.update` | `src/clasher_new/rl/elo.py:31` | function | §2.109 |
-| `Entity.update` | `src/clasher_new/battle.py:338` | function | §2.77 |
-| `EvoEffectZone.update` | `src/clasher_new/battle.py:1975` | function | §2.77 |
-| `EvoZapZone.update` | `src/clasher_new/battle.py:2347` | function | §2.77 |
-| `GenericBomb.update` | `src/clasher_new/battle.py:1913` | function | §2.77 |
-| `HealAuraZone.update` | `src/clasher_new/battle.py:2067` | function | §2.77 |
-| `IceGolemiteSnowZone.update` | `src/clasher_new/battle.py:2503` | function | §2.77 |
-| `PPOTrainer.update` | `src/clasher_new/rl/ppo.py:194` | function | §2.124 |
-| `Projectile.update` | `src/clasher_new/battle.py:1548` | function | §2.77 |
-| `ReturnScaler.update` | `src/clasher_new/rl/ppo.py:54` | function | §2.124 |
-| `SpawnProjectile.update` | `src/clasher_new/battle.py:1702` | function | §2.77 |
-| `StatisticalBelief.update` | `src/clasher_new/rl/belief.py:140` | function | §2.103 |
-| `TimedExplosive.update` | `src/clasher_new/battle.py:2384` | function | §2.77 |
-| `Troop.update` | `src/clasher_new/battle.py:1099` | function | §2.77 |
-| `VinesSnareZone.update` | `src/clasher_new/battle.py:2160` | function | §2.77 |
-| `update` | `src/clasher_new/agent_pool.py:15` | function | §2.75 |
-| `Entity.update_current_target` | `src/clasher_new/battle.py:672` | function | §2.77 |
-| `BattleState.update_player_hp` | `src/clasher_new/battle.py:2643` | function | §2.77 |
-| `PFSP.update_winrate` | `src/clasher_new/rl/pfsp.py:46` | function | §2.122 |
-| `ArcherQueen.use_ability` | `src/clasher_new/card_mechanics.py:358` | function | §2.80 |
-| `BattleState.use_ability` | `src/clasher_new/battle.py:3208` | function | §2.77 |
-| `BossBandit.use_ability` | `src/clasher_new/card_mechanics.py:480` | function | §2.80 |
-| `GoldenKnight.use_ability` | `src/clasher_new/card_mechanics.py:379` | function | §2.80 |
-| `HeroBalloon.use_ability` | `src/clasher_new/card_mechanics.py:1378` | function | §2.80 |
-| `HeroBerserker.use_ability` | `src/clasher_new/card_mechanics.py:1315` | function | §2.80 |
-| `HeroBowler.use_ability` | `src/clasher_new/card_mechanics.py:1134` | function | §2.80 |
-| `HeroDarkPrince.use_ability` | `src/clasher_new/card_mechanics.py:1348` | function | §2.80 |
-| `HeroEliteArcher.use_ability` | `src/clasher_new/card_mechanics.py:1503` | function | §2.80 |
-| `HeroGiant.use_ability` | `src/clasher_new/card_mechanics.py:1163` | function | §2.80 |
-| `HeroGoblins.use_ability` | `src/clasher_new/card_mechanics.py:1215` | function | §2.80 |
-| `HeroIceGolemite.use_ability` | `src/clasher_new/card_mechanics.py:1546` | function | §2.80 |
-| `HeroIceWizard.use_ability` | `src/clasher_new/card_mechanics.py:1458` | function | §2.80 |
-| `HeroKnight.use_ability` | `src/clasher_new/card_mechanics.py:908` | function | §2.80 |
-| `HeroMegaMinion.use_ability` | `src/clasher_new/card_mechanics.py:1261` | function | §2.80 |
-| `HeroMiniPekka.use_ability` | `src/clasher_new/card_mechanics.py:976` | function | §2.80 |
-| `HeroMusketeer.use_ability` | `src/clasher_new/card_mechanics.py:936` | function | §2.80 |
-| `HeroTombstone.use_ability` | `src/clasher_new/card_mechanics.py:1289` | function | §2.80 |
-| `HeroValkyrie.use_ability` | `src/clasher_new/card_mechanics.py:1000` | function | §2.80 |
-| `HeroWizard.use_ability` | `src/clasher_new/card_mechanics.py:1061` | function | §2.80 |
-| `LittlePrince.use_ability` | `src/clasher_new/card_mechanics.py:464` | function | §2.80 |
-| `MightyMiner.use_ability` | `src/clasher_new/card_mechanics.py:438` | function | §2.80 |
-| `Monk.use_ability` | `src/clasher_new/card_mechanics.py:419` | function | §2.80 |
-| `SkeletonKing.use_ability` | `src/clasher_new/card_mechanics.py:328` | function | §2.80 |
-| `_HeroBase.use_ability` | `src/clasher_new/card_mechanics.py:316` | function | §2.80 |
-| `validate_bundle` | `src/clasher_new/rl/action_mask.py:521` | function | §2.101 |
-| `validate_slots` | `src/clasher_new/rl/mcts.py:201` | function | §2.118 |
-| `FollowerPolicy.value` | `src/clasher_new/rl/follower.py:704` | function | §2.114 |
-| `ReturnScaler.var` | `src/clasher_new/rl/ppo.py:62` | function | §2.124 |
-| `var_decomp` | `scripts/pomdp_ceiling_probe.py:240` | function | §2.46 |
-| `VinesSnareZone` | `src/clasher_new/battle.py:2091` | class | §2.77 |
-| `Visualizer` | `src/clasher_new/minimal_visualizer.py:67` | class | §2.94 |
-| `Visualizer` | `src/clasher_new/new_visualization.py:19` | class | §2.95 |
-| `w2s` | `src/clasher_new/client_side/client.py:156` | function | §2.84 |
-| `w2s` | `src/clasher_new/minimal_visualizer.py:60` | function | §2.94 |
-| `w2s` | `src/clasher_new/new_visualization.py:14` | function | §2.95 |
-| `PFSP.weights` | `src/clasher_new/rl/pfsp.py:53` | function | §2.122 |
-| `WeightsCopyingCallback` | `src/clasher_new/train.py:61` | class | §2.160 |
-| `windows_host_ip` | `scripts/cdp_forward.py:16` | function | §2.27 |
-| `Witch` | `src/clasher_new/card_mechanics.py:66` | class | §2.80 |
-| `within_std_scalar` | `scripts/probe_value_ln.py:395` | function | §2.50 |
-| `within_std_vec` | `scripts/probe_value_ln.py:382` | function | §2.50 |
-| `wizard` | `start_rl.bat` | class(素材) | §2.163 |
-| `worker_main` | `src/clasher_new/rl/workers.py:71` | function | §2.136 |
-| `write_outputs` | `scripts/coverage.py:306` | function | §2.32 |
-| `write_solo_state` | `src/clasher_new/rl/train_solo.py:513` | function | §2.135 |
-| `PlanToken.zeros` | `src/clasher_new/rl/plan_space.py:182` | function | §2.123 |
-| `顶层可执行段-1：变量与参数解析` | `scripts/run_probe_v3.sh` | class(素材) | §2.63 |
-| `顶层可执行段-1：路径/协议/文件清单初始化` | `scripts/l1_upgrade.ps1` | class(素材) | §2.45 |
-| `顶层可执行段-2：下载循环` | `scripts/l1_upgrade.ps1` | class(素材) | §2.45 |
-| `顶层可执行段-2：阶段分派与收尾` | `scripts/run_probe_v3.sh` | class(素材) | §2.63 |
+| `SelfDefenderPolicy` | `src/clasher_new/rl/opponents.py:125` | class | §2.126 |
+| `selftest_done` | `start_rl.bat` | class(素材) | §2.169 |
+| `selftest_done` | `start_training.bat` | class(素材) | §2.170 |
+| `selftest_failed` | `start_rl.bat` | class(素材) | §2.169 |
+| `selftest_failed` | `start_training.bat` | class(素材) | §2.170 |
+| `GameServer.send` | `src/clasher_new/server.py:18` | function | §2.155 |
+| `extractPage.send（箭头函数）` | `scripts/cdp_evo.js` | class(素材) | §2.31 |
+| `extractPage.send（箭头函数）` | `scripts/cdp_extract.js` | class(素材) | §2.32 |
+| `extractPage.send（箭头函数）` | `scripts/cdp_hero.js` | class(素材) | §2.34 |
+| `extractPage.send（箭头函数）` | `scripts/cdp_spell.js` | class(素材) | §2.37 |
+| `seq` | `src/clasher_new/runs/_tmp_behavior_recount.py:133` | function | §2.144 |
+| `SequentialEvalEnv` | `src/clasher_new/evaluate.py:13` | class | §2.96 |
+| `LeagueGameRecorder.set_decks` | `src/clasher_new/rl/run_league.py:124` | function | §2.133 |
+| `PlayerState.set_evolution_slots` | `src/clasher_new/player.py:17` | function | §2.104 |
+| `PlayerState.set_hero_slots` | `src/clasher_new/player.py:27` | function | §2.104 |
+| `Card.set_level` | `src/clasher_new/card_utils.py:347` | function | §2.87 |
+| `Card.set_level` | `src/clasher_new/client_side/card_utils.py:112` | function | §2.89 |
+| `set_run_font` | `scripts/_survey_md_to_docx.py:47` | function | §2.22 |
+| `PlayerState.set_tower_troop` | `src/clasher_new/player.py:21` | function | §2.104 |
+| `settle_stall` | `src/clasher_new/rl/run_league.py:240` | function | §2.133 |
+| `settle_stall_from_counts` | `src/clasher_new/rl/run_league.py:213` | function | §2.133 |
+| `setup_done` | `start_rl.bat` | class(素材) | §2.169 |
+| `setup_done` | `start_training.bat` | class(素材) | §2.170 |
+| `setup_failed` | `start_rl.bat` | class(素材) | §2.169 |
+| `setup_failed` | `start_training.bat` | class(素材) | §2.170 |
+| `shade` | `scripts/_survey_md_to_docx.py:66` | function | §2.22 |
+| `shift_headings` | `scripts/_survey_merge_docs.py:86` | function | §2.24 |
+| `show_help` | `start_rl.bat` | class(素材) | §2.169 |
+| `show_help` | `start_training.bat` | class(素材) | §2.170 |
+| `simulate_exchange` | `src/clasher_new/simulate_exchange.py:163` | function | §2.156 |
+| `SingleCardAdapter` | `src/clasher_new/rl/train_baseline.py:26` | class | §2.135 |
+| `ActionBundle.size` | `src/clasher_new/rl/action_bundle.py:92` | function | §2.106 |
+| `SkeletonKing` | `src/clasher_new/card_mechanics.py:319` | class | §2.86 |
+| `Skeletrooper` | `src/clasher_new/card_mechanics.py:1398` | class | §2.86 |
+| `slot_mask` | `src/clasher_new/rl/action_mask.py:59` | function | §2.107 |
+| `slot_to_screen` | `src/clasher_new/minimal_visualizer.py:34` | function | §2.100 |
+| `slug` | `scripts/_survey_groups.py:33` | function | §2.20 |
+| `smoke` | `scripts/batch_smoke.py:21` | function | §2.29 |
+| `TrainConfig.solo_ckpt_path` | `src/clasher_new/rl/config.py:256` | function | §2.111 |
+| `solo_commit_blocked` | `src/clasher_new/rl/action_mask.py:255` | function | §2.107 |
+| `solo_env` | `src/clasher_new/rl/train_solo.py:157` | function | §2.141 |
+| `TrainConfig.solo_main_path` | `src/clasher_new/rl/config.py:253` | function | §2.111 |
+| `TrainConfig.solo_opt_path` | `src/clasher_new/rl/config.py:260` | function | §2.111 |
+| `TrainConfig.solo_state_path` | `src/clasher_new/rl/config.py:250` | function | §2.111 |
+| `solve_dual` | `src/clasher_new/runs/_tmp_ln_geom2.py:29` | function | §2.146 |
+| `solve_primal` | `src/clasher_new/runs/_tmp_ln_geom2.py:61` | function | §2.146 |
+| `spawn` | `scripts/test_m6_elite.py:37` | function | §2.78 |
+| `BattleState.spawn_arrival_troops` | `src/clasher_new/battle.py:2775` | function | §2.83 |
+| `spawn_building` | `scripts/test_m3_evo.py:40` | function | §2.75 |
+| `spawn_building` | `scripts/test_m4_evo7.py:45` | function | §2.76 |
+| `spawn_evo_zone` | `src/clasher_new/battle.py:2006` | function | §2.83 |
+| `BattleState.spawn_projectile_chain` | `src/clasher_new/battle.py:2751` | function | §2.83 |
+| `spawn_troop` | `scripts/test_m2.py:43` | function | §2.74 |
+| `spawn_troop` | `scripts/test_m3_evo.py:35` | function | §2.75 |
+| `spawn_troop` | `scripts/test_m4_evo7.py:40` | function | §2.76 |
+| `spawn_troop` | `scripts/test_m5_data.py:41` | function | §2.77 |
+| `spawn_vines_zone` | `src/clasher_new/battle.py:2223` | function | §2.83 |
+| `SpawnProjectile` | `src/clasher_new/battle.py:1656` | class | §2.83 |
+| `special_fields` | `scripts/coverage.py:111` | function | §2.38 |
+| `split_masks` | `scripts/probe_v3_mono_check.py:42` | function | §2.54 |
+| `split_masks` | `scripts/probe_v4_ln_pair.py:49` | function | §2.55 |
+| `split_part` | `scripts/_survey_merge.py:54` | function | §2.23 |
+| `split_table_row` | `scripts/_survey_md_to_docx.py:142` | function | §2.22 |
+| `standardize` | `scripts/pomdp_ceiling_probe.py:337` | function | §2.52 |
+| `EpisodeReplay.start` | `src/clasher_new/rl/replay.py:28` | function | §2.132 |
+| `HumanPlaySession.start` | `src/clasher_new/rl/human_play.py:94` | function | §2.121 |
+| `start_dashboard` | `start_rl.bat` | class(素材) | §2.169 |
+| `start_dashboard` | `start_training.bat` | class(素材) | §2.170 |
+| `started` | `start_rl.bat` | class(素材) | §2.169 |
+| `started` | `start_training.bat` | class(素材) | §2.170 |
+| `BeliefInference.state` | `src/clasher_new/rl/belief.py:318` | function | §2.109 |
+| `HumanPlaySession.state` | `src/clasher_new/rl/human_play.py:101` | function | §2.121 |
+| `state_arg` | `src/clasher_new/rl/launcher_menu.py:229` | function | §2.122 |
+| `state_dict_of` | `scripts/value_displacement_scan.py:45` | function | §2.79 |
+| `TrainConfig.state_path` | `src/clasher_new/rl/config.py:247` | function | §2.111 |
+| `StatisticalBelief` | `src/clasher_new/rl/belief.py:130` | class | §2.109 |
+| `ReturnScaler.std` | `src/clasher_new/rl/ppo.py:65` | function | §2.130 |
+| `BattleState.step` | `src/clasher_new/battle.py:2652` | function | §2.83 |
+| `CREnv.step` | `src/clasher_new/environment.py:76` | function | §2.95 |
+| `ProphetEnv.step` | `src/clasher_new/rl/train_prophet.py:69` | function | §2.140 |
+| `RLEnv.step` | `src/clasher_new/rl/env_wrapper.py:598` | function | §2.116 |
+| `SingleCardAdapter.step` | `src/clasher_new/rl/train_baseline.py:37` | function | §2.135 |
+| `step_for` | `scripts/test_m1.py:31` | function | §2.73 |
+| `step_for` | `scripts/test_m2.py:39` | function | §2.74 |
+| `step_for` | `scripts/test_m3_evo.py:45` | function | §2.75 |
+| `step_for` | `scripts/test_m4_evo7.py:50` | function | §2.76 |
+| `step_for` | `scripts/test_m5_data.py:47` | function | §2.77 |
+| `step_for` | `scripts/test_m6_elite.py:43` | function | §2.78 |
+| `sub_position` | `src/clasher_new/rl/action_bundle.py:31` | function | §2.106 |
+| `SubAction` | `src/clasher_new/rl/action_bundle.py:43` | class | §2.106 |
+| `swipe` | `src/clasher_new/minimal_visualizer.py:40` | function | §2.100 |
+| `Elo.table` | `src/clasher_new/rl/elo.py:44` | function | §2.115 |
+| `Building.take_damage` | `src/clasher_new/battle.py:1266` | function | §2.83 |
+| `Entity.take_damage` | `src/clasher_new/battle.py:507` | function | §2.83 |
+| `EvoEffectZone.take_damage` | `src/clasher_new/battle.py:1998` | function | §2.83 |
+| `GenericBomb.take_damage` | `src/clasher_new/battle.py:1933` | function | §2.83 |
+| `TimedExplosive.take_damage` | `src/clasher_new/battle.py:2398` | function | §2.83 |
+| `VinesSnareZone.take_damage` | `src/clasher_new/battle.py:2176` | function | §2.83 |
+| `FollowerOpponent.take_last_step` | `src/clasher_new/rl/train_follower.py:112` | function | §2.139 |
+| `test_ablation_recorded` | `src/clasher_new/rl/selftest.py:1447` | function | §2.134 |
+| `test_action_bundle_ability` | `src/clasher_new/rl/selftest.py:66` | function | §2.134 |
+| `test_action_bundle_same_tick` | `src/clasher_new/rl/selftest.py:37` | function | §2.134 |
+| `test_action_interp_damage` | `scripts/test_m3_evo.py:62` | function | §2.75 |
+| `test_action_interp_spawn_giant` | `scripts/test_m3_evo.py:78` | function | §2.75 |
+| `test_adv_inert_probe_and_const_baseline` | `src/clasher_new/rl/selftest.py:4771` | function | §2.134 |
+| `test_anchor_light_point_state` | `src/clasher_new/rl/selftest.py:4695` | function | §2.134 |
+| `test_archer_queen` | `scripts/test_m2.py:168` | function | §2.74 |
+| `test_archer_special_range` | `scripts/test_m3_evo.py:385` | function | §2.75 |
+| `test_attack_seq_berserker` | `scripts/test_m2.py:377` | function | §2.74 |
+| `test_attack_seq_inferno_battle` | `scripts/test_m2.py:358` | function | §2.74 |
+| `test_attack_seq_inferno_evo` | `scripts/test_m2.py:339` | function | §2.74 |
+| `test_babydragon_gust` | `scripts/test_m4_evo7.py:206` | function | §2.76 |
+| `test_balloon` | `scripts/test_m6_elite.py:395` | function | §2.78 |
+| `test_barbarians_rage` | `scripts/test_m3_evo.py:360` | function | §2.75 |
+| `test_barblog` | `scripts/test_m6_elite.py:418` | function | §2.78 |
+| `test_bats_overheal` | `scripts/test_m3_evo.py:230` | function | §2.75 |
+| `test_battle_clone_fix` | `src/clasher_new/rl/selftest.py:1203` | function | §2.134 |
+| `test_battle_level_range` | `scripts/test_m2.py:424` | function | §2.74 |
+| `test_battleram_pushback` | `scripts/test_m3_evo.py:202` | function | §2.75 |
+| `test_bayes_filter` | `src/clasher_new/rl/selftest.py:98` | function | §2.134 |
+| `test_bayes_queue_lock` | `src/clasher_new/rl/selftest.py:2536` | function | §2.134 |
+| `test_behavioral_metrics` | `src/clasher_new/rl/selftest.py:3370` | function | §2.134 |
+| `test_belief_follower_ppo_league` | `src/clasher_new/rl/selftest.py:1258` | function | §2.134 |
+| `test_belief_multi_card_update` | `src/clasher_new/rl/selftest.py:289` | function | §2.134 |
+| `test_belief_survives_ability` | `src/clasher_new/rl/selftest.py:267` | function | §2.134 |
+| `test_berserker` | `scripts/test_m6_elite.py:352` | function | §2.78 |
+| `test_bomber_chain` | `scripts/test_m3_evo.py:407` | function | §2.75 |
+| `test_boss_bandit` | `scripts/test_m2.py:231` | function | §2.74 |
+| `test_bowler` | `scripts/test_m6_elite.py:208` | function | §2.78 |
+| `test_bp_new_intent_rules` | `src/clasher_new/rl/selftest.py:2223` | function | §2.134 |
+| `test_building_decay` | `scripts/test_m2.py:130` | function | §2.74 |
+| `test_bundle_cap_no_crash` | `src/clasher_new/rl/selftest.py:328` | function | §2.134 |
+| `test_champion_unaffected` | `scripts/test_m6_elite.py:489` | function | §2.78 |
+| `test_classified_decks` | `src/clasher_new/rl/selftest.py:598` | function | §2.134 |
+| `test_clone` | `scripts/test_m1.py:151` | function | §2.73 |
+| `test_config_reward_weights` | `src/clasher_new/rl/selftest.py:640` | function | §2.134 |
+| `test_crossed_river_defend_plan` | `src/clasher_new/rl/selftest.py:3151` | function | §2.134 |
+| `test_cuda_device_support` | `src/clasher_new/rl/selftest.py:1223` | function | §2.134 |
+| `test_cycle_trigger_path` | `scripts/test_m4_evo7.py:263` | function | §2.76 |
+| `test_darkprince` | `scripts/test_m6_elite.py:375` | function | §2.78 |
+| `test_dashboard_card_stats` | `src/clasher_new/rl/selftest.py:1137` | function | §2.134 |
+| `test_dashboard_replays` | `src/clasher_new/rl/selftest.py:1019` | function | §2.134 |
+| `test_data_layer` | `scripts/test_m6_elite.py:57` | function | §2.78 |
+| `test_death_damage_scaling` | `src/clasher_new/rl/selftest.py:3215` | function | §2.134 |
+| `test_deck_pool_factory` | `src/clasher_new/rl/selftest.py:1099` | function | §2.134 |
+| `test_draw_penalty_as_loss` | `src/clasher_new/rl/selftest.py:1743` | function | §2.134 |
+| `test_electro_dragon_chain` | `scripts/test_m3_evo.py:183` | function | §2.75 |
+| `test_elitearcher` | `scripts/test_m6_elite.py:441` | function | §2.78 |
+| `test_elo_eval_granularity` | `src/clasher_new/rl/selftest.py:524` | function | §2.134 |
+| `test_enc_layernorm_gru_vitality` | `src/clasher_new/rl/selftest.py:4186` | function | §2.134 |
+| `test_entropy_positive_and_sign` | `src/clasher_new/rl/selftest.py:153` | function | §2.134 |
+| `test_eval_solo_parallel` | `src/clasher_new/rl/selftest.py:2616` | function | §2.134 |
+| `test_eval_stall_early_stop` | `src/clasher_new/rl/selftest.py:1717` | function | §2.134 |
+| `test_evo_all_construct` | `scripts/test_m2.py:318` | function | §2.74 |
+| `test_evo_archer_double_shot` | `scripts/test_m2.py:297` | function | §2.74 |
+| `test_evo_cycle` | `scripts/test_m2.py:247` | function | §2.74 |
+| `test_evo_knight_fortify` | `scripts/test_m2.py:270` | function | §2.74 |
+| `test_evo_royal_giant_push` | `scripts/test_m2.py:307` | function | §2.74 |
+| `test_evo_skeletons_duplication` | `scripts/test_m2.py:280` | function | §2.74 |
+| `test_evo_wizard_shield` | `scripts/test_m2.py:291` | function | §2.74 |
+| `test_exploiter_loads_main_checkpoint` | `src/clasher_new/rl/selftest.py:245` | function | §2.134 |
+| `test_firecracker_chain` | `scripts/test_m1.py:106` | function | §2.73 |
+| `test_fisherman_hook` | `scripts/test_m2.py:141` | function | §2.74 |
+| `test_flow_league_smoke` | `src/clasher_new/rl/selftest.py:1394` | function | §2.134 |
+| `test_flow_resume` | `src/clasher_new/rl/selftest.py:1523` | function | §2.134 |
+| `test_flow_sweep_smoke` | `src/clasher_new/rl/selftest.py:1483` | function | §2.134 |
+| `test_freeze` | `scripts/test_m2.py:81` | function | §2.74 |
+| `test_furnace_hot_spawn` | `scripts/test_m4_evo7.py:240` | function | §2.76 |
+| `test_ghost_souldier_summon` | `scripts/test_m4_evo7.py:123` | function | §2.76 |
+| `test_giant` | `scripts/test_m6_elite.py:233` | function | §2.78 |
+| `test_goblin_barrel` | `scripts/test_m1.py:124` | function | §2.73 |
+| `test_goblin_giant_threshold` | `scripts/test_m3_evo.py:93` | function | §2.75 |
+| `test_goblinbarrel_decoy` | `scripts/test_m3_evo.py:217` | function | §2.75 |
+| `test_goblincage_capture` | `scripts/test_m3_evo.py:271` | function | §2.75 |
+| `test_goblindrill_hide` | `scripts/test_m3_evo.py:248` | function | §2.75 |
+| `test_goblins` | `scripts/test_m6_elite.py:258` | function | §2.78 |
+| `test_golden_knight_dash` | `scripts/test_m2.py:181` | function | §2.74 |
+| `test_graveyard` | `scripts/test_m1.py:136` | function | §2.73 |
+| `test_heal` | `scripts/test_m2.py:96` | function | §2.74 |
+| `test_heuristic_opponent_actually_plays` | `src/clasher_new/rl/selftest.py:223` | function | §2.134 |
+| `test_hidden_replay_consistency` | `src/clasher_new/rl/selftest.py:130` | function | §2.134 |
+| `test_history_dedup_and_gates` | `src/clasher_new/rl/selftest.py:3857` | function | §2.134 |
+| `test_human_play_session` | `src/clasher_new/rl/selftest.py:1599` | function | §2.134 |
+| `test_hunter_net` | `scripts/test_m3_evo.py:442` | function | §2.75 |
+| `test_icegolemite` | `scripts/test_m6_elite.py:465` | function | §2.78 |
+| `test_icespirits_zone` | `scripts/test_m3_evo.py:423` | function | §2.75 |
+| `test_icewizard` | `scripts/test_m6_elite.py:312` | function | §2.78 |
+| `test_knight` | `scripts/test_m6_elite.py:84` | function | §2.78 |
+| `test_league_elo_history` | `src/clasher_new/rl/selftest.py:426` | function | §2.134 |
+| `test_league_replays` | `src/clasher_new/rl/selftest.py:983` | function | §2.134 |
+| `test_league_resume` | `src/clasher_new/rl/selftest.py:956` | function | §2.134 |
+| `test_league_training_loop` | `src/clasher_new/rl/selftest.py:623` | function | §2.134 |
+| `test_level16_support` | `scripts/test_m2.py:400` | function | §2.74 |
+| `test_little_prince_guard` | `scripts/test_m2.py:207` | function | §2.74 |
+| `test_log_rolling_direction` | `src/clasher_new/rl/selftest.py:3301` | function | §2.134 |
+| `test_mask_validate_invariant_both_sides` | `src/clasher_new/rl/selftest.py:180` | function | §2.134 |
+| `test_mcts_basic` | `src/clasher_new/rl/selftest.py:2970` | function | §2.134 |
+| `test_mcts_defense_and_wait` | `src/clasher_new/rl/selftest.py:3068` | function | §2.134 |
+| `test_megaknight_dash` | `scripts/test_m3_evo.py:156` | function | §2.75 |
+| `test_megaknight_uppercut` | `scripts/test_m3_evo.py:170` | function | §2.75 |
+| `test_megaminion` | `scripts/test_m6_elite.py:284` | function | §2.78 |
+| `test_mergemaiden_data` | `scripts/test_m5_data.py:211` | function | §2.77 |
+| `test_mergemaiden_forms` | `scripts/test_m5_data.py:228` | function | §2.77 |
+| `test_mergemaiden_mirror` | `scripts/test_m5_data.py:266` | function | §2.77 |
+| `test_mighty_miner` | `scripts/test_m2.py:218` | function | §2.74 |
+| `test_min_range` | `scripts/test_m2.py:49` | function | §2.74 |
+| `test_minionhorde_first_hit_veil` | `scripts/test_m4_evo7.py:80` | function | §2.76 |
+| `test_minipekka` | `scripts/test_m6_elite.py:135` | function | §2.78 |
+| `test_mirror` | `scripts/test_m1.py:165` | function | §2.73 |
+| `test_mk_spawn_damage_and_iw_slow_fl` | `src/clasher_new/rl/selftest.py:3428` | function | §2.134 |
+| `test_model_reward_overrides` | `src/clasher_new/rl/selftest.py:682` | function | §2.134 |
+| `test_monk_reflect` | `scripts/test_m2.py:195` | function | §2.74 |
+| `test_mp_training_loop` | `src/clasher_new/rl/selftest.py:1372` | function | §2.134 |
+| `test_musketeer` | `scripts/test_m6_elite.py:112` | function | §2.78 |
+| `test_musketeer_snipe` | `scripts/test_m3_evo.py:306` | function | §2.75 |
+| `test_no_solo_commit_without_lead` | `src/clasher_new/rl/selftest.py:1993` | function | §2.134 |
+| `test_opp_event_token` | `src/clasher_new/rl/selftest.py:3098` | function | §2.134 |
+| `test_opponent_pool_mix` | `src/clasher_new/rl/selftest.py:3671` | function | §2.134 |
+| `test_opponent_pool_mix_multi_dir` | `src/clasher_new/rl/selftest.py:3905` | function | §2.134 |
+| `test_opponent_pool_rand_anchor` | `src/clasher_new/rl/selftest.py:3964` | function | §2.134 |
+| `test_overtime_window` | `src/clasher_new/rl/selftest.py:2653` | function | §2.134 |
+| `test_parallel_batch_equivalence` | `src/clasher_new/rl/selftest.py:1315` | function | §2.134 |
+| `test_parallel_training_loop` | `src/clasher_new/rl/selftest.py:1355` | function | §2.134 |
+| `test_pekka_heal_on_kill` | `scripts/test_m3_evo.py:141` | function | §2.75 |
+| `test_pekka_resurrect` | `scripts/test_m3_evo.py:106` | function | §2.75 |
+| `test_pekka_soul_bonus` | `scripts/test_m3_evo.py:129` | function | §2.75 |
+| `test_pfsp_gate_and_dynamic_hist` | `src/clasher_new/rl/selftest.py:4086` | function | §2.134 |
+| `test_plan_v1_layout` | `src/clasher_new/rl/selftest.py:2150` | function | §2.134 |
+| `test_play_pair_env_reuse` | `src/clasher_new/rl/selftest.py:1691` | function | §2.134 |
+| `test_pp_new_intent_rules` | `src/clasher_new/rl/selftest.py:2401` | function | §2.134 |
+| `test_ppo_multi_epoch_minibatch` | `src/clasher_new/rl/selftest.py:4530` | function | §2.134 |
+| `test_princess_slow_shot` | `scripts/test_m4_evo7.py:56` | function | §2.76 |
+| `test_prophet_empty_board_not_defend` | `src/clasher_new/rl/selftest.py:381` | function | §2.134 |
+| `test_rage` | `scripts/test_m2.py:107` | function | §2.74 |
+| `test_ramp_inferno_dragon` | `scripts/test_m1.py:37` | function | §2.73 |
+| `test_ramp_inferno_tower` | `scripts/test_m1.py:65` | function | §2.73 |
+| `test_ramp_reset` | `scripts/test_m1.py:91` | function | §2.73 |
+| `test_random_deck_model` | `src/clasher_new/rl/selftest.py:398` | function | §2.134 |
+| `test_register_checkpoint_isolated` | `src/clasher_new/rl/selftest.py:304` | function | §2.134 |
+| `test_replay_roundtrip` | `src/clasher_new/rl/selftest.py:356` | function | §2.134 |
+| `test_reward_economy_elixir_diff` | `src/clasher_new/rl/selftest.py:782` | function | §2.134 |
+| `test_reward_economy_level_invariance` | `src/clasher_new/rl/selftest.py:745` | function | §2.134 |
+| `test_reward_economy_preset` | `src/clasher_new/rl/selftest.py:712` | function | §2.134 |
+| `test_reward_economy_trade_pricing` | `src/clasher_new/rl/selftest.py:820` | function | §2.134 |
+| `test_reward_tower_premium` | `src/clasher_new/rl/selftest.py:3522` | function | §2.134 |
+| `test_reward_tower_premium_rlenv_flow` | `src/clasher_new/rl/selftest.py:3595` | function | §2.134 |
+| `test_reward_v2_ledger` | `src/clasher_new/rl/selftest.py:1806` | function | §2.134 |
+| `test_rlenv_card_level` | `src/clasher_new/rl/selftest.py:872` | function | §2.134 |
+| `test_ronin_cooldown_and_ranged` | `scripts/test_m5_data.py:82` | function | §2.77 |
+| `test_ronin_data` | `scripts/test_m5_data.py:54` | function | §2.77 |
+| `test_ronin_parry_reflect` | `scripts/test_m5_data.py:66` | function | §2.77 |
+| `test_royalhogs_flying_landing` | `scripts/test_m4_evo7.py:98` | function | §2.76 |
+| `test_simulate_exchange` | `src/clasher_new/rl/selftest.py:2776` | function | §2.134 |
+| `test_skeleton_king` | `scripts/test_m2.py:153` | function | §2.74 |
+| `test_skeletonarmy_general_gerry` | `scripts/test_m4_evo7.py:162` | function | §2.76 |
+| `test_smoke_regression` | `scripts/test_m1.py:183` | function | §2.73 |
+| `test_solo_mode_smoke` | `src/clasher_new/rl/selftest.py:1559` | function | §2.134 |
+| `test_solo_rand_anchor` | `src/clasher_new/rl/selftest.py:4648` | function | §2.134 |
+| `test_solo_resume` | `src/clasher_new/rl/selftest.py:1632` | function | §2.134 |
+| `test_spell_empty_value_gate` | `src/clasher_new/rl/selftest.py:1875` | function | §2.134 |
+| `test_spell_module` | `src/clasher_new/rl/selftest.py:2866` | function | §2.134 |
+| `test_spell_tower_ev_gate` | `src/clasher_new/rl/selftest.py:1934` | function | §2.134 |
+| `test_stall_probe` | `src/clasher_new/rl/selftest.py:1660` | function | §2.134 |
+| `test_stall_settlement_margin` | `src/clasher_new/rl/selftest.py:4404` | function | §2.134 |
+| `test_tank_backline_geometry` | `src/clasher_new/rl/selftest.py:2064` | function | §2.134 |
+| `test_tesla_pulse` | `scripts/test_m3_evo.py:371` | function | §2.75 |
+| `test_tombstone` | `scripts/test_m6_elite.py:331` | function | §2.78 |
+| `test_tornado_pull` | `scripts/test_m2.py:116` | function | §2.74 |
+| `test_tower_threat_calc` | `src/clasher_new/rl/selftest.py:2724` | function | §2.134 |
+| `test_tower_troop_hp_reference` | `src/clasher_new/rl/selftest.py:897` | function | §2.134 |
+| `test_tower_value_mult` | `src/clasher_new/rl/selftest.py:3490` | function | §2.134 |
+| `test_valkyrie` | `scripts/test_m6_elite.py:158` | function | §2.78 |
+| `test_valkyrie_tornado` | `scripts/test_m3_evo.py:327` | function | §2.75 |
+| `test_value_bypass` | `src/clasher_new/rl/selftest.py:4319` | function | §2.134 |
+| `test_value_channel_norm_and_gnorm_split` | `src/clasher_new/rl/selftest.py:3766` | function | §2.134 |
+| `test_value_independent_encoder` | `src/clasher_new/rl/selftest.py:4437` | function | §2.134 |
+| `test_vines_data_and_zone` | `scripts/test_m5_data.py:107` | function | §2.77 |
+| `test_vines_ground_snare_top3` | `scripts/test_m5_data.py:157` | function | §2.77 |
+| `test_vines_snare_fl_duration` | `src/clasher_new/rl/selftest.py:3270` | function | §2.134 |
+| `test_vines_two_hits_and_tower` | `scripts/test_m5_data.py:131` | function | §2.77 |
+| `test_wallbreakers_mini` | `scripts/test_m3_evo.py:456` | function | §2.75 |
+| `test_winrate_streams_independent` | `src/clasher_new/rl/selftest.py:452` | function | §2.134 |
+| `test_witchmother_curse` | `scripts/test_m2.py:452` | function | §2.74 |
+| `test_wizard` | `scripts/test_m6_elite.py:181` | function | §2.78 |
+| `test_wizard_shield_lost` | `scripts/test_m3_evo.py:347` | function | §2.75 |
+| `test_zap_evo_zone` | `scripts/test_m3_evo.py:287` | function | §2.75 |
+| `test_zap_stun` | `scripts/test_m2.py:66` | function | §2.74 |
+| `ThreeMusketeers` | `src/clasher_new/card_mechanics.py:1738` | class | §2.86 |
+| `tile_to_screen` | `src/clasher_new/minimal_visualizer.py:37` | function | §2.100 |
+| `TileGrid` | `src/clasher_new/arena.py:8` | class | §2.82 |
+| `TimedExplosive` | `src/clasher_new/battle.py:2377` | class | §2.83 |
+| `TimedExplosiveData` | `src/clasher_new/card_utils.py:497` | class | §2.87 |
+| `TimedExplosiveData` | `src/clasher_new/client_side/card_utils.py:155` | class | §2.89 |
+| `timeout_winner` | `src/clasher_new/rl/run_league.py:179` | function | §2.133 |
+| `EpisodeReplay.to_belief_dataset` | `src/clasher_new/rl/replay.py:69` | function | §2.132 |
+| `FollowerPolicy.to_device` | `src/clasher_new/rl/follower.py:263` | function | §2.120 |
+| `AreaEffect.to_dict` | `src/clasher_new/battle.py:1870` | function | §2.83 |
+| `Building.to_dict` | `src/clasher_new/battle.py:1261` | function | §2.83 |
+| `Entity.to_dict` | `src/clasher_new/battle.py:185` | function | §2.83 |
+| `EvoEffectZone.to_dict` | `src/clasher_new/battle.py:2000` | function | §2.83 |
+| `GenericBomb.to_dict` | `src/clasher_new/battle.py:1935` | function | §2.83 |
+| `Projectile.to_dict` | `src/clasher_new/battle.py:1543` | function | §2.83 |
+| `ReturnScaler.to_dict` | `src/clasher_new/rl/ppo.py:73` | function | §2.130 |
+| `SpawnProjectile.to_dict` | `src/clasher_new/battle.py:1695` | function | §2.83 |
+| `TrainConfig.to_dict` | `src/clasher_new/rl/config.py:291` | function | §2.111 |
+| `Troop.to_dict` | `src/clasher_new/battle.py:1082` | function | §2.83 |
+| `VinesSnareZone.to_dict` | `src/clasher_new/battle.py:2178` | function | §2.83 |
+| `SubAction.to_position` | `src/clasher_new/rl/action_bundle.py:67` | function | §2.106 |
+| `ActionBundle.to_tuple` | `src/clasher_new/rl/action_bundle.py:95` | function | §2.106 |
+| `SubAction.to_tuple` | `src/clasher_new/rl/action_bundle.py:70` | function | §2.106 |
+| `PlanToken.to_vector` | `src/clasher_new/rl/plan_space.py:124` | function | §2.129 |
+| `total_loss` | `scripts/duel_search.py:448` | function | §2.43 |
+| `tower_premium_k` | `src/clasher_new/rl/env_wrapper.py:121` | function | §2.116 |
+| `TileGrid.tower_rect_dist` | `src/clasher_new/arena.py:65` | function | §2.82 |
+| `tower_total_hp` | `src/clasher_new/rl/env_wrapper.py:74` | function | §2.116 |
+| `tower_value_mult` | `src/clasher_new/rl/env_wrapper.py:101` | function | §2.116 |
+| `towers_hp` | `src/clasher_new/rl/run_league.py:149` | function | §2.133 |
+| `train` | `src/clasher_new/rl/train_belief.py:145` | function | §2.137 |
+| `train_bc` | `src/clasher_new/rl/train_bc.py:86` | function | §2.136 |
+| `train_bc_from_human` | `src/clasher_new/rl/human_play.py:205` | function | §2.121 |
+| `TrainConfig` | `src/clasher_new/rl/config.py:98` | class | §2.111 |
+| `Troop` | `src/clasher_new/battle.py:759` | class | §2.83 |
+| `troop_list` | `scripts/forensics_response.py:35` | function | §2.46 |
+| `u32` | `src/clasher_new/hook_raw_capture.js` | class(素材) | §2.99 |
+| `AreaEffect.update` | `src/clasher_new/battle.py:1833` | function | §2.83 |
+| `BeliefInference.update` | `src/clasher_new/rl/belief.py:300` | function | §2.109 |
+| `Building.update` | `src/clasher_new/battle.py:1273` | function | §2.83 |
+| `CycleBayesFilter.update` | `src/clasher_new/rl/bayes_filter.py:116` | function | §2.108 |
+| `DeathSlowZone.update` | `src/clasher_new/battle.py:2201` | function | §2.83 |
+| `Elo.update` | `src/clasher_new/rl/elo.py:31` | function | §2.115 |
+| `Entity.update` | `src/clasher_new/battle.py:338` | function | §2.83 |
+| `EvoEffectZone.update` | `src/clasher_new/battle.py:1975` | function | §2.83 |
+| `EvoZapZone.update` | `src/clasher_new/battle.py:2347` | function | §2.83 |
+| `GenericBomb.update` | `src/clasher_new/battle.py:1913` | function | §2.83 |
+| `HealAuraZone.update` | `src/clasher_new/battle.py:2067` | function | §2.83 |
+| `IceGolemiteSnowZone.update` | `src/clasher_new/battle.py:2503` | function | §2.83 |
+| `PPOTrainer.update` | `src/clasher_new/rl/ppo.py:194` | function | §2.130 |
+| `Projectile.update` | `src/clasher_new/battle.py:1548` | function | §2.83 |
+| `ReturnScaler.update` | `src/clasher_new/rl/ppo.py:54` | function | §2.130 |
+| `SpawnProjectile.update` | `src/clasher_new/battle.py:1702` | function | §2.83 |
+| `StatisticalBelief.update` | `src/clasher_new/rl/belief.py:140` | function | §2.109 |
+| `TimedExplosive.update` | `src/clasher_new/battle.py:2384` | function | §2.83 |
+| `Troop.update` | `src/clasher_new/battle.py:1099` | function | §2.83 |
+| `VinesSnareZone.update` | `src/clasher_new/battle.py:2160` | function | §2.83 |
+| `update` | `src/clasher_new/agent_pool.py:15` | function | §2.81 |
+| `Entity.update_current_target` | `src/clasher_new/battle.py:672` | function | §2.83 |
+| `BattleState.update_player_hp` | `src/clasher_new/battle.py:2643` | function | §2.83 |
+| `PFSP.update_winrate` | `src/clasher_new/rl/pfsp.py:46` | function | §2.128 |
+| `ArcherQueen.use_ability` | `src/clasher_new/card_mechanics.py:358` | function | §2.86 |
+| `BattleState.use_ability` | `src/clasher_new/battle.py:3208` | function | §2.83 |
+| `BossBandit.use_ability` | `src/clasher_new/card_mechanics.py:480` | function | §2.86 |
+| `GoldenKnight.use_ability` | `src/clasher_new/card_mechanics.py:379` | function | §2.86 |
+| `HeroBalloon.use_ability` | `src/clasher_new/card_mechanics.py:1378` | function | §2.86 |
+| `HeroBerserker.use_ability` | `src/clasher_new/card_mechanics.py:1315` | function | §2.86 |
+| `HeroBowler.use_ability` | `src/clasher_new/card_mechanics.py:1134` | function | §2.86 |
+| `HeroDarkPrince.use_ability` | `src/clasher_new/card_mechanics.py:1348` | function | §2.86 |
+| `HeroEliteArcher.use_ability` | `src/clasher_new/card_mechanics.py:1503` | function | §2.86 |
+| `HeroGiant.use_ability` | `src/clasher_new/card_mechanics.py:1163` | function | §2.86 |
+| `HeroGoblins.use_ability` | `src/clasher_new/card_mechanics.py:1215` | function | §2.86 |
+| `HeroIceGolemite.use_ability` | `src/clasher_new/card_mechanics.py:1546` | function | §2.86 |
+| `HeroIceWizard.use_ability` | `src/clasher_new/card_mechanics.py:1458` | function | §2.86 |
+| `HeroKnight.use_ability` | `src/clasher_new/card_mechanics.py:908` | function | §2.86 |
+| `HeroMegaMinion.use_ability` | `src/clasher_new/card_mechanics.py:1261` | function | §2.86 |
+| `HeroMiniPekka.use_ability` | `src/clasher_new/card_mechanics.py:976` | function | §2.86 |
+| `HeroMusketeer.use_ability` | `src/clasher_new/card_mechanics.py:936` | function | §2.86 |
+| `HeroTombstone.use_ability` | `src/clasher_new/card_mechanics.py:1289` | function | §2.86 |
+| `HeroValkyrie.use_ability` | `src/clasher_new/card_mechanics.py:1000` | function | §2.86 |
+| `HeroWizard.use_ability` | `src/clasher_new/card_mechanics.py:1061` | function | §2.86 |
+| `LittlePrince.use_ability` | `src/clasher_new/card_mechanics.py:464` | function | §2.86 |
+| `MightyMiner.use_ability` | `src/clasher_new/card_mechanics.py:438` | function | §2.86 |
+| `Monk.use_ability` | `src/clasher_new/card_mechanics.py:419` | function | §2.86 |
+| `SkeletonKing.use_ability` | `src/clasher_new/card_mechanics.py:328` | function | §2.86 |
+| `_HeroBase.use_ability` | `src/clasher_new/card_mechanics.py:316` | function | §2.86 |
+| `validate_bundle` | `src/clasher_new/rl/action_mask.py:521` | function | §2.107 |
+| `validate_slots` | `src/clasher_new/rl/mcts.py:201` | function | §2.124 |
+| `FollowerPolicy.value` | `src/clasher_new/rl/follower.py:704` | function | §2.120 |
+| `ReturnScaler.var` | `src/clasher_new/rl/ppo.py:62` | function | §2.130 |
+| `var_decomp` | `scripts/pomdp_ceiling_probe.py:240` | function | §2.52 |
+| `VinesSnareZone` | `src/clasher_new/battle.py:2091` | class | §2.83 |
+| `Visualizer` | `src/clasher_new/minimal_visualizer.py:67` | class | §2.100 |
+| `Visualizer` | `src/clasher_new/new_visualization.py:19` | class | §2.101 |
+| `w2s` | `src/clasher_new/client_side/client.py:156` | function | §2.90 |
+| `w2s` | `src/clasher_new/minimal_visualizer.py:60` | function | §2.100 |
+| `w2s` | `src/clasher_new/new_visualization.py:14` | function | §2.101 |
+| `PFSP.weights` | `src/clasher_new/rl/pfsp.py:53` | function | §2.128 |
+| `WeightsCopyingCallback` | `src/clasher_new/train.py:61` | class | §2.166 |
+| `windows_host_ip` | `scripts/cdp_forward.py:16` | function | §2.33 |
+| `Witch` | `src/clasher_new/card_mechanics.py:66` | class | §2.86 |
+| `within_std_scalar` | `scripts/probe_value_ln.py:395` | function | §2.56 |
+| `within_std_vec` | `scripts/probe_value_ln.py:382` | function | §2.56 |
+| `wizard` | `start_rl.bat` | class(素材) | §2.169 |
+| `worker_main` | `src/clasher_new/rl/workers.py:71` | function | §2.142 |
+| `write_outputs` | `scripts/coverage.py:306` | function | §2.38 |
+| `write_solo_state` | `src/clasher_new/rl/train_solo.py:513` | function | §2.141 |
+| `PlanToken.zeros` | `src/clasher_new/rl/plan_space.py:182` | function | §2.129 |
+| `顶层可执行段-1：变量与参数解析` | `scripts/run_probe_v3.sh` | class(素材) | §2.69 |
+| `顶层可执行段-1：路径/协议/文件清单初始化` | `scripts/l1_upgrade.ps1` | class(素材) | §2.51 |
+| `顶层可执行段-2：下载循环` | `scripts/l1_upgrade.ps1` | class(素材) | §2.51 |
+| `顶层可执行段-2：阶段分派与收尾` | `scripts/run_probe_v3.sh` | class(素材) | §2.69 |
 
-（共 1528 条）
+（共 1554 条）
 
 ---
 
@@ -25886,6 +26307,26 @@ COVERAGE_OK GX01 files=9 symbols=93
 | docs/_cdp_extract140.js | 2 | 2 |
 
 COVERAGE_OK GX02 files=14 symbols=55
+
+### GX03
+
+| 文件 | 符号总数 | 已文档化 |
+|---|---|---|
+| scripts/_survey_audit.py | 2 | 2 |
+| scripts/_survey_md_to_docx.py | 9 | 9 |
+| scripts/_survey_merge.py | 6 | 6 |
+| scripts/_survey_merge_docs.py | 4 | 4 |
+| scripts/_survey_verify.py | 2 | 2 |
+
+COVERAGE_OK GX03 files=5 symbols=23
+
+### GX04
+
+| 文件 | 符号总数 | 已文档化 |
+|---|---|---|
+| scripts/_mask_vs_engine_reconcile.py | 3 | 3 |
+
+COVERAGE_OK GX04 files=1 symbols=3
 
 ---
 
