@@ -205,10 +205,15 @@ def main() -> int:
     W("")
     W("下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。")
     W("")
+    W("> **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。")
+    W("> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明")
+    W("> （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——")
+    W("> 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。")
+    W("")
     if not pending:
         W("（无——各部分未产生待确认项。）")
     for title, rows in pending:
-        W(f"### {title}")
+        W(f"### 来源：{title}")
         W("")
         W("| # | 条目 | 无法确认的原因 | 要确认需要什么 |")
         W("|---|---|---|---|")

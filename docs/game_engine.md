@@ -1395,7 +1395,12 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 
 下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。
 
-### A.7 本部分待确认清单
+> **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。
+> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明
+> （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——
+> 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。
+
+### 来源：A.7 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
 |---|---|---|---|
@@ -1412,7 +1417,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 | 11 | `PlayerState` 默认塔血与 `card_level` 不一致的窗口 | `tower_hps` 默认 `(4824, 3052, 3052)` 是 lv11 值（player.py:6），而 `BattleState(card_level=...)` 可为 11-16；在首次 `step` 覆盖之前（battle.py:2654），`can_play_card` 读的是默认值（player.py:39） | 确认是否存在「首次 step 前读 `*_tower_hp`」的调用路径（`rl/` 不在本轮清单） |
 | 12 | 多战斗并行的等级全局态安全 | `Card.default_level` 是类变量，由 `BattleState.__init__` 与镜像窗口改写（card_utils.py:220、battle.py:2541、battle.py:2706-2714）；源码注释声明基于单战斗串行假设（card_utils.py:218-219），并行场景的后果未在源码中给出 | 官方并行/多进程方案的说明，或一条并发回归测试 |
 
-### B.9 本部分待确认清单
+### 来源：B.9 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
 |---|---|---|---|

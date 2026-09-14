@@ -3069,7 +3069,12 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 
 下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。
 
-### A.7 本部分待确认清单
+> **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。
+> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明
+> （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——
+> 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。
+
+### 来源：A.7 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
 |---|---|---|---|
@@ -3086,7 +3091,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 | 11 | `--mode eval` 与 `--mode flow` 是否也支持 `--load-config` / `--save-config` 的全部组合 | 分派顺序上 `cfg = TrainConfig.resolve(...)` 在 mode 分派之前（`1346-1353`），但 flow 侧如何使用 `cfg` 未在允许清单内 | 同上第 1 条 |
 | 12 | `kinds` 的合法取值集合（`--kinds`） | `evaluate_league` 直接把 `kinds[i]` 透传给 `league.add_agent(..., kind=...)`（`run_league.py:514-518`），未做校验；合法值的定义在 `rl/league.py` | 读 `rl/league.py`（`add_agent`/`Agent`） |
 
-### B.9 本部分待确认清单
+### 来源：B.9 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
 |---|---|---|---|
