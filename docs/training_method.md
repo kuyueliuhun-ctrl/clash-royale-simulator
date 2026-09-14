@@ -995,7 +995,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 - 构造默认：`PFSP(beta=1.0, seed=0, alpha=0.05, gate_hi=1.0, gate_penalty=1.0)`（rl/pfsp.py:30-31）；校验 `beta >= 0`、`0 < alpha <= 1`、`0 <= gate_penalty <= 1`（:32-37）。
 - 未采样对手按 **0 胜率（乐观先验）** 处理 ⇒ 权重高（:58-59）；门禁：`seen and gate_hi < 1.0 and winrates[key] > gate_hi` ⇒ `w *= gate_penalty`（:60-62）；权重下限 `max(w, 1e-6)`（:63）；`sample()` 归一化后 `rng.choices`（:66-71）。
 - EMA 更新：`update_winrate(a, b, score_a, alpha=None)`：`prev*(1-a) + score_a*a`，`prev` 缺省 0.5（:46-51）。
-- 训练侧显式参数：`self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11, alpha=_PFSP_ALPHA=0.20, gate_hi=_PFSP_GATE_HI=0.85, gate_penalty=_PFSP_GATE_PENALTY=0.2)`（rl/train_solo.py:360-362，常量定义 :152-154）；且可被 `cfg.pfsp_alpha/pfsp_gate_hi/pfsp_gate_penalty` 覆盖（:356-359）。`_train_solo.py:398-401` 会打印这三个参数与重扫间隔。
+- 训练侧显式参数：`self._pfsp = _PFSP(beta=1.0, seed=cfg.seed + 11, alpha=_PFSP_ALPHA=0.20, gate_hi=_PFSP_GATE_HI=0.85, gate_penalty=_PFSP_GATE_PENALTY=0.2)`（rl/train_solo.py:360-362，常量定义 :152-154）；且可被 `cfg.pfsp_alpha/pfsp_gate_hi/pfsp_gate_penalty` 覆盖（:356-359）。`rl/train_solo.py:398-401` 会打印这三个参数与重扫间隔。
 
 #### B.4.3 联赛（`rl/league.py` / `rl/elo.py` / `rl/run_league.py`）
 

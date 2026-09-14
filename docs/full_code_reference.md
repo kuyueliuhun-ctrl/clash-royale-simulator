@@ -33,7 +33,7 @@
 | 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|
 | 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|
 
-共 **170 个代码文件**、**46973 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
+共 **170 个代码文件**、**47018 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
 
 ### 0.2 方法（为什么可以相信这份文档的数字）
 
@@ -75,7 +75,7 @@
 | `docs` | 7 | 448 | 0 | 2.1–2.7 |
 | `ideas` | 1 | 14 | 0 | 2.8–2.8 |
 | `runs` | 3 | 279 | 0 | 2.10–2.12 |
-| `scripts` | 56 | 13399 | 319 | 2.13–2.79 |
+| `scripts` | 56 | 13444 | 319 | 2.13–2.79 |
 | `scripts/rl` | 11 | 87 | 1 | 2.58–2.68 |
 | `src/clasher_new` | 35 | 10050 | 495 | 2.80–2.168 |
 | `src/clasher_new/client_side` | 5 | 581 | 26 | 2.88–2.92 |
@@ -108,7 +108,7 @@
 | 20 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.20 | G032 |
 | 21 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.21 | G030 |
 | 22 | `scripts/_survey_md_to_docx.py` | 341 | 9 | 113 | §2.22 | GX03 |
-| 23 | `scripts/_survey_merge.py` | 485 | 6 | 74 | §2.23 | GX03 |
+| 23 | `scripts/_survey_merge.py` | 530 | 6 | 74 | §2.23 | GX03 |
 | 24 | `scripts/_survey_merge_docs.py` | 315 | 4 | 56 | §2.24 | GX03 |
 | 25 | `scripts/_survey_verify.py` | 145 | 2 | 30 | §2.25 | GX03 |
 | 26 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.26 | G033 |
@@ -1308,7 +1308,7 @@
 
 ### 2.23 `scripts/_survey_merge.py`
 
-- **分析组**：GX03　**行数**：485　**AST 符号数**：6
+- **分析组**：GX03　**行数**：530　**AST 符号数**：6
 
 - 语言/类型: Python
 - 行数: 469
@@ -16348,7 +16348,7 @@
 - 主要导入: os, subprocess, sys, time, webbrowser
 - 关键模块级常量:
   - `ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))` (L22-23) — 仓库根目录（由 `src/clasher_new/rl/` 上溯 3 级）
-  - `RUN_LEAGUE_WRAP = os.path.join(ROOT, "scripts", "rl", "run_league.py")` (L24) — 训练入口 wrapper 路径（该文件存在，是 `runpy` 转发到 `src/clasher_new/rl/run_league.py` 的 wrapper，见 `scripts/rl/run_league.py:1-20`）
+  - `RUN_LEAGUE_WRAP = os.path.join(ROOT, "scripts", "rl", "run_league.py")` (L24) — 训练入口 wrapper 路径（该文件存在，是 `runpy` 转发到 `src/clasher_new/rl/run_league.py` 的 wrapper，见 `scripts/rl/run_league.py:1-17`）
   - `DASH_WRAP = os.path.join(ROOT, "scripts", "rl", "dashboard.py")` (L25) — dashboard 入口 wrapper 路径（文件存在）
   - `DEFAULT_PORT = 8090` (L26) — dashboard 默认端口
 - 顶层数据表/字典:
@@ -24020,6 +24020,41 @@
 **另一处已知的快照漂移（主动披露）**：`docs/_survey/parts/GX03.md` 对 `scripts/_survey_merge.py` 的描述里写着「默认输出 `docs/project_full_reference.md`」——那是**该脚本被分析当时**的事实。本文档定稿前该默认值已改名，现在产出的是 `docs/full_code_reference.md`（即本文档现在的文件名）；`scripts/_survey_merge_docs.py` 的交叉引用同样已改名。**除这一处命名外，被描述的逻辑一字未变。**
 
 **结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致（类型 0 处不符、参数 0 处缺失、AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**
+
+### 4.4 抽样反查：引用回源体检（脚本复算，非人工挑选）
+
+`scripts/_survey_reverse_check.py` 做两类**机械**反查（只读）：
+
+**A. 符号条目抽检**——对本文档每 60 条符号条目取 1 条（确定性步长，不是挑好看的），逐条校验：
+① 标题的 `[L起-止]` 区间里**确实**有该名字的 `def`/`class`；
+② 条目「签名」里的参数名集合与源码形参集合一致（多一个/少一个都算 FAIL）；
+③ 条目正文里每一个 `文件.py:行号` 引用都能解析到真实文件、且在文件行数范围内。
+
+| 抽检项 | 结果 |
+|---|---|
+| 条目总数 | 1509 |
+| 抽样步长 / 抽中条数 | 每 60 条取 1 / 26 条 |
+| ✅ PASS | 25 |
+| ❌ FAIL | 0 |
+| 无法判定 | 1（`.js` 等非 `.py` 文件不在 AST 抽取范围内，结构校验不适用）|
+
+**B. 全量引用体检**——把三份交付物正文里**每一个** `xxx.py:NNN`（含 `NNN-MMM` 区间）逐个回源：
+
+| 文档 | 引用条数 | 文件未找到 | 行号越界 |
+|---|---|---|---|
+| `docs\full_code_reference.md` | 2162 | 0 | 0 |
+| `docs\training_method.md` | 2237 | 0 | 0 |
+| `docs\game_engine.md` | 793 | 0 | 0 |
+| **合计** | **5192** | **0** | **0** |
+
+> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露：
+>
+> | # | 原文 | 实际 | 说明 |
+> |---|---|---|---|
+> | 1 | `_train_solo.py:398-401` | `rl/train_solo.py:398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |
+> | 2 | `scripts/rl/run_league.py:1-20` | `scripts/rl/run_league.py:1-17` | 该 wrapper 实测 17 行，区间写多了 3 行 |
+>
+> 另有 1 条 `player.py:36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。
 
 ---
 

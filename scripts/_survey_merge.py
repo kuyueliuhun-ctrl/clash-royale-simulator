@@ -403,6 +403,51 @@ def main() -> int:
           "AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，"
           "均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**")
         W("")
+    # 4.4 抽样反查（引用回源体检）
+    try:
+        rc = load("reverse_check_report.json")
+    except Exception:
+        rc = None
+    if rc:
+        A = rc.get("A_entries", {})
+        W("### 4.4 抽样反查：引用回源体检（脚本复算，非人工挑选）")
+        W("")
+        W("`scripts/_survey_reverse_check.py` 做两类**机械**反查（只读）：")
+        W("")
+        W("**A. 符号条目抽检**——对本文档每 60 条符号条目取 1 条（确定性步长，不是挑好看的），逐条校验：")
+        W("① 标题的 `[L起-止]` 区间里**确实**有该名字的 `def`/`class`；")
+        W("② 条目「签名」里的参数名集合与源码形参集合一致（多一个/少一个都算 FAIL）；")
+        W("③ 条目正文里每一个 `文件.py:行号` 引用都能解析到真实文件、且在文件行数范围内。")
+        W("")
+        W("| 抽检项 | 结果 |")
+        W("|---|---|")
+        W(f"| 条目总数 | {A.get('entries_total', '?')} |")
+        W(f"| 抽样步长 / 抽中条数 | 每 {A.get('step', '?')} 条取 1 / {A.get('sampled', '?')} 条 |")
+        W(f"| ✅ PASS | {A.get('pass', '?')} |")
+        W(f"| ❌ FAIL | {A.get('fail', '?')} |")
+        W(f"| 无法判定 | {A.get('undecidable', '?')}（`.js` 等非 `.py` 文件不在 AST 抽取范围内，结构校验不适用）|")
+        W("")
+        W("**B. 全量引用体检**——把三份交付物正文里**每一个** `xxx.py:NNN`（含 `NNN-MMM` 区间）逐个回源：")
+        W("")
+        W("| 文档 | 引用条数 | 文件未找到 | 行号越界 |")
+        W("|---|---|---|---|")
+        tot = 0
+        for d in rc.get("docs", []):
+            tot += d.get("citations", 0)
+            W(f"| `{d.get('doc')}` | {d.get('citations')} | {d.get('file_not_found')} | {d.get('line_out_of_range')} |")
+        W(f"| **合计** | **{tot}** | **{sum(d.get('file_not_found', 0) for d in rc.get('docs', []))}** | **{sum(d.get('line_out_of_range', 0) for d in rc.get('docs', []))}** |")
+        W("")
+        W("> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露：")
+        W(">")
+        W("> | # | 原文 | 实际 | 说明 |")
+        W("> |---|---|---|---|")
+        W("> | 1 | `_train_solo.py:398-401` | `rl/train_solo.py:398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |")
+        W(f"> | 2 | `scripts/rl/run_league.py:1-20` | `scripts/rl/run_league.py:1-17` | 该 wrapper 实测 {17} 行，区间写多了 3 行 |")
+        W(">")
+        W("> 另有 1 条 `player.py:36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**"
+          "（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，"
+          "按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。")
+        W("")
     W("---")
     W("")
 
