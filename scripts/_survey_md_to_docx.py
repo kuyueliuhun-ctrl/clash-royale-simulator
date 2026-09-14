@@ -145,7 +145,7 @@ def split_table_row(line: str) -> List[str]:
         s = s[1:]
     if s.endswith("|"):
         s = s[:-1]
-    return [c.strip() for c in s.split("|")]
+    return [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", s)]
 
 
 def convert(md_path: str, docx_path: str, title: str | None = None) -> dict:

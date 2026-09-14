@@ -83,6 +83,50 @@ def read_draft(name: str) -> str:
         return fh.read()
 
 
+def fix_table_pipes(txt: str) -> str:
+    """表格行里的 `|`（含 `|Δx|`、`int|None` 这类代码片段）会把 Markdown 表格切错列。
+
+    规则：**只对表格行**处理，把每个反引号区段内的未转义 `|` 换成 `\\|`（幂等）。
+    """
+    out = []
+    for ln in txt.splitlines():
+        if ln.lstrip().startswith("|"):
+            ln = re.sub(
+                r"`([^`]*)`",
+                lambda m: "`" + m.group(1).replace("\\|", "|").replace("|", "\\|") + "`",
+                ln,
+            )
+        out.append(ln)
+    return "\n".join(out)
+
+
+def pad_tables(txt: str) -> str:
+    """把列数少于表头的表格行补齐空列（源草稿偶有少写一列的表格行）。只补不裁。"""
+    lines = txt.splitlines()
+    out = []
+    i = 0
+    while i < len(lines):
+        if lines[i].lstrip().startswith("|"):
+            j = i
+            while j < len(lines) and lines[j].lstrip().startswith("|"):
+                j += 1
+            blk = lines[i:j]
+            ws = [len(re.split(r"(?<!\\)\|", r.strip().strip("|"))) for r in blk]
+            w = max(ws) if ws else 0
+            for r, ww in zip(blk, ws):
+                if w:
+                    r = r.rstrip()
+                    if r.endswith("|"):
+                        r = r[:-1].rstrip()
+                    r = r + " |" * (w - ww) + " |"
+                out.append(r)
+            i = j
+        else:
+            out.append(lines[i])
+            i += 1
+    return "\n".join(out)
+
+
 def shift_headings(txt: str) -> Tuple[str, List[Tuple[int, str]]]:
     """标题整体下移一级，返回 (新文本, [(级别, 标题)])"""
     out: List[str] = []
@@ -139,6 +183,7 @@ def main() -> int:
     for name in cfg["drafts"]:
         txt = read_draft(name)
         txt = re.sub(r"^\s*(PART_[AB]_OK|TRAIN_[AB]_OK).*$", "", txt, flags=re.M).strip()
+        txt = pad_tables(fix_table_pipes(txt))
         shifted, heads = shift_headings(txt)
         bodies.append(shifted)
         heads_all += [h for h in heads if h[0] <= 3]

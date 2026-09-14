@@ -82,7 +82,7 @@
 #### A.1.1 三种模式
 
 | 模式 | CLI 取值 | 语义（源码原义） | 入口函数 | 源码位置 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | **solo** | `--mode solo` | 单人自对弈：单模型 `main`（`FollowerPolicy`+`PPOTrainer`），双方同副固定卡组镜像；对手 = main 的周期冻结副本 + 对手池；无联赛、不写 Elo/PFSP/`league_state.json`；周期评估写 `solo_state.json` | `run_solo(cfg, resume=..., record_replays=...)` | `rl/train_solo.py:1039`；分派 `rl/run_league.py:1365-1369` |
 | **run** | `--mode run`（默认） | 联赛主循环：同时维护 5 个模型槽位（`main` + 三分类×3/all_decks + 全随机），PPO 训练 main → PFSP 采对手 → 周期全轮转评估 → 逐局 Elo → 状态持久化 | `run_league(cfg, resume=..., record_replays=...)` | `rl/run_league.py:1143`；分派 `rl/run_league.py:1371` |
 | **flow** | `--mode flow` | 全配对分流派联赛（一次 148,800 局） | `rl.flow_league.run_flow(cfg, resume=..., n_random_decks=...)` | 调用点 `rl/run_league.py:1351-1354`；模块 docstring 亦声明 `rl/run_league.py:10` |
@@ -92,7 +92,7 @@
 **run 模式内部的三种执行体**（由 `cfg.n_envs` 与 `cfg.parallel` 选择，`rl/run_league.py:1143-1149`）：
 
 | 条件 | 执行体 | 源码 |
-|---|---|---|
+|---|---|--- |
 | `n_envs <= 1` | `_run_single`（单 env 主循环，旧行为） | `rl/run_league.py:697` |
 | `n_envs > 1` 且 `parallel == "proc"` | `_run_vec`（单进程批量化：`act_parallel` + batch PPO） | `rl/run_league.py:803` |
 | `n_envs > 1` 且 `parallel != "proc"`（默认 `"mp"`） | `_run_mp`（跨进程 worker，主进程批量 GPU 推理） | `rl/run_league.py:942` |
@@ -102,7 +102,7 @@
 #### A.1.2 模式之间共享的代码
 
 | 被共用的文件 / 对象 | 共享方式 | 证据 |
-|---|---|---|
+|---|---|--- |
 | `rl/ppo.py`（`PPOTrainer`、`compute_gae`、`ReturnScaler`） | `run_league` / `flow_league` / `train_follower` / `train_prophet` / `train_solo` 共用；类 docstring 明确写"默认行为不得变" | `rl/ppo.py:105-108`；solo 侧 import `rl/train_solo.py:37`；run 侧 import `rl/run_league.py:59` |
 | `rl/env_wrapper.py`（`RLEnv`） | run 与 solo 共用；差异只在构造参数（卡组/奖励/等级） | `rl/run_league.py:579-581`（run：`RLEnv(opponent=None, seed, reward_weights, card_level)`）；`rl/train_solo.py:157-161`（solo：额外传 `deck0/deck1` 同副镜像） |
 | `rl/follower.py`（`FollowerPolicy`/`save_checkpoint`/`load_checkpoint`） | 三种模式共用 | `rl/run_league.py:55`、`rl/train_solo.py:36` |
@@ -125,7 +125,7 @@
 #### A.2.0 逐步总览
 
 | # | 阶段 | 函数 | 源码位置 | 输出（形状/类型） |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | 1 | 重置环境 | `RLEnv.reset(seed=...)` / `self.observe(0)` | `env_wrapper.py:348-386`、`390-391` | `obs: dict`、`info: {}` |
 | 2 | 观测构造 | `observation.observe(battle, player_id)` | `observation.py:87` | `grid (32,18,15) f32`、`hand (5,) i32`、`elixir (1,) f32`、`next_card (1,) i32`、`time (1,) f32` |
 | 3 | 计划生成 | `ProphetPlanner.plan` 或 `BeliefPlanner.plan` → `plan.to_vector()` | `train_solo.py:1578-1581` | `plan_vec (PLAN_DIM,)`，`PLAN_DIM=58`（实算，`follower.py:26` 导入） |
@@ -151,7 +151,7 @@
 **`observation.observe` 的输出字段与维度**（`observation.py:87-144`；常量 `GRID_H, GRID_W, GRID_C = 32, 18, 15` 在 `observation.py:83-84`）：
 
 | 字段 | 形状 | dtype | 构造方式 | 行号 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `grid` | `(32, 18, 15)` | float32 | 全零网格；对 `battle.entities` 中存活且名字在 `ENTITY_NAMES` 里的实体，`obs[y][x] = 15 维属性向量`（y 为第一轴） | `observation.py:89-90,124-130` |
 | `hand` | `(5,)` | int32 | `p.cycle[:5]` 的 `ENTITY_NAMES.index`（未登记名 → 0） | `observation.py:133-136` |
 | `elixir` | `(1,)` | float32 | `p.elixir` | `observation.py:141` |
@@ -161,7 +161,7 @@
 **grid 的 15 个通道**（逐元素顺序，`observation.py:125-129`）：
 
 | 通道 idx | 名称 | 计算 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | 0 | `entity_id` | `ENTITY_NAMES.index(each.name)` | `95,126` |
 | 1 | `is_opponent` | `each.player != player_id`（己方恒 0） | `100,126` |
 | 2 | `elixir` | `getattr(d,"elixir",0) or 0` | `105,126` |
@@ -189,7 +189,7 @@
 #### A.2.2 计划与信念 token
 
 | 步骤 | 函数 | 行号 | 说明 |
-|---|---|---|---|
+|---|---|---|--- |
 | 计划二选一 | `use_prophet = rng.random() < 0.3` | `train_solo.py:1578`（常量 `_SOLO_PROPHET_PROB = 0.3` 在 `train_solo.py:129`；run 模式同 0.3 在 `run_league.py:732`） | 30% 用 `ProphetPlanner.plan(env.get_prophet_state())`，70% 用 `BeliefPlanner.plan(env.battle, belief.state(), obs)` |
 | 计划向量化 | `plan.to_vector()` | `train_solo.py:1581` | 维度 `PLAN_DIM`（`follower.py:26` 导入；实算 58） |
 | 信念编码 | `belief.encode(obs, None)` | `train_solo.py:1582` | 一维向量，长度 = `belief_dim`（solo 下 563，见 A.3.4） |
@@ -201,7 +201,7 @@
 `act()` 全程 `torch.no_grad()`（`follower.py:439`）。单条路径 `_encode_parts`（`follower.py:268-298`）：
 
 | 步 | 操作 | 张量形状 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | `grid` → tensor + `unsqueeze(0)` | `(1,32,18,15)` | `271` |
 | 2 | `hand` → long tensor | `(1,5)` | `272` |
 | 3 | `elixir` / `time` / `next_card`，`next_card` 除以 12.0 | 各 `(1,1)` | `273-275` |
@@ -233,7 +233,7 @@
 `act()` 的解码循环（`follower.py:450-483`，最多 `K_MAX+2 = 6` 步）：
 
 | 步 | 操作 | 形状 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | `mask = get_mask(bundle)`，压入 `masks` 序列（供 PPO 重放） | `dict`（`slots (4,)`、`cells (4,32,18)`、`ability_legal`、`used_slots`、`at_cap`、`any_legal`） | `451-452`；掩码契约 `env_wrapper.py:476-486` |
 | 2 | `_slot_mask_tensor(mask)`：`sm[:4]=mask["slots"]`、`sm[4]=ability_legal`、`sm[5]=1`；`at_cap` 时只放行 STOP | `(6,)` | `316-330` |
 | 3 | `slot_logits = slot_head(h) + slot_bias`，掩码位置填 `-1e9` | `(1,6)`；`slot_head: Linear(128→6)` | `454-455`；头定义 `237` |
@@ -269,7 +269,7 @@
 **`compute_reward` 的组成**（`env_wrapper.py:209-263`）：
 
 | 项 | 公式 | 行号 |
-|---|---|---|
+|---|---|--- |
 | 皇冠差 | `crown_weight * (red_left_old - red_left_new) - crown_lose_weight * (blue_left_old - blue_left_new)` | `239-240` |
 | 塔伤（敌） | `+ tower_dmg_opp * red_dmg` | `241` |
 | 塔伤（己） | `- tower_dmg_self * blue_dmg` | `242` |
@@ -336,7 +336,7 @@
 #### A.3.1 逐层表（`hidden=128`，即训练实际取值）
 
 | # | 层名 | 类型 | 输入维度 | 输出维度 | 激活 | 是否共享 | 源码 |
-|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|--- |
 | 1 | `entity_emb` | `nn.Embedding(177, 8)` | 标量 id | 8 | 无 | 共享（grid id 通道 + hand） | `follower.py:192` |
 | 2 | `cnn.0` | `Conv2d(26,32,3,padding=1)` | `(N,26,32,18)` | `(N,32,32,18)` | ReLU | 共享 | `194-195` |
 | 3 | `cnn.2` | `Conv2d(32,64,3,stride=2,padding=1)` | `(N,32,32,18)` | `(N,64,16,9)` | ReLU | 共享 | `196` |
@@ -366,7 +366,7 @@
 **价值支路三变体**（唯一实现 `_value_from`，`follower.py:303-314`；优先级 `independent > bypass > shared`，注释见 `236`）：
 
 | 变体 | 触发条件 | 计算公式 | 价值支路吃到的张量 | 行号 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `independent` | `value_independent=True`（无论 `value_bypass`） | `value_head_mlp(value_enc_ln(relu(value_enc_fc(fused))))` | `fused (N,2731)`，**不经过 GRU** | `309-311` |
 | `bypass` | `value_independent=False` 且 `value_bypass=True` | `value_head(enc)` | `enc (N,128)`（post-LN 共享编码），跳过 GRU | `312-313` |
 | `shared`（默认） | 两者皆 False | `value_head(h)` | GRU 隐状态 `h (N,128)` | `314` |
@@ -386,7 +386,7 @@
 #### A.3.4 总参数量（实算）
 
 | 配置 | 总参数量 | 说明 |
-|---|---|---|
+|---|---|--- |
 | 共享 value 通路（`value_bypass=False, value_independent=False`），`hidden=128, plan_dim=58, belief_dim=563` | **634,735** | 含 `enc_fc.weight (128,2731)` 349,568、`cell_head.weight (576,128)` 73,728、`gru_cell.*` 98,304、`belief_mlp.0.weight (64,563)` 36,032 等 |
 | `value_bypass=True`（默认 `value_independent=False`） | **634,735** | 只换接线，不新增参数（复用 `value_head`） |
 | `value_independent=True` | **993,008** | 额外 `value_enc_fc.weight (128,2731)` 349,568 + `value_enc_ln` 256 + `value_head_mlp.0 (64,128)` 8,192 + `value_head_mlp.2 (1,64)` 64 等，净增 358,273 |
@@ -405,7 +405,7 @@
 「类型」为源码类型注解（Python 不做运行时强制）。
 
 | # | 参数名 | 类型 | 默认值 | 含义 | 来源行号 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `name` | str | `"standard"` | 配置名 / 输出子目录名 | `rl/config.py:99` |
 | 2 | `description` | str | `""` | 人类可读描述 | `rl/config.py:100` |
 | 3 | `total_steps` | int | `20000` | 训练总步数（1 步 = 1 决策帧） | `rl/config.py:102` |
@@ -468,7 +468,7 @@
 来源 `rl/config.py:316-369`。下表只列**与 dataclass 默认值不同**的字段。
 
 | 预设 | `reward` 覆盖 | 其它字段覆盖 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | `standard` | 无（全默认） | 无 | `319` |
 | `aggressive` | `crown_weight=8.0, win_bonus=15.0, lose_penalty=10.0, invalid_penalty=0.05, elixir_bonus=0.0, elixir_diff_weight=0.7` | 无 | `320-325` |
 | `defensive` | `crown_weight=3.0, win_bonus=10.0, lose_penalty=10.0, invalid_penalty=0.1, elixir_bonus=0.0, elixir_diff_weight=0.3` | 无 | `326-331` |
@@ -490,7 +490,7 @@
 来源 `rl/ppo.py:87-90`。**这些默认值与 `TrainConfig` 的同名默认值并不相同**（见"差异"列）。
 
 | 参数 | 签名默认值 | `TrainConfig` 同名默认 | 差异 | 行号 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `lr` | `3e-4` | `3e-4` | 一致 | `ppo.py:87` |
 | `gamma` | `0.99` | `0.997` | **不一致** | `ppo.py:87` / `config.py:127` |
 | `gae_lambda` | `0.95` | `0.95` | 一致 | `ppo.py:87` / `config.py:128` |
@@ -517,7 +517,7 @@
 #### A.4.4 枚举 / 字典型字段的全部取值
 
 | 字段 | 全部取值 | 含义 | 来源 |
-|---|---|---|---|
+|---|---|---|--- |
 | `adv_norm` | `batch` / `scale` / `none` | 整批中心化+除 std（旧） / 只除批 std / 不归一化；其它值抛 `ValueError` | `rl/config.py:139`；`rl/ppo.py:224-233` |
 | `value_norm` | `none`（含 `""`、`None`）/ `running` | 价值损失不缩放 / `v_loss = MSE/s²`；其它值抛 `ValueError` | `rl/config.py:144`；`rl/ppo.py:245-248` |
 | `critic_baseline` | `value` / `const` | 优势用网络 V / 优势里 V 整体替换为标量 `c = ppo.ret_scaler.mean` | `rl/config.py:160`；`rl/train_solo.py:1214,1647-1650` |
@@ -534,7 +534,7 @@
 来源 `rl/config.py:37-57`；`env_wrapper._DEFAULT_REWARD` 是同值的副本（`rl/env_wrapper.py:40-58`，注释要求"勿单独改一处"）。
 
 | 键 | 默认值 | 含义 | `config.py` 行号 | `env_wrapper.py` 行号 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `crown_weight` | `8.0` | 皇冠差系数（破敌塔每座 +8） | `38` | `41` |
 | `crown_lose_weight` | `10.0` | 被破塔惩罚（> `crown_weight`，丢塔比破塔更痛） | `39` | `42` |
 | `tower_dmg_opp` | `0.001` | 敌方塔损 → 正奖励（前段 t<120） | `40` | `43` |
@@ -564,7 +564,7 @@
 「取值」列中 `flag` 表示 `action="store_true"`（出现即 True，无值）。
 
 | # | 参数名 | 默认值 | 取值 | 含义 | 行号 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `--mode` | `"run"` | `eval`/`run`/`flow`/`solo`/`flow-sweep-stream`/`flow-sweep-games5` | 运行模式选择 | `1171-1173` |
 | 2 | `--policies` | `None` | 路径列表（`nargs="+"`） | eval 模式的策略检查点列表 | `1175` |
 | 3 | `--kinds` | `None` | 字符串列表（`nargs="+"`） | eval 模式的 agent kind | `1176` |
@@ -701,7 +701,7 @@ python rl/run_league.py --mode solo --config economy --config-name my_run --fres
 主目录与 `replays/`（`rl/config.py:286-288`）。
 
 | 文件 | 写入函数 | 内容 / 字段 | 来源 |
-|---|---|---|---|
+|---|---|---|--- |
 | `config.json` | `cfg.save()`（`TrainConfig.save`） | `asdict(self)` 全字段，`ensure_ascii=False, indent=2` | `rl/config.py:294-298`；调用点 `train_solo.py:1049`、`run_league.py:700,805,953`；`--save-config` 另存 `1347-1349` |
 | `solo_main.pt` | `save_checkpoint(main, cfg.solo_main_path())` | `{state_dict, plan_dim, belief_dim, hidden_dim, value_bypass, value_independent}` | `train_solo.py:1417,1736`；`follower.py:55-64` |
 | `solo_main_<step>.pt` | `save_checkpoint(main, cfg.solo_ckpt_path(step))` | 同上；每次评估/锚点保留一份（回溯 + 作为 hist 池成员） | `train_solo.py:1418`；路径 `config.py:256-258` |
@@ -748,7 +748,7 @@ python rl/run_league.py --mode solo --config economy --config-name my_run --fres
 **(4) 注意点（源码可确认的脚枪）**：
 
 | # | 注意点 | 证据 |
-|---|---|---|
+|---|---|--- |
 | 1 | **`config.json` 不参与 resume 解析**：续训必须重传 `--ppo-epochs/--ppo-minibatch/--ppo-shuffle`，否则静默退回"1 次梯度步/更新"；solo 会在预算不一致时打印告警 | `train_solo.py:1117-1131`（比较 `rs` 与 `cfg` 的预算） |
 | 2 | **`--fresh` 挡不住 `--main-init`**：`--fresh` 只把 `resume` 置 False（`rs=None`），`main_init` 分支条件仍成立并加载权重 | `run_league.py:1296`；`train_solo.py:1085-1093` |
 | 3 | **solo 热启动显式传 `plan_dim=PLAN_DIM, belief_dim=belief_dim`**，避免旧 ckpt 元数据（旧维度）把 main 建成旧维度后 `_sync_frozen_copy` shape 失配 | `train_solo.py:1085-1093`（注释 `1087-1089`） |
@@ -765,7 +765,7 @@ python rl/run_league.py --mode solo --config economy --config-name my_run --fres
 ### A.7 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | flow 模式（`--mode flow`）的完整数据流、模型槽位、评估口径、`cfg` 字段使用范围 | `rl/flow_league.py` 不在本部分允许阅读的源码清单内，只能从 `run_league.py:1351-1363` 看到入口签名与两个参数 | 读 `rl/flow_league.py` 的 `run_flow` / `run_flow_sweep` 全文，以及 `League` 在 flow 下的装配方式 |
 | 2 | `flow-sweep-*` 两个策略（`stream` / `games5`）的具体判别与产出一致性 | 同上 | 同上 |
 | 3 | 总参数量与既有文档"629,359"不一致的成因 | 源码中没有硬编码参数量；本文两个数（634,735 / 993,008）是实算值，差异只能来自历史 `belief_dim`/`num_entity`/`hidden` 或旧架构 | 找到写 629,359 的文档所依据的版本/配置，或在那个版本上重算 |
@@ -804,7 +804,7 @@ python rl/run_league.py --mode solo --config economy --config-name my_run --fres
 #### B.1.2 ② 采样一步（rollout 决策）
 
 | 步骤 | 函数 / 表达式 | 行号 | 说明 |
-|---|---|---|---|
+|---|---|---|--- |
 | plan 选择 | `rng.random() < _SOLO_PROPHET_PROB`（=0.3，rl/train_solo.py:129）→ `prophet.plan(env.get_prophet_state())`，否则 `bp.plan(env.battle, belief.state(), obs)` | rl/train_solo.py:1578-1580 | 先知（特权状态）以 0.3 概率注入 |
 | plan 向量化 | `plan.to_vector()` | rl/train_solo.py:1581 | 维度 `PLAN_DIM`（rl/plan_space.py:187） |
 | 信念 token | `belief.encode(obs, None)` | rl/train_solo.py:1582 | 粒子数 128（rl/train_solo.py:1171） |
@@ -867,7 +867,7 @@ elif cfg.anchor_every and step % cfg.anchor_every == 0 and step != cfg.total_ste
 #### B.1.8 触发条件常量总表（默认值）
 
 | 常量 | 默认值 | 位置 | 语义 |
-|---|---|---|---|
+|---|---|---|--- |
 | `update_interval` | 128 | rl/config.py:112 | 每 128 决策帧一次 PPO 更新 |
 | `batch_size` | 128 | rl/config.py:111 | 每次更新取多少 transition |
 | `solo_copy_every` | 2000 | rl/config.py:198 | 冻结副本同步间隔（并触发 `refresh_hist`） |
@@ -1025,7 +1025,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 - 同步实现：`_sync_frozen_copy(main, opp)` = `opp.load_state_dict(main.state_dict())`（rl/train_solo.py:170-172），触发点 B.1.6。
 - 三组对照（**只做对比、绝不进训练/迭代**，rl/train_solo.py:1179-1184 注释）：
   | 对照 | 权重来源 | 评估种子 | 行号 |
-  |---|---|---|---|
+  |---|---|---|--- |
   | `baseline0` | 训练起点（`_sync_controls_once` 首次同步） | `cfg.seed + 50000 + step` | rl/train_solo.py:1240-1244、:1372-1373 |
   | `baseline_prev` | 上一评估点权重（每轮末刷新） | `cfg.seed + 60000 + step` | rl/train_solo.py:1374-1375、:1388 |
   | `baseline_rand` | 固定随机锚点（`RAND_ANCHOR_SEED`） | `RAND_ANCHOR_EVAL_SEED = 90000` | rl/train_solo.py:1196、:1378-1379 |
@@ -1058,7 +1058,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **行为指标** `behavioral_metrics(games)`（rl/train_solo.py:550-710），内部阈值：
 
 | 指标 | 定义 | 阈值/常数 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | `defense_invest_rate` | 敌过河帧中有我方 deploy 的比例 | 敌过河 = P1 troop `y < 16.0`（`RIVER`） | :573、:606、:699 |
 | `engagement_rate` | 防守部署后 8s 内 5 格内敌我 troop 同框的比例 | 窗口 `8.0/0.5` 帧、曼哈顿距离 `< 5.0` | :644-655、:700 |
 | `intercept_rate` | 落点在"敌→我方塔"直线路径 4 格内的比例 | 目标点 `(tx,ty)=(8.5,6.0)`、阈值 `<= 4.0` | :656-667、:701 |
@@ -1091,7 +1091,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **GRU 活力 / 价值通道统计（写进 history）**（rl/train_solo.py:1303-1362）：
 
 | 键 | 定义 | 阈值（rl/diagnostics.py:56） |
-|---|---|---|
+|---|---|--- |
 | `h_std` | 隐状态跨帧 std（逐维 std 后取均值） | `> 0.05`，`<= 0.05` 报警 |
 | `gru_n_abs` | GRU 候选 `tanh(...)` 的 \|·\| 均值 | `< 0.9`，`>= 0.9` 报警 |
 | `value_std` | value_head 输出跨帧 std（最近 96 帧探针） | 无独立报警 |
@@ -1203,7 +1203,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **3) 核心数据结构/维度**
 
 | 项 | 值 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `MCTSConfig.n_simulations` | `24` | mcts.py:44 |
 | `max_depth` | `3` | mcts.py:45 |
 | `leaf_horizon_s` | `8.0` | mcts.py:46 |
@@ -1234,7 +1234,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `MCTSConfig` | mcts.py:43 | MCTS 配置 dataclass | `n_simulations=24, max_depth=3, leaf_horizon_s=8.0, prior_top_k=8, c_uct=1.4, decision_frames=30, dt=1/60, max_bundles_per_node=64, reward=default_factory(dict)` | 实例 |
 | `_tower_premium_loss` | mcts.py:68 | 逐塔累计塔损（凹形溢价+王塔闸门） | `player` | `float` |
 | `node_value` | mcts.py:99 | 塔血差+皇冠+资源账的值函数 | `battle, player_id, cfg` | `float` |
@@ -1282,7 +1282,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `_one_hot` | plan_space.py:89 | 名字→one-hot，未知取默认位 | `name, choices, default_idx=0, dtype=np.float32` | `np.ndarray` |
 | `PlanToken` | plan_space.py:99 | 战术意图 token dataclass | `macro_intent="cycle_and_wait", focus_region="own_center", suggested_card=None, bundle_size_hint=1, combo_hint=0, risk_profile=0.5, value_estimate=0.0, target_kind="none", placement_hint="none", opp_spell_threat="none", elixir_budget=1.0, hold_mask=0` | 实例 |
 | `PlanToken.intent` | plan_space.py:117 | 便捷构造 | `cls, name, region="own_center", **kw` | `PlanToken` |
@@ -1312,7 +1312,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `sub_position` | action_bundle.py:31 | 本地网格→世界坐标唯一换算 | `player_id, x, y` | `Position` |
 | `SubAction` | action_bundle.py:43 | 单卡子动作 dataclass | `kind="deploy", slot=0, x=0, y=0` | 实例 |
 | `SubAction.ability` | action_bundle.py:59 | 构造技能子动作 | `cls` | `SubAction` |
@@ -1368,7 +1368,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `belief_token_dim` | belief.py:36 | 无神经编码时 token 维度公式 | `deck` | `int` |
 | `_event_row` | belief.py:52 | 单条事件→行向量 | `card, x, y, dt` | `np.ndarray` |
 | `opp_event_token` | belief.py:63 | 最近 k 条事件展平（含 Δt） | `history, now=None, k=OPP_EVENT_K` | `np.ndarray` |
@@ -1428,34 +1428,34 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `_is_tower` | prophet.py:45 | 卡名是否含 Tower | `name` | `bool` |
 | `_region_from_intent` | prophet.py:49 | 旧 8 意图→region 映射 | `intent` | `str` |
 | `_units` | prophet.py:63 | 特权状态非塔且属卡表实体 | `fs, player_id` | `list` |
 | `_mean_x` | prophet.py:73 | 单位平均 x（空=9.0） | `units` | `float` |
 | `_threat_and_my_pressure` | prophet.py:78 | 特权威胁/我方压力统计 | `fs` | `(float,float)` |
-| `_closest_enemy` | prophet.py:92 | 最接近我方塔的敌单位 | `fs` | `dict|None` |
+| `_closest_enemy` | prophet.py:92 | 最接近我方塔的敌单位 | `fs` | `dict\|None` |
 | `_pressing_enemy` | prophet.py:102 | 有敌单位进半场/桥头 | `fs` | `bool` |
 | `_side` | prophet.py:107 | x→left/right | `x` | `str` |
 | `_own_region` | prophet.py:111 | x→own_left/right | `x` | `str` |
 | `_enemy_region` | prophet.py:115 | x→enemy_left/right | `x` | `str` |
 | `_opposite_enemy_region` | prophet.py:119 | 重心反侧进攻路 | `x` | `str` |
-| `_hand_slot` | prophet.py:124 | 卡在手牌槽位 1..4 | `cycle, card_name` | `int|None` |
-| `_spell_threat_in` | prophet.py:128 | 前 depth 张首张强法术 | `cycle, depth=6` | `str|None` |
-| `_pick_suggested` | prophet.py:140 | 按 intent 启发式选槽 | `fs, intent` | `int|None` |
+| `_hand_slot` | prophet.py:124 | 卡在手牌槽位 1..4 | `cycle, card_name` | `int\|None` |
+| `_spell_threat_in` | prophet.py:128 | 前 depth 张首张强法术 | `cycle, depth=6` | `str\|None` |
+| `_pick_suggested` | prophet.py:140 | 按 intent 启发式选槽 | `fs, intent` | `int\|None` |
 | `ProphetPlanner` | prophet.py:163 | 特权状态启发式先知 | — | 实例 |
-| `ProphetPlanner._soft_control` | prophet.py:168 | 压境威胁→软控法术 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._spell_trade` | prophet.py:183 | 高费后排→伤害法术 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._protect_backline` | prophet.py:206 | 保后排（含手牌预判） | `fs` | `PlanToken|None` |
-| `ProphetPlanner._pull` | prophet.py:254 | 血牛桥头带→拉扯 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._punish` | prophet.py:279 | 对手低圣水→另一路 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._push_commit` | prophet.py:302 | 坦克推进→跟输出 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._spell_finish` | prophet.py:325 | 后期低血塔→磨塔法术 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._setup_wait` | prophet.py:348 | 无压力+有坦克→蓄力 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._king_activate` | prophet.py:364 | 公主塔残血→激活王塔 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._anti_spell` | prophet.py:392 | 直读牌序法术→防溅射 | `fs` | `PlanToken|None` |
-| `ProphetPlanner._save_ace` | prophet.py:410 | 藏终结卡 hold_mask | `fs` | `PlanToken|None` |
-| `ProphetPlanner._cycle_small` | prophet.py:447 | 无压力+小费牌→过牌 | `fs` | `PlanToken|None` |
+| `ProphetPlanner._soft_control` | prophet.py:168 | 压境威胁→软控法术 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._spell_trade` | prophet.py:183 | 高费后排→伤害法术 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._protect_backline` | prophet.py:206 | 保后排（含手牌预判） | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._pull` | prophet.py:254 | 血牛桥头带→拉扯 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._punish` | prophet.py:279 | 对手低圣水→另一路 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._push_commit` | prophet.py:302 | 坦克推进→跟输出 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._spell_finish` | prophet.py:325 | 后期低血塔→磨塔法术 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._setup_wait` | prophet.py:348 | 无压力+有坦克→蓄力 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._king_activate` | prophet.py:364 | 公主塔残血→激活王塔 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._anti_spell` | prophet.py:392 | 直读牌序法术→防溅射 | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._save_ace` | prophet.py:410 | 藏终结卡 hold_mask | `fs` | `PlanToken\|None` |
+| `ProphetPlanner._cycle_small` | prophet.py:447 | 无压力+小费牌→过牌 | `fs` | `PlanToken\|None` |
 | `ProphetPlanner.plan` | prophet.py:464 | 优先链+旧 8 意图回退 | `full_state` | `PlanToken` |
 
 ---
@@ -1469,7 +1469,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **3) 核心数据结构/维度**：无张量；输入 `(battle, BeliefState, obs)`，输出 `PlanToken`。模块级常量（全部本文件定义）：
 
 | 常量 | 值 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `PRESSURE_THRESHOLD` | `2.0` | 51 |
 | `BRIDGE_Y` / `OWN_HALF_EDGE` / `LANE_SPLIT_X` / `LATE_S` | `16.0` / `15.0` / `9.0` / `120.0` | 54/55/56/57 |
 | `SOFT_CONTROL_CARDS` | `("Freeze","Vines","Tornado")` | 60 |
@@ -1497,10 +1497,10 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 **5) 符号清单**
 
 | 符号 | 文件:行 | 作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | `_is_tower` | belief_planner.py:118 | 卡名是否含 Tower | `name` | `bool` |
 | `_deployable_entity` | belief_planner.py:122 | 是否可部署单位/建筑 | `e` | `bool` |
-| `_unit_card` | belief_planner.py:133 | 卡名→Card（非卡名 None） | `name` | `Card|None` |
+| `_unit_card` | belief_planner.py:133 | 卡名→Card（非卡名 None） | `name` | `Card\|None` |
 | `_tanky_or_melee` | belief_planner.py:141 | 拉扯对象口径（建筑/高血/近战） | `c` | `bool` |
 | `_is_front_tank_name` | belief_planner.py:151 | 前排主体判定 | `name` | `bool` |
 | `_enemy_pressure` | belief_planner.py:159 | 双方半场推进压力 | `battle` | `(float,float)` |
@@ -1511,27 +1511,27 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 | `_own_region` | belief_planner.py:206 | x→own_left/right | `x` | `str` |
 | `_enemy_region` | belief_planner.py:211 | x→enemy_left/right | `x` | `str` |
 | `_opposite_enemy_region` | belief_planner.py:216 | 重心反侧进攻路 | `x` | `str` |
-| `_pick_suggested_card` | belief_planner.py:221 | 按 intent 启发式选卡 | `battle, player_id, belief, intent` | `int|None` |
-| `_hand_slot` | belief_planner.py:249 | 卡在手牌槽位 1..4 | `p, card_name` | `int|None` |
+| `_pick_suggested_card` | belief_planner.py:221 | 按 intent 启发式选卡 | `battle, player_id, belief, intent` | `int\|None` |
+| `_hand_slot` | belief_planner.py:249 | 卡在手牌槽位 1..4 | `p, card_name` | `int\|None` |
 | `_spell_cast_value` | belief_planner.py:253 | 法术落点估值（工具③） | `battle, player_id, card_name` | `(float,float,bool)` |
-| `_closest_threat` | belief_planner.py:309 | 最近我方塔的敌单位 | `battle` | 实体`|None` |
+| `_closest_threat` | belief_planner.py:309 | 最近我方塔的敌单位 | `battle` | 实体`\|None` |
 | `_threat_unit_is_pressing` | belief_planner.py:321 | 威胁是否已过河/桥头 | `e` | `bool` |
-| `_opp_spell_threat_of` | belief_planner.py:326 | 手牌后验→法术威胁 | `belief` | `str|None` |
+| `_opp_spell_threat_of` | belief_planner.py:326 | 手牌后验→法术威胁 | `belief` | `str\|None` |
 | `BeliefPlanner` | belief_planner.py:341 | 基于信念的规划器 | — | 实例 |
 | `BeliefPlanner.__init__` | belief_planner.py:344 | 存后验采样开关 | `self, use_posterior_sampling=False, n_samples=8` | `None` |
-| `BeliefPlanner._soft_control` | belief_planner.py:350 | 压境威胁→软控法术 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._spell_trade` | belief_planner.py:366 | 远程脆皮进半场→法术 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._protect_backline` | belief_planner.py:399 | 保后排（含信念预判） | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._pull` | belief_planner.py:449 | 拉扯/拦路（7g 口径） | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._punish` | belief_planner.py:510 | 读 belief 圣水→压反侧 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._push_commit` | belief_planner.py:534 | 前排推进→优先真后排 | `battle, p, threat, belief` | `PlanToken|None` |
+| `BeliefPlanner._soft_control` | belief_planner.py:350 | 压境威胁→软控法术 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._spell_trade` | belief_planner.py:366 | 远程脆皮进半场→法术 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._protect_backline` | belief_planner.py:399 | 保后排（含信念预判） | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._pull` | belief_planner.py:449 | 拉扯/拦路（7g 口径） | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._punish` | belief_planner.py:510 | 读 belief 圣水→压反侧 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._push_commit` | belief_planner.py:534 | 前排推进→优先真后排 | `battle, p, threat, belief` | `PlanToken\|None` |
 | `_ok` | belief_planner.py:555 | 跟牌候选判定闭包 | `card` | `bool` |
-| `BeliefPlanner._spell_finish` | belief_planner.py:582 | 后期低血塔→磨塔法术 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._setup_wait` | belief_planner.py:617 | 攒费窗口 hold_mask=1111 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._king_activate` | belief_planner.py:668 | 公主塔残血→激活王塔 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._save_ace` | belief_planner.py:698 | 藏 ace hold_mask | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._anti_spell` | belief_planner.py:734 | 信念法术威胁→防溅射 | `battle, p, threat, belief` | `PlanToken|None` |
-| `BeliefPlanner._cycle_small` | belief_planner.py:753 | 无压力+小费牌→过牌 | `battle, p, threat, belief` | `PlanToken|None` |
+| `BeliefPlanner._spell_finish` | belief_planner.py:582 | 后期低血塔→磨塔法术 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._setup_wait` | belief_planner.py:617 | 攒费窗口 hold_mask=1111 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._king_activate` | belief_planner.py:668 | 公主塔残血→激活王塔 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._save_ace` | belief_planner.py:698 | 藏 ace hold_mask | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._anti_spell` | belief_planner.py:734 | 信念法术威胁→防溅射 | `battle, p, threat, belief` | `PlanToken\|None` |
+| `BeliefPlanner._cycle_small` | belief_planner.py:753 | 无压力+小费牌→过牌 | `battle, p, threat, belief` | `PlanToken\|None` |
 | `BeliefPlanner.plan` | belief_planner.py:772 | 优先链+旧回退+拦截 hint | `battle, belief, obs=None` | `PlanToken` |
 
 ---
@@ -2151,7 +2151,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.2 `rl/action_bundle.py`（15 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `sub_position` | `rl/action_bundle.py:31` | 本地网格坐标→世界坐标唯一换算（P1 镜像） | `player_id: int, x: int, y: int` | `Position` |
 | 2 | `SubAction` | `rl/action_bundle.py:43` | 单卡子动作：kind/slot/本地 x,y | `—` | `—` |
 | 3 | `SubAction.ability`<br>（内嵌于 `SubAction`） | `rl/action_bundle.py:59` | 构造英雄技能子动作（kind=ability） | `cls` | `'SubAction'` |
@@ -2171,7 +2171,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.3 `rl/action_mask.py`（24 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_card_cost` | `rl/action_mask.py:30` | 实际出牌费用（Mirror 按引擎语义 = 上一张牌费用 + 1；无上一张牌 → None）。 | `player, card_name: str` | `Optional[float]` |
 | 2 | `_effective_card` | `rl/action_mask.py:39` | 引擎实际部署/校验的卡名（Mirror 重放上一张牌）。 | `player, card_name: str` | `str` |
 | 3 | `_slot_playable` | `rl/action_mask.py:46` | 单槽可出判定：王塔存活+在手牌前 4+费用足够 | `player, card_name: str, elixir: float` | `bool` |
@@ -2200,7 +2200,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.4 `rl/bayes_filter.py`（13 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `CycleBayesFilter` | `rl/bayes_filter.py:42` | 8 卡循环队列信念：O(1) 锁定流+粒子相 | `—` | `—` |
 | 2 | `CycleBayesFilter.__init__`<br>（内嵌于 `CycleBayesFilter`） | `rl/bayes_filter.py:45` | 存卡组/粒子数/RNG，均匀先验重采样 | `self, deck, n_particles: int=128, seed: int=0` | `—` |
 | 3 | `CycleBayesFilter.locked`<br>（内嵌于 `CycleBayesFilter`） | `rl/bayes_filter.py:57` | 是否处于精确锁定流（property） | `self` | `bool` |
@@ -2218,7 +2218,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.5 `rl/belief.py`（26 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `belief_token_dim` | `rl/belief.py:36` | 无神经编码时 belief_token 维度公式 | `deck` | `int` |
 | 2 | `_event_row` | `rl/belief.py:52` | 单条对手出牌事件→定长行向量 | `card, x, y, dt` | `np.ndarray` |
 | 3 | `opp_event_token` | `rl/belief.py:63` | 最近 k 条事件展平（含 Δt 陈旧度），前补零 | `history, now=None, k: int=OPP_EVENT_K` | `np.ndarray` |
@@ -2249,7 +2249,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.6 `rl/belief_planner.py`（35 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_is_tower` | `rl/belief_planner.py:118` | 卡名是否含 Tower | `name: str` | `bool` |
 | 2 | `_deployable_entity` | `rl/belief_planner.py:122` | 是否可部署单位/建筑（排除塔与弹道） | `e` | `bool` |
 | 3 | `_unit_card` | `rl/belief_planner.py:133` | 卡名→Card（KeyError 返回 None） | `name` | `—` |
@@ -2289,7 +2289,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.7 `rl/config.py`（23 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `TrainConfig` | `rl/config.py:98` | 训练配置数据类：超参、奖励权重、架构开关与路径方法 | `—` | `—` |
 | 2 | `TrainConfig.folder`<br>（内嵌于 `TrainConfig`） | `rl/config.py:244` | 返回 out_dir/<name> 输出目录 | `self` | `—` |
 | 3 | `TrainConfig.state_path`<br>（内嵌于 `TrainConfig`） | `rl/config.py:247` | 返回联赛状态 league_state.json 路径 | `self` | `—` |
@@ -2317,7 +2317,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.8 `rl/dashboard.py`（28 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `load_state` | `rl/dashboard.py:71` | 读取 JSON 状态文件，不存在返回 None | `path` | `—` |
 | 2 | `build_payload` | `rl/dashboard.py:78` | 组装联赛面板数据（agents/elo_history/round_stats） | `path` | `—` |
 | 3 | `scan_sweep_dirs` | `rl/dashboard.py:122` | 扫描 sweep 根目录得到策略目录列表 | `root` | `—` |
@@ -2350,7 +2350,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.9 `rl/decks.py`（7 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_engine_lookup` | `rl/decks.py:42` | 建"归一化卡名→引擎卡名"查询表（惰性单次） | `—` | `—` |
 | 2 | `normalize_card` | `rl/decks.py:53` | 数据集卡名 → 引擎卡名；无法映射返回 None。 | `name: str` | `—` |
 | 3 | `map_deck_cards` | `rl/decks.py:74` | 映射一副 8 卡卡组；未命中的卡槽用引擎卡池补位（确定性）。 | `cards, seed=0` | `—` |
@@ -2362,7 +2362,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.10 `rl/diagnostics.py`（5 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `print_safe` | `rl/diagnostics.py:37` | print 兜底：编码不支持的字符降级为 '?'，而不是抛 UnicodeEncodeError。 | `msg` | `—` |
 | 2 | `_gru_gate_stats` | `rl/diagnostics.py:59` | 手动复现 GRUCell 内部，返回候选 n 的 \|·\| 均值（饱和判据）。 | `policy, enc, h_prev` | `—` |
 | 3 | `gru_vitality` | `rl/diagnostics.py:80` | 测 GRU / value_head 的"活力"。 | `policy, frames, max_frames=96` | `—` |
@@ -2372,7 +2372,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.11 `rl/elo.py`（8 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `Elo` | `rl/elo.py:16` | Elo 评分系统：更新、评分表与 JSON 持久化 | `—` | `—` |
 | 2 | `Elo.__init__`<br>（内嵌于 `Elo`） | `rl/elo.py:17` | 初始化 K 系数、初始分与评分表 | `self, k: float=32.0, initial: float=1500.0` | `—` |
 | 3 | `Elo.ensure`<br>（内嵌于 `Elo`） | `rl/elo.py:22` | 确保成员有初始分并返回其评分 | `self, agent_id` | `float` |
@@ -2385,7 +2385,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.12 `rl/env_wrapper.py`（28 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `tower_total_hp` | `rl/env_wrapper.py:74` | 一方的总塔血 = 国王塔 + 两座公主塔（塔血归一化的分母；lv11 标准塔 = 10928）。 | `troop_hp: float, king_hp: float` | `float` |
 | 2 | `tower_value_mult` | `rl/env_wrapper.py:101` | 单位血价值倍数：凹形溢价 + 王塔贬值闸门。 | `hp_ratio: float, *, king: bool, princesses_alive: int, k: float=DEFAULT_TOWER_PREMIUM_K, king_gate: float=DEFAULT_KING_GATE` | `float` |
 | 3 | `tower_premium_k` | `rl/env_wrapper.py:121` | 从奖励字典取溢价强度（缺省 2.0；经 reward_to_env 透传可调）。 | `rw` | `float` |
@@ -2418,7 +2418,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.13 `rl/evaluate.py`（13 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_overtime_open` | `rl/evaluate.py:35` | 惰性 import 判加时窗口，避免循环依赖 | `battle` | `—` |
 | 2 | `_ece` | `rl/evaluate.py:41` | 按分箱计算置信度校准误差 ECE | `conf, acc, n_bins=10` | `—` |
 | 3 | `_plan_region_hit` | `rl/evaluate.py:52` | 粗判首部署格与 plan.focus_region 的半场/分边吻合 | `region: str, x: float, y: float` | `—` |
@@ -2436,13 +2436,13 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.14 `rl/export_replay.py`（1 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `main` | `rl/export_replay.py:23` | 跑对局并导出 EpisodeReplay pickle | `—` | `—` |
 
 ##### B.8.15 `rl/flow_league.py`（18 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `build_flow_pools` | `rl/flow_league.py:67` | 构建 6 个卡组池（三分类+全量+随机+main 全量） | `cfg, n_random_decks=30` | `—` |
 | 2 | `flow_pair_games` | `rl/flow_league.py:90` | 按全配对规则统计一次训练的总对局数 | `pools` | `—` |
 | 3 | `scale_pools` | `rl/flow_league.py:100` | 按固定种子把各卡组池缩小 factor 倍 | `pools, factor` | `—` |
@@ -2465,7 +2465,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.16 `rl/follower.py`（21 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `save_checkpoint` | `rl/follower.py:55` | 保存带元数据的 checkpoint（P0-5）。 | `policy, path` | `—` |
 | 2 | `load_checkpoint` | `rl/follower.py:67` | 加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。 | `path, hidden_dim=None, plan_dim=None, belief_dim=None, value_bypass=None, value_independent=None` | `—` |
 | 3 | `FollowerPolicy` | `rl/follower.py:154` | 跟随者策略网络：CNN+实体嵌入+GRU+多决策头 | `—` | `—` |
@@ -2491,7 +2491,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.17 `rl/human_play.py`（13 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_make_env` | `rl/human_play.py:52` | 建人机对战用 RLEnv（同副卡组且记 hidden） | `cfg, deck, seed` | `—` |
 | 2 | `load_policy` | `rl/human_play.py:58` | 加载 FollowerPolicy checkpoint（带元数据）。 | `path, hidden_dim=128` | `—` |
 | 3 | `HumanPlaySession` | `rl/human_play.py:63` | 一局人机对战：人出 ActionBundle，模型对手每 tick 应对；全程记录训练数据。 | `—` | `—` |
@@ -2509,7 +2509,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.18 `rl/launcher_menu.py`（9 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `ask` | `rl/launcher_menu.py:60` | 逐项问答：回车=默认值；输入 b/B=返回上一步；q/Q=退出。 | `prompt, default, cast=str, allow_back=True` | `—` |
 | 2 | `ask_yesno` | `rl/launcher_menu.py:81` | 是/否询问（支持 .. 返回上级） | `prompt, default=True` | `—` |
 | 3 | `pick` | `rl/launcher_menu.py:92` | 打印选项列表并让用户选序号；回车选 default_idx。 | `label, options, default_idx=0, extra=None` | `—` |
@@ -2523,7 +2523,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.19 `rl/league.py`（15 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `LeagueAgent` | `rl/league.py:24` | 联赛成员数据类：id/类型/策略/检查点/ELO | `—` | `—` |
 | 2 | `League` | `rl/league.py:32` | 联赛容器：成员表 + PFSP + Elo + 历史与统计持久化 | `—` | `—` |
 | 3 | `League.__init__`<br>（内嵌于 `League`） | `rl/league.py:33` | 初始化成员表、PFSP、Elo、历史与计数器 | `self, pfsp_beta: float=1.0, elo_k: float=32.0, seed: int=0` | `—` |
@@ -2543,7 +2543,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.20 `rl/mcts.py`（24 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `MCTSConfig` | `rl/mcts.py:43` | MCTS 配置：模拟次数/深度/叶推演/UCT 系数 | `—` | `—` |
 | 2 | `_tower_premium_loss` | `rl/mcts.py:68` | 逐塔累计塔损：凹形溢价+王塔存活闸门 | `player: PlayerState` | `float` |
 | 3 | `node_value` | `rl/mcts.py:99` | 值函数：塔血差+皇冠差+资源账（双倍期切权重） | `battle, player_id: int, cfg: MCTSConfig` | `float` |
@@ -2572,7 +2572,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.21 `rl/observation.py`（3 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `observe` | `rl/observation.py:87` | 返回玩家 player_id 的可见观测字典。 | `battle, player_id: int=0` | `dict` |
 | 2 | `hidden_labels` | `rl/observation.py:147` | 特权隐藏状态标签（只允许训练期使用，绝不进跟随者观测）。 | `battle, player_id: int=0` | `dict` |
 | 3 | `hidden_labels._ids`<br>（内嵌于 `hidden_labels`） | `rl/observation.py:156` | 卡名列表转实体 id 数组（未知名记 0） | `cards` | `—` |
@@ -2580,7 +2580,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.22 `rl/opponents.py`（14 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `build_card_pool` | `rl/opponents.py:49` | 过滤出引擎可部署的卡池（去王塔/0 费/非法类型） | `—` | `list` |
 | 2 | `sample_deck` | `rl/opponents.py:71` | 从卡池随机抽 8 张不重复卡组成卡组 | `rng, pool` | `list` |
 | 3 | `ScriptedPolicy` | `rl/opponents.py:76` | 脚本策略：掩码随机合法出牌，可作任意一侧对手 | `—` | `—` |
@@ -2599,13 +2599,13 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.23 `rl/overtime.py`（1 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `overtime_open` | `rl/overtime.py:30` | 加时（突然死亡）窗口是否仍应继续，绕过 max_ep_steps 在常规时间末的截断。 | `battle` | `—` |
 
 ##### B.8.24 `rl/pfsp.py`（5 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `PFSP` | `rl/pfsp.py:29` | PFSP 对手采样：按 (1−胜率)^β 加权随机抽对手 | `—` | `—` |
 | 2 | `PFSP.__init__`<br>（内嵌于 `PFSP`） | `rl/pfsp.py:30` | 校验并保存 beta/alpha/门禁参数，初始化 RNG 与胜率表 | `self, beta: float=1.0, seed: int=0, alpha: float=0.05, gate_hi: float=1.0, gate_penalty: float=1.0` | `—` |
 | 3 | `PFSP.update_winrate`<br>（内嵌于 `PFSP`） | `rl/pfsp.py:46` | 用 EMA 更新 (a 对 b) 的胜率 | `self, agent_a, agent_b, score_a: float, alpha: float=None` | `—` |
@@ -2615,7 +2615,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.25 `rl/plan_space.py`（7 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_one_hot` | `rl/plan_space.py:89` | 名字→one-hot 向量，未命中取 default_idx | `name, choices, default_idx=0, dtype=np.float32` | `np.ndarray` |
 | 2 | `PlanToken` | `rl/plan_space.py:99` | 战术意图 token：旧 21 维字段+v1 追加字段 | `—` | `—` |
 | 3 | `PlanToken.intent`<br>（内嵌于 `PlanToken`） | `rl/plan_space.py:117` | 便捷构造：指定 macro_intent 与 region | `cls, name, region='own_center', **kw` | `'PlanToken'` |
@@ -2627,7 +2627,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.26 `rl/ppo.py`（18 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `ReturnScaler` | `rl/ppo.py:41` | 回报尺度的运行统计（Welford 在线均值/方差），用于价值损失的量纲对齐。 | `—` | `—` |
 | 2 | `ReturnScaler.__init__`<br>（内嵌于 `ReturnScaler`） | `rl/ppo.py:48` | 记录 eps 并初始化 Welford 均值/方差统计 | `self, eps=1e-06` | `—` |
 | 3 | `ReturnScaler.update`<br>（内嵌于 `ReturnScaler`） | `rl/ppo.py:54` | 批量喂入一批回报（list/np.ndarray）。 | `self, values` | `—` |
@@ -2650,7 +2650,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.27 `rl/prophet.py`（28 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_is_tower` | `rl/prophet.py:45` | 卡名是否含 Tower | `name: str` | `bool` |
 | 2 | `_region_from_intent` | `rl/prophet.py:49` | 旧 8 意图→focus_region 映射 | `intent: str` | `str` |
 | 3 | `_units` | `rl/prophet.py:63` | 特权状态里的非塔且属卡表部署实体 | `fs, player_id: int` | `—` |
@@ -2683,7 +2683,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.28 `rl/replay.py`（11 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `EpisodeReplay` | `rl/replay.py:22` | 单局 replay 容器：逐步记录含隐藏标签的监督数据 | `—` | `—` |
 | 2 | `EpisodeReplay.start`<br>（内嵌于 `EpisodeReplay`） | `rl/replay.py:28` | 清空步列表并标记为采集中 | `self` | `—` |
 | 3 | `EpisodeReplay.record_step`<br>（内嵌于 `EpisodeReplay`） | `rl/replay.py:32` | 记录一步（obs/动作/奖励/对手出牌/可选 hidden） | `self, obs, bundle, reward, info, hidden=None` | `—` |
@@ -2699,7 +2699,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.29 `rl/run_league.py`（50 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_cuda_hint` | `rl/run_league.py:70` | CUDA 不可用时返回诊断提示，区分 CPU 构建与驱动问题 | `—` | `str` |
 | 2 | `resolve_device` | `rl/run_league.py:94` | 解析 --device 为实际设备（auto 按 CUDA 可用性） | `device: str` | `str` |
 | 3 | `LeagueGameRecorder` | `rl/run_league.py:108` | 逐局录像采集器：把每个决策步压成轻量帧供联赛回放 | `—` | `—` |
@@ -2754,7 +2754,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.30 `rl/selftest.py`（161 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `test_action_bundle_same_tick` | `rl/selftest.py:37` | 自检：同刻多卡正确打出并原子拒绝非法包 | `—` | `—` |
 | 2 | `test_action_bundle_ability` | `rl/selftest.py:66` | 自检：出牌与英雄技能同 tick 生效、无就绪英雄整包拒绝 | `—` | `—` |
 | 3 | `test_bayes_filter` | `rl/selftest.py:98` | 自检：贝叶斯粒子滤波后验收敛、下一张牌进 top3 | `—` | `—` |
@@ -2920,7 +2920,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.31 `rl/train_baseline.py`（9 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `SingleCardAdapter` | `rl/train_baseline.py:26` | 把 bundle 动作适配成旧式单卡动作 | `—` | `—` |
 | 2 | `SingleCardAdapter.__init__`<br>（内嵌于 `SingleCardAdapter`） | `rl/train_baseline.py:29` | 包装 RLEnv 并设 MultiDiscrete 动作空间 | `self, **env_kwargs` | `—` |
 | 3 | `SingleCardAdapter.reset`<br>（内嵌于 `SingleCardAdapter`） | `rl/train_baseline.py:34` | 直接转发内部环境 reset | `self, *, seed=None, options=None` | `—` |
@@ -2934,7 +2934,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.32 `rl/train_bc.py`（3 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `expert_bundle` | `rl/train_bc.py:40` | 规则专家：建议卡落到区域中心最近合法格 | `env, belief, bp, obs, rng` | `—` |
 | 2 | `collect` | `rl/train_bc.py:60` | 用专家策略采集 BC 样本 | `n_games, seed, policy, max_steps=600` | `—` |
 | 3 | `train_bc` | `rl/train_bc.py:86` | 做行为克隆并保存 checkpoint | `n_games=50, epochs=3, lr=0.001, hidden_dim=128, seed=0, out='follower_bc.pt', max_steps=600` | `—` |
@@ -2942,7 +2942,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.33 `rl/train_belief.py`（10 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `sample_bundle` | `rl/train_belief.py:33` | 从掩码随机采样一张卡与落点 | `mask, rng` | `—` |
 | 2 | `collect_replays` | `rl/train_belief.py:49` | 随机策略跑多局录带 hidden 标签回放 | `n_games, seed, opponent=None, max_steps=600` | `—` |
 | 3 | `_episode_arrays` | `rl/train_belief.py:72` | 单局回放转特征与两类标签数组 | `ep` | `—` |
@@ -2957,7 +2957,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.34 `rl/train_exploiter.py`（3 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_play_side0` | `rl/train_exploiter.py:27` | policy 以 p0 身份打整局返回赢家 | `env, policy, belief, bp, max_steps=300` | `—` |
 | 2 | `evaluate_winrate` | `rl/train_exploiter.py:56` | 换边评估 exploiter 对 main 胜率 | `exploiter, main, n_games=10, seed=0, max_steps=300` | `—` |
 | 3 | `main` | `rl/train_exploiter.py:89` | 训练 exploiter 评估并按阈值入联赛 | `—` | `—` |
@@ -2965,7 +2965,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.35 `rl/train_follower.py`（12 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `heuristic_opponent` | `rl/train_follower.py:33` | 返回脚本对手（p1 掩码随机出牌） | `env, rng=None` | `—` |
 | 2 | `heuristic_opponent._opp`<br>（内嵌于 `heuristic_opponent`） | `rl/train_follower.py:37` | 对手闭包：采样合法槽位与格子 | `obs` | `—` |
 | 3 | `FollowerOpponent` | `rl/train_follower.py:52` | 把 FollowerPolicy 包装成 p1 对手 | `—` | `—` |
@@ -2982,7 +2982,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.36 `rl/train_prophet.py`（12 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_build_priv` | `rl/train_prophet.py:35` | 构造归一化对手特权向量（12 维） | `env, obs` | `—` |
 | 2 | `ProphetEnv` | `rl/train_prophet.py:46` | 特权观测 gym 环境（obs+priv，单卡动作） | `—` | `—` |
 | 3 | `ProphetEnv.__init__`<br>（内嵌于 `ProphetEnv`） | `rl/train_prophet.py:49` | 包装 RLEnv 并扩展 priv 观测空间 | `self, **env_kwargs` | `—` |
@@ -2999,7 +2999,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.37 `rl/train_solo.py`（35 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_rand_anchor_warns` | `rl/train_solo.py:72` | 绝对强度警报（E1）：低于阈值返回告警列表（空=通过）。阈值未标定，先只报警。 | `winrate, floor=RAND_ANCHOR_WARN_FLOOR` | `—` |
 | 2 | `_make_rand_anchor` | `rl/train_solo.py:80` | 构造固定随机锚点策略（E1/E2 共用，权重种子 RAND_ANCHOR_SEED）。 | `cfg, belief_dim, device=None` | `—` |
 | 3 | `resolve_deck_set` | `rl/train_solo.py:107` | cfg.deck_set → (mirror_deck, deck_pool_for_defender)。 | `deck_set: str` | `—` |
@@ -3039,7 +3039,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ##### B.8.38 `rl/workers.py`（3 个符号）
 
 | 序号 | 函数/方法 | 文件:行号 | 一句话作用 | 关键参数（名字=默认值） | 返回 |
-|---|---|---|---|---|---|
+|---|---|---|---|---|--- |
 | 1 | `_payload` | `rl/workers.py:45` | 计算下一个决策步的 (obs, belief_tok, plan_vec)。 | `env, belief, bp, prophet, obs, rng` | `—` |
 | 2 | `_apply_opponent` | `rl/workers.py:54` | 按 spec 装配对手（脚本策略在 worker 本地重建并绑定 env）。 | `env, spec` | `—` |
 | 3 | `worker_main` | `rl/workers.py:71` | 跨进程 env 推演循环（独立进程入口，绕开 GIL 实现多核并行）。 | `worker_id, seed, reward_weights, in_q, out_q, card_level=None` | `—` |
@@ -3049,7 +3049,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 ### B.9 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | `eval_workers` 的生效默认值 | `rl/config.py:209` 的 dataclass 默认是 `min(16, os.cpu_count() or 1)`，而 CLI `--eval-workers` 的 help 文本写"默认 0=串行"（rl/run_league.py:1246-1248），两者矛盾；`economy` 预设未设置该字段（rl/config.py:344-364）⇒ 实际继承 dataclass 默认 | 跑一次 `--help` 与一次短 run，打印 `cfg.eval_workers`（或看启动日志"eval@0 … (并行worker=N)"，rl/train_solo.py:1489-1490） |
 | 2 | `PLAN_DIM` 到底是 57 还是 58 | `rl/plan_space.py:11-12` 的模块 docstring 写 "PLAN_DIM = 57"、"placement_hint(7)"，而 `PLACEMENT_HINTS` 实为 8 项（:65-74）、`PLAN_DIM = len(PlanToken().to_vector())`（:187）与 `to_vector` 的拼接（:155-160）在只读源码下算得 58 | 直接执行 `python -c "from rl.plan_space import PLAN_DIM; print(PLAN_DIM)"`（本文档不执行代码） |
 | 3 | `resolve_deck_set` docstring 与 `FOUR_DECK_SET` 不一致 | docstring 写 `"four"` = "速猪/皇家巨人/X弩/双线快攻"（rl/train_solo.py:111-113），而 `FOUR_DECK_SET` 实际是速猪 / 石头人 / X 弩 / 巨骷髅攻城槌（rl/opponents.py:30-46） | 以代码为准；docstring 待维护者更新，或确认是否存在历史别名表 |

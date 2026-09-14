@@ -88,7 +88,7 @@
 #### A.1.2 对外入口
 
 | 入口 | 位置 | 说明 |
-|---|---|---|
+|---|---|--- |
 | `BattleState.__init__(player_0, player_1, card_level=None)` | battle.py:2539 | 构造即铺设 6 座塔（battle.py:2556-2561） |
 | `BattleState.step(dt)` | battle.py:2652 | 单帧推进（A.4） |
 | `BattleState.deploy_card(player_id, card_name, position, _from_mirror=False)` | battle.py:2806 | 出牌/施法（返回 `False` = 未生效） |
@@ -103,7 +103,7 @@
 #### A.1.3 依赖方向
 
 | 模块 | 依赖 | 依据 |
-|---|---|---|
+|---|---|--- |
 | `battle.py` | `core.BlankEntity`、`player.PlayerState`、`arena.TileGrid`、`pathfinding_heap.{EntityPathfinder, position_to_cell, cell_to_position}`、`card_mechanics.*`、`card_utils.*`、`evolutions.*` | battle.py:1-8 |
 | `arena.py` | `core.Position`（arena.py:2）、`math` | arena.py:1-3 |
 | `core.py` | 仅 `dataclasses`/`math`（core.py:1-2） | — |
@@ -132,7 +132,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.2.1 场地尺寸与坐标范围
 
 | 常量 | 值 | 依据 |
-|---|---|---|
+|---|---|--- |
 | `TileGrid.width, height` | `18, 32`（格） | arena.py:9 |
 | `TileGrid.tile_size` | `100.0` | arena.py:10 |
 | 合法世界坐标 | `0 <= x < 18`、`0 <= y < 32` | arena.py:100-101 |
@@ -144,7 +144,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.2.2 关键坐标常量（原样抄录）
 
 | 常量 | 值 `(x, y)` | 依据 |
-|---|---|---|
+|---|---|--- |
 | `BLUE_KING_TOWER` | `Position(9.0, 3.0)` | arena.py:11 |
 | `BLUE_LEFT_TOWER` | `Position(3.5, 6.5)` | arena.py:12 |
 | `BLUE_RIGHT_TOWER` | `Position(14.5, 6.5)` | arena.py:13 |
@@ -174,7 +174,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 塔以**轴对齐矩形**参与占位与射程，忽略 `collisionRadius`：
 
 | 塔 | 中心 | 半宽 / 半高 | `player_id` | 依据 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | 蓝左公主塔 | `(3.5, 6.5)` | `1.5 / 1.5` | 0 | arena.py:40 |
 | 蓝右公主塔 | `(14.5, 6.5)` | `1.5 / 1.5` | 0 | arena.py:41 |
 | 蓝国王塔 | `(9.0, 3.0)` | `2.0 / 2.0` | 0 | arena.py:42 |
@@ -197,7 +197,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 **（a）`arena.get_deploy_zones` 的区间**（半开 `[x1,x2) × [y1,y2)`，判定见 arena.py:185）：
 
 | 玩家 | 区间 | 展开后实际格 | 开启条件 | 依据 |
-|---|---|---|---|---|
+|---|---|---|---|--- |
 | 0 | `(0, 1, 18, 15)` | `x 0..17, y 1..14` | 恒有 | arena.py:152 |
 | 0 | `(6, 0, 12, 6)` | `x 6..11, y 0..5` | 恒有（「己方王塔后 6 格，含边缘行」） | arena.py:153 |
 | 0 | `(0, 17, 9, 20)` | `x 0..8, y 17..19` | `players[1].left_tower_hp <= 0` | arena.py:157 |
@@ -218,7 +218,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 **（d）`battle.deploy_card` 内的另一套合法性判定**（battle.py:2865-2887，仅对 `card_info.type != 'spell'` 且卡名不是 `Miner` 时生效）：
 
 | 玩家 | 规则（原样） | 依据 |
-|---|---|---|
+|---|---|--- |
 | 0 | `y <= 1.0` 且（`x <= 6.0` 或 `x > 12.0`）⇒ `False` | battle.py:2873 |
 | 0 | `y >= 21.0` ⇒ `False` | battle.py:2874 |
 | 0 | `15.0 <= y < 21.0`：`x <= 9` 时红左塔存活 ⇒ `False`；否则红右塔存活 ⇒ `False` | battle.py:2875-2879 |
@@ -238,7 +238,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 镜像/翻转**只发生在观测编码层，且只对观测视角玩家 ≠ 0 时发生**：
 
 | 变换 | 方向 | 公式 | 依据 |
-|---|---|---|---|
+|---|---|---|--- |
 | 世界 → 本地网格（视角 0） | 不翻转 | `x = int(px)`、`y = int(py)` | environment.py:146 |
 | 世界 → 本地网格（视角 1，`observe(1)`） | 180° 点对称 | `x = 17 - int(px)`、`y = 31 - int(py)` | environment.py:147-149 |
 | 本地网格 → 世界（玩家 0 出牌） | 格心 | `Position(x + 0.5, y + 0.5)` | environment.py:94 |
@@ -256,7 +256,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.3.1 类职责一览
 
 | 类 | 基类 | 职责 | 依据 |
-|---|---|---|---|
+|---|---|---|--- |
 | `Entity` | — | 最基类：公共属性、索敌/换目标、伤害结算、buff 槽、投射物创建 | battle.py:13 |
 | `BasicCharacter`（`core.py`） | — | 默认钩子载体：`on_spawn` 空、`on_tick` 刷新 `battle_state`、`on_death` 空、`on_attack` 结算攻击 | core.py:16-69 |
 | `Troop` | `Entity` | 可移动实体：部署延迟、A* 行军、跳河、攻击、卡死自救、队形车道 | battle.py:759 |
@@ -277,7 +277,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.3.2 公共属性（`Entity.__init__`，battle.py:14-99）
 
 | 属性 | 初值 | 依据 |
-|---|---|---|
+|---|---|--- |
 | `id, position, player, card_name, battle_state` | 构造参数 | battle.py:16 |
 | `data` | `Card(card_name)` | battle.py:17 |
 | `level` | `self.data.level`（11-16） | battle.py:18 |
@@ -307,7 +307,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 子类追加：
 
 | 类 | 追加属性 | 依据 |
-|---|---|---|
+|---|---|--- |
 | `Troop` | `deploy_delay_remaining = data.deploy_time`、`path_blocked_counter`、`_stuck_check_pos/_time`、`_lane_offset`（由 `position._lane_offset` 带入）、`jumping_across_river`、`start_jumping_position`、`spawned`、`evo_hits`、`evo_extra_spawned` | battle.py:762-775 |
 | `Building` | `deploy_delay_remaining = data.deploy_time`、`lifetime_elapsed`、`target_id`、`tower_active=False`、`persistent`、`_tower_rect=0`（哨兵） | battle.py:1236-1244 |
 | `Projectile` | `target_position`、`initial_position`、`proj = data.projectile_data`、`rolling = bool(proj.roll_range)`、`homing`、`target`、`source`、`collision_radius`（法术取 `proj.radius`，否则 `0.3`）、`damage_dealt`、`damage_override` | battle.py:1420-1434 |
@@ -321,7 +321,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 - 6 座塔在 `__init__` 内按 `_spawn_entity` 顺序占用 id 1..6（battle.py:2556-2561）；因为 `_spawn_entity` 用计数器**覆盖**传入 id（battle.py:2606），实际映射为：
 
 | id | 实体 | 归属 | 依据 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | 红左公主塔 | 1 | battle.py:2556 |
 | 2 | 红右公主塔 | 1 | battle.py:2557 |
 | 3 | 蓝左公主塔 | 0 | battle.py:2558 |
@@ -382,7 +382,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.4.1 `step(dt)` 逐阶段顺序（严格按源码顺序）
 
 | # | 阶段 | 行号 | 内容 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | 终局短路 | battle.py:2653 | `if self.game_over: return`——终局后不再推进任何状态 |
 | 2 | 塔血同步 | battle.py:2654 → battle.py:2643-2650 | 实体 HP 写回 `PlayerState`：蓝 `king←entities[6]`、`left←[3]`、`right←[4]`；红 `king←[5]`、`left←[1]`、`right←[2]` |
 | 3 | 皇冠读取 | battle.py:2655-2656 | `p0 = players[0].get_crown_count()`、`p1 = players[1].get_crown_count()`（口径见 A.6） |
@@ -410,7 +410,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.4.2 `dt` 取值来源与固定步长
 
 | 事实 | 值 | 依据 |
-|---|---|---|
+|---|---|--- |
 | `step` 的 `dt` 唯一来源 | `self.battle.step(1/60)` | environment.py:102 |
 | 每次决策最多推进 | `for i in range(30)`，且每帧先判 `game_over` 提前 `break` | environment.py:98-100 |
 | 固定步长含义 | 30 × 1/60 = **0.5 秒/决策** | environment.py:80-81、environment.py:98 |
@@ -427,7 +427,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 按代码顺序：
 
 | # | 判定 | 行为 | 依据 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | 首击面纱 | `_evo_veil_time > 0` 且未用过 ⇒ 记 `_evo_veil_used=True`、`_evo_veil_timer=_evo_veil_time`、`invincible=True`，**本次伤害整段丢弃并 return** | battle.py:511-515 |
 | 2 | 无敌 | `invincible and not pierce_invincible` ⇒ return | battle.py:516 |
 | 3 | 伤害来源记录 | `source is not None` ⇒ `last_hit_by = source` | battle.py:517 |
@@ -445,7 +445,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.5.2 护盾 / 减伤 / 治疗
 
 | 机制 | 规则 | 依据 |
-|---|---|---|
+|---|---|--- |
 | 护盾 | `shield_health` 优先吸收；`data.shield_health` 初值来自 `shieldHitpoints` | battle.py:26、battle.py:540-542、card_utils.py:272 |
 | 减伤（buff 槽） | `apply_buff(damage_reduction=...)` 取 `max` 并给 `damage_reduction_timer` | battle.py:146-148 |
 | 减伤（fortify 独立槽） | 觉醒 `buffWhenNotAttackingData.damageReduction/100`；「脱战」= 距 `last_attack_time` 超过 `1.0` 秒 | battle.py:397-403 |
@@ -458,7 +458,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.5.3 攻击间隔与首次攻击
 
 | 项 | 规则 | 依据 |
-|---|---|---|
+|---|---|--- |
 | 初始冷却（首次攻击延迟） | `attack_cooldown = data.hit_speed - data.load_time` | battle.py:23（`load_time = loadTime/1000`，card_utils.py:241） |
 | 一次攻击后的冷却 | `attack_cooldown = data.hit_speed`（`on_attack` 末尾） | core.py:60 |
 | 冷却递减（移动中） | `attack_cooldown = max(hit_speed - load_time, attack_cooldown - dt*speed_buff*speed_debuff*hit_speed_mult*hit_speed_debuff)` | battle.py:1224 |
@@ -482,7 +482,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.5.4 投射物飞行与命中
 
 | 项 | 规则 | 依据 |
-|---|---|---|
+|---|---|--- |
 | 追踪目标点 | `homing=True` 时逐帧追 `self.target.position`，否则飞向发射瞬间的 `target_position` | battle.py:1588 |
 | 到达判定 | 到目标点距离 `<= proj.speed * dt` ⇒ `_on_arrive()` 且 `is_alive = False`；否则按 `speed*dt` 直线前进 | battle.py:1590-1594、battle.py:1630-1636 |
 | 滚动弹 | `rolling = bool(proj.roll_range)`；滚出 `roll_range` 即 `_chain` + 消亡；滚动途中对 `type(each).__name__` 不在排除集、非空中、非同方且 `中心距 < each.collision_radius + proj.radius` 的实体逐个伤害并推挤（`pushback`），同一目标只打一次（`damage_dealt`） | battle.py:1423、battle.py:1551-1586 |
@@ -505,8 +505,8 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.5.5 索敌与射程几何
 
 | 函数 | 规则 | 依据 |
-|---|---|---|
-| `in_attack_range(target)` | `dist = target.edge_distance_from(self.position)`；`'PrincessTower' in target.name` 时 `bonus = 0.5`（battle.py:588-591）；`_range_override` 存在则 `dist <= 覆盖值 + bonus`（battle.py:595-597）；`min_range` 存在且 `dist < min_range` ⇒ `False`（battle.py:599-600）；狙击临时射程命中 ⇒ `True`（battle.py:602-603）；否则 `dist <= data.range + bonus`（battle.py:604） |
+|---|---|--- |
+| `in_attack_range(target)` | `dist = target.edge_distance_from(self.position)`；`'PrincessTower' in target.name` 时 `bonus = 0.5`（battle.py:588-591）；`_range_override` 存在则 `dist <= 覆盖值 + bonus`（battle.py:595-597）；`min_range` 存在且 `dist < min_range` ⇒ `False`（battle.py:599-600）；狙击临时射程命中 ⇒ `True`（battle.py:602-603）；否则 `dist <= data.range + bonus`（battle.py:604） | |
 | `in_sight_range(target)` | 同 `bonus` 口径；狙击射程同步扩展；否则 `dist <= data.sight_range + bonus` | battle.py:605-616 |
 | `get_nearest_target` | 遍历 `Troop`/`Building`、存活、非同方、`targetable`、`min_range` 过滤、空地能力过滤、`in_sight_range` 过滤；建筑与部队分桶，`target_only_buildings` / 已在攻击范围 / 否则只看部队，最后按距离排序取最近 | battle.py:618-649 |
 | 无目标兜底 | 从 id 1..6 里挑**同侧**最近的敌方公主塔（`(tower.x - width/2) * (self.x - width/2) >= 0`）；同侧无存活则取 `best_any`；距离用 `edge_distance_from` | battle.py:700-727 |
@@ -530,7 +530,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 **血量**（本轮可确证的来源）：
 
 | 塔 | 数值 | 依据 |
-|---|---|---|
+|---|---|--- |
 | 公主塔 / 国王塔 `PlayerState` 默认三塔血 | `(4824, 3052, 3052)`（顺序：king, left, right） | player.py:6、player.py:10 |
 | 国王塔基值 | `hitpoints = 2100`（硬编码表） | card_utils.py:40 |
 | 国王塔其它硬编码数值 | `hitSpeed 1000`、`damage 109`、`sightRange 7000`、`range 7000`、`collisionRadius 1400`、`deployTime 3300`、`loadTime 700`、弹道 `KingProjectile speed 600 / damage 109` | card_utils.py:41-53 |
@@ -542,7 +542,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### A.6.2 国王塔激活（`tower_active`）
 
 | 触发 | 条件 | 依据 |
-|---|---|---|
+|---|---|--- |
 | 自身受击 | `Building.take_damage` 内 `data.name == 'KingTower'` 且未激活 ⇒ 置 `True` | battle.py:1266-1271 |
 | 同方公主塔阵亡 | `on_death` 内 `entity.name == 'King_PrincessTowers'` ⇒ 把同方 `KingTower` 置 `True` | battle.py:3148-3154 |
 
@@ -564,7 +564,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 `winner` 初值 `None`、`game_over` 初值 `False`（battle.py:2547-2548）；**全部置位都只发生在 `step` 的阶段 4**（本文件内 grep `game_over|winner` 无其它写入点）：
 
 | # | 条件 | 结果 | 依据 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | `p0 == 3`（玩家 0 三塔全失） | `game_over=True`，`winner=1`，`return` | battle.py:2659-2662 |
 | 2 | `p1 == 3` | `game_over=True`，`winner=0`，`return` | battle.py:2663-2666 |
 | 3 | `300 > time >= 180` 且 `p0 > p1` | `game_over=True`，`winner=1`，`return` | battle.py:2667-2671 |
@@ -589,7 +589,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 ### A.7 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | 半格寻路网格的坐标变换（`position_to_cell` / `cell_to_position` 的具体公式） | 定义在 `pathfinding_heap.py`，不在本轮允许阅读的源码清单内；`battle.py` 只显示网格为 36×64（battle.py:3033-3036），`battle.py:4` 仅导入函数名 | 允许阅读 `pathfinding_heap.py`（或让作者给出该文件的行号引用）；可先看 `docs/_survey/parts/G037.md` 的记载再回源码核验 |
 | 2 | `TileGrid.tile_size = 100.0` 的用途 | 该常量在 `arena.py`/`battle.py` 内定义后无任何读取点（本目录 `*.py` grep 仅命中 arena.py:10） | 全仓（含渲染层 `new_visualization.py`）搜 `tile_size` |
 | 3 | `arena.can_deploy_at(is_spell=True, spell_obj=...)` 的行为 | arena.py:181 调用的 `self._is_rolling_projectile_spell(...)` 在 `arena.py`（209 行）内未定义，全仓亦未找到 Python 定义；当前唯一调用方传 `is_spell=False`（battle.py:2855），该分支从未执行 | 查 `spell_module.py:261` 的调用参数（不在本轮清单）；或让作者确认该方法是否被删除 |
@@ -623,7 +623,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### B.1.1 谁需要寻路
 
 | 主体 | 是否走 A* | 依据 |
-|---|---|---|
+|---|---|--- |
 | 地面 `Troop` | **是**，`Troop.update` 里唯一 A* 调用方 | `battle.py:1176-1197` |
 | 空中单位（`data.is_air_unit=True`） | **否**，直接 `move_towards(current_target.position)` | `battle.py:1176-1177` |
 | 跳河状态（`jumping_across_river`） | **否**，仍走 `move_towards`；跳河时临时置 `data.is_air_unit=True` | `battle.py:1123-1126, 1169-1177` |
@@ -635,7 +635,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 **输入**（`EntityPathfinder.__init__`，`pathfinding_heap.py:37-45`）：
 
 | 参数 | 用途 |
-|---|---|
+|---|--- |
 | `entity` | 取 `entity.position`（起点）、`entity.data.collision_radius`、`entity.data.range`、`entity.data.is_air_unit` |
 | `target` | 取 `target.position`、`target.edge_distance_from(pos)`（目标边缘距离）、`target._tower_rect`（塔矩形） |
 | `battle_state` | 只用来调 `battle_state.pathfind_ground_walkable(pos, radius)` |
@@ -648,7 +648,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 全仓只有 `battle.py` 导入并调用：
 
 | 位置 | 内容 |
-|---|---|
+|---|--- |
 | `battle.py:4` | `from pathfinding_heap import EntityPathfinder, position_to_cell, cell_to_position` |
 | `battle.py:1180` | `if not self.path:` → 重算全程路径 |
 | `battle.py:1182` | `elif self.in_sight_range(current_target) and self.battle_state.tick % 10 == 0:` → 目标在视距内时每 10 tick 刷新 |
@@ -673,7 +673,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### B.2.1 两套坐标系
 
 | 层 | 尺寸 | 定义 |
-|---|---|---|
+|---|---|--- |
 | 世界/竞技场 | 18 × 32（`width, height = 18, 32`） | `arena.py:9`；`is_valid_position` 判 `0 <= x < 18 and 0 <= y < 32`（`arena.py:100-101`） |
 | 寻路网格 | 36 × 64 **半格** | `position_to_cell = (floor(2x), floor(2y))`（`pathfinding_heap.py:13-15`）；反向 `cell_to_position = ((x+0.5)/2, (y+0.5)/2)`，带 `cell_cache`（`pathfinding_heap.py:17-21`） |
 
@@ -689,7 +689,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 代价映射（`pathfinding_heap.py:132-147`）：
 
 | 字符 | 地面 `tile_cost` | 空中 `tile_cost` |
-|---|---|---|
+|---|---|--- |
 | `W` | 800 | 7 |
 | `.` | 5（heap 版）／8（`pathfinding.py`，`pathfinding.py:109-110`） | 同左 |
 | 其它（含 `1`/`2`） | 5 | 5 |
@@ -707,7 +707,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### B.2.3 `arena.TileGrid` 的通行性
 
 | 判定 | 规则 | 行号 |
-|---|---|---|
+|---|---|--- |
 | 边界 | `0 <= x < 18 and 0 <= y < 32` | `arena.py:100-101` |
 | `BLOCKED_TILES` | 河岸两端 `(0,15)(0,16)(1,15)(1,16)`、`(16,15)(16,16)(17,15)(17,16)`；河中央 `x∈[5,13) × y∈[15,17)`；上下底边各 6 格围栏 `y=0/y=31` 且 `x∈[0,6)∪[12,18)` | `arena.py:21-34` |
 | 河流/桥 | `RIVER_Y1 = 15.0`、`RIVER_Y2 = 16.0`；`y ∈ [15.0, 16.0]` 时仅 `2.0 <= x < 5.0`（左桥）或 `13.0 <= x < 16.0`（右桥）可走 | `arena.py:113-116`；桥常量 `LEFT_BRIDGE=(3.5,16.0)`、`RIGHT_BRIDGE=(14.5,16.0)`（`arena.py:17-18`） |
@@ -723,7 +723,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### B.2.4 两套 walkability API（容易混淆，务必区分）
 
 | 函数 | 判定 | 行号 | 谁用 |
-|---|---|---|---|
+|---|---|---|--- |
 | `pathfind_ground_walkable(pos, mover_radius)` | `arena.is_walkable(pos)` **且** `building_cache[x][y] > mover_radius` | `battle.py:3053-3056` | **只被 A* 用**（`pathfinding_heap.py:83, 93, 128`） |
 | `ground_walkable(pos, mover_radius)` | `arena.is_walkable(pos)` **且** 非建筑/塔占位（活体列表 + 塔矩形） | `battle.py:3058-3060` | 非寻路代码：投射物击退与滚动命中（`battle.py:1578, 1929`）、机制类落点（`card_mechanics.py:1018, 1183, 1519`）、`ensure_walkability`（`battle.py:2590`） |
 
@@ -746,7 +746,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 #### B.3.1 清单
 
 | 名字 | 行号 | 说明 |
-|---|---|---|
+|---|---|--- |
 | 模块级 `contents` | 6-8 | 读入 `tilemap_lane_grid.txt`（64 行 × 36 列） |
 | `cell_cache` / `neighbor_cache` | 10-11 | 世界坐标缓存 / 邻居表缓存 |
 | `position_to_cell(position)` | 13-15 | 世界 → 半格 |
@@ -754,7 +754,7 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 | `get_neighboring_points(x, y)` | 23-33 | 8 邻域；越界 `nx<0 or ny<0 or nx>=36 or ny>=64` 丢弃；结果缓存 |
 | `class EntityPathfinder` | 36 | 见下 |
 | `.__init__(entity, target, battle_state)` | 37-45 | 状态初始化 |
-| `.heuristic(cell)` | 47-50 | `10 * max(|Δx|, |Δy|)`（Chebyshev × 10） |
+| `.heuristic(cell)` | 47-50 | `10 * max(\|Δx\|, \|Δy\|)`（Chebyshev × 10） |
 | `._target_footprint_radius()` | 52-63 | 塔取 `_tower_rect` 半轴较大者，否则 `data.collision_radius` |
 | `.calculate()` | 65-160 | 目标格生成 + A* |
 | `__main__` 演示 | 162-172 | 直接构造 `BattleState` 冒烟 |
@@ -823,7 +823,7 @@ grep -rn --include=*.py -e "import pathfinding" -e "from pathfinding" -e "pathfi
 #### B.4.2 与 B.3 的逐项差异
 
 | 维度 | `pathfinding_heap.py`（在用） | `pathfinding.py`（未在用） |
-|---|---|---|
+|---|---|--- |
 | 开放集 | `heapq` 二叉堆 + 惰性删除（`:114-124`） | `set` + 每次 `min(open_set, key=f)` 线性扫描（`pathfinding.py:88, 93-97`） |
 | 邻居 | `neighbor_cache` 缓存（`:11, 23-33`） | 每次 `yield` 生成器（`pathfinding.py:25-31`） |
 | 启发式 | 单目标 `10*max(Δ)`（`:47-50`） | **goals 集合上的 min**：`min(10*max(...) for gx,gy in self.goals)`（`pathfinding.py:44-49`） |
@@ -855,7 +855,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 #### B.5.1 `sight_range` / `range` 字段来源
 
 | 字段 | 来源 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `Card.sight_range` | `summonCharacterData.sightRange / 1000` | `card_utils.py:248` |
 | `Card.range` | `summonCharacterData.range / 1000` | `card_utils.py:247` |
 | `Card.min_range` | 数值表行 `minimum_range / 1000`（Mortar/GoblinCannon/BarbarianLauncher=3.5） | `card_utils.py:314-315` |
@@ -945,7 +945,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 #### B.5.7 法术索敌 vs 单位索敌
 
 | 维度 | 单位/建筑 | 法术 |
-|---|---|---|
+|---|---|--- |
 | 目标是什么 | 实体 id（`target_id`），持续跟踪 | **坐标**（落点），无 `target_id` 语义 |
 | 命中判定 | `edge_distance_from ≤ range`（边缘） | 罩圈判定：`中心距 ≤ radius + 目标碰撞半径`（`battle.py:1785-1786`） |
 | 视距过滤 | 有（`sight_range`） | **无**（`AreaEffect._pulse` 遍历全实体，`battle.py:1788-1831`） |
@@ -990,7 +990,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 #### B.6.2 触发点（钩子调度位置）
 
 | 钩子 | 调度位置 | 说明 |
-|---|---|---|
+|---|---|--- |
 | `on_spawn()` | `battle.py:53`（`Entity.__init__` 末尾） | 部署即触发 |
 | `on_tick(dt)` | `Entity.update → self.entity_holder.on_tick(dt)`（`battle.py:362`） | 每帧；`Troop.update` 在冰冻期会提前 `return`，因此 `freeze_timer > 0` 时 `on_tick` 不被调用（`battle.py:1101-1104`） |
 | `on_attack(current_target)` | `Troop.update` 攻击分支（`battle.py:1226-1227`） | 冷却到 0 时由 holder 结算 |
@@ -1008,7 +1008,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 **基础机制族**
 
 | 类 | 行号 | 钩子 | 机制 / 关键数值 |
-|---|---|---|---|
+|---|---|---|--- |
 | `Ghost` | 8 | on_tick, on_attack | 隐身：`targetable=False`；显形后 `EVOLVED_INVIS_DELAY = 2.0`，基础取 `buffWhenNotAttackingTime`(缺省 1800ms)（`card_mechanics.py:15, 43-45`） |
 | `Witch` | 66 | on_tick | 每 `spawnPauseTime`（缺省 7000ms）出 4 只 Skeletons，首波 1.0s（`card_mechanics.py:69, 78-87`） |
 | `Balloon` | 89 | on_death | 死亡生成 `TimedExplosive`（`card_mechanics.py:90-93`） |
@@ -1032,7 +1032,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 **冠军能力族（`_HeroBase`，`card_mechanics.py:315`）**
 
 | 类 | 行号 | 机制 / 关键数值 |
-|---|---|---|
+|---|---|--- |
 | `SkeletonKing` | 319 | 灵魂召唤：`min(6 + souls, 16)`，前摇 0.9s，每 0.25s 放 1 只，半径取 `OFFICIAL_OVERRIDES['SkeletonKing']['spawn_radius']`(缺省 3.5)，角度步进 2.399963（`card_mechanics.py:320-352`） |
 | `ArcherQueen` | 355 | 隐身斗篷 3.5s，`hit_speed_mult=2.8`，`speed_mult=0.75`（`card_mechanics.py:356-372`） |
 | `GoldenKnight` | 375 | 连环突进：`dash_remaining = 10`，每段 5.5 格内最近未突进目标，伤害 `131 × level_scale`，命中公主塔即停（`card_mechanics.py:375-413`） |
@@ -1044,7 +1044,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 **M8 Elite17（Hero）族**（`HERO_CLASSES` 表见 `card_mechanics.py:1562-1579`）
 
 | 类 | 行号 | 关键数值 / 要点 |
-|---|---|---|
+|---|---|--- |
 | `HeroKnight` | 900 | 嘲讽 `tauntRadius` 内敌军 + 护盾 `shieldValue`（`elite17_data` 表） |
 | `HeroMusketeer` | 932 | 前方 `frontOffset` 放炮塔，落地 `spawnDamage`、`spawnRadius` |
 | `HeroMiniPekka` | 948 | 煎饼进度 `meterSeconds`/`onHitProgress`、`maxMeter`；吃饼等级 `levelsByMeter`，`mult = 1.1**steps`，回复 `healPct` |
@@ -1065,7 +1065,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 **勘误/专项族**
 
 | 类 | 行号 | 钩子 | 机制 / 关键数值 |
-|---|---|---|---|
+|---|---|---|--- |
 | `ElectroGiant` | 1584 | on_damaged | 反射 `reflectedAttackDamage`(缺省 75)×`level_scale` + 眩晕 `reflectedAttackBuffDuration`(缺省 500ms)；半径 `reflectedAttackRadius`(缺省 2000)/1000；冰冻期不反射 |
 | `_AttackStunMixin` | 1603 | on_attack | 命中部队附 `_stun_time = 0.5` 眩晕 |
 | `ElectroWizard` | 1613 | on_spawn | 落地 3.0 格 / `75×level_scale` / 0.5s 眩晕 |
@@ -1094,7 +1094,7 @@ if getattr(self.target, 'persistent', False) and getattr(self.target, 'id', 99) 
 `deploy_card` 先做**类型无关**检查，再按法术子类分流（`battle.py:2857-2994`）：
 
 | 分支 | 条件 | 行号 | 产物 |
-|---|---|---|---|
+|---|---|---|--- |
 | BarbLog 专属 | `card_name == 'BarbLog' and not _from_mirror` → `arena.can_deploy_at(..., is_spell=False)` | 2854-2856 | 非法直接 `return False`（**唯一有部署区限制的法术**） |
 | Lightning | 硬编码分支 | 2892-2895 | `_cast_lightning(player, position)`（`battle.py:2783-2804`） |
 | 区域持续出兵（墓园类） | `srow['spawn_character']` | 2896-2911 | `radius` 缺省 3000/1000、`duration` 缺省 5000/1000、`interval` 缺省 500/1000，`count = int((duration−initial)/interval)`，黄金角 2.399963 散布，`delayed_spawn` |
@@ -1111,7 +1111,7 @@ BarbLog 以外的法术不调 `can_deploy_at`。⇒ 直接调用 `deploy_card` �
 构造（`battle.py:1728-1783`）：
 
 | 参数 | 取值/缺省 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `radius` | `spells[card].radius`，缺省 3000 → `/1000` | 1744 |
 | `lifetime` | `OFFICIAL_OVERRIDES.duration` 或 `life_duration/1000` | 1745 |
 | `tick` | `OFFICIAL_OVERRIDES.tick` 或 `hit_speed/1000`，`or 0.5` | 1746 |
@@ -1132,7 +1132,7 @@ _in_radius(e) := e.position.distance_to(self.position) <= self.radius + e.data.c
 `only_enemies` / `only_own_troops` / `ignore_buildings`；`_in_radius`。然后按 `buff_name` 分发：
 
 | `buff_name` | 效果 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `ZapFreeze` | `apply_buff(stun=buff_time, retarget=True)` | 1798-1799 |
 | `Freeze` | 整场只施加一次（`stun_applied` 闸门） | 1800-1804 |
 | `Earthquake` / `Poison` | 减速 `speed_mult`，时长 `buff_time or 1.0` | 1805-1808 |
@@ -1190,7 +1190,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 #### B.7.6 `spell_module.py`：法术知识查询服务（三层 API）
 
 | 层 | 函数 | 行号 | 口径 |
-|---|---|---|---|
+|---|---|---|--- |
 | 静态档案 | `get_spell_profile(card, level)` | 204-210 | 按 `(卡名, 等级)` 惰性缓存 `_PROFILE_CACHE` |
 | 落点估值 | `evaluate_cast(battle, pid, card, pos)` | 235-296 | **零推演**静态预测；命中式 `中心距 > radius + col` 即否（`spell_module.py:273`） |
 | 引擎实测 | `engine_resolution(battle, pid, card, pos)` | 95-139 | `deepcopy` → `deploy_card` → `step(dt)` 到施法实体消亡（`max_t=15.0`, `dt=1/60`），逐实体 hp 差 |
@@ -1214,7 +1214,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 #### B.7.7 塔伤修正汇总
 
 | 位置 | 修正 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `AreaEffect._pulse` | 名字含 `King`/`PrincessTower` → `damage_per_tick × crown_pct` | `battle.py:1819-1822` |
 | `AreaEffect._pulse` | 普通建筑 → `× building_mult`（Earthquake `building_damage_percent=350` → ×4.5） | `battle.py:1823-1824`（说明见 `battle.py:1775-1776`） |
 | `AreaEffect.update` | Rage 对建筑 `×0.3` | `battle.py:1857-1860` |
@@ -1228,7 +1228,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 #### B.7.8 命中判定公式对照
 
 | 实现 | 公式 | 行号 |
-|---|---|---|
+|---|---|--- |
 | `AreaEffect._in_radius` | `中心距 ≤ radius + 目标碰撞半径` | `battle.py:1785-1786` |
 | `Projectile._deal_splash_damage` | 同上 | `battle.py:1611-1612` |
 | `spell_module.evaluate_cast` | 同上 | `spell_module.py:273` |
@@ -1265,7 +1265,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 `_position_legal` 步骤（`rl/action_mask.py:382-438`）：
 
 | 序 | 条件 | 结果 | 行号 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | 卡是法术 | 进法术子流程（下同） | 394 |
 | 1a | 贴已毁敌方塔本体 | False | 395-396 |
 | 1b | 伤害型且半径 > 0 且罩不到存活敌方目标 | False | 397-400 |
@@ -1302,7 +1302,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 引擎侧（`battle.py:2806-2887`）与掩码逐条对照：
 
 | 校验项 | 引擎 | 掩码 | 是否一致 |
-|---|---|---|---|
+|---|---|---|--- |
 | 手牌/圣水/王塔 | `can_play_card`（`player.py:36-39`：`cycle[:4]` + `elixir >= Card.elixir` + `king_tower_hp > 0`） | `_slot_playable`（`action_mask.py:46-56`） | 一致（除 Mirror 动态费） |
 | 建筑/塔占位 | `is_position_occupied_by_building(position, 0)`（`battle.py:2867`） | `(pos, 0.0)`（`action_mask.py:406`） | 一致 |
 | 王塔后禁建筑 | `card_info.type == 'building'`（`battle.py:2869`） | `card_info.type == "building"`（`action_mask.py:409`） | 一致 |
@@ -1318,7 +1318,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 比较 `legal_cells[y,x]` 与 `deepcopy` 后 `deploy_card` 的返回值）：
 
 | 卡 | mask=True 格数 | 「掩码 False / 引擎 True」 | 「掩码 True / 引擎 False」 |
-|---|---|---|---|
+|---|---|---|--- |
 | `Knight` | 224 | 0 | 0 |
 | `Giant` | 224 | 0 | 0 |
 | `Cannon`（建筑） | 220 | 0 | 0 |
@@ -1348,7 +1348,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 对同一张卡结论不同（会话内实测）：
 
 | 卡 | `action_mask._spell_deals_damage` | `spell_module._deals_damage` |
-|---|---|---|
+|---|---|--- |
 | `Zap` / `Poison` / `Tornado` / `Earthquake` / `Freeze` / `Heal` | False | True |
 | `Arrows` / `Fireball` | True | True |
 | `Lightning` / `Rage` / `BarbLog` / `Log` / `GoblinBarrel` / `Mirror` | False | False |
@@ -1358,7 +1358,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 #### B.8.5 禁放区差异（按卡类）
 
 | 卡类 | 禁放区 |
-|---|---|
+|---|--- |
 | 部队（非 Miner） | 己方半场（P0：`y ∈ (1,21)` 内、且 `y ≥ 15` 时要求对应敌方公主塔已破）；底边 `y ≤ 1` 仅 `6 < x ≤ 12`；引擎与掩码同式（`battle.py:2872-2879`；`action_mask.py:411-422`） |
 | Miner | **全场**（含敌半场），仅受塔/建筑占位与边界限制（`battle.py:2871-2872`）；掩码未实现该例外 |
 | 建筑 | 部队规则 + 王塔身后 1 格宽禁区 `(7,0)-(11,1)`（P0）/ `(7,31)-(11,32)`（P1）（`arena.py:86-98`；`battle.py:2869`；`action_mask.py:409`） |
@@ -1371,7 +1371,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 ### B.9 本部分待确认清单
 
 | # | 条目 | 无法确认的原因 | 要确认需要什么 |
-|---|---|---|---|
+|---|---|---|--- |
 | 1 | `pathfinding.py` 是否存在**仓库外**调用方 | 只能对本仓 grep；仓外/部署脚本不可见（本仓内已确认无 import 方：`battle.py:4` 导入的是 `pathfinding_heap`） | 部署清单/外仓引用检索；或直接删除前的 owner 确认 |
 | 2 | `pathfinding.py:61-62` 的 `self.battle_state` 未赋值错误是否曾被触发/修复过 | 该分支在现有代码里不可达（模块无调用方），无运行期证据 | `git log -p src/clasher_new/pathfinding.py`（本部分未允许运行历史挖掘）或恢复调用后复现 |
 | 3 | `tilemap_lane_grid.txt` 里 `W` 代价 800（地面）是否真的只对桥最外 16 个可走半格生效 | 会话内只实测了「可走 W 格 = 16 个」（`nx∈{4,9,26,31} × ny∈{30..33}`），未跑路径对比 | 端到端路径取证：同一单位在桥面不同 x 起点的 A* 路径对比 |
