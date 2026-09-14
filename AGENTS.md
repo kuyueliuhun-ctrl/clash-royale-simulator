@@ -97,7 +97,11 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/summarize_solo_run.py` | 长 run 诊断汇总（全点表 / 对照 / 锚点 / 对手池 / gates / 异常计数） |
 | `scripts/diag_critic_ev.py` | 5 种 EV 口径 + 探针（`--probe/--predict`） |
 | `scripts/diag_value_head.py` `diag_encoder_scale.py` `diag_gru_ablation.py` | h/enc 方差、GRU 门、融合层尺度、归一化对照 |
-| `scripts/forensics_response.py` `_forensics_cycling.py` | 防守响应/接敌取证；cycling 取证 |
+| `scripts/forensics_response.py` `_forensics_cycling.py` | 防守响应/接敌取证；cycling 取证（⚠️ 其 `y≥20` 的"幽灵动作"口径**已被推翻**，见【否证 X-15】） |
+| `scripts/forensics_card_usage.py`（2026-09-14） | **回放行为取证**：卡牌使用分布 / 圣水（部署前·后·全帧）/ 部署节奏 / **费用可达性表** / 合法性核验。**只读**，11 个回放文件约 10 秒 |
+| `scripts/probe_value_ln.py`（2026-09-14） | **价值通路逐层可读性阶梯**（`fused→pre_ln→relu_ln→post_ln→mlp0_post→value`）；`--raw-obs` 加参考集、`--alpha-grid {v1,v2}`。**只读**，默认 `torch.manual_seed(seed)`（闸 10） |
+| `scripts/probe_reward_composition.py`（2026-09-14） | **逐帧奖励分量分解**（内存包装 `compute_reward`，不改代码）；拆 crown/edw/tower/unit/terminal 五项。**只读** |
+| `scripts/value_displacement_scan.py` | 逐窗 `‖ΔW‖/‖W‖` 参数位移指纹（R14 的 M1/M2 判别） |
 
 > **脚本对手陷阱**：`ScriptedPolicy(mode="heuristic")` 实为 **mask 随机**（P0-3 时代占位）；
 > 要"会防守的脚本对手"必须用 `SelfDefenderPolicy`——其反制落点是**世界坐标**，
