@@ -226,7 +226,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `docs/four_decks_manual.md` | 四卡组逐卡手册（速猪/石头人/X弩/巨骷髅攻城槌） | 已定稿，供 `--deck-set four` |
 | `docs/cycling_league_plan_2026-09-13.md` / `docs/d1_long_100k_prereg_2026-09-13.md` | D1 与 100k 的**预注册** | 均已执行并判读（C5/C6） |
 | `docs/eval_cadence_c_2026-09-13.md` | 评估节奏 C 方案（密锚点 + 稀全块） | 已落地（`--anchor-every`，默认关） |
-| **[`docs/lessons_ledger.md`](docs/lessons_ledger.md)** | **经验台账（冻结版）**：15 条被推翻的结论 + 10 类读数病理 + 9 道检测闸门 + R14 参数位移指纹（论文 Table 1 + 附录底稿）；**不引入新数字**，数字全部指向证据文件 | **已冻结（2026-09-13）**；新增经验只追加、被推翻的保留标注 |
+| **[`docs/lessons_ledger.md`](docs/lessons_ledger.md)** | **经验台账（冻结版）**：16 条被推翻的结论 + 11 类读数病理 + 10 道检测闸门 + R14 参数位移指纹（论文 Table 1 + 附录底稿）；**不引入新数字**，数字全部指向证据文件 | **已冻结（2026-09-13）**；新增经验只追加、被推翻的保留标注 |
 | **[`docs/pomdp_ceiling_v2_verdict_2026-09-13.md`](docs/pomdp_ceiling_v2_verdict_2026-09-13.md)** | **信息侧天花板（第二轮，已判决）**：P3/H-LEARN —— 信息在现有输入里（A/C/B = +0.182/+0.186/+0.197，Ridge +0.30），oracle 只加 1.1pp、**belief token 只加 0.4pp**；四道对照电池全过 | **已判决**；预注册 `docs/pomdp_ceiling2_prereg_2026-09-13.md` |
 | **[`docs/paper_outline_2026-09-13.md`](docs/paper_outline_2026-09-13.md)** | **论文大纲（案例 + 方法论合并）**：K1–K6 贡献、章节骨架、证据映射、实验 E1–E6、**停止规则（预注册）**、相关工作待检索清单 | 大纲已定；**缺口 = E4（对抗性基线）/ E5（外部有效性，最高优先）/ E6（用指纹重判四代架构）**；**不要求"强度提升"才动笔** |
 
@@ -257,7 +257,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | **当前问题的归因**（critic 为何塌成常数 / 上限为何不动 / 判别性实验） | [`docs/d1_long_100k_cause_analysis_2026-09-13.md`](docs/d1_long_100k_cause_analysis_2026-09-13.md) |
 | 该归因的结构化取证全文（6 路并行 + 评审，含 3 处已更正的口径错误） | [`docs/report_d1_long_100k_structured_2026-09-13.md`](docs/report_d1_long_100k_structured_2026-09-13.md) |
 | **critic 惰性检验**（预注册 / 判读 / 判读脚本） | [`docs/critic_inertia_prereg_2026-09-13.md`](docs/critic_inertia_prereg_2026-09-13.md)、[`docs/critic_inertia_verdict_2026-09-13.md`](docs/critic_inertia_verdict_2026-09-13.md)、`scripts/judge_critic_inertia.py` |
-| **经验台账 / 论文计划**（15 次结论推翻、10 类读数病理、9 道检测闸门、R14 指纹、大纲与停止规则） | [`docs/lessons_ledger.md`](docs/lessons_ledger.md)、[`docs/paper_outline_2026-09-13.md`](docs/paper_outline_2026-09-13.md) |
+| **经验台账 / 论文计划**（16 次结论推翻、11 类读数病理、10 道检测闸门、R14 指纹、大纲与停止规则） | [`docs/lessons_ledger.md`](docs/lessons_ledger.md)、[`docs/paper_outline_2026-09-13.md`](docs/paper_outline_2026-09-13.md) |
 | **信息侧天花板检验 · 第一轮**（预注册 + 修订 3/4/5 → 判读：**形式判决 P0**，三道对照支持 V3 = P3） | [`docs/pomdp_ceiling_prereg_2026-09-13.md`](docs/pomdp_ceiling_prereg_2026-09-13.md)、[`docs/pomdp_ceiling_verdict_2026-09-13.md`](docs/pomdp_ceiling_verdict_2026-09-13.md) |
 | **信息侧天花板检验 · 第二轮（结论）**（估计器跑前写死 + 四道对照电池 → **P3/H-LEARN**；belief 通道增量仅 +0.4pp） | [`docs/pomdp_ceiling2_prereg_2026-09-13.md`](docs/pomdp_ceiling2_prereg_2026-09-13.md)、[`docs/pomdp_ceiling_v2_verdict_2026-09-13.md`](docs/pomdp_ceiling_v2_verdict_2026-09-13.md) |
 | **外部独立调研的核验**（~44 条断言逐条复算；含文档未有的问题层次"**模型连局部最优都做不到**"） | [`docs/external_review_verification_2026-09-13.md`](docs/external_review_verification_2026-09-13.md) |

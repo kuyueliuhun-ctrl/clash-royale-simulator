@@ -188,7 +188,7 @@ def rollout_layers(a, cfg, device):
           f"ep_len mean={np.mean(ep_lens):.1f} wall={dt:.1f}s "
           f"({len(y) / max(1e-9, dt):.1f} frames/s)", flush=True)
     if a.save_npz:
-        z = {f"X_{k}": X[k] for _, k in LADDER}
+        z = {f"X_{k}": X[k] for k in keys}
         z.update({"y": y, "v": v, "ep": ep})
         np.savez_compressed(a.save_npz, **z)
         print(f"[npz] {a.save_npz}", flush=True)
@@ -313,7 +313,20 @@ def main():
         ep = z["ep"]
         print(f"[npz] 载入 {a.npz}: frames={len(y)} episodes={int(ep.max()) + 1}",
               flush=True)
+        # 离线重拟合时仍加载 ckpt，只为描述量（max_gain_head / LN γ / 塌缩指纹）
         pol = None
+        if a.ckpt:
+            try:
+                _e = solo_env(cfg, a.seed)
+                _bd = len(BeliefInference(opp_deck=_e.deck1, n_particles=128,
+                                          seed=a.seed).encode(None, None))
+                pol = load_checkpoint(a.ckpt, hidden_dim=cfg.hidden_dim,
+                                      plan_dim=PLAN_DIM, belief_dim=_bd)
+                pol.eval()
+            except Exception as exc:      # 只影响描述量，不影响判决
+                print(f"[npz] ⚠️ ckpt 加载失败（描述量将缺失）: {type(exc).__name__}",
+                      flush=True)
+                pol = None
     else:
         device = a.device if (a.device == "cpu" or torch.cuda.is_available()) else "cpu"
         X, y, v, ep, pol = rollout_layers(a, cfg, device)
@@ -424,6 +437,12 @@ def main():
               f"(a={r_post_v1['alpha']})  v2={rows['post_ln']['EV_within']:+.4f} "
               f"Δ={rows['post_ln']['EV_within'] - r_post_v1['EV_within']:+.4f}",
               flush=True)
+        # ⚠️ 修正（2026-09-14 自披露）：`gates` 里仍留着 v1 的 G-UP（fused≥0.15），
+        #    但 **v2 预注册 §3 的闸门集不含 G-UP**（它已被 G-RAW 取代，见【红线 R15】）。
+        #    首次 v2 跑因把 G-UP 算进 gates_ok 而误判 V2_INVALID ⇒ 此处按预注册重算。
+        GATE_SET_V2 = ("G-RAW", "G-PC", "G-CLK", "G-SCR", "G-VAR")
+        print(f"  [gate-set] v2 权威闸门集 = {GATE_SET_V2}（G-UP 仅作 v1 遗留诊断，不计入）",
+              flush=True)
         gates["G-VAR"] = bool(float(np.var(y)) > 1.0)
         gates["G-RAW"] = bool(r_raw["EV_within"] is not None
                               and r_raw["EV_within"] >= 0.15)
@@ -431,7 +450,7 @@ def main():
               f"{gates['G-RAW']}", flush=True)
         print(f"  G-VAR   Var(R)_within={float(np.var(y)):.4f} >1 ? "
               f"{gates['G-VAR']}", flush=True)
-        gates_ok = all(gates.values())
+        gates_ok = all(gates[k] for k in GATE_SET_V2)
         R0 = r_raw["EV_within"]
         E1, E2, E3 = (rows["pre_ln"]["EV_within"], rows["relu_ln"]["EV_within"],
                       rows["post_ln"]["EV_within"])
@@ -579,6 +598,9 @@ def main():
                       "std_ratio": float(X["value"].std() / max(1e-12, np.std(y)))},
            "alpha_grid": a.alpha_grid, "raw_obs": bool(a.raw_obs),
            "v2": v2_res,
+           "gate_set_v2": list(GATE_SET_V2) if v2_res is not None else None,
+           "note_gup_legacy": ("G-UP 是 v1 遗留，v2 判决不计入（预注册 §3）"
+                               if v2_res is not None else None),
            "n_prereg": ("docs/value_ln_probe2_prereg_2026-09-14.md"
                         if a.alpha_grid == "v2"
                         else "docs/value_ln_probe_prereg_2026-09-14.md")}
