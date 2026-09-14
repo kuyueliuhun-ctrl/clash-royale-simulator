@@ -94,6 +94,14 @@ def feat_hidden(hid, eid2slot, ndeck) -> np.ndarray:
 # rollout
 # --------------------------------------------------------------------------
 def rollout(a, cfg, device):
+    # 【闸 10 复现闸 / 病理 ⑪ 部分播种】`pol.act` 的动作采样用**全局 torch RNG**；
+    # 不播种则每个进程一条全新轨迹（实测同 ckpt/同 seed 的 `EV_within` 差 1.84×，
+    # 见【否证 X-16】）。默认播种；`--no-seed-rng` 复现旧行为。
+    if getattr(a, "seed_rng", True):
+        torch.manual_seed(int(a.seed))
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(int(a.seed))
+        print(f"[rng] torch.manual_seed({a.seed})", flush=True)
     env = solo_env(cfg, a.seed)
     bdim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                seed=a.seed).encode(None, None))
@@ -432,6 +440,10 @@ def main():
                     help="把逐帧特征/回报/价值存成 npz（离线重拟合用，免重跑 rollout）")
     ap.add_argument("--out", default=None)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--seed-rng", dest="seed_rng", action="store_true", default=True,
+                    help="跑 rollout 前 torch.manual_seed(seed)（默认开，闸 10）")
+    ap.add_argument("--no-seed-rng", dest="seed_rng", action="store_false",
+                    help="复现旧的未播种行为（轨迹不可复现）")
     # ---- 修订 4（2026-09-13 深夜，见预注册 §8）：估计器必须与主判据同口径，且必须过阳性对照 ----
     ap.add_argument("--npz", default=None,
                     help="从 --save-npz 落盘的逐帧数据离线重拟合（免重跑 rollout）")

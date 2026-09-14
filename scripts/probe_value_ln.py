@@ -79,6 +79,17 @@ def _force_utf8_stdout():
 # rollout（逐帧抓 6 层）
 # --------------------------------------------------------------------------
 def rollout_layers(a, cfg, device):
+    # 【第 10 道闸门「复现闸」/ 病理 ⑪ 部分播种】动作采样用全局 torch RNG
+    # （`FollowerPolicy.act` 的 `slot_dist.sample()`），**不播种则每个进程一条全新轨迹**
+    # ⇒ 实测同 ckpt/同 seed 两次 `EV_within(raw_obs)` 差 1.84×（【否证 X-16】）。
+    # 这里显式播种；要复现旧（未播种）行为可传 `--no-seed-rng`。
+    if getattr(a, "seed_rng", True):
+        torch.manual_seed(int(a.seed))
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(int(a.seed))
+        print(f"[rng] torch.manual_seed({a.seed})（放闸 10：探针轨迹可复现）", flush=True)
+    else:
+        print("[rng] ⚠️ --no-seed-rng：轨迹不可复现，读数只能做同 run 内配对", flush=True)
     env = solo_env(cfg, a.seed)
     bdim = len(BeliefInference(opp_deck=env.deck1, n_particles=128,
                                seed=a.seed).encode(None, None))
@@ -290,6 +301,10 @@ def main():
                     help="额外抓原始 obs（参考集，与第二轮 A 集同构造）")
     ap.add_argument("--alpha-grid", choices=["v1", "v2"], default="v2",
                     help="主 α 网格：v1=上一轮(下界1e-1)；v2=下界1e-6")
+    ap.add_argument("--seed-rng", dest="seed_rng", action="store_true", default=True,
+                    help="跑 rollout 前 torch.manual_seed(seed)（默认开，闸 10）")
+    ap.add_argument("--no-seed-rng", dest="seed_rng", action="store_false",
+                    help="复现旧的未播种行为（轨迹不可复现）")
     a = ap.parse_args()
 
     cfg = TrainConfig.resolve("economy")
@@ -597,6 +612,7 @@ def main():
                       "EV_pooled": rows["value"]["EV_pooled"],
                       "std_ratio": float(X["value"].std() / max(1e-12, np.std(y)))},
            "alpha_grid": a.alpha_grid, "raw_obs": bool(a.raw_obs),
+           "seed_rng": bool(getattr(a, "seed_rng", True)),
            "v2": v2_res,
            "gate_set_v2": list(GATE_SET_V2) if v2_res is not None else None,
            "note_gup_legacy": ("G-UP 是 v1 遗留，v2 判决不计入（预注册 §3）"
