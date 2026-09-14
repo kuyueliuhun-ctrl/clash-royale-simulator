@@ -1,0 +1,273 @@
+{
+ "ckpt": "runs/critic_inert_probe_20k/solo_main_20000.pt",
+ "tag": "",
+ "mode": "stoch",
+ "seed": 7,
+ "frames": 29991,
+ "episodes": 138,
+ "test_frac": 0.25,
+ "val_frac": 0.15,
+ "gates": {
+  "G-UP": false,
+  "G-PC": true,
+  "G-CLK": true,
+  "G-SCR": true,
+  "G-VAR": true,
+  "G-RAW": false
+ },
+ "gates_ok": false,
+ "ev_within_ladder": {
+  "L0_fused": 0.04312000460119425,
+  "L1_pre_ln": -0.014072568041280764,
+  "L2_relu_ln": 3.1251719427749514e-05,
+  "L3_post_ln": 0.00018556314618090042,
+  "L4_mlp0_post": 0.0,
+  "L5_value": 0.0
+ },
+ "kstar": 0,
+ "verdict": "V2_INVALID",
+ "rows": {
+  "fused": {
+   "dim_raw": 2731,
+   "dim": 2727,
+   "degenerate": false,
+   "EV_within": 0.04312000460119425,
+   "EV_pooled": 0.032270956650341964,
+   "EV_within_raw": 0.032270956650342186,
+   "val_EV_within": 0.07191178416317034,
+   "alpha": 10000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357,
+   "label": "L0_fused"
+  },
+  "pre_ln": {
+   "dim_raw": 128,
+   "dim": 128,
+   "degenerate": false,
+   "EV_within": -0.014072568041280764,
+   "EV_pooled": -0.02419136203171357,
+   "EV_within_raw": -0.024191362031713348,
+   "val_EV_within": 0.05204240820517669,
+   "alpha": 0.1,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357,
+   "label": "L1_pre_ln"
+  },
+  "relu_ln": {
+   "dim_raw": 128,
+   "dim": 30,
+   "degenerate": false,
+   "EV_within": 3.1251719427749514e-05,
+   "EV_pooled": 3.1247131936140704e-05,
+   "EV_within_raw": 3.124713193636275e-05,
+   "val_EV_within": -7.085940842355143e-05,
+   "alpha": 100000000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357,
+   "label": "L2_relu_ln"
+  },
+  "post_ln": {
+   "dim_raw": 128,
+   "dim": 128,
+   "degenerate": false,
+   "EV_within": 0.00018556314618090042,
+   "EV_pooled": 0.00018543762656175744,
+   "EV_within_raw": 0.00018543762656197949,
+   "val_EV_within": -0.00040898610806339164,
+   "alpha": 100000000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357,
+   "label": "L3_post_ln"
+  },
+  "mlp0_post": {
+   "dim_raw": 64,
+   "dim": 0,
+   "degenerate": true,
+   "EV_within": 0.0,
+   "EV_pooled": 0.0,
+   "EV_within_raw": 0.0,
+   "val_EV_within": 0.0,
+   "alpha": null,
+   "note": "全零方差（平凡预测）",
+   "label": "L4_mlp0_post"
+  },
+  "value": {
+   "dim_raw": 1,
+   "dim": 0,
+   "degenerate": true,
+   "EV_within": 0.0,
+   "EV_pooled": 0.0,
+   "EV_within_raw": 0.0,
+   "val_EV_within": 0.0,
+   "alpha": null,
+   "note": "全零方差（平凡预测）",
+   "label": "L5_value"
+  },
+  "raw_obs": {
+   "dim_raw": 8648,
+   "dim": 6789,
+   "degenerate": false,
+   "EV_within": 0.12145137497621039,
+   "EV_pooled": 0.1003660704340189,
+   "EV_within_raw": 0.10036607043401913,
+   "val_EV_within": 0.09470309399906884,
+   "alpha": 10000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357,
+   "label": "RAW_obs"
+  }
+ },
+ "controls": {
+  "poscontrol": {
+   "dim_raw": 2731,
+   "dim": 2727,
+   "degenerate": false,
+   "EV_within": 0.757871300316403,
+   "EV_pooled": 0.7100013496873723,
+   "EV_within_raw": 0.7100013496873723,
+   "val_EV_within": 0.7736829139090683,
+   "alpha": 1000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357
+  },
+  "clockbase": {
+   "dim_raw": 1,
+   "dim": 1,
+   "degenerate": false,
+   "EV_within": 2.3478591977266206e-06,
+   "EV_pooled": 2.347838345850839e-06,
+   "EV_within_raw": 2.3478383460728836e-06,
+   "val_EV_within": -5.266136582582348e-06,
+   "alpha": 100000000.0,
+   "alpha_at_boundary": false,
+   "n_tr": 17852,
+   "n_va": 4782,
+   "n_te": 7357
+  },
+  "scramble": {
+   "raw_obs": 3.777047791042598e-05,
+   "fused": 0.0004199266410550573,
+   "post_ln": 0.00014807614732459395
+  }
+ },
+ "descriptive": {
+  "within_std_R": 7.670260964311313,
+  "fused": {
+   "name": "L0_fused",
+   "D": 2731,
+   "const_norm": 77.75969945460106,
+   "varying_norm": 39.430520727001024,
+   "rel": 0.5070817017499147,
+   "zero_var_dim_frac": 0.0007323324789454412,
+   "dim_std_mean": 0.04296011656840834,
+   "within_std_vec": 35.85616388232433,
+   "gain_needed": 0.21391750075340457
+  },
+  "pre_ln": {
+   "name": "L1_pre_ln",
+   "D": 128,
+   "const_norm": 196.4598557046904,
+   "varying_norm": 16.182956704514506,
+   "rel": 0.08237284226066009,
+   "zero_var_dim_frac": 0.0,
+   "dim_std_mean": 1.1962528807417148,
+   "within_std_vec": 14.64918271283563,
+   "gain_needed": 0.5235965114689042
+  },
+  "relu_ln": {
+   "name": "L2_relu_ln",
+   "D": 128,
+   "const_norm": 169.0162749564936,
+   "varying_norm": 5.651096927143346,
+   "rel": 0.03343522349311031,
+   "zero_var_dim_frac": 0.765625,
+   "dim_std_mean": 0.184694456413461,
+   "within_std_vec": 5.130526210587668,
+   "gain_needed": 1.4950242235352962
+  },
+  "post_ln": {
+   "name": "L3_post_ln",
+   "D": 128,
+   "const_norm": 11.797277266739181,
+   "varying_norm": 0.3303409237844834,
+   "rel": 0.028001454599684172,
+   "zero_var_dim_frac": 0.0,
+   "dim_std_mean": 0.011990892294972215,
+   "within_std_vec": 0.2998030436513524,
+   "gain_needed": 25.584333203872436
+  },
+  "mlp0_post": {
+   "name": "L4_mlp0_post",
+   "D": 64,
+   "const_norm": 0.0,
+   "varying_norm": 0.0,
+   "rel": 0.0,
+   "zero_var_dim_frac": 1.0,
+   "dim_std_mean": 0.0,
+   "within_std_vec": 0.0,
+   "gain_needed": 7670260964311.313
+  },
+  "value": {
+   "name": "L5_value",
+   "D": 1,
+   "const_norm": 0.14254850149154663,
+   "varying_norm": 0.0,
+   "rel": 0.0,
+   "zero_var_dim_frac": 1.0,
+   "dim_std_mean": 0.0,
+   "within_std_vec": 0.0,
+   "gain_needed": 7670260964311.313
+  },
+  "max_gain_head": 2.5263924357502674,
+  "gain_shortfall_post_ln": 10.126824653935685,
+  "ln_weight_mean": 1.0355310440063477,
+  "ln_weight_norm": 11.721212387084961,
+  "ln_bias_norm": 0.34172120690345764,
+  "value_unique": 1,
+  "value_std": 2.9802322387695312e-08
+ },
+ "critic": {
+  "EV_within": 0.0,
+  "EV_pooled": 0.0,
+  "std_ratio": 3.8854378653296795e-09
+ },
+ "alpha_grid": "v2",
+ "raw_obs": true,
+ "seed_rng": true,
+ "v2": {
+  "R0_raw": 0.12145137497621039,
+  "E0_fused": 0.04312000460119425,
+  "E1_pre": -0.014072568041280764,
+  "E2_relu": 3.1251719427749514e-05,
+  "E3_post": 0.00018556314618090042,
+  "hits": [
+   "V-LOSS-FRONT"
+  ],
+  "verdict": "V2_INVALID",
+  "raw_v1_grid_EV_within": 0.12145137497621039,
+  "raw_v1_grid_alpha": 10000.0,
+  "post_v1_grid_EV_within": 0.00018556314618090042,
+  "post_v1_grid_alpha": 100000000.0
+ },
+ "gate_set_v2": [
+  "G-RAW",
+  "G-PC",
+  "G-CLK",
+  "G-SCR",
+  "G-VAR"
+ ],
+ "note_gup_legacy": "G-UP 是 v1 遗留，v2 判决不计入（预注册 §3）",
+ "n_prereg": "docs/value_ln_probe2_prereg_2026-09-14.md"
+}
