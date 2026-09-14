@@ -48,9 +48,14 @@ from rl.ppo import PPOTrainer  # noqa: E402
 
 # 复用第二轮主估计器与对照构造（逐位一致，避免"两套估计器"）
 from pomdp_ceiling_probe import (  # noqa: E402
-    ev, ev_within, ev_within_raw, standardize, fit_ridge,
+    ev, ev_within, ev_within_raw, standardize, fit_ridge, feat_obs,
     make_positive_control, scramble_rows_by_clock,
 )
+
+#: α 网格。v1 = 上一轮用的（下界 1e-1）；v2 = 本轮主网格（下界 1e-6，修 ⑩ 类"边界"缺陷）。
+ALPHAS_V1 = (1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)
+ALPHAS_V2 = (1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)
+GRIDS = {"v1": ALPHAS_V1, "v2": ALPHAS_V2}
 
 #: 阶梯：(标签, 缓冲区键)。顺序 = 前向顺序，判据 §3.2 的 `k*` 就是这个次序的下标。
 LADDER = [
@@ -110,10 +115,11 @@ def rollout_layers(a, cfg, device):
     belief.reset(env.deck1)
     hidden = None
 
-    acc = {k: [] for _, k in LADDER}
+    keys = [k for _, k in LADDER] + (["raw_obs"] if a.raw_obs else [])
+    acc = {k: [] for k in keys}
     Y, V, EP = [], [], []
     ep_rew, ep_val, ep_term, ep_trunc = [], [], [], []
-    ep_acc = {k: [] for _, k in LADDER}
+    ep_acc = {k: [] for k in keys}
     ep_idx, ep_lens, n_frame = 0, [], 0
     t0 = time.time()
     step = 0
@@ -137,6 +143,9 @@ def rollout_layers(a, cfg, device):
             ep_acc["post_ln"].append(post_ln.detach().cpu().numpy().ravel())
             ep_acc["mlp0_post"].append(mlp0_post.detach().cpu().numpy().ravel())
             ep_acc["value"].append(np.asarray([float(val_t.item())], dtype=np.float32))
+            if a.raw_obs:
+                # 参考集：与第二轮 A 集同一构造（原始 obs 展平）⇒ 同源配对比较
+                ep_acc["raw_obs"].append(feat_obs(obs))
             ep_val.append(float(np.asarray(val, dtype=np.float64).ravel()[0]))
             obs, r, term, trunc, info = env.step(bundle)
             ep_rew.append(float(r))
@@ -155,7 +164,7 @@ def rollout_layers(a, cfg, device):
                 _, ret = PPOTrainer.compute_gae(ep_rew, ep_val, ep_term, cfg.gamma,
                                                 cfg.gae_lambda, truncated=ep_trunc,
                                                 last_value=last_val)
-                for _, k in LADDER:
+                for k in keys:
                     acc[k].extend(ep_acc[k])
                 Y.extend(np.asarray(ret, dtype=np.float64).tolist())
                 V.extend(ep_val)
@@ -163,7 +172,7 @@ def rollout_layers(a, cfg, device):
                 ep_lens.append(len(ep_rew))
                 ep_idx += 1
                 ep_rew, ep_val, ep_term, ep_trunc = [], [], [], []
-                ep_acc = {k: [] for _, k in LADDER}
+                ep_acc = {k: [] for k in keys}
                 obs, _ = env.reset(seed=a.seed + step)
                 belief.reset(env.deck1)
                 hidden = None
@@ -171,7 +180,7 @@ def rollout_layers(a, cfg, device):
                     print(f"  [rollout] ep={ep_idx} frames={n_frame} "
                           f"{time.time() - t0:.1f}s", flush=True)
     dt = time.time() - t0
-    X = {k: np.asarray(acc[k], dtype=np.float32) for _, k in LADDER}
+    X = {k: np.asarray(acc[k], dtype=np.float32) for k in keys}
     y = np.asarray(Y, dtype=np.float64)
     v = np.asarray(V, dtype=np.float64)
     ep = np.asarray(EP, dtype=np.int64)
@@ -189,8 +198,14 @@ def rollout_layers(a, cfg, device):
 # --------------------------------------------------------------------------
 # 每层拟合（与第二轮主估计器逐位一致）
 # --------------------------------------------------------------------------
-def fit_layer(Xl, y, ep, m_tr, m_va, m_te, ep_va, select="within", repeats=1):
-    """返回 dict：dim / EV_within(test) / val_EV_within / EV_pooled / alpha / degenerate。"""
+def fit_layer(Xl, y, ep, m_tr, m_va, m_te, ep_va, select="within", repeats=1,
+              alphas=None):
+    """返回 dict：dim / EV_within(test) / val_EV_within / EV_pooled / alpha / degenerate。
+
+    `alphas`：α 网格（默认 v2）。选中值落在网格**边界**时打 `alpha_at_boundary`
+    （台账 §2 病理 ⑩：落在边界就是网格不够宽 ⇒ 该层不得用来下"无信号"结论）。
+    """
+    alphas = tuple(alphas) if alphas is not None else ALPHAS_V2
     Xl = np.asarray(Xl, dtype=np.float64)
     sd_tr = Xl[m_tr].std(axis=0)
     keep = sd_tr > 1e-8
@@ -206,13 +221,14 @@ def fit_layer(Xl, y, ep, m_tr, m_va, m_te, ep_va, select="within", repeats=1):
     ytr, yva, yte = y[m_tr], y[m_va], y[m_te]
     ew_tr = ep[m_tr]
     p_te, alpha, best_va, p_va = fit_ridge(Xtr, ytr, Xva, yva, Xte, ep_va=ep_va,
-                                           select=select)
+                                           select=select, alphas=alphas)
     out.update({
         "EV_within": ev_within(p_te, yte, ep[m_te]),
         "EV_pooled": ev(p_te, yte),
         "EV_within_raw": ev_within_raw(p_te, yte, ep[m_te]),
         "val_EV_within": best_va,
         "alpha": float(alpha),
+        "alpha_at_boundary": bool(alpha == min(alphas)),
         "n_tr": int(m_tr.sum()), "n_va": int(m_va.sum()), "n_te": int(m_te.sum()),
     })
     return out
@@ -269,6 +285,11 @@ def main():
     ap.add_argument("--tag", default="")
     ap.add_argument("--out", default=None)
     ap.add_argument("--verbose", action="store_true")
+    # ---- v2（2026-09-14 第二轮预注册）：加原始 obs 参考集 + 扩 α 网格下界 ----
+    ap.add_argument("--raw-obs", action="store_true",
+                    help="额外抓原始 obs（参考集，与第二轮 A 集同构造）")
+    ap.add_argument("--alpha-grid", choices=["v1", "v2"], default="v2",
+                    help="主 α 网格：v1=上一轮(下界1e-1)；v2=下界1e-6")
     a = ap.parse_args()
 
     cfg = TrainConfig.resolve("economy")
@@ -327,8 +348,10 @@ def main():
     Xa = X["fused"]
     # G-UP + 主阶梯
     rows = {}
+    _AG = GRIDS[a.alpha_grid]
     for label, key in LADDER:
-        r = fit_layer(X[key], y, ep, m_tr, m_va, m_te, ep_va, select="within")
+        r = fit_layer(X[key], y, ep, m_tr, m_va, m_te, ep_va, select="within",
+                      alphas=_AG)
         rows[key] = r
         rows[key]["label"] = label
         print(f"[fit] {label:14s} dim={r['dim']:5d}(raw {r['dim_raw']}) "
@@ -347,7 +370,7 @@ def main():
     for e in np.unique(ep):
         m = (ep == e)
         ypc[m] -= ypc[m].mean()
-    rpc = fit_layer(Xa, ypc, ep, m_tr, m_va, m_te, ep_va, select="within")
+    rpc = fit_layer(Xa, ypc, ep, m_tr, m_va, m_te, ep_va, select="within", alphas=_AG)
     gates["G-PC"] = bool(rpc["EV_within"] is not None and rpc["EV_within"] >= 0.15)
     print(f"  G-PC    EV_within(阳性对照)={rpc['EV_within']:+.4f} ≥0.15 ? "
           f"{gates['G-PC']}", flush=True)
@@ -358,22 +381,101 @@ def main():
         idx = np.where(ep == e)[0]
         k_in_ep[idx] = np.arange(len(idx))
     Xclk = k_in_ep.reshape(-1, 1).astype(np.float32)
-    rclk = fit_layer(Xclk, y, ep, m_tr, m_va, m_te, ep_va, select="within")
+    rclk = fit_layer(Xclk, y, ep, m_tr, m_va, m_te, ep_va, select="within", alphas=_AG)
     gates["G-CLK"] = bool(rclk["EV_within"] is not None and rclk["EV_within"] <= 0.05)
     print(f"  G-CLK   EV_within(时钟基线)={rclk['EV_within']:+.4f} ≤0.05 ? "
           f"{gates['G-CLK']}", flush=True)
 
     # G-SCR 状态打散（fused 与 post_ln）
     scr = {}
-    for key in ("fused", "post_ln"):
+    for key in [k for k in ("raw_obs", "fused", "post_ln") if k in X]:
         Xs = scramble_rows_by_clock(X[key], ep, seed=a.seed)
-        rs = fit_layer(Xs, y, ep, m_tr, m_va, m_te, ep_va, select="within")
+        rs = fit_layer(Xs, y, ep, m_tr, m_va, m_te, ep_va, select="within",
+                       alphas=_AG)
         scr[key] = rs["EV_within"]
         print(f"  G-SCR[{key:8s}] EV_within(打散)={rs['EV_within']:+.4f}", flush=True)
     gates["G-SCR"] = bool(all(x is not None and x <= 0.05 for x in scr.values()))
     print(f"  G-SCR   两者 ≤0.05 ? {gates['G-SCR']}", flush=True)
 
     gates_ok = all(gates.values())
+
+    # ---- v2 模式（预注册 docs/value_ln_probe2_prereg_2026-09-14.md §3/§4）----
+    v2_res = None
+    if a.alpha_grid == "v2":
+        v2_res = {}
+        if "raw_obs" not in X:
+            raise SystemExit("[abort] --alpha-grid v2 需要 --raw-obs（参考集）")
+        print("\n--- v2：参考集与诊断重拟合 ---", flush=True)
+        r_raw = fit_layer(X["raw_obs"], y, ep, m_tr, m_va, m_te, ep_va,
+                          select="within", alphas=ALPHAS_V2)
+        rows["raw_obs"] = dict(r_raw, label="RAW_obs")
+        print(f"[fit] {'RAW_obs':14s} dim={r_raw['dim']:5d}(raw {r_raw['dim_raw']}) "
+              f"val_EV_within={r_raw['val_EV_within']:+.4f} | "
+              f"EV_within={r_raw['EV_within']:+.4f} a={r_raw['alpha']}"
+              + ("  [边界α]" if r_raw["alpha_at_boundary"] else ""), flush=True)
+        r_raw_v1 = fit_layer(X["raw_obs"], y, ep, m_tr, m_va, m_te, ep_va,
+                             select="within", alphas=ALPHAS_V1)
+        r_post_v1 = fit_layer(X["post_ln"], y, ep, m_tr, m_va, m_te, ep_va,
+                              select="within", alphas=ALPHAS_V1)
+        print(f"[diag] raw_obs  v1 网格 EV_within={r_raw_v1['EV_within']:+.4f} "
+              f"(a={r_raw_v1['alpha']})  ← 与第二轮 +0.2999 的可比性检查",
+              flush=True)
+        print(f"[diag] post_ln  v1 网格 EV_within={r_post_v1['EV_within']:+.4f} "
+              f"(a={r_post_v1['alpha']})  v2={rows['post_ln']['EV_within']:+.4f} "
+              f"Δ={rows['post_ln']['EV_within'] - r_post_v1['EV_within']:+.4f}",
+              flush=True)
+        gates["G-VAR"] = bool(float(np.var(y)) > 1.0)
+        gates["G-RAW"] = bool(r_raw["EV_within"] is not None
+                              and r_raw["EV_within"] >= 0.15)
+        print(f"  G-RAW   EV_within(raw_obs)={r_raw['EV_within']:+.4f} ≥0.15 ? "
+              f"{gates['G-RAW']}", flush=True)
+        print(f"  G-VAR   Var(R)_within={float(np.var(y)):.4f} >1 ? "
+              f"{gates['G-VAR']}", flush=True)
+        gates_ok = all(gates.values())
+        R0 = r_raw["EV_within"]
+        E1, E2, E3 = (rows["pre_ln"]["EV_within"], rows["relu_ln"]["EV_within"],
+                      rows["post_ln"]["EV_within"])
+        E0 = rows["fused"]["EV_within"]
+        hits = []
+        if R0 is not None and E0 is not None and R0 >= 2.0 * E0:
+            hits.append("V-LOSS-FRONT")
+        if E1 is not None and E2 is not None and E1 >= 0.05 and E2 < 0.05:
+            hits.append("V-LOSS-RELU")
+        if (E2 is not None and E3 is not None and E2 >= 0.05 and E3 < 0.05
+                and not rows["post_ln"].get("alpha_at_boundary")):
+            hits.append("V-LOSS-LN")
+        if E3 is not None and E3 >= 0.05:
+            hits.append("V-NO-LOSS-IN-BRANCH")
+        if (E3 is not None and E3 >= 0.05
+                and not (R0 is not None and E0 is not None and R0 >= 2.0 * E0)):
+            hits.append("V-NO-LOSS-AT-ALL")
+        if not gates_ok:
+            v2_verdict = "V2_INVALID"
+        elif not hits:
+            v2_verdict = "NOT_PREREGISTERED"
+        else:
+            v2_verdict = "+".join(hits)
+        print("\n=== v2 分支（预注册 §4，逐条报命中）===", flush=True)
+        print(f"  R0=EV_within(raw_obs)={R0:+.4f}  E0(fused)={E0:+.4f}  "
+              f"E1(pre_ln)={E1:+.4f}  E2(relu_ln)={E2:+.4f}  E3(post_ln)={E3:+.4f}",
+              flush=True)
+        print(f"  V-LOSS-FRONT: R0 ≥ 2×E0 ? {R0 >= 2.0 * E0} "
+              f"({R0:.4f} vs {2.0 * E0:.4f})", flush=True)
+        print(f"  V-LOSS-RELU : E1≥0.05 且 E2<0.05 ? "
+              f"{E1 >= 0.05 and E2 < 0.05}", flush=True)
+        print(f"  V-LOSS-LN   : E2≥0.05 且 E3<0.05 ? "
+              f"{E2 >= 0.05 and E3 < 0.05}"
+              + ("  [作废：post_ln α 在边界]" if rows["post_ln"].get(
+                  "alpha_at_boundary") else ""), flush=True)
+        print(f"  V-NO-LOSS-IN-BRANCH: E3≥0.05 ? {E3 >= 0.05}", flush=True)
+        print(f"  VERDICT(v2) = {v2_verdict}", flush=True)
+        v2_res.update({"R0_raw": R0, "E0_fused": E0, "E1_pre": E1,
+                       "E2_relu": E2, "E3_post": E3, "hits": hits,
+                       "verdict": v2_verdict,
+                       "raw_v1_grid_EV_within": r_raw_v1["EV_within"],
+                       "raw_v1_grid_alpha": r_raw_v1["alpha"],
+                       "post_v1_grid_EV_within": r_post_v1["EV_within"],
+                       "post_v1_grid_alpha": r_post_v1["alpha"]})
 
     # ---- 判决：首个 EV_within < 0.05 的层 ----
     evs = [rows[k]["EV_within"] for _, k in LADDER]
@@ -382,7 +484,9 @@ def main():
         if e is not None and e < 0.05:
             kstar = i
             break
-    if not gates_ok:
+    if v2_res is not None:
+        verdict = v2_res["verdict"]
+    elif not gates_ok:
         verdict = "L0_INVALID"
     elif kstar == 0:
         verdict = "L4_INVALID"
@@ -473,7 +577,11 @@ def main():
            "critic": {"EV_within": rows["value"]["EV_within"],
                       "EV_pooled": rows["value"]["EV_pooled"],
                       "std_ratio": float(X["value"].std() / max(1e-12, np.std(y)))},
-           "n_prereg": "docs/value_ln_probe_prereg_2026-09-14.md"}
+           "alpha_grid": a.alpha_grid, "raw_obs": bool(a.raw_obs),
+           "v2": v2_res,
+           "n_prereg": ("docs/value_ln_probe2_prereg_2026-09-14.md"
+                        if a.alpha_grid == "v2"
+                        else "docs/value_ln_probe_prereg_2026-09-14.md")}
     if a.out:
         with open(a.out, "w", encoding="utf-8") as f:
             json.dump(res, f, ensure_ascii=False, indent=1)
