@@ -216,7 +216,7 @@ def check_citations(doc_path: str, canon, bybase) -> Dict:
             bad_line += 1
             if len(samples) < 20:
                 samples.append(f"{cite}:{a}{'-' + b if b else ''} 越界(共 {n} 行)")
-    return {"doc": os.path.relpath(doc_path, ROOT), "citations": total,
+    return {"doc": os.path.relpath(doc_path, ROOT).replace(os.sep, "/"), "citations": total,
             "file_not_found": bad_file, "line_out_of_range": bad_line, "samples": samples}
 
 

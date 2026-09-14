@@ -437,14 +437,15 @@ def main() -> int:
             W(f"| `{d.get('doc')}` | {d.get('citations')} | {d.get('file_not_found')} | {d.get('line_out_of_range')} |")
         W(f"| **合计** | **{tot}** | **{sum(d.get('file_not_found', 0) for d in rc.get('docs', []))}** | **{sum(d.get('line_out_of_range', 0) for d in rc.get('docs', []))}** |")
         W("")
-        W("> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露：")
+        W("> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露"
+          "（下表用全角冒号书写，以免反查脚本把这两个**反面示例**误当成真引用）：")
         W(">")
         W("> | # | 原文 | 实际 | 说明 |")
         W("> |---|---|---|---|")
-        W("> | 1 | `_train_solo.py:398-401` | `rl/train_solo.py:398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |")
-        W(f"> | 2 | `scripts/rl/run_league.py:1-20` | `scripts/rl/run_league.py:1-17` | 该 wrapper 实测 {17} 行，区间写多了 3 行 |")
+        W("> | 1 | `_train_solo.py：398-401` | `rl/train_solo.py：398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |")
+        W(f"> | 2 | `scripts/rl/run_league.py：1-20` | `scripts/rl/run_league.py：1-17` | 该 wrapper 实测 17 行，区间写多了 3 行 |")
         W(">")
-        W("> 另有 1 条 `player.py:36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**"
+        W("> 另有 1 条 `player.py：36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**"
           "（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，"
           "按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。")
         W("")

@@ -33,7 +33,7 @@
 | 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|
 | 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|
 
-共 **170 个代码文件**、**47018 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
+共 **170 个代码文件**、**47019 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
 
 ### 0.2 方法（为什么可以相信这份文档的数字）
 
@@ -75,7 +75,7 @@
 | `docs` | 7 | 448 | 0 | 2.1–2.7 |
 | `ideas` | 1 | 14 | 0 | 2.8–2.8 |
 | `runs` | 3 | 279 | 0 | 2.10–2.12 |
-| `scripts` | 56 | 13444 | 319 | 2.13–2.79 |
+| `scripts` | 56 | 13445 | 319 | 2.13–2.79 |
 | `scripts/rl` | 11 | 87 | 1 | 2.58–2.68 |
 | `src/clasher_new` | 35 | 10050 | 495 | 2.80–2.168 |
 | `src/clasher_new/client_side` | 5 | 581 | 26 | 2.88–2.92 |
@@ -108,7 +108,7 @@
 | 20 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.20 | G032 |
 | 21 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.21 | G030 |
 | 22 | `scripts/_survey_md_to_docx.py` | 341 | 9 | 113 | §2.22 | GX03 |
-| 23 | `scripts/_survey_merge.py` | 530 | 6 | 74 | §2.23 | GX03 |
+| 23 | `scripts/_survey_merge.py` | 531 | 6 | 74 | §2.23 | GX03 |
 | 24 | `scripts/_survey_merge_docs.py` | 315 | 4 | 56 | §2.24 | GX03 |
 | 25 | `scripts/_survey_verify.py` | 145 | 2 | 30 | §2.25 | GX03 |
 | 26 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.26 | G033 |
@@ -1308,7 +1308,7 @@
 
 ### 2.23 `scripts/_survey_merge.py`
 
-- **分析组**：GX03　**行数**：530　**AST 符号数**：6
+- **分析组**：GX03　**行数**：531　**AST 符号数**：6
 
 - 语言/类型: Python
 - 行数: 469
@@ -24042,19 +24042,19 @@
 
 | 文档 | 引用条数 | 文件未找到 | 行号越界 |
 |---|---|---|---|
-| `docs\full_code_reference.md` | 2162 | 0 | 0 |
-| `docs\training_method.md` | 2237 | 0 | 0 |
-| `docs\game_engine.md` | 793 | 0 | 0 |
+| `docs/full_code_reference.md` | 2162 | 0 | 0 |
+| `docs/training_method.md` | 2237 | 0 | 0 |
+| `docs/game_engine.md` | 793 | 0 | 0 |
 | **合计** | **5192** | **0** | **0** |
 
-> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露：
+> 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露（下表用全角冒号书写，以免反查脚本把这两个**反面示例**误当成真引用）：
 >
 > | # | 原文 | 实际 | 说明 |
 > |---|---|---|---|
-> | 1 | `_train_solo.py:398-401` | `rl/train_solo.py:398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |
-> | 2 | `scripts/rl/run_league.py:1-20` | `scripts/rl/run_league.py:1-17` | 该 wrapper 实测 17 行，区间写多了 3 行 |
+> | 1 | `_train_solo.py：398-401` | `rl/train_solo.py：398-401` | 文件名笔误（下划线位置错），会导致引用无法回源 |
+> | 2 | `scripts/rl/run_league.py：1-20` | `scripts/rl/run_league.py：1-17` | 该 wrapper 实测 17 行，区间写多了 3 行 |
 >
-> 另有 1 条 `player.py:36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。
+> 另有 1 条 `player.py：36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。
 
 ---
 

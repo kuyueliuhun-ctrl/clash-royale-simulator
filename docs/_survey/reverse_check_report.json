@@ -349,24 +349,21 @@
  },
  "docs": [
   {
-   "doc": "docs\\full_code_reference.md",
-   "citations": 2167,
-   "file_not_found": 1,
-   "line_out_of_range": 1,
-   "samples": [
-    "_train_solo.py:398 文件未找到",
-    "scripts/rl/run_league.py:1-20 越界(共 17 行)"
-   ]
+   "doc": "docs/full_code_reference.md",
+   "citations": 2162,
+   "file_not_found": 0,
+   "line_out_of_range": 0,
+   "samples": []
   },
   {
-   "doc": "docs\\training_method.md",
+   "doc": "docs/training_method.md",
    "citations": 2237,
    "file_not_found": 0,
    "line_out_of_range": 0,
    "samples": []
   },
   {
-   "doc": "docs\\game_engine.md",
+   "doc": "docs/game_engine.md",
    "citations": 793,
    "file_not_found": 0,
    "line_out_of_range": 0,
