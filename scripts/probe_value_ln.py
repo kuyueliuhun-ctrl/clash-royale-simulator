@@ -1,19 +1,26 @@
 """只读：价值通路「逐层线性可读性阶梯」。
 
-预注册：`docs/value_ln_probe_prereg_2026-09-14.md`（判据/闸门/分支在跑之前写死，【红线 R3】）。
+预注册：
+  v1/v2 `docs/value_ln_probe_prereg_2026-09-14.md` / `docs/value_ln_probe2_prereg_2026-09-14.md`
+  v3    `docs/value_ln_probe3_prereg_2026-09-14.md`（**前端丢在哪一段** + 把 `R0/E0` 比值做成正式判据）
 
-问题：从 `fused` 到 `value` 的逐层阶梯上，局内可预测性（`EV_within`）在第几层掉到 ≈0？
-方法：单 ckpt / 单 rollout 逐帧抓 6 层激活 → 每层用第二轮主估计器（Ridge + alpha 网格 +
+问题：从 `obs` 到 `value` 的逐层阶梯上，局内可预测性（`EV_within`）在第几层掉下去？
+方法：单 ckpt / 单 rollout 逐帧抓激活 → 每层用第二轮主估计器（Ridge + alpha 网格 +
       输出裁剪 + `select=within`）拟**同一个目标**（GAE 回报，按局中心化），**同一局分组切分**
       ⇒ 层间是配对比较，落差可信。
 
-只有前向、不写 ckpt、不改任何训练状态。
+只有前向、不写 ckpt、不改任何训练状态、不改 `rl/` 一行。
 
 用法（在 src/clasher_new 下）：
+  # v2（第二轮，向后兼容，默认）
   PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
       ../../scripts/probe_value_ln.py --ckpt runs/critic_inert_probe_20k/solo_main_20000.pt \
       --frames 30000 --seed 7 --device cuda --tag primary \
       --out ../../docs/value_ln_probe_primary.json
+
+  # v3 两阶段（rollout 与拟合分离：省内存 + npz 留证）
+  ... --ladder v3 --raw-obs --rollout-only --save-npz ../../runs/_probe_v3_seed7.npz
+  ... --ladder v3 --raw-obs --npz ../../runs/_probe_v3_seed7.npz --out ../../docs/....json
 """
 
 import argparse
@@ -57,8 +64,8 @@ ALPHAS_V1 = (1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)
 ALPHAS_V2 = (1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)
 GRIDS = {"v1": ALPHAS_V1, "v2": ALPHAS_V2}
 
-#: 阶梯：(标签, 缓冲区键)。顺序 = 前向顺序，判据 §3.2 的 `k*` 就是这个次序的下标。
-LADDER = [
+#: 阶梯 v2：(标签, 缓冲区键)。顺序 = 前向顺序，判据 §3.2 的 `k*` 就是这个次序的下标。
+LADDER_V2 = [
     ("L0_fused", "fused"),
     ("L1_pre_ln", "pre_ln"),
     ("L2_relu_ln", "relu_ln"),
@@ -66,6 +73,44 @@ LADDER = [
     ("L4_mlp0_post", "mlp0_post"),
     ("L5_value", "value"),
 ]
+LADDER = LADDER_V2          # 旧名保留（v1/v2 代码路径逐位不变）
+
+#: 阶梯 v3（预注册 `docs/value_ln_probe3_prereg_2026-09-14.md` §3.1）：
+#: 把「感知前端 → fused」这一段拆成 `raw_obs / raw_nongrid / [grid_x] / cnn_pre_ln /
+#: grid_ln_out / fused 的 5 个分块 / enc`，用来定位 R0/E0 比值损失的落点。
+#: `grid_x`（CNN 输入，14976 维）默认不抓（`--cnn-input` 显式开启）⇒ 内存/时间可控。
+LADDER_V3 = [
+    ("R_ref_raw_obs", "raw_obs"),
+    ("R_nongrid", "raw_nongrid"),
+    ("G0_x", "grid_x"),
+    ("G1_cnn_pre_ln", "cnn_pre_ln"),
+    ("G2_grid_ln", "grid_ln_out"),
+    ("B1_hand_f", "hand_f"),
+    ("B2_scalar_f", "scalar_f"),
+    ("B3_plan_f", "plan_f"),
+    ("B4_belief_f", "belief_f"),
+    ("L0_fused", "fused"),
+    ("E_enc", "enc"),
+    ("L1_pre_ln", "pre_ln"),
+    ("L2_relu_ln", "relu_ln"),
+    ("L3_post_ln", "post_ln"),
+    ("L4_mlp0_post", "mlp0_post"),
+    ("L5_value", "value"),
+]
+
+#: `feat_obs` 里 grid 块展平后的长度（`rl/observation.py`：GRID_H/W/C = 32/18/15）。
+#: `raw_nongrid` = `raw_obs[GRID_FLAT:]` = hand(5) + elixir(1) + next_card(1) + time(1) = 8 维。
+GRID_FLAT = 32 * 18 * 15
+
+#: v3 的 G-REPRO（闸 10 跨版本复现闸）参考值 = v2 权威跑（seed 7、30000 帧、stoch）的读数，
+#: 见 `docs/value_ln_probe2_primary.json`。仪器惰性若成立，v3 必须逐位复现它。
+REPRO_REF = {
+    "seed": 7,
+    "frames": 29991,
+    "EV_raw": 0.12145137497621039,        # EV_within(raw_obs)，α=1e4
+    "EV_fused": 0.04312000460119425,      # EV_within(fused)，α=1e4
+    "var_within": 58.83,                  # Var(R)_within（打印值，容差 1%）
+}
 
 
 def _force_utf8_stdout():
@@ -73,6 +118,50 @@ def _force_utf8_stdout():
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
+
+
+def _capture_parts(pol, obs, belief_token, plan_token):
+    """v3：**逐字**复刻 `FollowerPolicy._encode_parts`（`rl/follower.py:268-298`）并把
+    中间张量全部返回（`x` / `cnn_pre_ln` / `grid_ln_out` / 5 个分块 / `fused` / `enc`）。
+
+    ⚠️ 复制实现有漂移风险 ⇒ 调用方**逐帧断言** `fused` 与 `pol._encode_parts` 逐位一致
+    （`_IDENT_CHECK`）。这里不引入任何 RNG 消耗，前向顺序与 `_encode_parts` 完全一致。
+    """
+    import torch.nn.functional as _F
+
+    dev = pol.device
+    grid = torch.as_tensor(obs["grid"], dtype=torch.float32).unsqueeze(0).to(dev)
+    hand = torch.as_tensor(obs["hand"], dtype=torch.long).unsqueeze(0).to(dev)
+    elixir = torch.as_tensor(obs["elixir"], dtype=torch.float32).unsqueeze(0).to(dev)
+    time = torch.as_tensor(obs["time"], dtype=torch.float32).unsqueeze(0).to(dev)
+    next_card = torch.as_tensor(obs["next_card"], dtype=torch.float32).unsqueeze(0).to(dev) / 12.0
+
+    card_ids = grid[..., 0].long()
+    card_vecs = pol.entity_emb(card_ids)                       # (1,32,18,8)
+    rest = grid[..., 1:]                                       # (1,32,18,14)
+    card_type = rest[..., 2].long()
+    card_type_oh = _F.one_hot(card_type, num_classes=4).float()
+    x = torch.cat([rest, card_vecs, card_type_oh], dim=-1)     # (1,32,18,26)
+    x = x.permute(0, 3, 1, 2)                                  # (1,26,32,18)
+
+    cnn_pre_ln = pol.cnn(x)                                    # (1,2560)
+    grid_ln_out = pol.grid_ln(cnn_pre_ln)                      # (1,2560)
+    hand_f = pol.entity_emb(hand).reshape(1, -1)               # (1,40)
+    scalar = torch.cat([elixir, time, next_card], dim=1)       # (1,3)
+    plan_v = torch.as_tensor(plan_token, dtype=torch.float32).unsqueeze(0).to(dev)
+    belief_v = torch.as_tensor(belief_token, dtype=torch.float32).unsqueeze(0).to(dev)
+    plan_f = pol.plan_mlp(plan_v)                              # (1,64)
+    belief_f = pol.belief_mlp(belief_v)                        # (1,64)
+
+    fused = torch.cat([grid_ln_out, hand_f, scalar, plan_f, belief_f], dim=1)
+    enc = pol.enc_ln(torch.relu(pol.enc_fc(fused)))            # (1,hidden)
+    return {"grid_x": x, "cnn_pre_ln": cnn_pre_ln, "grid_ln_out": grid_ln_out,
+            "hand_f": hand_f, "scalar_f": scalar, "plan_f": plan_f,
+            "belief_f": belief_f, "fused": fused, "enc": enc}
+
+
+#: 逐帧断言（复制实现 vs 原实现）的最大允许偏差。0.0 = 要求逐位一致。
+_IDENT_CHECK = True
 
 
 # --------------------------------------------------------------------------
@@ -126,12 +215,18 @@ def rollout_layers(a, cfg, device):
     belief.reset(env.deck1)
     hidden = None
 
-    keys = [k for _, k in LADDER] + (["raw_obs"] if a.raw_obs else [])
+    v3 = (getattr(a, "ladder", "v2") == "v3")
+    keys = [k for _, k in (LADDER_V3 if v3 else LADDER_V2)
+            if not (k == "grid_x" and not getattr(a, "cnn_input", False))]
+    if getattr(a, "raw_obs", False):
+        keys = keys + ["raw_obs"] + (["raw_nongrid"] if v3 else [])
+    keys = list(dict.fromkeys(keys))          # 去重且保序
     acc = {k: [] for k in keys}
     Y, V, EP = [], [], []
     ep_rew, ep_val, ep_term, ep_trunc = [], [], [], []
     ep_acc = {k: [] for k in keys}
     ep_idx, ep_lens, n_frame = 0, [], 0
+    ident_max = 0.0
     t0 = time.time()
     step = 0
     with torch.no_grad():
@@ -141,22 +236,40 @@ def rollout_layers(a, cfg, device):
             pv = plan.to_vector()
             bundle, _, val, hidden, _ = pol.act(obs, tok, pv, env.get_action_mask,
                                                 hidden=hidden, deterministic=det)
-            fused, _enc = pol._encode_parts(obs, tok, pv)
-            pre_ln = pol.value_enc_fc(fused)
-            relu_ln = torch.relu(pre_ln)
-            post_ln = pol.value_enc_ln(relu_ln)
+            frame = {}
+            if v3:
+                cap = _capture_parts(pol, obs, tok, pv)
+                if _IDENT_CHECK:
+                    fu_ref, en_ref = pol._encode_parts(obs, tok, pv)
+                    d = float((cap["fused"] - fu_ref).abs().max().item())
+                    d = max(d, float((cap["enc"] - en_ref).abs().max().item()))
+                    ident_max = max(ident_max, d)
+                frame.update({"cnn_pre_ln": cap["cnn_pre_ln"],
+                              "grid_ln_out": cap["grid_ln_out"],
+                              "hand_f": cap["hand_f"], "scalar_f": cap["scalar_f"],
+                              "plan_f": cap["plan_f"], "belief_f": cap["belief_f"],
+                              "enc": cap["enc"], "fused": cap["fused"]})
+                if getattr(a, "cnn_input", False):
+                    frame["grid_x"] = cap["grid_x"]
+            else:
+                fused, _enc = pol._encode_parts(obs, tok, pv)
+                frame["fused"] = fused
+            frame["pre_ln"] = pol.value_enc_fc(frame["fused"])
+            frame["relu_ln"] = torch.relu(frame["pre_ln"])
+            frame["post_ln"] = pol.value_enc_ln(frame["relu_ln"])
             m0 = pol.value_head_mlp[0]
-            mlp0_post = torch.relu(m0(post_ln))
-            val_t = pol.value_head_mlp[2](mlp0_post)
-            ep_acc["fused"].append(fused.detach().cpu().numpy().ravel())
-            ep_acc["pre_ln"].append(pre_ln.detach().cpu().numpy().ravel())
-            ep_acc["relu_ln"].append(relu_ln.detach().cpu().numpy().ravel())
-            ep_acc["post_ln"].append(post_ln.detach().cpu().numpy().ravel())
-            ep_acc["mlp0_post"].append(mlp0_post.detach().cpu().numpy().ravel())
-            ep_acc["value"].append(np.asarray([float(val_t.item())], dtype=np.float32))
+            frame["mlp0_post"] = torch.relu(m0(frame["post_ln"]))
+            frame["value"] = pol.value_head_mlp[2](frame["mlp0_post"])
             if a.raw_obs:
-                # 参考集：与第二轮 A 集同一构造（原始 obs 展平）⇒ 同源配对比较
-                ep_acc["raw_obs"].append(feat_obs(obs))
+                fo = feat_obs(obs)
+                frame["raw_obs"] = fo
+                if v3:
+                    frame["raw_nongrid"] = fo[GRID_FLAT:]
+            for k in keys:
+                t = frame[k]
+                arr = (t.detach().cpu().numpy() if torch.is_tensor(t)
+                       else np.asarray(t))
+                ep_acc[k].append(np.asarray(arr, dtype=np.float32).ravel())
             ep_val.append(float(np.asarray(val, dtype=np.float64).ravel()[0]))
             obs, r, term, trunc, info = env.step(bundle)
             ep_rew.append(float(r))
@@ -191,13 +304,21 @@ def rollout_layers(a, cfg, device):
                     print(f"  [rollout] ep={ep_idx} frames={n_frame} "
                           f"{time.time() - t0:.1f}s", flush=True)
     dt = time.time() - t0
-    X = {k: np.asarray(acc[k], dtype=np.float32) for k in keys}
+    # 逐键转换并立刻释放列表：`acc`（list[ndarray]）与 `X` 同时存在会**翻倍**峰值内存
+    # （v3 阶梯 30000 帧约 3.9 GB/份 ⇒ 4 条并行会撞 WSL 内存墙）。
+    X = {}
+    for k in keys:
+        X[k] = np.asarray(acc[k], dtype=np.float32)
+        acc[k] = None
     y = np.asarray(Y, dtype=np.float64)
     v = np.asarray(V, dtype=np.float64)
     ep = np.asarray(EP, dtype=np.int64)
     print(f"[rollout] mode={a.mode} frames={len(y)} episodes={ep_idx} "
           f"ep_len mean={np.mean(ep_lens):.1f} wall={dt:.1f}s "
           f"({len(y) / max(1e-9, dt):.1f} frames/s)", flush=True)
+    if v3:
+        print(f"[ident] 复制实现 vs `_encode_parts` 逐帧最大偏差 = {ident_max:.3e} "
+              f"({'逐位一致 ✅' if ident_max == 0.0 else '⚠️ 有偏差'})", flush=True)
     if a.save_npz:
         z = {f"X_{k}": X[k] for k in keys}
         z.update({"y": y, "v": v, "ep": ep})
@@ -305,6 +426,16 @@ def main():
                     help="跑 rollout 前 torch.manual_seed(seed)（默认开，闸 10）")
     ap.add_argument("--no-seed-rng", dest="seed_rng", action="store_false",
                     help="复现旧的未播种行为（轨迹不可复现）")
+    # ---- v3（2026-09-14 第三轮预注册）：前端定位 + 比值判据 ----
+    ap.add_argument("--ladder", choices=["v2", "v3"], default="v2",
+                    help="阶梯：v2=二轮原样（默认，逐位不变）；v3=加前端拆解层")
+    ap.add_argument("--cnn-input", dest="cnn_input", action="store_true", default=False,
+                    help="v3：额外抓 CNN 输入 `x`（14976 维，贵）⇒ 可把『CNN 前』拆成 CNN/输入编码")
+    ap.add_argument("--rollout-only", dest="rollout_only", action="store_true",
+                    default=False, help="只跑 rollout 存 npz 就退出（两阶段执行的第一步）")
+    ap.add_argument("--exclude", default="",
+                    help="逗号分隔：从 X 里剔除这些层（如 grid_x=14976 维，单层 Ridge 峰值过高）。"
+                         "被剔除的层不参与拟合、也不进分支判定（预注册 §7 允许该情形）")
     a = ap.parse_args()
 
     cfg = TrainConfig.resolve("economy")
@@ -321,13 +452,26 @@ def main():
 
     if a.npz:
         z = np.load(a.npz)
-        X = {k.split("_", 1)[1]: z[k].astype(np.float32) for k in z.files
-             if k.startswith("X_")}
+        # `--exclude` 在**载入阶段**就生效：grid_x（14976 维）不解压进内存，
+        # 否则仅"载入"这一步就要 ~3.9 GB（v3 预注册 §8 的内存纪律）。
+        _ex = {x.strip() for x in (a.exclude or "").split(",") if x.strip()}
+        X, _skipped = {}, []
+        for k in z.files:
+            if not k.startswith("X_"):
+                continue
+            key = k.split("_", 1)[1]
+            if key in _ex:
+                _skipped.append(key)
+                continue
+            arr = z[k]
+            X[key] = arr if arr.dtype == np.float32 else arr.astype(np.float32)
+        if _skipped:
+            print(f"[exclude] npz 阶段跳过 {_skipped}（未载入内存）", flush=True)
         y = z["y"].astype(np.float64)
         v = z["v"].astype(np.float64)
         ep = z["ep"]
-        print(f"[npz] 载入 {a.npz}: frames={len(y)} episodes={int(ep.max()) + 1}",
-              flush=True)
+        print(f"[npz] 载入 {a.npz}: frames={len(y)} episodes={int(ep.max()) + 1} "
+              f"层数={len(X)}", flush=True)
         # 离线重拟合时仍加载 ckpt，只为描述量（max_gain_head / LN γ / 塌缩指纹）
         pol = None
         if a.ckpt:
@@ -345,6 +489,18 @@ def main():
     else:
         device = a.device if (a.device == "cpu" or torch.cuda.is_available()) else "cpu"
         X, y, v, ep, pol = rollout_layers(a, cfg, device)
+        if a.rollout_only:
+            print("[rollout-only] 已存 npz，退出（拟合请用 --npz 重新调用）", flush=True)
+            return None
+
+    # ---- --exclude：剔除过重的层（不参与拟合、也不进分支判定；v3 预注册 §7 允许）----
+    if a.exclude:
+        for k in [x.strip() for x in a.exclude.split(",") if x.strip()]:
+            if k in X:
+                del X[k]
+                print(f"[exclude] 剔除层 `{k}`（不参与拟合/分支）", flush=True)
+            else:
+                print(f"[exclude] 层 `{k}` 不在 X 中（npz 阶段已跳过 / 未抓取）", flush=True)
 
     # ---- 局分组切分（与第二轮逐位同一算法，R9④）----
     n_ep = int(ep.max()) + 1
@@ -374,10 +530,12 @@ def main():
     gates = {}
     print("\n--- 闸门（不过 ⇒ L0_INVALID）---", flush=True)
     Xa = X["fused"]
-    # G-UP + 主阶梯
+    # G-UP + 主阶梯（v3 时用 v3 阶梯；`grid_x` 未抓则自动略过）
+    _LAD = [(lab, k) for lab, k in (LADDER_V3 if a.ladder == "v3" else LADDER_V2)
+            if k in X]
     rows = {}
     _AG = GRIDS[a.alpha_grid]
-    for label, key in LADDER:
+    for label, key in _LAD:
         r = fit_layer(X[key], y, ep, m_tr, m_va, m_te, ep_va, select="within",
                       alphas=_AG)
         rows[key] = r
@@ -414,9 +572,9 @@ def main():
     print(f"  G-CLK   EV_within(时钟基线)={rclk['EV_within']:+.4f} ≤0.05 ? "
           f"{gates['G-CLK']}", flush=True)
 
-    # G-SCR 状态打散（fused 与 post_ln）
+    # G-SCR 状态打散（v2：fused 与 post_ln；v3：再加 grid_ln_out，见预注册 §4）
     scr = {}
-    for key in [k for k in ("raw_obs", "fused", "post_ln") if k in X]:
+    for key in [k for k in ("raw_obs", "fused", "grid_ln_out", "post_ln") if k in X]:
         Xs = scramble_rows_by_clock(X[key], ep, seed=a.seed)
         rs = fit_layer(Xs, y, ep, m_tr, m_va, m_te, ep_va, select="within",
                        alphas=_AG)
@@ -429,7 +587,7 @@ def main():
 
     # ---- v2 模式（预注册 docs/value_ln_probe2_prereg_2026-09-14.md §3/§4）----
     v2_res = None
-    if a.alpha_grid == "v2":
+    if a.alpha_grid == "v2" and a.ladder == "v2":
         v2_res = {}
         if "raw_obs" not in X:
             raise SystemExit("[abort] --alpha-grid v2 需要 --raw-obs（参考集）")
@@ -440,7 +598,7 @@ def main():
         print(f"[fit] {'RAW_obs':14s} dim={r_raw['dim']:5d}(raw {r_raw['dim_raw']}) "
               f"val_EV_within={r_raw['val_EV_within']:+.4f} | "
               f"EV_within={r_raw['EV_within']:+.4f} a={r_raw['alpha']}"
-              + ("  [边界α]" if r_raw["alpha_at_boundary"] else ""), flush=True)
+              + ("  [边界α]" if r_raw.get("alpha_at_boundary") else ""), flush=True)
         r_raw_v1 = fit_layer(X["raw_obs"], y, ep, m_tr, m_va, m_te, ep_va,
                              select="within", alphas=ALPHAS_V1)
         r_post_v1 = fit_layer(X["post_ln"], y, ep, m_tr, m_va, m_te, ep_va,
@@ -511,8 +669,131 @@ def main():
                        "post_v1_grid_EV_within": r_post_v1["EV_within"],
                        "post_v1_grid_alpha": r_post_v1["alpha"]})
 
-    # ---- 判决：首个 EV_within < 0.05 的层 ----
-    evs = [rows[k]["EV_within"] for _, k in LADDER]
+    # ---- v3 模式（预注册 docs/value_ln_probe3_prereg_2026-09-14.md §4/§5/§6）----
+    v3_res = None
+    if a.ladder == "v3":
+        v3_res = {}
+        _REQ = ("raw_obs", "raw_nongrid", "cnn_pre_ln", "grid_ln_out", "hand_f",
+                "scalar_f", "plan_f", "belief_f", "fused", "enc", "pre_ln",
+                "relu_ln", "post_ln")
+        _miss = [k for k in _REQ if k not in X]
+        if _miss:
+            raise SystemExit(f"[abort] --ladder v3 缺层 {_miss}（必须配 --raw-obs）")
+        E = {k: rows[k]["EV_within"] for k in X}
+        R0 = E["raw_obs"]
+        rho = {k: (E[k] / R0 if (R0 is not None and R0 > 0 and E[k] is not None)
+                   else None) for k in E}
+        tol = 0.01 * abs(R0 or 0.0)   # 用绝对值：R0≤0 时容差不能变成负的（反而放松 G-MONO）
+        var_within = float(np.var(y))
+        GATE_SET_V3 = ("G-REPRO", "G-RATIO", "G-ANCHOR", "G-PC", "G-CLK",
+                       "G-SCR", "G-VAR", "G-MONO")
+        print("\n--- v3：闸门（预注册 §4；G-UP/G-RAW 均不计入）---", flush=True)
+        print(f"  [gate-set] v3 权威闸门集 = {GATE_SET_V3}", flush=True)
+
+        # G-REPRO：闸 10 的**跨版本**形式——仪器扩展不许改变轨迹
+        if a.seed == REPRO_REF["seed"]:
+            d_raw = None if R0 is None else abs(R0 - REPRO_REF["EV_raw"])
+            d_fu = abs(E["fused"] - REPRO_REF["EV_fused"])
+            d_var = abs(var_within - REPRO_REF["var_within"]) / REPRO_REF["var_within"]
+            ok = bool(len(y) == REPRO_REF["frames"] and d_raw is not None
+                      and d_raw <= 0.002 and d_fu <= 0.002 and d_var <= 0.01)
+            gates["G-REPRO"] = ok
+            print(f"  G-REPRO frames {len(y)}=={REPRO_REF['frames']} ? "
+                  f"{len(y) == REPRO_REF['frames']} | ΔEV(raw)={d_raw:.6f}≤0.002 ? "
+                  f"{d_raw <= 0.002} | ΔEV(fused)={d_fu:.6f}≤0.002 ? {d_fu <= 0.002} | "
+                  f"ΔVar/Var={d_var:.5f}≤0.01 ? {d_var <= 0.01} ⇒ {ok}", flush=True)
+        else:
+            gates["G-REPRO"] = None
+            print(f"  G-REPRO N/A（仅 seed {REPRO_REF['seed']} 适用，本跑 seed={a.seed}）",
+                  flush=True)
+
+        # G-RATIO（第 11 道闸门「比值闸」；阈值标定见预注册 §5）
+        rho_fused = rho.get("fused")
+        gates["G-RATIO"] = bool(rho_fused is not None and rho_fused <= 0.5)
+        print(f"  G-RATIO ρ(fused)=EV(fused)/EV(raw_obs)="
+              f"{'None' if rho_fused is None else f'{rho_fused:.4f}'} ≤0.5 ? "
+              f"{gates['G-RATIO']}  (R0/E0="
+              f"{'None' if not rho_fused else f'{1.0 / rho_fused:.2f}×'})", flush=True)
+
+        # G-ANCHOR（仅退化护栏，声明为非判别器）
+        _scr_vals = [x for x in scr.values() if x is not None]
+        scr_max = max(_scr_vals) if _scr_vals else 0.0
+        gates["G-ANCHOR"] = bool(R0 is not None and R0 >= 0.05 and R0 >= 5.0 * scr_max)
+        print(f"  G-ANCHOR EV(raw_obs)={R0:+.4f} ≥0.05 且 ≥5×打散({scr_max:+.4f}) ? "
+              f"{gates['G-ANCHOR']}   [仅护栏，不是判别器]", flush=True)
+
+        # G-VAR
+        gates["G-VAR"] = bool(var_within > 1.0)
+        print(f"  G-VAR   Var(R)_within={var_within:.4f} >1 ? {gates['G-VAR']}",
+              flush=True)
+
+        # G-MONO：集合包含自洽（不含阈值的**方向性**检查，容差 = 1% EV(raw_obs)）
+        mono = {}
+        for blk in ("grid_ln_out", "hand_f", "scalar_f", "plan_f", "belief_f"):
+            mono[f"fused≥{blk}"] = bool(E["fused"] >= E[blk] - tol)
+        mono["cnn_pre_ln≥grid_ln_out"] = bool(E["cnn_pre_ln"] >= E["grid_ln_out"] - tol)
+        if "grid_x" in X:
+            mono["grid_x≥cnn_pre_ln"] = bool(E["grid_x"] >= E["cnn_pre_ln"] - tol)
+        gates["G-MONO"] = bool(all(mono.values()))
+        print("  G-MONO " + " ".join(f"{k}={'✅' if v else '❌'}"
+                                     for k, v in mono.items())
+              + f" ⇒ {gates['G-MONO']}", flush=True)
+
+        gates_ok = all(gates[k] for k in GATE_SET_V3
+                       if gates.get(k) is not None)
+
+        # ---- 分支（预注册 §6；全部逐条打印真值，先命中先报）----
+        c0 = E["cnn_pre_ln"]
+        gx = E.get("grid_x")
+        br = {}
+        br["B-LN"] = bool(c0 >= 0.5 * R0 and E["grid_ln_out"] <= 0.5 * c0)
+        br["B-CNN"] = bool(c0 < 0.5 * R0 and gx is not None and gx >= 0.5 * R0)
+        br["B-INPUT"] = bool(c0 < 0.5 * R0 and gx is not None and gx < 0.5 * R0)
+        br["B-NONGRID"] = bool(E["raw_nongrid"] >= 0.5 * R0)
+        br["B-ENC"] = bool(c0 >= 0.5 * R0 and E["grid_ln_out"] >= 0.5 * c0
+                           and E["enc"] <= 0.5 * E["fused"])
+        _up_ok = bool(c0 >= 0.5 * R0 and E["grid_ln_out"] >= 0.5 * R0)
+        br["B-SHALLOW"] = bool(_up_ok and E["pre_ln"] <= 0.5 * E["fused"])
+        order = ["B-LN", "B-CNN", "B-INPUT", "B-NONGRID", "B-ENC", "B-SHALLOW"]
+        hits = [b for b in order if br[b]]
+        prov = None
+        if not hits and gx is None and c0 < 0.5 * R0:
+            prov = "B-CNN-or-earlier(PROVISIONAL)"
+            hits = [prov]
+        if not gates_ok:
+            v3_verdict = "V3_INVALID"
+        elif not hits:
+            v3_verdict = "NOT_PREREGISTERED"
+        else:
+            v3_verdict = "+".join(hits)
+
+        print("\n=== v3 读数（照预注册 §3.1/§4 读）===", flush=True)
+        for lab, key in _LAD:
+            r = rows[key]
+            print(f"  {lab:14s} {key:12s} D={r['dim']:5d}({r['dim_raw']:5d}) "
+                  f"EV_within={r['EV_within']:+.5f} "
+                  f"ρ={('None' if rho.get(key) is None else f'{rho[key]:.4f}')} "
+                  f"a={r['alpha']}", flush=True)
+        print("\n=== v3 分支（预注册 §6；先命中先报，全部真值列出）===", flush=True)
+        print(f"  R0=EV(raw_obs)={R0:+.5f}  cnn_pre_ln={c0:+.5f}  "
+              f"grid_ln_out={E['grid_ln_out']:+.5f}  enc={E['enc']:+.5f}  "
+              f"fused={E['fused']:+.5f}", flush=True)
+        for b in order:
+            print(f"  {b:12s} {br[b]}", flush=True)
+        if prov:
+            print(f"  ⚠️ {prov}：未抓 `x` ⇒ 『CNN』与『输入编码』不可分（预注册 §7）",
+                  flush=True)
+        print(f"  VERDICT(v3) = {v3_verdict}", flush=True)
+        v3_res.update({
+            "gate_set_v3": list(GATE_SET_V3), "gates_ok": bool(gates_ok),
+            "G-MONO_detail": mono, "var_within": var_within,
+            "R0_raw_obs": R0, "rho": rho, "branches": br, "hits": hits,
+            "provisional": prov, "verdict": v3_verdict, "cnn_input": bool(a.cnn_input),
+            "repro_ref": dict(REPRO_REF),
+        })
+
+    # ---- 判决：首个 EV_within < 0.05 的层（**仅 v2 阶梯**；v3 走预注册 §6 分支）----
+    evs = [rows[k]["EV_within"] for _, k in _LAD]
     kstar = None
     for i, e in enumerate(evs):
         if e is not None and e < 0.05:
@@ -520,6 +801,9 @@ def main():
             break
     if v2_res is not None:
         verdict = v2_res["verdict"]
+    elif v3_res is not None:
+        verdict = v3_res["verdict"]
+        kstar = None                       # v3 的 k* 无定义（阶梯不再是价值支路单链）
     elif not gates_ok:
         verdict = "L0_INVALID"
     elif kstar == 0:
@@ -540,20 +824,20 @@ def main():
 
     print("\n=== 判据（照预注册 §3 读）===", flush=True)
     print("  阶梯 EV_within: " + "  ".join(
-        f"{lab}={e if e is None else round(e, 4)}" for (lab, _), e in zip(LADDER, evs)),
+        f"{lab}={e if e is None else round(e, 4)}" for (lab, _), e in zip(_LAD, evs)),
         flush=True)
     print(f"  闸门: " + " ".join(f"{k}={'PASS' if x else 'FAIL'}"
                                  for k, x in gates.items())
           + f"  ⇒ all={gates_ok}", flush=True)
     print(f"  首个 EV_within<0.05 的层 k*={kstar}"
-          + (f" ({LADDER[kstar][0]})" if kstar is not None else " (不存在)"), flush=True)
+          + (f" ({_LAD[kstar][0]})" if kstar is not None else " (不存在)"), flush=True)
     print(f"  VERDICT = {verdict}", flush=True)
 
     # ---- 描述量（不判决）----
     print("\n--- 描述量（不参与判决，见预注册 §4）---", flush=True)
     ws_R = within_std_scalar(y, ep)
     desc = {"within_std_R": ws_R}
-    for label, key in LADDER:
+    for label, key in _LAD:
         st = layer_magstats(label, X[key], ep)
         wv = within_std_vec(X[key], ep)
         gn = ws_R / max(1e-12, wv)
@@ -603,7 +887,7 @@ def main():
            "frames": int(len(y)), "episodes": int(n_ep),
            "test_frac": a.test_frac, "val_frac": a.val_frac,
            "gates": gates, "gates_ok": bool(gates_ok),
-           "ev_within_ladder": {lab: e for (lab, _), e in zip(LADDER, evs)},
+           "ev_within_ladder": {lab: e for (lab, _), e in zip(_LAD, evs)},
            "kstar": kstar, "verdict": verdict,
            "rows": rows, "controls": {"poscontrol": rpc, "clockbase": rclk,
                                       "scramble": scr},
@@ -613,13 +897,16 @@ def main():
                       "std_ratio": float(X["value"].std() / max(1e-12, np.std(y)))},
            "alpha_grid": a.alpha_grid, "raw_obs": bool(a.raw_obs),
            "seed_rng": bool(getattr(a, "seed_rng", True)),
+           "ladder": a.ladder, "v3": v3_res,
            "v2": v2_res,
            "gate_set_v2": list(GATE_SET_V2) if v2_res is not None else None,
            "note_gup_legacy": ("G-UP 是 v1 遗留，v2 判决不计入（预注册 §3）"
                                if v2_res is not None else None),
-           "n_prereg": ("docs/value_ln_probe2_prereg_2026-09-14.md"
-                        if a.alpha_grid == "v2"
-                        else "docs/value_ln_probe_prereg_2026-09-14.md")}
+           "n_prereg": ("docs/value_ln_probe3_prereg_2026-09-14.md"
+                        if a.ladder == "v3"
+                        else ("docs/value_ln_probe2_prereg_2026-09-14.md"
+                              if a.alpha_grid == "v2"
+                              else "docs/value_ln_probe_prereg_2026-09-14.md"))}
     if a.out:
         with open(a.out, "w", encoding="utf-8") as f:
             json.dump(res, f, ensure_ascii=False, indent=1)

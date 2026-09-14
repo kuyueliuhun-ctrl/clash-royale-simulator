@@ -1,0 +1,95 @@
+[npz] 载入 ../../runs/_probe_v3/seed13.npz: frames=29898 episodes=140 层数=15
+[exclude] 层 `grid_x` 不在 X 中（npz 阶段已跳过 / 未抓取）
+[split] train=17530 val=4644 test=7724 (episodes 84/21/35)
+[target] 目标=GAE 回报按局中心化；Var(R)_within=60.9229 std=7.8053
+
+--- 闸门（不过 ⇒ L0_INVALID）---
+[fit] R_ref_raw_obs  dim= 6694(raw 8648) val_EV_within=+0.1439 | EV_within=+0.2306 EV_pooled=+0.1986 a=10000.0
+[fit] R_nongrid      dim=    8(raw 8) val_EV_within=-0.0000 | EV_within=-0.0000 EV_pooled=-0.0000 a=100000000.0
+[fit] G1_cnn_pre_ln  dim=  406(raw 2560) val_EV_within=+0.1023 | EV_within=+0.0551 EV_pooled=+0.0277 a=100.0
+[fit] G2_grid_ln     dim= 2560(raw 2560) val_EV_within=+0.1000 | EV_within=+0.0961 EV_pooled=+0.0819 a=100.0
+[fit] B1_hand_f      dim=   40(raw 40) val_EV_within=-0.0000 | EV_within=+0.0000 EV_pooled=+0.0000 a=100000000.0
+[fit] B2_scalar_f    dim=    3(raw 3) val_EV_within=-0.0000 | EV_within=-0.0000 EV_pooled=-0.0000 a=100000000.0
+[fit] B3_plan_f      dim=   60(raw 64) val_EV_within=+0.0184 | EV_within=+0.0157 EV_pooled=+0.0145 a=100000.0
+[fit] B4_belief_f    dim=   63(raw 64) val_EV_within=+0.0000 | EV_within=-0.0006 EV_pooled=-0.0006 a=1000000.0
+[fit] L0_fused       dim= 2726(raw 2731) val_EV_within=+0.0631 | EV_within=+0.0642 EV_pooled=+0.0595 a=100000.0
+[fit] E_enc          dim=  128(raw 128) val_EV_within=+0.0001 | EV_within=-0.0001 EV_pooled=-0.0001 a=10000000.0
+[fit] L1_pre_ln      dim=  128(raw 128) val_EV_within=+0.0079 | EV_within=+0.0354 EV_pooled=+0.0312 a=100.0
+[fit] L2_relu_ln     dim=   31(raw 128) val_EV_within=-0.0000 | EV_within=-0.0000 EV_pooled=-0.0000 a=100000000.0
+[fit] L3_post_ln     dim=  128(raw 128) val_EV_within=-0.0000 | EV_within=-0.0001 EV_pooled=-0.0001 a=100000000.0
+[fit] L4_mlp0_post   dim=    0(raw 64) val_EV_within=+0.0000 | EV_within=+0.0000 EV_pooled=+0.0000 a=None  [退化]
+[fit] L5_value       dim=    0(raw 1) val_EV_within=+0.0000 | EV_within=+0.0000 EV_pooled=+0.0000 a=None  [退化]
+  G-UP    EV_within(fused)=+0.0642 ≥0.15 ? False
+  G-PC    EV_within(阳性对照)=+0.8007 ≥0.15 ? True
+  G-CLK   EV_within(时钟基线)=-0.0000 ≤0.05 ? True
+  G-SCR[raw_obs ] EV_within(打散)=-0.0000
+  G-SCR[fused   ] EV_within(打散)=-0.0006
+  G-SCR[grid_ln_out] EV_within(打散)=-0.0006
+  G-SCR[post_ln ] EV_within(打散)=-0.0001
+  G-SCR   两者 ≤0.05 ? True
+
+--- v3：闸门（预注册 §4；G-UP/G-RAW 均不计入）---
+  [gate-set] v3 权威闸门集 = ('G-REPRO', 'G-RATIO', 'G-ANCHOR', 'G-PC', 'G-CLK', 'G-SCR', 'G-VAR', 'G-MONO')
+  G-REPRO N/A（仅 seed 7 适用，本跑 seed=13）
+  G-RATIO ρ(fused)=EV(fused)/EV(raw_obs)=0.2785 ≤0.5 ? True  (R0/E0=3.59×)
+  G-ANCHOR EV(raw_obs)=+0.2306 ≥0.05 且 ≥5×打散(-0.0000) ? True   [仅护栏，不是判别器]
+  G-VAR   Var(R)_within=60.9229 >1 ? True
+  G-MONO fused≥grid_ln_out=❌ fused≥hand_f=✅ fused≥scalar_f=✅ fused≥plan_f=✅ fused≥belief_f=✅ cnn_pre_ln≥grid_ln_out=❌ ⇒ False
+
+=== v3 读数（照预注册 §3.1/§4 读）===
+  R_ref_raw_obs  raw_obs      D= 6694( 8648) EV_within=+0.23060 ρ=1.0000 a=10000.0
+  R_nongrid      raw_nongrid  D=    8(    8) EV_within=-0.00000 ρ=-0.0000 a=100000000.0
+  G1_cnn_pre_ln  cnn_pre_ln   D=  406( 2560) EV_within=+0.05507 ρ=0.2388 a=100.0
+  G2_grid_ln     grid_ln_out  D= 2560( 2560) EV_within=+0.09609 ρ=0.4167 a=100.0
+  B1_hand_f      hand_f       D=   40(   40) EV_within=+0.00000 ρ=0.0000 a=100000000.0
+  B2_scalar_f    scalar_f     D=    3(    3) EV_within=-0.00000 ρ=-0.0000 a=100000000.0
+  B3_plan_f      plan_f       D=   60(   64) EV_within=+0.01571 ρ=0.0681 a=100000.0
+  B4_belief_f    belief_f     D=   63(   64) EV_within=-0.00058 ρ=-0.0025 a=1000000.0
+  L0_fused       fused        D= 2726( 2731) EV_within=+0.06423 ρ=0.2785 a=100000.0
+  E_enc          enc          D=  128(  128) EV_within=-0.00010 ρ=-0.0004 a=10000000.0
+  L1_pre_ln      pre_ln       D=  128(  128) EV_within=+0.03545 ρ=0.1537 a=100.0
+  L2_relu_ln     relu_ln      D=   31(  128) EV_within=-0.00001 ρ=-0.0000 a=100000000.0
+  L3_post_ln     post_ln      D=  128(  128) EV_within=-0.00008 ρ=-0.0004 a=100000000.0
+  L4_mlp0_post   mlp0_post    D=    0(   64) EV_within=+0.00000 ρ=0.0000 a=None
+  L5_value       value        D=    0(    1) EV_within=+0.00000 ρ=0.0000 a=None
+
+=== v3 分支（预注册 §6；先命中先报，全部真值列出）===
+  R0=EV(raw_obs)=+0.23060  cnn_pre_ln=+0.05507  grid_ln_out=+0.09609  enc=-0.00010  fused=+0.06423
+  B-LN         False
+  B-CNN        False
+  B-INPUT      False
+  B-NONGRID    False
+  B-ENC        False
+  B-SHALLOW    False
+  ⚠️ B-CNN-or-earlier(PROVISIONAL)：未抓 `x` ⇒ 『CNN』与『输入编码』不可分（预注册 §7）
+  VERDICT(v3) = V3_INVALID
+
+=== 判据（照预注册 §3 读）===
+  阶梯 EV_within: R_ref_raw_obs=0.2306  R_nongrid=-0.0  G1_cnn_pre_ln=0.0551  G2_grid_ln=0.0961  B1_hand_f=0.0  B2_scalar_f=-0.0  B3_plan_f=0.0157  B4_belief_f=-0.0006  L0_fused=0.0642  E_enc=-0.0001  L1_pre_ln=0.0354  L2_relu_ln=-0.0  L3_post_ln=-0.0001  L4_mlp0_post=0.0  L5_value=0.0
+  闸门: G-UP=FAIL G-PC=PASS G-CLK=PASS G-SCR=PASS G-REPRO=FAIL G-RATIO=PASS G-ANCHOR=PASS G-VAR=PASS G-MONO=FAIL  ⇒ all=False
+  首个 EV_within<0.05 的层 k*=None (不存在)
+  VERDICT = V3_INVALID
+
+--- 描述量（不参与判决，见预注册 §4）---
+  R_ref_raw_obs  D= 8648 ‖恒定‖=  234.2604 ‖跨帧变化‖=293.62825 相对=1.25343 零变化维=0.203 within_std_vec=270.47273 gain_needed=        0.03
+  R_nongrid      D=    8 ‖恒定‖=  229.9845 ‖跨帧变化‖=172.72617 相对=0.75103 零变化维=0.000 within_std_vec=134.85012 gain_needed=        0.06
+  G1_cnn_pre_ln  D= 2560 ‖恒定‖=  261.1066 ‖跨帧变化‖=  6.38047 相对=0.02444 零变化维=0.841 within_std_vec=  6.19040 gain_needed=        1.26
+  G2_grid_ln     D= 2560 ‖恒定‖=   50.5465 ‖跨帧变化‖=  1.27525 相对=0.02523 零变化维=0.000 within_std_vec=  1.23743 gain_needed=        6.31
+  B1_hand_f      D=   40 ‖恒定‖=    3.1932 ‖跨帧变化‖=  6.32141 相对=1.97963 零变化维=0.000 within_std_vec=  4.41113 gain_needed=        1.77
+  B2_scalar_f    D=    3 ‖恒定‖=   58.1175 ‖跨帧变化‖= 38.95880 相对=0.67035 零变化维=0.000 within_std_vec= 35.24171 gain_needed=        0.22
+  B3_plan_f      D=   64 ‖恒定‖=    1.6421 ‖跨帧变化‖=  1.08155 相对=0.65864 零变化维=0.047 within_std_vec=  1.05095 gain_needed=        7.43
+  B4_belief_f    D=   64 ‖恒定‖=    2.5576 ‖跨帧变化‖=  0.67765 相对=0.26495 零变化维=0.016 within_std_vec=  0.63778 gain_needed=       12.24
+  L0_fused       D= 2731 ‖恒定‖=   77.1494 ‖跨帧变化‖= 39.50954 相对=0.51212 零变化维=0.001 within_std_vec= 35.55951 gain_needed=        0.22
+  E_enc          D=  128 ‖恒定‖=   11.4410 ‖跨帧变化‖=  0.52027 相对=0.04547 零变化维=0.000 within_std_vec=  0.46940 gain_needed=       16.63
+  L1_pre_ln      D=  128 ‖恒定‖=  196.4931 ‖跨帧变化‖= 16.24453 相对=0.08267 零变化维=0.000 within_std_vec= 14.56716 gain_needed=        0.54
+  L2_relu_ln     D=  128 ‖恒定‖=  169.0108 ‖跨帧变化‖=  5.67496 相对=0.03358 零变化维=0.758 within_std_vec=  5.11084 gain_needed=        1.53
+  L3_post_ln     D=  128 ‖恒定‖=   11.7972 ‖跨帧变化‖=  0.33053 相对=0.02802 零变化维=0.000 within_std_vec=  0.29874 gain_needed=       26.13
+  L4_mlp0_post   D=   64 ‖恒定‖=    0.0000 ‖跨帧变化‖=  0.00000 相对=0.00000 零变化维=1.000 within_std_vec=  0.00000 gain_needed=7805310115231.09
+  L5_value       D=    1 ‖恒定‖=    0.1425 ‖跨帧变化‖=  0.00000 相对=0.00000 零变化维=1.000 within_std_vec=  0.00000 gain_needed=7805310115231.09
+  max_gain_head = σmax(W1)*σmax(W2) = 2.9033*0.8702 = 2.5264
+  post_ln gain_needed=26.13 vs max_gain_head=2.5264 ⇒ 缺口 10.3×
+  LN γ: mean=+1.03553 ‖γ‖=11.72121 ‖β‖=0.34172
+  relu_ln 逐帧存活率=0.1473  存活维占比=0.2422
+  mlp0_post 逐帧存活率=0.000000  全零帧占比=1.0000
+  value 唯一值=1/29898 std=2.980e-08 EV_within=+0.000000 std(V)/std(R)=0.000000
+[out] ../../runs/_probe_v3/seed13.json

@@ -1,0 +1,17 @@
+[rng] torch.manual_seed(13)（放闸 10：探针轨迹可复现）
+=== value-LN probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames<=30000 device=cpu ===
+    independent=True bypass=True γ=0.997 λ=0.99
+  [param] value_head.weight          (1, 128) ‖·‖=0.58907795
+  [param] value_head.bias            (1,) ‖·‖=0.08475759
+  [param] value_enc_fc.weight        (128, 2731) ‖·‖=12.69951344
+  [param] value_enc_fc.bias          (128,) ‖·‖=0.26213279
+  [param] value_enc_ln.weight        (128,) ‖·‖=11.72121239
+  [param] value_enc_ln.bias          (128,) ‖·‖=0.34172121
+  [param] value_head_mlp.0.weight    (64, 128) ‖·‖=5.69008923
+  [param] value_head_mlp.0.bias      (64,) ‖·‖=0.50158954
+  [param] value_head_mlp.2.weight    (1, 64) ‖·‖=0.87018532
+  [param] value_head_mlp.2.bias      (1,) ‖·‖=0.14254850
+[rollout] mode=stoch frames=29898 episodes=140 ep_len mean=213.6 wall=2080.8s (14.4 frames/s)
+[ident] 复制实现 vs `_encode_parts` 逐帧最大偏差 = 0.000e+00 (逐位一致 ✅)
+[npz] ../../runs/_probe_v3/seed13.npz
+[rollout-only] 已存 npz，退出（拟合请用 --npz 重新调用）
