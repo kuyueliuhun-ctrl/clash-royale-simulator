@@ -1,0 +1,50 @@
+=== value-LN probe | ckpt=runs/critic_inert_probe_20k/solo_main_20000.pt mode=stoch frames<=30000 device=cuda ===
+    independent=True bypass=True γ=0.997 λ=0.99
+  [param] value_head.weight          (1, 128) ‖·‖=0.58907795
+  [param] value_head.bias            (1,) ‖·‖=0.08475759
+  [param] value_enc_fc.weight        (128, 2731) ‖·‖=12.69955349
+  [param] value_enc_fc.bias          (128,) ‖·‖=0.26213279
+  [param] value_enc_ln.weight        (128,) ‖·‖=11.72121334
+  [param] value_enc_ln.bias          (128,) ‖·‖=0.34172124
+  [param] value_head_mlp.0.weight    (64, 128) ‖·‖=5.69008875
+  [param] value_head_mlp.0.bias      (64,) ‖·‖=0.50158954
+  [param] value_head_mlp.2.weight    (1, 64) ‖·‖=0.87018538
+  [param] value_head_mlp.2.bias      (1,) ‖·‖=0.14254850
+[rollout] mode=stoch frames=29998 episodes=132 ep_len mean=227.3 wall=1525.5s (19.7 frames/s)
+[split] train=18283 val=4616 test=7099 (episodes 79/20/33)
+[target] 目标=GAE 回报按局中心化；Var(R)_within=59.9885 std=7.7452
+
+--- 闸门（不过 ⇒ L0_INVALID）---
+[fit] L0_fused       dim= 2725(raw 2731) val_EV_within=+0.1075 | EV_within=+0.0884 EV_pooled=+0.0773 a=10000.0
+[fit] L1_pre_ln      dim=  128(raw 128) val_EV_within=+0.0608 | EV_within=+0.0521 EV_pooled=+0.0387 a=1.0
+[fit] L2_relu_ln     dim=   32(raw 128) val_EV_within=+0.0550 | EV_within=-0.0183 EV_pooled=-0.0204 a=100.0
+[fit] L3_post_ln     dim=  128(raw 128) val_EV_within=+0.0933 | EV_within=-0.0173 EV_pooled=-0.0250 a=0.1
+[fit] L4_mlp0_post   dim=    0(raw 64) val_EV_within=+0.0000 | EV_within=+0.0000 EV_pooled=+0.0000 a=None  [退化]
+[fit] L5_value       dim=    0(raw 1) val_EV_within=+0.0000 | EV_within=+0.0000 EV_pooled=+0.0000 a=None  [退化]
+  G-UP    EV_within(fused)=+0.0884 ≥0.15 ? False
+  G-PC    EV_within(阳性对照)=+0.7461 ≥0.15 ? True
+  G-CLK   EV_within(时钟基线)=+0.0000 ≤0.05 ? True
+  G-SCR[fused   ] EV_within(打散)=+0.0003
+  G-SCR[post_ln ] EV_within(打散)=+0.0046
+  G-SCR   两者 ≤0.05 ? True
+
+=== 判据（照预注册 §3 读）===
+  阶梯 EV_within: L0_fused=0.0884  L1_pre_ln=0.0521  L2_relu_ln=-0.0183  L3_post_ln=-0.0173  L4_mlp0_post=0.0  L5_value=0.0
+  闸门: G-UP=FAIL G-PC=PASS G-CLK=PASS G-SCR=PASS  ⇒ all=False
+  首个 EV_within<0.05 的层 k*=2 (L2_relu_ln)
+  VERDICT = L0_INVALID
+
+--- 描述量（不参与判决，见预注册 §4）---
+  L0_fused       D= 2731 ‖恒定‖=   80.3340 ‖跨帧变化‖= 42.37498 相对=0.52748 零变化维=0.002 within_std_vec= 38.07242 gain_needed=        0.20
+  L1_pre_ln      D=  128 ‖恒定‖=  196.0173 ‖跨帧变化‖= 17.29760 相对=0.08825 零变化维=0.000 within_std_vec= 15.49806 gain_needed=        0.50
+  L2_relu_ln     D=  128 ‖恒定‖=  168.7808 ‖跨帧变化‖=  5.92429 相对=0.03510 零变化维=0.750 within_std_vec=  5.34591 gain_needed=        1.45
+  L3_post_ln     D=  128 ‖恒定‖=   11.7970 ‖跨帧变化‖=  0.35166 相对=0.02981 零变化维=0.000 within_std_vec=  0.31653 gain_needed=       24.47
+  L4_mlp0_post   D=   64 ‖恒定‖=    0.0000 ‖跨帧变化‖=  0.00000 相对=0.00000 零变化维=1.000 within_std_vec=  0.00000 gain_needed=7745226281231.88
+  L5_value       D=    1 ‖恒定‖=    0.1425 ‖跨帧变化‖=  0.00000 相对=0.00000 零变化维=1.000 within_std_vec=  0.00000 gain_needed=7745226281231.88
+  max_gain_head = σmax(W1)*σmax(W2) = 2.9033*0.8702 = 2.5264
+  post_ln gain_needed=24.47 vs max_gain_head=2.5264 ⇒ 缺口 9.7×
+  LN γ: mean=+1.03553 ‖γ‖=11.72121 ‖β‖=0.34172
+  relu_ln 逐帧存活率=0.1469  存活维占比=0.2500
+  mlp0_post 逐帧存活率=0.000000  全零帧占比=1.0000
+  value 唯一值=1/29998 std=1.490e-08 EV_within=+0.000000 std(V)/std(R)=0.000000
+[out] ../../docs/value_ln_probe_primary.json
