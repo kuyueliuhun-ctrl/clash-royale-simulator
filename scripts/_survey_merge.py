@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """把 48+ 份逐文件分析素材（docs/_survey/parts/*.md）机械合并成
-《项目内容全解文档》（docs/project_full_reference.md）。
+《项目内容全解文档》（docs/full_code_reference.md）。
 
 设计原则：
   * **不做二次创作**——只做结构重排 + 章节编号 + 目录 + 索引 + 对账附录；
@@ -12,7 +12,7 @@
 
 用法：
     PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe scripts/_survey_merge.py \
-        --out docs/project_full_reference.md
+        --out docs/full_code_reference.md
 """
 from __future__ import annotations
 
@@ -124,7 +124,7 @@ def collect_noncode() -> Dict[str, List[Tuple[str, int]]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default=os.path.join(ROOT, "docs", "project_full_reference.md"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "docs", "full_code_reference.md"))
     args = ap.parse_args()
 
     groups = load("groups.json")
@@ -393,6 +393,12 @@ def main() -> int:
                     note = "素材把**装饰器行**也算进定义区间，比 AST 的 `def` 行更完整 ⇒ 不是错误"
                 W(f"| `{who}` | {mat} | {ast_v} | {note} |")
         W("")
+        W("")
+        W("**另一处已知的快照漂移（主动披露）**：`docs/_survey/parts/GX03.md` 对 `scripts/_survey_merge.py` 的描述里"
+          "写着「默认输出 `docs/project_full_reference.md`」——那是**该脚本被分析当时**的事实。"
+          "本文档定稿前该默认值已改名，现在产出的是 `docs/full_code_reference.md`（即本文档现在的文件名）；"
+          "`scripts/_survey_merge_docs.py` 的交叉引用同样已改名。**除这一处命名外，被描述的逻辑一字未变。**")
+        W("")
         W("**结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致（类型 0 处不符、参数 0 处缺失、"
           "AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，"
           "均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**")
@@ -446,7 +452,7 @@ def main() -> int:
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_groups.py    --inventory docs/_survey/inventory.json --out docs/_survey/groups.json")
     W("#  → 由子代理按 docs/_survey/TASK_TEMPLATE.md 逐组分析，产出 docs/_survey/parts/<组号>.md")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_verify.py")
-    W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py --out docs/project_full_reference.md")
+    W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py --out docs/full_code_reference.md")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_md_to_docx.py --md docs/training_method.md --docx docs/training_method.docx")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_md_to_docx.py --md docs/game_engine.md     --docx docs/game_engine.docx")
     W("```")

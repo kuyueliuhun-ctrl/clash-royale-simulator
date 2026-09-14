@@ -46,7 +46,7 @@
 | 胜负判定 | §A.6（塔血量、摧毁效果、`winner`/`game_over` 全部置位点） |
 | 卡牌与法术 | §B.6–B.7（机制类组织、法术落点与命中公式） |
 | 部署合法性 | §B.8（`legal_cells`/`_position_legal` 与引擎侧校验的一致性） |
-| 配套文档 | 《项目内容全解文档》`docs/project_full_reference.md`、《训练方法文档》`docs/training_method.md` |
+| 配套文档 | 《项目内容全解文档》`docs/full_code_reference.md`、《训练方法文档》`docs/training_method.md` |
 | 一致性取证 | `docs/mask_vs_engine_reconcile_2026-09-14.log` —— 掩码 `legal_cells` 与引擎 `deploy_card` 的**逐格双向对账**（18×32×2 方 × 24 张卡），脚本 `scripts/_mask_vs_engine_reconcile.py`（只读） |
 
 ### 0.2 资料来源与「不编造」的保证
@@ -1396,7 +1396,7 @@ Freeze 首次 pulse 后把 `damage_per_tick` 置 0（施法单次伤害）（`ba
 下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。
 
 > **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。
-> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明
+> 这些文件在本项目的《项目内容全解文档》[`full_code_reference.md`](full_code_reference.md) 里已被逐函数说明
 > （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——
 > 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。
 
@@ -1448,7 +1448,7 @@ PYTHONIOENCODING=utf-8 $PY scripts/_survey_inventory.py --out docs/_survey/inven
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_groups.py --inventory docs/_survey/inventory.json --out docs/_survey/groups.json
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_verify.py
 # 2) 合并三份交付物
-PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/project_full_reference.md
+PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/full_code_reference.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind training --out docs/training_method.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind engine   --out docs/game_engine.md
 # 3) 生成 DOCX

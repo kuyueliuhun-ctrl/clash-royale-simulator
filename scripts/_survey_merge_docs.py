@@ -46,7 +46,7 @@ CONF: Dict[str, Dict] = {
             ("训练相关源码", "`src/clasher_new/rl/` 全部 33 个 `.py` 文件（PPO、环境封装、策略网络、对手池、评估、诊断、辅助训练脚本）"),
             ("引擎接口", "`src/clasher_new/rl/env_wrapper.py` 调用的 `battle.py` / `action_mask.py` 接口（仅涉及训练接口部分）"),
             ("函数索引", "§B.8（本文件内，含「函数名 → 文件:行号」字母序快速索引）"),
-            ("配套文档", "《项目内容全解文档》`docs/project_full_reference.md`（逐文件全量函数说明）、《游戏引擎文档》`docs/game_engine.md`"),
+            ("配套文档", "《项目内容全解文档》`docs/full_code_reference.md`（逐文件全量函数说明）、《游戏引擎文档》`docs/game_engine.md`"),
         ],
         "howto_index": "按 `Ctrl+F` 搜函数名即可；先用 §B.8 的字母序快速索引定位 `文件:行号`。",
     },
@@ -69,7 +69,7 @@ CONF: Dict[str, Dict] = {
             ("胜负判定", "§A.6（塔血量、摧毁效果、`winner`/`game_over` 全部置位点）"),
             ("卡牌与法术", "§B.6–B.7（机制类组织、法术落点与命中公式）"),
             ("部署合法性", "§B.8（`legal_cells`/`_position_legal` 与引擎侧校验的一致性）"),
-            ("配套文档", "《项目内容全解文档》`docs/project_full_reference.md`、《训练方法文档》`docs/training_method.md`"),
+            ("配套文档", "《项目内容全解文档》`docs/full_code_reference.md`、《训练方法文档》`docs/training_method.md`"),
             ("一致性取证", "`docs/mask_vs_engine_reconcile_2026-09-14.log` —— 掩码 `legal_cells` 与引擎 `deploy_card` 的**逐格双向对账**（18×32×2 方 × 24 张卡），脚本 `scripts/_mask_vs_engine_reconcile.py`（只读）"),
         ],
         "howto_index": "按 `Ctrl+F` 搜函数名或常量名；引擎常量（格子尺寸、塔血量、代价表）都在 §A.2/§B.3/§B.5 的表格里。",
@@ -251,7 +251,7 @@ def main() -> int:
     W("下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。")
     W("")
     W("> **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。")
-    W("> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明")
+    W("> 这些文件在本项目的《项目内容全解文档》[`full_code_reference.md`](full_code_reference.md) 里已被逐函数说明")
     W("> （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——")
     W("> 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。")
     W("")
@@ -287,7 +287,7 @@ def main() -> int:
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_groups.py --inventory docs/_survey/inventory.json --out docs/_survey/groups.json")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_verify.py")
     W("# 2) 合并三份交付物")
-    W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/project_full_reference.md")
+    W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/full_code_reference.md")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind training --out docs/training_method.md")
     W("PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind engine   --out docs/game_engine.md")
     W("# 3) 生成 DOCX")

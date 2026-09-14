@@ -33,7 +33,7 @@
 | 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|
 | 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|
 
-共 **170 个代码文件**、**46917 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
+共 **170 个代码文件**、**46973 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
 
 ### 0.2 方法（为什么可以相信这份文档的数字）
 
@@ -75,7 +75,7 @@
 | `docs` | 7 | 448 | 0 | 2.1–2.7 |
 | `ideas` | 1 | 14 | 0 | 2.8–2.8 |
 | `runs` | 3 | 279 | 0 | 2.10–2.12 |
-| `scripts` | 56 | 13343 | 319 | 2.13–2.79 |
+| `scripts` | 56 | 13399 | 319 | 2.13–2.79 |
 | `scripts/rl` | 11 | 87 | 1 | 2.58–2.68 |
 | `src/clasher_new` | 35 | 10050 | 495 | 2.80–2.168 |
 | `src/clasher_new/client_side` | 5 | 581 | 26 | 2.88–2.92 |
@@ -108,8 +108,8 @@
 | 20 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.20 | G032 |
 | 21 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.21 | G030 |
 | 22 | `scripts/_survey_md_to_docx.py` | 341 | 9 | 113 | §2.22 | GX03 |
-| 23 | `scripts/_survey_merge.py` | 479 | 6 | 74 | §2.23 | GX03 |
-| 24 | `scripts/_survey_merge_docs.py` | 265 | 4 | 56 | §2.24 | GX03 |
+| 23 | `scripts/_survey_merge.py` | 485 | 6 | 74 | §2.23 | GX03 |
+| 24 | `scripts/_survey_merge_docs.py` | 315 | 4 | 56 | §2.24 | GX03 |
 | 25 | `scripts/_survey_verify.py` | 145 | 2 | 30 | §2.25 | GX03 |
 | 26 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.26 | G033 |
 | 27 | `scripts/assassin_vs_megaknight.py` | 94 | 1 | 32 | §2.27 | G033 |
@@ -1308,7 +1308,7 @@
 
 ### 2.23 `scripts/_survey_merge.py`
 
-- **分析组**：GX03　**行数**：479　**AST 符号数**：6
+- **分析组**：GX03　**行数**：485　**AST 符号数**：6
 
 - 语言/类型: Python
 - 行数: 469
@@ -1388,7 +1388,7 @@
 
 ### 2.24 `scripts/_survey_merge_docs.py`
 
-- **分析组**：GX03　**行数**：265　**AST 符号数**：4
+- **分析组**：GX03　**行数**：315　**AST 符号数**：4
 
 - 语言/类型: Python
 - 行数: 264
@@ -24016,6 +24016,9 @@
 | `GX03.md:scripts/_survey_merge_docs.py:extract_pending` | L101-125 | L102-126 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
 | `GX03.md:scripts/_survey_merge_docs.py:main` | L128-260 | L129-261 | **素材写作之后该脚本又被作者修改过**（本次文档工作里给 `_survey_*.py` 加/改了文案行）⇒ 素材记录的是**写作当时的行号**，区间偏移 1~3 行；功能描述不受影响。这是「素材快照 vs 后续改动」的正常结果，**不是编造** |
 
+
+**另一处已知的快照漂移（主动披露）**：`docs/_survey/parts/GX03.md` 对 `scripts/_survey_merge.py` 的描述里写着「默认输出 `docs/project_full_reference.md`」——那是**该脚本被分析当时**的事实。本文档定稿前该默认值已改名，现在产出的是 `docs/full_code_reference.md`（即本文档现在的文件名）；`scripts/_survey_merge_docs.py` 的交叉引用同样已改名。**除这一处命名外，被描述的逻辑一字未变。**
+
 **结论：`.py` 文件的函数名、类型、参数名与素材记录全部一致（类型 0 处不符、参数 0 处缺失、AST 查无的符号全部是非 `.py` 或非符号标题）；行号区间的少数差异已逐条定性，均不改变任何功能描述 ⇒ 未发现编造的函数、参数或机制。**
 
 ---
@@ -26339,7 +26342,7 @@ PYTHONIOENCODING=utf-8 $PY scripts/_survey_inventory.py --out docs/_survey/inven
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_groups.py    --inventory docs/_survey/inventory.json --out docs/_survey/groups.json
 #  → 由子代理按 docs/_survey/TASK_TEMPLATE.md 逐组分析，产出 docs/_survey/parts/<组号>.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_verify.py
-PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py --out docs/project_full_reference.md
+PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py --out docs/full_code_reference.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_md_to_docx.py --md docs/training_method.md --docx docs/training_method.docx
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_md_to_docx.py --md docs/game_engine.md     --docx docs/game_engine.docx
 ```

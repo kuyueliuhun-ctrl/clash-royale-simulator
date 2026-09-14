@@ -14,7 +14,7 @@
 | **当前问题的归因**（critic 为何塌成常数 / 上限为何不动 / 判别性实验与预注册要素） | `d1_long_100k_cause_analysis_2026-09-13.md` |
 | **critic 惰性检验**（预注册 + 判读） | `critic_inertia_prereg_2026-09-13.md`、`critic_inertia_verdict_2026-09-13.md`（判读脚本 `../scripts/judge_critic_inertia.py`） |
 | R1 事件留证（`cudaErrorUnknown` / 宿主提交压力 / 孤儿 worker） | `r1_incident_2026-09-13_layer1_cuda_unknown.md` |
-| **逐文件函数全解**（每个代码文件的每个函数：作用/参数/实现/行号；含覆盖对账与编造体检） | `project_full_reference.md`（150+ 代码文件 / 1450+ 符号） |
+| **逐文件函数全解**（每个代码文件的每个函数：作用/参数/实现/行号；含覆盖对账与编造体检） | `full_code_reference.md`（170 个代码文件 / 1554 条索引） |
 | **训练方法文档**（训练过程、被调函数、函数参数、函数索引；docx 同名） | `training_method.md` / `training_method.docx` |
 | **游戏引擎文档**（地图 / 寻路 / 索敌 / 战斗主循环；docx 同名） | `game_engine.md` / `game_engine.docx` |
 | 跨会话红线与结论索引（先读这个再动方案） | 根目录 `AGENTS.md`（编号可引用：R/C/X/O） |
@@ -25,7 +25,7 @@
 
 | 文档 | 内容 | 关联源文件/数据 |
 |---|---|---|
-| `project_full_reference.md` | **项目内容全解（2026-09-14）**：对 `src/` `scripts/` 及仓库根目录共 **170 个代码文件**做逐文件函数级摸底——每个类/函数/方法给出类型、签名（含默认值）、作用、参数、返回、实现步骤、调用关系、置信度，全部带源码行号；含代码库总览、非代码文件清单、**覆盖对账**（147 个 `.py` / 1479 个符号 100% 覆盖）、**签名·行号·参数抽检**（对账 1479 符号：0 类型不符、0 参数缺失；共 170 文件 / 46917 行 / 1554 条索引）与**全局符号索引**（1528 条） | 全仓库代码；生成链 `scripts/_survey_{inventory,groups,brief,verify,audit,merge}.py`；素材 `docs/_survey/` |
+| `full_code_reference.md` | **项目内容全解（2026-09-14）**：对 `src/` `scripts/` 及仓库根目录共 **170 个代码文件**做逐文件函数级摸底——每个类/函数/方法给出类型、签名（含默认值）、作用、参数、返回、实现步骤、调用关系、置信度，全部带源码行号；含代码库总览、非代码文件清单、**覆盖对账**（147 个 `.py` / 1479 个符号 100% 覆盖）、**签名·行号·参数抽检**（对账 1479 符号：0 类型不符、0 参数缺失；共 170 文件 / 46917 行 / 1554 条索引）与**全局符号索引**（1528 条） | 全仓库代码；生成链 `scripts/_survey_{inventory,groups,brief,verify,audit,merge}.py`；素材 `docs/_survey/` |
 | `training_method.md` / `.docx` | **训练方法文档（2026-09-14）**：三种训练模式、一次训练的数据流（观测→前向→动作→奖励→GAE→PPO）、网络逐层结构、**TrainConfig 全 47 字段**、`run_league.py` 全 54 个 CLI 参数、检查点与恢复、评估诊断口径、辅助训练脚本、**rl 全包函数索引**（含字母序快速索引） | `src/clasher_new/rl/*.py`、`battle.py`；素材 `docs/_survey/drafts/training_*.md` |
 | `game_engine.md` / `.docx` | **游戏引擎文档（2026-09-14）**：地图与坐标系统、实体体系、`step(dt)` 逐阶段战斗主循环、伤害与命中、皇家塔与胜负判定、**寻路**（两套实现与 A* 代价）、**索敌与目标选择**、卡牌机制分类、法术落点与命中公式、部署合法性 | `battle.py` `arena.py` `core.py` `player.py` `pathfinding*.py` `card_mechanics.py` `spell_module.py` `threat_calc.py` `rl/action_mask.py` |
 | `../AGENTS.md` | **红线与结论索引**（2026-09-13 重构）：12 条红线（R）+ 10 条已确证（C）+ 9 条已否证（X）+ 5 条未决（O）+ 计划台账 + run 台账；条目编号可引用 | 全部 `rl/` 与 `scripts/`；过程细节见 `agents_archive_2026-09.md` |

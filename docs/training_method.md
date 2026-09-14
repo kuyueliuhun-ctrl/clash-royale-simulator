@@ -41,7 +41,7 @@
 | 训练相关源码 | `src/clasher_new/rl/` 全部 33 个 `.py` 文件（PPO、环境封装、策略网络、对手池、评估、诊断、辅助训练脚本） |
 | 引擎接口 | `src/clasher_new/rl/env_wrapper.py` 调用的 `battle.py` / `action_mask.py` 接口（仅涉及训练接口部分） |
 | 函数索引 | §B.8（本文件内，含「函数名 → 文件:行号」字母序快速索引） |
-| 配套文档 | 《项目内容全解文档》`docs/project_full_reference.md`（逐文件全量函数说明）、《游戏引擎文档》`docs/game_engine.md` |
+| 配套文档 | 《项目内容全解文档》`docs/full_code_reference.md`（逐文件全量函数说明）、《游戏引擎文档》`docs/game_engine.md` |
 
 ### 0.2 资料来源与「不编造」的保证
 
@@ -3070,7 +3070,7 @@ _n_mb = ppo_minibatch if >0 else max(1, update_interval)
 下列条目是各部分**显式标注为无法从源码确认**的内容，集中列在这里以防被误当作事实。
 
 > **重要提示**：不少条目的「无法确认的原因」并不是「源码里查不到」，而是**该子代理的阅读清单里没有那个文件**。
-> 这些文件在本项目的《项目内容全解文档》[`project_full_reference.md`](project_full_reference.md) 里已被逐函数说明
+> 这些文件在本项目的《项目内容全解文档》[`full_code_reference.md`](full_code_reference.md) 里已被逐函数说明
 > （例如 `pathfinding_heap.py`、`rl/action_mask.py`、`spell_module.py`、`rl/env_wrapper.py`、`new_visualization.py`）——
 > 因此请**先到该文档对应章节取行号，再回源码核验**；本附录只负责标明「哪些结论还没被独立确认过」。
 
@@ -3120,7 +3120,7 @@ PYTHONIOENCODING=utf-8 $PY scripts/_survey_inventory.py --out docs/_survey/inven
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_groups.py --inventory docs/_survey/inventory.json --out docs/_survey/groups.json
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_verify.py
 # 2) 合并三份交付物
-PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/project_full_reference.md
+PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge.py         # -> docs/full_code_reference.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind training --out docs/training_method.md
 PYTHONIOENCODING=utf-8 $PY scripts/_survey_merge_docs.py --kind engine   --out docs/game_engine.md
 # 3) 生成 DOCX
