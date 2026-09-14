@@ -33,7 +33,7 @@
 | 明确排除 | `__pycache__/`、`.git/`、`.venv/`、`clash-royale-simulator-main.venv/`、`node_modules/`、`.idea/`（非项目源码或二进制缓存）|
 | 未纳入 | `docs/` 下的 Markdown（它们是文档而非代码；其中 7 个 `.cdp*.js` 已按代码纳入 GX02）|
 
-共 **170 个代码文件**、**47019 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
+共 **170 个代码文件**、**47054 行**；其中 `.py` 文件经 AST 抽取得 **1479 个类/函数/方法**。
 
 ### 0.2 方法（为什么可以相信这份文档的数字）
 
@@ -47,6 +47,7 @@
    结果见 §4.1/§4.2。
 5. **二次抽检**：`scripts/_survey_audit.py` 再把每个符号条目的**行号区间、类型、参数名**
    与 AST 事实逐条对账 ⇒ 既防漏，也防「写了个不存在的参数」。结果见 §4.3。
+6. **独立唱反调校验**：另派一个无上下文的子代理只读源码、专找编造与错误；它找出 9 条不符项（含 1 条「编造 grep 结论」级），已逐条更正并全部记录在 §4.5。
 
 ### 0.3 阅读约定
 
@@ -75,7 +76,7 @@
 | `docs` | 7 | 448 | 0 | 2.1–2.7 |
 | `ideas` | 1 | 14 | 0 | 2.8–2.8 |
 | `runs` | 3 | 279 | 0 | 2.10–2.12 |
-| `scripts` | 56 | 13445 | 319 | 2.13–2.79 |
+| `scripts` | 56 | 13480 | 319 | 2.13–2.79 |
 | `scripts/rl` | 11 | 87 | 1 | 2.58–2.68 |
 | `src/clasher_new` | 35 | 10050 | 495 | 2.80–2.168 |
 | `src/clasher_new/client_side` | 5 | 581 | 26 | 2.88–2.92 |
@@ -108,7 +109,7 @@
 | 20 | `scripts/_survey_groups.py` | 129 | 2 | 40 | §2.20 | G032 |
 | 21 | `scripts/_survey_inventory.py` | 200 | 8 | 101 | §2.21 | G030 |
 | 22 | `scripts/_survey_md_to_docx.py` | 341 | 9 | 113 | §2.22 | GX03 |
-| 23 | `scripts/_survey_merge.py` | 531 | 6 | 74 | §2.23 | GX03 |
+| 23 | `scripts/_survey_merge.py` | 566 | 6 | 74 | §2.23 | GX03 |
 | 24 | `scripts/_survey_merge_docs.py` | 315 | 4 | 56 | §2.24 | GX03 |
 | 25 | `scripts/_survey_verify.py` | 145 | 2 | 30 | §2.25 | GX03 |
 | 26 | `scripts/assassin_left_bridge_test.py` | 93 | 1 | 31 | §2.26 | G033 |
@@ -1308,7 +1309,7 @@
 
 ### 2.23 `scripts/_survey_merge.py`
 
-- **分析组**：GX03　**行数**：531　**AST 符号数**：6
+- **分析组**：GX03　**行数**：566　**AST 符号数**：6
 
 - 语言/类型: Python
 - 行数: 469
@@ -4163,7 +4164,7 @@
 - 参数: 无
 - 返回: 无返回值（副作用：改写 `EW.compute_reward` 与 `REC`）
 - 实现: L52 定义 `wrapped(rw, **kw)`：先 `full = _ORIG(rw, **kw)`（L53）；L55-58 定义内层 `variant(**over)`，做法是 `dict(rw)` 拷贝后 `update(over)` 再调 `_ORIG`；L60-63 依次构造 `no_edw`（`elixir_diff_weight=0.0`）、`no_crown`（`crown_weight=0.0, crown_lose_weight=0.0`）、`no_tower`（`tower_dmg_opp=0.0, tower_dmg_self=0.0`）、`no_term`（`win_bonus=0.0, lose_penalty=0.0, draw_penalty=0.0`）；L64-73 `REC.clear()` 后写入 5 个差值（`full`、`full - no_edw` 等）以及从 `rw` 里读出的 `edw_coef`、`tower_opp_coef`；L74 返回 `full`；L75 完成替换。差值即"精确项"的前提是各项对权重线性——已在 `rl/env_wrapper.py:240-253`（`reward = rw["crown_weight"]*(...) + rw["tower_dmg_opp"]*red_dmg ...`）与 `L243-248`（`reward += edw * ((me_a-op_a)-(me_b-op_b))`）确认。
-- 调用: 被 `main` 在 L103 调用一次；`wrapped` 由 `rl.env_wrapper.RLEnv.step` 内的全局名 `compute_reward(rw, ...)`（`rl/env_wrapper.py:684`）在每次 step 时调用。已知前提由 `main` L175-176 在 `REC` 为空时 `raise SystemExit` 自检。
+- 调用: 被 `main` 在 L103 调用一次；`wrapped` 由 `rl.env_wrapper.RLEnv.step` 内的全局名 `compute_reward(rw, ...)`（`rl/env_wrapper.py:678`，2026-09-14 更正：原文 684 有 6 行偏差）在每次 step 时调用。已知前提由 `main` L175-176 在 `REC` 为空时 `raise SystemExit` 自检。
 - 置信度: 已确认
   - 附加事实（依据 `rl/env_wrapper.py`）：`RLEnv.step` 在调用前已把"两段价格"解析结果写回 `rw["tower_dmg_opp"] / rw["tower_dmg_self"] / rw["elixir_diff_weight"]`（`env_wrapper.py:678-683` 调 `_phase_weights`，L169-178 定义 120s 切档），而 `compute_reward` 内部不再重新解析（`env_wrapper.py:218-249` 直接读 `rw`），因此"把这三个键置 0"在前后两段都能真正关掉对应项；`compute_reward` 开头 `rw = dict(_DEFAULT_REWARD, **(rw or {}))`（`env_wrapper.py:209`）保证显式 0 值覆盖默认值生效。
 
@@ -5158,7 +5159,7 @@
   - `extra` (默认 `''`): 额外读数串；非空时追加 `  [extra]`
 - 返回: 无
 - 实现: L16 用 `global PASS, FAIL` 拿模块计数器；L17 `if cond: PASS += 1; print(f'  OK {name}' + (f'  [{extra}]' if extra else ''))`；L18 否则 `FAIL += 1` 并打印同格式 `FAIL`。没有 `assert`、没有异常，这是它能被 488 行脚本到处复用的原因。
-- 调用: 被本文件全部 28 个测试函数调用（共约 60 处），也被运行器的异常兜底调用（L486）；不调用其它函数。
+- 调用: 被本文件全部 28 个测试函数调用（**共 74 处**，2026-09-14 复算：`grep -c 'check('` = 75 减去 1 处函数定义），也被运行器的异常兜底调用（L486）；不调用其它函数。
 - 置信度: 已确认
 
 #### 2.74.2 make_battle [L20-26]
@@ -5407,7 +5408,7 @@
 #### 2.74.25 test_evo_wizard_shield [L291-295]
 - 类型: function
 - 签名: `def test_evo_wizard_shield()`
-- 作用: **验证机制：族 7 觉醒法师护盾（75×1.1^10 ≈194）**。被测函数：`derive_evolved_stats` 的护盾推导（evolutions.py L114-115：`out['shield_hitpoints'] = evolved_scd['shieldHitpoints'] * level_scale(level)`）、`Troop._apply_evolution` 写 `shield_health`（battle.py L800-801）、`level_scale`（card_utils.py L210-214）、`Entity.take_damage` 的先扣护盾再扣血（battle.py L540-542）。
+- 作用: **验证机制：族 7 觉醒法师护盾（75×1.1^10 ≈194）**。被测函数：`derive_evolved_stats` 的护盾推导（evolutions.py L114-115：`out['shield_hitpoints'] = evolved_scd['shieldHitpoints'] * level_scale(level)`）、`Troop._apply_evolution` 写 `shield_health`（battle.py L800-801）、`level_scale`（card_utils.py L210-214）、`Entity.take_damage` 的护盾/血量**二选一**结算（battle.py L540-542：`if not self.shield_health: self.hp -= amount` `else: self.shield_health = max(0, shield - amount)` —— **有盾只扣盾、无盾才扣血，伤害不溢出**）。
 - 参数: 无
 - 返回: 无
 - 实现: L293-294 造局并放蓝方 evolved Wizard；L295 断言 `abs(w.shield_health - 75*1.1**10) < 2`。`Wizard` 的 `evolvedSpellsData.summonCharacterData.shieldHitpoints = 75`（已复算），`level_scale(11)=1.1^10`，故期望 194.5。
@@ -5582,9 +5583,9 @@
   - `player` (int): 归属玩家
   - `evolved` (默认 `False`): 是否觉醒形态
 - 返回: 生成的 `Building` 实例 `b`
-- 实现: L41 用 `Building(bs.next_entity_id, Position(x, y), player, card, False, evolved=evolved)` 构造（第 5 个位置参数 `False` 未在本文件说明语义，无法确认：未读到 `Building.__init__` 签名）；L42 调 `bs._spawn_entity(b)`；L43 返回实体。
+- 实现: L41 用 `Building(bs.next_entity_id, Position(x, y), player, card, False, evolved=evolved)` 构造；第 5 个位置参数 `False` = **`persistent`**（非持久塔标记）——`Building.__init__(self, id, position, player, card_name, persistent=False, evolved=False)`（`battle.py:1234`），并在 `L1240 self.persistent = persistent` 落存。**（2026-09-14 独立校验后补全：原文标为无法确认，实为可确认）**；L42 调 `bs._spawn_entity(b)`；L43 返回实体。
 - 调用: 被 `test_goblindrill_hide`（L253）、`test_goblincage_capture`（L276）、`test_tesla_pulse`（L376）调用；它调用了 `battle.Building`（`battle.py:1233`）。
-- 置信度: 已确认（第 5 个位置参数 `False` 的具体语义无法确认，原因：未读取 `Building.__init__` 定义）
+- 置信度: 已确认（含第 5 个位置参数语义 = `persistent`，依据 `battle.py:1234`/`L1240`）
 
 #### 2.75.6 step_for [L45-47]
 - 类型: function
@@ -11191,7 +11192,7 @@
 - 参数: 构造参数 `position`。
 - 返回: 实例。
 - 实现: 类体仅 `__init__` 一个方法，无其它属性/方法。
-- 调用: 仓库内 `grep BlankEntity` 只命中本文件 ⇒ **未发现在别处被实例化或引用**（无法确认它的实际消费方）。
+- 调用: **（2026-09-14 独立校验后更正）** `battle.py:1` 导入它、`battle.py:1670` 与 `battle.py:2964` 两次实例化它（`self.target = BlankEntity(target_position)` / `target = BlankEntity(position)`，用作「占位/空目标」实体）；定义在 `core.py:11`。**原文曾写「仓库内 grep 只命中本文件 ⇒ 未发现在别处被实例化或引用」，该结论与仓库事实相反，已作废。**
 - 置信度: 已确认（定义与无引用的事实）；其设计意图的消费方无法确认（原因：全仓无使用点）
 
 ##### 2.93.2.1 BlankEntity.__init__ [L13-14]
@@ -11630,7 +11631,7 @@
   - `buildings`: 建筑数据表 dict（`card_utils.py:16` 同构）。
   - `level=11` (默认 11): 目标等级，支持 11-16（L99 docstring）。
 - 返回: `out` dict，键可能含 `hp`（必有）、`damage`（必有）、`shield_hitpoints`（条件）、若干特殊机制字段、`evoProjectileData`（条件）。L100 docstring 描述为 `{hp, damage, shield_hitpoints, 特殊字段...}`。
-- 实现: L102 函数内延迟导入 `from card_utils import _rarity_level_index, level_scale`（`card_utils.py:182`/`210`）。L103 `out = {}`；L104 `base_scd = base_card.data['summonCharacterData']`（键不存在会 `KeyError`）；L105 `char_row = characters.get(base_scd.get('name')) or buildings.get(base_scd.get('name')) or {}`（先角色表后建筑表）；L106 `hp_pl = char_row.get('hitpoints_per_level') or []`；L107 `li = _rarity_level_index(base_card.data.get('rarity') or 'Common', level)`（稀有度→等级索引，未知稀有度按 Common）。L108-113 血量：`evo_hp = evolved_scd.get('hitpoints')`，若 `evo_hp` 为真且 `hp_pl` 非空且 `0 <= li < len(hp_pl)` 且 `hp_pl[0]` 非 0 ⇒ `out['hp'] = evo_hp * (hp_pl[li]/hp_pl[0])`（按基础卡曲线从 lv1 基准等比放大），否则**保底** `out['hp'] = base_card.hp`；`out['damage'] = base_card.damage`（伤害不随觉醒变大，直接用基础卡值）。L114-115 护盾：若 `evolved_scd.get('shieldHitpoints')` 则 `out['shield_hitpoints'] = evolved_scd['shieldHitpoints'] * level_scale(level)`（`level_scale` 定义在 `card_utils.py:210`，= `1.1**(level-1)`），行内注释自评「置信度中」。L117-123 逐字段透传 18 个特殊机制字段（`buffWhenNotAttackingData`、`buffAfterHitsData`、`buffAfterHitsTime`、`groupMaxSize`、`projectile2Data`、`onAttackActionData`、`onStartChargingActionData`、`onStartingActionData`、`deathSpawnCharacterData`、`onKilledActionData`、`shieldLostActionData`、`chargeSpeedMultiplier`、`damageSpecial`、`specialAttackRangeForStats`、`attackSequence`、`attackSequenceMode`、`attackSequenceList`），仅当 `k in evolved_scd` 时写入。L125-127 再按 `M5_EVO_PASSTHROUGH` 白名单补透传，条件加 `k not in out`（不覆盖上一步已写值）。L130-131 弹道：`_pd = evolved_scd.get('projectileData') or (evolved_scd.get('baseData') or {}).get('projectileData')`；L131-132 若真值则 `out['evoProjectileData'] = _pd`。L133 返回 `out`。
+- 实现: L102 函数内延迟导入 `from card_utils import _rarity_level_index, level_scale`（`card_utils.py:182`/`210`）。L103 `out = {}`；L104 `base_scd = base_card.data['summonCharacterData']`（键不存在会 `KeyError`）；L105 `char_row = characters.get(base_scd.get('name')) or buildings.get(base_scd.get('name')) or {}`（先角色表后建筑表）；L106 `hp_pl = char_row.get('hitpoints_per_level') or []`；L107 `li = _rarity_level_index(base_card.data.get('rarity') or 'Common', level)`（稀有度→等级索引，未知稀有度按 Common）。L108-113 血量：`evo_hp = evolved_scd.get('hitpoints')`，若 `evo_hp` 为真且 `hp_pl` 非空且 `0 <= li < len(hp_pl)` 且 `hp_pl[0]` 非 0 ⇒ `out['hp'] = evo_hp * (hp_pl[li]/hp_pl[0])`（按基础卡曲线从 lv1 基准等比放大），否则**保底** `out['hp'] = base_card.hp`；`out['damage'] = base_card.damage`（伤害不随觉醒变大，直接用基础卡值）。L114-115 护盾：若 `evolved_scd.get('shieldHitpoints')` 则 `out['shield_hitpoints'] = evolved_scd['shieldHitpoints'] * level_scale(level)`（`level_scale` 定义在 `card_utils.py:210`，= `1.1**(level-1)`），行内注释自评「置信度中」。L117-123 逐字段透传 **17** 个特殊机制字段（2026-09-14 复算更正：原文写 18，元组实为 17 项）（`buffWhenNotAttackingData`、`buffAfterHitsData`、`buffAfterHitsTime`、`groupMaxSize`、`projectile2Data`、`onAttackActionData`、`onStartChargingActionData`、`onStartingActionData`、`deathSpawnCharacterData`、`onKilledActionData`、`shieldLostActionData`、`chargeSpeedMultiplier`、`damageSpecial`、`specialAttackRangeForStats`、`attackSequence`、`attackSequenceMode`、`attackSequenceList`），仅当 `k in evolved_scd` 时写入。L125-127 再按 `M5_EVO_PASSTHROUGH` 白名单补透传，条件加 `k not in out`（不覆盖上一步已写值）。L130-131 弹道：`_pd = evolved_scd.get('projectileData') or (evolved_scd.get('baseData') or {}).get('projectileData')`；L131-132 若真值则 `out['evoProjectileData'] = _pd`。L133 返回 `out`。
 - 调用: `battle.py:8` 导入；被 `battle.py:792`（Troop 觉醒应用 `_apply_evolution`，`characters`/`buildings` 由 L786 `from card_utils import characters, buildings` 提供，`level=self.level`）与 `battle.py:1252`（觉醒建筑，同口径）调用；调用方随后用 `stats.get('hp')` 覆盖 `self.hp`、`stats['damage']` 覆盖 `self.data.damage`、`stats['shield_hitpoints']` 覆盖 `self.shield_health`、把整个 `stats` 存进 `self.evo`（`battle.py:797-802`，`self.evo` 初值见 `battle.py:71`），并消费 `evoProjectileData`（`battle.py:804`、`battle.py:1489`）。
 - 置信度: 已确认
 
@@ -14028,7 +14029,7 @@
 
 补充（字段交互，可确认的部分）：
 - `folder()` 只依赖 `out_dir` + `name`，因此改名即改全部产物路径（L244-245）。
-- `reward` 字段在**直接构造**时不做默认合并（例如 `presets()` 里 `cls(reward={...})` 会把 `reward` 整体替换为所给字典，实测 `aggressive.reward` 仅 7 键…见下 `presets` 条目实测：`aggressive` 仅 6 键）；只有在 `from_dict`（L305-307）或 `reward_to_env`/`model_reward_weights`（L401、L410）路径上才与 `DEFAULT_REWARD` 合并。
+- `reward` 字段在**直接构造**时不做默认合并（例如 `presets()` 里 `cls(reward={...})` 会把 `reward` 整体替换为所给字典）。**（2026-09-14 复算更正：原文此处自相矛盾地写了「仅 7 键…仅 6 键」）** 精确事实是：预设里的**字面字典** 6 键（`crown_weight`/`win_bonus`/`lose_penalty`/`invalid_penalty`/`elixir_bonus`/`elixir_diff_weight`，config.py:320-325），而**解析后**的 `TrainConfig.resolve('aggressive').reward` 是 **17 键**（与 `DEFAULT_REWARD` 合并后的结果）；只有在 `from_dict`（L305-307）或 `reward_to_env`/`model_reward_weights`（L401、L410）路径上才与 `DEFAULT_REWARD` 合并。
 
 ##### 2.111.1.1 TrainConfig.folder [L244-245]
 - 类型: method
@@ -24042,10 +24043,10 @@
 
 | 文档 | 引用条数 | 文件未找到 | 行号越界 |
 |---|---|---|---|
-| `docs/full_code_reference.md` | 2162 | 0 | 0 |
+| `docs/full_code_reference.md` | 2169 | 0 | 0 |
 | `docs/training_method.md` | 2237 | 0 | 0 |
 | `docs/game_engine.md` | 793 | 0 | 0 |
-| **合计** | **5192** | **0** | **0** |
+| **合计** | **5199** | **0** | **0** |
 
 > 上表的 0 是**修完之后**的读数（脚本跑完立刻复跑）。反查**确实抓到过 2 处真实缺陷**，已修并在此披露（下表用全角冒号书写，以免反查脚本把这两个**反面示例**误当成真引用）：
 >
@@ -24056,7 +24057,29 @@
 >
 > 另有 1 条 `player.py：36-39` 曾被判「越界」——复查后确认**是校验脚本自己的缺陷**（同名文件 `src/clasher_new/player.py` 与 `src/clasher_new/client_side/player.py` 解析歧义，按区间**末行**取值即正确）⇒ **文档无误**，已修脚本。
 
----
+### 4.5 独立校验与更正记录（唱反调抽样反查）
+
+2026-09-14 由**独立子代理**做「唱反调」校验：它没有本次对话的上下文、只读源码与三份文档、禁止上网，并被明确要求找出编造/夸大/错误。抽样是确定性的（每 24 条符号取 1、抽满 40 条；两份专题文档每 40 行取 1 行），判定全部基于亲读源码行号，可执行断言实跑取值。报告见 `docs/_survey/verification_report_2026-09-14.md`。
+
+**它发现 9 条不符项；本文档与两份专题文档已逐条更正**（更正方式一律是：改素材 → 重新机械合并，不是手改成品）：
+
+| # | 严重度 | 问题 | 更正 |
+|---|---|---|---|
+| 1 | **★编造级** | `core.BlankEntity` 条目写「仓库内 grep 只命中本文件 ⇒ 全仓无使用点」——**与事实相反**（`battle.py:1` 导入、`:1670` 与 `:2964` 两次实例化）| 已改为正确事实，并标注原文已作废 |
+| 2 | 高（易被下游照抄） | 训练文档称 `env_wrapper._DEFAULT_REWARD` 与 `config.DEFAULT_REWARD` 是「同值副本」——实跑为 **16 键 vs 17 键**，差 `draw_penalty` | 已改为「**不是**同值副本，改奖励常量必须同时改两处」 |
+| 3 | 高（语义误导） | `Entity.take_damage` 被写成「先扣护盾再扣血」——实为**有盾只扣盾、无盾才扣血，伤害不溢出** | 已改为源码语义并附两行源码 |
+| 4 | 中 | `aggressive` 预设 reward 键数在同一行自相矛盾（先写 7 键后写 6 键）| 已改为精确表述：**字面字典 6 键、解析后 17 键（与 `DEFAULT_REWARD` 合并）** |
+| 5 | 低 | 把 `env_wrapper.py:684` 称作 `compute_reward` 调用点——实为 **678** | 已改 |
+| 6 | 低 | `test_m2.py` 的 `check()` 调用点「约 60 处」——实为 **74** | 已改，并写明复算方法 |
+| 7 | 低 | `derive_evolved_stats` 特殊字段「18 个」——元组实为 **17** | 已改 |
+| 8 | 过度保守 | `spawn_building` 第 5 个位置实参被标「无法确认」——读 `battle.py:1234` 即知是 `persistent` | 已补全为可确认 |
+| 9 | 过度保守 + 文档内自相矛盾 | 引擎文档 A.7 第 4 项把同一文档 §B.8 已回答的「RL 掩码层是否补齐」标为无法确认 | 已改为「见 §B.8」，并挂上逐格对账日志 |
+
+**校验方给出的正面读数（客观，非客套）**：跨文件行号引用极准——专项攻击 15 条行内引用 **15/15** 正确；训练文档 **15/15**、引擎文档 **11/11** 全对（含最易错的数值常量 / 坐标区间 / 阶段顺序 / 函数名四类）；`_spell_deals_damage` 两面对照表**实跑亦对**。
+
+**校验方自陈的局限（照录，禁止外推）**：937 条符号只抽 **4.3%**；`#####` 子符号（568 条）与专题文档 §B.6–B.9 未覆盖；只做静态读取 + 少量纯计算实跑，**未**启动训练或对局 ⇒ 「未发现更多」**不能**外推为「全文正确」。
+
+> 除人工唱反调外，本文档另配**可复算**的反查工具 `scripts/_survey_reverse_check.py`（见 §4.4）：脚本负责「每个引用是否回源」，人工负责「语义有没有被说反」，两者互补。
 
 ## 5. 全局符号索引
 

@@ -531,7 +531,7 @@
 
 #### A.4.5 奖励权重全表（`DEFAULT_REWARD`，17 键）
 
-来源 `rl/config.py:37-57`；`env_wrapper._DEFAULT_REWARD` 是同值的副本（`rl/env_wrapper.py:40-58`，注释要求"勿单独改一处"）。
+来源 `rl/config.py:37-57`；`env_wrapper._DEFAULT_REWARD`（`rl/env_wrapper.py:40-58`，注释要求"勿单独改一处"）**不是同值副本**：2026-09-14 实跑核对 `len(config.DEFAULT_REWARD) = 17` 而 `len(env_wrapper._DEFAULT_REWARD) = 16`，差集恰为 **`draw_penalty`**（config 有、env_wrapper 无）⇒ 改奖励常量时**必须同时改两处**，不能按"同值副本"处理。
 
 | 键 | 默认值 | 含义 | `config.py` 行号 | `env_wrapper.py` 行号 |
 |---|---|---|---|--- |
