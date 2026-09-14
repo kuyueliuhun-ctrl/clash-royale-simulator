@@ -185,6 +185,15 @@ X-15 是**被一条独立证据挡住**的（"费用有没有被扣"直接测出
    **部署前圣水 ≥6 只占 0.02%**、**全帧圣水 ≥6 只占 0.11%** ⇒ 把 O3 的"不会攒费"从定性变成定量。
    同时**当场推翻了一条跨三手复用的旧口径**（X-15）。
    证据：`docs/replay_behavior_forensics_2026-09-14.md`、`scripts/forensics_card_usage.py`、`docs/forensics_card_usage_d1_long_100k.{log,json}`。
+7. **奖励分量可复算仪器 + 一次干净的排除（2026-09-14，W4）**：内存里包装 `compute_reward`（不改代码），
+   把逐帧奖励**精确**拆成 crown / edw（资源账）/ tower / unit / terminal 五项。
+   读数（2968 帧 / 13 局）：**crown 30.95% / edw 29.84% / tower 21.47% / terminal 10.11% / unit 7.63%**
+   ⇒ 照跑前写死的判据读出 **W4（无主导项）**：**"奖励被资源账带偏"这个候选被排除**；
+   同时**正面验证了双倍期切价**（`edw` 份额 32.5%→15.5%、塔伤 19.8%→30.4%）。
+   顺带记下一条**理论缺陷**：塑形项写成 `edw·[Φ(s')−Φ(s)]`，缺 `γ` ⇒ 不满足
+   Ng et al. 1999 的 policy-invariance 条件；偏差量级经算 **+0.0012/帧**（≈ 每帧平均奖励的 6%）
+   ⇒ **量级不足，不是主结论**，但它是唯一一条"一行可修"的理论缺陷，且按 R2/R11 须先预注册再改。
+   证据：`docs/reward_composition_verdict_2026-09-14.md`、预注册 `docs/reward_composition_prereg_2026-09-14.md`、`scripts/probe_reward_composition.py`。
 
 ---
 

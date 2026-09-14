@@ -1,0 +1,30 @@
+=== 奖励分量分解 | ckpt=runs/d1_long_100k/solo_main_100000.pt mode=stoch frames<=3000 device=cpu ===
+    γ=0.997 λ=0.99 update_interval=128
+    奖励权重（env 真值）: crown_lose_weight=10.0, crown_weight=8.0, draw_penalty=10.0, elixir_diff_late=0.1, elixir_diff_weight=0.5, king_gate=0.05, lose_penalty=10.0, normalize_tower_dmg=True, tower_dmg_late=0.002, tower_dmg_opp=0.001, tower_dmg_self=0.0012, tower_dmg_self_late=0.0022, tower_premium_k=2.0, unit_dmg_k=0.0005, win_bonus=10.0
+  [rollout] ep=0 frames=161 7.3s
+  [rollout] ep=5 frames=1295 57.4s
+  [rollout] ep=10 frames=2535 111.2s
+[rollout] frames=2968 episodes=13 ep_len mean=228.3 wall=129.6s (22.9 frames/s)
+
+--- §1 分量占比（Σ|项| 归一）---
+  edw       Σ|·|=   383.667  占比= 29.84%  Σ(带符号)=    11.400  mean=+0.003841  max|·|=2.5000
+  crown     Σ|·|=   398.000  占比= 30.95%  Σ(带符号)=    18.000  mean=+0.006065  max|·|=20.0000
+  tower     Σ|·|=   276.092  占比= 21.47%  Σ(带符号)=     4.272  mean=+0.001439  max|·|=1.7705
+  unit      Σ|·|=    98.116  占比=  7.63%  Σ(带符号)=    -3.717  mean=-0.001252  max|·|=0.3440
+  terminal  Σ|·|=   130.000  占比= 10.11%  Σ(带符号)=    30.000  mean=+0.010108  max|·|=10.0000
+  step_reward Σ=59.955  Σ|·|=1184.070  mean=+0.020201
+
+--- §2 分期（edw 切价 t=120s）---
+  [t<120 ] n= 2422 edw_coef≈0.50 | edw=32.5%  crown=32.8%  tower=19.8%  unit=6.5%  terminal=8.3%
+  [t>=120] n=  546 edw_coef≈0.10 | edw=15.5%  crown=20.8%  tower=30.4%  unit=13.5%  terminal=19.8%
+
+--- §3 Φ 轨迹与法术账（描述）---
+  elixir0 mean=1.727 median=1.643 | field_v0 mean=6.038 | Φ_me mean=7.764
+  field_v1 mean=5.130 | Φ_opp mean=6.953 | ΔΦ=(Φ_me−Φ_opp) mean=+0.812
+  施法/下牌帧 n=276：edw 项 mean=-0.111685 | 空帧 n=2692：edw 项 mean=+0.015685
+
+=== 判据（照预注册 §3 读）===
+  A/S(edw)=0.2984  B/S(tower)=0.2147  C/S(crown)=0.3095  D/S(unit)=0.0763  E/S(terminal)=0.1011
+  W3 终局 <10% ? False（E/S=10.11%）
+  VERDICT = W4_NO_DOMINANT_TERM
+[out] ../../docs/reward_composition_100k.json

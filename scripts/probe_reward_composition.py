@@ -125,12 +125,18 @@ def main():
           f"device={device} ===", flush=True)
     print(f"    γ={cfg.gamma} λ={cfg.gae_lambda} update_interval={cfg.update_interval}",
           flush=True)
-    print(f"    奖励权重: " + ", ".join(
-        f"{k}={v}" for k, v in sorted(cfg.reward_weights.items())
+    _rw_env = dict(getattr(env, "reward_weights", None) or {})
+    print(f"    奖励权重（env 真值）: " + ", ".join(
+        f"{k}={_rw_env[k]}" for k in sorted(_rw_env)
         if k in ("crown_weight", "crown_lose_weight", "tower_dmg_opp",
-                 "tower_dmg_self", "elixir_diff_weight", "elixir_diff_late",
-                 "unit_dmg_k", "win_bonus", "lose_penalty", "draw_penalty")),
+                 "tower_dmg_self", "tower_dmg_late", "tower_dmg_self_late",
+                 "elixir_diff_weight", "elixir_diff_late",
+                 "unit_dmg_k", "win_bonus", "lose_penalty", "draw_penalty",
+                 "normalize_tower_dmg", "tower_premium_k", "king_gate")),
         flush=True)
+    if not _rw_env:
+        print("    ⚠️ env.reward_weights 为空 ⇒ 权重取自默认表（读数仍为引擎真值）",
+              flush=True)
 
     opp = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM, belief_dim=bdim,
                          value_bypass=bool(pol.value_bypass),
@@ -207,6 +213,8 @@ def main():
           f"ep_len mean={np.mean(per_ep):.1f} wall={dt:.1f}s "
           f"({len(rows['full']) / max(1e-9, dt):.1f} frames/s)", flush=True)
 
+    if len(rows["full"]) == 0:
+        raise SystemExit("[abort] 没有一局完整结束 ⇒ --frames 太小（本局最长 360 帧）")
     terms = ("edw", "crown", "tower", "unit", "terminal")
     A = float(np.abs(rows["edw"]).sum())
     B = float(np.abs(rows["tower"]).sum())
@@ -278,7 +286,9 @@ def main():
     res = {"ckpt": a.ckpt, "mode": a.mode, "seed": a.seed,
            "frames": int(len(rows["full"])), "episodes": len(per_ep),
            "device": device,
-           "weights": {k: v for k, v in cfg.reward_weights.items()},
+           "weights_env": {k: v for k, v in
+                           dict(getattr(env, "reward_weights", None) or {}).items()},
+           "weights_cfg_reward": dict(cfg.reward),
            "sum_abs": {"edw": A, "tower": B, "crown": C, "unit": D, "terminal": E},
            "share": share, "verdict": verdict, "w3_terminal_lt_10pct": bool(w3),
            "stats": {k: _stat(rows[k]) for k in list(terms) + ["step_reward", "full"]},

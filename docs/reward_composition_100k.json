@@ -1,0 +1,167 @@
+{
+ "ckpt": "runs/d1_long_100k/solo_main_100000.pt",
+ "mode": "stoch",
+ "seed": 7,
+ "frames": 2968,
+ "episodes": 13,
+ "device": "cpu",
+ "weights_env": {
+  "crown_weight": 8.0,
+  "crown_lose_weight": 10.0,
+  "tower_dmg_opp": 0.001,
+  "tower_dmg_self": 0.0012,
+  "tower_dmg_late": 0.002,
+  "tower_dmg_self_late": 0.0022,
+  "win_bonus": 10.0,
+  "lose_penalty": 10.0,
+  "invalid_penalty": 0.05,
+  "elixir_bonus": 0.0,
+  "normalize_tower_dmg": true,
+  "elixir_diff_weight": 0.5,
+  "elixir_diff_late": 0.1,
+  "unit_dmg_k": 0.0005,
+  "tower_premium_k": 2.0,
+  "king_gate": 0.05,
+  "draw_penalty": 10.0
+ },
+ "weights_cfg_reward": {
+  "crown_weight": 8.0,
+  "crown_lose_weight": 10.0,
+  "tower_dmg_opp": 0.001,
+  "tower_dmg_self": 0.0012,
+  "tower_dmg_late": 0.002,
+  "tower_dmg_self_late": 0.0022,
+  "win_bonus": 10.0,
+  "lose_penalty": 10.0,
+  "draw_penalty": 10.0,
+  "invalid_penalty": 0.05,
+  "elixir_bonus": 0.0,
+  "normalize_tower_dmg": true,
+  "elixir_diff_weight": 0.5,
+  "elixir_diff_late": 0.1,
+  "unit_dmg_k": 0.0005,
+  "tower_premium_k": 2.0,
+  "king_gate": 0.05
+ },
+ "sum_abs": {
+  "edw": 383.6666666666673,
+  "tower": 276.09245966152105,
+  "crown": 398.0,
+  "unit": 98.11641075532485,
+  "terminal": 130.0
+ },
+ "share": {
+  "edw": 0.2983699865205146,
+  "tower": 0.2147116510885064,
+  "crown": 0.30951673666854373,
+  "unit": 0.0763031941472828,
+  "terminal": 0.10109843157515248
+ },
+ "verdict": "W4_NO_DOMINANT_TERM",
+ "w3_terminal_lt_10pct": false,
+ "stats": {
+  "edw": {
+   "n": 2968,
+   "mean": 0.003841,
+   "median": 0.0,
+   "sum": 11.4,
+   "sum_abs": 383.6667,
+   "p10": -0.0,
+   "p90": 0.0,
+   "max_abs": 2.5
+  },
+  "crown": {
+   "n": 2968,
+   "mean": 0.006065,
+   "median": 0.0,
+   "sum": 18.0,
+   "sum_abs": 398.0,
+   "p10": 0.0,
+   "p90": 0.0,
+   "max_abs": 20.0
+  },
+  "tower": {
+   "n": 2968,
+   "mean": 0.001439,
+   "median": 0.0,
+   "sum": 4.272,
+   "sum_abs": 276.0925,
+   "p10": -0.199813,
+   "p90": 0.194068,
+   "max_abs": 1.770485
+  },
+  "unit": {
+   "n": 2968,
+   "mean": -0.001252,
+   "median": 0.0,
+   "sum": -3.7166,
+   "sum_abs": 98.1164,
+   "p10": -0.0545,
+   "p90": 0.0545,
+   "max_abs": 0.344
+  },
+  "terminal": {
+   "n": 2968,
+   "mean": 0.010108,
+   "median": 0.0,
+   "sum": 30.0,
+   "sum_abs": 130.0,
+   "p10": 0.0,
+   "p90": 0.0,
+   "max_abs": 10.0
+  },
+  "step_reward": {
+   "n": 2968,
+   "mean": 0.020201,
+   "median": 0.0,
+   "sum": 59.9554,
+   "sum_abs": 1184.0704,
+   "p10": -0.288938,
+   "p90": 0.301082,
+   "max_abs": 30.393264
+  },
+  "full": {
+   "n": 2968,
+   "mean": 0.021453,
+   "median": 0.0,
+   "sum": 63.672,
+   "sum_abs": 1133.8015,
+   "p10": -0.291078,
+   "p90": 0.3,
+   "max_abs": 30.393264
+  }
+ },
+ "phases": {
+  "t<120": {
+   "n": 2422,
+   "share": {
+    "edw": 0.3250742799279428,
+    "crown": 0.3284572667578451,
+    "tower": 0.19804113555493225,
+    "unit": 0.06539036829802705,
+    "terminal": 0.08303694946125297
+   },
+   "edw_coef": 0.5
+  },
+  "t>=120": {
+   "n": 546,
+   "share": {
+    "edw": 0.15509962387191145,
+    "crown": 0.20789949582830652,
+    "tower": 0.30415010840301393,
+    "unit": 0.13485125206028564,
+    "terminal": 0.1979995198364824
+   },
+   "edw_coef": 0.09999999999999999
+  }
+ },
+ "phi": {
+  "phi_me_mean": 7.764293335258543,
+  "phi_opp_mean": 6.952776039661053,
+  "dphi_mean": 0.8115172955974899,
+  "elixir0_mean": 1.7265574862019397,
+  "field_v0_mean": 6.037735849056604,
+  "field_v1_mean": 5.1301942946990104
+ },
+ "n_prereg": "docs/reward_composition_prereg_2026-09-14.md"
+}
