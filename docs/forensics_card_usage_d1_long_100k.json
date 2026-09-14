@@ -136,6 +136,59 @@
     "min": 0.0893,
     "max": 6.0714
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 169,
+     "bucket_share": 0.2079,
+     "per_card_share": 0.2079,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.663388,
+     "n_frames_afford": 6003
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 169,
+     "bucket_share": 0.2079,
+     "per_card_share": 0.2079,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.316278,
+     "n_frames_afford": 2862
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 466,
+     "bucket_share": 0.5732,
+     "per_card_share": 0.1911,
+     "cards": [
+      "Knight",
+      "Archer",
+      "IceWizard"
+     ],
+     "p_afford_all_frames": 0.048845,
+     "n_frames_afford": 442
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 9,
+     "bucket_share": 0.0111,
+     "per_card_share": 0.0055,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.000995,
+     "n_frames_afford": 9
+    }
+   ],
    "all_frames_frac_ge6": 0.0001,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.2857,
@@ -286,6 +339,71 @@
     "min": 0.1786,
     "max": 10.0
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 183,
+     "bucket_share": 0.2672,
+     "per_card_share": 0.2672,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.656161,
+     "n_frames_afford": 3456
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 105,
+     "bucket_share": 0.1533,
+     "per_card_share": 0.1533,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.324283,
+     "n_frames_afford": 1708
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 294,
+     "bucket_share": 0.4292,
+     "per_card_share": 0.1431,
+     "cards": [
+      "Knight",
+      "IceWizard",
+      "Archer"
+     ],
+     "p_afford_all_frames": 0.061135,
+     "n_frames_afford": 322
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 102,
+     "bucket_share": 0.1489,
+     "per_card_share": 0.0745,
+     "cards": [
+      "Fireball",
+      "Tesla"
+     ],
+     "p_afford_all_frames": 0.017847,
+     "n_frames_afford": 94
+    },
+    {
+     "cost": 6.0,
+     "n_cards": 1,
+     "plays": 1,
+     "bucket_share": 0.0015,
+     "per_card_share": 0.0015,
+     "cards": [
+      "Xbow"
+     ],
+     "p_afford_all_frames": 0.01405,
+     "n_frames_afford": 74
+    }
+   ],
    "all_frames_frac_ge6": 0.014,
    "all_frames_frac_ge8": 0.0104,
    "post_median": 0.2857,
@@ -434,6 +552,59 @@
     "min": 0.1786,
     "max": 8.0357
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 207,
+     "bucket_share": 0.2039,
+     "per_card_share": 0.2039,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.669482,
+     "n_frames_afford": 6816
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 214,
+     "bucket_share": 0.2108,
+     "per_card_share": 0.2108,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.323544,
+     "n_frames_afford": 3294
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 584,
+     "bucket_share": 0.5754,
+     "per_card_share": 0.1918,
+     "cards": [
+      "Archer",
+      "Knight",
+      "IceWizard"
+     ],
+     "p_afford_all_frames": 0.054906,
+     "n_frames_afford": 559
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 10,
+     "bucket_share": 0.0099,
+     "per_card_share": 0.0049,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.002947,
+     "n_frames_afford": 30
+    }
+   ],
    "all_frames_frac_ge6": 0.0012,
    "all_frames_frac_ge8": 0.0001,
    "post_median": 0.3214,
@@ -583,6 +754,71 @@
     "min": 0.1726,
     "max": 7.1429
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 112,
+     "bucket_share": 0.1989,
+     "per_card_share": 0.1989,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.658967,
+     "n_frames_afford": 3737
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 134,
+     "bucket_share": 0.238,
+     "per_card_share": 0.238,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.31423,
+     "n_frames_afford": 1782
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 304,
+     "bucket_share": 0.54,
+     "per_card_share": 0.18,
+     "cards": [
+      "Knight",
+      "Archer",
+      "IceWizard"
+     ],
+     "p_afford_all_frames": 0.050256,
+     "n_frames_afford": 285
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 11,
+     "bucket_share": 0.0195,
+     "per_card_share": 0.0098,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.007406,
+     "n_frames_afford": 42
+    },
+    {
+     "cost": 6.0,
+     "n_cards": 1,
+     "plays": 2,
+     "bucket_share": 0.0036,
+     "per_card_share": 0.0036,
+     "cards": [
+      "Xbow"
+     ],
+     "p_afford_all_frames": 0.002821,
+     "n_frames_afford": 16
+    }
+   ],
    "all_frames_frac_ge6": 0.0028,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.2857,
@@ -730,6 +966,59 @@
     "min": 0.0893,
     "max": 7.1429
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 134,
+     "bucket_share": 0.21,
+     "per_card_share": 0.21,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.653003,
+     "n_frames_afford": 4556
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 139,
+     "bucket_share": 0.2179,
+     "per_card_share": 0.2179,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.305432,
+     "n_frames_afford": 2131
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 357,
+     "bucket_share": 0.5596,
+     "per_card_share": 0.1865,
+     "cards": [
+      "Knight",
+      "IceWizard",
+      "Archer"
+     ],
+     "p_afford_all_frames": 0.047012,
+     "n_frames_afford": 328
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 8,
+     "bucket_share": 0.0125,
+     "per_card_share": 0.0063,
+     "cards": [
+      "Fireball",
+      "Tesla"
+     ],
+     "p_afford_all_frames": 0.00344,
+     "n_frames_afford": 24
+    }
+   ],
    "all_frames_frac_ge6": 0.0013,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.2857,
@@ -876,6 +1165,59 @@
     "min": 0.1071,
     "max": 3.5298
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 200,
+     "bucket_share": 0.2094,
+     "per_card_share": 0.2094,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.671589,
+     "n_frames_afford": 6595
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 195,
+     "bucket_share": 0.2042,
+     "per_card_share": 0.2042,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.319246,
+     "n_frames_afford": 3135
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 546,
+     "bucket_share": 0.5717,
+     "per_card_share": 0.1906,
+     "cards": [
+      "IceWizard",
+      "Knight",
+      "Archer"
+     ],
+     "p_afford_all_frames": 0.053259,
+     "n_frames_afford": 523
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 14,
+     "bucket_share": 0.0147,
+     "per_card_share": 0.0073,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.0,
+     "n_frames_afford": 0
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.3214,
@@ -1024,6 +1366,59 @@
     "min": 0.1012,
     "max": 5.3571
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 120,
+     "bucket_share": 0.2128,
+     "per_card_share": 0.2128,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.659161,
+     "n_frames_afford": 4245
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 114,
+     "bucket_share": 0.2021,
+     "per_card_share": 0.2021,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.312267,
+     "n_frames_afford": 2011
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 319,
+     "bucket_share": 0.5656,
+     "per_card_share": 0.1885,
+     "cards": [
+      "Archer",
+      "IceWizard",
+      "Knight"
+     ],
+     "p_afford_all_frames": 0.045342,
+     "n_frames_afford": 292
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 11,
+     "bucket_share": 0.0195,
+     "per_card_share": 0.0098,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.000466,
+     "n_frames_afford": 3
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.2857,
@@ -1170,6 +1565,59 @@
     "min": 0.1786,
     "max": 4.1786
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 294,
+     "bucket_share": 0.2045,
+     "per_card_share": 0.2045,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.684973,
+     "n_frames_afford": 9504
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 290,
+     "bucket_share": 0.2017,
+     "per_card_share": 0.2017,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.332036,
+     "n_frames_afford": 4607
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 848,
+     "bucket_share": 0.5897,
+     "per_card_share": 0.1966,
+     "cards": [
+      "Archer",
+      "IceWizard",
+      "Knight"
+     ],
+     "p_afford_all_frames": 0.060036,
+     "n_frames_afford": 833
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 6,
+     "bucket_share": 0.0042,
+     "per_card_share": 0.0021,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.000505,
+     "n_frames_afford": 7
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.4226,
@@ -1316,6 +1764,59 @@
     "min": 0.1786,
     "max": 4.5298
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 248,
+     "bucket_share": 0.171,
+     "per_card_share": 0.171,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.721221,
+     "n_frames_afford": 10682
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 247,
+     "bucket_share": 0.1703,
+     "per_card_share": 0.1703,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.391736,
+     "n_frames_afford": 5802
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 722,
+     "bucket_share": 0.4979,
+     "per_card_share": 0.166,
+     "cards": [
+      "Knight",
+      "IceWizard",
+      "Archer"
+     ],
+     "p_afford_all_frames": 0.123557,
+     "n_frames_afford": 1830
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 233,
+     "bucket_share": 0.1607,
+     "per_card_share": 0.0803,
+     "cards": [
+      "Fireball",
+      "Tesla"
+     ],
+     "p_afford_all_frames": 0.015326,
+     "n_frames_afford": 227
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.4226,
@@ -1462,6 +1963,59 @@
     "min": 0.1667,
     "max": 4.3512
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 195,
+     "bucket_share": 0.2048,
+     "per_card_share": 0.2048,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.675887,
+     "n_frames_afford": 6842
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 189,
+     "bucket_share": 0.1985,
+     "per_card_share": 0.1985,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.326287,
+     "n_frames_afford": 3303
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 543,
+     "bucket_share": 0.5704,
+     "per_card_share": 0.1901,
+     "cards": [
+      "Knight",
+      "Archer",
+      "IceWizard"
+     ],
+     "p_afford_all_frames": 0.057394,
+     "n_frames_afford": 581
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 25,
+     "bucket_share": 0.0263,
+     "per_card_share": 0.0131,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.001284,
+     "n_frames_afford": 13
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.3214,
@@ -1608,6 +2162,59 @@
     "min": 0.0595,
     "max": 4.1786
    },
+   "cost_table": [
+    {
+     "cost": 1.0,
+     "n_cards": 1,
+     "plays": 150,
+     "bucket_share": 0.2046,
+     "per_card_share": 0.2046,
+     "cards": [
+      "Skeletons"
+     ],
+     "p_afford_all_frames": 0.661809,
+     "n_frames_afford": 5722
+    },
+    {
+     "cost": 2.0,
+     "n_cards": 1,
+     "plays": 150,
+     "bucket_share": 0.2046,
+     "per_card_share": 0.2046,
+     "cards": [
+      "Log"
+     ],
+     "p_afford_all_frames": 0.312052,
+     "n_frames_afford": 2698
+    },
+    {
+     "cost": 3.0,
+     "n_cards": 3,
+     "plays": 421,
+     "bucket_share": 0.5744,
+     "per_card_share": 0.1915,
+     "cards": [
+      "Knight",
+      "Archer",
+      "IceWizard"
+     ],
+     "p_afford_all_frames": 0.047652,
+     "n_frames_afford": 412
+    },
+    {
+     "cost": 4.0,
+     "n_cards": 2,
+     "plays": 12,
+     "bucket_share": 0.0164,
+     "per_card_share": 0.0082,
+     "cards": [
+      "Tesla",
+      "Fireball"
+     ],
+     "p_afford_all_frames": 0.000694,
+     "n_frames_afford": 6
+    }
+   ],
    "all_frames_frac_ge6": 0.0,
    "all_frames_frac_ge8": 0.0,
    "post_median": 0.2857,
@@ -1759,6 +2366,71 @@
    "min": 0.0595,
    "max": 10.0
   },
+  "cost_table": [
+   {
+    "cost": 1.0,
+    "n_cards": 1,
+    "plays": 2012,
+    "bucket_share": 0.2052,
+    "per_card_share": 0.2052,
+    "cards": [
+     "Skeletons"
+    ],
+    "p_afford_all_frames": 0.675768,
+    "n_frames_afford": 68158
+   },
+   {
+    "cost": 2.0,
+    "n_cards": 1,
+    "plays": 1946,
+    "bucket_share": 0.1984,
+    "per_card_share": 0.1984,
+    "cards": [
+     "Log"
+    ],
+    "p_afford_all_frames": 0.330488,
+    "n_frames_afford": 33333
+   },
+   {
+    "cost": 3.0,
+    "n_cards": 3,
+    "plays": 5404,
+    "bucket_share": 0.5511,
+    "per_card_share": 0.1837,
+    "cards": [
+     "Knight",
+     "Archer",
+     "IceWizard"
+    ],
+    "p_afford_all_frames": 0.063524,
+    "n_frames_afford": 6407
+   },
+   {
+    "cost": 4.0,
+    "n_cards": 2,
+    "plays": 441,
+    "bucket_share": 0.045,
+    "per_card_share": 0.0225,
+    "cards": [
+     "Tesla",
+     "Fireball"
+    ],
+    "p_afford_all_frames": 0.004511,
+    "n_frames_afford": 455
+   },
+   {
+    "cost": 6.0,
+    "n_cards": 1,
+    "plays": 3,
+    "bucket_share": 0.0003,
+    "per_card_share": 0.0003,
+    "cards": [
+     "Xbow"
+    ],
+    "p_afford_all_frames": 0.00111,
+    "n_frames_afford": 112
+   }
+  ],
   "all_frames_frac_ge6": 0.0011,
   "all_frames_frac_ge8": 0.0006,
   "post_median": 0.3214,

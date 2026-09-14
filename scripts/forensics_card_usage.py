@@ -138,7 +138,7 @@ def _blank(step=None):
         "n_spell_y_ge21": 0,
         "legacy_ghost_plays": 0, "legacy_ghost_frames": 0,
         "elix_post": [], "elix_pre": [], "dt_all": [], "dt_same_lane": [],
-        "elix_all": [],
+        "elix_all": [], "n_frames_main": 0,
         "unknown_cost_frames": 0, "exec_violations": 0,
         "n_single_frames": 0, "elixir_spent": 0.0,
         "deck_cards": Counter(), "pairs": Counter(),
@@ -195,6 +195,7 @@ def main():
             st["n_frames"] += len(frames)
             # 「会不会攒费」的对照组：**全部帧**的 elixir 分布（含不出手的帧）
             st["elix_all"].extend(float(fr.get("elixir0") or 0.0) for fr in frames)
+            st["n_frames_main"] += len(frames)
             prev_t, prev_lane = None, None
             for fr in frames:
                 # 与 `run_league._bundle_cards` **逐字同口径的过滤**（否则 cards 与 bundle 错位）
@@ -290,6 +291,37 @@ def main():
     def _frac(x, f):
         return None if len(x) == 0 else round(float(f(x).mean()), 4)
 
+    def _cost_table(counts, elix_all, cmap):
+        """§7：把「出手分布」与「费用可达性」并排放（脚本复算，禁手抄）。
+
+        对牌组里每个**出现过的费用档 c**：`per_card_share` = 该档每张卡的平均出手占比；
+        `p_afford` = 全部帧里 `elixir0 >= c` 的比例（= 该档的**可达窗口**上限）。
+        若策略只是"打得起什么就打什么"，两列应同向且量级相近。
+        """
+        tot = sum(counts.values())
+        el = np.asarray(elix_all, dtype=np.float64)
+        by_cost = {}
+        for c, n in counts.items():
+            cc = cmap.get(c)
+            if cc is None:
+                continue
+            by_cost.setdefault(float(cc), []).append((c, n))
+        out = []
+        for c in sorted(by_cost):
+            items = by_cost[c]
+            share = sum(n for _, n in items) / max(1, tot)
+            out.append({
+                "cost": c, "n_cards": len(items),
+                "plays": int(sum(n for _, n in items)),
+                "bucket_share": round(share, 4),
+                "per_card_share": round(share / len(items), 4),
+                "cards": [k for k, _ in sorted(items, key=lambda x: -x[1])],
+                "p_afford_all_frames": (round(float((el >= c).mean()), 6)
+                                        if el.size else None),
+                "n_frames_afford": (int((el >= c).sum()) if el.size else None),
+            })
+        return out
+
     def summarize(st):
         cc = st["card_counts"]
         tot = sum(cc.values())
@@ -335,6 +367,7 @@ def main():
             "dt_all": _stat(np.asarray(st["dt_all"], dtype=np.float64)),
             "dt_same_lane": _stat(np.asarray(st["dt_same_lane"], dtype=np.float64)),
             "elix_all_frames": _stat(np.asarray(st["elix_all"], dtype=np.float64)),
+            "cost_table": _cost_table(st["card_counts"], st["elix_all"], cost_map),
             "all_frames_frac_ge6": _frac(np.asarray(st["elix_all"], dtype=np.float64),
                                          lambda x: x >= 6.0),
             "all_frames_frac_ge8": _frac(np.asarray(st["elix_all"], dtype=np.float64),
@@ -413,6 +446,16 @@ def main():
             print(f"  [POOLED] {lab:12s} n={s['n']:5d} mean={s['mean']:.3f} "
                   f"median={s['median']:.3f} p10={s['p10']:.3f} p90={s['p90']:.3f} "
                   f"max={s['max']:.3f}")
+
+    print("\n--- §7 费用可达性：出手分布 vs 「圣水 ≥ 费用」的帧占比 ---")
+    print(f"  {'费':>3s} {'张数':>4s} {'出手':>6s} {'档占比':>8s} {'每张占比':>8s} "
+          f"{'可达窗口':>10s} {'可达帧数':>9s}  卡")
+    for r in p["cost_table"]:
+        print(f"  {r['cost']:3.1f} {r['n_cards']:4d} {r['plays']:6d} "
+              f"{r['bucket_share']:8.2%} {r['per_card_share']:8.2%} "
+              f"{(r['p_afford_all_frames'] if r['p_afford_all_frames'] is not None else float('nan')):10.6f} "
+              f"{(r['n_frames_afford'] if r['n_frames_afford'] is not None else -1):9d}  "
+              f"{','.join(r['cards'])}")
 
     lg = p["legality"]
     print("\n--- §5 合法性核验（推翻旧『幽灵动作 y≥20』口径）---")
