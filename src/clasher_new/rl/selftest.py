@@ -4882,6 +4882,139 @@ def test_adv_inert_probe_and_const_baseline():
         (float(adv_c.std()), float(adv_r.std()))
 
 
+def test_precise_threat():
+    """精确塔伤（rl/threat_precise.py）：双向一次算完与工具对账、桥列/半场口径对账、
+    默认关时逐位不变、触发条件的物理正确性、跨局自动复位。"""
+    import battle as bm
+    import player as pm
+    from core import Position
+    from arena import TileGrid
+    import threat_calc
+    from threat_calc import estimate_tower_threat
+    from rl import belief_planner as bp_mod
+    from rl.threat_precise import RIVER_Y1, RIVER_Y2
+    from rl.threat_precise import (combine_both_directions, trigger_directions,
+                                   PreciseThreat, HP_PER_PRESSURE, HORIZON_S,
+                                   _half_of, _TOWER_IDS, bridge_cols)
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball",
+            "Giant", "Archer"]
+
+    def fresh():
+        return bm.BattleState(pm.PlayerState(0, list(deck), 5.0),
+                              pm.PlayerState(1, list(deck), 5.0), card_level=11)
+
+    def put(bs, pid, card, pos):
+        p = bs.players[pid]
+        p.cycle = [card] + [c for c in p.cycle if c != card]
+        p.elixir = 10.0
+        assert bs.deploy_card(pid, card, pos), f"{card} 部署失败"
+
+    # ① 桥列/塔 id 常量与引擎对账（【红线 R7】同一数值 + 对账）
+    assert threat_calc._TOWER_IDS == _TOWER_IDS, "塔 id 约定与 threat_calc 不一致"
+    ar = TileGrid()
+    bc = bridge_cols()
+    assert 3 in bc and 14 in bc, f"桥列应含左右桥中心格: {sorted(bc)}"
+    assert 9 not in bc, "中轴处不应是桥"
+    for cx in sorted(bc):
+        assert ar.is_walkable(Position(cx + 0.5, (RIVER_Y1 + RIVER_Y2) / 2.0)), \
+            f"桥列 {cx} 应可走"
+    assert not ar.is_walkable(Position(9.0, 15.5)), "河道非桥位置应不可走"
+
+    # ② 半场口径：中轴旁那一格两半都算 ⇒ 每支部队至少落在一个半场
+    for cx in range(18):
+        assert len(_half_of(cx + 0.5)) >= 1, f"cell {cx} 未落入任何半场"
+    assert _half_of(9.5) == ("L", "R"), "中轴旁那一格应同时属于左右半场（用户口径）"
+    assert _half_of(0.5) == ("L",) and _half_of(17.5) == ("R",)
+
+    # ③ 双向一次算完 与 工具单调用 逐位相等（这是"一次推演替代两次"的前提）
+    cases = []
+    bs = fresh()
+    put(bs, 1, "Giant", Position(14.5, 19.0))
+    cases.append(bs)
+    bs2 = fresh()
+    put(bs2, 0, "Giant", Position(3.5, 14.0))
+    put(bs2, 1, "Musketeer", Position(14.5, 20.0))
+    cases.append(bs2)
+    cases.append(fresh())
+    for i, b in enumerate(cases):
+        comb = combine_both_directions(b, HORIZON_S)
+        e0 = estimate_tower_threat(b, 0, horizon=HORIZON_S)["total"]
+        e1 = estimate_tower_threat(b, 1, horizon=HORIZON_S)["total"]
+        assert comb["to_p0"] == e0 and comb["to_p1"] == e1, \
+            f"用例{i}: 双向一次算完与工具不一致 {comb} vs ({e0},{e1})"
+        # 原局面不得被污染
+        assert b.time == cases[i].time
+
+    # ④ 触发条件的物理正确性
+    bs = fresh()
+    put(bs, 1, "Giant", Position(3.5, 17.5))          # 敌 Giant 到左桥头（合法部署最近点）
+    trig, halves = trigger_directions(bs, 1)
+    assert trig and "L" in halves, f"左桥头有敌兵且我方左半无兵 ⇒ 应触发: {trig} {halves}"
+    put(bs, 0, "Knight", Position(4.0, 12.0))         # 我方左半场放人 ⇒ 不再触发
+    trig2, _ = trigger_directions(bs, 1)
+    assert not trig2, "左半场已有我方单位 ⇒ 不应触发"
+    # 敌方偏远（还没到桥头、也没过河）→ 不触发
+    bs3 = fresh()
+    put(bs3, 1, "Giant", Position(6.0, 21.0))
+    assert not trigger_directions(bs3, 1)[0], "敌兵在敌方半场深处 ⇒ 不应触发"
+
+    # ⑤ 默认关：`_enemy_pressure` 必须与旧实现逐位相同
+    bp_mod.set_precise_threat(False)
+    for b in cases:
+        got = bp_mod._enemy_pressure(b)
+        ref = bp_mod._crude_enemy_pressure(b)
+        assert got == ref, f"开关关闭时应逐位等于旧实现: {got} vs {ref}"
+
+    # ⑥ 开启后：未触发帧回退旧口径；触发帧给出**精确值**；同初始状态 ⇒ 确定
+    bp_mod.set_precise_threat(True)
+    try:
+        b = cases[0]                                   # 敌 Giant 在敌方半场 → 不触发
+        assert bp_mod._enemy_pressure(b) == bp_mod._crude_enemy_pressure(b), \
+            "未触发帧应回退旧口径"
+
+        def _fresh_call(board):
+            """同一初始状态下的单次调用（提供器重建 ⇒ 不受上一次调用影响）。"""
+            bp_mod.set_precise_threat(False)
+            bp_mod.set_precise_threat(True)
+            return bp_mod._enemy_pressure(board)
+
+        b = cases[1]                                   # 我方 Giant 到左桥头 → 触发方向 B
+        r1 = _fresh_call(b)
+        r2 = _fresh_call(b)
+        assert r1 == r2, f"同一局面同一初始状态应确定: {r1} vs {r2}"
+        exp_b = estimate_tower_threat(b, 1, horizon=HORIZON_S)["total"] / HP_PER_PRESSURE
+        exp_a = estimate_tower_threat(b, 0, horizon=HORIZON_S)["total"] / HP_PER_PRESSURE
+        assert abs(r1[1] - exp_b) < 1e-6, f"触发方向的 my_pressure 应为精确值: {r1[1]} vs {exp_b}"
+        assert abs(r1[0] - exp_a) < 1e-6, \
+            f"一次推演同时得到另一方向 ⇒ threat 也应是精确值: {r1[0]} vs {exp_a}"
+        st = bp_mod.precise_threat_stats()
+        assert st["triggers"] >= 1, f"应有触发计数: {st}"
+
+        # 状态机：威胁源消失 ⇒ 该方向退出保持、回到回退口径
+        b_clear = fresh()                              # 场上无敌方单位
+        r3 = bp_mod._enemy_pressure(b_clear)
+        assert r3 == bp_mod._crude_enemy_pressure(b_clear), \
+            "威胁源消失后应退出保持并回到回退口径"
+    finally:
+        bp_mod.set_precise_threat(False)
+    assert bp_mod.precise_threat_stats() is None, "关闭后不应再有提供器"
+
+    # ⑦ 跨局自动复位：time 回退 ⇒ 不得沿用上一局的保持值
+    pr = PreciseThreat(horizon=HORIZON_S)
+    b = cases[1]
+    pr.pressures(b)
+    assert pr._hold["B"] is not None, "触发后应进入保持"
+    nb = fresh()                                       # 新一局，time=0 < 上一局
+    pr.pressures(nb)
+    assert pr._hold["B"] is None and pr._hold["A"] is None, "跨局必须复位保持值"
+    pr.reset()
+
+    print(f"[PASS] 精确塔伤：双向一次算完与工具逐位相等（3 用例）；桥列/塔id/半场口径对账；"
+          f"默认关逐位不变；触发条件物理正确（左桥头触发 / 有守军不触发 / 远处不触发）；"
+          f"开启后触发方向 = 引擎精确值（H={HORIZON_S}s，常量 {HP_PER_PRESSURE}）；跨局自动复位")
+
+
 def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
@@ -4976,6 +5109,7 @@ def main():
     test_ppo_multi_epoch_minibatch()
     test_stall_settlement_margin()
     test_adv_inert_probe_and_const_baseline()
+    test_precise_threat()
     print("\nALL SELFTESTS PASSED")
 
 

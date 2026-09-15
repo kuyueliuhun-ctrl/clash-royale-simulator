@@ -156,8 +156,13 @@ def _is_front_tank_name(name) -> bool:
     return name in FRONT_TANK_CARDS or (c.type == "character" and c.hp >= TANKY_HP)
 
 
-def _enemy_pressure(battle):
-    """敌我双方实体在各自半场的推进压力（粗略威胁估计，排除静态塔）。"""
+def _crude_enemy_pressure(battle):
+    """旧口径：数单位 + 距离的**粗略**威胁估计（保留为回退路径与对账基线）。
+
+    实测（`docs/threat_precise_probe_verdict_2026-09-14.md`）该闸门的 balanced accuracy
+    只有 0.44~0.66，且 4/6 组**劣于「有敌军就判有威胁」的零信息基线**：
+    它既不看单位能否打到塔、不看塔兵反击，也不区分 Giant 与 Musketeer（各算 1.0）。
+    """
     threat = 0.0
     my_pressure = 0.0
     for e in battle.entities.values():
@@ -171,6 +176,43 @@ def _enemy_pressure(battle):
         else:
             my_pressure += 1.0 + max(0.0, (e.position.y - 16) / 16.0)
     return threat, my_pressure
+
+
+#: 精确塔伤提供器（**默认 None = 关闭 = 旧行为逐位不变**，见【红线 R2】）。
+#: 开启：`set_precise_threat(True)`。开启后 `_enemy_pressure` 改走
+#: `rl/threat_precise.PreciseThreat`：触发时用引擎推演算**真实**塔损（双向一次算完），
+#: 未触发帧回退到 `_crude_enemy_pressure`（保证"没算的地方不比今天更差"）。
+#: 设计依据与实测见 `docs/threat_precise_impl_2026-09-14.md`。
+_PRECISE_PROVIDER = None
+
+
+def set_precise_threat(enabled: bool, **kwargs):
+    """开关精确塔伤（返回实际状态）。关闭时 `_enemy_pressure` 还原为逐位旧行为。"""
+    global _PRECISE_PROVIDER
+    if enabled:
+        from rl.threat_precise import PreciseThreat
+        if _PRECISE_PROVIDER is None:
+            _PRECISE_PROVIDER = PreciseThreat(**kwargs)
+        return True
+    _PRECISE_PROVIDER = None
+    return False
+
+
+def precise_threat_stats():
+    """只读诊断：精确提供器的计数（未开启时 None）。"""
+    return None if _PRECISE_PROVIDER is None else dict(_PRECISE_PROVIDER.stats)
+
+
+def _enemy_pressure(battle):
+    """敌我双方在各自半场的推进压力。
+
+    **默认走旧粗略口径**；只有显式 `set_precise_threat(True)` 后才走精确塔伤。
+    精确路径的量纲已折算回 pressure（单常量源 `HP_PER_PRESSURE`）⇒
+    `PRESSURE_THRESHOLD` / `threat >= 0.8*my_pressure` 等阈值**一律不动**。
+    """
+    if _PRECISE_PROVIDER is not None:
+        return _PRECISE_PROVIDER.pressures(battle)
+    return _crude_enemy_pressure(battle)
 
 
 def _enemy_main_x(battle):
