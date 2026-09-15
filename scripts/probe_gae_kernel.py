@@ -100,3 +100,32 @@ print("    实际口径：advs = adv / std(adv)（整批 128 帧共用一个标�
 for s in (0.05, 0.52, 5.0):
     print(f"    批 std={s:>5.2f} ⇒ 同一帧的 adv 被乘 {1.0/s:>7.3f} 倍"
           f"（逐帧相对结构不变，绝对幅度随同批其他帧变化）")
+
+
+print("\n[H] 「训练一个打分器当 potential」在数学上等于什么？（用真 compute_gae 验证）")
+print("    形塑：r' = r + γ·S(s') − S(s)（Ng et al. 1999 的 policy-invariance 形式）")
+rngp = np.random.default_rng(3)
+S = rngp.normal(0.0, 1.0, size=T)
+r0 = rngp.normal(0.0, 0.5, size=T)
+Sp = np.concatenate([S[1:], [0.0]])           # S(s_{t+1})
+r_shaped = r0 + GAMMA * Sp - S
+_v = [0.0] * T
+
+# (1) 回报层面：λ=1 ⇒ G' 应精确 = G − S_t（telescoping）
+_, ret0 = PPOTrainer.compute_gae(r0.tolist(), _v, [False] * T, GAMMA, 1.0)
+_, ret1 = PPOTrainer.compute_gae(r_shaped.tolist(), _v, [False] * T, GAMMA, 1.0)
+print("    [回报] max|G' − (G − S_t)| = %.3e  ⇒ 回报被精确平移 −S_t"
+      % np.abs((ret1 - ret0) + S).max())
+
+# (2) 优势层面（λ=0.99）：A' = A − S_t + (1/λ−1)·Σ_{j≥1}(γλ)^j S_{t+j}
+a0 = gae(r0.tolist(), 0.99)
+a1 = gae(r_shaped.tolist(), 0.99)
+glp = GAMMA * 0.99
+tail = np.array([sum(glp ** j * S[t + j] for j in range(1, T - t)) for t in range(T)])
+pred = a0 - S + (1.0 / 0.99 - 1.0) * tail
+print("    [优势] max|A' − [A − S_t + (1/λ−1)·Σ(γλ)^j S_{t+j}]| = %.3e"
+      % np.abs(a1 - pred).max())
+print("    ⇒ potential 形塑在**优势**上不是「简单减 S」：还多出 (1/λ−1)=0.0101 倍的未来 S 折扣和；")
+print("      而**收敛后** critic 会把 S 吸收进 V（回报平移多少、V 就学多少）⇒ 最优解不变。")
+print("    ⇒ 结论：打分器当 potential **教不了新东西**（policy invariance），只能改学习过程")
+print("      （≈ 基线/方差层）——而该层今天已被实测否证：闭式基线在线口径 EV ≤ 0。")
