@@ -163,10 +163,13 @@ def main():
     while n < a.frames:
         b = env.battle
         t_a, n_un = min_time_to_tower(b, 0, PULL_SLACK_TILES, max_range)
+        from rl.belief_planner import _enemy_pressure
+        thr0, myp0 = _enemy_pressure(b)
         rec = {"t": float(b.time), "t_a": (-1.0 if t_a is None else float(t_a)),
-               "n_un": int(n_un)}
+               "n_un": int(n_un), "thr": float(thr0), "myp": float(myp0)}
         for H in a.horizons:
             rec[f"E{H:g}"] = float(estimate_tower_threat(b, 0, horizon=H)["total"])
+            rec[f"Emy{H:g}"] = float(estimate_tower_threat(b, 1, horizon=H)["total"])
         recs.append(rec)
         plan_vec = bp.plan(b, belief.state(), obs).to_vector()
         btok = belief.encode(obs, None)
@@ -259,6 +262,43 @@ def main():
                   + " ".join(f"{v:7.1f}%" for v in line)
                   + f" {flip:9.1f}%")
     print("    读法：差异率 = 用保持值做决策时的**误判率**；逐帧翻转率 = 闸门本身的不稳定度。")
+
+    # ---------------- §5 折算常量标定 ----------------
+    print("\n" + "=" * 78)
+    print("§5 折算常量 HP_PER_PRESSURE 的标定（把 HP 折算回旧 pressure 刻度，"
+          "使 PRESSURE_THRESHOLD=2.0 语义可比）")
+    thr = np.array([r["thr"] for r in recs])
+    myp = np.array([r["myp"] for r in recs])
+    Hcal = a.horizons[0] if a.horizons else 3.0
+    Hcal = 3.0 if 3.0 in a.horizons else a.horizons[0]
+    E = np.array([r[f"E{Hcal:g}"] for r in recs])
+    Emy = np.array([r[f"Emy{Hcal:g}"] for r in recs])
+    print(f"    H={Hcal:g}s | 旧刻度: mean(threat)={thr.mean():.4f} "
+          f"mean(my_pressure)={myp.mean():.4f} | 新刻度: mean(E)={E.mean():.1f} HP "
+          f"mean(E_my)={Emy.mean():.1f} HP")
+    k_mean = float(E.mean() / thr.mean()) if thr.mean() > 1e-9 else float("nan")
+    k_my = float(Emy.mean() / myp.mean()) if myp.mean() > 1e-9 else float("nan")
+    print(f"    规则① 等均值：HP_PER_PRESSURE = mean(E)/mean(threat) = {k_mean:.1f} "
+          f"（我方侧 = {k_my:.1f}）")
+    # 规则② 等阳性率
+    best = None
+    for k in np.arange(5.0, 1000.0, 1.0):
+        r_new = float((E / k >= PRESSURE_THRESHOLD).mean())
+        d = abs(r_new - float((thr >= PRESSURE_THRESHOLD).mean()))
+        if best is None or d < best[0]:
+            best = (d, k, r_new)
+    print(f"    规则② 等阳性率：HP_PER_PRESSURE ≈ {best[1]:.0f} "
+          f"（旧阳性率 {100 * float((thr >= PRESSURE_THRESHOLD).mean()):.1f}%，"
+          f"新 {100 * best[2]:.1f}%）")
+    for k in (k_mean, best[1], 500.0, 1000.0):
+        if not np.isfinite(k):
+            continue
+        ve_old = np.tanh(myp - thr)
+        ve_new = np.tanh((Emy - E) / k)
+        print(f"    k={k:7.1f}: 新闸门阳性率={100 * float((E / k >= 2.0).mean()):5.1f}%"
+              f" | tanh 饱和(旧)={100 * float((np.abs(ve_old) > 0.99).mean()):4.1f}%"
+              f" tanh 饱和(新)={100 * float((np.abs(ve_new) > 0.99).mean()):4.1f}%"
+              f" | ρ(value_estimate)={spearman(ve_old, ve_new):+.4f}")
 
 
 if __name__ == "__main__":
