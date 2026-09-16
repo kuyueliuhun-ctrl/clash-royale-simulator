@@ -41,7 +41,7 @@ import copy
 import math
 
 __all__ = ["PreciseThreat", "combine_both_directions", "HP_PER_PRESSURE",
-           "HORIZON_S", "CELL_AXIS", "BRIDGEHEAD_Y", "CROSSED_Y",
+           "HORIZON_S", "MAX_HOLD_S", "CELL_AXIS", "BRIDGEHEAD_Y", "CROSSED_Y",
            "trigger_directions", "bridge_cols"]
 
 #: 推演视界（秒）。**由成本预算反推**（多 seed 实测，`docs/threat_precise_impl_2026-09-14.md`）：
@@ -82,8 +82,14 @@ BRIDGEHEAD_Y = RIVER_Y2 + 1.5
 #: 已过河：y ≤ RIVER_Y1（`belief_planner.OWN_HALF_EDGE = 15.0` 同口径）
 CROSSED_Y = RIVER_Y1
 
-#: 保持帧数：触发后保持该帧数（1 = 只在触发帧用它；随后由 `_exit` 条件决定活性）
-HOLD_FRAMES = 1
+#: **保持寿命上限（游戏秒）**：超过它，保持值强制失效 ⇒ 回退粗糙值，直到下一次上升沿。
+#: 依据（`docs/hold_recompute_verdict_2026-09-14.md` §5）：一次的推演只覆盖 H 秒，而保持实测
+#: 中位 21 帧(10.5 s)/最长 91 帧(45.5 s)；年龄-质量曲线显示
+#:   [0,5) 帧 BA(保持)=0.8808 vs 0.5523（+0.329）… [20,40) 帧 0.6568 vs 0.5016（+0.155）
+#:   **[40,∞) 帧 0.4878 vs 0.5796（−0.092）** ⇒ ≥20 s 后保持值已不比粗糙值好
+#: ⇒ 取交叉点下界 **4×H = 20 s**（不取 10 s：该桶仍有 +0.182 的明确优势）。
+#: 预注册：`docs/threat_hold_life_prereg_2026-09-14.md`（参数用同批数据选的 ⇒ 验收只算"不劣化"）。
+MAX_HOLD_S = 4.0 * HORIZON_S
 
 #: HP → 旧 pressure 刻度的单一折算常量（【R7】单常量源）。
 #: 标定规则（**跑之前写死**）：令新标量与旧标量在参考批次上**等均值**
@@ -217,16 +223,21 @@ class PreciseThreat:
       保证"未触发时的行为与今天一致"，而不是凭空给 0）；
     - **HOLD**：触发（上升沿）时算一次精确值并保持；只要该方向仍"有威胁源"
       （pusher 在该半场仍有兵、或防守方该半场仍无兵）就继续持有；
-    - 威胁源消失 ⇒ 回到 ARMED。
+    - 威胁源消失**或保持已超过 `MAX_HOLD_S`** ⇒ 回到 ARMED；
+    - ⚠️ **保持期内盘面变化不会重算**（对方新放卡/单位死亡都不会触发推演）——
+      这是实测确认的行为（`docs/hold_recompute_verdict_2026-09-14.md` §2），
+      由 `MAX_HOLD_S` 给它的有效期封顶。
     """
 
     def __init__(self, horizon: float = HORIZON_S, fallback_crude: bool = True,
-                 enabled: bool = True):
+                 enabled: bool = True, max_hold_s: float = MAX_HOLD_S):
         self.horizon = float(horizon)
+        #: 保持寿命上限（秒）；`float("inf")` = 关闭该机制（供同轨迹 A/B 用）
+        self.max_hold_s = float(max_hold_s)
         self.fallback_crude = bool(fallback_crude)
         self.enabled = bool(enabled)
         #: 诊断计数（只读用途，不参与决策）——必须在 reset() 之前建好
-        self.stats = {"calls": 0, "triggers": 0, "sim_ms": 0.0}
+        self.stats = {"calls": 0, "triggers": 0, "sim_ms": 0.0, "expired": 0}
         self._last_time = -1.0
         self.reset()
 
@@ -235,9 +246,11 @@ class PreciseThreat:
         """每局开始必须调用（跨局不得沿用上一局的保持值）。"""
         self._hold = {"A": None, "B": None}      # A: 敌方压我；B: 我压敌方
         self._hold_half = {"A": set(), "B": set()}
+        self._hold_t = {"A": None, "B": None}    # 保持值算出的游戏时刻（算寿命用）
         self.stats["calls"] = 0
         self.stats["triggers"] = 0
         self.stats["sim_ms"] = 0.0
+        self.stats["expired"] = 0
 
     # ------------------------------------------------------------------
     def _exit(self, battle, pusher: int) -> bool:
@@ -267,12 +280,23 @@ class PreciseThreat:
         trigA, halfA = trigger_directions(battle, 1)     # 敌方压我
         trigB, halfB = trigger_directions(battle, 0)     # 我压敌方
 
+        # ① 寿命上限：保持值超过 MAX_HOLD_S 强制失效（回退粗糙值；若触发条件仍成立，
+        #    下面的上升沿分支会在**同一帧**重新推演一次 ⇒ 寿命越长重算越稀）
+        for tag in ("A", "B"):
+            if self._hold[tag] is not None and self._hold_t[tag] is not None \
+                    and (t_now - self._hold_t[tag]) >= self.max_hold_s:
+                self._hold[tag] = None
+                self._hold_half[tag] = set()
+                self._hold_t[tag] = None
+                self.stats["expired"] = self.stats.get("expired", 0) + 1
         need_sim = False
         for tag, trig in (("A", trigA), ("B", trigB)):
             if trig and self._hold[tag] is None:
                 need_sim = True                          # 上升沿
             elif self._hold[tag] is not None and self._exit(battle, 1 if tag == "A" else 0):
                 self._hold[tag] = None                   # 退出保持
+                self._hold_half[tag] = set()
+                self._hold_t[tag] = None
         if need_sim:
             import time as _t
             t0 = _t.perf_counter()
@@ -285,6 +309,7 @@ class PreciseThreat:
             self._hold["A"] = res["to_p0"]
             self._hold["B"] = res["to_p1"]
             self._hold_half = {"A": halfA, "B": halfB}
+            self._hold_t = {"A": t_now, "B": t_now}      # 两个方向都是刚算的 ⇒ 寿命同时重置
 
         fb_t, fb_m = self._crude(battle) if (
             self._hold["A"] is None or self._hold["B"] is None) else (0.0, 0.0)

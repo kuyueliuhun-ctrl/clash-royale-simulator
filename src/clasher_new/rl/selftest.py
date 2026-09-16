@@ -4895,6 +4895,7 @@ def test_precise_threat():
     from rl.threat_precise import RIVER_Y1, RIVER_Y2
     from rl.threat_precise import (combine_both_directions, trigger_directions,
                                    PreciseThreat, HP_PER_PRESSURE, HORIZON_S,
+                                   MAX_HOLD_S,
                                    _half_of, _TOWER_IDS, bridge_cols)
 
     deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball",
@@ -5010,9 +5011,51 @@ def test_precise_threat():
     assert pr._hold["B"] is None and pr._hold["A"] is None, "跨局必须复位保持值"
     pr.reset()
 
+    # ⑧ 保持寿命上限 MAX_HOLD_S：到期强制失效；触发仍成立时同帧刷新；无触发则回退粗糙
+    #    ⚠️ 这里直接改 `battle.time` 做状态机单元测试（提供器读的就是量 `battle.time`）；
+    #    真实时间推进下的行为由 scripts/probe_hold_recompute.py 的 rollout 度量。
+    assert MAX_HOLD_S == 4.0 * HORIZON_S, "寿命上限取值应 = 4×视界（预注册写死）"
+    pr = PreciseThreat(horizon=HORIZON_S)
+    bb = fresh()
+    put(bb, 1, "Giant", Position(3.5, 17.5))           # 敌 Giant 到左桥头 ⇒ 方向 A 触发
+    bb.time = 50.0
+    pr.pressures(bb)
+    assert pr._hold["A"] is not None, "触发后应进入保持"
+    assert pr.stats["triggers"] == 1 and pr.stats["expired"] == 0, f"{pr.stats}"
+    bb.time = 50.0 + MAX_HOLD_S - 1.0                  # (a) 未到期
+    pr.pressures(bb)
+    assert pr._hold["A"] is not None and pr.stats["expired"] == 0, \
+        f"未到 {MAX_HOLD_S}s 不应失效: {pr.stats}"
+    bb.time = 50.0 + MAX_HOLD_S + 0.5                  # (b) 到期 ∧ 触发仍成立 ⇒ 同帧刷新
+    r1 = pr.pressures(bb)
+    # 该盘面没有我方单位 ⇒ 方向 B 那次"顺手武装"早已按 `_exit` 退出，故只有 A 到期
+    assert pr.stats["expired"] == 1, f"应记一次寿命到期: {pr.stats}"
+    assert pr.stats["triggers"] == 2, f"触发仍成立 ⇒ 应同帧重算: {pr.stats}"
+    assert pr._hold["A"] is not None, "重算后应重新进入保持"
+    exp_a = estimate_tower_threat(bb, 0, horizon=HORIZON_S)["total"] / HP_PER_PRESSURE
+    assert abs(r1[0] - exp_a) < 1e-6, f"刷新后应为最新精确值: {r1[0]} vs {exp_a}"
+
+    pr.reset()                                         # (c) 到期 ∧ 触发已失效 ⇒ 退出回退
+    b2 = fresh()
+    put(b2, 1, "Giant", Position(3.5, 17.5))
+    b2.time = 80.0
+    pr.pressures(b2)
+    assert pr._hold["A"] is not None, "触发武装失败"
+    put(b2, 0, "Knight", Position(4.0, 12.0))          # 我方左半场有兵 ⇒ 触发条件失效
+    b2.time = 80.0 + MAX_HOLD_S - 1.0
+    pr.pressures(b2)
+    assert pr._hold["A"] is not None, "触发失效但敌兵仍在桥头 ⇒ 寿命未到不得退出"
+    b2.time = 80.0 + MAX_HOLD_S + 0.5
+    r2 = pr.pressures(b2)
+    assert pr._hold["A"] is None and pr._hold["B"] is None, "寿命到期且无触发 ⇒ 必须退出保持"
+    # 本盘面我方 Knight 已过河 ⇒ 方向 B 的保持也活到了寿命上限 ⇒ 两个方向各记一次到期
+    assert pr.stats["expired"] == 2 and pr.stats["triggers"] == 1, f"{pr.stats}"
+    assert abs(r2[0] - pr._crude(b2)[0]) < 1e-9, "退出后应回退粗糙口径"
+
     print(f"[PASS] 精确塔伤：双向一次算完与工具逐位相等（3 用例）；桥列/塔id/半场口径对账；"
           f"默认关逐位不变；触发条件物理正确（左桥头触发 / 有守军不触发 / 远处不触发）；"
-          f"开启后触发方向 = 引擎精确值（H={HORIZON_S}s，常量 {HP_PER_PRESSURE}）；跨局自动复位")
+          f"开启后触发方向 = 引擎精确值（H={HORIZON_S}s，常量 {HP_PER_PRESSURE}）；跨局自动复位；"
+          f"保持寿命上限 {MAX_HOLD_S}s（未到期不失效 / 到期且触发则同帧刷新 / 到期且无触发则回退粗糙）")
 
 
 def main():
