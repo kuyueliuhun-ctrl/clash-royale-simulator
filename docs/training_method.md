@@ -288,7 +288,7 @@
 
 - 逐帧写入：`train_solo.py:1589-1595`（`ep_init` 保存**进入本步时的隐状态** `init_hidden = hidden`，`1583`；PPO 重放用它保证 `ratio` 是有效 IS 比，`ppo.py:7`）。
 - **终端补结算**（截断/僵局早停时）：`timeout_winner(battle)`（皇冠多者胜；皇冠相同则**三塔血量合计**多者胜；完全相等才平局；`rl/run_league.py::timeout_winner` 委托 `rl/overtime.py`，最终单一来源 = `BattleState.timeout_winner()`） ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。→ `win_bonus` / `lose_penalty`；无胜者 → `-_draw_penalty(cfg)`（`train_solo.py:1604-1613`）。
-- **僵局早停（2026-09-17 起默认关闭）**：`cfg.train_stall_stop=False` 时**训练环与评估环都不再早停**，零塔损局打满到 180s/300s 由引擎按塔血合计裁决（用户拍板：接受时间损失；实测总帧数 +96%~+222%、同 20k 步局数 109→34~55，见 `docs/draw_rule_verdict_2026-09-17.md` §9）。开启时：每 `STALL_WINDOW = 10` 步探针一次，连续 `STALL_LIMIT = 10` 次零塔血变化 → 判平（常量与探针 `rl/run_league.py`，`--train-stall-stop` 复现旧行为）；早停结算用 `settle_stall(battle, cfg.stall_draw_margin)`（实现 `rl/run_league.py::settle_stall`）：**默认 `margin=0` ⇒ 与 `timeout_winner` 同口径**（三塔血量合计），仅 `margin>0` 才走 C′ 百分比+边距旧路径。 ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。
+- **僵局早停（2026-09-17 起默认关闭）**：`cfg.train_stall_stop=False` 时**训练环与评估环都不再早停**，零塔损局打满到 180s/300s 由引擎按塔血合计裁决（用户拍板：早停的本意是防"**完全不下牌**"，**不是**防僵持 ⇒ 下牌但没打出伤害的对局按正常对待；实测被早停的对局 = **32/280 = 11.4%**（判据 = **全程零塔损**）、总帧数 **+16%~+31%**、同 20k 步局数 **109→83~94**，且**相位极不均**（`demo20k` 的 eval@5000 = 14/40、eval@12500 = 17/40 被截断 ⇒ 那两个点局部 ≈4×），见 `docs/draw_rule_verdict_2026-09-17.md` §9 —— ⚠️ 该节原写 "+96%~+222% / 109→34~55" 是**代理判据造成的度量假象**（`n<360 且 t<300` 对任何未打满上限的对局都成立），已推翻并更正）。开启时：每 `STALL_WINDOW = 10` 步探针一次，连续 `STALL_LIMIT = 10` 次零塔血变化 → 判平（常量与探针 `rl/run_league.py`，`--train-stall-stop` 复现旧行为）；早停结算用 `settle_stall(battle, cfg.stall_draw_margin)`（实现 `rl/run_league.py::settle_stall`）：**默认 `margin=0` ⇒ 与 `timeout_winner` 同口径**（三塔血量合计），仅 `margin>0` 才走 C′ 百分比+边距旧路径。 ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。
 - **截断标记**：仅当 `truncated and virt is None` 才置 `ep_trunc[-1] = True` 并算 `last_val = main.value(...)`，否则 `last_val = 0.0`（`train_solo.py:1618-1622`）。
 - **入池**：`transitions.append({obs, belief, plan, bundle, old_logprob, adv, returns, masks, init_hidden[, adv_const, adv_gap]})`（`train_solo.py:1625-1633`）；solo 额外带 `adv_const`/`adv_gap`（critic 惰性检验用，`train_solo.py:1570-1572`）。
 - **局间重置**：`_new_episode_reset(winner)` → `_probe["games"] += 1` → `opp_pool.record(winner)` → `opp_pool.sample()` → `env.opponent = side` → `env.reset()` → `belief.reset(...)` → 清空全部 `ep_*`（`train_solo.py:1513-1539`；`nonlocal` 显式列出全部缓冲，注释指出漏 `nonlocal` 会导致缓冲泄漏事故，`1519-1524`）。
@@ -431,7 +431,7 @@
 | 23 | `adv_norm` | str | `"scale"` | 优势归一化：`batch`=整批中心化（旧）/`scale`=只除批 std/`none`=原始 | `rl/config.py:139`（语义 `133-138`） |
 | 24 | `value_norm` | str | `"none"` | 价值损失量纲：`none`=不缩放（旧）/`running`=按回报运行 std 缩放（`v_loss /= s²`） | `rl/config.py:144`（语义 `140-143`） |
 | 25 | `diagnose_every` | int | `10` | 每 N 次 update 额外打印 `p_gnorm/v_gnorm` 梯度分解（`0`=关） | `rl/config.py:147`（语义 `145-146`） |
-| 26 | `train_stall_stop` | bool | `True` | solo 训练环僵局早停判平（连续 100 步零塔血变化）；`False`=旧行为拖满 `max_ep_steps` | `rl/config.py:150`（语义 `148-149`） |
+| 26 | `train_stall_stop` | bool | **`False`**（2026-09-17 起；旧值 `True`） | solo **训练环与评估环**的僵局早停判平（连续 100 步零塔血变化）；**`False` = 打满 `max_ep_steps`（新默认）**，`True`/`--train-stall-stop` = 旧行为（50 s 判平截断）。⚠️ 移除它的代价见 `docs/draw_rule_verdict_2026-09-17.md` §9 | `rl/config.py:150`（语义 `148-149`） |
 | 27 | `adv_inert_probe` | bool | `False` | critic 惰性检验**纯测量**开关：额外算 V≡常数优势并报告 corr/resid/grad_cos；不改写入梯度的量 | `rl/config.py:156`（语义 `151-155`） |
 | 28 | `critic_baseline` | str | `"value"` | critic 惰性检验**干预**开关：`value`=用网络 V/`const`=把优势里的 V 换成标量 `c` | `rl/config.py:160`（语义 `157-159`） |
 | 29 | `stall_draw_margin` | float | **`0.0`**（2026-09-17 起） | **默认 0 = 走新口径**（皇冠 → 三塔血量合计，完全相等才平局）；`>0` 时走 2026-09-12 的 C′ 旧路径（最低血量%差 < 该阈值 → 记平局），仅供逐位复现旧标签 | `rl/config.py`（语义注释同处）| ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。
@@ -610,7 +610,7 @@
 | 43 | `--value-norm` | `None` | `none`/`running` | 价值通道量纲 | `1256-1258` |
 | 44 | `--diagnose-every` | `None` | int | 梯度成分诊断采样间隔（`0`=关） | `1259-1261` |
 | 45 | `--hist-seed-dir` | `None` | 目录（`action="append"`，可多次） | 对手池 hist 槽补种目录 | `1262-1264` |
-| 46 | `--no-train-stall-stop` | `False` | flag | solo 关闭训练环僵局早停（关=旧行为拖满 `max_ep_steps`） | `1265-1266` |
+| 46 | `--train-stall-stop` / `--no-train-stall-stop` | 见右 | flag | 训练环僵局早停：**默认关**（2026-09-17）；`--train-stall-stop` = **恢复旧行为**（零塔损 50 s 判平截断）；`--no-train-stall-stop` = 显式关（与默认同，保留兼容） | `1271-1276` |
 | 47 | `--adv-inert-probe` | `False` | flag | critic 惰性检验纯测量开关 | `1267-1270` |
 | 48 | `--critic-baseline` | `None` | `value`/`const` | critic 惰性检验干预开关（`const` 非推荐） | `1271-1273` |
 | 49 | `--stall-draw-margin` | `None` | float | C' 早停低置信裁定降噪阈值（`0`=旧行为） | `1274-1276` |
