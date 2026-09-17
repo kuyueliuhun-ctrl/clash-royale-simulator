@@ -158,6 +158,13 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
   ⇒ 谷底只有 **1 个评估点宽（≲5000 步）**。
 - **成本**：纯训练 **26 步/s**（≥2 处独立互证）；一个**全点**（4 块×40 局=160 局）≈**210 s**、
   一个**轻点**（只跑锚点 40 局）≈**53 s**；20k 协议里**评估占 73% 墙钟**。
+- **平局裁决口径（2026-09-17 用户拍板，**打断与历史 run 的标签可比性**）**：皇冠优先 → 皇冠相同则
+  **三塔血量合计**多者胜 → **合计完全相等才平局**；单一来源 = `BattleState.tower_hp_total()/timeout_winner()`
+  （`rl/overtime`、`run_league.timeout_winner`、`settle_stall(margin=0)` 全部委托）。旧口径（存活塔**最低血量百分比**）
+  已删；C′"细差 < `stall_draw_margin` 记平局"**默认关**（0.0；`--stall-draw-margin 0.05` 复现旧标签）。
+  实测 280 局回放配对（复现校验 280/280）：训练侧平局 **54→33**、评估侧 **33→33**（其中 **32/33 是"全程零塔损"
+  的 50 s 僵局** ⇒ 按新口径本就该判平，属【O3】行为症状而非标签 bug）；**21/280=7.5% 标签变了**。
+  见 `docs/draw_rule_verdict_2026-09-17.md`。
 - **判读禁则**：**不判** main 曲线与单点胜率。机理：`main vs 冻结副本` 结构性≈0.5，且当
   `copy_every` 与 `steps_per_eval` 整除时，"同步→评估"的顺序会让评估对手**恒为刚同步的 main 自己**
   （已改"先评估后同步"）；⇒ **`main vs 冻结副本` 的 0.85 这类读数不得当作"变强"证据**——
@@ -178,6 +185,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `DEFAULT_OPP_MIX`（= `train_solo._OPP_MIX`） | `frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1` | D1 后的对手分布（改它要同步两处） |
 | `_HIST_POOL_MAX` | 12 | hist 池上限；本目录 ckpt 优先 ⇒ **长 run 会把 `--hist-seed-dir` 的外部补种挤出**（脚本复算：首次"本目录 12"在 **28k** 步，`N(t)=⌊t/2500⌋+1`；`d1_long_100k_verdict` 写的 40k 属口径漂移）。选择规则是 `linspace(0,N−1,12)` **含端点 0** ⇒ `solo_main_0.pt`（未训练起点）**永久钉在 0 号槽**，池成员平均年龄 ≈ t/2 |
 | `_PFSP_ALPHA` / `_PFSP_GATE_HI` / `_PFSP_GATE_PENALTY` | 0.20 / 0.85 / 0.2 | PFSP EMA 学习率 / 易胜对手门槛 / 门禁惩罚（`rl/pfsp.py` 默认值仍 = 旧行为） |
+| `stall_draw_margin` | **0.0**（2026-09-17 起；旧值 0.05） | 早停局裁定：0 = 新口径（皇冠 → 三塔血量合计，完全相等才平局）；>0 = C′ 旧路径（最低血量%差 < 阈值记平局，仅供复现旧标签）。`rl/config.py` |
 | `eval_workers` 安全档 | 12 | 16 有 commit 压力风险（见 R1）。**⚠️ 更正（2026-09-14 实测）**：`economy` 预设**未设置**该字段 ⇒ 继承 dataclass 默认 `min(16, os.cpu_count())`，本机实测 **= 16**（原文"预设为 0（串行）"**已作废**）⇒ 不显式传参就会落在风险档位 |
 
 ---
@@ -297,6 +305,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | **价值阶梯 · 第二轮（v2，已判读）**：正式判决仍是 `V2_INVALID`（**我的 G-RAW 阈值用单次观测标定** ⇒【红线 R16】），但**比值判据 `R0 ≥ 2·E0` 在三条轨迹上全部复现**（2.82× / 3.05× / 3.39×）⇒「共享感知前端丢掉约 2/3 线性可读局内信号」+「`value_enc_ln` **不是**掉点层」两条**复现过**（⚠️ **已被【否证 X-17】/【X-18】推翻，见上一行**）；探针**复现闸 PASS**（播种后同 ckpt/seed 唯一轨迹） | [`docs/value_ln_probe2_prereg_2026-09-14.md`](docs/value_ln_probe2_prereg_2026-09-14.md)、[`docs/value_ln_probe2_verdict_2026-09-14.md`](docs/value_ln_probe2_verdict_2026-09-14.md)、`docs/value_ln_probe2_rngchk_{a,b}.log` |
 | **奖励分量分解**（预注册 + 判读：逐帧奖励精确拆五项 → **W4 无主导项**；排除"奖励被资源账带偏"；验证双倍期切价；附带发现塑形缺 `γ`） | [`docs/reward_composition_prereg_2026-09-14.md`](docs/reward_composition_prereg_2026-09-14.md)、[`docs/reward_composition_verdict_2026-09-14.md`](docs/reward_composition_verdict_2026-09-14.md)、`scripts/probe_reward_composition.py` |
 | **精确塔伤 · P3（近似闸门否证 → 触发式实现 → 归因与寿命修复）** ★：`threat_precise_prereg` / `threat_precise_probe_verdict`（近似 BA 0.44~0.66）/ `threat_trigger_verdict`（上升沿 vs 电平）/ `threat_precise_cheapening_verdict`（剪枝）/ **`threat_precise_impl_2026-09-14.md`（交付 + 3 seed 验收）** / **`hold_recompute_verdict_2026-09-14.md`（盘面变了会不会重算：不会；寿命/陈旧度/BA 年龄曲线）** / `threat_hold_life_prereg_2026-09-14.md`（寿命上限预注册） | `docs/threat_precise_prereg_2026-09-14.md`、`docs/threat_precise_probe_verdict_2026-09-14.md`、`docs/threat_trigger_verdict_2026-09-14.md`、`docs/threat_precise_cheapening_verdict_2026-09-14.md`、`docs/threat_precise_impl_2026-09-14.md`、`docs/hold_recompute_verdict_2026-09-14.md`、`docs/threat_hold_life_prereg_2026-09-14.md`、`docs/threat_hold_life_verdict_2026-09-14.md`（配对 A/B 判读）；仪器 `scripts/probe_precise_threat.py`、`scripts/probe_hold_recompute.py`、`scripts/probe_hold_life_ab.py`（同轨迹配对） |
+| **平局裁决口径（2026-09-17）** ★：皇冠优先 → **三塔血量合计**多者胜 → 完全相等才平局；C′ 细差判平默认关；280 局回放配对实测 | [`docs/draw_rule_prereg_2026-09-17.md`](docs/draw_rule_prereg_2026-09-17.md)、[`docs/draw_rule_verdict_2026-09-17.md`](docs/draw_rule_verdict_2026-09-17.md)、仪器 `scripts/analyze_draw_anatomy.py` |
 | R1 事件留证（`cudaErrorUnknown` / 宿主提交压力 / 孤儿 worker） | [`docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`](docs/r1_incident_2026-09-13_layer1_cuda_unknown.md) |
 | 本文件的过程细节与历史推理链 | [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) |
 | 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |

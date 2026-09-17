@@ -27,6 +27,59 @@ NORMAL_TIME_S = 180.0
 OVERTIME_END_S = 300.0
 
 
+#: 双方三塔实体 id（与 `battle.BattleState.TOWER_IDS` 同约定；mock 战场复算用）
+_TOWER_IDS = {0: (3, 4, 6), 1: (1, 2, 5)}
+
+
+def tower_hp_total(battle, player_id):
+    """三塔血量合计：优先用引擎单源方法；mock 战场按同 id 约定复算；无实体信息 → None。"""
+    fn = getattr(battle, "tower_hp_total", None)
+    if callable(fn):
+        return float(fn(player_id))
+    ents = getattr(battle, "entities", None)
+    if not ents:
+        return None
+    tot = 0.0
+    for i in _TOWER_IDS[int(player_id)]:
+        e = ents.get(i)
+        if e is None:
+            continue
+        if getattr(e, "is_alive", False):
+            tot += float(getattr(e, "hp", 0.0))
+    return tot
+
+
+def timeout_winner(battle):
+    """截断/早停/到点时的结算：皇冠多者胜；皇冠平 → **塔血合计多者胜**；完全相等 → None。
+
+    2026-09-17 口径变更（用户指定）：塔血裁决从"存活塔最低血量百分比"改为
+    "三塔血量**合计**"，且**只在合计完全相等时判平局**。单一来源 = 引擎
+    `BattleState.timeout_winner()`（本函数在真实 battle 上直接委托它）。
+    规则与取舍：`docs/draw_rule_prereg_2026-09-17.md`。
+    """
+    if battle is None:
+        return None
+    p0, p1 = battle.players
+    lost0 = int(p0.get_crown_count())
+    lost1 = int(p1.get_crown_count())
+    if lost1 > lost0:
+        return 0
+    if lost0 > lost1:
+        return 1
+    fn = getattr(battle, "timeout_winner", None)
+    if callable(fn):
+        return fn()                      # 真实引擎：单一来源
+    h0 = tower_hp_total(battle, 0)
+    h1 = tower_hp_total(battle, 1)
+    if h0 is None or h1 is None:
+        return None                      # mock 无实体信息 → 平局（旧行为）
+    if h0 > h1 + 1e-9:
+        return 0
+    if h1 > h0 + 1e-9:
+        return 1
+    return None
+
+
 def overtime_open(battle):
     """加时（突然死亡）窗口是否仍应继续，绕过 max_ep_steps 在常规时间末的截断。"""
     if battle is None or battle.game_over:

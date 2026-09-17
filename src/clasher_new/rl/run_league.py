@@ -63,7 +63,8 @@ from rl.observation import ENTITY_NAMES
 from rl.opponents import ScriptedPolicy, build_card_pool
 from rl.decks import load_classified_decks, decks_by_archetype, classify_stats
 from rl.config import TrainConfig, reward_to_env
-from rl.overtime import NORMAL_TIME_S, OVERTIME_END_S, overtime_open
+from rl.overtime import (NORMAL_TIME_S, OVERTIME_END_S, overtime_open,
+                         timeout_winner as _overtime_timeout_winner)
 from rl.replay import battle_snapshot, save_league_replays
 
 
@@ -182,8 +183,9 @@ def timeout_winner(battle, hp_tiebreak=None):
     规则（2026-09 定稿）：
       1) 皇冠多者胜：皇冠 = 对方被拆塔数（players[X].get_crown_count()
          是 X 侧被拆塔数 = 对方得分）；
-      2) 皇冠相同 → 双方存活塔中血量百分比更低者输（真实 CR 加时末裁决口径，
-         与引擎 300s 硬顶分支同一规则）；完全相等 → None（平局）。
+      2) 皇冠相同 → **三塔血量合计**多者胜（2026-09-17 用户指定口径；
+         旧口径是"存活塔最低血量百分比"，见 docs/draw_rule_prereg_2026-09-17.md）；
+         完全相等 → None（平局）。
          僵局早停/截断等价于把终局提前到这里，不能一律记平局——否则出现
          "1-1、双方塔血差 1000+ HP 却记 D" 的错误平局（回放实证：
          economy league_6000 局3/局11 等）。mock 战场无实体信息时退回平局。
@@ -199,15 +201,7 @@ def timeout_winner(battle, hp_tiebreak=None):
         return 0
     if lost0 > lost1:
         return 1
-    m0 = _min_alive_tower_pct(battle, 0)
-    m1 = _min_alive_tower_pct(battle, 1)
-    if m0 is None or m1 is None:
-        return None
-    if m0 > m1 + 1e-9:
-        return 0
-    if m1 > m0 + 1e-9:
-        return 1
-    return None
+    return _overtime_timeout_winner(battle)      # 单一来源（引擎 BattleState.timeout_winner）
 
 
 def settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05):
@@ -237,16 +231,23 @@ def settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05):
     return None
 
 
-def settle_stall(battle, margin=0.05):
-    """早停局结算（C'）：包装 settle_stall_from_counts + timeout_winner 的塔血口径。"""
+def settle_stall(battle, margin=0.0):
+    """早停局结算。**默认（margin=0）走 2026-09-17 新口径**：皇冠 → 三塔血量**合计**，
+    完全相等才平局（= timeout_winner 同一规则）。
+
+    `margin > 0` 时走 2026-09-12 的 C′ 旧路径（存活塔最低血量百分比 + 边距，
+    "低置信细差记平局"）——保留它是为了**逐位复现旧标签**（`--stall-draw-margin 0.05`）。
+    为什么改：正常防守 ⇒ 100 步无塔损 ⇒ 僵局早停 ⇒ 细差 < margin ⇒ 记 D（且 D 按失败罚），
+    即"正常防守被判为平局"。口径与判据见 docs/draw_rule_prereg_2026-09-17.md。
+    """
     if battle is None:
         return None
-    p0, p1 = battle.players
-    lost0 = int(p0.get_crown_count())
-    lost1 = int(p1.get_crown_count())
-    m0 = _min_alive_tower_pct(battle, 0)
-    m1 = _min_alive_tower_pct(battle, 1)
-    return settle_stall_from_counts(lost0, lost1, m0, m1, margin)
+    if margin and float(margin) > 0.0:
+        p0, p1 = battle.players
+        return settle_stall_from_counts(int(p0.get_crown_count()), int(p1.get_crown_count()),
+                                        _min_alive_tower_pct(battle, 0),
+                                        _min_alive_tower_pct(battle, 1), float(margin))
+    return timeout_winner(battle)
 
 
 def _stall_probe(env, last_hp, stall_count):

@@ -2656,8 +2656,8 @@ def test_overtime_window():
     规则（用户确认，2026-09）：
       - battle.time ∈ [180, 300) 且双方被拆塔数相同、未终局 → overtime_open=True
         （RL 循环继续打，引擎 [180,300) 内谁先被再破一塔谁输）；
-      - 恰达 300s 仍平 → overtime_open=False，收手后由 timeout_winner 按最低塔血
-        百分比裁决（真实 CR 加时末规则），完全相等才平局；
+      - 恰达 300s 仍平 → overtime_open=False，收手后由 timeout_winner 按**三塔血量合计**
+        裁决（2026-09-17 用户口径；旧口径是"存活塔最低血量百分比"），完全相等才平局；
       - 皇冠不同 → 直接按皇冠结算（常规时间末领先者胜）。
     """
     from rl.run_league import overtime_open, timeout_winner
@@ -2675,7 +2675,7 @@ def test_overtime_window():
             self.players = [_P(c0), _P(c1)]
             self.game_over = bool(over)
 
-    class _T:  # 假塔：最低血量百分比裁决用
+    class _T:  # 假塔：塔血合计裁决用（保留 data.hp 以兼容旧 C′ 百分比路径）
         def __init__(self, hp, max_hp):
             self.hp = hp
             self.is_alive = hp > 0
@@ -2706,19 +2706,106 @@ def test_overtime_window():
     # 皇冠平 + 无实体信息（mock）→ 退回平局
     assert timeout_winner(_B(300.0, 1, 1)) is None
     assert timeout_winner(_B(180.0, 0, 0)) is None
-    # 皇冠平 + 塔血裁决：双方满血公主塔（p0 左塔残血 50%）→ p0 输
+    # 皇冠平 + 塔血裁决（合计）：p0 合计 9402 < p1 10928 → p0 输
     assert timeout_winner(_BT(300.0, 1, 1,
                               [(3052, 3052), (1526, 3052), (4824, 4824)],
                               [(4824, 4824), (3052, 3052), (3052, 3052)])) == 1
-    # 镜像：p1 塔更残 → p0 胜（僵局早停不再一律记平局）
+    # 镜像：p1 合计 8876 < p0 10928 → p0 胜（僵局早停不再一律记平局）
     assert timeout_winner(_BT(200.0, 1, 1,
                               [(4824, 4824), (3052, 3052), (3052, 3052)],
                               [(4824, 4824), (1000, 3052), (3052, 3052)])) == 0
-    # 双方最低塔血完全相等（各 100%）→ 平局
+    # 双方塔血合计完全相等（7876 = 7876，分布不同）→ 平局
     assert timeout_winner(_BT(110.0, 1, 1,
                               [(4824, 4824), (0, 3052), (3052, 3052)],
                               [(4824, 4824), (3052, 3052), (0, 3052)])) is None
-    print("[PASS] 加时窗口：180s 皇冠平进入 [180,300) 突然死亡；到顶按最低塔血裁决；皇冠差直接判胜")
+    # **新旧口径的关键差异**：双方"最低血量百分比"都是 50%（旧口径 → 平局），
+    # 但合计 9402 vs 11174 不同 ⇒ 新口径必须判 p1 胜（这就是"正常防守被判平"的病灶）
+    assert timeout_winner(_BT(300.0, 1, 1,
+                              [(3052, 3052), (1526, 3052), (4824, 4824)],
+                              [(4824, 4824), (1526, 3052), (4824, 4824)])) == 1
+    print("[PASS] 加时窗口：180s 皇冠平进入 [180,300) 突然死亡；到顶按**塔血合计**裁决；皇冠差直接判胜")
+
+
+def test_draw_rule_tower_hp_total():
+    """平局规则（2026-09-17 用户口径）：到点按**三塔血量合计**裁决，只有完全相等才平局。
+
+    回归点（对应 docs/draw_rule_prereg_2026-09-17.md 的 J1/J3）：
+      1) 四处口径**同值**（单一来源）：引擎 `BattleState.timeout_winner()`、
+         `rl.overtime.timeout_winner`、`rl.run_league.timeout_winner`、`settle_stall(margin=0)`；
+      2) 合计不等 → 多者胜（**旧口径"最低百分比相等即平局"必须不再成立**）；
+      3) 合计完全相等（即使分布不同）→ None；
+      4) 皇冠不同 → 皇冠优先，与塔血无关；
+      5) 旧 C′ 路径仍可逐位复现：`settle_stall(b, 0.05)` 在细差 <5% 时判平。
+    """
+    import battle as bm
+    import player as pm
+    from rl.overtime import timeout_winner as ot_winner
+    from rl.run_league import timeout_winner as rl_winner, settle_stall
+
+    deck = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball",
+            "Giant", "Archer"]
+
+    def fresh():
+        return bm.BattleState(pm.PlayerState(0, list(deck), 5.0),
+                              pm.PlayerState(1, list(deck), 5.0), card_level=11)
+
+    def set_pct(bs, pct0, pct1):
+        """按**各塔自身最大血**的百分比设置血量（各塔 max 不同：公主 3052 / 王 4824）。"""
+        for i, q in zip((3, 4, 6), pct0):
+            bs.entities[i].hp = float(q) * float(bs.entities[i].data.hp)
+        for i, q in zip((1, 2, 5), pct1):
+            bs.entities[i].hp = float(q) * float(bs.entities[i].data.hp)
+        bs.update_player_hp()
+        return bs
+
+    # ① 合计不等（对方多）→ 四处一致判 1
+    bs = set_pct(fresh(), (1.0, 0.0, 1.0), (1.0, 1.0, 1.0))
+    assert bs.tower_hp_total(1) > bs.tower_hp_total(0)
+    assert bs.timeout_winner() == 1
+    assert ot_winner(bs) == 1 and rl_winner(bs) == 1 and settle_stall(bs) == 1, \
+        "四处口径必须同值（单一来源）"
+
+    # ② 关键差异：最低百分比都是 1.0（旧口径 → 平局），但合计不同 → 必须判胜负
+    bs = set_pct(fresh(), (1.0, 0.99, 1.0), (1.0, 1.0, 1.0))
+    assert bs.timeout_winner() == 1, "合计不同 ⇒ 判胜负；不得因最低百分比相等判平"
+    assert settle_stall(bs, 0.05) is None, "旧 C′ 路径：细差 <5% 仍判平（可复现旧标签，供对照）"
+    assert settle_stall(bs) == 1, "默认（margin=0）必须走新口径"
+
+    # ③ 合计完全相等但**分布不同** → 平局（用户口径 = 合计相等即平）
+    #    p0 存活 {左3, 王6} = 3052+4824 = 7876；p1 存活 {右2, 王5} = 3052+4824 = 7876
+    bs = set_pct(fresh(), (1.0, 0.0, 1.0), (0.0, 1.0, 1.0))
+    for eid in (4, 1):
+        bs.entities[eid].is_alive = False          # 死塔显式标记（与引擎一致）
+    assert abs(bs.tower_hp_total(0) - bs.tower_hp_total(1)) < 1e-9, \
+        f"{bs.tower_hp_total(0)} vs {bs.tower_hp_total(1)}"
+    assert bs.timeout_winner() is None
+    assert ot_winner(bs) is None and rl_winner(bs) is None and settle_stall(bs) is None
+
+    # ④ 皇冠优先：塔血无关，谁被拆得多谁输（`get_crown_count()` = 本侧**被拆**塔数）
+    class _P:
+        def __init__(self, lost):
+            self._lost = int(lost)
+        def get_crown_count(self):
+            return self._lost
+    class _B:
+        def __init__(self, lost0, lost1):
+            self.players = [_P(lost0), _P(lost1)]
+            self.game_over = False
+            self.time = 300.0
+    assert ot_winner(_B(2, 1)) == 1, "p0 被拆 2 塔 > p1 的 1 ⇒ p1 胜"
+    assert ot_winner(_B(1, 2)) == 0
+
+    # ⑤ 引擎 300s 硬顶分支：真的会按合计写入 winner（不只 helper 对）
+    bs = set_pct(fresh(), (1.0, 1.0, 1.0), (1.0, 1.0, 0.5))
+    bs.time = 300.0
+    bs.step(1.0 / 60.0)
+    assert bs.game_over and bs.winner == 0, f"引擎 300s 应判 p0 胜: {bs.winner}"
+    bs = set_pct(fresh(), (1.0, 1.0, 1.0), (1.0, 1.0, 1.0))
+    bs.time = 300.0
+    bs.step(1.0 / 60.0)
+    assert bs.game_over and bs.winner is None, "合计完全相等 ⇒ 平局（winner=None）"
+    print("[PASS] 平局规则（塔血合计）：四处口径同值、合计不等判胜负（含旧口径的最低百分比相等用例）、"
+          "完全相等判平、皇冠优先、引擎 300s 硬顶分支一致、旧 C′ 路径可复现")
 
 
 def test_tower_threat_calc():
@@ -5123,6 +5210,7 @@ def main():
     test_eval_stall_early_stop()
     test_eval_solo_parallel()
     test_overtime_window()
+    test_draw_rule_tower_hp_total()
     test_tower_threat_calc()
     test_simulate_exchange()
     test_spell_module()

@@ -287,8 +287,8 @@
 `ep_obs / ep_belief / ep_plan / ep_bundle / ep_lp / ep_val / ep_rew / ep_term / ep_trunc / ep_masks / ep_init`。
 
 - 逐帧写入：`train_solo.py:1589-1595`（`ep_init` 保存**进入本步时的隐状态** `init_hidden = hidden`，`1583`；PPO 重放用它保证 `ratio` 是有效 IS 比，`ppo.py:7`）。
-- **终端补结算**（截断/僵局早停时）：`timeout_winner(battle)`（皇冠多者胜；皇冠相同则存活塔最低血量%更低者输；`rl/run_league.py:179-210`）→ `win_bonus` / `lose_penalty`；无胜者 → `-_draw_penalty(cfg)`（`train_solo.py:1604-1613`）。
-- **训练环僵局早停**：`cfg.train_stall_stop` 且每 `STALL_WINDOW = 10` 步探针一次，连续 `STALL_LIMIT = 10` 次零塔血变化 → 判平（`train_solo.py:1545-1547`；常量与探针 `rl/run_league.py:145-146,252-265`）；早停结算用 `settle_stall(battle, cfg.stall_draw_margin)`（`train_solo.py:1552`；实现 `rl/run_league.py:213-249`）。
+- **终端补结算**（截断/僵局早停时）：`timeout_winner(battle)`（皇冠多者胜；皇冠相同则**三塔血量合计**多者胜；完全相等才平局；`rl/run_league.py::timeout_winner` 委托 `rl/overtime.py`，最终单一来源 = `BattleState.timeout_winner()`） ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。→ `win_bonus` / `lose_penalty`；无胜者 → `-_draw_penalty(cfg)`（`train_solo.py:1604-1613`）。
+- **训练环僵局早停**：`cfg.train_stall_stop` 且每 `STALL_WINDOW = 10` 步探针一次，连续 `STALL_LIMIT = 10` 次零塔血变化 → 判平（`train_solo.py:1545-1547`；常量与探针 `rl/run_league.py:145-146,252-265`）；早停结算用 `settle_stall(battle, cfg.stall_draw_margin)`（实现 `rl/run_league.py::settle_stall`）：**默认 `margin=0` ⇒ 与 `timeout_winner` 同口径**（三塔血量合计），仅 `margin>0` 才走 C′ 百分比+边距旧路径。 ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。
 - **截断标记**：仅当 `truncated and virt is None` 才置 `ep_trunc[-1] = True` 并算 `last_val = main.value(...)`，否则 `last_val = 0.0`（`train_solo.py:1618-1622`）。
 - **入池**：`transitions.append({obs, belief, plan, bundle, old_logprob, adv, returns, masks, init_hidden[, adv_const, adv_gap]})`（`train_solo.py:1625-1633`）；solo 额外带 `adv_const`/`adv_gap`（critic 惰性检验用，`train_solo.py:1570-1572`）。
 - **局间重置**：`_new_episode_reset(winner)` → `_probe["games"] += 1` → `opp_pool.record(winner)` → `opp_pool.sample()` → `env.opponent = side` → `env.reset()` → `belief.reset(...)` → 清空全部 `ep_*`（`train_solo.py:1513-1539`；`nonlocal` 显式列出全部缓冲，注释指出漏 `nonlocal` 会导致缓冲泄漏事故，`1519-1524`）。
@@ -434,7 +434,7 @@
 | 26 | `train_stall_stop` | bool | `True` | solo 训练环僵局早停判平（连续 100 步零塔血变化）；`False`=旧行为拖满 `max_ep_steps` | `rl/config.py:150`（语义 `148-149`） |
 | 27 | `adv_inert_probe` | bool | `False` | critic 惰性检验**纯测量**开关：额外算 V≡常数优势并报告 corr/resid/grad_cos；不改写入梯度的量 | `rl/config.py:156`（语义 `151-155`） |
 | 28 | `critic_baseline` | str | `"value"` | critic 惰性检验**干预**开关：`value`=用网络 V/`const`=把优势里的 V 换成标量 `c` | `rl/config.py:160`（语义 `157-159`） |
-| 29 | `stall_draw_margin` | float | `0.05` | C'：早停局皇冠相同时，塔血%最低差 < 该阈值 → 记平局（去掷硬币级标签）；`0`=退化为旧行为 | `rl/config.py:168`（语义 `161-167`） |
+| 29 | `stall_draw_margin` | float | **`0.0`**（2026-09-17 起） | **默认 0 = 走新口径**（皇冠 → 三塔血量合计，完全相等才平局）；`>0` 时走 2026-09-12 的 C′ 旧路径（最低血量%差 < 该阈值 → 记平局），仅供逐位复现旧标签 | `rl/config.py`（语义注释同处）| ⚠️**2026-09-17 口径变更**：见 `docs/draw_rule_verdict_2026-09-17.md`。
 | 30 | `ppo_epochs` | int | `1` | 同一 rollout 重复几轮更新（`1`=旧行为，只有 1 次 `opt.step()`） | `rl/config.py:178`（语义 `169-177`） |
 | 31 | `ppo_minibatch` | int | `0` | 每轮切分的小批大小；`0`=整批（不切） | `rl/config.py:179` |
 | 32 | `ppo_shuffle` | bool | `False` | 每轮是否打乱样本顺序 | `rl/config.py:180` |
@@ -797,7 +797,7 @@ python rl/run_league.py --mode solo --config economy --config-name my_run --fres
 
 - 触发条件：`cfg.train_stall_stop and len(ep_rew) and len(ep_rew) % STALL_WINDOW == 0`（rl/train_solo.py:1545）。
 - 探针：`_stall_probe(env, last_hp, stall_count)`（rl/run_league.py:252）——每 `STALL_WINDOW=10` 步调用一次（rl/run_league.py:145），连续 `STALL_LIMIT=10` 次塔血零变化（`abs(hp-last_hp) < 1e-9`，rl/run_league.py:260）⇒ 早停（等价 100 步零塔损，rl/run_league.py:146）。
-- 早停结算：`settle_stall(env.battle, cfg.stall_draw_margin)`（rl/train_solo.py:1552；`stall_draw_margin` 默认 `0.05`，rl/config.py:168），其纯函数内核是 `settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05)`（rl/run_league.py:213）：皇冠不同 → 决定性判胜负；皇冠相同且最低塔血百分比差 `< margin` → 返回 `None`（记平局=失败）。
+- 早停结算：`settle_stall(env.battle, cfg.stall_draw_margin)`（rl/train_solo.py:1552；`stall_draw_margin` 默认 `0.0`（2026-09-17 起；旧值 0.05 可用参数复现），`rl/config.py`），其纯函数内核是 `settle_stall_from_counts(lost0, lost1, min_pct0, min_pct1, margin=0.05)`（rl/run_league.py:213）：皇冠不同 → 决定性判胜负；皇冠相同且最低塔血百分比差 `< margin` → 返回 `None`（记平局=失败）。
 - 奖惩注入：`win_bonus` / `-lose_penalty` / `-_draw_penalty(cfg)` 写进 `ep_rew[-1]`（rl/train_solo.py:1554-1559）；平局惩罚取 `rw.get("draw_penalty", rw.get("lose_penalty", 10.0))`（rl/train_solo.py:164-167）。
 - 收尾：算 GAE → 把本局全部 transition 追加进 `transitions`（rl/train_solo.py:1563-1572）→ `_new_episode_reset(winner)` → `continue`（跳过本 step 的采样）。
 
@@ -878,7 +878,7 @@ elif cfg.anchor_every and step % cfg.anchor_every == 0 and step != cfg.total_ste
 | `eval_at_start` | True | rl/config.py:126 | 开局先评估一次 |
 | `diagnose_every` | 10 | rl/config.py:147 | 每 N 次 update 做梯度成分分解 |
 | `train_stall_stop` | True | rl/config.py:150 | 训练环僵局早停 |
-| `stall_draw_margin` | 0.05 | rl/config.py:168 | 早停局低置信裁定降噪阈值 |
+| `stall_draw_margin` | **0.0** | rl/config.py | 早停局裁定：0=新口径（三塔血量合计）；>0=C′ 低置信降噪阈值（旧行为，可复现） |
 | `ppo_epochs / ppo_minibatch / ppo_shuffle` | 1 / 0 / False | rl/config.py:178-180 | "真正的 PPO 更新预算"，默认=旧行为 |
 | `gamma / gae_lambda` | 0.997 / 0.95 | rl/config.py:127-128 | `economy` 预设 `gae_lambda`=0.99（rl/config.py:351） |
 | `adv_norm / value_norm` | `scale` / `none` | rl/config.py:139、:144 | `economy` 预设 `value_norm="running"`（rl/config.py:356） |

@@ -119,7 +119,8 @@ class TrainConfig:
                               # 4000→8000 抵消墙钟；评估开销与 N 成正比，嫌慢用 --n-eval-games 覆盖。
     max_ep_steps: int = 360       # 常规时间 180s（360 步）的截断上限；180s 皇冠相同 → 自动进入
                                   # 加时窗口（overtime_open 延长到最多 300s=600 步，先破塔者胜；
-                                  # 到 300s 仍无人破塔 → 按平局=失败结算，不再按塔血提前判胜）
+                                  # 到 300s 仍无人破塔 → **按三塔血量合计裁决**：多者胜，
+                                  # 只有合计完全相等才记平局（2026-09-17 口径））
     n_envs: int = 1               # 并行多环境（>1 用批量推理；默认 1 与旧行为一致）
     parallel: str = "mp"          # n_envs>1 时：mp=跨进程 worker（多核真并行）/ proc=单进程批量化
     card_level: int = 11          # 本局全部卡牌等级（11-16；配合 economy 的塔血归一化跨等级一致）
@@ -165,7 +166,10 @@ class TrainConfig:
     # 依据：docs/critic_probe_experiment_2026-09-12.md 实验 3 —— timeout_winner
     # 塔血裁定是标签噪声候选（早停局占 28~40%，其中皇冠相同的细差裁定噪声最大）。
     # 仅改训练侧标签（eval 仍用真实 CR 规则 timeout_winner，保证评估口径可对比）。
-    stall_draw_margin: float = 0.05
+    # 2026-09-17：默认 0.0 = **不再按"低置信细差"判平**；塔血裁决改走"三塔血量合计"
+    # 且只在完全相等时平局（docs/draw_rule_prereg_2026-09-17.md）。
+    # 旧行为可逐位复现：--stall-draw-margin 0.05。
+    stall_draw_margin: float = 0.0
     # —— F′（2026-09-12）：真正的 PPO 更新预算 ——
     # 旧实现 `PPOTrainer.update()` = **1 次 forward / 1 次 backward / 1 次 opt.step**，
     # 而喂进来的批是**同一局连续 128 帧**（corr(R_t,R_{t+1})≈0.99）⇒ 20k 步只有

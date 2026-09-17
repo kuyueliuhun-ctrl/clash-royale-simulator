@@ -569,15 +569,20 @@ if self.card_name in globals() and not isinstance(self, Projectile):
 | 2 | `p1 == 3` | `game_over=True`，`winner=0`，`return` | battle.py:2663-2666 |
 | 3 | `300 > time >= 180` 且 `p0 > p1` | `game_over=True`，`winner=1`，`return` | battle.py:2667-2671 |
 | 4 | `300 > time >= 180` 且 `p0 < p1` | `game_over=True`，`winner=0`，`return` | battle.py:2672-2675 |
-| 5 | `time >= 300` 且 `_m0 > _m1` | `winner=0` | battle.py:2685-2686 |
-| 6 | `time >= 300` 且 `_m1 > _m0` | `winner=1` | battle.py:2687-2688 |
-| — | `time >= 300` 且 `_m0 == _m1` | 只 `game_over=True`，`winner` **保持 `None`（平局）** | battle.py:2680-2688 |
+| 5 | `time >= 300` 且 **p0 三塔血量合计** > p1 | `winner=0` | `BattleState.timeout_winner()` |
+| 6 | `time >= 300` 且 p1 三塔血量合计 > p0 | `winner=1` | 同上 |
+| — | `time >= 300` 且两方**合计完全相等** | 只 `game_over=True`，`winner` **保持 `None`（平局）** | 同上 |
+
+> ⚠️ **2026-09-17 口径变更**：上表 #5/#6 与"平局"的判据从"存活塔**最低血量百分比**"
+> （旧 `_m0/_m1`）改为"**三塔血量合计**"，只有合计完全相等才平局（用户指定）。
+> 单一来源 = `BattleState.tower_hp_total()/timeout_winner()`；旧口径已删除。
+> 依据与实测：`docs/draw_rule_verdict_2026-09-17.md`。
 
 其中：
 
 - `p0/p1` 是**自己被摧毁的塔数**（A.6.3 第 1 条）⇒ `p0==3` 表示玩家 0 全失、玩家 1 获胜（battle.py:2659-2662），`p0 > p1` 同理归给玩家 1（battle.py:2668-2670）。
-- `time >= 300` 分支（加时硬顶，battle.py:2676-2688）：`_m0 = min(entities[i].hp / entities[i].data.hp for i in (3,4,6) if is_alive)`（玩家 0 存活塔的最低**血量百分比**）、`_m1` 对应 `(1,2,5)`（battle.py:2681-2684）；注释说明「双方存活塔中血量百分比最低者输，完全相等才平局」（battle.py:2677-2679）。
-- **加时/平局**：`180 <= time < 300` 时若皇冠相等则**不结束**（无 else 分支）；只有到 `time >= 300` 才可能以平局收场（`winner` 保持 `None`）。
+- `time >= 300` 分支（加时硬顶）：**2026-09-17 起**调 `self.timeout_winner()` —— 比较双方 `tower_hp_total()`（三塔血量之和），合计多者胜、完全相等才平局（`TOWER_IDS = {0:(3,4,6), 1:(1,2,5)}`）。旧实现是 `_m0 = min(hp/data.hp for i in (3,4,6) if is_alive)`（最低**血量百分比**），已删除。
+- **加时/平局**：`180 <= time < 300` 时若皇冠相等则**不结束**（无 else 分支）；到 `time >= 300` 由 `timeout_winner()` 裁决，**只有三塔血量合计完全相等才平局**（`winner` 保持 `None`）。
 - `CREnv.step` 侧的后果：`winner == 0` 加 `+10`，否则（含 `winner is None` 的平局）减 `10`（environment.py:112-118）；返回 `terminated = truncated = battle.game_over`（environment.py:121）。
 
 #### A.6.5 皇冠计数来源

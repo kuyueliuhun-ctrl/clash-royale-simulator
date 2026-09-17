@@ -2649,6 +2649,39 @@ class BattleState:
         p1.left_tower_hp = self.entities[1].hp
         p1.right_tower_hp = self.entities[2].hp
 
+    #: 双方三塔实体 id（player 0: 左3 右4 王6；player 1: 左1 右2 王5）
+    TOWER_IDS = {0: (3, 4, 6), 1: (1, 2, 5)}
+
+    def tower_hp_total(self, player_id):
+        """该方三塔**血量合计**（绝对 HP；已毁塔计 0）。
+
+        单一来源（【R7】）：到点裁决（timeout_winner）与 RL 层结算全部走这里。
+        2026-09-17 用户指定口径："300 秒时双方所有塔血相同即平局" ⇒ 以合计为准。
+        ⚠️ 旧口径是"存活塔最低血量百分比"（为兼容塔兵改变公主塔最大血量的卡组）；
+        改绝对值的取舍见 docs/draw_rule_prereg_2026-09-17.md §3。
+        """
+        tot = 0.0
+        for i in self.TOWER_IDS[int(player_id)]:
+            e = self.entities.get(i)
+            if e is None:
+                continue
+            if getattr(e, 'is_alive', False):
+                tot += float(e.hp)
+        return tot
+
+    def timeout_winner(self):
+        """到点（300s 硬顶 / RL 截断兜底）裁决：**塔血合计多者胜**；完全相等 → None（平局）。
+
+        单一来源：`rl/overtime.timeout_winner` 与 `rl/run_league.timeout_winner` 都委托本方法。
+        """
+        h0 = self.tower_hp_total(0)
+        h1 = self.tower_hp_total(1)
+        if h0 > h1 + 1e-9:
+            return 0
+        if h1 > h0 + 1e-9:
+            return 1
+        return None
+
     def step(self, dt):
         if self.game_over: return
         self.update_player_hp()
@@ -2674,18 +2707,12 @@ class BattleState:
                 self.winner = 0
                 return
         elif self.time >= 300:
-            # 加时硬顶（300s）真实 CR 裁决：双方存活塔中血量百分比最低者输；
-            # 完全相等才平局（winner 保持 None）。此前 else 恒判 player 1 胜，
-            # 且用绝对血量（塔兵改变公主塔最大血时会失真）。
+            # 加时硬顶（300s）裁决 —— **2026-09-17 起用用户指定口径**：
+            # 双方三塔**血量合计**多者胜；完全相等才平局（winner 保持 None）。
+            # 旧口径（存活塔最低血量百分比）自本日起不再用于训练/评估默认路径，
+            # 见 docs/draw_rule_prereg_2026-09-17.md；单一来源 = self.timeout_winner()。
             self.game_over = True
-            _m0 = min(self.entities[i].hp / self.entities[i].data.hp
-                      for i in (3, 4, 6) if self.entities[i].is_alive)
-            _m1 = min(self.entities[i].hp / self.entities[i].data.hp
-                      for i in (1, 2, 5) if self.entities[i].is_alive)
-            if _m0 > _m1:
-                self.winner = 0
-            elif _m1 > _m0:
-                self.winner = 1
+            self.winner = self.timeout_winner()
         for each in self.players:
             each.regenerate_elixir(dt, 2.8 if self.time < 120 else 1.4 if self.time < 240 else 2.8/3)
         self.entities = {key:value for key,value in self.entities.items() if (value.is_alive or key <= 6)}

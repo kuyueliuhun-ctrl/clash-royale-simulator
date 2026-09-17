@@ -1549,7 +1549,7 @@ def run_solo(cfg, resume=False, record_replays=True):
                     # 早停补结算：C'（2026-09-12）低置信裁定降噪 —— 皇冠相同的
                     # 塔血%细差 < stall_draw_margin 视为掷硬币，不再判胜负（记平局=
                     # 失败）；皇冠不同/细差决定性照常 ±胜负。皇冠相同但细差小 → 平局。
-                    virt = settle_stall(env.battle, getattr(cfg, "stall_draw_margin", 0.05))
+                    virt = settle_stall(env.battle, getattr(cfg, "stall_draw_margin", 0.0))
                     rw = reward_to_env(cfg)
                     if virt == 0:
                         ep_rew[-1] += float(rw["win_bonus"])
