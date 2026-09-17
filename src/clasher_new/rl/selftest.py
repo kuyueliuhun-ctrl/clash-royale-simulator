@@ -23,6 +23,7 @@
 import os
 import shutil
 import sys
+import time
 import random
 
 _PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1132,6 +1133,125 @@ def test_deck_pool_factory():
     assert len(seen) == 2, f"deck_pool 应逐局抽整套卡组（2 副），实得 {len(seen)} 种"
 
     print("[PASS] 卡组工厂：deck_pool 逐局生效 + pool 生效 + 跨 pair 清空")
+
+
+def test_dashboard_league_payload():
+    """仪表盘「联赛/长跑」面板：进度、两级评估点标注、逐点对手胜率、目录入口（2026-09-18）。
+
+    长跑（1M 步 / 131 评估点）期间每 3 s 轮询这个 payload，所以每条都可能**静默失效**：
+    ① `--state` 只认文件 ⇒ 盯着 `runs/long1m/` 就得写全文件名；目录入口必须能解析；
+    ② `league_state.total_steps` 只是"最近评估点"⇒ 没有 run_state.json 的进度就没法
+       显示"才跑了 1.6%"，前端会看起来像跑完了；百分比/ETA/计划点数必须来自 run_state+config；
+    ③ 大/小评估点必须**来自与训练侧同一份** `eval_schedule`（漏传 config 字段 ⇒ 计划点数
+       与实际点数漂移，会被当成训练异常）；
+    ④ 逐点胜率是从 `history` + `round_stats[i].games` 的累计局数**切分复原**的
+       （`league_state` 只存 EMA 标量），切错位会给出假曲线 ⇒ 用可手算的 fixture 对账；
+    ⑤ 训练卡死/退出时要能看出来（15 min 无写入 ⇒ stale）。
+    """
+    import tempfile
+    import json as _json
+    import rl.dashboard as dash
+    from rl.config import eval_schedule
+    from rl.run_league import _EvalScheduler
+
+    # 手算 fixture：小点 10 步 × 2 局/对、大点 15 步 × 3 局/对、总 30 步、起始用大预算
+    cfg = {"name": "t_league", "total_steps": 30, "steps_per_eval": 10,
+           "big_eval_every": 15, "n_eval_games": 2, "n_eval_games_big": 3,
+           "eval_big_at_start": True, "only_vs_main": True, "eval_workers": 12,
+           "n_envs": 1, "device": "cuda"}
+    # 计划 = {0,10,20,30} ∪ {0,15,30} = 5 点；kind：0 大、10 小、15 大、20 小、30 大
+    want = [(0, "big", 3), (10, "small", 2), (15, "big", 3), (20, "small", 2), (30, "big", 3)]
+    assert eval_schedule(10, 15, 2, 3, 30) == want, eval_schedule(10, 15, 2, 3, 30)
+
+    with tempfile.TemporaryDirectory() as td:
+        run = os.path.join(td, "long1m")
+        os.makedirs(run)
+        with open(os.path.join(run, "config.json"), "w", encoding="utf-8") as f:
+            _json.dump(cfg, f)
+        with open(os.path.join(run, "run_state.json"), "w", encoding="utf-8") as f:
+            _json.dump({"step": 20, "total_steps": 30, "config": "t_league"}, f)
+        # 已写完两个点（0 与 10）：各 main vs A 2 局
+        state = {
+            "agents": [{"agent_id": "main", "kind": "main"},
+                       {"agent_id": "A", "kind": "baseline"}],
+            "ratings": {"main": 1600.0, "A": 1400.0},
+            "elo_history": {"main": [[0, 1550.0], [10, 1600.0]],
+                            "A": [[0, 1450.0], [10, 1400.0]]},
+            "round_stats": [
+                {"step": 0, "est": {"main": [1550.0, 100.0], "A": [1450.0, 100.0]},
+                 "games": {"main": 2, "A": 2}},
+                {"step": 10, "est": {"main": [1600.0, 90.0], "A": [1400.0, 90.0]},
+                 "games": {"main": 2, "A": 2}},
+            ],
+            "winrates": {"main|A": 0.625, "A|main": 0.375},
+            "history": [["main", "A", 1.0], ["main", "A", 0.0],
+                        ["main", "A", 1.0], ["main", "A", 0.5]],
+            "total_steps": 10,
+        }
+        sp = os.path.join(run, "league_state.json")
+        with open(sp, "w", encoding="utf-8") as f:
+            _json.dump(state, f)
+
+        # ① 目录入口
+        assert dash.resolve_state_path(run) == sp, dash.resolve_state_path(run)
+        assert dash.resolve_state_path(sp) == sp
+        assert dash.resolve_state_path(os.path.join(td, "nope")) == \
+            os.path.abspath(os.path.join(td, "nope"))
+        empt = os.path.join(td, "empty_run")
+        os.makedirs(empt)
+        assert dash.resolve_state_path(empt) is None, "目录里没有 league_state.json ⇒ None"
+
+        pl = dash.build_payload(dash.resolve_state_path(run))
+        assert pl["ok"], pl.get("error")
+
+        # ② 进度：来自 run_state（20/30），不是 league_state 的 total_steps(=10)
+        rm = pl["run_meta"]
+        assert rm["cur_step"] == 20 and rm["total_steps"] == 30, rm
+        assert abs(rm["pct"] - 66.67) < 0.05, rm["pct"]
+        assert rm["points_done"] == 2, rm["points_done"]
+
+        # ③ 计划点数 = 训练侧调度器的点数（同一份 eval_schedule）
+        sched = _EvalScheduler(_FakeCfg(cfg), 0)
+        assert sched.expected_points(30) == [p for p, _k, _n in want], sched.expected_points(30)
+        assert rm["plan_points"] == len(want) == 5, rm["plan_points"]
+        assert rm["plan_big"] == 3 and rm["plan_small"] == 2, rm
+        assert [[s, k, n] for s, k, n in rm["schedule"]] == [list(w) for w in want]
+        # round_stats 被标注了大/小（前端据此画竖虚线）
+        ks = [(rt["step"], rt["kind"], rt["games_per_pair"]) for rt in pl["round_stats"]]
+        assert ks == [(0, "big", 3), (10, "small", 2)], ks
+
+        # ④ 逐点胜率（切分复原）：点0 = (1+0)/2 = 0.5；点10 = (1+0.5)/2 = 0.75
+        assert pl["winrate_curves"]["main|A"] == [[0, 0.5], [10, 0.75]], \
+            pl["winrate_curves"]["main|A"]
+        assert pl["winrate_counts"]["main|A"] == [2, 2], pl["winrate_counts"]
+        assert pl["winrates"]["main|A"] == 0.625, pl["winrates"]
+
+        # ⑤ stale：把状态文件 mtime 拨到 20 分钟前
+        old = time.time() - 1200
+        os.utime(sp, (old, old))
+        assert dash.build_payload(sp)["run_meta"]["stale"] is True
+        assert dash.build_payload(sp)["run_meta"]["state_age_s"] > 1000
+
+        # 缺 run_state/config 时不得炸（旧 run / demo 状态）——进度降级但曲线仍可用
+        os.remove(os.path.join(run, "run_state.json"))
+        os.remove(os.path.join(run, "config.json"))
+        pl2 = dash.build_payload(sp)
+        assert pl2["ok"], pl2.get("error")
+        # 退化但结构完整：total_steps=0 ⇒ 前端 renderRunMeta 自动不画进度条（不是崩）
+        assert pl2["run_meta"]["total_steps"] == 0 and not pl2["run_meta"]["schedule"], pl2["run_meta"]
+        assert pl2["run_meta"]["cur_step"] == 10, pl2["run_meta"]   # 退回 league_state.total_steps
+        assert pl2["winrate_curves"]["main|A"] == [[0, 0.5], [10, 0.75]]
+
+    print("[PASS] 联赛长跑面板：目录入口、进度/ETA 来自 run_state、两级评估点标注与训练侧"
+          "同源（5 点 = 大3/小2）、逐点胜率切分复原（0.5/0.75）、20 min 未写入 ⇒ stale、"
+          "缺 run_state/config 时降级不炸")
+
+
+class _FakeCfg:
+    """给 `_EvalScheduler` 用的最小 cfg 壳（只带它读的字段）。"""
+
+    def __init__(self, d):
+        self.__dict__.update(d)
 
 
 def test_dashboard_card_stats():
@@ -5630,6 +5750,7 @@ def main():
     test_dashboard_replays()
     test_deck_pool_factory()
     test_dashboard_card_stats()
+    test_dashboard_league_payload()
     test_battle_clone_fix()
     test_take_damage_signature_consistency()
     test_noncombat_entity_contract()

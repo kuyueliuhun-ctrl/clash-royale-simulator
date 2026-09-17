@@ -94,6 +94,40 @@ MODEL_REWARD_OVERRIDES = {
 DEFAULT_OPP_MIX = {"frozen": 0.1, "hist": 0.6, "defend": 0.2, "rand_anchor": 0.1}
 
 
+def eval_schedule(steps_per_eval, big_eval_every, n_eval_games, n_eval_games_big,
+                  total_steps, big_at_start=True):
+    """两级评估的**完整计划**（单一来源）：``[(step, kind, n_games), ...]``。
+
+    - 小网格 ``steps_per_eval``、大网格 ``big_eval_every`` 取**并集**（两者不整除时大点被
+      **插入**为额外评估点，而不是被小网格吞掉）；
+    - 同一步同时命中两网格 ⇒ 只出现一次、按**大预算**；
+    - ``kind ∈ {"big","small"}``；``big_at_start=False`` 时 step 0 用小预算；
+    - ``n_eval_games_big=0`` ⇒ 大点回退 ``n_eval_games``（只改间隔不改局数）。
+
+    为什么放在这里：实际触发（`rl/run_league.py::_EvalScheduler`）与展示侧的进度条
+    （`rl/dashboard.py::build_payload` 的 `run_meta.expected_points`）必须用**同一套规则**，
+    否则"计划 131 点 / 实际 128 点"这类漂移会被当成训练异常。
+    `test_eval_scheduler_two_tier` 断言两侧对同一组超参给出完全相同的计划。
+    """
+    spe = max(0, int(steps_per_eval or 0))
+    big = max(0, int(big_eval_every or 0))
+    n_small = max(0, int(n_eval_games or 0))
+    n_big = int(n_eval_games_big or 0) or n_small
+    total = max(0, int(total_steps or 0))
+    steps = set()
+    if spe:
+        steps.update(range(0, total + 1, spe))
+    if big:
+        steps.update(range(0, total + 1, big))
+    out = []
+    for st in sorted(steps):
+        is_big = bool(big) and (st % big == 0)
+        if st == 0 and not big_at_start:
+            is_big = False
+        out.append((st, "big" if is_big else "small", n_big if is_big else n_small))
+    return out
+
+
 @dataclass
 class TrainConfig:
     name: str = "standard"

@@ -142,6 +142,68 @@ console.log("FAILURES=" + fail);
 process.exit(fail ? 1 : 0);
 """
 
+#: 联赛/长跑面板（run 模式）：进度条 + 两级评估计划 + 逐点对手胜率 + 大点竖虚线。
+#: 2026-09-18 起 `--state` 传 `runs/<name>` 目录即可，供 1M 步长跑 3 s 轮询。
+_LEAGUE_TAIL = r"""
+const out2 = []; let fail2 = 0;
+function t2(name, fn){ try { fn(); out2.push("PASS " + name); } catch(e){
+  fail2++; out2.push("FAIL " + name + " :: " + (e && e.stack
+    ? String(e.stack).split("\n").slice(0, 4).join(" | ") : e.message)); } }
+const LP = %(league)s;
+t2("renderTable(联赛 payload)：主体 + 排名表", function(){
+  payload = LP; renderTable(); renderLegend();
+  const h = document.getElementById("tbody").innerHTML;
+  if (h.indexOf("<tr>") < 0) throw new Error("无数据行: " + h.slice(0,120));
+  const nRows = (h.match(/<tr>/g) || []).length;
+  const nTds = (h.match(/<td/g) || []).length;
+  if (nTds !== nRows * 7) throw new Error("列数错: tds=" + nTds + " rows=" + nRows);
+  if (document.getElementById("legend").innerHTML.indexOf("dot") < 0) throw new Error("图例为空");
+});
+t2("进度条：显示 当前/总计划步数与评估点进度", function(){
+  renderRunMeta();
+  const h = document.getElementById("leagueProgress").innerHTML;
+  const rm = LP.run_meta || {};
+  if (!h) throw new Error("进度条为空");
+  if (rm.total_steps && h.indexOf("评估点") < 0) throw new Error("缺评估点进度");
+  const hNum = h.replace(/,/g, "");   // 进度条用 toLocaleString（千分位）
+  if (rm.total_steps && hNum.indexOf("评估点") < 0) throw new Error("缺评估点进度");
+  if (rm.total_steps && hNum.indexOf(String(rm.cur_step)) < 0) throw new Error("缺当前步数");
+  if (rm.total_steps && hNum.indexOf(String(rm.total_steps)) < 0) throw new Error("缺总计划步数");
+  const sub = document.getElementById("leagueSub").textContent;
+  if (sub.indexOf("两级评估") < 0) throw new Error("缺两级评估说明: " + sub);
+});
+t2("缺 run_state 的旧 run：进度条留空、不崩", function(){
+  const keep = payload; payload = {ok:true, agents:[], elo_history:{}, round_stats:[],
+                                   run_meta:{total_steps:0}};
+  renderRunMeta(); renderTable();
+  if (document.getElementById("leagueProgress").innerHTML !== "") throw new Error("应留空");
+  payload = keep;
+});
+t2("Elo 曲线（含大评估点竖虚线路径）", function(){
+  payload = LP; document.getElementById("leagueMetric").value = "elo"; drawChart();
+});
+t2("胜率曲线：退出/恢复切换 + 有对手曲线", function(){
+  const sel = document.getElementById("leagueMetric");
+  sel.value = "winrate"; drawChart();
+  const keys = Object.keys(LP.winrate_curves || {}).filter(k => k.indexOf("main|") === 0);
+  if (!keys.length) throw new Error("payload 里没有 main|* 曲线");
+  sel.value = "elo"; drawChart();
+});
+t2("winrate 空 payload 走空分支（不抛）", function(){
+  const keep = payload;
+  payload = {ok:true, agents:[], elo_history:{}, round_stats:[], winrate_curves:{},
+             winrate_counts:{}, winrates:{}, run_meta:{total_steps:0}};
+  document.getElementById("leagueMetric").value = "winrate";
+  drawChart();
+  document.getElementById("leagueMetric").value = "elo";
+  drawChart();
+  payload = keep;
+});
+console.log(out2.join("\n"));
+console.log("FAILURES=" + fail2);
+process.exit(fail2 ? 1 : 0);
+"""
+
 
 def extract_js():
     with io.open(_DASH, encoding="utf-8") as f:
@@ -180,6 +242,9 @@ def main() -> int:
                     help="run 目录（相对 src/clasher_new）；取其 solo_state.json 与 replays/")
     ap.add_argument("--old-run", default="runs/economy_9j",
                     help="一个**旧录像** run（无 meta.decks），用于测空表分支")
+    ap.add_argument("--league-run", default=None,
+                    help="run 模式训练目录（含 league_state.json，可给 runs/<name>）："
+                         "额外跑联赛/长跑面板渲染冒烟（进度条 + 两级评估点 + 对手胜率曲线）")
     ap.add_argument("--syntax-only", action="store_true")
     ap.add_argument("--keep", action="store_true", help="保留证据 JSON（排查用）")
     a = ap.parse_args()
@@ -243,11 +308,61 @@ def main() -> int:
     if r.returncode != 0 and (r.stderr or "").strip():
         print("--- stderr ---")
         print((r.stderr or "")[-1500:])
+
+    rc = 0 if r.returncode == 0 else 1
+
+    # —— 联赛/长跑面板（run 模式）——
+    if a.league_run:
+        lg_dir = a.league_run if os.path.isabs(a.league_run) \
+            else os.path.join(_SRC, a.league_run)
+        sp = D.resolve_state_path(lg_dir)
+        if sp is None:
+            print(f"[FAIL] {lg_dir} 里找不到 league_state.json"
+                  "（run 模式还没写出第一个评估点？）")
+            return 1
+        lg_pl = D.build_payload(sp)
+        if not lg_pl.get("ok"):
+            print(f"[FAIL] build_payload 失败：{lg_pl.get('error')}")
+            return 1
+        rm = lg_pl.get("run_meta") or {}
+        wr_keys = [k for k in (lg_pl.get("winrate_curves") or {}) if k.startswith("main|")]
+        n_big = sum(1 for rt in lg_pl.get("round_stats") or [] if rt.get("kind") == "big")
+        print(f"[dashboard-js] 联赛 payload：state={os.path.basename(sp)} "
+              f"曲线点={len(lg_pl.get('round_stats') or [])} "
+              f"main|* 胜率曲线={len(wr_keys)} 大点={n_big} "
+              f"进度={rm.get('cur_step')}/{rm.get('total_steps')}"
+              f"（计划 {rm.get('plan_points')} 点 = 大 {rm.get('plan_big')} / 小 {rm.get('plan_small')}）")
+        # 静默失效防线：已评估点里的"大点"个数，必须等于**计划中 step 已到达的那些大点**
+        # （漏读 config 字段 ⇒ schedule 为空 ⇒ 标注 0 个；与"计划总数"比是错的量）
+        sched = rm.get("schedule") or []
+        last_step = max([rt.get("step", 0) for rt in
+                         (lg_pl.get("round_stats") or [])] or [0])
+        expect_big_done = sum(1 for s, k, _n in sched if k == "big" and int(s) <= last_step)
+        expect_done = sum(1 for s, _k, _n in sched if sched and int(s) <= last_step)
+        if sched and n_big != expect_big_done:
+            print(f"[FAIL] 已评估点里的大点标注数 {n_big} != 计划中已到达的大点数 "
+                  f"{expect_big_done}（last_step={last_step}）")
+            return 1
+        if sched and len(lg_pl.get("round_stats") or []) != expect_done:
+            print(f"[FAIL] 曲线点数 {len(lg_pl.get('round_stats') or [])} != "
+                  f"计划中已到达的点数 {expect_done}")
+            return 1
+        prelude2 = "const _LEAGUE_PAYLOAD = %s;\n" % json.dumps(lg_pl, ensure_ascii=False)
+        tail2 = _LEAGUE_TAIL % {"league": "_LEAGUE_PAYLOAD"}
+        r2 = _run_node(runner, _STUB + prelude2 + js + tail2)
+        out2 = (r2.stdout or "").strip()
+        print(out2 if out2 else "(联赛面板无 stdout)")
+        if r2.returncode != 0 and (r2.stderr or "").strip():
+            print("--- stderr (league) ---")
+            print((r2.stderr or "")[-1500:])
+        if r2.returncode != 0:
+            rc = 1
+
     if a.keep:
         print(f"[dashboard-js] 证据 JSON 保留：{tmp}")
     else:
         shutil.rmtree(tmp, ignore_errors=True)
-    return 0 if r.returncode == 0 else 1
+    return rc
 
 
 if __name__ == "__main__":

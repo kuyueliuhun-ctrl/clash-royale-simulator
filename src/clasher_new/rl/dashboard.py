@@ -37,6 +37,7 @@ import os
 import re
 import sys
 import json
+import time
 import pickle
 import argparse
 import datetime
@@ -48,6 +49,7 @@ if _PARENT not in sys.path:
     sys.path.insert(0, _PARENT)
 
 from rl.replay import save_league_replays
+from rl.config import eval_schedule
 
 MODEL_COLORS = {
     "main": "#2563eb",
@@ -86,9 +88,121 @@ def load_state(path):
         return json.load(f)
 
 
+def resolve_state_path(path):
+    """`--state` 既接受 JSON 文件，也接受 `runs/<name>` 目录（自动找 league_state.json）。
+
+    2026-09-18 起 `--solo`/`--play` 都支持目录，联赛面板是唯一还需要写全文件名的入口——
+    长跑（1M 步）期间每 3 秒轮询要盯着 `runs/long1m/`，记文件名是纯摩擦。
+    """
+    if not path:
+        return None
+    p = os.path.abspath(path)
+    if os.path.isdir(p):
+        cand = os.path.join(p, "league_state.json")
+        return cand if os.path.exists(cand) else None
+    return p
+
+
+def _league_run_meta(state_path, state):
+    """长跑实时进度（run_state.json 的 step + config.json 的两级评估超参）。
+
+    为什么需要：`league_state.total_steps` 只是**最近一个评估点**的步数，1M 步长跑里
+    它每 5 分钟才跳一次、且和"总共要跑到哪"无关 ⇒ 没有 run_state.json 就只能显示
+    "总训练步数：16000"，看起来像跑完了。这里给出 step/total/百分比/评估点进度/ETA。
+
+    ETA 用**观测节奏外推**（`step ÷ (now − main_ckpt_0.pt 的 mtime)`）——包含评估占用，
+    正是墙钟；标注为"粗估"。`state_age_s` 用于前端判断训练是不是卡死/崩了
+    （小点节奏 ≈5.5 分钟，>15 分钟没写入就变红）。
+    """
+    d = os.path.dirname(os.path.abspath(state_path))
+    rs = load_state(os.path.join(d, "run_state.json")) or {}
+    cf = load_state(os.path.join(d, "config.json")) or {}
+    total = int(rs.get("total_steps") or cf.get("total_steps") or 0)
+    cur = int(rs.get("step") or state.get("total_steps") or 0)
+    plan = eval_schedule(cf.get("steps_per_eval"), cf.get("big_eval_every"),
+                         cf.get("n_eval_games"), cf.get("n_eval_games_big"),
+                         total, big_at_start=bool(cf.get("eval_big_at_start", True)))
+    n_big = sum(1 for _s, k, _n in plan if k == "big")
+    done = sum(1 for _s, _k, _n in plan if _s <= cur and cur > 0)
+    try:
+        age = max(0.0, time.time() - os.path.getmtime(state_path))
+    except OSError:
+        age = None
+    started_m = None
+    ck0 = os.path.join(d, "main_ckpt_0.pt")
+    if os.path.exists(ck0) and cur > 0:
+        try:
+            started_m = max(0.0, (time.time() - os.path.getmtime(ck0)) / 60.0)
+        except OSError:
+            started_m = None
+    eta_m = None
+    if started_m and started_m > 0.5 and total > cur:
+        eta_m = (total - cur) / (cur / started_m)
+    return {
+        "cur_step": cur, "total_steps": total,
+        "pct": round(100.0 * cur / total, 2) if total else None,
+        "plan_points": len(plan), "plan_big": n_big, "plan_small": len(plan) - n_big,
+        "points_done": len(state.get("round_stats") or []), "plan_done": done,
+        "steps_per_eval": cf.get("steps_per_eval"),
+        "big_eval_every": cf.get("big_eval_every"),
+        "n_eval_games": cf.get("n_eval_games"), "n_eval_games_big": cf.get("n_eval_games_big"),
+        "only_vs_main": cf.get("only_vs_main"), "eval_workers": cf.get("eval_workers"),
+        "n_envs": cf.get("n_envs"), "device": cf.get("device"),
+        "state_age_s": round(age, 1) if age is not None else None,
+        "elapsed_min": round(started_m, 1) if started_m is not None else None,
+        "eta_min": round(eta_m, 1) if eta_m is not None else None,
+        # 前端配色阈值：小点节奏 ≈5.5 min；>15 min 未写入 ⇒ 疑似卡死/退出
+        "stale": bool(age is not None and age > 900),
+        "schedule": [[int(s), k, int(n)] for s, k, n in plan],
+    }
+
+
+def _winrate_curves(state):
+    """从 `history` + `round_stats` 派生**逐点对手胜率曲线**（`league_state` 只存 EMA 标量）。
+
+    `history` 是逐局 `[a, b, score_a]` 的追加流（**不含 step**），但 `round_stats[i].games[aid]`
+    给出该评估点每方的局数 ⇒ `sum(games)/2` 就是该点的总对局数，按此切分即可复原
+    "第 i 个评估点、a 对 b 的胜率"。返回 `(curves, counts)`：
+    `curves["a|b"] = [[step, winrate], ...]`、`counts["a|b"] = [该点局数, ...]`（前端算 ±SE）。
+    局数不足的最后一个点（正在写）直接丢弃，避免曲线上出现半截读数的假跳变。
+    """
+    hist = state.get("history") or []
+    curves, counts = {}, {}
+    cur = 0
+    for rt in state.get("round_stats") or []:
+        g = rt.get("games") or {}
+        try:
+            n = int(sum(int(v) for v in g.values()) // 2)
+        except (TypeError, ValueError):
+            n = 0
+        if n <= 0:
+            continue
+        seg = hist[cur:cur + n]
+        cur += n
+        if len(seg) < n:
+            break
+        agg = {}
+        for row in seg:
+            try:
+                a, b, sc = row[0], row[1], float(row[2])
+            except (TypeError, ValueError, IndexError):
+                continue
+            w, d, m = agg.get(f"{a}|{b}", (0.0, 0.0, 0))
+            agg[f"{a}|{b}"] = (w + (1.0 if sc == 1.0 else 0.0),
+                               d + (1.0 if sc == 0.5 else 0.0), m + 1)
+        stp = int(rt.get("step", 0))
+        for key, (w, d, m) in agg.items():
+            if m <= 0:
+                continue
+            curves.setdefault(key, []).append([stp, round((w + 0.5 * d) / m, 4)])
+            counts.setdefault(key, []).append(m)
+    return curves, counts
+
+
 def build_payload(path):
     # 错误时也返回完整结构（空 agents/elo_history 等），前端渲染链不依赖 ok 分支
-    empty = {"agents": [], "elo_history": {}, "round_stats": [], "total_steps": 0}
+    empty = {"agents": [], "elo_history": {}, "round_stats": [], "total_steps": 0,
+             "winrate_curves": {}, "winrate_counts": {}, "winrates": {}, "run_meta": None}
     if path is None:
         return {"ok": False, "error": "未指定 --state（联赛面板关闭；可看 --solo/--sweep/--play 面板）",
                 "state_path": None, **empty}
@@ -110,12 +224,28 @@ def build_payload(path):
         k: [[float(x), float(y)] for x, y in v]
         for k, v in st.get("elo_history", {}).items()
     }
+    run_meta = _league_run_meta(path, st)
+    # 给每个评估点标注大/小（来自同一份 eval_schedule ⇒ 与训练侧不可能漂移）
+    kind_by_step = {s: k for s, k, _n in run_meta.get("schedule") or []}
+    games_by_step = {s: n for s, _k, n in run_meta.get("schedule") or []}
+    round_stats = []
+    for rt in st.get("round_stats", []):
+        rt = dict(rt)
+        stp = int(rt.get("step", 0))
+        rt["kind"] = kind_by_step.get(stp)
+        rt["games_per_pair"] = games_by_step.get(stp)
+        round_stats.append(rt)
+    wr_curves, wr_counts = _winrate_curves(st)
     return {
         "ok": True,
         "agents": agents,
         "elo_history": elo_history,
-        "round_stats": st.get("round_stats", []),   # [{step, est:{aid:[R,SE]}, games:{aid:n}}]
+        "round_stats": round_stats,   # [{step, est:{aid:[R,SE]}, games:{aid:n}, kind, games_per_pair}]
         "total_steps": int(st.get("total_steps", 0)),
+        "winrates": {k: round(float(v), 4) for k, v in (st.get("winrates") or {}).items()},
+        "winrate_curves": wr_curves,      # {"main|push_flow": [[step, wr], ...]}
+        "winrate_counts": wr_counts,      # {"main|push_flow": [n, ...]}（±SE 用）
+        "run_meta": run_meta,             # 长跑进度/ETA/评估点计划（dashboard 进度条）
         "demo": bool(st.get("demo", False)),   # --demo 生成的合成数据标记
         "state_path": path,
         "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -810,7 +940,14 @@ _HTML = r"""<!DOCTYPE html>
 </header>
 <main>
   <div class="card">
-    <h2>Elo 曲线（训练步数）</h2>
+    <h2>Elo 曲线（训练步数）
+      <span class="sub" id="leagueSub"></span>
+      <select id="leagueMetric" class="btn" title="曲线指标" onchange="drawChart()">
+        <option value="elo">指标：轮内估计 Elo</option>
+        <option value="winrate">指标：对每个对手的胜率</option>
+      </select>
+    </h2>
+    <div class="progress" id="leagueProgress" style="margin-bottom:10px"></div>
     <div class="legend" id="legend"></div>
     <div style="position:relative">
       <canvas id="chart"></canvas>
@@ -820,7 +957,7 @@ _HTML = r"""<!DOCTYPE html>
   <div class="card">
     <h2>当前排名</h2>
     <table>
-      <thead><tr><th>模型</th><th>类型</th><th>Elo</th><th>Δ上轮</th><th>σ 信号/噪声</th><th>checkpoint</th></tr></thead>
+      <thead><tr><th>模型</th><th>类型</th><th>Elo</th><th>Δ上轮</th><th>σ 信号/噪声</th><th>vs 对手胜率(EMA)</th><th>checkpoint</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <p id="meta" class="sub" style="margin-top:12px"></p>
@@ -1003,7 +1140,8 @@ function colorOf(id){
   let h=0; for (const c of id) h=(h*31+c.charCodeAt(0))>>>0;
   return COLORS.fallback[h % COLORS.fallback.length];
 }
-let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:0};
+let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:0,
+               winrate_curves:{}, winrate_counts:{}, winrates:{}, run_meta:null};
 let sweep = {ok:false, strategies:[]};
 let solo = {ok:false, history:[]};
 
@@ -1050,6 +1188,7 @@ async function refresh(){
       else src.style.color = "#22c55e";
       if (!hasHist) src.textContent += " · 暂无评估数据（等待首次评估…）";
       else if (rsN) src.textContent += " · 竖线误差棒 = 评估噪声 1σ（轮内聚合 SE≈347.5/√N）";
+      renderRunMeta();
     }
   }catch(e){
     document.getElementById("status").textContent = "连接失败：" + e;
@@ -1058,6 +1197,42 @@ async function refresh(){
   renderSweep();
   renderSolo();
   refreshPlay();
+}
+
+// 长跑进度条：来自 run_state.json（当前 step）+ config.json（两级评估计划）。
+// 关键点：league_state.total_steps 只是"最近评估点"，与"总共要跑到哪"无关 ⇒ 必须显示
+// cur/total，否则 1M 步跑到 16k 时看起来像已经跑完。
+function renderRunMeta(){
+  const el = document.getElementById("leagueProgress");
+  const sub = document.getElementById("leagueSub");
+  if (!el) return;
+  const rm = payload.run_meta;
+  if (!payload.ok || !rm || !rm.total_steps){
+    el.innerHTML = ""; if (sub) sub.textContent = ""; return;
+  }
+  const pct = rm.pct == null ? 0 : rm.pct;
+  const h = (m) => m == null ? "—" : (m >= 60 ? (m/60).toFixed(1) + " h" : m.toFixed(1) + " min");
+  const stale = rm.stale;
+  const ageTxt = rm.state_age_s == null ? "" :
+    (rm.state_age_s < 90 ? `${rm.state_age_s.toFixed(0)} s 前写入`
+                         : `${(rm.state_age_s/60).toFixed(1)} min 前写入`);
+  const barColor = stale ? "#ef4444" : (pct >= 99.5 ? "#22c55e" : "#3b82f6");
+  el.innerHTML =
+    `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px">` +
+    `<b>${rm.cur_step.toLocaleString()}</b> / ${rm.total_steps.toLocaleString()} 步` +
+    `<span style="color:#94a3b8">(${pct}%)</span>` +
+    `<span style="color:#94a3b8">· 评估点 ${rm.points_done}/${rm.plan_points}` +
+    `（大 ${rm.plan_big} / 小 ${rm.plan_small}）</span>` +
+    `<span style="color:#94a3b8">· 已跑 ${h(rm.elapsed_min)} · 粗估剩余 ${h(rm.eta_min)}</span>` +
+    `<span style="color:${stale ? "#ef4444" : "#94a3b8"}">· ${ageTxt}` +
+    `${stale ? " ⚠ 超过 15 min 未写入（疑似卡死/退出）" : ""}</span>` +
+    `</div>` +
+    `<div style="height:6px;background:#1e293b;border-radius:4px;overflow:hidden;margin-top:6px">` +
+    `<div style="height:100%;width:${Math.min(100,pct)}%;background:${barColor}"></div></div>`;
+  if (sub) sub.textContent =
+    `两级评估：小点每 ${rm.steps_per_eval} 步 × ${rm.n_eval_games} 局/对` +
+    (rm.big_eval_every ? `，大点每 ${rm.big_eval_every} 步 × ${rm.n_eval_games_big} 局/对`
+                       : "（未开大评估）");
 }
 
 function renderLegend(){
@@ -1088,22 +1263,61 @@ function renderTable(){
     }
     const kindCls = a.kind === "main" ? "main" : (a.kind === "historical" ? "historical"
                    : (a.kind === "exploiter" ? "exploiter" : "baseline"));
+    // vs 对手胜率（EMA）：league_state.winrates 的键是 "a|b" = a 对 b 的胜率。
+    // main 行给"对手均值 + 逐对手明细"，其余行给自己的胜率（= 1 − main 对自己的胜率）。
+    const wr = payload.winrates || {};
+    let wrCell = "—";
+    if (a.id === "main"){
+      const vals = (payload.agents || []).filter(x => x.id !== "main")
+        .map(x => wr["main|" + x.id]).filter(v => typeof v === "number");
+      if (vals.length){
+        const mean = vals.reduce((s,v)=>s+v,0) / vals.length;
+        const detail = (payload.agents || []).filter(x => x.id !== "main")
+          .map(x => `${x.id}=${typeof wr["main|"+x.id] === "number" ? wr["main|"+x.id].toFixed(2) : "—"}`)
+          .join(" ");
+        wrCell = `<span title="${detail}">${(100*mean).toFixed(1)}%</span>`;
+      }
+    } else {
+      const v = wr["main|" + a.id];
+      if (typeof v === "number") wrCell = `${(100*(1-v)).toFixed(1)}%`;
+    }
     return `<tr>
       <td><span class="dot" style="background:${colorOf(a.id)}"></span>${a.label}</td>
       <td><span class="kind ${kindCls}">${a.kind}</span></td>
       <td><b>${a.elo.toFixed(1)}</b></td>
       <td>${delta}</td>
       <td>${sigma}</td>
+      <td>${wrCell}</td>
       <td style="color:#94a3b8;font-size:11px">${a.path ? a.path.split(/[\\/]/).pop() : "—"}</td>
     </tr>`;
   }).join("");
-  tbody.innerHTML = rows || `<tr><td colspan="6">暂无模型（等待训练写入状态文件…）</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="7">暂无模型（等待训练写入状态文件…）</td></tr>`;
   document.getElementById("meta").textContent =
     `总训练步数：${payload.total_steps} · 模型数：${payload.agents.length}` +
-    (rCur ? ` · 最近评估 ${rCur.step} 步` : "");
+    (rCur ? ` · 最近评估 ${rCur.step} 步` + (rCur.kind ? `（${rCur.kind === "big" ? "大" : "小"}评估` +
+      (rCur.games_per_pair ? ` ${rCur.games_per_pair} 局/对` : "") + `）` : "") : "") +
+    (payload.run_meta && payload.run_meta.total_steps ?
+      ` · 计划跑到 ${payload.run_meta.total_steps}` : "");
 }
 
 function drawChart(){
+  const sel = document.getElementById("leagueMetric");
+  const mode = sel ? sel.value : "elo";
+  if (mode === "winrate") return drawWinrateChart();
+  return drawEloChart();
+}
+
+// 大评估点（两级评估）的竖虚线：横轴整个画布只画一次，不随曲线条数重复。
+function drawBigPointMarkers(ctx, bigSteps, X, padT, H, padB){
+  if (!bigSteps.length) return;
+  ctx.save();
+  ctx.strokeStyle = "#64748b"; ctx.globalAlpha = 0.5;
+  ctx.setLineDash([2,4]); ctx.lineWidth = 1;
+  bigSteps.forEach(s => { ctx.beginPath(); ctx.moveTo(X(s), padT); ctx.lineTo(X(s), H-padB); ctx.stroke(); });
+  ctx.restore();
+}
+
+function drawEloChart(){
   const canvas = document.getElementById("chart");
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -1120,7 +1334,10 @@ function drawChart(){
   const xs = allPts.map(p=>p[0]);
   let ys = allPts.map(p=>p[1]);
   if (payload.agents.length) ys = ys.concat(payload.agents.map(a=>a.elo));
-  const maxStep = Math.max(100, ...xs, payload.total_steps);
+  // 横轴优先用 run_state 的**总计划步数**（1M 长跑）：否则曲线会被最近几个评估点挤满，
+  // 看不见"才跑了 1.6%"。没有 run_meta 时退回旧行为（最近评估点 / 当前值）。
+  const rm = payload.run_meta || {};
+  const maxStep = Math.max(100, ...xs, payload.total_steps, rm.total_steps || 0);
   let minElo = Math.min(1400, ...ys), maxElo = Math.max(1600, ...ys);
   const span = Math.max(50, maxElo - minElo);
   minElo = minElo - span*0.08; maxElo = maxElo + span*0.08;
@@ -1142,7 +1359,7 @@ function drawChart(){
   for (let i=0;i<=5;i++){
     const v = Math.round(maxStep*i/5), x = X(v);
     ctx.moveTo(x, padT); ctx.lineTo(x, H-padB);
-    ctx.fillText(String(v), x-12, H-padB+16);
+    ctx.fillText(v >= 10000 ? (v/1000).toFixed(0)+"k" : String(v), x-12, H-padB+16);
   }
   ctx.stroke();
   // 1500 基准线
@@ -1150,6 +1367,9 @@ function drawChart(){
   ctx.moveTo(padL, Y(1500)); ctx.lineTo(W-padR, Y(1500));
   ctx.stroke(); ctx.setLineDash([]);
   ctx.fillText("1500", W-padR-30, Y(1500)-4);
+  // 大评估点标记
+  const bigSteps = (payload.round_stats || []).filter(rt => rt.kind === "big").map(rt => rt.step);
+  drawBigPointMarkers(ctx, bigSteps, X, padT, H, padB);
 
   // 每条模型曲线
   const series = payload.agents.map(a => ({
@@ -1202,6 +1422,100 @@ function drawChart(){
       tip.style.display="block";
       tip.style.left=(mx+12)+"px"; tip.style.top=(my+10)+"px";
       tip.innerHTML=`<b style="color:${colorOf(best.id)}">${LABELS[best.id] || best.id}</b><br>步数 ${best.step}<br>Elo ${best.elo.toFixed(1)}`;
+    } else tip.style.display="none";
+  };
+  canvas.onmouseleave=()=>{ document.getElementById("tooltip").style.display="none"; };
+}
+
+// 对每个对手的胜率曲线（run 模式专用）：对手是**固定脚本**、不学习 ⇒ 这是非自引用读数，
+// 与 solo 的"打冻结副本"完全不同（后者结构性≈0.5，禁读）。数据来自
+// payload.winrate_curves（父进程按累计局数从 league_state.history 切分复原的逐点胜率）。
+function drawWinrateChart(){
+  const canvas = document.getElementById("chart");
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const padL=52, padR=16, padT=16, padB=40;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const rm = payload.run_meta || {};
+  const curves = payload.winrate_curves || {}, counts = payload.winrate_counts || {};
+  // 只画"learner vs 对手"的 pair：优先 main|*，否则用 agents 里第一个 id 当 learner
+  let keys = Object.keys(curves).filter(k => k.startsWith("main|"));
+  if (!keys.length && payload.agents.length){
+    const lid = payload.agents[0].id;
+    keys = Object.keys(curves).filter(k => k.startsWith(lid + "|"));
+  }
+  keys.sort();
+  let xs = [];
+  keys.forEach(k => (curves[k] || []).forEach(p => xs.push(p[0])));
+  const maxStep = Math.max(100, ...xs, rm.total_steps || 0, payload.total_steps);
+  const X = s => padL + (s / maxStep) * plotW;
+  const Y = v => padT + (1 - v) * plotH;
+
+  ctx.strokeStyle="#334155"; ctx.fillStyle="#94a3b8";
+  ctx.font="11px sans-serif"; ctx.lineWidth=1;
+  ctx.beginPath();
+  [0,0.25,0.5,0.75,1].forEach(v => {
+    const y = Y(v); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y);
+    ctx.fillText(v.toFixed(2), 4, y+4);
+  });
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i=0;i<=5;i++){
+    const v = Math.round(maxStep*i/5), x = X(v);
+    ctx.moveTo(x, padT); ctx.lineTo(x, H-padB);
+    ctx.fillText(v >= 10000 ? (v/1000).toFixed(0)+"k" : String(v), x-12, H-padB+16);
+  }
+  ctx.stroke();
+  ctx.strokeStyle="#475569"; ctx.setLineDash([4,4]); ctx.beginPath();
+  ctx.moveTo(padL, Y(0.5)); ctx.lineTo(W-padR, Y(0.5));
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillText("0.50", W-padR-34, Y(0.5)-4);
+  const bigSteps = (payload.round_stats || []).filter(rt => rt.kind === "big").map(rt => rt.step);
+  drawBigPointMarkers(ctx, bigSteps, X, padT, H, padB);
+
+  const series = keys.map(k => {
+    const opp = k.split("|")[1];
+    return {id: k, opp: opp, color: colorOf(opp),
+            pts: (curves[k] || []), ns: (counts[k] || [])};
+  });
+  series.forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.beginPath();
+    let first = true;
+    s.pts.forEach(p => { const x=X(p[0]), y=Y(p[1]); first ? ctx.moveTo(x,y) : ctx.lineTo(x,y); first=false; });
+    ctx.stroke();
+    s.pts.forEach((p,i) => {
+      const n = s.ns[i] || 0, se = n > 1 ? Math.sqrt(Math.max(0,p[1]*(1-p[1]))/n) : 0;
+      const x = X(p[0]);
+      if (se > 0){
+        ctx.globalAlpha = 0.85; ctx.strokeStyle = s.color; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x, Y(Math.min(1,p[1]+se))); ctx.lineTo(x, Y(Math.max(0,p[1]-se))); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x, Y(p[1]), 2.5, 0, 7); ctx.fill();
+    });
+  });
+
+  canvas.onmousemove = e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+    let best=null, bestD=1e9;
+    series.forEach(s => s.pts.forEach((p,i) => {
+      const d=(X(p[0])-mx)**2 + (Y(p[1])-my)**2;
+      if (d<bestD){ bestD=d; best={s:s, step:p[0], wr:p[1], n:s.ns[i]||0}; }
+    }));
+    const tip=document.getElementById("tooltip");
+    if (best && bestD < 900){
+      const n = best.n, se = n > 1 ? Math.sqrt(Math.max(0,best.wr*(1-best.wr))/n) : 0;
+      tip.style.display="block";
+      tip.style.left=(mx+12)+"px"; tip.style.top=(my+10)+"px";
+      tip.innerHTML=`<b style="color:${best.s.color}">main vs ${LABELS[best.s.opp] || best.s.opp}</b>` +
+        `<br>步数 ${best.step}<br>胜率 ${(100*best.wr).toFixed(1)}% ± ${(100*se).toFixed(1)}%` +
+        `<br>${n} 局`;
     } else tip.style.display="none";
   };
   canvas.onmouseleave=()=>{ document.getElementById("tooltip").style.display="none"; };
@@ -2607,7 +2921,9 @@ def make_demo_solo(path, n_points=10, seed=3):
 def main():
     ap = argparse.ArgumentParser(description="RL 训练仪表盘（Elo / flow-sweep / solo 自对弈 + 回放）")
     ap.add_argument("--state", type=str, default=None,
-                    help="run_league 写出的联赛状态 JSON（不传则联赛面板关闭；只显示 --solo/--sweep/--play 面板）")
+                    help="run 模式训练目录或 league_state.json（`--state runs/long1m` 亦可；"
+                         "目录里会再读 run_state.json + config.json 显示 1M 长跑进度/ETA/评估点计划）。"
+                         "不传则联赛面板关闭；只显示 --solo/--sweep/--play 面板")
     ap.add_argument("--sweep", type=str, default=None,
                     help="flow-sweep 根目录（--mode flow-sweep-* 的产物 runs/<name>/，或某个 "
                          "flow_sweep_<strategy> 策略目录；实时显示训练进度/曲线）")
@@ -2630,7 +2946,11 @@ def main():
                     help="状态文件不存在时生成演示数据（Elo + flow-sweep + solo + 回放）")
     ap.add_argument("--demo-points", type=int, default=10)
     args = ap.parse_args()
-    state_abs = os.path.abspath(args.state) if args.state else None
+    # --state 接受 JSON 文件或 runs/<name> 目录（目录里自动找 league_state.json）
+    state_abs = resolve_state_path(args.state) if args.state else None
+    if args.state and os.path.isdir(os.path.abspath(args.state)) and state_abs is None:
+        print(f"[dashboard] ⚠ {args.state} 是目录但里面没有 league_state.json"
+              f"（run 模式还没写出第一个评估点？）", flush=True)
     if args.demo and not (state_abs and os.path.exists(state_abs)):
         state_abs = state_abs or os.path.join(os.path.abspath("."), "league_state.json")
         make_demo_state(state_abs, n_points=args.demo_points)

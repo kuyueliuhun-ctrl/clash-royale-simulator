@@ -62,7 +62,7 @@ from rl.action_bundle import ActionBundle, K_MAX
 from rl.observation import ENTITY_NAMES
 from rl.opponents import ScriptedPolicy, build_card_pool
 from rl.decks import load_classified_decks, decks_by_archetype, classify_stats
-from rl.config import TrainConfig, reward_to_env
+from rl.config import TrainConfig, reward_to_env, eval_schedule
 from rl.overtime import (NORMAL_TIME_S, OVERTIME_END_S, overtime_open,
                          timeout_winner as _overtime_timeout_winner)
 from rl.replay import battle_snapshot, save_league_replays
@@ -912,14 +912,20 @@ class _EvalScheduler:
         return self.budget_for(0)
 
     def expected_points(self, total_steps):
-        """按两网格并集列出预期评估点（只用于日志/预注册对账）。"""
-        total = int(total_steps)
-        pts = set()
-        if self.small_every:
-            pts.update(range(0, total + 1, self.small_every))
-        if self.big_every:
-            pts.update(range(0, total + 1, self.big_every))
-        return sorted(pts)
+        """按两网格并集列出预期评估点（只用于日志/预注册对账/dashboard 进度条）。
+
+        **单一来源** = `rl.config.eval_schedule`（dashboard 也用它算"计划点数"）⇒
+        两侧不可能漂移；`test_eval_scheduler_two_tier` 断言逐点一致。
+        """
+        return [p for p, _k, _n in eval_schedule(
+            self.small_every, self.big_every, self.small_games, self.big_games,
+            total_steps, big_at_start=self.big_at_start)]
+
+    def expected_plan(self, total_steps):
+        """完整计划 [(step, kind, n_games), ...]（dashboard 用它标注大/小点）。"""
+        return eval_schedule(self.small_every, self.big_every, self.small_games,
+                             self.big_games, total_steps,
+                             big_at_start=self.big_at_start)
 
     def plan_str(self, total_steps, n_pairs):
         """一行计划描述：评估点数 / 大小点拆分 / 预计总对局数。"""
