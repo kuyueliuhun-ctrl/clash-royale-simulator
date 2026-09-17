@@ -23,7 +23,7 @@
 | **R5** | **n=1/臂 分辨率不足** | 同 seed、同代码的两次 run **也不可复现**（前 435 步逐位一致 → 1e-4 漂移 → `eval@800` 已不同；`PYTHONHASHSEED=0` + 单线程 BLAS 无效，机制未定）。20k 单跑 A/B 只能看**大效应**；跨 run 数字不可直接比，判据优先用**同 run 内对照**。⇒ 追溯处置：**此前"单跑看曲线"得出的小效应结论一律降级**；要判读必须多 seed 配对重复，或把评估局数拉大。 |
 | **R6** | **架构变更必须 `--fresh`** | `--fresh` **挡不住 `--main-init`**（须显式不传）。旧 ckpt 无 `enc_ln`/`grid_ln` 键时 `load_checkpoint` **静默**保持新初始化 ⇒ 权重与 LN 都不对。新增架构参数必须全仓 `grep load_state_dict` 核对并传播到所有往返构造点。**热启动 `--main-init` 必须显式传 `plan_dim`/`belief_dim`**（旧 ckpt 元数据 57/23 会把 main 建成旧维度 ⇒ `_sync_frozen_copy` shape 失配崩溃；当前 `plan_dim=58`、`belief_dim=563`）。已加护栏：`load_checkpoint` 对缺 `enc_ln.*`/`grid_ln.*` 的旧 ckpt **显式告警**；`_probe["ev_pairs"]` 有 20 万帧上界。 |
 | **R7** | **尺度改动必须单常量源 + 对账 selftest** | 奖励汇率 / 值函数 / 闸门 `edw×卡费` / MCTS 值函数必须同源同步改（已两次踩量纲失配：塔伤项 ×1000 使空砸王塔被误判正 EV）。 |
-| **R8** | **每个修复配回归测试；selftest 必须跨局边界** | 只看落盘、不跨局边界的 smoke 是盲的（9j 事故：漏 `nonlocal` ⇒ 首局后缓冲泄漏、adv −671、value loss 43 万，30 步冒烟没拦住）。判"是不是我改坏了"以**官方全量 `rl/selftest.py`** 为准（97 项），不是自定义批次顺序。9j 类事故的**日志指纹**：adv 均值 ≈ −惩罚/帧、value loss 数量级漂移、更新连发 ⇒ **看日志头 30 行即可定位**。 |
+| **R8** | **每个修复配回归测试；selftest 必须跨局边界** | 只看落盘、不跨局边界的 smoke 是盲的（9j 事故：漏 `nonlocal` ⇒ 首局后缓冲泄漏、adv −671、value loss 43 万，30 步冒烟没拦住）。判"是不是我改坏了"以**官方全量 `rl/selftest.py`** 为准（97 项），不是自定义批次顺序。9j 类事故的**日志指纹**：adv 均值 ≈ −惩罚/帧、value loss 数量级漂移、更新连发 ⇒ **看日志头 30 行即可定位**。**⚠️ 2026-09-14 用户拍板：【红线 R19】修订本条的执行方式**——不再默认跑全量 selftest；本条其余内容（回归测试必须配、跨局边界、9j 指纹）仍然有效。 |
 | **R9** | **测量口径纪律** | ①`step` = **决策帧**不是更新次数；②`ratio≡1.000`/`clip_frac≡0%` 在 `n_epochs=1` 下是**结构性恒等**（该判据已删除，换 EV）；③EV 用**更新前池化**口径（`EVin` 是 in-sample，假象）；④探针必须**按局分组留出**（逐帧随机留出 = 时间泄漏，`corr(R_t,R_{t+1})≈0.99`）；⑤比值门槛的分子分母必须同样本集。 |
 | **R10** | **不确定就写不确定** | 宁可写"成因未定 / 样本不足 / 不显著（n=24 时 1σ≈0.22）"，也不要写一个自信的错答案——历史已吃过一次：把未定的性能异常判成"页面文件不够"并写进注释，后续会话会照抄。 |
 | **R11** | **明确不做（未获用户另行拍板前）** | 不扩模型参数（629,359）；不上训练时 MCTS / 专家迭代（≈120× 每帧经验成本）；不引入 LLM 实时决策（LLM 只做局间议程提案，文本永不进网络/梯度）；不重构动作语义（`K_MAX=4` 冻结）；不为绕开外部性能异常改代码/降配置；**不把 `main vs 冻结副本` 的 0.85 当"进步"**（自引用失真，见 §3 判读禁则）；**不因 EV≈0 宣称"修好"**（C3）；**不在 A′ 类取证之前改奖励或拆价值头**（该顺序已被证否）；`value_bypass` 默认关闭（证据不支持收益）。 |
@@ -33,6 +33,8 @@
 | **R15** | **判据阈值不许跨实验照抄** | 每个实验的闸门阈值必须在**该实验自己的量纲**上标定（用本实验的对照/阳性靶，或"上一步实测值 × 系数"并写明依据）；**不许**以"与上一个实验同尺度可比"为理由复用数字。**实例（2026-09-14）**：价值阶梯探针把第二轮为「8648 维**原始 obs**」标定的 `0.15` 直接用在「2731 维**编码后**特征 `fused`」上 ⇒ 闸门 G-UP 实测 **+0.0884 未过** ⇒ 形式判决 **`L0_INVALID`（不判决）**、25 分钟算力零产出。**失败方向安全（挡住判决而非放过假结论），但白跑。** 同类教训【否证 X-15】管**口径**，R15 管**阈值**。见 `docs/value_ln_probe_verdict_2026-09-14.md` §3。 |
 | **R16** | **判据阈值不许用单次观测标定** | 阈值必须建立在**已量出"run 间散布 Δ"**的量上，**余量必须 ≫ Δ**；做不到就**改用比值/配对判据**（同批次内的比或差）。**实例（2026-09-14）**：v2 的上游闸门 `G-RAW ≥ 0.15` 是"第二轮单次 **+0.2999** × 0.5"得来的，而同一个量在三条轨迹上是 **+0.2999 / +0.1629 / +0.1215（散布 2.5×）** ⇒ 阈值落在散布内部 ⇒ 两次都判 `V2_INVALID`、又 30 分钟算力零产出。**R15 管"跨实验照抄阈值"，R16 管"同实验内单次观测标定阈值"。** 反面样板：同一轮的**比值**判据 `R0 ≥ 2·E0` 在三条轨迹上**全部通过**（2.82× / 3.05× / 3.39×）。见 `docs/value_ln_probe2_verdict_2026-09-14.md` §3/§4。 |
 | **R17** | **判据的分子/分母必须来自同一超参约定**；超参跨特征不可共用时必须报「两套约定」并只采信方向一致的部分；凡比较**包含关系**（`A ⊇ B`）的两层，**必须逐位验证包含**（`np.array_equal`）**并在同一超参下对账** | 价值阶梯 v3：`R0/E0` 的分子需 α≈1e4、分母需 α≈10；两套约定下"前端保留率"= **0.23~0.44** 与 **0.42~0.84** ⇒ **同一物理量差 2 倍 ⇒ 判据没有定义**，而它把 v1/v2 两轮的主结论撑了两轮。R15 管跨实验阈值、R16 管单次观测阈值、R17 管分子/分母的超参一致性。见 `docs/value_ln_probe3_verdict_2026-09-14.md` |
+| **R18** | **改代码必须同步维护既有文档**（2026-09-14 用户拍板） | 只要改了**行为/常量/默认值/口径**，就必须同一步维护：① `docs/` 里对应的预注册 / 实现 / 判读文档（含被推翻的结论要保留原文并标注）；② 本文件的条目（红线 / 确证 / 否证 / 未决 / 文档地图指针）；③ 由这些内容派生的交付物（如 `docs/training_method.{md,docx}`、`docs/game_engine.{md,docx}`、`docs/full_code_reference.md`）。**具体动作**：(a) 改常量前先 `grep` 全仓文档对它的引用（【R4】【R7】：文档里的数字必须脚本可复算，禁止手抄）；(b) 改完在**同一次提交**里更新文档；(c) 收尾汇报必须列出「本次同步维护了哪些文档」。**只改代码不改文档 = 视为未完成**。 |
+| **R19** | **默认不跑全量 selftest**（2026-09-14 用户拍板） | **不跑 `rl/selftest.py` 全量**，以"直接运行时发现问题"为主；只跑**与本次改动直接相关**的最小测试：`cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe ../../scripts/run_selftests.py test_<名字>`（可给多个；`--list` 列全部；该脚本从外部按名调用，**不修改 `selftest.py`**，故全量路径逐位不变）。**仍应跑全量的例外**：改动触及共享底层（`rl/ppo.py` / `rl/env_wrapper.py` / 掩码与 `legal_cells` / 奖励账本 / ckpt 加载）、跨局边界的状态、或用户明确要求。**风险如实记**：本条是**取舍**——【R8】的 9j 事故（漏 `nonlocal` ⇒ 跨局缓冲泄漏，30 步冒烟没拦住）依据仍然有效，子集绿**不等于**全量绿，被选测试之外的回归不会被发现。 |
 
 ---
 
@@ -123,9 +125,14 @@ python rl/dashboard.py --solo runs/<run>/solo_state.json --replays runs/<run>/re
 ### 2.6 自检
 
 ```bash
+# 默认：只跑与改动相关的测试（【红线 R19】）
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
+    ../../scripts/run_selftests.py --list
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
+    ../../scripts/run_selftests.py test_precise_threat
+# 全量（仅 R19 列的例外情形才跑；2026-09-14 最后一次全量 = 97 项 ALL PASSED）
 cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/selftest.py
 ```
-当前 **97 项 ALL PASSED**（含 `test_anchor_light_point_state`）。
 
 ---
 
@@ -287,6 +294,6 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | 本文件的过程细节与历史推理链 | [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) |
 | 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |
 | RL 代码导读与训练入口 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
-| 自检 / 回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
+| 自检 / 回归 | **`scripts/run_selftests.py`（按名跑子集，【R19】默认用法）**、`src/clasher_new/rl/selftest.py`（全量，仅 R19 例外情形）、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
 | 判读工具 | `scripts/judge_anchor_blocks.py`、`scripts/summarize_solo_run.py`、`scripts/diag_*.py` |
 | **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/full_code_reference.md`](docs/full_code_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`，素材 `docs/_survey/`（147 个 `.py`／1479 符号 100% 覆盖、0 参数缺失） |
