@@ -18,6 +18,7 @@
 | **训练方法文档**（训练过程、被调函数、函数参数、函数索引；docx 同名） | `training_method.md` / `training_method.docx` |
 | **游戏引擎文档**（地图 / 寻路 / 索敌 / 战斗主循环；docx 同名） | `game_engine.md` / `game_engine.docx` |
 | 跨会话红线与结论索引（先读这个再动方案） | 根目录 `AGENTS.md`（编号可引用：R/C/X/O） |
+| **AGENTS 分册索引**（2026-09-18 拆分：`AGENTS.md` 只留红线一行摘要 + 索引 + 活跃工作，**节号不变**） | `agents/redlines.md`（R1–R19 全文）、`agents/env.md`（§2）、`agents/metrics.md`（§3）、`agents/ledger.md`（§4–6）、`agents/plans_runs_docs.md`（§7–9）；校验 `scripts/_agents_split.py --check` |
 | 历史决策全文（过程细节与推理链） | `agents_archive_2026-09.md` |
 | 自检/回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m1..m6*.py`、`scripts/batch_smoke.py` |
 
@@ -64,6 +65,8 @@
 | `reward_settlement_prereg_2026-09-14.md` | **奖励结算方式改造预注册**：结算链路 5 个改动点（含源码行号）+ 零代码开关表；**先证明两类改动是恒等操作**（整体缩放奖励在 `adv_norm=scale`+`value_norm=running` 下 k 精确约掉；调权重无机制依据，因 W4 无主导项）；判据三层（机制/行为/结构）+ 阳性对照 `elixir_diff_weight 0.5→0`；§8 同日更新：**E-A/E-B 降级为近乎恒等**（ΔA=+0.0330 vs std(A)=14.68 ⇒ 0.22%，上界 1.5%）、**在线状态基线全部 ≤0**（最好 +0.0344）、段级/尾部收缩无机制依据 | `rl/env_wrapper.py:238-263` `rl/ppo.py:168-248` `rl/config.py`；仪器 `scripts/probe_gae_kernel.py` `scripts/probe_credit_baseline.py`；⚠️ 该支线此前**未被 AGENTS.md / 本文件索引** |
 | `reward_settlement_v3_design_2026-09-14.md` | **奖励结算 v3 方案（设计稿，同日深夜追加）**：L0 可审计结算台账 / L1 结算字段化（开）、L2 基线层（**关**：四协议实测全 ≤0）、L3 段级结算（**不做**：帧间自相关 0.987、窗口内方差仅 7.7%）、L4 势函数补齐 γ（唯一可证明正确，+0.0012/帧）；**§9/§10 = 对用户"训练打分器给每帧打分"与"搜索+推演训打分器"两提案的直接判决**（前者判**不行**：输入无增量 + potential 不改最优解 + 直接打分数无合法来源 + 在线口径 MLP `EV_within=−0.2225` 而阳性对照 +0.2710；后者落【R11】须用户拍板，且实测 v1 搜索结构**在数学上表示不了"攒费 8.4s 打 Xbow"**） | `rl/env_wrapper.py` `rl/ppo.py`；仪器 `scripts/probe_credit_baseline.py` `scripts/probe_scorer_offline.py` `scripts/probe_search_cost.py`；成本实测 43.3 ms/单次推演 |
 | `frame_credit_proposal_review_2026-09-18.md` | **逐帧信用分配提案评估（2026-09-18，用户新方案）**：**性能栏**——在线账本 ≪1% 可接受，但**伤害归因当前仅 17/52 调用点带 `source`**、`take_damage` 无返回、回放**无实体 id**（实测 8584/9079 帧存在重复 `(name,player)`）、**关键陷阱 `source=` 是语义参数**（`battle.py:565-571` M7 钩子 + `card_mechanics.py:695-713` Ronin 格挡 ⇒ 补 source 会让 Ronin 开始吞法术）、反事实读法 2~5× 墙钟；**效果栏**——击杀圣水价值**已在 `edw` Φ 兑现（29.84%）**、「差分」可动空间已被实测压到 ≤+0.0344、助攻项 = 引擎决定（**假归因**，落 `rl_reward_plan_v2` P3 不做清单）、瓶颈不在结算侧（全帧圣水≥6=0.11%）；结论 **作为奖励不接受 / 作为仪器-教师值得做**，并给 S1 门禁→S2 仪器化→S3 守恒式 A/B 的三步路径与失败分支 | 只读评审（未改代码）；复算命令见文内 §6：`battle.py:550/564/565-571`、`card_mechanics.py:695-713`、`replay.py:85-90`、`rl/env_wrapper.py:181-263` |
+| `long1m_stopped_2026-09-18.md` | **`long1m` 提前终止记录（部分 run）**：按用户指令停在 **128,000/1,000,000（12.8%）**——18 个评估点（含插入大点 100k）、**0 次降级**、无孤儿 worker；**J1 按定义不成立**，其余判据只能描述性地读这 12.8%；含终止时 Elo / 逐对手胜率读数、50 局环境画像（**0 平局、49/50 三冠碾压、中位 168 帧**）、以及「明确未做」三节 | `runs/long1m/`（18 ckpt + 18 录像，393 MB）；复算命令见文内 §1 |
+| `agents/`（目录） | **AGENTS 分册（2026-09-18 拆分，逐字未改 + 节号不变）**：`redlines.md`（19 条红线全文与事故证据）、`env.md`（§2 环境与命令）、`metrics.md`（§3 训练口径与常量）、`ledger.md`（§4 已确证 / §5 已否证 / §6 未决）、`plans_runs_docs.md`（§7 计划 / §8 run / §9 文档地图） | 根 `AGENTS.md`（索引）；迁移与校验 `scripts/_agents_split.py` |
 | `../scripts/forensics_response.py` | 9j 响应率取证脚本（防守响应占比/延迟/落点距离，v2 修正坐标口径） | `AGENTS.md` 9j 节（结论存档） |
 
 ## 2. 外置工具（引擎侧确定性服务，2026-09 起步；设计与优先级见 `../AGENTS.md`）
