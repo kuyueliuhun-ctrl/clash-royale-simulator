@@ -130,7 +130,7 @@ def main():
     print(f"平局解剖 · {a.run} · 回放 {len(files)} 个（每个 = 一个评估点的 40 局）")
     print("口径：旧=最低塔血百分比；旧+margin=叠加 C′ 细差<margin 判平；新=三塔血量合计（2026-09-17）")
     print("=" * 108)
-    print(f"{'评估点':>10} {'局':>4} {'t中位':>7} {'引擎300s':>9} {'僵局早停':>9} {'步数上限':>9} "
+    print(f"{'评估点':>10} {'局':>4} {'t中位':>7} {'引擎300s':>9} {'零塔损截断':>11} {'打满上限':>9} {'其他早终':>9} "
           f"{'旧(评估)W/L/D':>13} {'旧+margin':>12} {'新 W/L/D':>12} {'旧标签复现':>10}")
     all_rows = []
     for p in files:
@@ -141,11 +141,15 @@ def main():
         med = ts[len(ts) // 2]
         n_eng = sum(1 for r in rows if r["t"] >= 300.0)
         n_max = sum(1 for r in rows if r["n"] >= 360 and r["t"] < 300.0)
-        n_stall = len(rows) - n_eng - n_max
+        # ⚠️ 2026-09-17 更正：早停的**充要签名**是"全程零塔损"(zero_dmg) —— 零塔损局的结束
+        # 只可能来自 (a) 僵局早停 (b) 打满 max_ep_steps；而"n<360 且 t<300"对**任何**未到上限的
+        # 对局都成立（含正常的拆王塔结束）⇒ 旧标签 n_stall 是**度量假象**（曾给出 96.8%）。
+        n_stall = sum(1 for r in rows if r["zero_dmg"] and r["n"] < 360)
+        n_other = len(rows) - n_eng - n_max - n_stall
         o, om, nw = table(rows, "old"), table(rows, "old_margin"), table(rows, "new")
         ok = _hits([r["old"] for r in rows], [r["recorded"] for r in rows])
         d2wl = sum(1 for r in rows if r["old"] is None and r["new"] is not None)
-        print(f"{tag:>10} {len(rows):>4} {med:>7.1f} {n_eng:>9} {n_stall:>9} {n_max:>9} "
+        print(f"{tag:>10} {len(rows):>4} {med:>7.1f} {n_eng:>9} {n_stall:>11} {n_max:>9} {n_other:>9} "
               f"{str(o):>12} {str(om):>12} {str(nw):>12} {ok:>7}/{len(rows)}   D→胜负 {d2wl:>3}")
 
     print("-" * 108)
@@ -153,8 +157,9 @@ def main():
     ok = _hits([r["old"] for r in all_rows], [r["recorded"] for r in all_rows])
     print(f"{'合计':>10} {len(all_rows):>4} {'':>7} "
           f"{sum(1 for r in all_rows if r['t'] >= 300.0):>9} "
-          f"{sum(1 for r in all_rows if r['t'] < 300.0 and r['n'] < 360):>9} "
+          f"{sum(1 for r in all_rows if r['zero_dmg'] and r['n'] < 360):>11} "
           f"{sum(1 for r in all_rows if r['n'] >= 360 and r['t'] < 300.0):>9} "
+          f"{sum(1 for r in all_rows if not (r['t'] >= 300.0) and r['n'] < 360 and not r['zero_dmg']):>9} "
           f"{str(o):>12} {str(om):>12} {str(nw):>12} {ok:>7}/{len(all_rows)}")
     print(f"\n旧口径复现校验：{ok}/{len(all_rows)} 与回放记录的 winner 一致"
           f"{'（✅ 可信）' if ok == len(all_rows) else '（❌ 不一致 ⇒ 下面的新口径读数不可信）'}")
@@ -177,16 +182,22 @@ def main():
 
     # 停用僵局早停后的帧数代价（2026-09-17 用户拍板：零塔损局必须打满）
     print(f"\n{'=' * 108}\n停用僵局早停后的**帧数代价**（估算，标注上下界）：")
-    stall_games = [r for r in all_rows if r["n"] < 360 and r["t"] < 300.0]
+    print("  ⚠️ 2026-09-17 更正：本节的判据原为 `n<360 and t<300`，那是**度量假象**"
+          "（对任何未到上限的对局都成立，含正常拆塔结束）\n"
+          "     曾据此得出「96.8% 的对局被早停、帧数 +96%~+222%」。真判据 = **全程零塔损**"
+          "（零塔损局只能以早停或打满上限结束）。")
+    stall_games = [r for r in all_rows if r["zero_dmg"] and r["n"] < 360]
     cur = sum(r["n"] for r in all_rows)
-    hi = sum(600 if (r["n"] < 360 and r["t"] < 300.0) else r["n"] for r in all_rows)
-    lo = sum(max(r["n"], 360) if (r["n"] < 360 and r["t"] < 300.0) else r["n"] for r in all_rows)
-    print(f"  早停结束的对局 = {len(stall_games)}/{len(all_rows)}（{len(stall_games)/len(all_rows):.1%}）"
+    hi = sum(600 if (r["zero_dmg"] and r["n"] < 360) else r["n"] for r in all_rows)
+    lo = sum(max(r["n"], 360) if (r["zero_dmg"] and r["n"] < 360) else r["n"] for r in all_rows)
+    print(f"  被早停的对局 = {len(stall_games)}/{len(all_rows)}（{len(stall_games)/len(all_rows):.1%}）"
           f"，其帧数中位 {sorted(r['n'] for r in stall_games)[len(stall_games)//2] if stall_games else 0}")
     print(f"  总帧数：现状 {cur} → 停用后【下界】{lo}（+{(lo-cur)/cur:.1%}）"
           f" / 【上界】{hi}（+{(hi-cur)/cur:.1%}，假设这些局仍无人破塔 ⇒ 打满 600 帧）")
     print(f"  ⇒ 评估墙钟近似按同比例上升；同 `--total-steps 20000` 对应的**局数**从 "
           f"{20000*len(all_rows)/cur:.0f} 降到 {20000*len(all_rows)/hi:.0f}~{20000*len(all_rows)/lo:.0f}")
+    print("  交叉校验（独立证据）：`scripts/_probe_eval_frame_ab.py` 比对两个 run 的 eval@0（同初始权重）"
+          "⇒ 逐局帧数 40/40 相同\n      —— 因为 eval@0 的 40 局**零塔损局数为 0**，早停从未触发 ⇒ 与本节口径一致。")
 
     # 配对变化
     print(f"\n{'=' * 108}\n配对变化（同一批对局，只换标签口径）：")
