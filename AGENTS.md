@@ -178,7 +178,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 - **run 模式成本 + 两级评估 + 评估并行（2026-09-18 实测标定）**：纯训练 **27.4 步/s**（`n_envs=1`；
   2000 步 / 73 s）；**单局评估 ≈8~10 s**（串行，纯 Python 引擎）⇒ **评估曾是最大墙钟项**（7100 局 = 17.8 h > 训练 10.1 h）。① **两级评估**：小点 `steps_per_eval`×`n_eval_games`、
   大点 `big_eval_every`×`n_eval_games_big`，两网格**取并集**（不整除 ⇒ 大点被**插入**；
-  同格点只评一次按大预算）。② **评估并行分片**（`--eval-workers N`，worker 屏蔽 CUDA、失败降级串行）⇒ 131 点 / 7100 局 **33.5 h → 5.7 h**（`only_vs_main` 下逐局都是模型局 ≈17 s；worker 走 CPU 故单局 ≈33 s；实测 12 worker 各占 ≈1 核、非线程超订）⇒ 总墙钟 ≈ **15.9 h**（10.2 h 训练 + 5.7 h 评估）。⚠️ 早期写的 8.3 s/局是 `cal_1m` **全轮转**平均（含 bot-vs-bot），口径错，已在预注册里更正。
+  同格点只评一次按大预算）。② **评估并行分片**（`--eval-workers N`，worker 屏蔽 CUDA、失败降级串行）⇒ 131 点 / 7100 局 **33.5 h → 5.7 h**（`only_vs_main` 下逐局都是模型局；worker 走 CPU 故单局约为父进程 GPU 的 2×；实测 12 worker 各占 ≈1 核、非线程超订）⇒ 总墙钟 ≈ **15.9 h**。⚠️ 早期 8.3 s/局是 `cal_1m` **全轮转**平均，口径已更正（预注册 §3）。
   **⚠️ 默认仍是串行**：`main()` 显式区分——只有**显式传 `--eval-workers`** 才并行（否则 `eval_workers=1`），
   因为 `TrainConfig.eval_workers` 的 dataclass 默认是 16，直接接线会让所有既有 run 命令默认变 16 进程。
   预注册与判据 `docs/long1m_prereg_2026-09-18.md`。
