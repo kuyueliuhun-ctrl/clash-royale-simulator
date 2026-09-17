@@ -127,7 +127,15 @@ class LeagueGameRecorder:
         self.meta["decks"] = [list(deck0), list(deck1)]
 
     def record(self, env, bundle, reward, info, cards=None):
-        frame = battle_snapshot(env.battle, bundle, reward, info)
+        # schema 5（2026-09-18，S2）：把**在线残值真值**一并写进帧 —— 环境中立、只读记录
+        _v = getattr(env, "_active_v", None)
+        _vs = getattr(env, "_v_share", None)
+        _shares = None
+        if _vs is not None:
+            _shares = {}
+            _shares.update(_vs[0])
+            _shares.update(_vs[1])
+        frame = battle_snapshot(env.battle, bundle, reward, info, v=_v, shares=_shares)
         # cards = 本步我方（player-0）实际打出的卡名。opp_played 已含对手卡名，本字段
         # 补齐我方一侧 → dashboard 卡牌使用统计可做双侧完整。旧录像无此字段。
         if cards:

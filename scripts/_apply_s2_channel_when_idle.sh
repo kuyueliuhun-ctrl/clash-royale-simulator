@@ -57,7 +57,9 @@ rollback() {
 
 log "=== 验证 1/3：行为中立性逐位对账（DIGEST 必须 = $EXPECT_DIGEST）==="
 cd "$SRC" || exit 7
-D=$(PYTHONIOENCODING=utf-8 "$PY" ../../scripts/s2_neutrality_probe.py . 2>&1 | tee /tmp/s2_neutral_patched.txt | awk '/^DIGEST/{print $2}')
+# ⚠️ Windows 版 python 的 stdout 在重定向下是 CRLF ⇒ awk 取出的字段**带尾随 \r**
+# ⇒ 与 EXPECT_DIGEST 逐字节比较会**假阴性**（2026-09-18 实测把一次成功的补丁回滚了）。
+D=$(PYTHONIOENCODING=utf-8 "$PY" ../../scripts/s2_neutrality_probe.py . 2>&1 | tee /tmp/s2_neutral_patched.txt | awk '/^DIGEST/{print $2}' | tr -d '\r')
 if [ "$D" != "$EXPECT_DIGEST" ]; then
   log "!! DIGEST 不一致：$D"; cat /tmp/s2_neutral_patched.txt; rollback; exit 8
 fi

@@ -65,7 +65,8 @@
 | **S2 实施进度**（schema 3→4 实体带 `id`+`target_id`；§11.5 = 仪器 + 门禁判读） | 同上预注册 §11 |
 | **★ S2 实测与门禁判读（第二轮已重算）**（P3 推翻 / P1P2 否决 / **P4b 配对 10/10** / 6 个口径缺陷 / 门禁兑现率） | [`docs/s2_instrument_2026-09-18.md`](docs/s2_instrument_2026-09-18.md) |
 | **★ S1 零成本门禁**（手写专家；判「约束在机制/探索侧」+ 冰人白嫖证实） | [`docs/s1_gate_2026-09-18.md`](docs/s1_gate_2026-09-18.md) |
-| **引擎侧出牌溯源通道**（sandbox 已验、未落真树；diff + 落地步骤） | [`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md) |
+| **引擎侧出牌溯源通道 + 受控落地**（**已落真树**；三步验证 4/4） | [`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md) |
+| **★ 在线奖励项（默认关）+ 开/关对账 + 两处实质不确定 + CRLF 事故** | [`docs/engagement_trade_online_2026-09-18.md`](docs/engagement_trade_online_2026-09-18.md) |
 | 长跑工程（两级评估 + 评估并行分片） | [`docs/long1m_prereg_2026-09-18.md`](docs/long1m_prereg_2026-09-18.md) |
 | **`run100k` 启动记录（正在跑，100k 两级评估）** | [`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md) |
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
@@ -74,11 +75,13 @@
 
 ## C. 当前活跃工作（2026-09-18）
 
-0. **正在跑**：`run100k` —— `run` 模式 **100k 步**，**沿用两级评估**（小 8000×10 / 大 100000×20，`--only-vs-main`）
-   ⇒ **14 个评估点（大 2 / 小 12）/ 800 局**，预计 **≈1.65 h**；`--eval-workers 12`；
-   dashboard **http://127.0.0.1:8700**。⚠️ 本 run **不含**新方案（奖励项未实现）。
-   启动前【R1】实测：**14 个孤儿 spawn worker 占 7.7 GB** ⇒ 清掉后可用提交 7.51→**23.24 GB**、档位判回 12 OK
-   （新工具 `scripts/kill_orphan_workers.ps1`）。记录：[`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md)
+0. **`run100k` 已跑完**（`run` 模式 **100k 步**、**两级评估** 14 点 / 800 局、`--only-vs-main`）
+   ⇒ `runs/run100k/`：**14 个 schema-4 录像**（`league_{0,8000,…,100000}.pkl`）+ 14 ckpt；
+   启动前【R1】实测 **14 个孤儿 spawn worker 占 7.7 GB** ⇒ 清掉后可用提交 7.51→**23.24 GB**、
+   档位判回 12 OK（工具 `scripts/kill_orphan_workers.ps1`）。
+   **它的 14 个录像就是 S2 第一/二轮全部读数的数据源**（schema 4 ⇒ 带 §11.9.3 的重建误差）。
+   记录：[`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md)
+   ⚠️ 新源：`runs/run_schema5/`（落地验证用的短 smoke，**schema 5**，60 局）—— 精确口径的对照数据。
 
 1. **主线变更**：`long1m`（1M 步 `run` 模式）**已按用户指令提前终止**在 **128,000 步（12.8%）**——
    18 个评估点（含插入的大点 100k）、**0 次降级**、**无判读产出且 J1 按定义不成立**。
@@ -115,11 +118,25 @@
      手写攒费→Xbow 规则就打出了 **156× 基线**（47/1003，部署前圣水中位 6.25）⇒ **动作空间/掩码被证伪为约束点**，
      **不得**写成「手写专家做不到」。冰人白嫖推论 **证实**（`ΔΦ = −2.000000` 零散布，`edw=0.5` ⇒ **−1.0**；双倍期 −0.2）。
      全文：[`docs/s1_gate_2026-09-18.md`](docs/s1_gate_2026-09-18.md)
-   - **★ 两条门禁的合并结论（【R11】，2026-09-18 第二轮更新）**：
-     **S2 相关性门禁已过**（配对 5/5、跨口径 10/10）；**但 S1 仍判「约束在机制/探索侧」**
-     ⇒ **先修机制（`ACE_CARDS`/`SINK_TANK_CARDS` 名单 + "只推荐付得起的牌"自锁），
-     再按预注册 §11.7（唯一干预臂 `p4b`）在 `solo` 上做 A/B**；奖励项**仍未接线**。
-   - **引擎侧「出牌溯源」纯记录通道 + schema 5**：sandbox **完整实现 + 行为中立性逐位对账 PASS**
+   - **★ 三条门禁的合并结论（【R11】，2026-09-18 第三轮收敛）**：
+     **S1 未通过**（约束在探索/机制侧）；**S2 第二轮曾判"相关性过了"**，但第三轮查出**两处实质不确定**：
+     ① **在线与离线的局面切分不是同一个量**（同一局：离线 `identity=core` **67 个窗口** vs
+     在线 K=30 tick **2 个**；离线 `settle_frames ∈ {1..20}` 结果**一字不变**）；
+     ② **离线重建 `V` 的误差首次量出**：严格相等仅 **44.9%**、中位 0.23、**p90 3.0**、max **7.13** 圣水
+     （而窗口 `ΔΦ` 量级只有 ±2）⇒ **schema-4 的全部读数都带这个误差**。
+     ⇒ **S3 仍不开**；放行条件（写死）见预注册 §11.9.4：先做 **measure-only 口径重测 ρ**（在线口径、
+     权重 0、行为逐位不变）→ 补尾部 flush → 再谈 S1 的机制前置（须单独预注册）→ 阳性对照通过。
+     全文：[`docs/engagement_trade_online_2026-09-18.md`](docs/engagement_trade_online_2026-09-18.md)
+   - **★ 在线奖励项（默认关）+ 引擎侧记录通道 + schema 5 已落真树**：
+     `rl/engagement.py::EngagementTradeMonitor` + `RLEnv` 接线 + `DEFAULT_REWARD` 四开关
+     （`engagement_trade` **默认 0.0**）；**开/关逐位对账 PASS**（未打补丁 vs 开关关：逐帧奖励 + 全实体状态
+     SHA-256 逐字相同 `4d8b27b8…eca0c`）。
+     **落地三步验证**：中立性 DIGEST 逐字一致 ✅ / 【R19】selftest 子集 **4/4** ✅ /
+     短 smoke 产出 **schema 5**（元组全 15 长、`v0` 覆盖 100%、`is_product` 9.7%、非塔实体 `root_cast` 97.9%）✅。
+     ⚠️ 一次 **CRLF 假阴性**事故（Windows python stdout 为 CRLF ⇒ `awk` 取出的 digest 带 `\r` ⇒
+     逐字节比较失败 ⇒ 把**成功的**补丁回滚了）；修法 `| tr -d '\r'`，已写进脚本注释。
+     记录：[`docs/engagement_trade_online_2026-09-18.md`](docs/engagement_trade_online_2026-09-18.md)
+   - **（历史）sandbox 阶段的实现记录**：行为中立性逐位对账 PASS
      （1200 tick 全实体 SHA-256 两棵树逐字相同），schema 5（`root_cast`/`is_product`/`share` + 帧内 `v0/v1`）
      亦已在 sandbox 端到端验证（`exact=True`）。**已 armed 受控落地**：
      `scripts/_apply_s2_channel_when_idle.sh`（等 `run100k` 终局评估点 + 120 s → 干跑预检 → 应用 →

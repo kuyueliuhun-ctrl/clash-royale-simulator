@@ -64,6 +64,13 @@ class Entity:
         self.hp = self.data.hp
         self.shield_health = self.data.shield_health
         self.target_id = None
+        # —— S2 纯记录通道（2026-09-18）：出牌溯源。**只写不读** ——
+        # `root_cast` = 产出本实体的那次**出牌事件 id**（不是实体 id；链式继承到根）；
+        # `is_product` = 本实体是否由建筑/单位/法术**生成**（None = 未分类，由 _spawn_entity 填）。
+        # 二者不参与任何行为/掩码/伤害判定 ⇒ 默认关奖励项时逐位回旧。
+        # 规格：docs/engagement_trade_prereg_2026-09-18.md §3/§6
+        self.root_cast = None
+        self.is_product = None
 
         # Why use both targetable and invincible? Because some entities like the royal ghost/archer queen can be invisible but
         # still takes damage. Other entities like the bandit/boss bandit/golden knight/miner(underground) can not be hit in a
@@ -256,7 +263,7 @@ class Entity:
                 _Card(curse['name'])
                 t = Troop(self.battle_state.next_entity_id, Position(self.position.x, self.position.y),
                           curse['player'], curse['name'])
-                self.battle_state._spawn_entity(t)
+                self.battle_state._spawn_entity(t, spawner=self)
             except Exception:
                 pass
         # —— M5 觉醒补全：觉醒击杀治疗归因（PekkaEV1_Heal：onKilledDoneAction）——
@@ -313,7 +320,7 @@ class Entity:
         _info.spawn_number = _cnt
         _info.spawn_delay = 0
         for p in get_spawn_position(_info, self.position, self.player, False):
-            self.battle_state._spawn_entity(Troop(self.battle_state.next_entity_id, p, self.player, _nm, self.battle_state))
+            self.battle_state._spawn_entity(Troop(self.battle_state.next_entity_id, p, self.player, _nm, self.battle_state), spawner=self)
             self.battle_state.next_entity_id += 1
 
     def _generic_death_spawn(self):
@@ -341,14 +348,15 @@ class Entity:
         if is_death_bomb(dsd):
             bomb = TimedExplosive(bs.next_entity_id, Position(self.position.x, self.position.y),
                                   self.player, self.card_name)
-            bs._spawn_entity(bomb)
+            bs._spawn_entity(bomb, spawner=self)
             return
         if self.card_name == 'SkeletonBalloon' or name == 'SkeletonContainer':
             _cnt = int(dsd.get('deathSpawnCount') or 7)
             _delay = (dsd.get('deployTime') or 600) / 1000.0
             for i in range(_cnt):
                 bs.delayed_spawn((bs.next_entity_id + i, Position(self.position.x, self.position.y),
-                                  self.player, 'Skeleton', bs), _delay)
+                                  self.player, 'Skeleton', bs), _delay,
+                                  is_product=True, spawner=self)
             bs.next_entity_id += _cnt
             return
         from card_utils import character_to_card as _c2c
@@ -362,7 +370,7 @@ class Entity:
         for p in get_spawn_position(_info, self.position, self.player, False):
             t = Troop(bs.next_entity_id, p, self.player, target, bs)
             t._soul_excluded = True   # 勘误批11：亡语衍生不计魂
-            bs._spawn_entity(t)
+            bs._spawn_entity(t, spawner=self)
             bs.next_entity_id += 1
 
     def _death_elixir_gift(self):
@@ -625,7 +633,7 @@ class Entity:
                         only_enemies=getattr(self.data, 'death_area_effect_only_enemies', True),
                         hits_air=getattr(self.data, 'death_area_effect_air', True),
                         hits_ground=getattr(self.data, 'death_area_effect_ground', True),
-                        level=self.level))
+                        level=self.level), spawner=self)
         # —— 勘误批3：受击后钩子（ElectroGiant Zap Pack 反射等；不短路伤害）——
         if self.is_alive and hasattr(self.entity_holder, 'on_damaged'):
             self.entity_holder.on_damaged(amount, source)
@@ -790,6 +798,14 @@ class Entity:
             damage_override=damage_override, source=self)
         projectile.battle_state = self.battle_state
         self.battle_state.entities[projectile.id] = projectile
+        # S2 纯记录通道：本路径**绕过 `_spawn_entity`**（塔的弹道等）⇒ 就地补记，
+        # 否则 `is_product` 会一直是 None（离线按"非产物"退化处理）。仍只写不读。
+        if getattr(projectile, "root_cast", None) is None:
+            projectile.root_cast = getattr(self, "root_cast", None)
+            if projectile.root_cast is None:
+                projectile.root_cast = getattr(self.battle_state, "_cast_ctx", None)
+        if getattr(projectile, "is_product", None) is None:
+            projectile.is_product = True
         self.battle_state.next_entity_id += 1
 
     def on_both_sides_of_river(self, e2):
@@ -909,7 +925,7 @@ class Troop(Entity):
         g = Troop(bs.next_entity_id, Position(self.position.x, self.position.y + back),
                   self.player, name, bs)
         g._evo2025_is_gerry = True
-        bs._spawn_entity(g)
+        bs._spawn_entity(g, spawner=self)
         self._evo2025_army_gerry = g.id
 
     def _evo2025_gust_tick(self, dt, current_target=None):
@@ -953,7 +969,7 @@ class Troop(Entity):
                 if alive_group < max_group:
                     self.evo_extra_spawned += 1
                     self.battle_state.spawn_arrival_troops(self.card_name, 1,
-                        Position(self.position.x + 0.3, self.position.y + 0.3), self.player)
+                        Position(self.position.x + 0.3, self.position.y + 0.3), self.player, host=self)
             elif 'Heal' in name:
                 hps = buff.get("healPerSecond", 30) * level_scale(self.level)  # 起始级基准 → 当前级
                 self.apply_buff(heal={'hps': hps, 'time': window or 1.0})
@@ -1001,7 +1017,7 @@ class Troop(Entity):
                     tick=max(_bf.get('hitFrequency') or sd.get('hitSpeed') or 400, 50) / 1000,
                     attract=(_bf.get('attractPercentage') or 0) / 100.0,  # 300 → 3 格/s（口径假设）
                     level=self.level, label=sd.get('name') or 'Valkyrie_MiniTornado_EV1')
-                self.battle_state._spawn_entity(_zone)
+                self.battle_state._spawn_entity(_zone, spawner=self)
         # —— M6 ①：Princess 减速箭（首发减速, 之后每 everyNHits 发减速一次；
         # 半径 3.0 / 30% / 5.5s, 4/8/2026 平衡口径, 数据来源 evo_2025_data.py）——
         hooks = evo.get('evo2025Hooks') or {}
@@ -1035,13 +1051,13 @@ class Troop(Entity):
             card = Card(sd['name'])
             for p in get_spawn_position(card, self.position, self.player):
                 t = Troop(self.battle_state.next_entity_id, p, self.player, sd['name'])
-                self.battle_state._spawn_entity(t)
+                self.battle_state._spawn_entity(t, spawner=self)
         dsd = evo.get('deathSpawnCharacterData')
         if dsd and dsd.get('hitpoints') and dsd.get('name') not in ('GoblinBrawler',):
             # 觉醒囚笼亡语出兵（基础卡自身的 deathSpawn 走原路径，不重复）
             t = Troop(self.battle_state.next_entity_id, Position(self.position.x, self.position.y),
                       self.player, dsd['name'])
-            self.battle_state._spawn_entity(t)
+            self.battle_state._spawn_entity(t, spawner=self)
         # —— M5 觉醒补全：Pekka 觉醒临时复活（tempResurrect + resurrectParameters）——
         # 数值取自 gamedata resurrectParameters=[0,2000,500,500,5000,5000,900,10000,200]：
         #   rp[1]=2000 复活延迟 ms；rp[2]=500 基础复活 HP（lv1 基准）；rp[8]=200 每灵魂加成
@@ -1059,7 +1075,8 @@ class Troop(Entity):
             lifetime = (rp[4] if len(rp) > 4 else 5000) / 1000.0
             self.battle_state.resurrect_queue.append(
                 (self.card_name, Position(self.position.x, self.position.y), self.player,
-                 hp, lifetime, self.battle_state.time + delay))
+                 hp, lifetime, self.battle_state.time + delay,
+                 getattr(self, "root_cast", None)))
             self._evo_resurrect_used = True
         # —— M6 ⑤：SkeletonArmy 亡影转化（Gerry 存活时骷髅阵亡 → 原地生成亡影：
         # 无敌+不可选取, 法术可伤害; Gerry 阵亡后不再转化）——
@@ -1079,7 +1096,7 @@ class Troop(Entity):
                 sh.targetable = False
                 sh.invincible = True
                 sh.deploy_delay_remaining = 0.0
-                self.battle_state._spawn_entity(sh)
+                self.battle_state._spawn_entity(sh, spawner=self)
         # —— M6 ①：Princess 死亡减速领域（半径 3.0 / 30% / 5.5s）——
         dz = hooks.get('deathSlowZone')
         if dz:
@@ -1089,7 +1106,7 @@ class Troop(Entity):
                 radius=dz.get('radius', 3.0), lifetime=dz.get('duration', 5.5),
                 slow=dz.get('speedMult', 0.70), level=self.level,
                 label='Princess_EV1_DeathZone')
-            self.battle_state._spawn_entity(_zone)
+            self.battle_state._spawn_entity(_zone, spawner=self)
         # —— M6 ⑥：BabyDragon 死后气流残留（约 2s：友 +30% / 敌 -30%）——
         gust = hooks.get('gust')
         if gust:
@@ -1100,7 +1117,7 @@ class Troop(Entity):
                 slow=gust.get('enemySpeedMult', 0.70),
                 ally_buff={'speed_mult': gust.get('allySpeedMult', 1.30), 'duration': 0.3},
                 level=self.level, label='BabyDragon_EV1_Gust')
-            self.battle_state._spawn_entity(_zone)
+            self.battle_state._spawn_entity(_zone, spawner=self)
 
     def _evo_giant_tick(self, dt, current_target=None):
         """M5 觉醒补全：GoblinGiant_EV1 哥布林投掷（onStartingActionData：healthPercentages
@@ -1373,7 +1390,7 @@ class Building(Entity):
             card.spawn_delay = 0
             for p in get_spawn_position(card, self.position, self.player):
                 self.battle_state._spawn_entity(
-                    Troop(self.battle_state.next_entity_id, p, self.player, dsd['name'], self.battle_state))
+                    Troop(self.battle_state.next_entity_id, p, self.player, dsd['name'], self.battle_state), spawner=self)
 
     def _evo_building_tick(self, dt):
         """M5 觉醒补全：觉醒建筑逐 tick 钩子。返回 True = 本帧跳过常规行为（隐匿中）。
@@ -1407,7 +1424,7 @@ class Building(Entity):
                         _t = Troop(bs.next_entity_id,
                                    Position(self.position.x + 0.4 * (i + 1), self.position.y),
                                    self.player, _name, bs)
-                        bs._spawn_entity(_t)
+                        bs._spawn_entity(_t, spawner=self)
                 return True
         if getattr(self, '_evo_hidden', False):
             self._evo_hide_timer -= dt
@@ -1458,7 +1475,7 @@ class Building(Entity):
                     pos = Position(self.position.x + hs.get('sideOffset', 0.8) * side,
                                    self.position.y + fwd)
                     bs._spawn_entity(Troop(bs.next_entity_id, pos, self.player,
-                                           hs.get('card', 'FireSpirits'), bs))
+                                           hs.get('card', 'FireSpirits'), bs), spawner=self)
         return False
 
 class Projectile(Entity):
@@ -1576,7 +1593,7 @@ class Projectile(Entity):
                         lifetime=ohta['spawnTime'] / 1000.0,
                         ally_buff={'speed_mult': 1.30, 'hit_speed_mult': 1.30, 'duration': 0.6},
                         level=src.level, label=_bf.get('name') or 'IceSpirits_Target_EV1')
-                    self.battle_state._spawn_entity(zone)
+                    self.battle_state._spawn_entity(zone, spawner=self)
 
     def _chain(self, impact):
         """M1 弹道生成链：二段弹 / 落地出兵"""
@@ -1585,7 +1602,7 @@ class Projectile(Entity):
             self.battle_state.spawn_projectile_chain(sp, impact, self.player, self._arrival_direction())
         sc = getattr(self.proj, 'spawn_characters', None)
         if sc:
-            self.battle_state.spawn_arrival_troops(sc[1], sc[0], impact, self.player)
+            self.battle_state.spawn_arrival_troops(sc[1], sc[0], impact, self.player, host=self)
 
     def to_dict(self):
         d = super().to_dict()
@@ -2091,7 +2108,7 @@ def spawn_evo_zone(bs, src, sd, position, action=None):
                          radius=radius, lifetime=life, dps=dps, tick=tick, slow=slow,
                          stun_pulse=stun_pulse, attract=attract, level=src.level,
                          label=sd.get('name') or 'EvoEffectZone')
-    bs._spawn_entity(zone)
+    bs._spawn_entity(zone, spawner=src)
     return zone
 
 
@@ -2312,7 +2329,7 @@ def spawn_vines_zone(bs, projectile, impact):
         grounds_air=bool(aeo.get('groundsAirUnits')),
         level=Card.default_level,
         label=aeo.get('name') or 'Vines_AeO')
-    bs._spawn_entity(zone)
+    bs._spawn_entity(zone, spawner=projectile)
     return zone
 
 
@@ -2330,7 +2347,7 @@ def _spawn_action_character(bs, player, sd, position=None):
     card.spawn_delay = 0
     for p in get_spawn_position(card, position, player, False):
         t = Troop(bs.next_entity_id, p, player, name, bs)
-        bs._spawn_entity(t)
+        bs._spawn_entity(t, is_product=True)
     return True
 
 
@@ -2617,17 +2634,22 @@ class BattleState:
         self.winner = None
         self.next_entity_id = 1
         self.regen = 2.8
+        # —— S2 纯记录通道（2026-09-18）：出牌事件台账 ——
+        self.next_cast_id = 1        # 出牌事件 id（单调；出牌失败也消耗，留空洞）
+        self.cast_log = {}           # cast_id -> {"player","card","t","mirror"}
+        self._cast_ctx = None        # 正在进行的出牌事件 id（deploy_card 期间）
+        self._cast_is_product = False  # 当前出牌是法术 ⇒ 它直接生成的东西算产物
 
         # —— 勘误批7：塔兵=卡组第 9 张，替换两座公主塔（Cannoneer/Duchess/Chef；数值已在
         # cards_stats_building 与 rl/env_wrapper 参考表核对一致——gamedata 快照权威）——
         _r_tt = player_1.tower_troop or 'King_PrincessTowers'
         _b_tt = player_0.tower_troop or 'King_PrincessTowers'
-        self._spawn_entity(Building(1, self.arena.RED_LEFT_TOWER, 1, _r_tt, True))
-        self._spawn_entity(Building(2, self.arena.RED_RIGHT_TOWER, 1, _r_tt, True))
-        self._spawn_entity(Building(3, self.arena.BLUE_LEFT_TOWER, 0, _b_tt, True))
-        self._spawn_entity(Building(4, self.arena.BLUE_RIGHT_TOWER, 0, _b_tt, True))
-        self._spawn_entity(Building(5, self.arena.RED_KING_TOWER, 1, 'KingTower', True))
-        self._spawn_entity(Building(6, self.arena.BLUE_KING_TOWER, 0, 'KingTower', True))
+        self._spawn_entity(Building(1, self.arena.RED_LEFT_TOWER, 1, _r_tt, True), is_product=False)
+        self._spawn_entity(Building(2, self.arena.RED_RIGHT_TOWER, 1, _r_tt, True), is_product=False)
+        self._spawn_entity(Building(3, self.arena.BLUE_LEFT_TOWER, 0, _b_tt, True), is_product=False)
+        self._spawn_entity(Building(4, self.arena.BLUE_RIGHT_TOWER, 0, _b_tt, True), is_product=False)
+        self._spawn_entity(Building(5, self.arena.RED_KING_TOWER, 1, 'KingTower', True), is_product=False)
+        self._spawn_entity(Building(6, self.arena.BLUE_KING_TOWER, 0, 'KingTower', True), is_product=False)
 
         self.schedule = []
         self.resurrect_queue = []  # M5：觉醒临时复活队列 [(card,pos,player,hp,lifetime,at_time)]
@@ -2669,12 +2691,57 @@ class BattleState:
             entity.position.x = x
             entity.position.y = y
 
-    def _spawn_entity(self, entity):
+
+    def _finish_cast(self, cast_id, player_id, card_name, from_mirror, ok):
+        """S2 纯记录：只把**成功**的出牌事件写进 `cast_log`（失败留空洞，无害）。"""
+        if ok and cast_id is not None:
+            self.cast_log[int(cast_id)] = {
+                "player": int(player_id), "card": str(card_name),
+                "t": float(self.time), "mirror": bool(from_mirror)}
+
+    def deploy_card(self, player_id, card_name, position, _from_mirror=False):
+        """S2 包装（2026-09-18）：给 `_deploy_card_impl` 套一层「出牌事件」上下文。
+
+        包装体**不改变任何行为**：只分配 `cast_id`、设置/恢复两个记录用上下文、
+        成功时写 `cast_log`。镜像会递归进 `deploy_card` ⇒ 每张镜像卡算**独立**一次出牌事件。
+        """
+        cast_id = self.next_cast_id
+        self.next_cast_id += 1
+        prev_ctx, prev_flag = self._cast_ctx, self._cast_is_product
+        self._cast_ctx = cast_id
+        ok = False
+        try:
+            ok = self._deploy_card_impl(player_id, card_name, position,
+                                        _from_mirror=_from_mirror)
+        finally:
+            self._finish_cast(cast_id, player_id, card_name, _from_mirror, ok)
+            self._cast_ctx, self._cast_is_product = prev_ctx, prev_flag
+        return ok
+
+    def _spawn_entity(self, entity, spawner=None, is_product=None):
+        """出生登记。**新增两个参数只服务 S2 纯记录通道，不改变任何行为。**
+
+        - `spawner`：生成者实体。有 ⇒ 该实体是**产物体**，且 `root_cast` 从宿主
+          **链式继承**（宿主可能已死 ⇒ 指针写在产物体自己身上，规格 §3.4）。
+        - `is_product`：显式覆盖（塔 = False；法术直接生成 = True）。
+        """
         self.ensure_walkability(entity)
         entity.battle_state = self
         entity.id = self.next_entity_id
         self.entities[self.next_entity_id] = entity
         self.next_entity_id += 1
+        # —— S2 纯记录通道（只写不读）——
+        if getattr(entity, "root_cast", None) is None:
+            _rc = getattr(spawner, "root_cast", None) if spawner is not None else None
+            entity.root_cast = _rc if _rc is not None else self._cast_ctx
+        if getattr(entity, "is_product", None) is None:
+            if is_product is not None:
+                entity.is_product = bool(is_product)
+            elif spawner is not None:
+                entity.is_product = True
+            else:
+                entity.is_product = bool(self._cast_is_product)
+        return entity
 
     def _wrap(self, entity_data):
         card_name = entity_data[3]
@@ -2703,11 +2770,28 @@ class BattleState:
             apply_hero_overlay(ent, self)
         return ent
 
-    def delayed_spawn(self, entity, delay):
-        if delay:
-            self.schedule.append((entity, self.time+delay))
+    def delayed_spawn(self, entity, delay, is_product=None, spawner=None):
+        """延迟出兵。`schedule` 第三格带上 `(cast_id, is_product)` 快照。
+
+        ⚠️ 出牌上下文在**排程那一刻**捕获（真正出生要等若干 tick，届时上下文已恢复）。
+        """
+        _root = getattr(spawner, "root_cast", None) if spawner is not None else None
+        if _root is None:
+            _root = self._cast_ctx
+        if is_product is None:
+            _isprod = True if spawner is not None else self._cast_is_product
         else:
-            self._spawn_entity(self._wrap(entity))
+            _isprod = bool(is_product)
+        _meta = (_root, _isprod)
+        if delay:
+            self.schedule.append((entity, self.time+delay, _meta))
+        else:
+            _ent = self._wrap(entity)
+            if getattr(_ent, "root_cast", None) is None:
+                _ent.root_cast = _meta[0]
+            if getattr(_ent, "is_product", None) is None:
+                _ent.is_product = bool(_meta[1])
+            self._spawn_entity(_ent)
 
     def update_player_hp(self):
         p0, p1 = self.players
@@ -2802,8 +2886,15 @@ class BattleState:
         _bonus = getattr(self, '_mirror_level_bonus', 0)
         if _bonus:
             Card.default_level += _bonus   # 勘误批9：镜像出兵等级 +1（同步法术在 deploy 窗口内生效）
-        for entity, spawn_time in self.schedule:
-            if self.time >= spawn_time: self._spawn_entity(self._wrap(entity))
+        for _item in self.schedule:
+            if self.time >= _item[1]:
+                _ent = self._wrap(_item[0])
+                if len(_item) > 2 and _item[2] is not None:
+                    if getattr(_ent, "root_cast", None) is None:
+                        _ent.root_cast = _item[2][0]
+                    if getattr(_ent, "is_product", None) is None:
+                        _ent.is_product = bool(_item[2][1])
+                self._spawn_entity(_ent)
         self.schedule = [each for each in self.schedule if each[1] > self.time]
         if _bonus:
             Card.default_level -= _bonus
@@ -2816,7 +2907,9 @@ class BattleState:
                 _t.hp = item[3]
                 _t._evo_temp_lifetime = item[4]
                 _t._evo_resurrect_used = True  # 复活体不再二次复活
-                self._spawn_entity(_t)
+                if len(item) > 6 and item[6] is not None:
+                    _t.root_cast = item[6]
+                self._spawn_entity(_t, is_product=True)
         self.resurrect_queue = [i for i in self.resurrect_queue if self.time < i[5]]
         self.time += dt
         self.tick += 1
@@ -2868,13 +2961,14 @@ class BattleState:
             self.entities[sp.id] = sp
             self.next_entity_id += 1
 
-    def spawn_arrival_troops(self, card_name, count, position, player):
+    def spawn_arrival_troops(self, card_name, count, position, player, host=None):
         """M1 落地出兵（哥布林飞桶类）：弹道到达后在落点部署 count 个单位"""
         info = Card(card_name)
         info.spawn_number = count
         info.spawn_delay = 0
         for p in get_spawn_position(info, position, player):
-            self.delayed_spawn((self.next_entity_id, p, player, card_name, self), 0.0)
+            self.delayed_spawn((self.next_entity_id, p, player, card_name, self), 0.0,
+                               is_product=True, spawner=host)
 
     def _cast_lightning(self, player_id, position):
         """【勘误批8】Lightning：半径 3.5 内最高 HP 的至多 3 个敌方单位/建筑,
@@ -2899,7 +2993,7 @@ class BattleState:
             if isinstance(e, Troop):
                 e.apply_buff(stun=0.5, retarget=True)
 
-    def deploy_card(self, player_id, card_name, position, _from_mirror=False):
+    def _deploy_card_impl(self, player_id, card_name, position, _from_mirror=False):
         # —— M1 镜像法术：重放上一张使用的卡，费用 = 基础费 + 1 ——
         if card_name == 'Mirror':
             p = self.players[player_id]
