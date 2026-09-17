@@ -63,7 +63,17 @@ train_economy_9k.log  train_economy_9k_ft.log  train_gfix_20k.log  value_ln_prob
 **没有任何文件引用它们**，且其中 `selftest_*` / `_selftest_full_run*` 是过期全量自检转储（【红线 R19】后不再产出）。
 其余被删文件都**在 git 里**：`git log --diff-filter=D --name-only -- docs/ | head` 可查，`git show <commit>^:<path>` 可取回。
 
-## ⚠️ 清理顺带发现（与本任务无关，待确认）
+## ⚠️ 清理顺带发现（2026-09-17 **已更正：原文结论是错的**）
+
+> **更正留证**：下文 2026-09-14 写的「`runs/economy_9k_ft` 等目录已不存在」——**错**。
+> 原因：我在**仓库根目录**跑 `find runs`，而所有命令实际都在 `src/clasher_new` 下执行
+> ⇒ `runs/` 是 **cwd 相对路径**，真实位置是 **`src/clasher_new/runs/`**（4.7 GB，
+> `economy_9k_ft` / `economy_9j` / `d1_long_100k` **都在**）。仓库根那个 `runs/`（2.1 GB，
+> 含 `archive/economy_100k_v1_ungated` 的 53 个快照）是**另一份旧目录**。
+> **实测反证**（2026-09-17 `demo20k` 试跑启动日志）：
+> `[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 ['runs/economy_9k_ft','runs/economy_9j']）`
+> `mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1` ⇒ **AGENTS §2.2/§2.3 的协议照抄即完整生效**。
+> 原判据（保留原文，勿删）：
 
 `runs/economy_9k_ft`、`runs/economy_9j`、`runs/economy_9k`、`runs/economy_10d`、`runs/gfix_20k`
 **在磁盘上均不存在**（`find runs -maxdepth 3 -name "*economy_9*"` 为空；`runs/` 在 `.gitignore` 内 ⇒ 无 git 副本）。

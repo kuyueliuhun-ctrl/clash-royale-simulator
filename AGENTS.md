@@ -16,7 +16,7 @@
 
 | # | 红线 | 详情 |
 |---|---|---|
-| **R1** | **训练期"性能异常"先归因外部，暂停留证等人类** | 吞吐骤降 / 子进程批量崩 / 页面文件报错（历史指纹 **`WinError 1455`**，加载 `torch\lib\cufft64_12.dll` 失败）/ spawn 失败 / 评估卡死 / 进程莫名退出 ⇒ **不自动降级、不为绕开它改代码或下调配置、不把猜测写进注释**。成因未定就写"未定"。判读任何性能数字前先确认本次有没有发生降级（静默降级会把故障伪装成"只是慢"）。经验安全档位 `--eval-workers 12`；16 有 commit 压力风险（实测提交上限 47.3GB / 空闲 20.6GB，16×CUDA-torch≈20.8GB）。**比较两个 run 的耗时前先确认 `eval-workers` 档位**（E2 3419s vs 对照 2709s 的差里含 12 vs 16，不得归因于被比较的改动）。**⚠️ 2026-09-13 新指纹**：`[eval] 并行评估 worker 失败，降级串行: RuntimeError('DefaultCPUAllocator: not enough memory: you tried to allocate 539136 bytes')`（**worker 内建策略就 OOM，连 0.5 MB 都拿不到**）⇒ 代码按设计降级串行 ⇒ 串行 eval 在 `.to(device)` 处 **`torch.AcceleratorError: CUDA error: unknown error`**（后者成因**未定**）。**该事件当天实测空闲提交仅 10.68 GB（标定 12 档时是 20.6 GB）⇒ "12 = 安全"可能已过期**；因此**长跑开跑前先量 `wmic OS get FreeVirtualMemory`**，并清理**孤儿 spawn worker**（父进程已死的 `--multiprocessing-fork` 进程，实测 3 个占 1.2 GB）。留证 `docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`。 |
+| **R1** | **训练期"性能异常"先归因外部，暂停留证等人类** | 吞吐骤降 / 子进程批量崩 / 页面文件报错（历史指纹 **`WinError 1455`**，加载 `torch\lib\cufft64_12.dll` 失败）/ spawn 失败 / 评估卡死 / 进程莫名退出 ⇒ **不自动降级、不为绕开它改代码或下调配置、不把猜测写进注释**。成因未定就写"未定"。判读任何性能数字前先确认本次有没有发生降级（静默降级会把故障伪装成"只是慢"）。经验安全档位 `--eval-workers 12`；16 有 commit 压力风险（实测提交上限 47.3GB / 空闲 20.6GB，16×CUDA-torch≈20.8GB）。**比较两个 run 的耗时前先确认 `eval-workers` 档位**（E2 3419s vs 对照 2709s 的差里含 12 vs 16，不得归因于被比较的改动）。**⚠️ 2026-09-13 新指纹**：`[eval] 并行评估 worker 失败，降级串行: RuntimeError('DefaultCPUAllocator: not enough memory: you tried to allocate 539136 bytes')`（**worker 内建策略就 OOM，连 0.5 MB 都拿不到**）⇒ 代码按设计降级串行 ⇒ 串行 eval 在 `.to(device)` 处 **`torch.AcceleratorError: CUDA error: unknown error`**（后者成因**未定**）。**该事件当天实测空闲提交仅 10.68 GB（标定 12 档时是 20.6 GB）⇒ "12 = 安全"可能已过期**；因此**长跑开跑前先量可用提交内存**（⚠️ **2026-09-17 实测：本机 `wmic` 已被移除、返回空** ⇒ 改用 `.venv/Scripts/python.exe scripts/check_commit.py`，读 `GlobalMemoryStatusEx.ullAvailPageFile`；实测上限 47.31 GB / 已用 27.66 GB / **可用 19.65 GB** ⇒ 12 档达标），并清理**孤儿 spawn worker**（父进程已死的 `--multiprocessing-fork` 进程，实测 3 个占 1.2 GB）。留证 `docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`。 |
 | **R2** | **训练语义兼容红线** | `rl/ppo.py` 被 `run_league` / `flow_league` / `train_follower` / `train_prophet` **共用** ⇒ **函数默认参数必须恒等于旧行为**，新能力只经 `TrainConfig` 显式开启（`value_norm="none"` + `vf_coef=0.5` + `adv_norm="batch"` = 逐位回旧）。 |
 | **R3** | **单变量 + 预注册** | 一次只改一个变量；**判据必须在跑之前写死**（含判定分支、失败分支），跑完照单读，不许现编。 |
 | **R4** | **阈值判据的基线列必须脚本复算，禁止手抄** | 本会话连错三次（F′ 末4均值手抄 0.400 实际 0.588；C2 基线 1/3 实际 2/3；预注册写"每块 9 点(9,8,8,8,8)"而脚本按序号实切 (9,9,9,9,5)；把无 hist 退化时的**打印配比** 0.714/0.286 当采样配比——打印值≠采样值，实际是 0.571/0.286/0.143）。工具：`scripts/judge_anchor_blocks.py --groups`。**判据的力量必须来自设计**（区间不重叠 / 多跑聚合 / 机制指纹），不能来自对单跑或手算数字的信任。 |
@@ -79,7 +79,7 @@ python rl/run_league.py --mode solo --config economy --config-name <name> --fres
   --ppo-epochs 4 --ppo-minibatch 32 --ppo-shuffle
 ```
 > `opp_mix` **没有 CLI flag**；恢复文档配比（frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1）
-> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**⚠️ 2026-09-14 清理时发现（待确认）**：`runs/economy_9k_ft` / `runs/economy_9j` **在磁盘上已不存在**（`find runs -name "*economy_9*"` 为空；`runs/` 在 `.gitignore` 内 ⇒ 无 git 副本）⇒ 上面这条命令**照抄会因 hist 目录缺失而退化**；要复刻该对手分布需另备 baseline 快照（或改走 `--mode run` 的流派池）。**未定**：这两个目录是被清理迁移还是本来就未入库。
+> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**✅ 2026-09-17 更正（我 2026-09-14 写错过，留证）**：原文称 `runs/economy_9k_ft` / `runs/economy_9j`「已不存在」——**错**。真相：**本文件里所有 `runs/...` 都是 cwd 相对路径**，而所有命令都在 `src/clasher_new` 下跑 ⇒ 实际是 **`src/clasher_new/runs/`**（4.7 GB，`economy_9k_ft`/`economy_9j`/`d1_long_100k` 都在）；仓库根那个 `runs/`（2.1 GB，含 `archive/economy_100k_v1_ungated` 53 个快照）是**另一份旧目录**。实测（2026-09-17 `demo20k` 试跑）：`[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 [economy_9k_ft, economy_9j]）mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1` ⇒ **协议照抄即完整生效**。
 
 ### 2.3 100k 长跑 + 评估节奏 C（密锚点 + 稀全块）
 
@@ -109,6 +109,8 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/probe_v3_mono_check.py` + `summarize_probe_v3_mono.py`（2026-09-14） | **超参一致性对账**：逐位验证包含关系 + 每层 α 曲线 + 共同 α 阶梯（闸门 11/12 的执行器） |
 | `scripts/probe_reward_composition.py`（2026-09-14） | **逐帧奖励分量分解**（内存包装 `compute_reward`，不改代码）；拆 crown/edw/tower/unit/terminal 五项。**只读** |
 | `scripts/value_displacement_scan.py` | 逐窗 `‖ΔW‖/‖W‖` 参数位移指纹（R14 的 M1/M2 判别） |
+| `scripts/check_commit.py`（2026-09-17） | **长跑前宿主提交内存检查**（【R1】的 `wmic` 替代品，因 wmic 已被 Windows 移除）；可用提交 < 12 GB ⇒ 降 `--eval-workers` 档 |
+| `scripts/run_selftests.py`（2026-09-14） | 按名跑**子集** selftest（【R19】默认用法；不改 `selftest.py`） |
 
 > **脚本对手陷阱**：`ScriptedPolicy(mode="heuristic")` 实为 **mask 随机**（P0-3 时代占位）；
 > 要"会防守的脚本对手"必须用 `SelfDefenderPolicy`——其反制落点是**世界坐标**，
@@ -117,10 +119,15 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 ### 2.5 仪表盘（回放/曲线）
 
 ```bash
-python rl/dashboard.py --solo runs/<run>/solo_state.json --replays runs/<run>/replays --port 8090
+python rl/dashboard.py --solo runs/<run> --replays runs/<run>/replays --port 8700
 ```
-> Windows 侧 python 绑定的是 **Windows loopback**：从 WSL `curl 127.0.0.1:8090` 会失败，
-> 这是正常的（用它验证"服务挂了"会误判）；用户浏览器访问 `http://127.0.0.1:8090` 正常。
+> `--solo` 可传**目录**（自动找 `solo_state.json`）。
+> **⚠️ 2026-09-17 环境漂移（实测）：8090 已不可用**——`netsh int ipv4 show excludedportrange protocol=tcp`
+> 显示 **8013–8112 被系统保留**（Hyper-V/WinNAT）⇒ 绑定抛 `PermissionError: [WinError 10013]`，
+> 而 `netstat -ano | findstr :8090` **查不到任何监听**（所以别误判成"端口被占"）。**改用 `--port 8700`**（实测 200 OK）。
+> Windows 侧 python 绑定 **Windows loopback**：WSL 里 `curl 127.0.0.1:<port>` 一律失败（用它验证"服务挂了"会误判）；
+> **验证要用 Windows 侧解释器**：`.venv/Scripts/python.exe -c "import urllib.request;print(urllib.request.urlopen('http://127.0.0.1:8700/api/solo').status)"`；
+> 用户浏览器直接访问 `http://127.0.0.1:8700` 正常。
 
 ### 2.6 自检
 
