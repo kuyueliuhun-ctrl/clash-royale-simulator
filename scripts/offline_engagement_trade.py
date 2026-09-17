@@ -97,6 +97,9 @@ TOWER_OWNER = {1: 1, 2: 1, 5: 1, 3: 0, 4: 0, 6: 0}
 TICK_PER_FRAME = 30          # 1 决策帧 = 30 engine tick（0.5 s）
 SETTLE_TICKS = 30            # K（§1，登记为「有原则的选择」，非标定阈值）
 THETA = 1.0                  # θ 圣水（§2.3，登记为「有原则的选择」）
+#: §5.1 门禁的 N = 20 s：**必须登记为「有原则的选择」，不是标定值**（【R15】【R16】）。
+#: 回放分辨率 = 1 决策帧/0.5 s ⇒ 20 s = 40 帧。
+REALIZE_N_FRAMES = 40
 
 #: CLI 用：本批原始局（--sweep 需要在同一批局上反复换口径）
 _CACHE_GAMES: list = []
@@ -704,15 +707,16 @@ def window_trade(w, frames, phi, *, tables=None, cost_ring=None, first_seen=None
     mv_b = member_v(tables[tb], members, cost_ring)
     mv_t = member_v(tables[t1], members, cost_ring)
 
-    d_phi = [0.0, 0.0]
-    if phi_mode == "global":
-        d_phi = [phi[t1][p] - phi[tb][p] for p in (0, 1)]
-    else:
-        for p in (0, 1):
-            elx = float(frames[t1]["elixir%d" % p]) - float(frames[tb]["elixir%d" % p])
-            d_phi[p] = elx + (mv_t[p] - mv_b[p])
+    # `d_phi`：整块场地的 Φ 变化（诊断用）。**组件口径下它不能直接当 Trade** ——
+    # 见下面的 ★ 缺陷记录。
+    d_phi = [phi[t1][p] - phi[tb][p] for p in (0, 1)]
+    d_phi_elx = [0.0, 0.0]      # 只含"手牌圣水 + 成员残值"的版本（组件口径诊断）
+    for p in (0, 1):
+        elx = float(frames[t1]["elixir%d" % p]) - float(frames[tb]["elixir%d" % p])
+        d_phi_elx[p] = elx + (mv_t[p] - mv_b[p])
 
-    spend = [0.0, 0.0]          # 份额环（与 Φ 同源；组件口径用）
+    # 只算"**本窗口成员**的部署花费"（对齐 §2.1 的净支出形式）
+    spend = [0.0, 0.0]
     for eid in members:
         fs = (first_seen or {}).get(eid)
         if fs is None or not (t0 <= fs <= t1):
@@ -749,11 +753,21 @@ def window_trade(w, frames, phi, *, tables=None, cost_ring=None, first_seen=None
     else:                      # "own"：p0 视角、p1 取负（先前实现，保留作对照）
         term = [tau, -tau]
 
-    trade = [d_phi[0] - d_phi[1] + term[0], d_phi[1] - d_phi[0] + term[1]]
+    # ★ 缺陷 6（2026-09-18 由门禁测试暴露）：**组件口径必须走净支出形式，不能走 ΔΦ 形式**。
+    # ΔΦ 形式的圣水部分是**整块场地**的（`elixir0/1` 是全局的）而残值部分是**窗口成员**的
+    # ⇒ 只要窗口期间我们在**别的路**下了牌，那笔花费会被算进本窗口却拿不到对应的 V 记入
+    # ⇒ 窗口 Trade 被系统性压成负数（实测：本窗口 +3 的场景被算成 −1）。
+    # 净支出形式两侧都是"成员口径"，自洽，且**不需要 regen**（§2.1 明说自然回复不计）。
+    if phi_mode == "global":
+        trade = [d_phi[0] - d_phi[1] + term[0], d_phi[1] - d_phi[0] + term[1]]
+    else:
+        trade = [net_spend[1] - net_spend[0] + term[0],
+                 net_spend[0] - net_spend[1] + term[1]]
     return {
         "t0": t0, "t1": t1, "reason": w["reason"], "span_frames": t1 - t0 + 1,
         "n_members": len(members), "n_core": len(w.get("core_union") or ()),
-        "d_phi": d_phi, "net_spend": net_spend, "identity_err_elx": identity_err_elx,
+        "d_phi": d_phi, "d_phi_elx": d_phi_elx,
+        "net_spend": net_spend, "identity_err_elx": identity_err_elx,
         "tower_term": term, "tau": tau, "tau_p1": tau1, "kill_credit": tt["kill_credit"],
         "pinned_unit_frames_o0": tt["n_pinned_unit"],
         "pinned_unit_frames_o1": tau_opp["n_pinned_unit"],
@@ -825,6 +839,8 @@ def analyze_game(game, *, settle_frames=1, tower_mode="p3a", tower_transfer="zer
                   tower_transfer=tower_transfer, phi_mode=phi_mode, t_ref=t_ref,
                   rule1=rule1)
     trades = [window_trade(w, frames, phi, **common) for w in windows]
+    gate = realization_gate(frames, windows, trades, pdiag.get("deploy_cost"),
+                            main_player)
     if phi_mode == "component":
         g_trades = [window_trade(w, frames, phi, **dict(common, phi_mode="global"))
                     for w in windows]
@@ -841,6 +857,7 @@ def analyze_game(game, *, settle_frames=1, tower_mode="p3a", tower_transfer="zer
             "trade_main": trade_main, "score_main": score_main, "win_main": win_main,
             "n_frames": len(frames), "phi": phi, "phi_diag": pdiag,
             "windows": windows, "trades": trades, "global_trades": g_trades,
+            "gate": gate,
             "cost_ring": cost_ring,
             # ★ 口径陷阱：`player.get_crown_count()` 返回的是**本方被拆掉的公主塔数**
             # （= 让给对面的皇冠），所以"我方拿到的皇冠"= 对面的 `crown` 字段。
@@ -850,6 +867,51 @@ def analyze_game(game, *, settle_frames=1, tower_mode="p3a", tower_transfer="zer
             "tower_hp_diff": (t0_end - t1_end) * (1 if main_player == 0 else -1),
             "elixir0_end": float(last["elixir0"]),
             "elixir1_end": float(last["elixir1"])}
+
+
+def realization_gate(frames, windows, trades, deploy_cost, main_player, *,
+                     n_frames=REALIZE_N_FRAMES, theta=THETA):
+    """预注册 §5.1 第三行（**门禁**）：优势兑现率。
+
+    定义（逐字照预注册，只把"我方"解析成 main 侧）：
+        `Trade_me >= θ` 之后的 `N = 20 s` 内，
+        **我方累计部署花费 >= Trade**（真的把攒下的优势花出去）
+        **或** 我方打出的**塔伤 > 0**（真的推进了）
+        ⇒ 记一次"兑现"；兑现率 = 兑现数 / 合格窗口数。
+
+    ⚠️ **这是门禁，不是判据**：它的对照必须是**同批阴性对照臂**（§5.1 表第三行的"本实验同批阴性对照"），
+    离线 S2 没有对照臂 ⇒ 本函数只给**原始率与分布**，判决留给 S3（§11.7.2）。
+    ⚠️ `N = 20 s` 与 `θ = 1.0` 都是"有原则的选择"，**不得**当已标定阈值（§10.2）。
+    """
+    me = 1 if int(main_player) == 1 else 0
+    opp = 1 - me
+    dcost = (deploy_cost or {}).get(me) or {}
+    elig = 0
+    ok_spend = ok_dmg = realized = 0
+    spends, trades_pos = [], []
+    for w, t in zip(windows, trades):
+        trade_me = t["trade_p0"] if me == 0 else t["trade_p1"]
+        if trade_me < theta:
+            continue
+        elig += 1
+        t0 = w["t0"]
+        t_end = min(len(frames) - 1, t0 + n_frames)
+        spend = sum(v for tt, v in dcost.items() if t0 <= tt <= t_end)
+        dmg = (sum(float(x) for x in frames[t0]["towers%d" % opp])
+               - sum(float(x) for x in frames[t_end]["towers%d" % opp]))
+        s_ok, d_ok = spend >= trade_me, dmg > 1e-6
+        ok_spend += int(s_ok)
+        ok_dmg += int(d_ok)
+        realized += int(s_ok or d_ok)
+        spends.append(spend)
+        trades_pos.append(trade_me)
+    return {"n_eligible": elig,
+            "n_realized": realized,
+            "rate_all": (realized / elig) if elig else None,
+            "rate_spend": (ok_spend / elig) if elig else None,
+            "rate_dmg": (ok_dmg / elig) if elig else None,
+            "spend": _stats(spends), "trade_pos": _stats(trades_pos),
+            "n_frames": n_frames, "theta": theta}
 
 
 def _spearman(xs, ys):
@@ -906,6 +968,9 @@ def summarize(all_games, *, tower_mode, theta=THETA, tower_transfer="zero-sum",
             "crown_diff": g.get("crown_diff", 0),
             "tower_hp_diff": g.get("tower_hp_diff", 0.0),
         })
+    gates = [g["gate"] for g in gs if g.get("gate") and g["gate"]["n_eligible"]]
+    ge = sum(g["n_eligible"] for g in gates)
+    gr = sum(g["n_realized"] for g in gates)
     ident = [abs(t["identity_err_elx"]) for t in tw if t["identity_err_elx"] is not None]
     v_err = [g["phi_diag"]["reconstruct_vs_frame_v_max_err"] for g in gs
              if g["phi_diag"].get("reconstruct_vs_frame_v_max_err") is not None]
@@ -934,6 +999,14 @@ def summarize(all_games, *, tower_mode, theta=THETA, tower_transfer="zero-sum",
         "antisym_max_err": max((abs(t["trade_p0"] + t["trade_p1"]) for t in tw),
                               default=0.0),
         "reconstruct_vs_frame_v_max_err": max(v_err) if v_err else None,
+        "gate": {"n_eligible": ge, "n_realized": gr,
+                 "rate_all": (gr / ge) if ge else None,
+                 "rate_spend": (sum(g["n_eligible"] * g["rate_spend"] for g in gates) / ge)
+                 if ge else None,
+                 "rate_dmg": (sum(g["n_eligible"] * g["rate_dmg"] for g in gates) / ge)
+                 if ge else None,
+                 "n_frames": REALIZE_N_FRAMES, "theta": theta,
+                 "per_game_eligible": (ge / len(gates)) if gates else None},
         "per_game": per_game,
     }
 
@@ -1069,6 +1142,12 @@ def main(argv=None):
     print("   宽口径（任意跨边含塔）窗口占比 = %s" % _pct(s["pinned_any_share"]))
     print("   钉住未杀窗口的 Trade_p0: %s" % _fmt(s["pinned_no_kill_trade"]))
     print("\n④ score>0 窗口占比 = %s" % _pct(s["score_nonzero_share"]))
+    g = s.get("gate") or {}
+    print("   ★ 门禁·优势兑现率（N=%d 帧 = %.0f s，θ=%.1f）: 合格窗口 %d 个（%.1f/局）"
+          % (g.get("n_frames", 0), g.get("n_frames", 0) * 0.5, g.get("theta", 0),
+             g.get("n_eligible", 0), g.get("per_game_eligible") or 0.0))
+    print("     兑现率 = %s（花费达标 %s ／ 打出塔伤 %s）"
+          % (_pct(g.get("rate_all")), _pct(g.get("rate_spend")), _pct(g.get("rate_dmg"))))
     print("   对账 |净支出(原始圣水) − ΔΦ| : %s" % _fmt(s["identity_err_elx"]))
     print("   反对称：max|Trade_p0 + Trade_p1| = %.3e" % s["antisym_max_err"])
     if s["reconstruct_vs_frame_v_max_err"] is not None:
@@ -1104,9 +1183,9 @@ def main(argv=None):
         print("\n" + "=" * 80)
         print("★ S2 出口判据 ②：tower_term 代理选择扫描（其它口径完全固定）")
         print("=" * 80)
-        print("%-6s %7s %7s %7s %8s %9s %9s %9s %9s"
-              % ("代理", "τ中位", "τ均值", "τ≠0", "score>0", "ρ(冠差)", "ρ(塔血)",
-                 "ρ(胜)", "ρ(Φ差)*"))
+        print("%-6s %7s %7s %7s %8s %8s %9s %9s %9s %9s"
+              % ("代理", "τ中位", "τ均值", "τ≠0", "score>0", "兑现率", "ρ(冠差)",
+                 "ρ(塔血)", "ρ(胜)", "ρ(Φ差)*"))
         raw = [g for g in all_games if g]
         for mode in ("none", "p3a", "p3b", "p1", "p2", "p4", "p4b", "p5", "p5b"):
             gs = [analyze_game(g_src, settle_frames=a.settle_frames, tower_mode=mode,
@@ -1117,12 +1196,13 @@ def main(argv=None):
                            phi_mode=a.phi_mode)
             pg = sm["per_game"]
             twm = list(_tw(gs))
-            print("%-6s %7.2f %7.2f %7s %8s %9s %9s %9s %9s"
+            print("%-6s %7.2f %7.2f %7s %8s %8s %9s %9s %9s %9s"
                   % (mode, (sm["tau"] or {}).get("median", 0.0),
                      (sm["tau"] or {}).get("mean", 0.0),
                      _pct(None if not twm else sum(1 for t in twm if abs(t["tau"]) > 1e-12)
                           / len(twm)),
                      _pct(sm["score_nonzero_share"]),
+                     _pct((sm.get("gate") or {}).get("rate_all")),
                      _r(_spearman([x["trade"] for x in pg],
                                   [x["crown_diff"] for x in pg])),
                      _r(_spearman([x["trade"] for x in pg],

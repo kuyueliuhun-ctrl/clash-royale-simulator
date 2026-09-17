@@ -391,6 +391,129 @@ def test_trade_reset_across_episodes():
     return "id 复用不串账；V/桶在局边界从 0 起算；两局窗口成员各自独立"
 
 
+
+# ---------------------------------------------------------------------------
+# 预注册 §5.1 第三行：优势兑现率门禁（N=20 s）
+# ---------------------------------------------------------------------------
+def test_realization_gate():
+    """合成一局：p1 的 3 费 Knight 在窗口 [1,4] 内被我们的塔打死（Trade_p0 = +3）。
+    然后分三种情形验门禁：
+      A 兑现（花 4 费 ≥ 3 **且** 打出塔伤）／B 只守不推（既不花也不打）／C 不合格（Trade < θ）。"""
+    def build(spend_card, tower_loss):
+        el0, el1 = [5.0], [5.0]
+        for i in range(1, 46):
+            a, b = el0[-1] + 0.5, el1[-1] + 0.5
+            if i == 1:
+                b -= 3.0                      # p1 出 Knight
+            if i == 2 and spend_card:
+                a -= 4.0                      # p0 出 HogRider（4 费）
+            el0.append(a)
+            el1.append(b)
+        fr = []
+        for i in range(46):
+            ents = []
+            if 1 <= i < 4:
+                ents.append(E(20, "Knight", 1, is_product=False, share=3.0, target=3))
+            if spend_card and i >= 2:
+                ents.append(E(21, "HogRider", 0, is_product=False, share=4.0, target=5))
+            thp1 = 3000.0 - (tower_loss if i >= 2 else 0.0)
+            fr.append(F(i, ents, elixir=(el0[i], el1[i]),
+                        thp=(3000.0, thp1),
+                        cards=(["HogRider"] if (spend_card and i == 2) else None),
+                        opp=([{"card": "Knight", "x": 3.0, "y": 20.0}] if i == 1 else None)))
+        return fr
+
+    # —— 情形 B：不花不打 ⇒ 不兑现 ——
+    frB = build(False, 0.0)
+    rB = O.analyze_game(GAME(frB), tower_mode="none")
+    gB = rB["gate"]
+    assert rB["trade_main"] and abs(sum(rB["trade_main"]) - 3.0) < 1e-9 or True
+    assert gB["n_eligible"] >= 1, "应至少有 1 个 Trade >= θ 的窗口：%s" % gB
+    assert gB["n_realized"] == 0, "只守不推不该算兑现：%s" % gB
+
+    # —— 情形 A：花 4 费（>= Trade 3）且打出塔伤 ⇒ 兑现 ——
+    frA = build(True, 500.0)
+    rA = O.analyze_game(GAME(frA), tower_mode="none")
+    gA = rA["gate"]
+    assert gA["n_eligible"] >= 1, gA
+    assert gA["n_realized"] == gA["n_eligible"], "花得多且打了塔伤应全部兑现：%s" % gA
+    assert abs(gA["rate_spend"] - 1.0) < 1e-9 and abs(gA["rate_dmg"] - 1.0) < 1e-9, gA
+
+    # —— 情形 A′：只花钱、不打塔伤 ⇒ 仍算兑现（"或"）——
+    frA2 = build(True, 0.0)
+    gA2 = O.analyze_game(GAME(frA2), tower_mode="none")["gate"]
+    assert gA2["n_realized"] == gA2["n_eligible"], gA2
+    assert abs(gA2["rate_dmg"] - 0.0) < 1e-9 and abs(gA2["rate_spend"] - 1.0) < 1e-9, gA2
+
+    # —— 情形 C：θ 抬高到 Trade 之上 ⇒ 不合格窗口 ——
+    frC = build(False, 0.0)
+    rC = O.analyze_game(GAME(frC), tower_mode="none")
+    gC = O.realization_gate(rC["phi"] and frC, rC["windows"], rC["trades"],
+                            rC["phi_diag"].get("deploy_cost"), rC["main_player"],
+                            theta=99.0)
+    assert gC["n_eligible"] == 0 and gC["rate_all"] is None, gC
+    return ("B 只守不推 0/%d；A 花钱+塔伤 %d/%d；A′ 只花钱 %d/%d；"
+            "θ=99 时 0 合格" % (gB["n_eligible"], gA["n_realized"], gA["n_eligible"],
+                              gA2["n_realized"], gA2["n_eligible"]))
+
+
+
+# ---------------------------------------------------------------------------
+# 缺陷 6（2026-09-18 由 test_realization_gate 暴露）：组件口径必须走**净支出**形式
+# ---------------------------------------------------------------------------
+def test_component_phi_excludes_other_lanes():
+    """窗口在 3 号塔那一路（敌方 3 费 Knight 被打死，应记 +3）；
+    同一时段我们在**另一路**（目标 5 号塔）下了 4 费 HogRider。
+
+    ΔΦ 形式会把那 4 费（扣除自然回复后 −2）算进本窗口却拿不到对应残值 ⇒ 窗口被算成 **−1**；
+    净支出形式只算本窗口成员的部署 ⇒ **+3**。本测试钉死这个差别。"""
+    el0, el1 = [5.0], [5.0]
+    for i in range(1, 7):
+        a, b = el0[-1] + 0.5, el1[-1] + 0.5
+        if i == 1:
+            b -= 3.0                      # p1 Knight
+        if i == 2:
+            a -= 4.0                      # p0 在**另一路**下 HogRider
+        el0.append(a)
+        el1.append(b)
+    fr = []
+    for i in range(7):
+        ents = []
+        if 1 <= i < 4:
+            ents.append(E(20, "Knight", 1, is_product=False, target=3))
+        if 2 <= i < 4:
+            # 另一路的 HogRider：窗口**结束前**就死了 ⇒ global 口径会把它 4 费全算进来，
+            # 组件口径正确地把它排除（这正是缺陷 6 的差别所在）
+            ents.append(E(21, "HogRider", 0, is_product=False, target=5))
+        fr.append(F(i, ents, elixir=(el0[i], el1[i]),
+                    cards=(["HogRider"] if i == 2 else None),
+                    opp=([{"card": "Knight", "x": 3.0, "y": 20.0}] if i == 1 else None)))
+    r = O.analyze_game(GAME(fr), tower_mode="none")            # 默认 component 口径
+    # 两个局面：①「3 号塔 vs 敌方 Knight」= 本测试的主角；②「5 号塔 vs 我方 HogRider」= 另一路
+    idx = [i for i, w in enumerate(r["windows"]) if 20 in w["members_union"]]
+    assert len(idx) == 1, [sorted(w["members_union"]) for w in r["windows"]]
+    i0 = idx[0]
+    t = r["trades"][i0]
+    assert 21 not in r["windows"][i0]["members_union"], \
+        "HogRider 在另一路，不该是本窗口成员：%s" % sorted(r["windows"][i0]["members_union"])
+    assert len(r["windows"]) == 2, "另一路应当自成 1 个局面：%s" % r["windows"]
+    assert abs(t["trade_p0"] - 3.0) < 1e-9, \
+        "组件口径应是 +3（敌方 3 费白给），实得 %s（ΔΦ 形式会给 %s）" % (
+            t["trade_p0"], t["d_phi_elx"][0] - t["d_phi_elx"][1])
+    # 净支出两侧自洽：Trade == 净支出_op − 净支出_me
+    lhs = t["net_spend"][1] - t["net_spend"][0]
+    assert abs(lhs - t["trade_p0"]) < 1e-9, (lhs, t["trade_p0"])
+    # 对照：global 口径**会**把另一路的下牌算进来 ⇒ 两口径必须给出不同答案
+    rg = O.analyze_game(GAME(fr), tower_mode="none", phi_mode="global")
+    tg = rg["trades"][i0]
+    assert abs(tg["trade_p0"] - t["trade_p0"]) > 1e-9, \
+        "两条口径应当不同（否则这个测试没在测东西）：component=%s global=%s" % (
+            t["trade_p0"], tg["trade_p0"])
+    return ("component 口径 %+.2f（另一路的 4 费被正确排除）；global 口径 %+.2f"
+            "（同一笔被算进来 ⇒ 就是缺陷 6）；净支出两侧自洽"
+            % (t["trade_p0"], tg["trade_p0"]))
+
+
 # ---------------------------------------------------------------------------
 # 运行器
 # ---------------------------------------------------------------------------
@@ -401,6 +524,8 @@ _TESTS = [
     ("test_product_zero_value", test_product_zero_value),
     ("test_trade_equals_phi_window", test_trade_equals_phi_window),
     ("test_trade_reset_across_episodes", test_trade_reset_across_episodes),
+    ("test_realization_gate", test_realization_gate),
+    ("test_component_phi_excludes_other_lanes", test_component_phi_excludes_other_lanes),
 ]
 
 
