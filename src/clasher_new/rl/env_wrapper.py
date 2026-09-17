@@ -353,6 +353,10 @@ class RLEnv(gym.Env):
         self._et_theta = float(_rw.get("engagement_trade_theta", 1.0))
         self._et_t_ref = float(_rw.get("engagement_trade_t_ref", 2.0))
         self._et_gate = bool(_rw.get("engagement_trade_gate", 1))
+        # **measure-only**（2026-09-18 第四轮）：跑监视器、把在线窗口写进 info，
+        # 但**一分奖励都不加** ⇒ 行为与不接线时**逐位相同**。用途：在真实训练/评估局上
+        # 量"按在线口径切出来的 Trade"，再与结果做配对相关（这是放行 S3 的前置，见预注册 §11.9.4）。
+        self._et_measure_only = bool(_rw.get("engagement_trade_measure_only", 0))
         self._et = None                  # 关时恒为 None ⇒ 零开销、逐位回旧
         self._et_scores = []             # 逐决策帧的 score（p0 视角），供取证/对账
 
@@ -395,7 +399,7 @@ class RLEnv(gym.Env):
         self._et = (EngagementTradeMonitor(theta=self._et_theta, t_ref=self._et_t_ref,
                                            gate=self._et_gate, shares=self._v_share,
                                            tick_seconds=self.dt)
-                    if self._et_w else None)
+                    if (self._et_w or self._et_measure_only) else None)
         self._et_scores = []
         if self.visualize:
             from new_visualization import Visualizer
@@ -729,12 +733,21 @@ class RLEnv(gym.Env):
 
         # —— S2 §6 第 5 项：局面圣水交换（默认关 ⇒ 一个浮点运算都不做）——
         et_score = 0.0
+        et_phi = et_tau = et_tau0 = et_tau1 = 0.0
+        et_n = 0
         if self._et is not None:
             if self.battle.game_over:
                 self._et.flush(self.battle, self._active_v)   # 局末把开着的窗口结掉
             et_score = self._et.pop_scores()
+            _det = self._et.pop_detail()
+            et_n = len(_det)
+            et_phi = sum(d["phi_part"] for d in _det)
+            et_tau = sum(d["tau"] for d in _det)
+            et_tau0 = sum(d["tau0"] for d in _det)
+            et_tau1 = sum(d["tau1"] for d in _det)
             self._et_scores.append(float(et_score))
-            reward += self._et_w * et_score
+            if not self._et_measure_only:
+                reward += self._et_w * et_score      # ← 只有这里会动奖励
         terminated = self.battle.game_over
         info = {
             "bundle_ok": ok,
@@ -746,10 +759,16 @@ class RLEnv(gym.Env):
             "field_v": [float(self._active_v[0]), float(self._active_v[1])],
         }
         if self._et is not None:
-            # 取证字段（不影响任何行为）：本决策帧结算掉的 score + 累计
+            # 取证字段（不影响任何行为）：本决策帧结算掉的局面明细 + 累计
             info["engagement_trade"] = float(et_score)
             info["engagement_trade_cum"] = float(sum(self._et_scores))
             info["engagement_trade_n"] = int(self._et.n_settled)
+            # 逐帧明细：phi 部分 / 对称化后的 τ / 本帧 score / 本帧结算的窗口数 /
+            # 以及 τ 的**两侧原始值**（供离线核对称性与做 p1 镜像的符号还原）
+            info["engagement_trade_detail"] = [float(et_phi), float(et_tau),
+                                               float(et_score), int(et_n),
+                                               float(et_tau0), float(et_tau1)]
+            info["engagement_trade_measure_only"] = bool(self._et_measure_only)
         if self.record_hidden:
             info["hidden"] = self.get_hidden_state()
         return self.observe(0), reward, terminated, False, info

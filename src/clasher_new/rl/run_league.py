@@ -440,6 +440,38 @@ def _play_one_game(env, deck0_prior, belief_prior, a_id, a_pol, b_id, b_pol, g, 
     return score_a, (rec.done(w) if rec is not None else None)
 
 
+#: S2 第四轮：评估局也要能把**在线局面**记进录像（预注册 §11.9.4 的放行前置）。
+#: ⚠️ 评估 env 原本不传 `reward_weights`（用 env_wrapper 的缺省）⇒ 与训练的奖励口径本来就不同，
+#: 但**评估的行为由策略决定、不受奖励影响** ⇒ 只多挂"measure-only"这几个键**不改变任何行为**。
+#: 为遵守【R2】"默认不改"，它**由配置驱动**（`reward["engagement_trade_measure_only"]`），
+#: 在 `main()` 载入 `cfg` 之后由 `_set_et_measure(cfg)` 打开。
+#: ⚠️ 不要用环境变量做这个开关：本机的 WSL→Windows python 互操作**不传递**命令行前缀环境变量
+#: （2026-09-18 实测 `FOO_BAR=1 python.exe` 里 `os.environ.get("FOO_BAR")` 是 None）⇒ 会用不起来。
+_ET_MEASURE = False
+_ET_MEASURE_WEIGHTS = {
+    "engagement_trade": 0.0,            # 一分奖励都不加
+    "engagement_trade_measure_only": 1,  # 只跑监视器 + 写明细
+    "engagement_trade_theta": 1.0,
+    "engagement_trade_t_ref": 2.0,
+    "engagement_trade_gate": 1,
+}
+
+
+def _set_et_measure(cfg):
+    """按配置打开"评估局也记在线明细"。返回最终状态（供日志打印）。"""
+    global _ET_MEASURE
+    _ET_MEASURE = bool((getattr(cfg, "reward", None) or {}).get(
+        "engagement_trade_measure_only"))
+    return _ET_MEASURE
+
+
+def _eval_env(seed):
+    """评估/回放用的 env。`DSH_ET_MEASURE=1` 时额外挂 measure-only 口径（行为逐位不变）。"""
+    if _ET_MEASURE:
+        return RLEnv(opponent=None, seed=seed, reward_weights=dict(_ET_MEASURE_WEIGHTS))
+    return RLEnv(opponent=None, seed=seed)
+
+
 def _play_pair_games(a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False,
                      game_ids=None):
     """跑一个 pair 的若干局（默认全部 n_games），返回 [(g, score_a, replay_or_None)]。
@@ -448,7 +480,7 @@ def _play_pair_games(a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=
     league 状态演化完全一致（逐局 K=32 Elo 与 PFSP EMA 都对顺序敏感）。
     复用同一个 env（省重建）；``game_ids`` 供并行分片用。
     """
-    env = RLEnv(opponent=None, seed=seed)
+    env = _eval_env(seed)
     deck0_prior = list(env.deck0)
     belief_prior = list(env.deck1)
     gids = list(range(int(n_games))) if game_ids is None else list(game_ids)
@@ -531,7 +563,7 @@ def _eval_pair_worker_main(worker_id, pairs_spec, chunk, max_steps, record, out_
         rows = []
         for pair_idx in sorted(by_pair):
             a_id, a_spec, b_id, b_spec, pseed = pairs_spec[pair_idx]
-            env = RLEnv(opponent=None, seed=pseed)
+            env = _eval_env(pseed)
             deck0_prior = list(env.deck0)
             belief_prior = list(env.deck1)
             a_pol = _spec_to_policy(a_spec)
@@ -1685,6 +1717,10 @@ def main():
         overrides["eval_at_start"] = False
 
     cfg = TrainConfig.resolve(args.config, load_config=args.load_config, **overrides)
+    # S2 第四轮：评估局要不要也记「在线局面」明细（默认不记；只由配置显式打开）
+    if _set_et_measure(cfg):
+        print("[et-measure] 评估局将记录在线局面明细（measure-only：只记不改，行为逐位不变）",
+              flush=True)
     # run 模式评估并行度（2026-09-18）：老代码在 run 模式**完全忽略** --eval-workers（永远
     # 串行），而 TrainConfig.eval_workers 的 dataclass 默认是 min(16, cpu)。若直接接线，
     # 所有既有 `--mode run` 命令会在默认下从"串行"变成"16 进程"⇒ 默认不再逐位一致。

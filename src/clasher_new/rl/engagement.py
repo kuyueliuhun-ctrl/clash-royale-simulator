@@ -36,6 +36,7 @@ class EngagementTradeMonitor:
         self.shares = shares if shares is not None else {0: {}, 1: {}}   # 在线 _v_share（按引用）
         self._open = {}
         self._pending = 0.0
+        self._pending_detail = []   # 自上次 pop 以来**结算掉的局面**明细（取证/对账用）
         self.n_settled = 0
         self.sum_trade = 0.0
         self.settled = []          # [(trade, score, n_members)]，供测试/取证
@@ -141,8 +142,14 @@ class EngagementTradeMonitor:
             if rep in closed or rep not in hits:
                 n_settled += self._settle(self._open.pop(rep), battle, v)
 
-        # —— P4b 钉住计数：本 tick 里"被 p0 的非塔实体钉住"的敌方实体 ——
-        pinned = set()
+        # —— P4b 钉住计数：**两侧都记**（`pin0` = p1 的实体被 p0 的非塔实体钉住；
+        #    `pin1` = p0 的实体被 p1 的非塔实体钉住）。
+        #    ★ 为什么必须两侧都算：零和且**两侧对称**的 `tower_term` 是
+        #    `(τ₀ − τ₁)/2`。只算 p0 视角再让 p1 取负 ⇒ 另一半局（main 坐 player 1）
+        #    拿到的 τ 与它自己做了什么无关 ⇒ **相关性被系统性偏置**。
+        #    这是离线仪器缺陷 7.3 的在线同型 bug（见 docs/s2_instrument…§7.3），
+        #    第四轮在**跑数据之前**发现并修掉。
+        pin0, pin1 = set(), set()
         for ci in range(len(comps)):
             if not act[ci]:
                 continue
@@ -150,13 +157,13 @@ class EngagementTradeMonitor:
                 for x, y in ((a, b), (b, a)):
                     if x <= 6:                     # 必须是**非塔**物体 x 钉住 y
                         continue
-                    if ents[y].player == 0:        # y 必须是**敌方**（p0 视角）
-                        continue
-                    pinned.add(y)
-        if pinned:
+                    (pin0 if ents[y].player == 1 else pin1).add(y)
+        if pin0 or pin1:
             for w in self._open.values():
-                for eid in (pinned & w["members"]):
-                    w["pin"][eid] = w["pin"].get(eid, 0) + 1
+                for eid in (pin0 & w["members"]):
+                    w["pin0"][eid] = w["pin0"].get(eid, 0) + 1
+                for eid in (pin1 & w["members"]):
+                    w["pin1"][eid] = w["pin1"].get(eid, 0) + 1
 
         # —— 开新窗口：本 tick 活跃、且没有窗口续接它的核心 ——
         claimed = {ci for cis in hits.values() for ci in cis}
@@ -169,7 +176,8 @@ class EngagementTradeMonitor:
                 "key": set(cores[ci]), "inactive": 0, "last_active": battle.tick,
                 "phi0": float(battle.players[0].elixir) + float(v[0]),
                 "phi1": float(battle.players[1].elixir) + float(v[1]),
-                "thp0": self._tower_hp(battle, 0), "pin": {},
+                "thp0": self._tower_hp(battle, 0), "thp1": self._tower_hp(battle, 1),
+                "pin0": {}, "pin1": {},
             }
         return n_settled
 
@@ -177,21 +185,38 @@ class EngagementTradeMonitor:
         p0, p1 = battle.players
         d0 = (float(p0.elixir) + float(v[0])) - w["phi0"]
         d1 = (float(p1.elixir) + float(v[1])) - w["phi1"]
-        tau = 0.0
-        if self.t_ref and w["pin"]:
-            g = 1.0
-            if self.gate and self._tower_hp(battle, 0) < w["thp0"] - 1e-6:
-                g = 0.0
-            for eid, cnt in w["pin"].items():
-                owner = 1 if eid in self.shares[1] else 0
-                cost = float(self.shares[owner].get(eid, 0.0))   # 产物体恒 0
-                tau += g * cost * min(1.0, cnt * self.dt / self.t_ref)
+        tau0 = tau1 = 0.0
+        if self.t_ref and (w["pin0"] or w["pin1"]):
+            g0 = g1 = 1.0
+            if self.gate:
+                if self._tower_hp(battle, 0) < w["thp0"] - 1e-6:
+                    g0 = 0.0
+                if self._tower_hp(battle, 1) < w["thp1"] - 1e-6:
+                    g1 = 0.0
+            for eid, cnt in w["pin0"].items():
+                tau0 += g0 * float(self.shares[1].get(eid, 0.0)) * min(
+                    1.0, cnt * self.dt / self.t_ref)             # 产物体恒 0
+            for eid, cnt in w["pin1"].items():
+                tau1 += g1 * float(self.shares[0].get(eid, 0.0)) * min(
+                    1.0, cnt * self.dt / self.t_ref)
+        tau = 0.5 * (tau0 - tau1)       # ★ 零和 **且两侧对称**（§7.1 不变量）
         trade = d0 - d1 + tau
         score = max(0.0, trade - self.theta)
         self._pending += score
         self.n_settled += 1
         self.sum_trade += trade
         self.settled.append((trade, score, len(w["members"])))
+        # 逐窗口明细：把 `ΔΦ` 部分与 `τ` 部分**分开记** ⇒ 同一次跑里就能事后重组出
+        # 任意 tower_mode 变体（`none` = 只取 phi_part，`p4b` = phi_part + tau）
+        # ⇒ 配对分析**不需要跑第二遍**（measure-only 下两次跑的行为也是一样的）。
+        self._pending_detail.append({
+            "trade": float(trade), "score": float(score),
+            "phi_part": float(d0 - d1), "tau": float(tau),
+            "n_members": len(w["members"]),
+            "tau0": float(tau0), "tau1": float(tau1),
+            "pinned0": len(w["pin0"]), "pinned1": len(w["pin1"]),
+            "tick": int(getattr(battle, "tick", 0)),
+        })
         return 1
 
     # ---------------- 收口 ----------------
@@ -207,3 +232,9 @@ class EngagementTradeMonitor:
         s = self._pending
         self._pending = 0.0
         return s
+
+    def pop_detail(self):
+        """取走"自上次调用以来结算掉的局面"的明细列表（**不改动** `_pending`）。"""
+        d = self._pending_detail
+        self._pending_detail = []
+        return d

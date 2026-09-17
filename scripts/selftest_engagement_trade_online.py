@@ -58,6 +58,7 @@ def _run_scripted(reward_weights, *, steps=60):
 
     h = hashlib.sha256()
     total = 0.0
+    n_detail = 0
     fired = 0
     for step in range(steps):
         sa = []
@@ -69,6 +70,9 @@ def _run_scripted(reward_weights, *, steps=60):
             fired += 1
         bundle = ActionBundle(sa) if sa else ActionBundle.noop()
         obs, reward, term, trunc, _info = env.step(bundle)
+        _d = _info.get("engagement_trade_detail")
+        if _d:
+            n_detail += int(_d[3])
         total += float(reward)
         h.update(("%.9f;" % reward).encode())
         for eid in sorted(env.battle.entities):
@@ -84,7 +88,7 @@ def _run_scripted(reward_weights, *, steps=60):
         # 按 max_ep_steps 截断时 RLEnv 看不到，尾部窗口会丢 —— 本条测试显式补上，
         # 以免把"没 flush"误读成"没接上"）。
         et.flush(env.battle, env._active_v)
-    return h.hexdigest(), total, (et.n_settled if et is not None else 0)
+    return h.hexdigest(), total, (et.n_settled if et is not None else 0), n_detail
 
 
 def test_engagement_trade_default_off():
@@ -93,7 +97,7 @@ def test_engagement_trade_default_off():
     # —— 1/2：默认关 ⇒ 逐位回旧 + 零开销 ——
     assert float(DEFAULT_REWARD.get("engagement_trade", 0.0)) == 0.0, \
         "DEFAULT_REWARD 里 engagement_trade 必须是 0.0（默认关）"
-    d_off, sum_off, n_off = _run_scripted(None)          # 缺省 reward ⇒ 旧公式
+    d_off, sum_off, n_off, _nd = _run_scripted(None)     # 缺省 reward ⇒ 旧公式
     assert n_off == 0, "关时不该构造监视器（n_settled=%d）" % n_off
     assert d_off == GOLDEN_OFF_DIGEST, (
         "默认关时没有逐位回旧！\n  期望 %s\n  实得 %s\n"
@@ -101,7 +105,7 @@ def test_engagement_trade_default_off():
         % (GOLDEN_OFF_DIGEST, d_off))
 
     # 显式传 0.0 与"完全不传该键"必须**同样**是旧行为
-    d_off2, sum_off2, n_off2 = _run_scripted({
+    d_off2, sum_off2, n_off2, _nd2 = _run_scripted({
         "engagement_trade": 0.0, "engagement_trade_theta": 1.0,
         "engagement_trade_t_ref": 2.0, "engagement_trade_gate": 1})
     assert (d_off2, sum_off2, n_off2) == (d_off, sum_off, n_off), \
@@ -110,7 +114,7 @@ def test_engagement_trade_default_off():
     # —— 3：开关打开且 θ=0 ⇒ 项**必须**改变奖励（否则是假通过）——
     #  ⚠️ 必须长到**局内**就有窗口结算：score 是在**结算的那一决策帧**加进奖励的，
     #  只在局末 flush 的话分数永远进不了任何一帧（这正是文档 §1 的"尾部窗口"已知缺口）。
-    d_on, sum_on, n_on = _run_scripted({
+    d_on, sum_on, n_on, _nd3 = _run_scripted({
         "engagement_trade": 1.0, "engagement_trade_theta": 0.0,
         "engagement_trade_t_ref": 2.0, "engagement_trade_gate": 1}, steps=200)
     assert n_on > 0, ("打开开关后应至少结算一个局面（实得 %d）—— 注意本测试已显式补 flush"
@@ -123,7 +127,25 @@ def test_engagement_trade_default_off():
             % (GOLDEN_OFF_DIGEST[:12], n_on, sum_off, sum_on))
 
 
-_TESTS = [("test_engagement_trade_default_off", test_engagement_trade_default_off)]
+def test_measure_only_is_behavior_neutral():
+    """★ measure-only：跑监视器 + 把在线窗口写进 `info`，**但一分奖励都不加**
+    ⇒ 行为必须与"完全不接线"**逐位相同**（否则后续用它量的口径就不能代表真实训练）。"""
+    d_off, sum_off, _n_off, _nd = _run_scripted(None, steps=200)   # ⚠️ 必须与下一行同长度
+    d_m, sum_m, n_m, nd_m = _run_scripted({
+        "engagement_trade": 0.0, "engagement_trade_measure_only": 1,
+        "engagement_trade_theta": 1.0, "engagement_trade_t_ref": 2.0,
+        "engagement_trade_gate": 1}, steps=200)
+    assert d_m == d_off and sum_m == sum_off, (
+        "measure-only 改变了行为！\n  off  %s (%.6f)\n  meas %s (%.6f)"
+        % (d_off, sum_off, d_m, sum_m))
+    assert n_m > 0 and nd_m > 0, (
+        "measure-only 必须把在线窗口记下来（n_settled=%d, 明细窗口=%d）" % (n_m, nd_m))
+    return ("measure-only ⇒ 行为与不接线逐位相同（%s…）；同时结算 %d 个窗口 / 落 %d 条明细"
+            % (d_m[:12], n_m, nd_m))
+
+
+_TESTS = [("test_engagement_trade_default_off", test_engagement_trade_default_off),
+          ("test_measure_only_is_behavior_neutral", test_measure_only_is_behavior_neutral)]
 
 
 def main():

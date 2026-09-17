@@ -42,6 +42,10 @@ DEFAULT_REWARD = {
     "engagement_trade_theta": 1.0,    # 平滑 hinge 阈值 θ（圣水；登记为"有原则的选择"）
     "engagement_trade_t_ref": 2.0,    # P4b 的钉住时长参考 T_ref（秒；**待标定**）
     "engagement_trade_gate": 1,       # P4b 塔血零掉血门控（0 ⇒ 退化为不限门控的 P2）
+    # measure-only：跑监视器并把在线窗口写进录像，**一分奖励都不加**（行为逐位不变）。
+    # 用途：在真实评估局上量"按**在线口径**切出来的 Trade"，再与结果做配对相关
+    # （预注册 §11.9.4 的放行前置）。与 `engagement_trade > 0` 互斥使用。
+    "engagement_trade_measure_only": 0,
     "crown_weight": 8.0,        # 皇冠差系数（破敌塔每座 +8：破塔里程碑，胜利太稀疏需中间大奖励）
     "crown_lose_weight": 10.0,  # 被破塔惩罚（> crown_weight：丢塔比破塔更痛，教防守价值）
     "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（前段 t<120）
@@ -424,6 +428,27 @@ class TrainConfig:
                 value_independent=True,  # E'（2026-09-12）：独立价值编码器 + MLP 头
                                      # （优先级 independent > bypass）。架构变更 ⇒ 须 --fresh。
                 only_vs_main=True),   # 联赛模式评估只测 main（15 对→5 对，评估量再 ÷3）；solo 不受影响
+            # —— S2 第四轮：**measure-only** 口径（预注册 §11.9.4 的放行前置）——
+            # 与 `economy` 逐字同参，只多一个 `engagement_trade_measure_only=1`：
+            # 跑在线监视器、把每个决策帧结算掉的局面明细写进录像帧的 `et` 键，
+            # **但一分奖励都不加** ⇒ 行为与不接线**逐位相同**（已有回归测试
+            # `test_measure_only_is_behavior_neutral`）。用途：在真实评估局上量
+            # 「按**在线口径**切出来的 Trade」，再与结果做配对相关。
+            "economy_etm": cls(
+                name="economy_etm",
+                description="economy 的 measure-only 版：只量在线局面交换，不改一点行为",
+                reward={"crown_weight": 8.0, "win_bonus": 10.0,
+                        "lose_penalty": 10.0, "invalid_penalty": 0.05,
+                        "elixir_bonus": 0.0, "normalize_tower_dmg": True,
+                        "elixir_diff_weight": 0.5,
+                        "engagement_trade": 0.0,
+                        "engagement_trade_measure_only": 1,
+                        "engagement_trade_theta": 1.0,
+                        "engagement_trade_t_ref": 2.0,
+                        "engagement_trade_gate": 1},
+                gae_lambda=0.99, steps_per_eval=8000,
+                value_norm="running", value_bypass=True, value_independent=True,
+                only_vs_main=True),
             "fast": cls(
                 name="fast", description="小步快跑（冒烟/设备验证用）",
                 total_steps=2000, steps_per_eval=500,

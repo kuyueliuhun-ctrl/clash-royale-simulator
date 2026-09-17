@@ -135,6 +135,12 @@ def battle_snapshot(battle, bundle, reward, info, v=None, shares=None):
         "towers1": [float(p1.king_tower_hp), float(p1.left_tower_hp), float(p1.right_tower_hp)],
         "elixir0": float(p0.elixir),
         "elixir1": float(p1.elixir),
+        # schema 5.x（2026-09-18 第四轮，**可选键**）：在线局面交换的逐帧明细
+        # `info["engagement_trade_detail"] = [phi_part, tau, score, n_windows]`。
+        # 只有 measure-only（或开了该项）跑才有；缺省不写键 ⇒ 完全向后兼容。
+        "et": (list(info["engagement_trade_detail"])
+               if info.get("engagement_trade_detail") is not None else None),
+        "et_src": ("online" if info.get("engagement_trade_detail") is not None else None),
         "crown0": int(p0.get_crown_count()),
         "crown1": int(p1.get_crown_count()),
         # schema 5：在线残值真值（`RLEnv._active_v`）；缺省 None ⇒ 读方回落到离线重建
