@@ -163,9 +163,10 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 - **平局裁决口径 + 僵局早停（2026-09-17 用户拍板，**打断与历史 run 的可比性**）**：① 皇冠优先 → 皇冠相同则
   **三塔血量合计**多者胜 → 完全相等才平局（单一来源 `BattleState.timeout_winner()`；旧"最低血量百分比"已删；
   C′ 细差判平默认关）；② **僵局早停默认关**（`train_stall_stop=False`）⇒ 零塔损局打满 180s/300s，不再 50 s 判平。280 局配对（复现 280/280）：
-  被截断 **32/280=11.4%**（判据=**全程零塔损**；⚠️ 旧稿用 `n<360 且 t<300` 误得 96.8% **已推翻**）⇒ 总帧数 **+16%~+31%**、
-  20k 步局数 109→83~94，**相位极不均**（eval@5000 14/40、@12500 17/40 ⇒ 局部 ~4×）；训练侧 C′ 细差判平另删 21 局伪平；
-  终局罚可见度 0.27→3e-4。旧行为 `--train-stall-stop`；判读 `docs/draw_rule_verdict_2026-09-17.md`。
+  **✅ 端到端实测 `nostall20k`（20k 步）：J1–J3 全过**——0/240 局被早停、0 平局、`deploy%` 中位 **8.6→9.4** 且从未 <5%
+  ⇒ **早停未致"不爱下牌"**；墙钟 47min、局数 **62.7→58.0**。旧口径代价：**32/280=11.4% 局被早停**（判据=全程零塔损）
+  ⇒ 帧数 **+16%~+31%**（旧稿 96.8%/+96~222% 系**代理判据假象，已推翻**）。仍悬：终局罚可见度 0.27→0.011。
+  旧行为 `--train-stall-stop`；判读 `docs/nostall20k_verdict_2026-09-17.md`。
 - **判读禁则**：**不判** main 曲线与单点胜率。机理：`main vs 冻结副本` 结构性≈0.5，且当
   `copy_every` 与 `steps_per_eval` 整除时，"同步→评估"的顺序会让评估对手**恒为刚同步的 main 自己**
   （已改"先评估后同步"）；⇒ **`main vs 冻结副本` 的 0.85 这类读数不得当作"变强"证据**——
@@ -283,6 +284,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `e2_rand_anchor_20k` | 训练侧弱锚点 10% **未破 cycling** | `docs/train_e2_rand_anchor_20k.log` |
 | `d1_league_20k{,_r2,_r3}` | **防崩有效**（最差锚点区间不相交）；上限未证明；两处预注册标定错误自披露 | `docs/d1_league_20k_verdict_2026-09-13.md` |
 | `d1_long_100k` | **P1 PASS**（防崩在 4× 量级成立）、与 20k 无统计差别、上限仍未解决、加量救不了 critic | `docs/d1_long_100k_verdict_2026-09-13.md` + `docs/diag_d1_long_100k.md` |
+| `nostall20k` | **停用早停的端到端验证**：J1–J3 全过；早停**未**致"不爱下牌"；墙钟 47min | `docs/nostall20k_verdict_2026-09-17.md` |
 | `critic_inert_probe_20k`（惰性检验 Layer 1） | **P1 成立 ⇒ critic 惰性**：`grad_cos` 中位 **0.9973**、`resid_norm` 中位 **0.0415**（145 点）；**该 run 的 critic 没塌**（EV +0.30、`vstd/rstd` 0.53）⇒ 惰性不是塌缩的副产品；分布尾巴 34% 点 <0.99、3% 反向。顺带查出 2 处文档数字错误（20k `vstd/rstd` 基线、塌缩双稳态）**。⚠️ 已被判读 §0.1 ④ 推翻**：该 run 末点 critic **就是常数**（`value` 唯一值 **1/600** = `value_head_mlp[2].bias`、`MLP0` ReLU 逐帧存活率 **0**）⇒ "没塌"不成立；且 **V≡常数时 `resid≈0`/`grad_cos≈1` 是恒等式**，"P1 成立"**不得**读成"拟合良好的 critic 也只有 4%"，据此关闭 critic 线的处置作废 | `docs/critic_inertia_verdict_2026-09-13.md`、预注册 `docs/critic_inertia_prereg_2026-09-13.md`、判读脚本 `scripts/judge_critic_inertia.py`、日志 `docs/train_critic_inert_probe_20k.log` |
 
 ---
