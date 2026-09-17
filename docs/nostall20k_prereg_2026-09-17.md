@@ -1,0 +1,114 @@
+# 预注册：`nostall20k` —— 停用僵局早停后的端到端 20k 试跑（2026-09-17）
+
+> 【红线 R3】单变量 + 预注册：**判据在开跑前写死**（含判定分支与失败分支），跑完照单读，不许现编。
+> 本文件写于 `runs/nostall20k` 启动后 **约 3 分钟**（此时仍在 `eval@0` 的 40 局中，**尚无任何训练期读数**，
+> 也未读取任何 `eval@4000+` 结果）——若违反此条件后续必须自披露。
+> 【红线 R18】本文件与代码改动 `7cb67c1` 同批；被守文档清单见 §7。
+
+---
+
+## 1. 为什么要跑
+
+用户（2026-09-17）对早停的**设立本意**作了更正，并把处置定死：
+
+> 「早停会导致模型更不喜欢防守和对牌，从而导致又开始单边对牌，这条规则设立之初是要**避免模型完全不下牌**，
+> 而非避免僵持影响训练时间。**如果模型下牌只是没有打出伤害，我们就要正常对待。**」
+
+即：早停要防的是 **`deploy ≈ 0`（完全不作为）**，不是 **零塔损僵持**。上一轮 `7cb67c1` 已把
+`train_stall_stop` 默认关（4 个落点受控），但**关闭后的行为后果只在回放上离线估算过**（总帧数 +96%~+222%），
+**从未真正跑过训练**。本 run 就是这次端到端验证。
+
+## 2. 变量与不变项
+
+| 项 | 值 | 说明 |
+|---|---|---|
+| **变量 1（代码默认，本 run 生效）** | `train_stall_stop=False` + `stall_draw_margin=0.0` | 零塔损局打满 180s/300s；平局 = 皇冠同且**三塔血量合计完全相等** |
+| **变量 2（用户指定，偏离标准协议）** | `--steps-per-eval 4000`（标准 2500） | 评估点 0/4000/8000/12000/16000/20000 = **6 点**（标准 9 点） |
+| 不变项 | 标准 20k 协议其余全部照抄 | `--config economy --fresh --total-steps 20000 --n-eval-games 40 --eval-workers 12 --device cuda --value-norm running --adv-norm scale --diagnose-every 10 --ppo-epochs 4 --ppo-minibatch 32 --ppo-shuffle`、`--hist-seed-dir runs/economy_9k_ft --hist-seed-dir runs/economy_9j` |
+| 实测启动核对 | `config.json`: `train_stall_stop=False`、`stall_draw_margin=0.0`、`steps_per_eval=4000`、`max_ep_steps=360`、`eval_workers=12`；对手池 `hist ckpts=12（来自 ['runs/economy_9k_ft','runs/economy_9j']） mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1` | 协议照抄生效 |
+
+**与 `demo20k` 的可比性警告**：`demo20k` 跑在**旧早停**（`train_stall_stop=True`）+ **旧平局口径**下 ⇒
+两者**不是单变量 A/B**（差 2 处：早停 + 平局口径，外加评估节奏）。本 run 只判**机制指纹**，不判"比 demo20k 好/差"。
+
+## 3. 主判据（机制指纹，开跑前写死）
+
+### J1 —— 局长恢复（早停真的不生效了）
+
+| 读法 | 通过条件 |
+|---|---|
+| `run_state.json` 里 `cum_frames / episodes`（或判读脚本从 `replays/*.pkl` 复算的均局帧数） | **均局帧数 ≥ 450**（`demo20k` 实测均局 250~360 帧；早停把 96.8% 的对局截在 153 帧中位数） |
+| 50 s 附近是否还有被截断的对局 | **无** `t≈50s` 的堆积（回放逐帧 `t` 分布不应在 50 s 有尖峰） |
+
+### J2 —— 平局构成（新口径真的在裁）
+
+| 读法 | 通过条件 |
+|---|---|
+| `replays/league_*.pkl` 逐局 `winner`（schema 3 有 `towers0/towers1/crown0/crown1`） | 平局局中**全部**满足「皇冠相同 ∧ 三塔血量合计相等」；**不存在**"合计不等却判平"的局 |
+
+### J3 —— **核心：不退回"完全不下牌"**（用户本意）
+
+| 读法 | 通过条件 |
+|---|---|
+| 训练期诊断行的 `deploy=%`（每 1280 帧一行） | 全程 **`deploy` 不塌到 < 5%**（`demo20k` 训练期实测 7.0%~14.1% ⇒ 门槛取 5% 是"退到病态"的下界，留 2pp 余量） |
+| 末点 `gates.json` | `deploy` 相对本 run 首点**不出现 ≥50% 退化**（沿用 `gates.json` 既有相对口径，【否证 X9】） |
+
+> 这一条是本 run 的**唯一不可让**判据：早停被移除后，若策略以"反正要打满 300 s"为由学会躺平，J3 会亮。
+
+### J4 —— 成本实测（把离线估算换成真实数字）
+
+| 读法 | 预注册预期 |
+|---|---|
+| 单个全点（40 局）墙钟 | **500~900 s**（旧 eval@0 实测 237.9 s；离线估算帧数 +96%~+222% ⇒ 2.0~3.2× ） |
+| 整 run 墙钟 | **75~120 min** |
+| 同 20k 步的局数 | **34~55**（旧 109） |
+
+> J4 **不设通过/失败**，它是"把估算换成实测"的取数项（【R10】：实测与预期不符就如实写，并去找原因，不许圆场）。
+
+## 4. 判定分支
+
+| 结果 | 处置 |
+|---|---|
+| J1 ∧ J2 ∧ J3 全过，J4 落在预期内 | 早停停用**确认为可用默认**；把 J4 实测数字回写 `AGENTS.md` §3 与 `docs/draw_rule_verdict_2026-09-17.md` §9，并关闭"是否恢复早停"的未决项 |
+| J1 ∧ J2 过、**J3 挂**（deploy 塌到 <5% 或 gate 退化 ≥50%） | 用户的担心成立 ⇒ 记录为【未决】并**不再自动改奖励**（【R11】：A′ 类取证之前不改奖励）；候选按顺序：① 先做 `BeliefPlanner` 专家对照（零训练成本）判定"是不是局部最优"；② 再考虑**逐帧零伤害惩罚**——但那是**独立变量，需另立预注册** |
+| J1 挂（局长没升） | **不是策略问题，是开关没生效** ⇒ 停下来查 4 个落点（`_run_side0`/`_run_side0_scripted`/`eval_solo`/`_eval_worker_main`）与 spawn 传参，修完重跑；本 run 训练侧读数**作废** |
+| J2 挂（出现"合计不等却判平"） | 单一来源 `BattleState.timeout_winner()` 有分叉 ⇒ 按【红线 R13】口径先把 4 处入口逐个对账（`batch.py` 300 s 分支 / `rl/overtime` / `rl/run_league` / `settle_stall`），修完重跑 |
+| 跑不完（外部性能异常 / 崩溃） | 按【红线 R1】**先归因外部、暂停留证、不自动降级**，写"成因未定" |
+
+## 5. 明确不做（【红线 R11】）
+
+- **不**判 `main vs 冻结副本` 曲线（结构性 ≈0.5，run 内自引用失真）。
+- **不**判绝对强度 / "上限有没有动"（【未决 O1】：20k 单跑看不了小效应，【红线 R5】同 seed 不可复现）。
+- **不**把本 run 与 `demo20k` 直接比胜率（两处变量不同 + 跨 run 不可比）。
+- **不**因 `EV≈0` 宣称"修好/修坏"critic（【确证 C3】）。
+- **不**在本次改任何奖励项（早停移除会削弱终局 −10 的信用分配可见度 `(γλ)^k: 0.27→3e-4`，但补偿方案属**独立变量**，需另立预注册）。
+- **不**跑全量 selftest（【红线 R19】）；本改动相关子集已于 `7cb67c1` 6/6 通过，本 run 不重复。
+
+## 6. 成本与风险备注
+
+- 可用提交内存实测 **19.27 GB ≥ 12 GB** ⇒ `--eval-workers 12` 达标（【R1】，`scripts/check_commit.py`）。
+- 无孤儿 `--multiprocessing-fork` worker（`Get-CimInstance` 实测仅 dashboard 父/子两进程）。
+- **已知张力（如实记）**：−10 终局罚在 600 帧尺度下每步可见度 ≈ `(0.987)^600 ≈ 3e-4`（早停下 100 帧 ≈ 0.27）⇒
+  若本 run 出现"末段躺平"型退化（J3 亮），**优先怀疑信用分配可见度**而不是"策略不想赢"。这是【未决】，不是本 run 能判决的。
+
+## 7. 同批维护的文档（【红线 R18】）
+
+| 文档 | 维护内容 |
+|---|---|
+| `AGENTS.md` | §3 平局裁决口径 + 僵局早停条目（`7cb67c1` 已写）、§3.1 `train_stall_stop`/`stall_draw_margin` 行；**本 run 结束后**回写 §3 与 §3.1 的 J4 实测数字（**只在预算内加字符**，>65,244 B 会被静默截尾） |
+| `docs/draw_rule_verdict_2026-09-17.md` | §9 早停停用 + 代价；本 run 结束后在 §9 追加"端到端实测"小节 |
+| `docs/training_method.md` / `.docx` | 早停条目（已改）；如需回写 J4 数字则同步 |
+| `docs/nostall20k_prereg_2026-09-17.md`（本文件） | 预注册；跑完另写判读 `docs/nostall20k_verdict_2026-09-17.md` |
+| `docs/train_nostall20k.log` | 原始日志（`-f` 强加跟踪，同 `docs/train_demo20k.log` 惯例） |
+
+## 8. 复算入口（禁止手抄，【红线 R4】）
+
+```bash
+# 局长 / 平局构成（从回放逐帧复算；--margin 只影响第三条诊断列，复现校验用评估口径=0）
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
+  ../../scripts/analyze_draw_anatomy.py --run runs/nostall20k --margin 0.0
+# 全点汇总（对照 / 锚点 / 对手池 / gates）——⚠️ --log 是必填参数
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
+  ../../scripts/summarize_solo_run.py --log ../../docs/train_nostall20k.log --run runs/nostall20k
+# 训练期 deploy%（J3 读法）——诊断行每 1280 帧一行
+grep -o "deploy=[0-9.]*%" docs/train_nostall20k.log
+```
