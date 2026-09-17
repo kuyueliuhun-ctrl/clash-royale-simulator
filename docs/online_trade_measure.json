@@ -1,0 +1,204 @@
+{
+ "batches": [
+  {
+   "file": "league_0.pkl",
+   "schema": 5,
+   "n_games": 50,
+   "frames": 11099,
+   "windows_per_game": 12.82,
+   "tau_nonzero_game_share": 0.38,
+   "score_gt0_game_share": {
+    "trade_none": 0.68,
+    "trade_p4b": 0.72
+   },
+   "mean": {
+    "trade_none": 12.89999999999993,
+    "trade_p4b": 14.96672222222215,
+    "tau": 2.0667222222222223
+   },
+   "sd": {
+    "trade_none": 44.897426558374384,
+    "trade_p4b": 42.6114769386907
+   },
+   "rho_trade_none_crown": -0.048683329111644774,
+   "rho_trade_none_tower_hp": -0.12470588235294118,
+   "rho_trade_none_win": 0.19802950859533483,
+   "rho_trade_p4b_crown": -0.029677187539159683,
+   "rho_trade_p4b_tower_hp": -0.1024249699879952,
+   "rho_trade_p4b_win": 0.20510199104516824,
+   "d_rho_p4b_minus_none_crown": 0.01900614157248509,
+   "d_rho_p4b_minus_none_tower_hp": 0.022280912364945976,
+   "d_rho_p4b_minus_none_win": 0.007072482449833412
+  },
+  {
+   "file": "league_12000.pkl",
+   "schema": 5,
+   "n_games": 50,
+   "frames": 10510,
+   "windows_per_game": 11.66,
+   "tau_nonzero_game_share": 0.36,
+   "score_gt0_game_share": {
+    "trade_none": 0.54,
+    "trade_p4b": 0.54
+   },
+   "mean": {
+    "trade_none": 10.686666666666643,
+    "trade_p4b": 11.308388888888866,
+    "tau": 0.6217222222222223
+   },
+   "sd": {
+    "trade_none": 29.752753640736348,
+    "trade_p4b": 30.608181468078392
+   },
+   "rho_trade_none_crown": 0.33974961239153806,
+   "rho_trade_none_tower_hp": 0.33176470588235296,
+   "rho_trade_none_win": 0.33031042266852967,
+   "rho_trade_p4b_crown": 0.36355941660152674,
+   "rho_trade_p4b_tower_hp": 0.3413685474189676,
+   "rho_trade_p4b_win": 0.33954987505086615,
+   "d_rho_p4b_minus_none_crown": 0.023809804209988683,
+   "d_rho_p4b_minus_none_tower_hp": 0.009603841536614643,
+   "d_rho_p4b_minus_none_win": 0.009239452382336477
+  },
+  {
+   "file": "league_16000.pkl",
+   "schema": 5,
+   "n_games": 50,
+   "frames": 10991,
+   "windows_per_game": 12.56,
+   "tau_nonzero_game_share": 0.4,
+   "score_gt0_game_share": {
+    "trade_none": 0.66,
+    "trade_p4b": 0.66
+   },
+   "mean": {
+    "trade_none": 9.973333333333471,
+    "trade_p4b": 10.59336111111125,
+    "tau": 0.6200277777777777
+   },
+   "sd": {
+    "trade_none": 37.571207676337885,
+    "trade_p4b": 37.31343111878652
+   },
+   "rho_trade_none_crown": 0.14028172714127113,
+   "rho_trade_none_tower_hp": -0.10540216086434574,
+   "rho_trade_none_win": 0.18247918455114576,
+   "rho_trade_p4b_crown": 0.1515834941950114,
+   "rho_trade_p4b_tower_hp": -0.09070828331332532,
+   "rho_trade_p4b_win": 0.20095808931581874,
+   "d_rho_p4b_minus_none_crown": 0.01130176705374028,
+   "d_rho_p4b_minus_none_tower_hp": 0.014693877551020418,
+   "d_rho_p4b_minus_none_win": 0.018478904764672982
+  },
+  {
+   "file": "league_4000.pkl",
+   "schema": 5,
+   "n_games": 50,
+   "frames": 11386,
+   "windows_per_game": 13.68,
+   "tau_nonzero_game_share": 0.4,
+   "score_gt0_game_share": {
+    "trade_none": 0.6,
+    "trade_p4b": 0.6
+   },
+   "mean": {
+    "trade_none": 11.959999999999946,
+    "trade_p4b": 12.297611111111056,
+    "tau": 0.33761111111111114
+   },
+   "sd": {
+    "trade_none": 47.94671267392404,
+    "trade_p4b": 47.613544866448535
+   },
+   "rho_trade_none_crown": 0.2065046142999985,
+   "rho_trade_none_tower_hp": 0.11452581032412965,
+   "rho_trade_none_win": 0.2935699414679843,
+   "rho_trade_p4b_crown": 0.22671661435318322,
+   "rho_trade_p4b_tower_hp": 0.13267707082833133,
+   "rho_trade_p4b_win": 0.32552313237606423,
+   "d_rho_p4b_minus_none_crown": 0.020212000053184714,
+   "d_rho_p4b_minus_none_tower_hp": 0.018151260504201683,
+   "d_rho_p4b_minus_none_win": 0.03195319090807991
+  },
+  {
+   "file": "league_8000.pkl",
+   "schema": 5,
+   "n_games": 50,
+   "frames": 10623,
+   "windows_per_game": 13.32,
+   "tau_nonzero_game_share": 0.36,
+   "score_gt0_game_share": {
+    "trade_none": 0.52,
+    "trade_p4b": 0.54
+   },
+   "mean": {
+    "trade_none": 8.960000000000004,
+    "trade_p4b": 9.333861111111116,
+    "tau": 0.3738611111111111
+   },
+   "sd": {
+    "trade_none": 41.00846878964955,
+    "trade_p4b": 40.84458093380335
+   },
+   "rho_trade_none_crown": 0.22953469601144566,
+   "rho_trade_none_tower_hp": 0.2026890756302521,
+   "rho_trade_none_win": 0.19618389975157485,
+   "rho_trade_p4b_crown": 0.20267975750154027,
+   "rho_trade_p4b_tower_hp": 0.1799279711884754,
+   "rho_trade_p4b_win": 0.20044876713747864,
+   "d_rho_p4b_minus_none_crown": -0.02685493850990539,
+   "d_rho_p4b_minus_none_tower_hp": -0.022761104441776703,
+   "d_rho_p4b_minus_none_win": 0.004264867385903787
+  }
+ ],
+ "summary": {
+  "n_batches": 5,
+  "n_games": 250,
+  "paired_crown": {
+   "n": 5,
+   "pos": 4,
+   "mean_d": 0.009494954875898676,
+   "sd_d": 0.020825536971302374,
+   "mean_rho_none": 0.1734774641465217,
+   "mean_rho_p4b": 0.1829724190224204,
+   "vals": [
+    0.019,
+    0.024,
+    0.011,
+    0.02,
+    -0.027
+   ]
+  },
+  "paired_tower_hp": {
+   "n": 5,
+   "pos": 4,
+   "mean_d": 0.008393757503001203,
+   "sd_d": 0.018026668950225547,
+   "mean_rho_none": 0.08377430972388955,
+   "mean_rho_p4b": 0.09216806722689076,
+   "vals": [
+    0.022,
+    0.01,
+    0.015,
+    0.018,
+    -0.023
+   ]
+  },
+  "paired_win": {
+   "n": 5,
+   "pos": 5,
+   "mean_d": 0.014201779578165314,
+   "sd_d": 0.01126499219622564,
+   "mean_rho_none": 0.24011459140691388,
+   "mean_rho_p4b": 0.2543163709850792,
+   "vals": [
+    0.007,
+    0.009,
+    0.018,
+    0.032,
+    0.004
+   ]
+  }
+ },
+ "theta": 1.0
+}

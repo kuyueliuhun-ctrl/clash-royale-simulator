@@ -144,8 +144,103 @@ def test_measure_only_is_behavior_neutral():
             % (d_m[:12], n_m, nd_m))
 
 
+
+# ---------------------------------------------------------------------------
+# 在线 τ 必须**两侧都算**并对称化（离线缺陷 7.3 的在线同型；第四轮修）
+# ---------------------------------------------------------------------------
+class _FakeUnit:
+    def __init__(self, eid, player, target_id, hp=100.0):
+        self.id, self.player, self.target_id = eid, player, target_id
+        self.is_alive, self.hp = True, hp
+
+
+class _FakePlayer:
+    def __init__(self, elixir=5.0):
+        self.elixir = elixir
+
+
+class _FakeBattle:
+    """只提供监视器需要的最小面：entities / players[].elixir / tick。"""
+    def __init__(self, ents, ex0=5.0, ex1=5.0):
+        self.entities = {e.id: e for e in ents}
+        self.players = [_FakePlayer(ex0), _FakePlayer(ex1)]
+        self.tick = 0
+
+
+def _towers(thp0=3000.0, thp1=3000.0):
+    T = {}
+    for i, (pid, hp) in enumerate([(1, thp1), (1, thp1), (0, thp0), (0, thp0),
+                                   (1, thp1 * 1.6), (0, thp0 * 1.6)], start=1):
+        e = _FakeUnit(i, pid, None, hp)
+        T[i] = e
+    return T
+
+
+def test_online_tau_is_two_sided():
+    """两侧互相钉住：`τ = (τ₀ − τ₁)/2` 必须成立，且 `τ₀`、`τ₁` **都非零**。
+
+    只算 p0 视角的实现会让 `τ₁` 恒为 0 ⇒ 另一半局（main 坐 player 1）拿到与自己无关的 τ。
+    """
+    from rl.engagement import EngagementTradeMonitor
+
+    def run(cost0, cost1, thp0=3000.0, thp1=3000.0):
+        ents = list(_towers(thp0, thp1).values())
+        ents.append(_FakeUnit(10, 0, 20))      # p0 的部队，目标 p1 的部队
+        ents.append(_FakeUnit(20, 1, 10))      # p1 的部队，目标 p0 的部队
+        b = _FakeBattle(ents)
+        mon = EngagementTradeMonitor(theta=1.0, t_ref=1.0, shares={0: {10: cost0},
+                                                                  1: {20: cost1}})
+        for _ in range(60):                    # 60 tick（< K=30 的 2 倍，保证不结算）
+            b.tick += 1
+            mon.tick(b, [0.0, 0.0])
+        det = mon.pop_detail()
+        return det
+
+    d = run(3.0, 4.0)
+    assert not d, "交战持续 ⇒ 60 tick 内**不该**有窗口结算（实得 %s）" % d
+    # 60 tick 之后仍开着 ⇒ 用 flush 结掉
+    from rl.engagement import EngagementTradeMonitor as M
+    ents = list(_towers().values())
+    ents.append(_FakeUnit(10, 0, 20))
+    ents.append(_FakeUnit(20, 1, 10))
+    b = _FakeBattle(ents)
+    mon = M(theta=1.0, t_ref=1.0, shares={0: {10: 3.0}, 1: {20: 4.0}})
+    for _ in range(60):
+        b.tick += 1
+        mon.tick(b, [0.0, 0.0])
+    mon.flush(b, [0.0, 0.0])
+    det = mon.pop_detail()
+    assert len(det) == 1, det
+    w = det[0]
+    assert w["tau0"] > 0 and w["tau1"] > 0, \
+        "两侧都必须拿到 τ（只算一侧 = 缺陷 7.3 的在线同型）：%s" % w
+    assert abs(w["tau"] - 0.5 * (w["tau0"] - w["tau1"])) < 1e-12, w
+    # 门控：窗口内我方（p0）塔**零掉血** ⇒ gate 开；两侧塔血都没变 ⇒ 两侧 gate 都开
+    assert abs(w["tau0"] - 4.0) < 1e-9 and abs(w["tau1"] - 3.0) < 1e-9, w
+    # 窗口**中途**掉塔血 ⇒ p0 侧门控必须关（只关 p0 侧；p1 侧塔血没动 ⇒ 仍开）
+    ents2 = list(_towers().values())
+    ents2.append(_FakeUnit(10, 0, 20))
+    ents2.append(_FakeUnit(20, 1, 10))
+    b2 = _FakeBattle(ents2)
+    mon2 = M(theta=1.0, t_ref=1.0, shares={0: {10: 3.0}, 1: {20: 4.0}})
+    for i in range(60):
+        b2.tick += 1
+        if i == 20:
+            b2.entities[3].hp = 2000.0        # p0 的公主塔在窗口中途掉血
+        mon2.tick(b2, [0.0, 0.0])
+    mon2.flush(b2, [0.0, 0.0])
+    w2 = mon2.pop_detail()[0]
+    assert abs(w2["tau0"]) < 1e-12, \
+        "p0 塔血掉过 ⇒ p0 侧的 P4b 门控应当关闭：%s" % w2
+    assert abs(w2["tau1"] - 3.0) < 1e-9, \
+        "p1 侧塔血没动 ⇒ 它的门控不该被 p0 的掉血关掉：%s" % w2
+    return ("两侧 τ 都非零（τ₀=%.2f τ₁=%.2f ⇒ τ=%.2f）；塔血门控按侧生效（p0 掉血后 τ₀=0）"
+            % (w["tau0"], w["tau1"], w["tau"]))
+
+
 _TESTS = [("test_engagement_trade_default_off", test_engagement_trade_default_off),
-          ("test_measure_only_is_behavior_neutral", test_measure_only_is_behavior_neutral)]
+          ("test_measure_only_is_behavior_neutral", test_measure_only_is_behavior_neutral),
+          ("test_online_tau_is_two_sided", test_online_tau_is_two_sided)]
 
 
 def main():

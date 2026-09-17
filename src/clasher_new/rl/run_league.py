@@ -465,22 +465,27 @@ def _set_et_measure(cfg):
     return _ET_MEASURE
 
 
-def _eval_env(seed):
-    """评估/回放用的 env。`DSH_ET_MEASURE=1` 时额外挂 measure-only 口径（行为逐位不变）。"""
-    if _ET_MEASURE:
+def _eval_env(seed, et_measure=None):
+    """评估/回放用的 env。`et_measure=True` 时额外挂 measure-only 口径（行为逐位不变）。
+
+    ⚠️ 必须**显式传参**而不是只读模块全局：评估 worker 是 `spawn` 出来的**新进程**，
+    它的 `_ET_MEASURE` 默认 False（`_set_et_measure` 只在父进程的 `main()` 里被调用）
+    ⇒ 2026-09-18 实测"评估录像里 `et` 全是 None"就是这个原因。
+    """
+    if _ET_MEASURE if et_measure is None else bool(et_measure):
         return RLEnv(opponent=None, seed=seed, reward_weights=dict(_ET_MEASURE_WEIGHTS))
     return RLEnv(opponent=None, seed=seed)
 
 
 def _play_pair_games(a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False,
-                     game_ids=None):
+                     game_ids=None, et_measure=None):
     """跑一个 pair 的若干局（默认全部 n_games），返回 [(g, score_a, replay_or_None)]。
 
     **不碰 league**：Elo/PFSP 由调用方按 (pair, g) 顺序补记 ⇒ 串行/并行两条路径的
     league 状态演化完全一致（逐局 K=32 Elo 与 PFSP EMA 都对顺序敏感）。
     复用同一个 env（省重建）；``game_ids`` 供并行分片用。
     """
-    env = _eval_env(seed)
+    env = _eval_env(seed, et_measure)
     deck0_prior = list(env.deck0)
     belief_prior = list(env.deck1)
     gids = list(range(int(n_games))) if game_ids is None else list(game_ids)
@@ -551,7 +556,8 @@ def _spec_to_policy(spec):
     return pol
 
 
-def _eval_pair_worker_main(worker_id, pairs_spec, chunk, max_steps, record, out_q):
+def _eval_pair_worker_main(worker_id, pairs_spec, chunk, max_steps, record, out_q,
+                          et_measure=False):
     """并行评估 worker：chunk = [(pair_idx, g), ...] → 回传 [(pair_idx, g, score_a, replay)]。
 
     单进程、纯 CPU 推演（父进程调用方负责屏蔽 CUDA），不碰 league/文件 ⇒ 崩了不影响训练。
@@ -563,7 +569,7 @@ def _eval_pair_worker_main(worker_id, pairs_spec, chunk, max_steps, record, out_
         rows = []
         for pair_idx in sorted(by_pair):
             a_id, a_spec, b_id, b_spec, pseed = pairs_spec[pair_idx]
-            env = _eval_env(pseed)
+            env = _eval_env(pseed, et_measure)
             deck0_prior = list(env.deck0)
             belief_prior = list(env.deck1)
             a_pol = _spec_to_policy(a_spec)
@@ -606,7 +612,8 @@ def _run_eval_pairs_parallel(pairs_spec, n_games, max_steps, record, n_workers):
     try:
         for wid, ch in enumerate(chunks):
             p = ctx.Process(target=_eval_pair_worker_main,
-                            args=(wid, pairs_spec, ch, int(max_steps), bool(record), out_q))
+                            args=(wid, pairs_spec, ch, int(max_steps), bool(record), out_q,
+                                  bool(_ET_MEASURE)))
             try:
                 p.start()
             except OSError as e:
