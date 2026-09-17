@@ -5164,6 +5164,224 @@ def test_precise_threat():
           f"保持寿命上限 {MAX_HOLD_S}s（未到期不失效 / 到期且触发则同帧刷新 / 到期且无触发则回退粗糙）")
 
 
+def test_take_damage_signature_consistency():
+    """引擎全体 `take_damage` 覆盖必须接受**调用点用到的全部关键字实参**。
+
+    事故（2026-09-17）：`card_mechanics.dash_tick` 对突进目标调
+    `take_damage(dmg, delayed=True, source=e)`，而 `TimedExplosive.take_damage(self, amount)`
+    与 `GenericBomb.take_damage(self, amount)` 是"不受伤害"的 no-op 桩、**签名偏窄**
+    ⇒ 突进把爆炸物当目标时 `TypeError: ... unexpected keyword argument 'delayed'` **直接崩训练**。
+    solo 打固定 X弩牌不触发；`--mode run` 第一次上 200 副多卡组牌就崩（见
+    `docs/run_mode_multideck_2026-09-17.md`）。另有 2 个桩（EvoEffectZone / VinesSnareZone）
+    缺 `pierce_invincible`，被法术穿透那一支命中会同样崩。
+
+    判据（静态、确定性、零成本）：AST 扫引擎源码，收集每个 `take_damage` 调用用到的关键字，
+    再要求**每个定义都接受它们**（`**kwargs` 视为万能）。这是【R12】"能算的不许靠试"在 API 层
+    的落地——比"跑一局碰运气"快且穷尽。
+    """
+    import ast
+    import glob
+    import io as _io
+    import os as _os
+
+    root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+    files = [_os.path.join(root, "battle.py")] + sorted(glob.glob(_os.path.join(root, "rl", "*.py")))
+    defs, used = [], {}
+    for f in files:
+        try:
+            tree = ast.parse(_io.open(f, encoding="utf-8").read())
+        except SyntaxError:
+            continue
+        cls_of = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for sub in node.body:
+                    cls_of[id(sub)] = node.name
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == "take_damage":
+                defs.append((f, node.lineno, cls_of.get(id(node)),
+                             [a.arg for a in node.args.args], bool(node.args.kwarg)))
+            if isinstance(node, ast.Call):
+                fn = node.func
+                if (getattr(fn, "attr", None) or getattr(fn, "id", None)) == "take_damage":
+                    for kw in node.keywords:
+                        if kw.arg:
+                            used.setdefault(kw.arg, []).append((f, node.lineno))
+    assert defs, "没扫到任何 take_damage 定义 —— 扫描路径不对"
+    assert used, "没扫到任何 take_damage 调用 —— 扫描路径不对"
+    need = set(used)
+    bad = []
+    for f, ln, cls, params, has_kw in defs:
+        if has_kw:
+            continue
+        missing = sorted(need - set(params))
+        if missing:
+            bad.append("%s:%d %s 缺 %s" % (_os.path.relpath(f, root), ln, cls or "-", missing))
+    assert not bad, ("take_damage 签名与调用点不一致（会 TypeError 崩训练）：\n  " + "\n  ".join(bad))
+    # 出现新的调用关键字时，本测试的语义要跟着复核（不是自动放行）
+    assert need <= {"delayed", "source", "pierce_invincible"}, "出现未预期的 take_damage kwargs: %s" % sorted(need)
+    print("    [ok] take_damage：%d 个定义 / %d 类 kwargs 全部兼容（%s）"
+          % (len(defs), len(need), ", ".join(sorted(need))))
+
+
+def test_noncombat_entity_contract():
+    """非战斗实体契约（2026-09-17 事故，run 模式第一次上 200 副牌连撞两次崩溃）。
+
+    背景：`AreaEffect` / `GenericBomb` / `EvoEffectZone` / `HealAuraZone` / `VinesSnareZone`
+    **刻意不走 `Entity.__init__`**（无卡牌身份，避免同名机制类钩子），但仍 `class X(Entity)`。
+    于是任何通用路径碰到它们都会对**不存在**的属性赋值/读取 ⇒ `AttributeError` 崩训练：
+      - `battle.py::_pulse` 给范围内实体 `apply_buff(heal=…)` ⇒ `VinesSnareZone` 无 `regen_buffs`；
+      - 突进 `card_mechanics::dash_tick` 对目标 `take_damage(delayed=…)` ⇒ `TimedExplosive`
+        桩签名偏窄（该类其实走了 `Entity.__init__`，属同一族的"签名不一致"）。
+
+    判据：
+      A. 静态（双向）：battle.py 里"定义了 `__init__` 且不调 `super().__init__`/`Entity.__init__`"
+         的类（Entity 自身除外）**必须**声明 `is_combat_entity = False`；
+         反之声明了 `False` 的类**必须**真的跳过 `Entity.__init__`（防反向错标）。
+      B. 动态：5 个类各造一个实例，把通用入口全调一遍（`apply_buff` 的四条分支 + `take_damage`
+         全 kwargs）⇒ 必须**不抛异常**（就是 run 模式实测崩掉的那条路径）。
+    """
+    import ast
+    import io as _io
+    import os as _os
+
+    root = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+    path = _os.path.join(root, "battle.py")
+    src = _io.open(path, encoding="utf-8").read()
+    tree = ast.parse(src)
+
+    # 只考察 **Entity 的后代**（模块内直接/间接继承）；`_BombShim`/`BattleState` 这类
+    # 数据垫片不是 Entity，不适用本契约（2026-09-17 首版扫描漏了这一步，被测试自身抓出）。
+    bases_of = {}
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            bases_of[node.name] = [b.id for b in node.bases if isinstance(b, ast.Name)]
+    def _is_entity_desc(name):
+        """向上找 Entity（bases_of 只含本模块的类；外部基类视为非 Entity）。"""
+        todo, gone = [name], set()
+        while todo:
+            cur = todo.pop()
+            if cur in gone:
+                continue
+            gone.add(cur)
+            for b in bases_of.get(cur, []):
+                if b == "Entity":
+                    return True
+                todo.append(b)
+        return False
+
+    skip_init, declared_false = set(), set()
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef) or node.name == "Entity":
+            continue
+        if not any((b.id == "Entity") or _is_entity_desc(b.id)
+                   for b in node.bases if isinstance(b, ast.Name)):
+            continue
+        for sub in node.body:
+            if isinstance(sub, ast.Assign):
+                for t in sub.targets:
+                    if isinstance(t, ast.Name) and t.id == "is_combat_entity" \
+                            and isinstance(sub.value, ast.Constant) and sub.value.value is False:
+                        declared_false.add(node.name)
+        inits = [n for n in node.body if isinstance(n, ast.FunctionDef) and n.name == "__init__"]
+        if not inits:
+            continue
+        txt = ast.get_source_segment(src, inits[0]) or ""
+        if ("super().__init__" not in txt) and ("Entity.__init__" not in txt):
+            skip_init.add(node.name)
+
+    missing = sorted(skip_init - declared_false)
+    reverse = sorted(declared_false - skip_init)
+    assert not missing, ("这些类跳过 Entity.__init__ 但没声明 is_combat_entity = False"
+                        "（通用路径会 AttributeError 崩训练）：%s" % missing)
+    assert not reverse, ("这些类声明了 is_combat_entity = False 但其实走了 Entity.__init__"
+                        "（错标会让通用路径错误跳过真战斗实体）：%s" % reverse)
+    assert declared_false, "一个非战斗实体都没扫到 —— 扫描逻辑不对"
+
+    # B. 动态：通用入口对它们必须无异常（就是实测崩溃的那条路径）
+    from battle import (AreaEffect, GenericBomb, EvoEffectZone, HealAuraZone, Position,
+                        VinesSnareZone)
+    pos = Position(9.0, 10.0)
+    objs = [
+        AreaEffect(9001, pos, 0, "Fireball", None),
+        GenericBomb(9002, pos, 1, 100.0, 1.5, 0.5),
+        EvoEffectZone(9003, pos, 0, None, 2.0, 5.0),
+        HealAuraZone(9004, pos, 0, 2.0, 100.0),
+        VinesSnareZone(9005, pos, 1, None, 2.0, 2.0, 153.0),
+    ]
+    for o in objs:
+        assert getattr(o, "is_combat_entity", True) is False, type(o).__name__
+        o.apply_buff(speed_mult=1.3, duration=1.0)          # Rage 分支
+        o.apply_buff(hit_speed_mult=1.5, duration=1.0)      # M3 攻速槽
+        o.apply_buff(damage_reduction=0.3, duration=1.0)    # Monk 减伤
+        o.apply_buff(heal={"hps": 10.0, "time": 1.0})       # Heal（实测崩点）
+        o.apply_buff(stun=1.0, retarget=True)               # Freeze/Zap 分支
+        o.take_damage(10.0, delayed=True, source=None, pierce_invincible=False)
+    print("    [ok] 非战斗实体契约：%d 个类声明 False 且跳过 Entity.__init__；"
+          "5 个实例的通用入口全部无异常" % len(declared_false))
+
+
+def test_death_spawn_routing_data_invariant():
+    """通用亡语路由的数据不变量（2026-09-17 run 模式第三例崩溃）。
+
+    `_generic_death_spawn` 把"带 `deathDamage` 且无 `hitpoints`"的卡交给 `TimedExplosive`，
+    而 `TimedExplosiveData.__init__` 硬读 `name / deathDamage / deployTime / collisionRadius`。
+    `SkeletonBalloon` 的容器 dsd **同样带 `deathDamage` 却没有 `collisionRadius`**
+    （它是"0.6s 后出 7 骷髅"的容器，同一个函数里有专门分支）⇒ 被误判成炸弹，
+    `KeyError: 'collisionRadius'` 直接崩训练。
+
+    判据（数据驱动、穷举全卡表）：
+      A. 对所有**满足路由判定** `battle.is_death_bomb(dsd)` 的卡，`TimedExplosiveData(dsd)`
+         必须能构造成功（= 键齐全）；
+      B. `SkeletonBalloon` 必须**不**被判为炸弹（它应走容器分支）。
+    """
+    from battle import is_death_bomb
+    from card_utils import card_data, TimedExplosiveData
+
+    rows = [(n, r) for n, r in card_data.items() if isinstance(r, dict)]
+    assert rows, "卡表为空 —— 数据加载不对"
+    bombs, bad = [], []
+    for name, row in rows:
+        dsd = (row.get('summonCharacterData') or {}).get('deathSpawnCharacterData') or {}
+        if not dsd or not is_death_bomb(dsd):
+            continue
+        bombs.append(name)
+        try:
+            TimedExplosiveData(dsd)
+        except Exception as e:                     # noqa: BLE001 - 要的就是任何异常
+            bad.append("%s: %s" % (name, e))
+    assert not bad, ("被判为亡语炸弹、但 TimedExplosiveData 解析不了（会 KeyError 崩训练）：\n  "
+                     + "\n  ".join(bad))
+    assert bombs, "一张炸弹卡都没扫到 —— 路由判定或卡表不对"
+    sb = card_data.get('SkeletonBalloon')
+    if isinstance(sb, dict):
+        dsd = (sb.get('summonCharacterData') or {}).get('deathSpawnCharacterData') or {}
+        assert not is_death_bomb(dsd), \
+            "SkeletonBalloon 被判成炸弹了 —— 它应走容器分支（0.6s 后出 7 骷髅），否则漏掉容器语义"
+    print("    [ok] 亡语炸弹路由：%d 张（%s）全部可被 TimedExplosiveData 解析；"
+          "SkeletonBalloon 走容器分支" % (len(bombs), ", ".join(bombs)))
+
+
+def test_normalize_dir_zero_vector():
+    """方向向量归一化：**零向量必须返回 None**（而不是除零崩溃）。
+
+    2026-09-17 run 模式第四例崩溃：滚动弹（BarbLog 类）按
+    `target_position - initial_position` 归一化行进方向，起点与终点重合时
+    `direction_vector /= abs(direction_vector)` ⇒ `ZeroDivisionError: complex division by zero`。
+    同一个文件里"击退"与"推挤"两处各自写了零向量守卫，唯独这一处漏了 ⇒ 抽 `normalize_dir`
+    做单一来源（`battle.py::normalize_dir`）并在此固定语义。
+    """
+    from battle import normalize_dir
+
+    assert normalize_dir(0.0, 0.0) is None, "零向量必须返回 None"
+    assert normalize_dir(1e-12, -1e-12) is None, "数值等价于零的向量也必须返回 None"
+    v = normalize_dir(3.0, 4.0)
+    assert v is not None and abs(v - complex(0.6, 0.8)) < 1e-12, v
+    assert abs(abs(normalize_dir(-5.0, 0.0)) - 1.0) < 1e-12
+    assert abs(abs(normalize_dir(0.0, -2.5)) - 1.0) < 1e-12
+    print("    [ok] normalize_dir：零向量→None（不除零）；非零向量单位化正确")
+
+
 def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
@@ -5213,6 +5431,10 @@ def main():
     test_deck_pool_factory()
     test_dashboard_card_stats()
     test_battle_clone_fix()
+    test_take_damage_signature_consistency()
+    test_noncombat_entity_contract()
+    test_death_spawn_routing_data_invariant()
+    test_normalize_dir_zero_vector()
     test_cuda_device_support()
     test_parallel_batch_equivalence()
     test_parallel_training_loop()

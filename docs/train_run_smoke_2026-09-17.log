@@ -1,0 +1,642 @@
+[league] 配置 'run_smoke5' -> runs\run_smoke5 (device=cuda)
+[league] 三分类卡组已接入: {'推进流': 60, '防守反击流': 120, '自闭流': 20} 平均补位={'推进流': 0.0, '防守反击流': 0.0, '自闭流': 0.0}
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,15 —— 掩码缺口
+  warnings.warn(
+[eval@0] main vs push_flow: 3W 1L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,1 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,16 —— 掩码缺口
+  warnings.warn(
+[eval@0] main vs counter_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,3 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,2 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,27 —— 掩码缺口
+  warnings.warn(
+[eval@0] main vs lockdown_flow: 2W 2L 0D
+[eval@0] main vs all_decks: 2W 2L 0D
+[eval@0] main vs random_deck: 3W 1L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,31 —— 掩码缺口
+  warnings.warn(
+[eval@0] push_flow vs counter_flow: 3W 1L 0D
+[eval@0] push_flow vs lockdown_flow: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,3 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,4 —— 掩码缺口
+  warnings.warn(
+[eval@0] push_flow vs all_decks: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,24 —— 掩码缺口
+  warnings.warn(
+[eval@0] push_flow vs random_deck: 0W 4L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,2 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,2 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,16 —— 掩码缺口
+  warnings.warn(
+[eval@0] counter_flow vs lockdown_flow: 1W 3L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,0 —— 掩码缺口
+  warnings.warn(
+[eval@0] counter_flow vs all_decks: 2W 2L 0D
+[eval@0] counter_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,25 —— 掩码缺口
+  warnings.warn(
+[eval@0] lockdown_flow vs all_decks: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,24 —— 掩码缺口
+  warnings.warn(
+[eval@0] lockdown_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,29 —— 掩码缺口
+  warnings.warn(
+[eval@0] all_decks vs random_deck: 4W 0L 0D
+[eval@0] all_decks: 轮内估计 1576±78（本轮 20 局，1σ 噪声地板）
+[eval@0] counter_flow: 轮内估计 1441±78（本轮 20 局，1σ 噪声地板）
+[eval@0] lockdown_flow: 轮内估计 1453±78（本轮 20 局，1σ 噪声地板）
+[eval@0] main: 轮内估计 1559±78（本轮 20 局，1σ 噪声地板）
+[eval@0] push_flow: 轮内估计 1500±78（本轮 20 局，1σ 噪声地板）
+[eval@0] random_deck: 轮内估计 1471±78（本轮 20 局，1σ 噪声地板）
+[replay@0] 已保存 60 局联赛录像 -> runs\run_smoke5\replays\league_0.pkl
+=== League Elo ===
+  all_decks            Elo=1555.9
+  main                 Elo=1537.7
+  lockdown_flow        Elo=1487.8
+  push_flow            Elo=1484.5
+  counter_flow         Elo=1471.8
+  random_deck          Elo=1462.3
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,26 —— 掩码缺口
+  warnings.warn(
+[eval@300] main vs push_flow: 2W 2L 0D
+[eval@300] main vs counter_flow: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,0 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,3 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,0 —— 掩码缺口
+  warnings.warn(
+[eval@300] main vs lockdown_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,1 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,15 —— 掩码缺口
+  warnings.warn(
+[eval@300] main vs all_decks: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,30 —— 掩码缺口
+  warnings.warn(
+[eval@300] main vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,21 —— 掩码缺口
+  warnings.warn(
+[eval@300] push_flow vs counter_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,1 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,25 —— 掩码缺口
+  warnings.warn(
+[eval@300] push_flow vs lockdown_flow: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,18 —— 掩码缺口
+  warnings.warn(
+[eval@300] push_flow vs all_decks: 4W 0L 0D
+[eval@300] push_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,20 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,22 —— 掩码缺口
+  warnings.warn(
+[eval@300] counter_flow vs lockdown_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,7 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,29 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,17 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,23 —— 掩码缺口
+  warnings.warn(
+[eval@300] counter_flow vs all_decks: 1W 3L 0D
+[eval@300] counter_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,21 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,24 —— 掩码缺口
+  warnings.warn(
+[eval@300] lockdown_flow vs all_decks: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,4 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,18 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,3 —— 掩码缺口
+  warnings.warn(
+[eval@300] lockdown_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,23 —— 掩码缺口
+  warnings.warn(
+[eval@300] all_decks vs random_deck: 2W 2L 0D
+[eval@300] all_decks: 轮内估计 1377±78（本轮 20 局，1σ 噪声地板）
+[eval@300] counter_flow: 轮内估计 1394±78（本轮 20 局，1σ 噪声地板）
+[eval@300] lockdown_flow: 轮内估计 1500±78（本轮 20 局，1σ 噪声地板）
+[eval@300] main: 轮内估计 1576±78（本轮 20 局，1σ 噪声地板）
+[eval@300] push_flow: 轮内估计 1653±78（本轮 20 局，1σ 噪声地板）
+[eval@300] random_deck: 轮内估计 1500±78（本轮 20 局，1σ 噪声地板）
+[replay@300] 已保存 60 局联赛录像 -> runs\run_smoke5\replays\league_300.pkl
+=== League Elo ===
+  push_flow            Elo=1585.7
+  main                 Elo=1535.2
+  lockdown_flow        Elo=1501.9
+  random_deck          Elo=1483.6
+  all_decks            Elo=1458.8
+  counter_flow         Elo=1434.7
+[step 340] policy=-0.3733 value=11.1486 entropy=0.3567
+[step 341] policy=-0.2107 value=8.6859 entropy=0.3928
+[step 475] policy=-0.8031 value=31.2215 entropy=0.6521
+[eval@600] main vs push_flow: 3W 1L 0D
+[eval@600] main vs counter_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@12,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@1,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,19 —— 掩码缺口
+  warnings.warn(
+[eval@600] main vs lockdown_flow: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@16,27 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,19 —— 掩码缺口
+  warnings.warn(
+[eval@600] main vs all_decks: 1W 3L 0D
+[eval@600] main vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,25 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,19 —— 掩码缺口
+  warnings.warn(
+[eval@600] push_flow vs counter_flow: 3W 1L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,27 —— 掩码缺口
+  warnings.warn(
+[eval@600] push_flow vs lockdown_flow: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@13,23 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,16 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,26 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,23 —— 掩码缺口
+  warnings.warn(
+[eval@600] push_flow vs all_decks: 2W 2L 0D
+[eval@600] push_flow vs random_deck: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@5,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,30 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@11,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,19 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,16 —— 掩码缺口
+  warnings.warn(
+[eval@600] counter_flow vs lockdown_flow: 1W 3L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,24 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@15,19 —— 掩码缺口
+  warnings.warn(
+[eval@600] counter_flow vs all_decks: 2W 2L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,28 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,18 —— 掩码缺口
+  warnings.warn(
+[eval@600] counter_flow vs random_deck: 0W 4L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@6,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@17,23 —— 掩码缺口
+  warnings.warn(
+[eval@600] lockdown_flow vs all_decks: 4W 0L 0D
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,31 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,15 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@4,22 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:640: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@0,18 —— 掩码缺口
+  warnings.warn(
+[eval@600] lockdown_flow vs random_deck: 3W 1L 0D
+[eval@600] all_decks vs random_deck: 1W 3L 0D
+[eval@600] all_decks: 轮内估计 1424±78（本轮 20 局，1σ 噪声地板）
+[eval@600] counter_flow: 轮内估计 1365±78（本轮 20 局，1σ 噪声地板）
+[eval@600] lockdown_flow: 轮内估计 1559±78（本轮 20 局，1σ 噪声地板）
+[eval@600] main: 轮内估计 1500±78（本轮 20 局，1σ 噪声地板）
+[eval@600] push_flow: 轮内估计 1576±78（本轮 20 局，1σ 噪声地板）
+[eval@600] random_deck: 轮内估计 1576±78（本轮 20 局，1σ 噪声地板）
+[replay@600] 已保存 60 局联赛录像 -> runs\run_smoke5\replays\league_600.pkl
+=== League Elo ===
+  lockdown_flow        Elo=1579.1
+  push_flow            Elo=1574.8
+  random_deck          Elo=1538.9
+  main                 Elo=1493.5
+  all_decks            Elo=1424.7
+  counter_flow         Elo=1388.9
+[train] 训练循环耗时 1228.7s
+[done] config 'run_smoke5' 完成，产物在 runs\run_smoke5（含 Elo 历史，供网页 UI 读取）

@@ -10,7 +10,46 @@ import math
 from itertools import combinations
 
 
+def is_death_bomb(dsd) -> bool:
+    """通用亡语路由的**单一来源**：dsd 是否是"定时炸弹"型（交由 `TimedExplosive` 处理）。
+
+    必须同时要求 `collisionRadius`（`TimedExplosiveData` 硬依赖的键之一）：
+    `SkeletonBalloon` 的容器 dsd 同样带 `deathDamage`、但没有 `collisionRadius`
+    —— 它是"0.6s 后出 7 骷髅"的**容器**（`_generic_death_spawn` 里有专门分支）
+    ⇒ 只按 `deathDamage` 判定会把容器误当炸弹，在 `TimedExplosiveData` 里
+    `KeyError: 'collisionRadius'` **直接崩训练**（2026-09-17 run 模式实测第三例）。
+    回归：`rl/selftest.py::test_death_spawn_routing_data_invariant`。
+    """
+    return bool(dsd.get('deathDamage')) and not dsd.get('hitpoints') \
+        and ('collisionRadius' in dsd)
+
+
+def normalize_dir(dx, dy):
+    """把方向向量 (dx,dy) 归一化成复数；**零向量返回 None**（调用方必须处理）。
+
+    为什么要这个助手：`complex/a` 的归一化在本文件里有 4 处，其中 2 处（击退、推挤）
+    各自写了"零向量跳过"的守卫，另 1 处（滚动弹行进方向）**漏了** ⇒ 起点与终点重合时
+    `ZeroDivisionError: complex division by zero` 直接崩训练（2026-09-17 run 模式实测第四例）。
+    抽成单一来源后，"零向量"这件事只需要判一次，且可被单元测试直接覆盖。
+    回归：`rl/selftest.py::test_normalize_dir_zero_vector`。
+    """
+    v = complex(dx, dy)
+    n = abs(v)
+    if n <= 1e-9:
+        return None
+    return v / n
+
+
 class Entity:
+    #: 【非战斗实体契约 · 2026-09-17】True = 走 `Entity.__init__` 的完整战斗实体
+    #: （有 `data`/`entity_holder`/buff 槽…）。zone / bomb 一类实体**刻意不走**
+    #: `Entity.__init__`（无卡牌身份，避免同名机制类钩子），它们**必须**把本属性置 False：
+    #: 通用路径（法术 pulse 的 `apply_buff`、突进索敌、通用索敌…）据此跳过它们，
+    #: 否则会对缺失属性赋值 ⇒ `AttributeError` **直接崩训练**（2026-09-17 实测两例：
+    #: `TimedExplosive.take_damage(delayed=…)` 签名偏窄；`VinesSnareZone` 无 `regen_buffs`）。
+    #: 强制手段：`rl/selftest.py::test_noncombat_entity_contract`（静态双向对账 + 动态 no-crash）。
+    is_combat_entity = True
+
     def __init__(self, id, position, player, card_name, battle_state: "BattleState" = None):
         # Stores permanent information about this entity like `player` and `card_name`.
         self.id, self.position, self.player, self.card_name, self.battle_state = (id, position, player, card_name, battle_state)
@@ -103,6 +142,10 @@ class Entity:
                    damage_reduction=None, stun=0.0, heal=None, retarget=False):
         """speed_mult/hit_speed_mult: 倍率（>1 加速、<1 减速）；damage_reduction: 0~1 减伤；
         stun: 定身秒数（附带攻击蓄力重置与可选重索敌）；heal: {'hps','time'}"""
+        # 非战斗实体（zone/bomb，不走 Entity.__init__）没有 buff 槽/攻击态 ⇒ 直接无操作。
+        # 语义上法术 pulse 本来也不该给"领域"挂治疗/加速（见 Entity.is_combat_entity）。
+        if not getattr(self, 'is_combat_entity', True):
+            return
         if stun > 0:
             # —— 勘误批1：刺客突进不可被打断（用户口径 2026-09-04）——突进期间忽略眩晕/冰冻
             if getattr(self, '_dash_active', False):
@@ -295,7 +338,7 @@ class Entity:
             return
         bs = self.battle_state
         self._death_elixir_gift()
-        if dsd.get('deathDamage') and not dsd.get('hitpoints'):
+        if is_death_bomb(dsd):
             bomb = TimedExplosive(bs.next_entity_id, Position(self.position.x, self.position.y),
                                   self.player, self.card_name)
             bs._spawn_entity(bomb)
@@ -507,6 +550,10 @@ class Entity:
     def take_damage(self, amount: float, delayed=False, source=None, pierce_invincible=False):
         """Apply damage to entity.  M5：source=伤害来源（觉醒击杀治疗归因用）
         M6：pierce_invincible=法术伤害可穿透亡影无敌（觉醒骷髅军团亡影「can be affected by spells」）"""
+        # 非战斗实体（zone/bomb，不走 Entity.__init__、没有 hp/entity_holder）⇒ 无操作。
+        # 这不是"新行为"：它们的 take_damage 本来就是 no-op 桩，这里只是把契约统一到一处。
+        if not getattr(self, 'is_combat_entity', True):
+            return
         # —— M6：MinionHorde 首击面纱（每成员一次：首击被闪避 + 进入短无敌窗口）——
         if getattr(self, '_evo_veil_time', 0.0) > 0 and not self._evo_veil_used:
             self._evo_veil_used = True
@@ -1566,20 +1613,24 @@ class Projectile(Entity):
                     each.take_damage(self._damage(), delayed=True)
                     self.damage_dealt.append(each)
                     # now knockback
-                    direction_vector = complex(each.position.x-self.position.x, each.position.y-self.position.y)
-                    _nv = abs(direction_vector)
-                    if _nv <= 1e-9:
+                    direction_vector = normalize_dir(each.position.x-self.position.x,
+                                                   each.position.y-self.position.y)
+                    if direction_vector is None:
                         continue   # 目标与滚动弹同格：击退方向为零向量，跳过（防除零崩溃）
-                    direction_vector /= _nv
                     direction_vector *= self.proj.pushback
                     if isinstance(each, Troop):
                         new_x = each.position.x + direction_vector.real
                         new_y = each.position.y + direction_vector.imag
                         if self.battle_state.ground_walkable(Position(new_x, new_y), each.data.collision_radius):
                             each.position = Position(new_x, new_y)
-            direction_vector = complex(self.target_position.x-self.initial_position.x,
-                                       self.target_position.y-self.initial_position.y)
-            direction_vector /= abs(direction_vector)
+            direction_vector = normalize_dir(self.target_position.x-self.initial_position.x,
+                                           self.target_position.y-self.initial_position.y)
+            if direction_vector is None:
+                # 起点=终点（零行程滚动）：无处可滚 ⇒ 与 roll_range 终止分支同样处理
+                # （走出兵链后消亡）。旧代码此处直接 `/= abs(...)` ⇒ 除零崩训练。
+                self._chain(self.position)
+                self.is_alive = False
+                return
             direction_vector *= self.proj.speed * dt
             self.position.x += direction_vector.real
             self.position.y += direction_vector.imag
@@ -1725,6 +1776,9 @@ class AreaEffect(Entity):
     由 cards_stats_spell 行驱动（radius/life_duration/hit_speed/buff_data），官方 lv11 数值经
     evolutions.OFFICIAL_OVERRIDES 覆盖。此前这些法术在引擎里是「无行为隐形实体」。
     注意：刻意不走 Entity.__init__（否则同名机制类如 Rage 会在 battle_state 挂载前执行钩子）。"""
+    #: 非战斗实体：刻意不走 Entity.__init__（见 Entity.is_combat_entity 契约）
+    is_combat_entity = False
+
     def __init__(self, id, position, player, card_name, battle_state=None):
         self.id, self.position, self.player = id, position, player
         self.card_name = card_name
@@ -1892,6 +1946,9 @@ class _BombShim:
 class GenericBomb(Entity):
     """M3：可编程定时炸弹（Mighty Miner 能力）。显式伤害/半径/延迟/击退，不可被攻击不可被选取。
     M8+：hits_air/hits_ground 过滤（缺省双 True 保持旧行为；MK 落地溅射仅地面）。"""
+    #: 非战斗实体：刻意不走 Entity.__init__（见 Entity.is_combat_entity 契约）
+    is_combat_entity = False
+
     def __init__(self, id, position, player, damage, radius, delay, knockback=0.0,
                  hits_air=True, hits_ground=True):
         self.id, self.position, self.player = id, position, player
@@ -1930,7 +1987,8 @@ class GenericBomb(Entity):
                             e.position.x, e.position.y = nx, ny
         self.is_alive = False
 
-    def take_damage(self, amount): pass
+    def take_damage(self, amount, delayed=False, source=None, pierce_invincible=False):
+        pass   # 爆炸物不受伤害；**签名必须与标准一致**，否则被突进/法术当目标时 TypeError
 
     def to_dict(self):
         return {'type': 'bomb', 'card_name': self.name, 'player': self.player,
@@ -1949,6 +2007,9 @@ class EvoEffectZone(Entity):
     支持：持续伤害（damagePerSecond × hitFrequency 脉冲）、减速/冰冻（speedMultiplier /
     hitSpeedMultiplier=-100）、进入吸引（attractPercentage，格/s）、友方增益（狂暴领域）。
     刻意不走 Entity.__init__（同 AreaEffect：无卡牌身份，避免同名机制类钩子）。"""
+    #: 非战斗实体：刻意不走 Entity.__init__（见 Entity.is_combat_entity 契约）
+    is_combat_entity = False
+
     def __init__(self, id, position, player, battle_state, radius, lifetime,
                  dps=0.0, tick=0.5, slow=None, stun_pulse=0.0, attract=0.0,
                  ally_buff=None, level=11, label='EvoEffectZone'):
@@ -1995,7 +2056,8 @@ class EvoEffectZone(Entity):
         self.lifetime -= dt
         if self.lifetime <= 0: self.is_alive = False
 
-    def take_damage(self, amount, delayed=False, source=None): pass
+    def take_damage(self, amount, delayed=False, source=None, pierce_invincible=False):
+        pass
 
     def to_dict(self):
         return {'type': 'evo_zone', 'card_name': self.name, 'player': self.player,
@@ -2040,6 +2102,9 @@ class HealAuraZone(Entity):
     寿命 1s、每 0.25s 治疗半径内友军部队一跳（共 4 跳）; 不治疗光环源（exclude_id）;
     仅部队（建筑受疗【待确认】, 当前不含）; 对空对地。刻意不走 Entity.__init__
     （同 EvoEffectZone：无卡牌身份, 避免同名机制类钩子）。"""
+    #: 非战斗实体：刻意不走 Entity.__init__（见 Entity.is_combat_entity 契约）
+    is_combat_entity = False
+
     def __init__(self, id, position, player, radius, heal_per_tick,
                  ticks=4, interval=0.25, exclude_id=None, label='HealAura'):
         self.id, self.position, self.player = id, position, player
@@ -2098,6 +2163,9 @@ class VinesSnareZone(Entity):
     → 空中单位被拽落（groundsAirUnits：flying 临时关闭, 落地时长=束缚时长, 期间可被地面单位攻击）。
     伤害结构与 FL 等效：本引擎 153×2 跳 = FL 卡面 DPS 153/s × 2s = 306 总伤（lv11）。
     刻意不走 Entity.__init__（同 EvoEffectZone：无卡牌身份, 避免同名机制类钩子）。"""
+    #: 非战斗实体：刻意不走 Entity.__init__（见 Entity.is_combat_entity 契约）
+    is_combat_entity = False
+
     def __init__(self, id, position, player, battle_state, radius, lifetime, damage,
                  hits=2, crown_pct=0.25, snare_duration=2.0, max_targets=3,
                  grounds_air=True, level=11, label='Vines_AeO'):
@@ -2173,7 +2241,8 @@ class VinesSnareZone(Entity):
         if self.lifetime <= 0:
             self.is_alive = False
 
-    def take_damage(self, amount, delayed=False, source=None): pass
+    def take_damage(self, amount, delayed=False, source=None, pierce_invincible=False):
+        pass
 
     def to_dict(self):
         return {'type': 'vines_zone', 'card_name': self.name, 'player': self.player,
@@ -2395,7 +2464,7 @@ class TimedExplosive(Entity):
                     entity.take_damage(self.dsd.damage)
         self.is_alive = False
 
-    def take_damage(self, amount: float):
+    def take_damage(self, amount: float, delayed=False, source=None, pierce_invincible=False):
         # Bombs does not take damage!
         pass
 

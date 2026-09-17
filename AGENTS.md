@@ -65,8 +65,8 @@ PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe <脚本>
 
 | 模式 | 入口 | 语义 |
 |---|---|---|
-| `solo` | `rl/run_league.py --mode solo` | 固定卡组镜像 + 周期冻结副本 + 对手池（**当前主线**） |
-| `run` | `--mode run` | 5 流派卡组模型 + main，PFSP 采样 |
+| `solo` | `rl/run_league.py --mode solo` | 固定卡组镜像 + **自我对弈**对手池（frozen/hist/**SelfDefender**/锚点） |
+| `run` | `--mode run` | **多卡组**：5 脚本 agent（**均 mask-随机**）+ main + Elo。**2026-09-17 用户选定主线**；⚠️ 对手弱/无自我对弈 ⇒ `docs/run_mode_multideck_2026-09-17.md` |
 | `flow` | `--mode flow` | 全配对分流派联赛（一次 148,800 局） |
 
 ### 2.2 标准 20k 协议（与历史 run 可比，唯一变量改 `--config-name`）
@@ -80,7 +80,7 @@ python rl/run_league.py --mode solo --config economy --config-name <name> --fres
 ```
 > `opp_mix` **没有 CLI flag**；恢复文档配比（frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1）
 > 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**✅ 2026-09-17 更正（我 2026-09-14 写错过）**：`runs/...` 全是 **cwd 相对**路径，命令在 `src/clasher_new` 下跑 ⇒
-真实位置是 **`src/clasher_new/runs/`**（4.7 GB，三个目录都在）；仓库根那个 `runs/`（2.1 GB）是另一份旧目录。
+真实位置是 **`src/clasher_new/runs/`**；仓库根那个 `runs/` 是另一份旧目录。
 实测 `demo20k`：对手池 `hist ckpts=12 来自 [economy_9k_ft, economy_9j]`、mix 0.1/0.6/0.2/0.1 ⇒ **协议照抄即生效**。
 
 ### 2.3 100k 长跑 + 评估节奏 C（密锚点 + 稀全块）
@@ -113,7 +113,7 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/value_displacement_scan.py` | 逐窗 `‖ΔW‖/‖W‖` 参数位移指纹（R14 的 M1/M2 判别） |
 | `scripts/check_commit.py`（2026-09-17） | **长跑前宿主提交内存检查**（【R1】的 `wmic` 替代品，因 wmic 已被 Windows 移除）；可用提交 < 12 GB ⇒ 降 `--eval-workers` 档 |
 | `scripts/run_selftests.py`（2026-09-14） | 按名跑**子集** selftest（【R19】默认用法；不改 `selftest.py`） |
-| `scripts/check_dashboard_js.py`（2026-09-17） | **dashboard 前端回归**：node + DOM 桩跑内嵌 JS 的渲染冒烟（全指标绘制 / 空表分支）；Windows 下自动回退 `wsl.exe node`，经 stdin 管道 |
+| `scripts/check_dashboard_js.py`（2026-09-17） | **dashboard 前端回归**：node + DOM 桩跑内嵌 JS 渲染冒烟（经 stdin 管道；Windows 下回退 `wsl.exe node`） |
 
 > **脚本对手陷阱**：`ScriptedPolicy(mode="heuristic")` 实为 **mask 随机**（P0-3 时代占位）；
 > 要"会防守的脚本对手"必须用 `SelfDefenderPolicy`——其反制落点是**世界坐标**，
@@ -165,15 +165,14 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 - **平局裁决口径 + 僵局早停（2026-09-17 用户拍板，打断历史可比性）**：① 皇冠优先 → **三塔血量合计**多者胜 →
   完全相等才平局（单一来源 `BattleState.timeout_winner()`；C′ 细差判平默认关）；② **僵局早停默认关**
   （`train_stall_stop=False`；旧行为 `--train-stall-stop`）⇒ 零塔损局打满 180s/300s，不再 50 s 判平。
-  **端到端实测 `nostall20k`：J1–J3 全过**（0/240 局被早停、0 平局、`deploy%` 中位 8.6→9.4 且从未 <5% ⇒ **早停未致"不爱下牌"**）；
-  旧口径代价 **32/280=11.4% 局被早停**（全程零塔损判据）⇒ 帧数 **+16%~+31%**、局数 62.7→58.0（旧稿 96.8%/+96~222% 系代理判据假象，已推翻）。
+  **端到端实测 `nostall20k`：J1–J3 全过**（早停 0/240、0 平局、`deploy%` 中位 8.6→9.4）；
+  旧口径代价 **32/280=11.4% 局被早停**⇒ 帧数 **+16%~+31%**、局数 62.7→58.0（旧稿 96.8% 系代理判据假象，已推翻）。
   仍悬：终局罚可见度 0.27→0.011。判读 `docs/nostall20k_verdict_2026-09-17.md`。
 - **判读禁则**：**不判** main 曲线与单点胜率。机理：`main vs 冻结副本` 结构性≈0.5，且当
   `copy_every` 与 `steps_per_eval` 整除时，"同步→评估"的顺序会让评估对手**恒为刚同步的 main 自己**
   （已改"先评估后同步"）；⇒ **`main vs 冻结副本` 的 0.85 这类读数不得当作"变强"证据**——
   run 内自引用指标（打冻结副本 / 打上一评估点 / 行为门禁全绿）**全部失真**（见 C4）。
-  行为指标是**相位型**（D1 r1 的 engagement 同 run 内 39.8→0.3，r2 0.4→0.3，末点 deploy
-  11.9/42.5/54.5 横跨对照 12.5~61.9，见 `docs/d1_league_20k_verdict_2026-09-13.md` §4/§8），
+  行为指标是**相位型**（数字见 `docs/d1_league_20k_verdict_2026-09-13.md` §4/§8），
   只读 `gates.json` 的**相对退化**，绝对数不跨 run 比。
 
 ### 3.1 关键常量（改代码前先对照这里）
@@ -310,7 +309,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | **价值阶梯 · 第二轮（v2，已判读）**：正式判决仍是 `V2_INVALID`（**我的 G-RAW 阈值用单次观测标定** ⇒【红线 R16】），但**比值判据 `R0 ≥ 2·E0` 在三条轨迹上全部复现**（2.82× / 3.05× / 3.39×）⇒「共享感知前端丢掉约 2/3 线性可读局内信号」+「`value_enc_ln` **不是**掉点层」两条**复现过**（⚠️ **已被【否证 X-17】/【X-18】推翻，见上一行**）；探针**复现闸 PASS**（播种后同 ckpt/seed 唯一轨迹） | [`docs/value_ln_probe2_prereg_2026-09-14.md`](docs/value_ln_probe2_prereg_2026-09-14.md)、[`docs/value_ln_probe2_verdict_2026-09-14.md`](docs/value_ln_probe2_verdict_2026-09-14.md)、`docs/value_ln_probe2_rngchk_{a,b}.log` |
 | **奖励分量分解**（预注册 + 判读：逐帧奖励精确拆五项 → **W4 无主导项**；排除"奖励被资源账带偏"；验证双倍期切价；附带发现塑形缺 `γ`） | [`docs/reward_composition_prereg_2026-09-14.md`](docs/reward_composition_prereg_2026-09-14.md)、[`docs/reward_composition_verdict_2026-09-14.md`](docs/reward_composition_verdict_2026-09-14.md)、`scripts/probe_reward_composition.py` |
 | **精确塔伤 · P3（近似闸门否证 → 触发式实现 → 归因与寿命修复）** ★：`threat_precise_prereg` / `threat_precise_probe_verdict`（近似 BA 0.44~0.66）/ `threat_trigger_verdict`（上升沿 vs 电平）/ `threat_precise_cheapening_verdict`（剪枝）/ **`threat_precise_impl_2026-09-14.md`（交付 + 3 seed 验收）** / **`hold_recompute_verdict_2026-09-14.md`（盘面变了会不会重算：不会；寿命/陈旧度/BA 年龄曲线）** / `threat_hold_life_prereg_2026-09-14.md`（寿命上限预注册） | `docs/threat_precise_prereg_2026-09-14.md`、`docs/threat_precise_probe_verdict_2026-09-14.md`、`docs/threat_trigger_verdict_2026-09-14.md`、`docs/threat_precise_cheapening_verdict_2026-09-14.md`、`docs/threat_precise_impl_2026-09-14.md`、`docs/hold_recompute_verdict_2026-09-14.md`、`docs/threat_hold_life_prereg_2026-09-14.md`、`docs/threat_hold_life_verdict_2026-09-14.md`（配对 A/B 判读）；仪器 `scripts/probe_precise_threat.py`、`scripts/probe_hold_recompute.py`、`scripts/probe_hold_life_ab.py`（同轨迹配对） |
-| **平局裁决口径（2026-09-17）** ★：皇冠优先 → **三塔血量合计**多者胜 → 完全相等才平局；C′ 细差判平默认关；280 局回放配对实测 | [`docs/draw_rule_prereg_2026-09-17.md`](docs/draw_rule_prereg_2026-09-17.md)、[`docs/draw_rule_verdict_2026-09-17.md`](docs/draw_rule_verdict_2026-09-17.md)、仪器 `scripts/analyze_draw_anatomy.py` |
+| **2026-09-17 三项（平局/run 主线/dashboard）** ★：平局 → 皇冠后比**三塔血量合计**、完全相等才平局；run 模式（多卡组）实测修掉 **4 个阻塞级引擎 bug**（各配回归测试）；solo 曲线改**指标多选器**、卡牌统计新增「**按卡组**」矩阵 | [`docs/draw_rule_prereg_2026-09-17.md`](docs/draw_rule_prereg_2026-09-17.md)、[`docs/draw_rule_verdict_2026-09-17.md`](docs/draw_rule_verdict_2026-09-17.md)、仪器 `scripts/analyze_draw_anatomy.py`、`scripts/check_dashboard_js.py`；**`docs/run_mode_multideck_2026-09-17.md`** |
 | R1 事件留证（`cudaErrorUnknown` / 宿主提交压力 / 孤儿 worker） | [`docs/r1_incident_2026-09-13_layer1_cuda_unknown.md`](docs/r1_incident_2026-09-13_layer1_cuda_unknown.md) |
 | 本文件的过程细节与历史推理链 | [`docs/agents_archive_2026-09.md`](docs/agents_archive_2026-09.md) |
 | 文档 ↔ 源码完整索引 | [`docs/README.md`](docs/README.md) |
