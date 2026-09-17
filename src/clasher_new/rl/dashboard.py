@@ -4,22 +4,33 @@
 - ``--sweep`` 指向 flow-sweep 产物（runs/<name>/ 或单个 flow_sweep_<strategy> 目录），
   每 3 秒读取逐轮增量写的 ``summary.json``（status/run_current/eta_s）→ 进度条 +
   main 轮内估计 ±1σ 曲线（flow_sweep_stream / flow_sweep_games5 两个策略并排显示）；
-- ``--solo`` 指向 solo 自对弈状态（solo_state.json）→ 胜率曲线 ±SE + 训练进度；
+- ``--solo`` 指向 solo 自对弈状态（solo_state.json）→ **指标多选器** + 训练进度。
+  ⚠️ **2026-09-17 起不再以胜率为曲线指标**：AGENTS §3 判读禁则明确「不判 main 曲线与单点胜率」
+  （main vs 刚同步的冻结副本 = 自引用读数，结构性 ≈0.5）⇒ 默认画**行为指标**
+  （接敌率 / 单边堆牌 / 平均圣水），下拉可切防守链 / 部署量 / 回报 / critic / GRU 活力 /
+  外生对照（`_controls_history` 的 baseline0·prev·rand）/ 以及「⚠ 自引用（禁读）」分组的胜率。
+  数据源 = ``history[]``（逐评估点 32 键）与 ``_controls_history``；指标定义见 ``SOLO_METRICS``；
 - ``--play`` 指向 FollowerPolicy checkpoint 或 runs/<name> 目录 → **人机对战页面**：
   人在浏览器点手牌 + 点格子出牌（player-0），对手 = 训练模型（player-1）；每步记录
   EpisodeReplay（含 hidden）与 BC 样本，落盘 ``--play-out`` 供 train_belief / BC 训练；
 - 扫描 ``<state 同目录>/replays/league_<step>.pkl`` 联赛录像，列出最近回放；
 - 浏览器内 Canvas 播放器回放单局（纯前端自绘，无外部 CDN 依赖，离线可用）；
-- **卡牌使用统计**（``/api/cardstats``）：按卡组/模型汇总实际出牌 —— 行=卡牌、列=模型，
-  单元格为出牌次数（热力配色）+ 占该模型总出牌的比例；统计范围可选当前打开的回放 /
-  最近 N 个 / 全部。数据口径：对手侧取帧的 ``opp_played``（所有录像都有），我方侧取帧的
-  ``cards``（新录像；旧录像无 → 该侧显示 0 并提示"部分覆盖"）；
+- **卡牌使用统计**（``/api/cardstats``）：两种切分 —— ①**按模型**（行=卡牌、列=模型）；
+  ②**按卡组**（行=卡牌、列=卡组，2026-09-17 新增，面向 ``--mode run``/``flow`` 的**多卡组对战**：
+  卡组指纹 = 卡名排序（与顺序无关），列标题悬停可见该卡组 8 张卡，不在 200 副天梯池里的
+  未知卡组给短指纹）。单元格 = 出牌次数（热力配色）+ 占该列总出牌的比例。数据口径：
+  对手侧取帧的 ``opp_played``（所有录像都有），我方侧取帧的 ``cards``（新录像），
+  卡组归属取局级 ``meta.decks``（新录像才有 ⇒ 旧录像「按卡组」表为空并提示）；
+  统计范围可选当前打开的回放 / 最近 N 个 / 全部；
+- **回归**：``scripts/check_dashboard_js.py``（node + DOM 桩，用真实 payload 跑本文件内嵌
+  JS 的渲染冒烟：语法 + 全指标绘制 + 空表/旧录像分支）；
 - ``/api/state`` 每 3 秒轮询刷新，``/api/sweep`` / ``/api/solo`` 同频，``/api/replays`` 每 5 秒。
 
 用法：
-    python rl/dashboard.py --state league_state.json --sweep runs/economy --port 8090
-    python rl/dashboard.py --play runs/solo --port 8090      # 人机对战 + 数据采集
-打开 http://127.0.0.1:8090 查看。仓库根目录另有 scripts/rl/dashboard.py 包装。
+    python rl/dashboard.py --state league_state.json --sweep runs/economy --port 8700
+    python rl/dashboard.py --solo runs/nostall20k --replays runs/nostall20k/replays --port 8700
+    python rl/dashboard.py --play runs/solo --port 8700      # 人机对战 + 数据采集
+打开 http://127.0.0.1:<port> 查看（⚠️ 8090 在本机被系统保留，见 AGENTS §2.5）。仓库根目录另有 scripts/rl/dashboard.py 包装。
 """
 
 import os
@@ -180,17 +191,32 @@ def build_sweep_payload(sweep_root):
 # ---------------------------------------------------------------------------
 
 def build_solo_payload(path):
-    """读取 --mode solo 写出的 solo_state.json → 胜率曲线/进度/卡组信息。"""
+    """读取 --mode solo 写出的 solo_state.json → 指标曲线/进度/卡组信息。
+
+    2026-09-17：**不再以胜率为唯一曲线**——除 `history`（含行为/critic/活力共 32 键）外，
+    额外透传 `_controls_history`（三路外生对照曲线）与同目录 `gates.json`（行为门禁快照）。
+    """
     if not path:
         return {"ok": False, "error": "未指定 --solo 状态文件", "solo_path": None}
     st = load_state(path)
     if st is None:
         return {"ok": False, "error": f"solo 状态文件不存在: {path}", "solo_path": path}
     history = st.get("history") or []
+    gates = None
+    try:
+        gp = os.path.join(os.path.dirname(os.path.abspath(path)), "gates.json")
+        if os.path.isfile(gp):
+            with open(gp, "r", encoding="utf-8") as f:
+                gates = json.load(f)
+    except Exception:
+        gates = None
     return {
         "ok": True,
         "agents": [{"id": "main", "label": "main（自对弈）", "kind": "main"}],
-        "history": history,   # [{step,wins,losses,draws,games,winrate,winrate_se,mean_reward}]
+        "mode": st.get("mode", "solo"),
+        "history": history,   # [{step,wins,...,winrate,winrate_se,mean_reward,engagement_rate,...}]
+        "controls_history": st.get("_controls_history") or [],   # [{step,vs,winrate,...}]
+        "gates": gates,       # {step,ok,baseline,checks[]}
         "total_steps": int(st.get("total_steps", 0)),
         "target_steps": int(st.get("target_steps", 0) or 0),
         "deck": st.get("deck", []),
@@ -352,8 +378,59 @@ def _new_agent(mid):
             "cards": {}, "deck_cards": {}, "n_decks": 0}
 
 
+# --- 按「卡组」维度的统计（多卡组对战：行=卡牌、列=卡组） -------------------
+# 2026-09-17 新增：solo 是双方同一副牌，`--mode run` / `flow` 是真正的多卡组
+# （run_league.py:559-565 的 5 个脚本 agent 各带卡组池）⇒ 需要按**卡组**而不是按**模型**
+# 汇总出牌，才能回答"哪个卡组爱打哪张卡"。
+
+_DECK_INDEX = None      # deck_key -> archetype（来自 docs/leaderboard_decks_classified.json）
+
+
+def _deck_key(deck):
+    """卡组指纹：卡名排序后拼接（与顺序无关，双方同副牌的不同排列视为同一卡组）。"""
+    cards = [str(c) for c in (deck or []) if c]
+    if not cards:
+        return None
+    return "|".join(sorted(cards))
+
+
+def _deck_index():
+    """懒加载「卡组 → archetype」索引（200 副天梯卡组，rl/decks.py）。失败即空表。"""
+    global _DECK_INDEX
+    if _DECK_INDEX is None:
+        idx = {}
+        try:
+            from rl.decks import load_classified_decks
+            for d in load_classified_decks():
+                k = _deck_key(d.get("cards") or [])
+                if k and k not in idx:
+                    idx[k] = d.get("archetype") or "未知"
+        except Exception:
+            idx = {}
+        _DECK_INDEX = idx
+    return _DECK_INDEX
+
+
+def _new_deck(key, deck):
+    arch = _deck_index().get(key)
+    cards = [str(c) for c in (deck or [])]
+    # 未知卡组给一个短指纹（列多时可区分），完整 8 张在列标题的 title 里
+    short = "·".join(sorted(cards)[:3]) + ("…" if len(cards) > 3 else "")
+    return {"key": key, "deck": cards,
+            "label": arch or ("自定义 " + short), "archetype": arch,
+            "known": arch is not None,
+            "side_games": 0, "plays": 0, "cards": {}}
+
+
+def _deck_bucket(decks, deck):
+    key = _deck_key(deck)
+    if not key:
+        return None
+    return decks.setdefault(key, _new_deck(key, deck))
+
+
 def _stat_file_cards(path):
-    """统计单个回放文件里"每个模型打了哪些牌"。带 (mtime,size) 缓存。"""
+    """统计单个回放文件里"每个模型 / 每个卡组打了哪些牌"。带 (mtime,size) 缓存。"""
     try:
         st = os.stat(path)
     except OSError:
@@ -372,7 +449,8 @@ def _stat_file_cards(path):
         return None
 
     agents = {}
-    n_games = side0_games = side1_games = 0
+    deck_stats = {}
+    n_games = side0_games = side1_games = games_with_decks = 0
 
     def _agent(mid):
         return agents.setdefault(mid, _new_agent(mid))
@@ -382,6 +460,13 @@ def _stat_file_cards(path):
         pair = list(meta.get("pair") or [])
         side0_id = meta.get("side0") or (pair[0] if pair else None)
         side1_id = _other_side_id(meta)
+        meta_decks = meta.get("decks")
+        deck0 = deck1 = None
+        if isinstance(meta_decks, list) and len(meta_decks) == 2:
+            deck0, deck1 = meta_decks[0], meta_decks[1]
+            games_with_decks += 1
+        b0 = _deck_bucket(deck_stats, deck0)
+        b1 = _deck_bucket(deck_stats, deck1)
         n_games += 1
         seen0 = seen1 = False
         for fr in (g.get("frames") or []):
@@ -394,6 +479,9 @@ def _stat_file_cards(path):
                     a = _agent(side1_id)
                     a["cards"][c] = a["cards"].get(c, 0) + 1
                     a["plays"] += 1
+                    if b1 is not None:
+                        b1["cards"][c] = b1["cards"].get(c, 0) + 1
+                        b1["plays"] += 1
                     seen1 = True
             # 我方侧：cards（新录像才有）
             if side0_id:
@@ -403,6 +491,9 @@ def _stat_file_cards(path):
                     a = _agent(side0_id)
                     a["cards"][c] = a["cards"].get(c, 0) + 1
                     a["plays"] += 1
+                    if b0 is not None:
+                        b0["cards"][c] = b0["cards"].get(c, 0) + 1
+                        b0["plays"] += 1
                     seen0 = True
         if side0_id:
             _agent(side0_id)["games"] += 1
@@ -410,19 +501,21 @@ def _stat_file_cards(path):
             _agent(side1_id)["games"] += 1
         side0_games += 1 if seen0 else 0
         side1_games += 1 if seen1 else 0
-        # 卡组构成：meta.decks = [deck0, deck1]（新录像）
-        decks = meta.get("decks")
-        if isinstance(decks, list) and len(decks) == 2:
-            for mid, deck in ((side0_id, decks[0]), (side1_id, decks[1])):
-                if not mid:
-                    continue
+        # 卡组构成（meta.decks，新录像才有）+ 每卡组的出战边数
+        for mid, deck, b in ((side0_id, deck0, b0), (side1_id, deck1, b1)):
+            if not mid:
+                continue
+            if deck:
                 a = _agent(mid)
                 a["n_decks"] += 1
                 for c in (deck or []):
                     a["deck_cards"][c] = a["deck_cards"].get(c, 0) + 1
+            if b is not None:
+                b["side_games"] += 1
 
     stats = {"n_games": n_games, "side0_games": side0_games,
-             "side1_games": side1_games, "agents": agents}
+             "side1_games": side1_games, "games_with_decks": games_with_decks,
+             "agents": agents, "decks": deck_stats}
     _CARD_STATS_CACHE[path] = (key, stats)
     return stats
 
@@ -445,7 +538,8 @@ def build_card_stats_payload(replays_dir, filename=None, n_files=3):
         files = [r["file"] for r in scan_replays(replays_dir, limit=limit)]
 
     agents = {}
-    n_games = side0_games = side1_games = 0
+    decks = {}
+    n_games = side0_games = side1_games = games_with_decks = 0
     used = []
     for fn in files:
         st = _stat_file_cards(os.path.join(replays_dir, fn))
@@ -455,6 +549,7 @@ def build_card_stats_payload(replays_dir, filename=None, n_files=3):
         n_games += st["n_games"]
         side0_games += st["side0_games"]
         side1_games += st["side1_games"]
+        games_with_decks += st.get("games_with_decks", 0)
         for mid, a in st["agents"].items():
             tgt = agents.setdefault(mid, _new_agent(mid))
             tgt["games"] += a["games"]
@@ -464,6 +559,16 @@ def build_card_stats_payload(replays_dir, filename=None, n_files=3):
                 tgt["cards"][c] = tgt["cards"].get(c, 0) + v
             for c, v in a["deck_cards"].items():
                 tgt["deck_cards"][c] = tgt["deck_cards"].get(c, 0) + v
+        for key, d in (st.get("decks") or {}).items():
+            tgt = decks.get(key)
+            if tgt is None:
+                tgt = decks[key] = {"key": key, "deck": list(d["deck"]), "label": d["label"],
+                                    "archetype": d["archetype"], "known": d["known"],
+                                    "side_games": 0, "plays": 0, "cards": {}}
+            tgt["side_games"] += d["side_games"]
+            tgt["plays"] += d["plays"]
+            for c, v in d["cards"].items():
+                tgt["cards"][c] = tgt["cards"].get(c, 0) + v
 
     out = []
     for mid, a in agents.items():
@@ -483,17 +588,43 @@ def build_card_stats_payload(replays_dir, filename=None, n_files=3):
             "n_decks": a["n_decks"],
         })
     out.sort(key=lambda x: -x["plays"])
+
+    decks_out = []
+    for key, d in decks.items():
+        total = d["plays"]
+        top = sorted(d["cards"].items(), key=lambda kv: (-kv[1], kv[0]))
+        decks_out.append({
+            "key": key,
+            "deck": d["deck"],
+            "label": d["label"],
+            "archetype": d["archetype"],
+            "known": d["known"],
+            "side_games": d["side_games"],
+            "plays": total,
+            "n_distinct": len(d["cards"]),
+            "per_side_game": round(total / d["side_games"], 2) if d["side_games"] else 0.0,
+            "cards": d["cards"],
+            "top": [{"card": c, "n": v,
+                     "share": round(v / total, 4) if total else 0.0} for c, v in top],
+        })
+    decks_out.sort(key=lambda x: -x["plays"])
+
     return {
         "ok": True,
         "files": used,
         "n_games": n_games,
         "agents": out,
+        "decks": decks_out,
+        "n_decks": len(decks_out),
         "coverage": {
             "side0_games": side0_games,
             "side1_games": side1_games,
             "n_games": n_games,
+            "games_with_decks": games_with_decks,
             # 旧录像只有对手侧可统计 → 前端据此提示"部分覆盖"
             "partial": side0_games < n_games,
+            # 旧录像没有 meta.decks ⇒ 无法按卡组切分
+            "deck_meta_partial": games_with_decks < n_games,
         },
         "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
     }
@@ -612,6 +743,8 @@ _HTML = r"""<!DOCTYPE html>
   .sweep-layout .sub { font-size:12px; }
   /* —— solo 自对弈（无联赛）—— */
   .solo-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .solo-metricbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+  .solo-metricbar .btn { width:auto; }
   .solo-layout { display:grid; grid-template-columns: 1.6fr 1fr; gap:14px; }
   @media (max-width: 900px) { .solo-layout { grid-template-columns: 1fr; } }
   .solo-layout canvas { height:300px; }
@@ -646,6 +779,8 @@ _HTML = r"""<!DOCTYPE html>
   .stats-agent b { color:#e2e8f0; }
   .stats-agent .m { color:#94a3b8; }
   .stats-scroll { max-height:460px; overflow:auto; border:1px solid #334155; border-radius:8px; }
+  .stats-h { font-size:13px; color:#cbd5e1; margin:14px 0 6px; display:flex; align-items:baseline; gap:8px; }
+  .stats-h:first-of-type { margin-top:10px; }
   table.cards { font-size:12px; }
   table.cards th { position:sticky; top:0; background:#1e293b; z-index:1; }
   table.cards td, table.cards th { padding:5px 8px; white-space:nowrap;
@@ -708,6 +843,31 @@ _HTML = r"""<!DOCTYPE html>
     <div class="progress" id="soloProgress"></div>
     <span class="sub" id="soloMeta"></span>
   </div>
+  <div class="solo-metricbar">
+    <label class="sub" for="soloMetric" style="margin:0">曲线指标</label>
+    <select id="soloMetric" class="btn">
+      <optgroup label="行为（默认 · AGENTS §3：行为是相位型，只读相对退化）">
+        <option value="behavior" selected>接敌率 · 单边堆牌 · 平均圣水</option>
+        <option value="defense">防守投入 · 响应延迟 · 拦截率</option>
+        <option value="deploy">deploy/局 · 多卡同帧 · 塔血差</option>
+      </optgroup>
+      <optgroup label="回报">
+        <option value="reward">mean_reward（逐点）</option>
+      </optgroup>
+      <optgroup label="critic / 活力">
+        <option value="critic">critic EV · value÷R std</option>
+        <option value="vitality">GRU h 跨帧 std · n(abs)</option>
+      </optgroup>
+      <optgroup label="外生对照（唯一可测绝对强度的仪器）">
+        <option value="controls">baseline0 / prev / rand 胜率</option>
+      </optgroup>
+      <optgroup label="⚠ 自引用（AGENTS §3 判读禁则：不得当变强证据）">
+        <option value="winrate">main vs 冻结副本 胜率 ±1σ</option>
+      </optgroup>
+    </select>
+    <span class="legend" id="soloMetricLegend" style="margin:0"></span>
+  </div>
+  <p class="sub" id="soloMetricNote" style="margin:0 0 8px"></p>
   <div class="solo-layout">
     <div style="position:relative"><canvas id="soloChart"></canvas></div>
     <div>
@@ -781,7 +941,12 @@ _HTML = r"""<!DOCTYPE html>
     </span>
   </h2>
   <div class="stats-agents" id="statsAgents"></div>
+  <h3 class="stats-h">按模型 <span class="sub">行 = 卡牌，列 = 模型</span></h3>
   <div class="stats-scroll"><table class="cards" id="statsTable"></table></div>
+  <h3 class="stats-h">按卡组（多卡组对战）
+    <span class="sub">行 = 卡牌，列 = 卡组（悬停列标题可见该卡组 8 张卡）</span>
+    <span class="sub" id="statsDeckSub"></span></h3>
+  <div class="stats-scroll"><table class="cards" id="statsDeckTable"></table></div>
   <p class="sub" id="statsNote" style="margin-top:10px"></p>
 </section>
 
@@ -1213,61 +1378,185 @@ function renderSolo(){
       return evTd + hsTd + naTd + vrTd + "</tr>";
     })()).join("") ||
     '<tr><td colspan="14">等待首次评估…</td></tr>';
-  drawSoloChart();
+  drawSoloMetricChart();
 }
 
-function drawSoloChart(){
+/* --- 指标注册表：2026-09-17 起 **不再以胜率为曲线指标** ---
+   AGENTS §3 判读禁则：「不判 main 曲线与单点胜率」——main vs 刚同步的冻结副本是自引用读数
+   （结构性 ≈0.5）⇒ 默认画**行为指标**，胜率降级进"⚠ 自引用（禁读）"分组。
+   数据源：solo_state.json 的 history[]（逐评估点 32 键）与 _controls_history（三路外生对照）。 */
+const SOLO_METRICS = {
+  behavior: {
+    note: "行为指标（相位型，只读相对退化）：接敌率 = 防守部署 8s 内 5 格内敌我同框；单边堆牌 = 只攻不防；平均圣水低 = 不会攒费（O3 病理）。",
+    series: [
+      {key: "engagement_rate", label: "接敌率", color: "#22c55e", pct: true},
+      {key: "unilateral_rate", label: "单边堆牌", color: "#ef4444", pct: true},
+      {key: "elixir_avg", label: "平均圣水", color: "#38bdf8", pct: false},
+    ],
+  },
+  defense: {
+    note: "防守链：防守投入 = 敌过河帧中我方有部署的比例；响应延迟 = 威胁→首次响应中位秒数（越低越主动）；拦截率 = 落点在敌→我塔直线 4 格内。",
+    series: [
+      {key: "defense_invest_rate", label: "防守投入", color: "#22c55e", pct: true},
+      {key: "intercept_rate", label: "拦截率", color: "#a855f7", pct: true},
+      {key: "response_latency_med", label: "响应延迟(s)", color: "#fbbf24", pct: false},
+    ],
+  },
+  deploy: {
+    note: "部署量与场面：deploy/局 = 每局平均部署次数（⚠️ 早停关闭后局变长，绝对数不跨 run 比）；多卡同帧 = 同帧 ≥2 张的比例；塔血差 = 平均塔血差（正 = 我方领先）。",
+    series: [
+      {key: "deploy_per_game", label: "deploy/局", color: "#60a5fa", pct: false},
+      {key: "bundle_multi_rate", label: "多卡同帧", color: "#f472b6", pct: true},
+      {key: "tower_diff_avg", label: "塔血差", color: "#4ade80", pct: false},
+    ],
+  },
+  reward: {
+    note: "平均回报（逐点）。⚠️ 早停关闭后训练侧均局 ≈345 帧 ⇒ 终局 ±10 的可见度 (γλ)^k ≈ 0.011（旧早停时代 ~100 帧 ≈ 0.27），见 docs/nostall20k_verdict_2026-09-17.md §4。",
+    series: [{key: "mean_reward", label: "mean_reward", color: "#f59e0b", pct: false}],
+  },
+  critic: {
+    note: "critic 健康度：EV ≥0.2 才算价值头在有效学习（≈0 = 只会预测均值，<0 = 比常数还差）；value÷R std >0.3 才算输出波动与回报同量级（C3/O2）。",
+    series: [
+      {key: "explained_variance", label: "critic EV", color: "#22c55e", pct: false},
+      {key: "value_std_ratio", label: "value/R std", color: "#38bdf8", pct: false},
+    ],
+  },
+  vitality: {
+    note: "GRU 活力：h 跨帧 std 健康 >0.05（≤0.02 = 隐状态冻成常数）；n(abs) 健康 <0.9（→1.0 = tanh 候选饱和）。",
+    series: [
+      {key: "h_std", label: "h 跨帧 std", color: "#22c55e", pct: false},
+      {key: "gru_n_abs", label: "GRU n(abs)", color: "#f87171", pct: false},
+    ],
+  },
+  controls: {
+    note: "外生对照（**目前唯一能测绝对强度的仪器**）：baseline0 = 训练起点、baseline_prev = 上一评估点、baseline_rand = 固定种子的随机策略。三路各 40 局且每点重抽 ⇒ 1σ≈0.078。",
+    fromControls: true,
+    series: [
+      {key: "baseline0", label: "vs 起点", color: "#64748b", pct: true},
+      {key: "baseline_prev", label: "vs 上一评估点", color: "#a855f7", pct: true},
+      {key: "baseline_rand", label: "vs 固定随机锚点", color: "#f59e0b", pct: true},
+    ],
+  },
+  winrate: {
+    note: "⚠️ 自引用读数：main vs **刚同步的冻结副本**（结构性 ≈0.5）。AGENTS §3 判读禁则明确：这类的 0.85 **不得当作「变强」证据**，仅用于排查。",
+    series: [{key: "winrate", label: "胜率（自引用）", color: "#2563eb", pct: true, se: "winrate_se"}],
+  },
+};
+let curSoloMetric = "behavior";
+
+function _fmtVal(v){
+  const a = Math.abs(v);
+  if (a >= 10000) return (v / 1000).toFixed(1) + "k";
+  if (a >= 100) return v.toFixed(0);
+  if (a >= 1) return v.toFixed(2);
+  if (a === 0) return "0";
+  return v.toFixed(3);
+}
+
+function _allPct(lines){ return lines.length > 0 && lines.every(l => l.pct); }
+
+function drawSoloMetricChart(){
   const canvas = document.getElementById("soloChart");
   if (!canvas) return;
+  const spec = SOLO_METRICS[curSoloMetric] || SOLO_METRICS.behavior;
+  const noteEl = document.getElementById("soloMetricNote");
+  if (noteEl) noteEl.textContent = spec.note || "";
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.clientWidth || 600, H = canvas.clientHeight || 300;
   canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
-  const padL = 50, padR = 16, padT = 18, padB = 34;
+  const padL = 54, padR = 16, padT = 30, padB = 34;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const rows = solo.history || [];
+  const hist = solo.history || [];
+  const ctrl = solo.controls_history || [];
+  const legendEl = document.getElementById("soloMetricLegend");
   ctx.fillStyle = "#94a3b8"; ctx.font = "12px sans-serif";
-  if (!rows.length){ ctx.fillText("等待首次评估…", padL, padT + 20); return; }
-  const maxStep = Math.max(1, solo.target_steps || rows[rows.length - 1].step);
-  let lo = 0.0, hi = 1.0;
-  rows.forEach(h => { lo = Math.min(lo, h.winrate - h.winrate_se); hi = Math.max(hi, h.winrate + h.winrate_se); });
-  const span = Math.max(0.2, hi - lo); lo = Math.max(0, lo - span * 0.15); hi = Math.min(1, hi + span * 0.15);
-  if (hi - lo < 0.15){ const mid = (lo + hi) / 2; lo = Math.max(0, mid - 0.075); hi = Math.min(1, mid + 0.075); }
+  if (!(spec.fromControls ? ctrl.length : hist.length)){
+    ctx.fillText("等待首次评估…", padL, padT + 20);
+    return;
+  }
+  const lines = spec.series.map(s => {
+    let pts;
+    if (spec.fromControls){
+      pts = ctrl.filter(r => r.vs === s.key && r.winrate !== undefined && r.winrate !== null)
+                .map(r => [r.step, r.winrate, r.winrate_se || 0]);
+    } else {
+      pts = hist.filter(r => r[s.key] !== undefined && r[s.key] !== null)
+                .map(r => [r.step, r[s.key], s.se ? (r[s.se] || 0) : null]);
+    }
+    return {label: s.label, color: s.color, pct: !!s.pct, pts};
+  }).filter(l => l.pts.length);
+  if (!lines.length){
+    ctx.fillText("该指标尚无数据（需要新的评估点）", padL, padT + 20);
+    if (legendEl) legendEl.innerHTML = "";
+    return;
+  }
+  const allV = [];
+  lines.forEach(l => l.pts.forEach(p => {
+    allV.push(p[1]);
+    if (p[2]){ allV.push(p[1] + p[2]); allV.push(p[1] - p[2]); }
+  }));
+  let lo = Math.min.apply(null, allV), hi = Math.max.apply(null, allV);
+  if (hi - lo < 1e-9){ const m = Math.max(1e-6, Math.abs(hi)); lo -= m * 0.5; hi += m * 0.5; }
+  const span = hi - lo; lo -= span * 0.15; hi += span * 0.15;
+  let maxStep = 1;
+  lines.forEach(l => l.pts.forEach(p => { maxStep = Math.max(maxStep, p[0]); }));
+  if (solo.target_steps) maxStep = Math.max(maxStep, solo.target_steps);
   const X = s => padL + (s / maxStep) * plotW;
   const Y = v => padT + (1 - (v - lo) / (hi - lo)) * plotH;
-  // 网格
+  const pctAxis = _allPct(lines);
   ctx.strokeStyle = "#334155"; ctx.fillStyle = "#94a3b8"; ctx.font = "11px sans-serif"; ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let i = 0; i <= 4; i++){ const v = lo + (hi - lo) * i / 4, y = Y(v); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.fillText((v * 100).toFixed(0) + "%", 4, y + 4); }
+  for (let i = 0; i <= 4; i++){
+    const v = lo + (hi - lo) * i / 4, y = Y(v);
+    ctx.moveTo(padL, y); ctx.lineTo(W - padR, y);
+    ctx.fillText(_fmtVal(v) + (pctAxis ? "%" : ""), 4, y + 4);
+  }
   ctx.stroke();
   ctx.beginPath();
-  for (let i = 0; i <= 4; i++){ const s = Math.round(maxStep * i / 4), x = X(s); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.fillText(s.toLocaleString(), x - 12, H - padB + 16); }
+  for (let i = 0; i <= 4; i++){
+    const s = Math.round(maxStep * i / 4), x = X(s);
+    ctx.moveTo(x, padT); ctx.lineTo(x, H - padB);
+    ctx.fillText(s.toLocaleString(), x - 12, H - padB + 16);
+  }
   ctx.stroke();
-  // 50% 基准虚线
-  if (lo < 0.5 && 0.5 < hi){
+  if (pctAxis && lo < 0.5 && 0.5 < hi){
     ctx.strokeStyle = "#475569"; ctx.setLineDash([4, 4]); ctx.beginPath();
     ctx.moveTo(padL, Y(0.5)); ctx.lineTo(W - padR, Y(0.5)); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillText("50%", W - padR - 34, Y(0.5) - 4);
   }
-  // 胜率曲线 + 竖线误差棒（二项 SE）
-  const color = "#2563eb";
-  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
-  rows.forEach((h, i) => { const x = X(h.step), y = Y(h.winrate); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
-  ctx.stroke();
-  rows.forEach(h => {
-    const x = X(h.step), y = Y(h.winrate), se = h.winrate_se || 0;
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;
-    ctx.beginPath(); ctx.moveTo(x, Y(h.winrate + se)); ctx.lineTo(x, Y(h.winrate - se)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x - 4, Y(h.winrate + se)); ctx.lineTo(x + 4, Y(h.winrate + se)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x - 4, Y(h.winrate - se)); ctx.lineTo(x + 4, Y(h.winrate - se)); ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
+  lines.forEach(l => {
+    ctx.strokeStyle = l.color; ctx.lineWidth = 2; ctx.beginPath();
+    l.pts.forEach((p, i) => { const x = X(p[0]), y = Y(p[1]); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+    ctx.stroke();
+    l.pts.forEach(p => {
+      const x = X(p[0]), y = Y(p[1]);
+      if (p[2]){
+        ctx.strokeStyle = l.color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;
+        ctx.beginPath(); ctx.moveTo(x, Y(p[1] + p[2])); ctx.lineTo(x, Y(p[1] - p[2])); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, Y(p[1] + p[2])); ctx.lineTo(x + 4, Y(p[1] + p[2])); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, Y(p[1] - p[2])); ctx.lineTo(x + 4, Y(p[1] - p[2])); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = l.color; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
+    });
   });
+  if (legendEl) legendEl.innerHTML = lines.map(l =>
+    `<span><span class="dot" style="background:${l.color}"></span>${escHtml(l.label)}${l.pct ? "（%）" : ""}</span>`
+  ).join("");
+  const sel = document.getElementById("soloMetric");
+  const titleTxt = (sel && sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].textContent : "";
   ctx.fillStyle = "#e2e8f0"; ctx.font = "12px sans-serif";
-  ctx.fillText("main vs 冻结副本 胜率 ±1σ（固定卡组镜像，无联赛）", padL + 6, 12);
+  ctx.fillText("solo · " + titleTxt, padL + 4, 15);
 }
+
+/* 指标下拉：切换即重画（不必等下一次 3s 轮询） */
+document.getElementById("soloMetric").onchange = (e) => {
+  curSoloMetric = e.target.value;
+  drawSoloMetricChart();
+};
 
 /* ================= 人机对战：实时对局 + 数据采集 ================= */
 
@@ -1952,6 +2241,7 @@ function renderCardStats(){
     html += "</tr>";
   }
   table.innerHTML = html + "</tbody>";
+  renderDeckMatrix(d);
 
   const cov = d.coverage || {};
   if (cov.partial){
@@ -1960,6 +2250,53 @@ function renderCardStats(){
   } else {
     note.textContent = "双侧完整统计：每次出牌都归属到对应卡组/模型。百分比 = 该卡占该模型总出牌数的比例。";
   }
+  if (cov.deck_meta_partial){
+    note.textContent += ` ⚠️ 其中仅 ${cov.games_with_decks}/${cov.n_games} 局带 meta.decks（旧录像无卡组元数据）` +
+      `⇒「按卡组」表只覆盖有元数据的部分。`;
+  }
+}
+
+/* 多卡组对战统计：行 = 卡牌，列 = **卡组**（不是模型）。
+   数据源：回放 meta.decks（双方卡组清单）+ 逐帧出牌归因（我方 frames[].cards / 对手 frames[].opp_played）。
+   后端 /api/cardstats 的 decks[] 已算好；旧录像没有 meta.decks ⇒ 该表为空并给出提示。 */
+function renderDeckMatrix(d){
+  const tbl = document.getElementById("statsDeckTable");
+  const sub = document.getElementById("statsDeckSub");
+  if (!tbl) return;
+  const decks = d.decks || [];
+  const cov = d.coverage || {};
+  if (!decks.length){
+    tbl.innerHTML = "";
+    if (sub) sub.textContent = cov.deck_meta_partial ? "（旧录像无 meta.decks，无法按卡组切分）" : "（暂无卡组数据）";
+    return;
+  }
+  const totals = {};
+  decks.forEach(k => { for (const c in k.cards) totals[c] = (totals[c] || 0) + k.cards[c]; });
+  const cards = Object.keys(totals).sort((x, y) => totals[y] - totals[x] || x.localeCompare(y));
+  const colMax = {};
+  decks.forEach(k => { let mx = 1; for (const c in k.cards) if (k.cards[c] > mx) mx = k.cards[c]; colMax[k.key] = mx; });
+  const head = k => `${escHtml(k.known ? k.archetype : k.label)}<br>` +
+    `<span style="font-weight:400;color:#94a3b8">${k.side_games} 边 · ${k.plays} 次` +
+    (k.per_side_game !== undefined ? ` · ${k.per_side_game}/边` : "") + `</span>`;
+  let html = "<thead><tr><th>卡牌</th><th class='num'>总计</th>" +
+    decks.map(k => `<th class="num" title="${escHtml((k.deck || []).join(' · '))}">${head(k)}</th>`).join("") +
+    "</tr></thead><tbody>";
+  for (const c of cards){
+    html += `<tr><td class="card-name">${escHtml(c)}</td><td class="num">${totals[c]}</td>`;
+    for (const k of decks){
+      const n = k.cards[c] || 0;
+      if (!n){ html += `<td class="num" style="color:#475569">·</td>`; continue; }
+      const frac = n / (colMax[k.key] || 1);
+      const pct = k.plays ? (n / k.plays * 100) : 0;
+      html += `<td class="num" style="background:${statColor(frac)}">` +
+              `<span class="cellbar" style="width:${Math.round(frac * 36)}px"></span>` +
+              `${n} <span style="color:#cbd5e1">${pct.toFixed(1)}%</span></td>`;
+    }
+    html += "</tr>";
+  }
+  tbl.innerHTML = html + "</tbody>";
+  if (sub) sub.textContent = `${decks.length} 副卡组 · 「边」= 该卡组出战（局×边）次数` +
+    (cov.deck_meta_partial ? ` · ⚠️ 仅 ${cov.games_with_decks}/${cov.n_games} 局有卡组元数据` : "");
 }
 
 /* ---- 事件绑定 + 启动 ---- */
