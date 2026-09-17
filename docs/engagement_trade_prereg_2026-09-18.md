@@ -172,7 +172,10 @@ score = max(0, Trade_me − θ)          # 平滑 hinge（不用硬阈值 ⇒ �
 | 4 | **窗口等式**：`Trade_me == ΔΦ_window + tower_term`（同轨配对复算） | `test_trade_equals_phi_window` |
 | 5 | **局面切分**：手工构造 6 个场景（孤零零小屋 / 小屋+最近批 / 该批 vs 我方弓手 / 单只免费骷髅打塔 / 双路同时开战 / 目标瞬态死掉）逐一断言分段与结算时刻 | `test_engagement_segmentation` |
 | 6 | **跨局边界**：账本/桶在局边界完全重置（9j 事故类） | `test_trade_reset_across_episodes` |
-| 7 | **默认关逐位回旧** | `test_engagement_trade_default_off` |
+| 7 | **默认关逐位回旧** | `test_engagement_trade_default_off` —— ✅ **已实现并通过**（2026-09-18 第三轮）：
+`scripts/selftest_engagement_trade_online.py`（引擎侧，1/1 PASS）。三段：默认关时逐帧奖励 + 全实体状态
+摘要 == **打补丁之前的黄金值** `4d8b27b8…eca0c`；`env._et is None`（零开销）；打开开关且 `θ=0` ⇒ digest
+**必须改变**（防"假通过"）。见 [`engagement_trade_online_2026-09-18.md`](engagement_trade_online_2026-09-18.md) §5.1b |
 
 ---
 

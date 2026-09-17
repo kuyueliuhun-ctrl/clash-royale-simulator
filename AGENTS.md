@@ -127,6 +127,11 @@
      ⇒ **S3 仍不开**；放行条件（写死）见预注册 §11.9.4：先做 **measure-only 口径重测 ρ**（在线口径、
      权重 0、行为逐位不变）→ 补尾部 flush → 再谈 S1 的机制前置（须单独预注册）→ 阳性对照通过。
      全文：[`docs/engagement_trade_online_2026-09-18.md`](docs/engagement_trade_online_2026-09-18.md)
+   - **★ 预注册 §7 的 7 条不变量全部有测试**：§7-1…§7-6 见离线套件（**8/8 PASS**），
+     §7-7 `test_engagement_trade_default_off` 见 `scripts/selftest_engagement_trade_online.py`（**1/1 PASS**，
+     引擎侧，2026-09-18 第三轮落地）。**顺带把"尾部窗口"缺口实测出来**：60 帧的局 `n_settled = 0`
+     （分数只在局末 flush ⇒ 永远进不了任何一帧），拉到 200 帧后窗口在局内结算、digest 才变
+     ⇒ **上游按 `max_ep_steps` 截断时，局内未结算窗口的 score 全部丢失**（可复现，非理论顾虑）。
    - **★ 在线奖励项（默认关）+ 引擎侧记录通道 + schema 5 已落真树**：
      `rl/engagement.py::EngagementTradeMonitor` + `RLEnv` 接线 + `DEFAULT_REWARD` 四开关
      （`engagement_trade` **默认 0.0**）；**开/关逐位对账 PASS**（未打补丁 vs 开关关：逐帧奖励 + 全实体状态

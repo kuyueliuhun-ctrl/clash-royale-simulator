@@ -1,0 +1,76 @@
+--- src/clasher_new/rl/env_wrapper.py	2026-09-13 09:30:49.126888900 +0800
++++ /tmp/rtpatch/rl/env_wrapper.py	2026-09-18 05:27:16.036535138 +0800
+@@ -30,6 +30,7 @@
+ from rl.action_mask import (validate_bundle, slot_mask, legal_cells, ability_legal,
+                             ability_mana, solo_commit_blocked)
+ from rl.observation import observe, hidden_labels, GRID_H, GRID_W, GRID_C, ENTITY_NAMES
++from rl.engagement import EngagementTradeMonitor   # S2：局面圣水交换（**默认关**）
+ 
+ DEFAULT_DECK = ["Knight", "MiniPekka", "Arrows", "Minions", "Musketeer", "Fireball", "Giant", "Archer"]
+ DEFAULT_DECK_1 = ["Minions", "Archer", "MiniPekka", "Musketeer", "Giant", "Fireball", "Arrows", "Knight"]
+@@ -344,6 +345,16 @@
+         self._v_share = {0: {}, 1: {}}   # player -> {entity_id: 部署份额}
+         self._active_v = [0.0, 0.0]      # 每方当前场上部署价值 Σ份额
+         self._seen_max_id = 0            # 实体 id 水位（id 单调递增 → 新实体检测）
++        # —— S2 §6 第 5 项：局面圣水交换奖励项（**默认关**；关时不做任何额外工作）——
++        # 规格 docs/engagement_trade_prereg_2026-09-18.md §2/§11.7.1；
++        # 在线实现 rl/engagement.py::EngagementTradeMonitor（口径与离线仪器逐条对齐）。
++        _rw = self.reward_weights
++        self._et_w = float(_rw.get("engagement_trade", 0.0) or 0.0)
++        self._et_theta = float(_rw.get("engagement_trade_theta", 1.0))
++        self._et_t_ref = float(_rw.get("engagement_trade_t_ref", 2.0))
++        self._et_gate = bool(_rw.get("engagement_trade_gate", 1))
++        self._et = None                  # 关时恒为 None ⇒ 零开销、逐位回旧
++        self._et_scores = []             # 逐决策帧的 score（p0 视角），供取证/对账
+ 
+     def reset(self, *, seed=None, options=None):
+         if seed is not None:
+@@ -380,6 +391,12 @@
+         self._v_share = {0: {}, 1: {}}
+         self._active_v = [0.0, 0.0]
+         self._seen_max_id = max(self.battle.entities) if self.battle.entities else 0
++        # S2：局边界完全重建监视器（账本/窗口不得跨局残留；【R8】9j 事故类）
++        self._et = (EngagementTradeMonitor(theta=self._et_theta, t_ref=self._et_t_ref,
++                                           gate=self._et_gate, shares=self._v_share,
++                                           tick_seconds=self.dt)
++                    if self._et_w else None)
++        self._et_scores = []
+         if self.visualize:
+             from new_visualization import Visualizer
+             self._visualizer = Visualizer(self.battle)
+@@ -651,6 +668,8 @@
+                 break
+             for _ in range(frame_steps):
+                 self.battle.step(self.dt)
++                if self._et is not None:            # S2：只在开关打开时发生
++                    self._et.tick(self.battle, self._active_v)
+             if self.visualize and self._visualizer is not None:
+                 self._visualizer.render_frame()
+                 import time as _time
+@@ -708,6 +727,14 @@
+                     hurt[pid] += bhp - ahp
+             reward += uk * (hurt[1] - hurt[0])
+ 
++        # —— S2 §6 第 5 项：局面圣水交换（默认关 ⇒ 一个浮点运算都不做）——
++        et_score = 0.0
++        if self._et is not None:
++            if self.battle.game_over:
++                self._et.flush(self.battle, self._active_v)   # 局末把开着的窗口结掉
++            et_score = self._et.pop_scores()
++            self._et_scores.append(float(et_score))
++            reward += self._et_w * et_score
+         terminated = self.battle.game_over
+         info = {
+             "bundle_ok": ok,
+@@ -718,6 +745,11 @@
+             "winner": self.battle.winner,
+             "field_v": [float(self._active_v[0]), float(self._active_v[1])],
+         }
++        if self._et is not None:
++            # 取证字段（不影响任何行为）：本决策帧结算掉的 score + 累计
++            info["engagement_trade"] = float(et_score)
++            info["engagement_trade_cum"] = float(sum(self._et_scores))
++            info["engagement_trade_n"] = int(self._et.n_settled)
+         if self.record_hidden:
+             info["hidden"] = self.get_hidden_state()
+         return self.observe(0), reward, terminated, False, info

@@ -35,6 +35,13 @@ from dataclasses import dataclass, field, asdict
 #:   elixir_diff_late=0.1 费贱 → 双倍期亏费换塔血、法术砸塔自动变正 EV；
 #: - unit_dmg_k：单位受伤 shaping（客观伤害事件，非估值：敌方单位每掉 1 血 → 我方 +k）。
 DEFAULT_REWARD = {
+    # —— S2（2026-09-18）局面圣水交换奖励项：**默认关**（0.0 = 不做任何事，逐位回旧）——
+    # 规格 docs/engagement_trade_prereg_2026-09-18.md §2/§11.7.1；只有跑 solo A/B 的
+    # 干预臂才显式打开：--engagement-trade 0.5 之类。唯候选代理是 P4b（§4.4）。
+    "engagement_trade": 0.0,          # 权重（0 = 关）
+    "engagement_trade_theta": 1.0,    # 平滑 hinge 阈值 θ（圣水；登记为"有原则的选择"）
+    "engagement_trade_t_ref": 2.0,    # P4b 的钉住时长参考 T_ref（秒；**待标定**）
+    "engagement_trade_gate": 1,       # P4b 塔血零掉血门控（0 ⇒ 退化为不限门控的 P2）
     "crown_weight": 8.0,        # 皇冠差系数（破敌塔每座 +8：破塔里程碑，胜利太稀疏需中间大奖励）
     "crown_lose_weight": 10.0,  # 被破塔惩罚（> crown_weight：丢塔比破塔更痛，教防守价值）
     "tower_dmg_opp": 0.001,     # 敌方塔损 → 正奖励（前段 t<120）
