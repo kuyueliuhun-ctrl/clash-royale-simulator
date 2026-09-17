@@ -210,3 +210,80 @@ score = max(0, Trade_me − θ)          # 平滑 hinge（不用硬阈值 ⇒ �
    **不得**用 `main vs 冻结副本` 的胜率当判据；判据只用机制层 + 行为层 + 门禁。
 6. **`runs/long1m` 的 18 个录像**：来自 `run` 模式（对手是脚本）⇒ 可用于**仪器标定**，
    **不可**用于判"拉扯有没有可学样本"（那要靠 solo）。
+
+---
+
+## §11 S2 实施记录 · 第一步（2026-09-18，已落地）
+
+> **范围声明（【R3】/【R18】）**：本节只记录**已完成并验证**的那一步。
+> **未做**：`root_cast` 溯源（需给 `_spawn_entity` 的约 20 个调用点串宿主）、奖励项本身、离线仪器脚本。
+> **未跑任何训练**（本步对训练行为**零影响**）。
+
+### 11.1 改了什么
+
+`src/clasher_new/rl/replay.py`：
+
+| 项 | 改前 | 改后 |
+|---|---|---|
+| `LEAGUE_REPLAY_SCHEMA` | `3` | **`4`** |
+| 实体条目 | 10 元组 `[name,x,y,hp,player,kind,max_hp,shield,shield_max,radius]` | **12 元组**（**末尾追加** `id`、`target_id`） |
+
+**为什么不需要新造 `uid`**：`battle_state.next_entity_id` **本就是每局单调唯一**的（实体一直有 `.id`，只是**没进快照**）。
+所以本步是"把已有的身份写出去"，不是新增身份系统 —— 比预注册 §6 第 1 项乐观（该项可删）。
+
+**`target_id` 是意外收获**：它让**索敌关系图可以直接从回放重建** ⇒ **离线局面划分不需要重推演**。
+
+**向后兼容**：新字段追加在**末尾**，所有按下标读 `0..9` 的消费者不受影响
+（`dashboard.py` 前端、`scripts/forensics_card_usage.py`、`rl/train_solo.py::behavioral_metrics`）；
+`rl/prophet.py` 用的是另一套 dict 格式（`e["player"]`/`e["pos"]`），与本元组无关。
+
+### 11.2 验证
+
+**（a）回归（【R19】子集）** —— 6/6 PASS：
+
+```
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
+  ../../scripts/run_selftests.py test_league_replays test_dashboard_replays \
+  test_dashboard_league_payload test_dashboard_card_stats test_behavioral_metrics test_replay_roundtrip
+```
+
+**（b）实跑产出 schema-4 录像**（短 smoke，命令见下），在其上复算：
+
+| 检查 | 结果 |
+|---|---|
+| `schema` | **4** ✅ |
+| 实体元组长度 | **12** ✅ |
+| **帧内 `id` 不唯一** | **0**（= 身份唯一）✅ |
+| 有 `target_id` 的条目 | **76.3%**（177,562 / 232,607）✅ 仇恨图可用 |
+| 每帧重复实体是否可分辨 | ✅ 例：同帧两个 `King_PrincessTowers(player=1)` 的 `id` = **1 / 2** |
+
+```
+cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe -u rl/run_league.py \
+  --mode run --config-name run_schema4 --fresh --total-steps 600 --steps-per-eval 300 \
+  --n-eval-games 4 --eval-workers 2 --device cuda
+# 注：本次只跑到 eval@0 落盘（60 局 / 18,705 帧）就被 10 min 超时掐断，未跑满 600 步；
+#     产物 runs/run_schema4/replays/league_0.pkl（schema 4）保留作参照。
+```
+
+### 11.3 ⚠️ 口径细化（**结论不变，数字要记准**）
+
+评审 §3 P4 / §6.5 引用的"**8584/9079 帧（94.6%）存在重复 `(name,player)`**"**数字正确**，
+但**载重的口径是单位级**，不是全实体级 —— 因为**每个公主塔恒有 2 个同名实体**（`King_PrincessTowers` ×2/方），
+把所有实体都算进去会**高估**歧义率：
+
+| 口径 | `long1m/88000`（schema 3，9,079 帧） | `run_schema4/0`（schema 4，18,705 帧） |
+|---|---|---|
+| 含重复 name（**含塔**） | 8,584 帧（94.5%） | 18,259 帧（97.6%） |
+| **含重复单位（`kind=='troop'`）** | **5,596 帧（61.6%）**，多余单位 **11,517** | 13,396 帧（71.6%），多余单位 35,968 |
+
+⇒ **评审的结论不变**：schema ≤3 下"两只 Minions / 三只 Bats / 一堆骷髅不可区分"⇒ **精确归因不可能**；
+**但引用该论据时应使用 61.6%（单位级）**，不要用 94.5%。本步（schema 4）同时消除两种歧义。
+
+### 11.4 下一步（S2 剩余）
+
+1. **`root_cast` 溯源**：给 `BattleState._spawn_entity` 加可选 `spawner`，在**约 20 个调用点**传入宿主
+   （多数调用点就在宿主自身方法里 ⇒ `spawner=self`），并**链式取根到出牌事件**；
+   法术产物（Graveyard）的根 = 施放事件而非实体。**必须配 §7 的测试 2/3/6**。
+2. **离线局面/交换仪器**：用 `id` + `target_id` 在回放上做并查集分段（§1 定义）、
+   算 `Trade = ΔΦ_window + tower_term`、跑 §7 的测试 1/4/5。
+3. 之后才谈奖励项接线（§6 第 5 项，**默认关**）与 §8 的 A/B。

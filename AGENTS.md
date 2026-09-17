@@ -62,6 +62,7 @@
 | **`long1m` 提前终止的账**（12.8% 的实际状态） | [`docs/long1m_stopped_2026-09-18.md`](docs/long1m_stopped_2026-09-18.md) |
 | **当前新方案**：按局面结算的圣水交换信用分配（§7–§9 规格） | [`docs/frame_credit_proposal_review_2026-09-18.md`](docs/frame_credit_proposal_review_2026-09-18.md) |
 | **新方案预注册**（判据 / 失败分支 / 不变量 / S1–S3；**实现前必读**） | [`docs/engagement_trade_prereg_2026-09-18.md`](docs/engagement_trade_prereg_2026-09-18.md) |
+| **S2 实施进度**（已落地：录像 schema 3→4，实体带 `id`+`target_id` ⇒ 离线可重建仇恨图） | 同上预注册 §11 |
 | 长跑工程（两级评估 + 评估并行分片） | [`docs/long1m_prereg_2026-09-18.md`](docs/long1m_prereg_2026-09-18.md) |
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
 
@@ -81,3 +82,4 @@
      ③ 判据须带**优势兑现率**门禁（圣水上限 10 ⇒ 只守不推可攒交易打平）
    - 规格与判据：[`docs/frame_credit_proposal_review_2026-09-18.md`](docs/frame_credit_proposal_review_2026-09-18.md) §7–§9
    - **预注册（判据/失败分支/不变量/S1–S3）**：[`docs/engagement_trade_prereg_2026-09-18.md`](docs/engagement_trade_prereg_2026-09-18.md)
+   - **已落地第一步**：录像 schema 3→4（实体 `id` + `target_id`，末尾追加、向后兼容）⇒ 离线可重建索敌关系图；见预注册 §11

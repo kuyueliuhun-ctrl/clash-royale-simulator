@@ -79,15 +79,26 @@ class EpisodeReplay:
 # ---------------------------------------------------------------------------
 # 联赛录像（紧凑格式，供网页/回放观看，非信念训练数据）
 # ---------------------------------------------------------------------------
-LEAGUE_REPLAY_SCHEMA = 3
+LEAGUE_REPLAY_SCHEMA = 4
+#: schema 4（2026-09-18）：实体条目**末尾追加** `id` 与 `target_id` 两个字段。
+#: 动机：离线做「局面圣水交换」需要 **实体身份** 与 **索敌关系**，而 schema ≤3 只有
+#: `[name,x,y,hp,player,...]` ⇒ 实测 `league_88000.pkl` 有 **8584/9079 帧存在重复 (name,player)**
+#: （两只 Minions 不可区分）⇒ 精确归因不可能。`battle_state.next_entity_id` 本就是**每局单调唯一**的，
+#: 故无需新增 `uid`，只需把**已有的** `entity.id` 写进快照。
+#: **向后兼容**：新字段追加在**末尾**，所有按下标读 0..9 的消费者（`dashboard.py` 前端、
+#: `scripts/forensics_card_usage.py`、`rl/train_solo.py::behavioral_metrics`）**不受影响**；
+#: 读方须以 `schema >= 4` 判定字段是否存在。
 
 
 def battle_snapshot(battle, bundle, reward, info):
     """把一个决策步压缩成轻量帧（不含 32×18 观测网格，体积可控）。
 
     每帧含：时间、动作 bundle、奖励、对手出牌、双方塔血/圣水/皇冠、存活实体列表。
-    实体条目 [name, x, y, hp, player, kind, max_hp, shield, shield_max, radius]：
-    kind ∈ troop/building/projectile/effect（供前端按 pygame 风格渲染）。
+    实体条目（schema 4）：
+        [name, x, y, hp, player, kind, max_hp, shield, shield_max, radius, id, target_id]
+    kind ∈ troop/building/projectile/effect（供前端按 pygame 风格渲染）；
+    `id` = 实体在本局的唯一 id（= `BattleState.next_entity_id` 分配值）；
+    `target_id` = 当前索敌目标的 id（无目标为 `None`）⇒ 离线可**直接重建索敌关系图**。
     """
     from battle import Building, Projectile, SpawnProjectile, AreaEffect, TimedExplosive
 
@@ -119,7 +130,9 @@ def battle_snapshot(battle, bundle, reward, info):
              float(getattr(e.data, "hp", e.hp) or e.hp),
              float(getattr(e, "shield_health", 0.0) or 0.0),
              float(getattr(e.data, "shield_health", 0.0) or 0.0),
-             float(getattr(e.data, "collision_radius", 0.5) or 0.5)]
+             float(getattr(e.data, "collision_radius", 0.5) or 0.5),
+             int(e.id),                                    # schema 4：实体身份
+             (int(e.target_id) if getattr(e, "target_id", None) is not None else None)]  # schema 4：索敌关系
             for e in battle.entities.values() if e.is_alive
         ],
     }
