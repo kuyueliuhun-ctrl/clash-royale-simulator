@@ -409,6 +409,49 @@ def _pair_seed_offset(idx, a, b):
     return int(hashlib.sha1(f"{idx}|{a}|{b}".encode("utf-8")).hexdigest()[:7], 16)
 
 
+def _play_one_game(env, deck0_prior, belief_prior, a_id, a_pol, b_id, b_pol, g, max_steps,
+                   seed, record=False):
+    """单局（g 偶 = a 先手 / g 奇 = b 先手）；返回 (score_a, replay_or_None)。不改 league。
+
+    与旧 ``play_pair`` 内联体**逐句等价**（含每局新建 BeliefPlanner、信念先验、逐局种子
+    ``seed+g`` 换边 +5000）。抽出来是为了让并行 worker 能在不持有 league 的情况下打单局。
+    """
+    bp = BeliefPlanner()
+    if g % 2 == 0:
+        _prepare_env(env, a_pol, b_pol, deck0_prior)
+        belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g)
+        rec = LeagueGameRecorder(a_id, b_id, a_id, max_steps) if record else None
+        w = _run_side0(env, a_pol, belief, bp, max_steps, rec, reset_seed=seed + g)
+        score_a = 1.0 if w == 0 else (0.5 if w is None else 0.0)
+    else:
+        _prepare_env(env, b_pol, a_pol, deck0_prior)
+        belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g + 5000)
+        rec = LeagueGameRecorder(a_id, b_id, b_id, max_steps) if record else None
+        w = _run_side0(env, b_pol, belief, bp, max_steps, rec, reset_seed=seed + g + 5000)
+        score_a = 0.0 if w == 0 else (0.5 if w is None else 1.0)
+    return score_a, (rec.done(w) if rec is not None else None)
+
+
+def _play_pair_games(a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False,
+                     game_ids=None):
+    """跑一个 pair 的若干局（默认全部 n_games），返回 [(g, score_a, replay_or_None)]。
+
+    **不碰 league**：Elo/PFSP 由调用方按 (pair, g) 顺序补记 ⇒ 串行/并行两条路径的
+    league 状态演化完全一致（逐局 K=32 Elo 与 PFSP EMA 都对顺序敏感）。
+    复用同一个 env（省重建）；``game_ids`` 供并行分片用。
+    """
+    env = RLEnv(opponent=None, seed=seed)
+    deck0_prior = list(env.deck0)
+    belief_prior = list(env.deck1)
+    gids = list(range(int(n_games))) if game_ids is None else list(game_ids)
+    rows = []
+    for g in gids:
+        score_a, rep = _play_one_game(env, deck0_prior, belief_prior, a_id, a_pol, b_id, b_pol,
+                                      int(g), max_steps, seed, record=record)
+        rows.append((int(g), score_a, rep))
+    return rows
+
+
 def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record=False):
     """a vs b 换边 n 局（a 先手 n/2 + b 先手 n/2），逐局更新 Elo/PFSP（P1-11/P1-14）。
 
@@ -416,31 +459,8 @@ def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record
     """
     wins_a = wins_b = draws = 0
     replays = []
-    # 复用同一个 env：每局 reset(seed=...) 换对局，省去逐局 RLEnv/BattleState 重建
-    # （评估每轮数百局，重建固定成本累加起来可观）。信念先验固定用构造时的初始卡组
-    # 快照，与旧"每局新建 env（reset 前 deck 仍为默认卡组）"语义一致。
-    env = RLEnv(opponent=None, seed=seed)
-    deck0_prior = list(env.deck0)
-    belief_prior = list(env.deck1)
-    for g in range(n_games):
-        if g % 2 == 0:
-            _prepare_env(env, a_pol, b_pol, deck0_prior)
-            belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g)
-            rec = LeagueGameRecorder(a_id, b_id, a_id, max_steps) if record else None
-            w = _run_side0(env, a_pol, belief, BeliefPlanner(), max_steps, rec,
-                           reset_seed=seed + g)
-            if rec is not None:
-                replays.append(rec.done(w))
-            score_a = 1.0 if w == 0 else (0.5 if w is None else 0.0)
-        else:
-            _prepare_env(env, b_pol, a_pol, deck0_prior)
-            belief = BeliefInference(opp_deck=belief_prior, n_particles=128, seed=seed + g + 5000)
-            rec = LeagueGameRecorder(a_id, b_id, b_id, max_steps) if record else None
-            w = _run_side0(env, b_pol, belief, BeliefPlanner(), max_steps, rec,
-                           reset_seed=seed + g + 5000)
-            if rec is not None:
-                replays.append(rec.done(w))
-            score_a = 0.0 if w == 0 else (0.5 if w is None else 1.0)
+    for _g, score_a, rep in _play_pair_games(a_id, a_pol, b_id, b_pol, n_games, max_steps,
+                                             seed, record=record):
         league.record_match(a_id, b_id, score_a)
         if score_a == 1.0:
             wins_a += 1
@@ -448,7 +468,127 @@ def play_pair(league, a_id, a_pol, b_id, b_pol, n_games, max_steps, seed, record
             wins_b += 1
         else:
             draws += 1
+        if rep is not None:
+            replays.append(rep)
     return wins_a, wins_b, draws, replays
+
+
+def _policy_spec(pol):
+    """把策略序列化成 worker 可重建的 spec（与 `_run_mp.spec_for` 同源口径）。
+
+    ⚠️ 不能直接 pickle 策略对象：`_prepare_env` 会把 env 注入 ``ScriptedPolicy.env``，
+    带上 env 的对象过不了 spawn pickle（或把整个 BattleState 拖过去）。故只传
+    "重建所需的最小数据"：脚本策略 = 构造参数；学习型 = 权重（CPU 张量）。
+    """
+    if pol is None:
+        return {"type": "none"}
+    if isinstance(pol, ScriptedPolicy):
+        return {"type": "scripted", "mode": pol.mode, "pool": pol.pool,
+                "deck_pool": pol.deck_pool, "seed": pol.seed}
+    return {"type": "follower",
+            "state": {k: v.detach().cpu() for k, v in pol.state_dict().items()},
+            "hidden": int(pol.hidden_dim), "plan_dim": int(pol.plan_dim),
+            "belief_dim": int(pol.belief_dim),
+            "value_bypass": bool(getattr(pol, "value_bypass", False)),
+            "value_independent": bool(getattr(pol, "value_independent", False))}
+
+
+def _spec_to_policy(spec):
+    """`_policy_spec` 的逆操作（worker 侧）。"""
+    if spec["type"] == "none":
+        return None
+    if spec["type"] == "scripted":
+        return ScriptedPolicy(mode=spec["mode"], pool=spec["pool"],
+                              deck_pool=spec["deck_pool"], seed=spec["seed"])
+    pol = FollowerPolicy(hidden=spec["hidden"], plan_dim=spec["plan_dim"],
+                         belief_dim=spec["belief_dim"],
+                         value_bypass=spec["value_bypass"],
+                         value_independent=spec["value_independent"])
+    pol.load_state_dict(spec["state"])
+    pol.eval()
+    for p in pol.parameters():
+        p.requires_grad_(False)
+    return pol
+
+
+def _eval_pair_worker_main(worker_id, pairs_spec, chunk, max_steps, record, out_q):
+    """并行评估 worker：chunk = [(pair_idx, g), ...] → 回传 [(pair_idx, g, score_a, replay)]。
+
+    单进程、纯 CPU 推演（父进程调用方负责屏蔽 CUDA），不碰 league/文件 ⇒ 崩了不影响训练。
+    """
+    try:
+        by_pair = {}
+        for pair_idx, g in chunk:
+            by_pair.setdefault(int(pair_idx), []).append(int(g))
+        rows = []
+        for pair_idx in sorted(by_pair):
+            a_id, a_spec, b_id, b_spec, pseed = pairs_spec[pair_idx]
+            env = RLEnv(opponent=None, seed=pseed)
+            deck0_prior = list(env.deck0)
+            belief_prior = list(env.deck1)
+            a_pol = _spec_to_policy(a_spec)
+            b_pol = _spec_to_policy(b_spec)
+            for g in sorted(by_pair[pair_idx]):
+                score_a, rep = _play_one_game(env, deck0_prior, belief_prior, a_id, a_pol,
+                                              b_id, b_pol, g, max_steps, pseed, record=record)
+                rows.append((pair_idx, g, score_a, rep))
+        out_q.put(("result", rows))
+    except Exception as e:
+        import traceback
+        try:
+            out_q.put(("error", "%r\n%s" % (e, traceback.format_exc())))
+        except Exception:
+            pass
+
+
+def _run_eval_pairs_parallel(pairs_spec, n_games, max_steps, record, n_workers):
+    """spawn n_workers 个进程分片跑全部 (pair, game)；返回 (rows, failure_or_None)。
+
+    失败（worker 启动即崩 / 报错 / 静默退出）⇒ 返回 failure，调用方**整体降级串行重算**
+    （不记部分结果）。沿用 `eval_solo_parallel` 的两条硬经验：
+    ① ``CUDA_VISIBLE_DEVICES=""`` 屏蔽 worker 的 CUDA 初始化（纯 CPU 推理，省掉子进程
+       约 2 GB 提交内存 —— 这是 R1 事件里 worker OOM 的主因）；
+    ② 队列 + 存活探针收结果，绝不在 worker 启动即崩时永久阻塞。
+    """
+    import multiprocessing as mp
+    from rl.train_solo import _collect_worker_results
+
+    tasks = [(pi, g) for g in range(int(n_games)) for pi in range(len(pairs_spec))]
+    n_workers = max(2, min(int(n_workers), len(tasks)))
+    chunks = [tasks[i::n_workers] for i in range(n_workers)]
+    chunks = [c for c in chunks if c]
+    ctx = mp.get_context("spawn")
+    out_q = ctx.Queue()
+    procs = []
+    _prev_cvd = os.environ.get("CUDA_VISIBLE_DEVICES")
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    failure = None
+    try:
+        for wid, ch in enumerate(chunks):
+            p = ctx.Process(target=_eval_pair_worker_main,
+                            args=(wid, pairs_spec, ch, int(max_steps), bool(record), out_q))
+            try:
+                p.start()
+            except OSError as e:
+                failure = f"启动 worker{wid} 失败: {e!r}"
+                break
+            procs.append(p)
+        if failure is None:
+            rows, failure = _collect_worker_results(procs, out_q, len(procs))
+        if failure is not None:
+            for p in procs:
+                if p.is_alive():
+                    p.terminate()
+            return None, failure
+        for p in procs:
+            p.join(timeout=10)
+        return rows, None
+    finally:
+        if _prev_cvd is None:
+            os.environ.pop("CUDA_VISIBLE_DEVICES", None)
+        else:
+            os.environ["CUDA_VISIBLE_DEVICES"] = _prev_cvd
+
 
 
 def _round_estimates(pair_results):
@@ -479,25 +619,66 @@ def _round_estimates(pair_results):
     return est, games
 
 
-def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False, record=False):
+def eval_round_robin(league, n_games, max_steps, seed, step, only_vs_main=False, record=False,
+                     n_workers=0):
     """全轮转评估：所有有策略的 agent 两两换边对战，逐局 Elo，并记录历史曲线。
 
     返回采集到的联赛录像列表（record=True 时非空）。
+
+    ``n_workers > 1``（2026-09-18 新增）⇒ 把全部 (pair, game) 分片给 n_workers 个 spawn
+    进程并行打（每局纯 Python 引擎模拟 ≈9 s，单核是 1M 步长跑里最大的墙钟项）。
+    **Elo/PFSP 仍由本进程按 (pair, g) 规范顺序逐局补记** ⇒ league 状态演化与串行一致；
+    并行只改变"哪些局在哪个进程里跑"。任一 worker 失败 ⇒ 整体降级串行重算（不记部分结果）。
+    逐局种子仍是 ``pair_seed + g``；但洗牌/抽卡链按分片各自推进 ⇒ 与串行**不再逐局同序**
+    （统计口径不变，属于"同分布的另一次抽样"）。
     """
     ids = [aid for aid, ag in league.agents.items() if ag.policy is not None]
     pairs = list(itertools.combinations(ids, 2))
     if only_vs_main:
         pairs = [p for p in pairs if "main" in p]
+    pair_seeds = [seed + step + _pair_seed_offset(idx, a, b) for idx, (a, b) in enumerate(pairs)]
     replays = []
     pair_results = []
-    for idx, (a, b) in enumerate(pairs):
-        pair_seed = seed + step + _pair_seed_offset(idx, a, b)
-        wins_a, wins_b, draws, rs = play_pair(league, a, league.agents[a].policy,
-                                              b, league.agents[b].policy,
-                                              n_games, max_steps, pair_seed, record=record)
-        replays.extend(rs)
-        pair_results.append((a, b, wins_a, wins_b, draws))
-        print(f"[eval@{step}] {a} vs {b}: {wins_a}W {wins_b}L {draws}D", flush=True)
+    done_pairs = None
+    n_workers = int(n_workers or 0)
+    if n_workers > 1 and pairs and int(n_games) > 0:
+        pairs_spec = [(a, _policy_spec(league.agents[a].policy),
+                       b, _policy_spec(league.agents[b].policy), pair_seeds[idx])
+                      for idx, (a, b) in enumerate(pairs)]
+        rows, failure = _run_eval_pairs_parallel(pairs_spec, n_games, max_steps, record, n_workers)
+        if failure is not None or rows is None:
+            print(f"[eval] 并行评估失败，降级串行: {failure}", flush=True)
+        else:
+            rows.sort(key=lambda r: (r[0], r[1]))     # (pair_idx, g) 规范顺序
+            done_pairs = {}
+            for pair_idx, g, score_a, rep in rows:
+                done_pairs.setdefault(pair_idx, []).append((g, score_a, rep))
+    if done_pairs is not None:
+        for idx, (a, b) in enumerate(pairs):
+            rs = done_pairs.get(idx) or []
+            wa = wb = dr = 0
+            for _g, score_a, rep in rs:
+                league.record_match(a, b, score_a)    # 与串行同序补记 ⇒ Elo/PFSP 演化一致
+                if score_a == 1.0:
+                    wa += 1
+                elif score_a == 0.0:
+                    wb += 1
+                else:
+                    dr += 1
+                if rep is not None:
+                    replays.append(rep)
+            pair_results.append((a, b, wa, wb, dr))
+            print(f"[eval@{step}] {a} vs {b}: {wa}W {wb}L {dr}D（并行 {len(rs)} 局）",
+                  flush=True)
+    else:
+        for idx, (a, b) in enumerate(pairs):
+            wins_a, wins_b, draws, rs = play_pair(league, a, league.agents[a].policy,
+                                                  b, league.agents[b].policy,
+                                                  n_games, max_steps, pair_seeds[idx],
+                                                  record=record)
+            replays.extend(rs)
+            pair_results.append((a, b, wins_a, wins_b, draws))
+            print(f"[eval@{step}] {a} vs {b}: {wins_a}W {wins_b}L {draws}D", flush=True)
     # 轮内聚合估计 + 噪声地板（曲线可信度上限；SE≈347.5/√N 随局数下降）
     est, games = _round_estimates(pair_results)
     league.record_round_stats(step, {"est": est, "games": games})
@@ -645,17 +826,121 @@ def _save_snapshot(league, main, ppo, cfg, step, device):
         json.dump(run_state, f)
 
 
-def _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays):
-    replays = eval_round_robin(league, cfg.n_eval_games, cfg.max_ep_steps, cfg.seed, step,
-                               only_vs_main=cfg.only_vs_main, record=record_replays)
+def _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays, n_games=None,
+                       n_workers=None):
+    """一个评估点：跑轮转评估 → 落录像 → 落快照 + Elo。
+
+    n_games=None ⇒ 用 cfg.n_eval_games（旧行为逐位不变）；两级评估的"大评估"点
+    由 _EvalScheduler 传入 cfg.n_eval_games_big。
+    n_workers=None ⇒ 用 cfg.eval_workers（>1 时并行分片；run 模式默认 1=串行）。
+    """
+    _n = int(cfg.n_eval_games) if n_games is None else int(n_games)
+    _w = int(cfg.eval_workers or 0) if n_workers is None else int(n_workers or 0)
+    _t0 = time.monotonic()
+    replays = eval_round_robin(league, _n, cfg.max_ep_steps, cfg.seed, step,
+                               only_vs_main=cfg.only_vs_main, record=record_replays,
+                               n_workers=_w)
     if record_replays and replays:
         rpath = os.path.join(cfg.replays_dir(), f"league_{step}.pkl")
         save_league_replays(replays, rpath)
         print(f"[replay@{step}] 已保存 {len(replays)} 局联赛录像 -> {rpath}", flush=True)
     _save_snapshot(league, main, ppo, cfg, step, device)
+    print(f"[eval@{step}] 完成：{_n} 局/对 × {_eval_pair_count(league, cfg.only_vs_main)} 对，"
+          f"用时 {time.monotonic() - _t0:.1f}s（并行 worker={_w}）", flush=True)
     print("=== League Elo ===")
     for aid, r in league.elo_table().items():
         print(f"  {aid:20s} Elo={r:.1f}", flush=True)
+
+
+class _EvalScheduler:
+    """两级评估调度（2026-09-18，长跑专用；默认配置下逐位等价旧行为）。
+
+    - **小评估**：每 ``steps_per_eval`` 步、``n_eval_games`` 局/对（= 旧行为）。
+    - **大评估**：每 ``big_eval_every`` 步、``n_eval_games_big`` 局/对
+      （``n_eval_games_big=0`` ⇒ 回退 ``n_eval_games``）。
+    - ``big_eval_every=0`` ⇒ 只有小评估 ⇒ 与旧代码逐位一致（旧代码就是
+      ``step % steps_per_eval == 0``）。
+    - 两个网格取**并集**：两个间隔不整除时（8000 vs 100000），大评估网格上不在
+      小网格的点会被**插入**为额外评估点，而不是被吞掉；同一步同时命中两网格时
+      **只评一次**、按大预算（不重复花算力）。
+
+    ``due(step)`` 返回 ``(kind, n_games)``；不该评估返回 ``None``。三套主循环
+    （``_run_single``/``_run_vec``/``_run_mp``）共用本类，保证三条路径节奏一致。
+    """
+
+    def __init__(self, cfg, start_step=0):
+        self.small_every = int(getattr(cfg, "steps_per_eval", 0) or 0)
+        self.big_every = int(getattr(cfg, "big_eval_every", 0) or 0)
+        self.small_games = int(getattr(cfg, "n_eval_games", 0) or 0)
+        self.big_games = int(getattr(cfg, "n_eval_games_big", 0) or 0) or self.small_games
+        self.big_at_start = bool(getattr(cfg, "eval_big_at_start", True))
+        start_step = int(start_step or 0)
+        self._at_start = start_step == 0
+        self.prev_small = start_step // self.small_every if self.small_every else 0
+        self.prev_big = start_step // self.big_every if self.big_every else 0
+
+    def _kind(self, step):
+        """step 落在哪个网格上（大优先）；都不落 ⇒ None。"""
+        if self.big_every and step % self.big_every == 0:
+            return "big"
+        if self.small_every and step % self.small_every == 0:
+            return "small"
+        return None
+
+    def budget_for(self, step):
+        """给定评估点 step，返回 (kind, n_games)（不推进游标）。"""
+        if self._at_start and int(step) == 0 and not self.big_at_start:
+            return "small", self.small_games
+        kind = self._kind(int(step)) or "small"
+        return kind, (self.big_games if kind == "big" else self.small_games)
+
+    def due(self, step):
+        """step 是否该评估；是则推进游标并返回 (kind, n_games)。"""
+        step = int(step)
+        hit_small = bool(self.small_every) and (step // self.small_every) > self.prev_small
+        hit_big = bool(self.big_every) and (step // self.big_every) > self.prev_big
+        if not (hit_small or hit_big):
+            return None
+        if hit_small:
+            self.prev_small = step // self.small_every
+        if hit_big:
+            self.prev_big = step // self.big_every
+        return self.budget_for(step)
+
+    def start_budget(self):
+        """step 0 的评估预算（大评估开启且 eval_big_at_start ⇒ 低噪声基线点）。"""
+        return self.budget_for(0)
+
+    def expected_points(self, total_steps):
+        """按两网格并集列出预期评估点（只用于日志/预注册对账）。"""
+        total = int(total_steps)
+        pts = set()
+        if self.small_every:
+            pts.update(range(0, total + 1, self.small_every))
+        if self.big_every:
+            pts.update(range(0, total + 1, self.big_every))
+        return sorted(pts)
+
+    def plan_str(self, total_steps, n_pairs):
+        """一行计划描述：评估点数 / 大小点拆分 / 预计总对局数。"""
+        pts = self.expected_points(total_steps)
+        if not pts:
+            return "评估关闭（steps_per_eval=0 且 big_eval_every=0）"
+        kinds = [self.budget_for(p) for p in pts]
+        n_big = sum(1 for k, _ in kinds if k == "big")
+        games = sum(g for _, g in kinds) * int(n_pairs)
+        return (f"评估点 {len(pts)} 个（大 {n_big} / 小 {len(pts) - n_big}）｜"
+                f"局数：小 {self.small_games}、大 {self.big_games} 局/对｜"
+                f"{int(n_pairs)} 对/点 ⇒ 预计总对局 {games} 局")
+
+
+def _eval_pair_count(league, only_vs_main):
+    """评估轮转的对数（日志/预算用）。only_vs_main ⇒ 只数含 main 的 pair。"""
+    ids = [aid for aid, ag in league.agents.items() if ag.policy is not None]
+    pairs = list(itertools.combinations(ids, 2))
+    if only_vs_main:
+        pairs = [p for p in pairs if "main" in p]
+    return len(pairs)
 
 
 def _sample_opponent_for(league, env, seed):
@@ -717,12 +1002,18 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
     def sample_training_opponent():
         _sample_opponent_for(league, env, cfg.seed)
 
-    def eval_and_snapshot(step):
-        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays)
+    def eval_and_snapshot(step, n_games=None):
+        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays, n_games=n_games)
+
+    sched = _EvalScheduler(cfg, start_step)
+    print(f"[eval-plan] {sched.plan_str(cfg.total_steps, _eval_pair_count(league, cfg.only_vs_main))}",
+          flush=True)
 
     # 训练开始先跑一次评估/快照（WebUI 立即有真实数据而非只有预设 1500）
     if cfg.eval_at_start:
-        eval_and_snapshot(0)
+        _k, _g = sched.start_budget()
+        print(f"[eval-plan] 起始评估点 step=0（{_k} 预算：{_g} 局/对）", flush=True)
+        eval_and_snapshot(0, n_games=_g)
 
     obs, _ = env.reset()
     belief.reset(env.deck1)
@@ -791,14 +1082,15 @@ def _run_single(cfg: TrainConfig, resume=False, record_replays=True):
             print(f"[step {step}] policy={stats['policy_loss']:.4f} value={stats['value_loss']:.4f} "
                   f"entropy={stats['entropy']:.4f}", flush=True)
 
-        if cfg.steps_per_eval and step % cfg.steps_per_eval == 0:
-            eval_and_snapshot(step)
+        _due = sched.due(step)
+        if _due:
+            eval_and_snapshot(step, n_games=_due[1])
             last_eval_step = step
 
     print(f"[train] 训练循环耗时 {time.monotonic() - _t_train0:.1f}s", flush=True)
     save_checkpoint(main, cfg.main_final_path())
     if last_eval_step != cfg.total_steps:
-        eval_and_snapshot(cfg.total_steps)
+        eval_and_snapshot(cfg.total_steps, n_games=sched.budget_for(cfg.total_steps)[1])
     print(f"[done] config '{cfg.name}' 完成，产物在 {cfg.folder()}（含 Elo 历史，供网页 UI 读取）")
 
 
@@ -822,12 +1114,18 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
     prophet = ProphetPlanner()
     rng = random.Random(cfg.seed)
 
-    def eval_and_snapshot(step):
-        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays)
+    def eval_and_snapshot(step, n_games=None):
+        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays, n_games=n_games)
+
+    sched = _EvalScheduler(cfg, start_step)
+    print(f"[eval-plan] {sched.plan_str(cfg.total_steps, _eval_pair_count(league, cfg.only_vs_main))}",
+          flush=True)
 
     # 训练开始先跑一次评估/快照
     if cfg.eval_at_start:
-        eval_and_snapshot(0)
+        _k, _g = sched.start_budget()
+        print(f"[eval-plan] 起始评估点 step=0（{_k} 预算：{_g} 局/对）", flush=True)
+        eval_and_snapshot(0, n_games=_g)
 
     envs = [_make_env(cfg, cfg.seed + i) for i in range(n)]
     beliefs = [BeliefInference(opp_deck=e.deck1, n_particles=128, seed=cfg.seed + i)
@@ -848,7 +1146,6 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
     transitions = []
 
     step = start_step
-    prev_block = (start_step // cfg.steps_per_eval) if cfg.steps_per_eval else 0
     last_eval_step = None
 
     while step < cfg.total_steps:
@@ -928,16 +1225,14 @@ def _run_vec(cfg: TrainConfig, resume=False, record_replays=True):
 
         # 5) 按 env-steps 计步 + 评估
         step = min(cfg.total_steps, step + n)
-        if cfg.steps_per_eval:
-            block = step // cfg.steps_per_eval
-            if block > prev_block:
-                eval_and_snapshot(step)
-                last_eval_step = step
-                prev_block = block
+        _due = sched.due(step)
+        if _due:
+            eval_and_snapshot(step, n_games=_due[1])
+            last_eval_step = step
 
     save_checkpoint(main, cfg.main_final_path())
     if last_eval_step != cfg.total_steps:
-        eval_and_snapshot(cfg.total_steps)
+        eval_and_snapshot(cfg.total_steps, n_games=sched.budget_for(cfg.total_steps)[1])
     print(f"[done] config '{cfg.name}' 完成，产物在 {cfg.folder()}（含 Elo 历史，供网页 UI 读取）")
 
 
@@ -966,11 +1261,17 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
 
     _, _, main, ppo, league, start_step = _build_league(cfg, device, resume)
 
-    def eval_and_snapshot(step):
-        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays)
+    def eval_and_snapshot(step, n_games=None):
+        _eval_and_snapshot(league, main, ppo, cfg, step, device, record_replays, n_games=n_games)
+
+    sched = _EvalScheduler(cfg, start_step)
+    print(f"[eval-plan] {sched.plan_str(cfg.total_steps, _eval_pair_count(league, cfg.only_vs_main))}",
+          flush=True)
 
     if cfg.eval_at_start:
-        eval_and_snapshot(0)
+        _k, _g = sched.start_budget()
+        print(f"[eval-plan] 起始评估点 step=0（{_k} 预算：{_g} 局/对）", flush=True)
+        eval_and_snapshot(0, n_games=_g)
 
     def spec_for(pol):
         if pol is None:
@@ -1043,7 +1344,6 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
         hidden_list = [None] * n
         transitions = []
         step = start_step
-        prev_block = (start_step // cfg.steps_per_eval) if cfg.steps_per_eval else 0
         last_eval_step = None
         post_obs_list = [None] * n
         _t_train0 = time.monotonic()
@@ -1120,12 +1420,10 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
 
             # 5) 按 env-steps 计步 + 评估
             step = min(cfg.total_steps, step + n)
-            if cfg.steps_per_eval:
-                block = step // cfg.steps_per_eval
-                if block > prev_block:
-                    eval_and_snapshot(step)
-                    last_eval_step = step
-                    prev_block = block
+            _due = sched.due(step)
+            if _due:
+                eval_and_snapshot(step, n_games=_due[1])
+                last_eval_step = step
             if os.environ.get("DSH_MP_TIMING"):
                 print(f"[timing] iter act={(_t1-_t0)*1000:.1f}ms "
                       f"sim={(_t2-_t1)*1000:.1f}ms total={(time.monotonic()-_t0)*1000:.1f}ms",
@@ -1142,12 +1440,19 @@ def _run_mp(cfg: TrainConfig, resume=False, record_replays=True):
     print(f"[train] 训练循环耗时 {time.monotonic() - _t_train0:.1f}s", flush=True)
     save_checkpoint(main, cfg.main_final_path())
     if last_eval_step != cfg.total_steps:
-        eval_and_snapshot(cfg.total_steps)
+        eval_and_snapshot(cfg.total_steps, n_games=sched.budget_for(cfg.total_steps)[1])
     print(f"[done] config '{cfg.name}' 完成，产物在 {cfg.folder()}（含 Elo 历史，供网页 UI 读取）")
 
 
 def run_league(cfg: TrainConfig, resume=False, record_replays=True):
     """联赛主循环入口：n_envs>1 按 parallel 选择跨进程/单进程并行，否则单 env。"""
+    _w = int(getattr(cfg, "eval_workers", 0) or 0)
+    if _w > 1:
+        print(f"[eval-plan] run 模式评估并行：{_w} 个 spawn worker（纯 CPU 推理，"
+              f"失败自动降级串行）", flush=True)
+    else:
+        print("[eval-plan] run 模式评估：串行（未显式传 --eval-workers；run 模式旧默认即串行）",
+              flush=True)
     if int(cfg.n_envs) > 1:
         if cfg.parallel == "proc":
             return _run_vec(cfg, resume=resume, record_replays=record_replays)
@@ -1300,6 +1605,15 @@ def main():
                          "小批+打乱才打破批内同质性")
     ap.add_argument("--ppo-shuffle", action="store_true",
                     help="F'：每轮打乱样本顺序（默认关，配合 --ppo-epochs/--ppo-minibatch 用）")
+    # —— 两级评估（2026-09-18）：小评估保分辨率 + 稀疏大评估降噪 ——
+    ap.add_argument("--big-eval-every", type=int, default=None,
+                    help="两级评估：每 N 步一次**大评估**（默认 0=关闭=旧行为）。"
+                         "与小评估网格取并集，不整除时大评估点被插入为额外评估点；"
+                         "同一步同时命中两网格只评一次、按大预算。")
+    ap.add_argument("--n-eval-games-big", type=int, default=None,
+                    help="大评估每对局数（默认 0=回退 --n-eval-games）")
+    ap.add_argument("--no-big-eval-at-start", action="store_true",
+                    help="起始评估点（step 0）改用小评估预算（默认用大预算拿低噪声基线）")
     args = ap.parse_args()
     # 自动续训为默认：无 --fresh 时 resume=True（断点缺失/不存在时各入口会自行从头并提示）
     resume = not args.fresh
@@ -1318,7 +1632,7 @@ def main():
               "card_level",
               "batch_size", "update_interval", "lr", "hidden_dim", "seed",
               "n_eval_games", "max_ep_steps", "device", "main_init", "decks_path",
-              "deck_set",
+              "deck_set", "big_eval_every", "n_eval_games_big",
               "solo_copy_every", "eval_workers",
               "gae_lambda", "ent_coef", "adv_norm", "value_norm", "diagnose_every",
               "ppo_epochs", "ppo_minibatch"):
@@ -1339,6 +1653,8 @@ def main():
         overrides["train_stall_stop"] = False
     if args.train_stall_stop:
         overrides["train_stall_stop"] = True
+    if args.no_big_eval_at_start:
+        overrides["eval_big_at_start"] = False
     if args.adv_inert_probe:
         overrides["adv_inert_probe"] = True
     if args.critic_baseline is not None:
@@ -1355,6 +1671,12 @@ def main():
         overrides["eval_at_start"] = False
 
     cfg = TrainConfig.resolve(args.config, load_config=args.load_config, **overrides)
+    # run 模式评估并行度（2026-09-18）：老代码在 run 模式**完全忽略** --eval-workers（永远
+    # 串行），而 TrainConfig.eval_workers 的 dataclass 默认是 min(16, cpu)。若直接接线，
+    # 所有既有 `--mode run` 命令会在默认下从"串行"变成"16 进程"⇒ 默认不再逐位一致。
+    # 故这里显式区分：**只有显式传 --eval-workers 才启用并行**，否则强制 1（串行）。
+    if args.mode == "run" and args.eval_workers is None:
+        cfg.eval_workers = 1
     if args.save_config:
         path = cfg.save(args.save_config)
         print(f"[config] 已导出配置 -> {path}")

@@ -4874,6 +4874,206 @@ def test_anchor_light_point_state():
           "（step=0/2500/5000 锚点序列）、同 step 幂等")
 
 
+def test_eval_scheduler_two_tier():
+    """两级评估调度（2026-09-18）：小评估（`steps_per_eval`）+ 稀疏大评估（`big_eval_every`）。
+
+    本测试盯的都是会**静默失效**的点：
+    ① 默认全关（`big_eval_every=0` / `n_eval_games_big=0`）⇒ 与旧实现逐位一致；
+    ② `big_eval_every=0` 时 `due()` 触发序列 **恰好等于** 旧的
+       `step % steps_per_eval == 0`，且 `n_games` 恒 = `n_eval_games`；
+    ③ 两网格**并集**：8000 与 100000 不整除 ⇒ 100k/200k/…/900k 共 9 个大评估点被
+       **插入**（不被 8000 网格吞掉），1e6 同时命中两网格 → 只评一次、按大预算；
+    ④ CLI 已接线到 overrides（漏接 = 传了不生效，最典型的脚枪）；
+    ⑤ `_eval_and_snapshot(n_games=…)` 真的把局数传给了 `eval_round_robin`
+       （漏传 ⇒ 大评估静默退化成小评估，曲线噪声不变而你以为降了）。
+    """
+    import re
+    import inspect
+    from types import SimpleNamespace
+    from rl.config import TrainConfig
+    from rl import run_league
+
+    # ① 默认关 / 可显式开启
+    d = TrainConfig()
+    assert d.big_eval_every == 0, d.big_eval_every
+    assert d.n_eval_games_big == 0, d.n_eval_games_big
+    assert d.eval_big_at_start is True
+    assert TrainConfig.resolve("economy", big_eval_every=100000,
+                               n_eval_games_big=20).big_eval_every == 100000
+    assert TrainConfig.resolve("economy").big_eval_every == 0
+
+    # ② 关掉大评估 ⇒ 与旧触发条件逐位一致
+    cfg = TrainConfig(name="t2", steps_per_eval=8000, n_eval_games=10,
+                      total_steps=40000)
+    s = run_league._EvalScheduler(cfg, 0)
+    got = []
+    for st in range(0, cfg.total_steps + 1):
+        r = s.due(st)
+        if r:
+            got.append((st, r[0], r[1]))
+    old = [(st, "small", 10) for st in range(1, cfg.total_steps + 1)
+           if cfg.steps_per_eval and st % cfg.steps_per_eval == 0]
+    assert got == old, (got, old)
+    # 0 号点由 eval_at_start 单独触发（due 不重复触发）⇒ 旧序列里 0 也不该被 due 吃掉
+    assert got[0][0] == 8000, got[0]
+    assert s.start_budget() == ("small", 10), s.start_budget()
+
+    # ③ 两网格并集 + 不整除时插入 + 同格点只评一次
+    cfg = TrainConfig(name="t2b", steps_per_eval=8000, big_eval_every=100000,
+                      n_eval_games=10, n_eval_games_big=20, total_steps=1000000)
+    s = run_league._EvalScheduler(cfg, 0)
+    pts = s.expected_points(1000000)
+    # 8000 网格 126 点（含 0）；100000 网格 11 点，其中 6 点（k 偶：0/200k/…/1000k）
+    # 已被 8000 网格覆盖 ⇒ 并集 = 126 + (11−6) = 131；多出来的是 100k/300k/500k/700k/900k
+    assert len(pts) == 131, len(pts)
+    assert pts[:2] == [0, 8000], pts[:2]
+    assert 100000 in pts and 96000 in pts and 104000 in pts, "大评估点必须被插入"
+    kinds = {p: s.budget_for(p) for p in pts}
+    assert kinds[0] == ("big", 20), kinds[0]        # 起始点用大预算（低噪声基线）
+    assert kinds[8000] == ("small", 10), kinds[8000]
+    assert kinds[100000] == ("big", 20), kinds[100000]
+    assert kinds[200000] == ("big", 20), kinds[200000]   # 200k 同时在 8000 网格上 ⇒ 大
+    assert kinds[96000] == ("small", 10), kinds[96000]
+    assert kinds[1000000] == ("big", 20), kinds[1000000]   # 1e6 同时命中两网格 ⇒ 大
+    n_big = sum(1 for p in pts if kinds[p][0] == "big")
+    assert n_big == 11, n_big                       # 0/100k/../900k + 1e6
+    # 走一遍 due()：每个评估点恰好触发一次，且预算与 budget_for 一致
+    seen = []
+    for st in range(0, 1000000 + 1):
+        r = s.due(st)
+        if r:
+            seen.append((st, r[0], r[1]))
+    seen.append((0, *s.start_budget()))             # eval_at_start 的 0 号点
+    seen.sort()
+    assert [p for p, _, _ in seen] == pts, "due() 的评估点集合必须等于并集"
+    assert seen == [(p, *kinds[p]) for p in pts], "due() 的预算必须等于 budget_for"
+    assert sum(g for _, _, g in seen) == 120 * 10 + 11 * 20, "局数预算对账"
+    plan = s.plan_str(1000000, 5)
+    assert "评估点 131 个" in plan and "大 11 / 小 120" in plan, plan
+    assert "预计总对局 7100 局" in plan, plan       # (120*10 + 11*20) * 5 对
+
+    # n_eval_games_big=0 ⇒ 回退到 n_eval_games（只改间隔不改局数）
+    cfg2 = TrainConfig(name="t2c", steps_per_eval=8000, big_eval_every=100000,
+                       n_eval_games=10, n_eval_games_big=0, total_steps=200000)
+    assert run_league._EvalScheduler(cfg2, 0).budget_for(100000) == ("big", 10)
+    # eval_big_at_start=False ⇒ 起始点用小预算
+    cfg3 = TrainConfig(name="t2d", steps_per_eval=8000, big_eval_every=100000,
+                       n_eval_games=7, n_eval_games_big=21, total_steps=200000,
+                       eval_big_at_start=False)
+    assert run_league._EvalScheduler(cfg3, 0).start_budget() == ("small", 7)
+
+    # 续训：游标从 start_step 起步 ⇒ 不重复评估已评过的格点（run_state 是评估后才写的）
+    cfg5 = TrainConfig(name="t2f", steps_per_eval=8000, big_eval_every=100000,
+                       n_eval_games=10, n_eval_games_big=20)
+    s5 = run_league._EvalScheduler(cfg5, 8000)
+    assert s5.due(8000) is None, "resume 后不得重复评估同一格点"
+    assert s5.due(16000) == ("small", 10)
+    s6 = run_league._EvalScheduler(cfg5, 100000)
+    assert s6.due(100000) is None, "resume 后不得重复评估大评估格点"
+    assert s6.due(104000) == ("small", 10)
+
+    # ④ CLI 接线（源码级断言：flag 存在 **且** 进了 overrides 元组）
+    src = inspect.getsource(run_league.main)
+    assert '"--big-eval-every"' in src, "CLI flag --big-eval-every 缺失"
+    assert '"--n-eval-games-big"' in src, "CLI flag --n-eval-games-big 缺失"
+    assert re.search(r'for k in \([^)]*"big_eval_every"', src, re.S), \
+        "CLI flag 未进 overrides 元组 → 传了不生效"
+    assert re.search(r'for k in \([^)]*"n_eval_games_big"', src, re.S), \
+        "CLI flag 未进 overrides 元组 → 传了不生效"
+
+    # ⑤ _eval_and_snapshot 真的把 n_games 传下去（打桩 eval_round_robin / _save_snapshot）
+    calls = []
+    orig_eval, orig_save = run_league.eval_round_robin, run_league._save_snapshot
+    try:
+        run_league.eval_round_robin = lambda lg, n, ms, sd, st, **kw: calls.append((st, n)) or []
+        run_league._save_snapshot = lambda *a, **kw: None
+        cfg4 = TrainConfig(name="t2e", n_eval_games=10, max_ep_steps=360)
+        fake = SimpleNamespace(elo_table=lambda: {}, agents={}, only_vs_main=True)
+        run_league._eval_and_snapshot(fake, None, None, cfg4, 8000, "cpu", False)
+        run_league._eval_and_snapshot(fake, None, None, cfg4, 100000, "cpu", False, n_games=20)
+        assert calls == [(8000, 10), (100000, 20)], calls
+    finally:
+        run_league.eval_round_robin = orig_eval
+        run_league._save_snapshot = orig_save
+
+    print("[PASS] 两级评估调度：默认关（旧行为逐位一致）、并集插入 100k 网格、"
+          "同格点只评一次按大预算、1e6 共 131 点 / 7100 局、CLI 已接线、"
+          "n_games 真传到 eval_round_robin")
+
+
+def test_eval_round_robin_parallel_equivalence():
+    """run 模式评估并行分片（2026-09-18）：`eval_round_robin(..., n_workers=N)`。
+
+    动机：run 模式评估原本**串行**跑每个 pair 的每一局（纯 Python 引擎模拟 ≈9 s/局），
+    1M 步长跑里 7100 局 = 17+ 小时。并行化后 Elo/PFSP 必须仍在**父进程按 (pair, g)
+    规范顺序逐局补记**，否则 league 状态演化会与串行不同。
+
+    本测试断言（全部可证伪）：
+    ① `_policy_spec` → `_spec_to_policy` 往返：脚本策略重建后同 seed 同行为；
+       学习型策略权重逐位相同（漏传 dim/flag 会在此炸）；
+    ② **n_games=1 时并行与串行结果逐位一致**：单局不需要链式洗牌（每 pair 的 env
+       只 shuffle 一次，且种子相同）⇒ 并行分片不得改变任何一局的结果；
+    ③ 并行分支真的被走到（源码级：`_run_eval_pairs_parallel` 被调用），且
+       `eval_round_robin` 的默认 `n_workers=0` = 旧串行行为。
+    """
+    import inspect
+    import torch
+    from rl.config import TrainConfig
+    from rl import run_league
+    from rl.league import League
+    from rl.opponents import ScriptedPolicy
+    from rl.follower import FollowerPolicy
+    from rl.belief import BeliefInference
+    from rl.env_wrapper import RLEnv
+    from rl.plan_space import PLAN_DIM
+
+    # ① spec 往返
+    sp = ScriptedPolicy(mode="random", pool=None, deck_pool=None, seed=123)
+    sp2 = run_league._spec_to_policy(run_league._policy_spec(sp))
+    assert (sp2.mode, sp2.pool, sp2.deck_pool, sp2.seed) == \
+        (sp.mode, sp.pool, sp.deck_pool, sp.seed)
+    assert sp2.deck() == sp.deck(), "同 seed 的脚本策略重建后 deck() 必须一致"
+    env0 = RLEnv(seed=0)
+    belief0 = BeliefInference(opp_deck=env0.deck1, n_particles=128, seed=0)
+    main = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM,
+                          belief_dim=len(belief0.encode(None, None)),
+                          value_bypass=True, value_independent=True)  # = economy 架构
+    p2 = run_league._spec_to_policy(run_league._policy_spec(main))
+    assert (p2.value_bypass, p2.value_independent) == (True, True), "架构标志必须随 spec 传递"
+    sd_a, sd_b = main.state_dict(), p2.state_dict()
+    assert set(sd_a) == set(sd_b), (set(sd_a) ^ set(sd_b))
+    assert all(torch.equal(sd_a[k], sd_b[k]) for k in sd_a), "权重往返必须逐位相同"
+
+    # ② 并行 vs 串行（n_games=1 ⇒ 无洗牌链差异 ⇒ 必须逐位一致）
+    def build():
+        lg = League(seed=7)
+        for aid, sd in (("a", 11), ("b", 22), ("c", 33)):
+            lg.add_agent(aid, kind="baseline", policy=ScriptedPolicy(mode="random", seed=sd),
+                         replace=True)
+        return lg
+
+    lg1 = build()
+    r1 = run_league.eval_round_robin(lg1, 1, 60, 5, 0, n_workers=1, record=True)
+    ser_elo = {k: round(float(v), 4) for k, v in lg1.elo_table().items()}
+
+    lg2 = build()
+    r2 = run_league.eval_round_robin(lg2, 1, 60, 5, 0, n_workers=2, record=True)
+    par_elo = {k: round(float(v), 4) for k, v in lg2.elo_table().items()}
+    assert ser_elo == par_elo, (ser_elo, par_elo)
+    assert len(r1) == len(r2) == 3, (len(r1), len(r2))
+
+    # ③ 默认串行 + 并行分支已接线
+    sig = inspect.signature(run_league.eval_round_robin)
+    assert sig.parameters["n_workers"].default == 0, sig
+    src = inspect.getsource(run_league.eval_round_robin)
+    assert "_run_eval_pairs_parallel" in src, "并行分支未接线"
+    assert run_league._eval_pair_worker_main.__module__ == "rl.run_league", \
+        "worker 必须是模块级函数（spawn 需要可 pickle 的 target）"
+
+    print("[PASS] run 模式评估并行：spec 往返逐位一致、n_games=1 并行==串行（Elo + 录像）、"
+          "默认 n_workers=0 仍是串行、worker 为模块级函数")
+
+
 def test_adv_inert_probe_and_const_baseline():
     """critic 惰性检验（2026-09-13）：`adv_alt` 探针与 `critic_baseline="const"`。
 
@@ -5472,6 +5672,8 @@ def main():
     test_history_dedup_and_gates()
     test_solo_rand_anchor()
     test_anchor_light_point_state()
+    test_eval_scheduler_two_tier()
+    test_eval_round_robin_parallel_equivalence()
     test_opponent_pool_rand_anchor()
     test_opponent_pool_mix_multi_dir()
     test_pfsp_gate_and_dynamic_hist()
