@@ -1,0 +1,64 @@
+--- src/clasher_new/rl/replay.py	2026-09-18 03:48:42.976581600 +0800
++++ /tmp/rtpatch/rl/replay.py	2026-09-18 05:15:05.624756841 +0800
+@@ -79,7 +79,15 @@
+ # ---------------------------------------------------------------------------
+ # 联赛录像（紧凑格式，供网页/回放观看，非信念训练数据）
+ # ---------------------------------------------------------------------------
+-LEAGUE_REPLAY_SCHEMA = 4
++LEAGUE_REPLAY_SCHEMA = 5
++#: schema 5（2026-09-18，S2 第二轮）：实体条目**末尾再追加** `root_cast` / `is_product` / `share`，
++#: 帧**追加** `v0` / `v1`（= 在线 `RLEnv._active_v` 真值）。
++#: 动机（`docs/s2_instrument_2026-09-18.md` §9）：schema 4 有两处**退化** ——
++#: ①没有 `is_product` ⇒ 规则①(交战对至少一侧非产物)**退化为恒真**；
++#: ②残值 `V` 只能**离线重建** ⇒ 帧内延迟出兵可能污染份额。
++#: 带上帧内真值后：`V` 零误差、可直接**对账重建法**、`cost(E)` 用在线 `share` 而不是卡表回退。
++#: **向后兼容**：仍全部追加在**末尾**，按下标读 0..9 的消费者不受影响；读方以 `schema >= 5` 判定。
++#:
+ #: schema 4（2026-09-18）：实体条目**末尾追加** `id` 与 `target_id` 两个字段。
+ #: 动机：离线做「局面圣水交换」需要 **实体身份** 与 **索敌关系**，而 schema ≤3 只有
+ #: `[name,x,y,hp,player,...]` ⇒ 实测 `league_88000.pkl` 有 **8584/9079 帧存在重复 (name,player)**
+@@ -90,7 +98,7 @@
+ #: 读方须以 `schema >= 4` 判定字段是否存在。
+ 
+ 
+-def battle_snapshot(battle, bundle, reward, info):
++def battle_snapshot(battle, bundle, reward, info, v=None, shares=None):
+     """把一个决策步压缩成轻量帧（不含 32×18 观测网格，体积可控）。
+ 
+     每帧含：时间、动作 bundle、奖励、对手出牌、双方塔血/圣水/皇冠、存活实体列表。
+@@ -99,6 +107,12 @@
+     kind ∈ troop/building/projectile/effect（供前端按 pygame 风格渲染）；
+     `id` = 实体在本局的唯一 id（= `BattleState.next_entity_id` 分配值）；
+     `target_id` = 当前索敌目标的 id（无目标为 `None`）⇒ 离线可**直接重建索敌关系图**。
++
++    schema 5 追加：`root_cast`（产出该实体的**出牌事件 id**；塔/出牌直接产物为 null）、
++    `is_product`（是否由建筑/单位/法术**生成**）、`share`（该实体当前的**部署份额**，
++    不在台账里的实体（塔/产物）记 **0.0**，与 `rl_reward_plan_v2:19` 同口径）；
++    帧级 `v0`/`v1` = 在线 `RLEnv._active_v`。
++    `v`/`shares` 缺省（如 `human_play`）⇒ 这些字段为 `None`（读方须容忍）。
+     """
+     from battle import Building, Projectile, SpawnProjectile, AreaEffect, TimedExplosive
+ 
+@@ -123,6 +137,9 @@
+         "elixir1": float(p1.elixir),
+         "crown0": int(p0.get_crown_count()),
+         "crown1": int(p1.get_crown_count()),
++        # schema 5：在线残值真值（`RLEnv._active_v`）；缺省 None ⇒ 读方回落到离线重建
++        "v0": (float(v[0]) if v is not None else None),
++        "v1": (float(v[1]) if v is not None else None),
+         "entities": [
+             [e.name, round(float(e.position.x), 1), round(float(e.position.y), 1),
+              round(float(e.hp), 1), int(e.player),
+@@ -132,7 +149,11 @@
+              float(getattr(e.data, "shield_health", 0.0) or 0.0),
+              float(getattr(e.data, "collision_radius", 0.5) or 0.5),
+              int(e.id),                                    # schema 4：实体身份
+-             (int(e.target_id) if getattr(e, "target_id", None) is not None else None)]  # schema 4：索敌关系
++             (int(e.target_id) if getattr(e, "target_id", None) is not None else None),
++             # schema 5：出牌溯源 + 产物标记 + 部署份额（只读记录，不参与任何行为）
++             (int(e.root_cast) if getattr(e, "root_cast", None) is not None else None),
++             (bool(e.is_product) if getattr(e, "is_product", None) is not None else None),
++             (float(shares.get(e.id, 0.0)) if shares is not None else None)]
+             for e in battle.entities.values() if e.is_alive
+         ],
+     }

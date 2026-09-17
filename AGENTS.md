@@ -119,7 +119,13 @@
      **S2 相关性门禁已过**（配对 5/5、跨口径 10/10）；**但 S1 仍判「约束在机制/探索侧」**
      ⇒ **先修机制（`ACE_CARDS`/`SINK_TANK_CARDS` 名单 + "只推荐付得起的牌"自锁），
      再按预注册 §11.7（唯一干预臂 `p4b`）在 `solo` 上做 A/B**；奖励项**仍未接线**。
-   - **引擎侧「出牌溯源」纯记录通道**：已在 sandbox **完整实现 + 行为中立性逐位对账 PASS**
-     （1200 tick 全实体 SHA-256 两棵树逐字相同），**但尚未落到真树**（`run100k` 在跑，spawn worker 会重新 import）。
-     逐字 diff：[`docs/root_cast_channel_2026-09-18.diff`](docs/root_cast_channel_2026-09-18.diff)；记录与落地步骤：
-     [`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md)
+   - **引擎侧「出牌溯源」纯记录通道 + schema 5**：sandbox **完整实现 + 行为中立性逐位对账 PASS**
+     （1200 tick 全实体 SHA-256 两棵树逐字相同），schema 5（`root_cast`/`is_product`/`share` + 帧内 `v0/v1`）
+     亦已在 sandbox 端到端验证（`exact=True`）。**已 armed 受控落地**：
+     `scripts/_apply_s2_channel_when_idle.sh`（等 `run100k` 终局评估点 + 120 s → 干跑预检 → 应用 →
+     **中立性 DIGEST 必须等于基线** `9adc2aaf…5b55` → 跑 【R19】selftest 子集 → 短 smoke 产出真 schema-5 录像；
+     任一步失败**自动回滚**）。
+     三个逐字 diff：[`root_cast_channel_2026-09-18.diff`](docs/root_cast_channel_2026-09-18.diff)、
+     [`schema5_replay_2026-09-18.diff`](docs/schema5_replay_2026-09-18.diff)、
+     [`schema5_run_league_2026-09-18.diff`](docs/schema5_run_league_2026-09-18.diff)；
+     记录与落地步骤：[`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md)

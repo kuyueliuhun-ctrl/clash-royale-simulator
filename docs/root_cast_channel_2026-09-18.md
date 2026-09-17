@@ -135,3 +135,50 @@ PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe ../../scripts/run_selftest
 4. `create_projectile` 那条绕过路径已补记，但**同类绕过点没有做全仓静态扫描**
    （只用 AST 扫了 `_spawn_entity` 调用点 + 跑了一次探针看 `None` 计数）。
 5. **本通道不产生任何奖励**；把它当作"奖励已经修好了"是错的（§5）。
+
+---
+
+## §8 schema 5（帧内真值）+ 受控落地（2026-09-18 第二轮补记）
+
+### 8.1 schema 5 改了什么（sandbox 已端到端验证）
+| 位置 | 内容 | 文件 |
+|---|---|---|
+| 实体元组 12 → **15** | 末尾追加 `root_cast`、`is_product`、`share` | `rl/replay.py` |
+| 帧 | 追加 **`v0` / `v1`**（在线 `RLEnv._active_v`） | `rl/replay.py::battle_snapshot(battle, bundle, reward, info, v=None, shares=None)` |
+| 调用方 | `LeagueGameRecorder.record` 从 `env._active_v` / `env._v_share` 取值传入 | `rl/run_league.py` |
+| 常量 | `LEAGUE_REPLAY_SCHEMA` **4 → 5** | `rl/replay.py` |
+
+**`share` 的口径**：不在台账里的实体（塔、产物体）记 **0.0**（不是 `None`）——
+否则离线读方会回落到卡表，而 `IceGolemite` 在卡表里是 **2 费** ⇒ 会把产物估成 2 费（**违反 §4 的货币泵否决**）。
+`v`/`shares` 缺省（如 `rl/human_play.py`）⇒ 这些字段为 `None`，读方须容忍。
+
+**sandbox 探针**（`scripts/_schema5_probe.py`，合成局 + 影子 env 台账）实测：
+`LEAGUE_REPLAY_SCHEMA = 5`、帧含 `v0/v1`、实体元组**全部 15 长**、
+`is_product=True` 命中 16 条（如 `WitchProjectile`）、`share` 非零 6 条、
+`phi_series` 报 **`exact=True` / `v_source=frame`**，并自动跑**重建 vs 帧内真值**对账。
+⚠️ 该探针的"影子台账"是对 `RLEnv._deploy_ledger` 的**粗略仿写**（不处理 `_seen_max_id` 水位与延迟出兵），
+所以它报出的重建误差（8.0）**不代表真 env**；真误差要等真树 smoke 产出 schema-5 录像后才能量。
+
+### 8.2 受控落地脚本：`scripts/_apply_s2_channel_when_idle.sh`
+**为什么需要它**：`run_league.py` 用 Windows `spawn` 起 worker，worker 会**重新 import 源码** ⇒
+训练期间改源码会污染在跑的实验（【R1】）。脚本流程：
+
+1. **等** `runs/run100k/replays/league_100000.pkl` 落盘 **且** `run_state.json` 的 `step == 100000`，
+   再等 **120 s** 让 worker 退出（最多等 2 h，超时则**不做任何改动**）；
+2. 备份 `battle.py` / `rl/replay.py` / `rl/run_league.py` 到 `/tmp/s2_apply_bak/`；
+3. 三个补丁**先 `--dry-run` 预检**、再应用（任一失败 ⇒ 退出码非零）；
+4. **验证 1/3 行为中立性**：`scripts/s2_neutrality_probe.py .` 的 DIGEST 必须等于
+   `9adc2aafee52aa55f964fb52af7ac86fc240d105058d880bb50772b95bcd5b55`（= 未打补丁的基线），
+   不一致 ⇒ **自动回滚**；
+5. **验证 2/3**：`run_selftests.py test_noncombat_entity_contract test_replay_roundtrip test_league_replays test_dashboard_replays`（【R19】子集），失败 ⇒ 回滚；
+6. **验证 3/3**：短 smoke（`--config-name run_schema5 --total-steps 600 --steps-per-eval 300`）
+   产出真 schema-5 录像，打印元组长度与 `v0` 帧数，并用仪器复算（应报 `exact=True`）。
+
+**补丁（三个，均可 `patch -p0 <file> < target` 独立应用）**：
+`docs/root_cast_channel_2026-09-18.diff`（battle.py，+134 −40）、
+`docs/schema5_replay_2026-09-18.diff`（rl/replay.py）、
+`docs/schema5_run_league_2026-09-18.diff`（rl/run_league.py）。
+三个都已在本机 `--dry-run` 通过。
+
+**手动回滚**：`cp /tmp/s2_apply_bak/battle.py src/clasher_new/ && cp /tmp/s2_apply_bak/rl/*.py src/clasher_new/rl/`
+（或 `git checkout -- src/clasher_new`）。
