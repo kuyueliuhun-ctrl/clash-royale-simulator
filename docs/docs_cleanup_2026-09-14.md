@@ -71,3 +71,17 @@ train_economy_9k.log  train_economy_9k_ft.log  train_gfix_20k.log  value_ln_prob
 `--hist-seed-dir runs/economy_9k_ft --hist-seed-dir runs/economy_9j` **照抄会因目录缺失而退化**
 （对手池退化为「本 run 快照」，即文档配比 frozen/hist/defend/rand_anchor 失效）。
 **未定**：这两个目录是被迁移/清理，还是从未入库。已在 `AGENTS.md` §2.2 加 ⚠️ 标注。
+
+## 行尾规范化（**顺带发生，如实记录**）
+
+本次编辑用 `newline='\n'` 重写了被改动的文档，于是两个**原本是 CRLF** 的文件被规范化成 LF：
+
+| 文件 | 改动前 CR 行 | 改动后 | git 显示 |
+|---|---|---|---|
+| `docs/README.md` | 98 | 0（LF） | `104 98`（整文件重写） |
+| `docs/full_code_reference.md` | 26419 | 0（LF） | `26421 26419`（整文件重写） |
+
+**为什么保留 LF**：仓库 `docs/*.md` 里 **81/84 本来就是 LF**，这两个是少数派；`AGENTS.md` 也一直是 LF。
+**已知副作用**：`scripts/_survey_merge.py` 第 555 行用默认文本模式写 `full_code_reference.md`
+（Windows 下 = CRLF）⇒ **将来重新生成本文件会把行尾翻回 CRLF**，届时 diff 会再噪一次。
+要根治需给 `_survey_merge.py` 加 `newline='\n'`（未做：属独立的代码改动，须按【R3】单变量走）。
