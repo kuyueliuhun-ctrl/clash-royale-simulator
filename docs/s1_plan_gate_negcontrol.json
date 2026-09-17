@@ -1,0 +1,80 @@
+{
+ "arm": "random",
+ "seed": 7000,
+ "games": 0,
+ "prereg_baseline_reference": {
+  "all_frames_frac_ge6": 0.0011,
+  "xbow_rate": 0.0003,
+  "pre_median": 3.25,
+  "lane_dt_median": 5.5
+ },
+ "baseline_rule": "主基线 = 同脚本 --arm random 复算；prereg 值只作量级参照",
+ "negative_control": {
+  "slot_out_of_range_caught": 20,
+  "off_mask_cell_caught": 2,
+  "unaffordable_samples": 80,
+  "unaffordable_caught": 80,
+  "noop_accepted": 20
+ },
+ "result": {
+  "arm": "random",
+  "seed": 7000,
+  "n_games": 0,
+  "max_steps": 360,
+  "deck": [
+   "Xbow",
+   "Tesla",
+   "Skeletons",
+   "IceWizard",
+   "Archer",
+   "Knight",
+   "Log",
+   "Fireball"
+  ],
+  "opponent": "SelfDefenderPolicy",
+  "opponent_passive_prob": 0.6,
+  "n_frames": 0,
+  "frames_per_game": 0.0,
+  "wins": 0,
+  "losses": 0,
+  "draws": 0,
+  "score": 0.0,
+  "illegal_validate_count": 0,
+  "illegal_engine_count": 0,
+  "executor_stats": {},
+  "behavior": {
+   "n_frames": 0,
+   "n_deploy_frames": 0,
+   "n_subactions": 0,
+   "n_subactions_dedup": 0,
+   "dup_subaction_frames": 0,
+   "n_card_plays": 0,
+   "card_counts": {},
+   "card_share": {},
+   "deck_cards": {},
+   "all_frames_frac_ge6": null,
+   "all_frames_frac_ge8": null,
+   "xbow_plays": 0,
+   "xbow_rate": null,
+   "pre_median": null,
+   "pre_frac_ge6": null,
+   "post_median": null,
+   "elix_all_frames": {
+    "n": 0
+   },
+   "n_single_frames": 0,
+   "unknown_cost_frames": 0,
+   "lane_dt_median": null,
+   "lane_dt_n": 0,
+   "games_with_card": {},
+   "card_pre_elixir": {},
+   "legality": {
+    "n_unit_deploys": 0,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 0,
+    "n_spell_y_ge21_legal": 0
+   }
+  },
+  "wall_s": 0.0
+ }
+}

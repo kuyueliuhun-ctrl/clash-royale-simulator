@@ -1,0 +1,197 @@
+{
+ "arm": "token_xbow",
+ "seed": 7000,
+ "games": 20,
+ "prereg_baseline_reference": {
+  "all_frames_frac_ge6": 0.0011,
+  "xbow_rate": 0.0003,
+  "pre_median": 3.25,
+  "lane_dt_median": 5.5
+ },
+ "baseline_rule": "主基线 = 同脚本 --arm random 复算；prereg 值只作量级参照",
+ "result": {
+  "arm": "token_xbow",
+  "seed": 7000,
+  "n_games": 20,
+  "max_steps": 360,
+  "deck": [
+   "Xbow",
+   "Tesla",
+   "Skeletons",
+   "IceWizard",
+   "Archer",
+   "Knight",
+   "Log",
+   "Fireball"
+  ],
+  "opponent": "SelfDefenderPolicy",
+  "opponent_passive_prob": 0.6,
+  "n_frames": 9110,
+  "frames_per_game": 455.5,
+  "wins": 10,
+  "losses": 10,
+  "draws": 0,
+  "score": 0.5,
+  "illegal_validate_count": 0,
+  "illegal_engine_count": 0,
+  "executor_stats": {
+   "intent/cycle_small": 79,
+   "xbow_cycle_play": 86,
+   "intent/cycle_and_wait": 337,
+   "intent/push_left": 966,
+   "xbow_cycle_hold": 643,
+   "intent/protect_backline": 335,
+   "token_commit": 870,
+   "xbow_save_hold": 2451,
+   "intent/defend_left": 2685,
+   "noop_no_suggestion": 5013,
+   "intent/anti_spell": 488,
+   "xbow_commit": 47,
+   "intent/defend_right": 2087,
+   "intent/pull": 200,
+   "intent/push_right": 1152,
+   "intent/defend_king": 461,
+   "intent/push_commit": 263,
+   "intent/spell_finish": 53,
+   "intent/spell_trade": 4
+  },
+  "behavior": {
+   "n_frames": 9110,
+   "n_deploy_frames": 1003,
+   "n_subactions": 1003,
+   "n_subactions_dedup": 1003,
+   "dup_subaction_frames": 0,
+   "n_card_plays": 1003,
+   "card_counts": {
+    "Skeletons": 201,
+    "Log": 190,
+    "Knight": 183,
+    "Archer": 179,
+    "IceWizard": 174,
+    "Xbow": 47,
+    "Fireball": 18,
+    "Tesla": 11
+   },
+   "card_share": {
+    "Skeletons": 0.200399,
+    "Log": 0.189432,
+    "Knight": 0.182453,
+    "Archer": 0.178465,
+    "IceWizard": 0.17348,
+    "Xbow": 0.046859,
+    "Fireball": 0.017946,
+    "Tesla": 0.010967
+   },
+   "deck_cards": {
+    "Fireball": 20,
+    "Log": 20,
+    "IceWizard": 20,
+    "Tesla": 20,
+    "Archer": 20,
+    "Skeletons": 20,
+    "Xbow": 20,
+    "Knight": 20
+   },
+   "all_frames_frac_ge6": 0.005269,
+   "all_frames_frac_ge8": 0.0,
+   "xbow_plays": 47,
+   "xbow_rate": 0.046859,
+   "pre_median": 3.4226,
+   "pre_frac_ge6": 0.050847,
+   "post_median": 0.5655,
+   "elix_all_frames": {
+    "n": 9110,
+    "mean": 1.9683,
+    "median": 1.7798,
+    "max": 6.3869
+   },
+   "n_single_frames": 1003,
+   "unknown_cost_frames": 0,
+   "lane_dt_median": 4.0,
+   "lane_dt_n": 825,
+   "games_with_card": {
+    "Log": 20,
+    "Archer": 20,
+    "Skeletons": 20,
+    "Knight": 20,
+    "IceWizard": 20,
+    "Xbow": 18,
+    "Fireball": 13,
+    "Tesla": 8
+   },
+   "card_pre_elixir": {
+    "Log": {
+     "n": 190,
+     "median": 2.5655,
+     "p90": 3.403,
+     "min": 2.1786,
+     "max": 6.2798,
+     "frac_ge6": 0.0053
+    },
+    "IceWizard": {
+     "n": 174,
+     "median": 3.5655,
+     "p90": 3.9494,
+     "min": 3.1786,
+     "max": 6.494,
+     "frac_ge6": 0.0057
+    },
+    "Skeletons": {
+     "n": 201,
+     "median": 1.5655,
+     "p90": 1.994,
+     "min": 1.1786,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "Archer": {
+     "n": 179,
+     "median": 3.5655,
+     "p90": 4.1381,
+     "min": 3.1786,
+     "max": 5.7083,
+     "frac_ge6": 0.0
+    },
+    "Knight": {
+     "n": 183,
+     "median": 3.5655,
+     "p90": 3.9869,
+     "min": 3.1786,
+     "max": 6.2143,
+     "frac_ge6": 0.0055
+    },
+    "Xbow": {
+     "n": 47,
+     "median": 6.25,
+     "p90": 6.6369,
+     "min": 6.1786,
+     "max": 6.9226,
+     "frac_ge6": 1.0
+    },
+    "Tesla": {
+     "n": 11,
+     "median": 4.5655,
+     "p90": 4.7798,
+     "min": 4.25,
+     "max": 4.8155,
+     "frac_ge6": 0.0
+    },
+    "Fireball": {
+     "n": 18,
+     "median": 5.0327,
+     "p90": 5.8637,
+     "min": 4.2143,
+     "max": 6.0357,
+     "frac_ge6": 0.0556
+    }
+   },
+   "legality": {
+    "n_unit_deploys": 795,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 208,
+    "n_spell_y_ge21_legal": 1
+   }
+  },
+  "wall_s": 360.3
+ }
+}

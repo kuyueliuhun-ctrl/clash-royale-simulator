@@ -1,0 +1,134 @@
+{
+ "arm": "random",
+ "seed": 7000,
+ "games": 20,
+ "prereg_baseline_reference": {
+  "all_frames_frac_ge6": 0.0011,
+  "xbow_rate": 0.0003,
+  "pre_median": 3.25,
+  "lane_dt_median": 5.5
+ },
+ "baseline_rule": "主基线 = 同脚本 --arm random 复算；prereg 值只作量级参照",
+ "repro": {
+  "league_0.pkl": {
+   "n_games": 40,
+   "n_frames": 9049,
+   "n_card_plays": 813,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.000111,
+   "pre_median": 3.25,
+   "lane_dt_median": 8.5
+  },
+  "league_10000.pkl": {
+   "n_games": 40,
+   "n_frames": 5267,
+   "n_card_plays": 685,
+   "xbow_plays": 1,
+   "xbow_rate": 0.00146,
+   "all_frames_frac_ge6": 0.01405,
+   "pre_median": 3.25,
+   "lane_dt_median": 8.5
+  },
+  "league_20000.pkl": {
+   "n_games": 40,
+   "n_frames": 10181,
+   "n_card_plays": 1015,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.001179,
+   "pre_median": 3.25,
+   "lane_dt_median": 5.5
+  },
+  "league_30000.pkl": {
+   "n_games": 40,
+   "n_frames": 5671,
+   "n_card_plays": 563,
+   "xbow_plays": 2,
+   "xbow_rate": 0.003552,
+   "all_frames_frac_ge6": 0.002821,
+   "pre_median": 3.2143,
+   "lane_dt_median": 8.0
+  },
+  "league_40000.pkl": {
+   "n_games": 40,
+   "n_frames": 6977,
+   "n_card_plays": 638,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.00129,
+   "pre_median": 3.2143,
+   "lane_dt_median": 8.0
+  },
+  "league_50000.pkl": {
+   "n_games": 40,
+   "n_frames": 9820,
+   "n_card_plays": 955,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.25,
+   "lane_dt_median": 5.5
+  },
+  "league_60000.pkl": {
+   "n_games": 40,
+   "n_frames": 6440,
+   "n_card_plays": 564,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.25,
+   "lane_dt_median": 8.0
+  },
+  "league_70000.pkl": {
+   "n_games": 40,
+   "n_frames": 13875,
+   "n_card_plays": 1438,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.25,
+   "lane_dt_median": 4.0
+  },
+  "league_80000.pkl": {
+   "n_games": 40,
+   "n_frames": 14811,
+   "n_card_plays": 1450,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.3214,
+   "lane_dt_median": 4.5
+  },
+  "league_90000.pkl": {
+   "n_games": 40,
+   "n_frames": 10123,
+   "n_card_plays": 952,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.25,
+   "lane_dt_median": 5.5
+  },
+  "league_100000.pkl": {
+   "n_games": 40,
+   "n_frames": 8646,
+   "n_card_plays": 733,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "all_frames_frac_ge6": 0.0,
+   "pre_median": 3.25,
+   "lane_dt_median": 8.0
+  },
+  "POOLED": {
+   "n_games": 440,
+   "n_frames": 100860,
+   "n_card_plays": 9806,
+   "xbow_plays": 3,
+   "xbow_rate": 0.000306,
+   "all_frames_frac_ge6": 0.00111,
+   "pre_median": 3.25,
+   "lane_dt_median": 5.5
+  }
+ }
+}

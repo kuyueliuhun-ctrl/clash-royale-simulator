@@ -64,6 +64,8 @@
 | **新方案预注册**（判据 / 失败分支 / 不变量 / S1–S3；**实现前必读**） | [`docs/engagement_trade_prereg_2026-09-18.md`](docs/engagement_trade_prereg_2026-09-18.md) |
 | **S2 实施进度**（schema 3→4 实体带 `id`+`target_id`；§11.5 = 仪器 + 门禁判读） | 同上预注册 §11 |
 | **★ S2 实测与门禁判读**（P3 被推翻 / P1P2 否决 / P4b 唯一候选 / 5 个口径缺陷） | [`docs/s2_instrument_2026-09-18.md`](docs/s2_instrument_2026-09-18.md) |
+| **★ S1 零成本门禁**（手写专家；判「约束在机制/探索侧」+ 冰人白嫖证实） | [`docs/s1_gate_2026-09-18.md`](docs/s1_gate_2026-09-18.md) |
+| **引擎侧出牌溯源通道**（sandbox 已验、未落真树；diff + 落地步骤） | [`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md) |
 | 长跑工程（两级评估 + 评估并行分片） | [`docs/long1m_prereg_2026-09-18.md`](docs/long1m_prereg_2026-09-18.md) |
 | **`run100k` 启动记录（正在跑，100k 两级评估）** | [`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md) |
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
@@ -99,3 +101,16 @@
      其 `Trade` 中位 0、均值 **−0.43**（`p25 = −1.00`）⇒「正解被记为负」成立。
      ⇒ **门禁判「有候选、无判决」：S3 不得按原样开跑（其 `tower_term` 用的是已被推翻的 P3），
      唯一允许的干预臂是 `p4b`**。全文：[`docs/s2_instrument_2026-09-18.md`](docs/s2_instrument_2026-09-18.md)；预注册 §11.5
+   - **已跑 S1 零成本门禁（零训练成本，手写专家）**：**未通过（不显著 ≫ 基线）**
+     ⇒ 按预注册 §5 表**第二行**：**约束主要在探索/机制侧**（`token_strict` 全帧圣水≥6 = **0/8191**、Xbow = **0/929**；
+     机制自锁：Xbow 不在 `ACE_CARDS`/`SINK_TANK_CARDS` ⇒ `save_ace`/`setup_wait` 在 Xbow 卡组 0 帧触发、
+     `_pick_suggested_card` 只推荐付得起的牌）。**能力上限已交代**：只多加一条不在 PlanToken 语义里的
+     手写攒费→Xbow 规则就打出了 **156× 基线**（47/1003，部署前圣水中位 6.25）⇒ **动作空间/掩码被证伪为约束点**，
+     **不得**写成「手写专家做不到」。冰人白嫖推论 **证实**（`ΔΦ = −2.000000` 零散布，`edw=0.5` ⇒ **−1.0**；双倍期 −0.2）。
+     全文：[`docs/s1_gate_2026-09-18.md`](docs/s1_gate_2026-09-18.md)
+   - **★ 两条门禁的合并结论（【R11】）**：**S1 判「约束在机制/探索侧」+ S2 判「有候选、无判决」
+     ⇒ `engagement_trade` 奖励项不接线、S3 的 solo A/B 不开。**
+   - **引擎侧「出牌溯源」纯记录通道**：已在 sandbox **完整实现 + 行为中立性逐位对账 PASS**
+     （1200 tick 全实体 SHA-256 两棵树逐字相同），**但尚未落到真树**（`run100k` 在跑，spawn worker 会重新 import）。
+     逐字 diff：[`docs/root_cast_channel_2026-09-18.diff`](docs/root_cast_channel_2026-09-18.diff)；记录与落地步骤：
+     [`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md)

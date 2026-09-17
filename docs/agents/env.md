@@ -74,6 +74,10 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/diag_critic_ev.py` | 5 种 EV 口径 + 探针（`--probe/--predict`） |
 | `scripts/diag_value_head.py` `diag_encoder_scale.py` `diag_gru_ablation.py` | h/enc 方差、GRU 门、融合层尺度、归一化对照 |
 | `scripts/forensics_response.py` `_forensics_cycling.py` | 防守响应/接敌取证；cycling 取证（⚠️ 其 `y≥20` 的"幽灵动作"口径**已被推翻**，见【否证 X-15】） |
+| `scripts/s1_plan_gate.py`（2026-09-18） | **S1 零成本门禁**：`BeliefPlanner`→PlanToken 贪心执行器，三臂 `random`/`token_strict`/`token_xbow`，行为层三项（全帧圣水≥6 / Xbow 出手率 / 部署前圣水中位）+ 非法动作阴性对照 + `--repro-replays` 仪器自检。**判读**：`docs/s1_gate_2026-09-18.md` |
+| `scripts/phi_offline_check.py`（2026-09-18） | **离线逐帧复算 Φ**（`_v_share`/`_active_v`）并与回放 `reward` 逐项对账；冰人白嫖推论的数值验证（证实：ΔΦ = −2.000000 零散布） |
+| `scripts/s2_neutrality_probe.py`（2026-09-18） | **行为中立性探针**：在**两棵树**上跑同一段确定性推演，逐 tick 哈希全部实体状态 ⇒ 纯记录通道改动的开/关逐位对账（1200 tick DIGEST 必须逐字相同） |
+| `scripts/_patch_battle_root_cast.py`（2026-09-18） | 一次性补丁生成器：给 `battle.py` 打「出牌溯源」通道（AST 定位全部出生点，不靠正则猜括号）；`--apply` 才写文件 |
 | `scripts/offline_engagement_trade.py`（2026-09-18） | **离线「局面圣水交换」仪器**（S2）：只读录像，从实体 `id`+`target_id` 重建索敌关系图 → 并查集切局面 → 算 `Trade = ΔΦ + tower_term`。支持 schema 4/5、9 种 `tower_term` 代理（`--tower-mode`）、`component`/`global` 两种 ΔΦ 口径（`--phi-mode`）、`core`/`members` 两种身份判据（`--identity`）、`--sweep`（代理选择扫描）、`--half`（奇偶对半，量批间稳不稳）、`--json`。100 局约 3 秒。**口径与判读**：`docs/s2_instrument_2026-09-18.md` |
 | `scripts/selftest_offline_engagement_trade.py`（2026-09-18） | **预注册 §7 不变量 1–6 的测试**（6/6 PASS，合成帧、零引擎依赖、秒级）：反对称 / 桶守恒 / 产物恒 0 费 / 窗口等式 / 局面切分 8 场景 / 跨局重置。不需要经过 `rl/selftest.py`（【R19】） |
 | `scripts/forensics_card_usage.py`（2026-09-14） | **回放行为取证**：卡牌使用分布 / 圣水（部署前·后·全帧）/ 部署节奏 / **费用可达性表** / 合法性核验。**只读**，11 个回放文件约 10 秒 |

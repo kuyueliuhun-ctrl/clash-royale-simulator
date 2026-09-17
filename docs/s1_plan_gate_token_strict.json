@@ -1,0 +1,169 @@
+{
+ "arm": "token_strict",
+ "seed": 7000,
+ "games": 20,
+ "prereg_baseline_reference": {
+  "all_frames_frac_ge6": 0.0011,
+  "xbow_rate": 0.0003,
+  "pre_median": 3.25,
+  "lane_dt_median": 5.5
+ },
+ "baseline_rule": "主基线 = 同脚本 --arm random 复算；prereg 值只作量级参照",
+ "result": {
+  "arm": "token_strict",
+  "seed": 7000,
+  "n_games": 20,
+  "max_steps": 360,
+  "deck": [
+   "Xbow",
+   "Tesla",
+   "Skeletons",
+   "IceWizard",
+   "Archer",
+   "Knight",
+   "Log",
+   "Fireball"
+  ],
+  "opponent": "SelfDefenderPolicy",
+  "opponent_passive_prob": 0.6,
+  "n_frames": 8191,
+  "frames_per_game": 409.55,
+  "wins": 9,
+  "losses": 11,
+  "draws": 0,
+  "score": 0.45,
+  "illegal_validate_count": 0,
+  "illegal_engine_count": 0,
+  "executor_stats": {
+   "intent/cycle_small": 13,
+   "token_commit": 929,
+   "intent/cycle_and_wait": 137,
+   "intent/push_right": 1528,
+   "noop_no_suggestion": 7262,
+   "intent/defend_right": 1732,
+   "intent/pull": 140,
+   "intent/defend_king": 509,
+   "intent/push_commit": 74,
+   "intent/push_left": 1101,
+   "intent/protect_backline": 275,
+   "intent/defend_left": 2607,
+   "intent/anti_spell": 75
+  },
+  "behavior": {
+   "n_frames": 8191,
+   "n_deploy_frames": 929,
+   "n_subactions": 929,
+   "n_subactions_dedup": 929,
+   "dup_subaction_frames": 0,
+   "n_card_plays": 929,
+   "card_counts": {
+    "Log": 189,
+    "Skeletons": 188,
+    "Archer": 185,
+    "Knight": 185,
+    "IceWizard": 181,
+    "Tesla": 1
+   },
+   "card_share": {
+    "Log": 0.203445,
+    "Skeletons": 0.202368,
+    "Archer": 0.199139,
+    "Knight": 0.199139,
+    "IceWizard": 0.194833,
+    "Tesla": 0.001076
+   },
+   "deck_cards": {
+    "Fireball": 20,
+    "Log": 20,
+    "IceWizard": 20,
+    "Tesla": 20,
+    "Archer": 20,
+    "Skeletons": 20,
+    "Xbow": 20,
+    "Knight": 20
+   },
+   "all_frames_frac_ge6": 0.0,
+   "all_frames_frac_ge8": 0.0,
+   "xbow_plays": 0,
+   "xbow_rate": 0.0,
+   "pre_median": 3.2857,
+   "pre_frac_ge6": 0.0,
+   "post_median": 0.494,
+   "elix_all_frames": {
+    "n": 8191,
+    "mean": 1.6232,
+    "median": 1.5357,
+    "max": 4.1786
+   },
+   "n_single_frames": 929,
+   "unknown_cost_frames": 0,
+   "lane_dt_median": 4.0,
+   "lane_dt_n": 763,
+   "games_with_card": {
+    "Archer": 20,
+    "Skeletons": 20,
+    "Log": 20,
+    "Knight": 20,
+    "IceWizard": 20,
+    "Tesla": 1
+   },
+   "card_pre_elixir": {
+    "Log": {
+     "n": 189,
+     "median": 2.494,
+     "p90": 2.7155,
+     "min": 2.2143,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "IceWizard": {
+     "n": 181,
+     "median": 3.494,
+     "p90": 3.7083,
+     "min": 3.2143,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "Skeletons": {
+     "n": 188,
+     "median": 1.494,
+     "p90": 1.7083,
+     "min": 1.2143,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "Archer": {
+     "n": 185,
+     "median": 3.494,
+     "p90": 3.7083,
+     "min": 3.2143,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "Knight": {
+     "n": 185,
+     "median": 3.494,
+     "p90": 3.7083,
+     "min": 3.2143,
+     "max": 5.1786,
+     "frac_ge6": 0.0
+    },
+    "Tesla": {
+     "n": 1,
+     "median": 4.3571,
+     "p90": 4.3571,
+     "min": 4.3571,
+     "max": 4.3571,
+     "frac_ge6": 0.0
+    }
+   },
+   "legality": {
+    "n_unit_deploys": 740,
+    "n_unit_y_ge21_illegal": 0,
+    "n_spell_plays": 189,
+    "n_spell_y_ge21_legal": 0
+   }
+  },
+  "wall_s": 261.1
+ }
+}
