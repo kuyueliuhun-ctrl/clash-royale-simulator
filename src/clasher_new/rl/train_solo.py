@@ -741,12 +741,13 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
         steps = 0
         ep_rew = 0.0
         stall_count = 0
+        _stall_stop = bool(getattr(cfg, "train_stall_stop", False))
         last_hp = None
         while not done and (steps < max_steps or overtime_open(env.battle)):
-            if steps % STALL_WINDOW == 0:
+            if _stall_stop and steps % STALL_WINDOW == 0:
                 early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
                 if early:
-                    break   # 僵局判平，提前结束
+                    break   # 僵局判平，提前结束（默认关闭；见 config.train_stall_stop 注释）
             plan = bp.plan(env.battle, belief.state(), obs)
             tok = belief.encode(obs, None)
             bundle, _, _, hidden, _ = main.act(
@@ -800,7 +801,8 @@ def eval_solo(env, main, opp, n_games, max_steps, seed, cfg,
 
 
 def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
-                      seed_base, max_steps, n_particles, record, out_q):
+                      seed_base, max_steps, n_particles, record, out_q,
+                      stall_stop=False):
     """并行评估 worker：独立进程打 games（全局游戏索引列表）里每局。
 
     战斗模拟是纯 Python（GIL），跨进程才能真正吃满多核。每 worker 自建 env+信念+策略
@@ -875,7 +877,7 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
             stall_count = 0
             last_hp = None
             while not done and (steps < max_steps or overtime_open(env.battle)):
-                if steps % STALL_WINDOW == 0:
+                if stall_stop and steps % STALL_WINDOW == 0:
                     early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
                     if early:
                         break
@@ -981,7 +983,8 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
                 continue
             p = ctx.Process(target=_eval_worker_main,
                             args=(wid, main_sd, opp_sd, chunk, env_kwargs,
-                                  int(seed), int(max_steps), 128, bool(record_replays), out_q))
+                                  int(seed), int(max_steps), 128, bool(record_replays), out_q,
+                                  bool(getattr(cfg, "train_stall_stop", False))))
             try:
                 p.start()
             except OSError as e:

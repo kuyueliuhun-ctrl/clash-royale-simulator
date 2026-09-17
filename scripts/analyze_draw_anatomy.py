@@ -175,6 +175,19 @@ def main():
         d = sorted(abs(r["hp0"] - r["hp1"]) for r in cat_c)
         print(f"      (c) 的塔血合计差：中位 {d[len(d)//2]:.0f} HP，最大 {d[-1]:.0f} HP")
 
+    # 停用僵局早停后的帧数代价（2026-09-17 用户拍板：零塔损局必须打满）
+    print(f"\n{'=' * 108}\n停用僵局早停后的**帧数代价**（估算，标注上下界）：")
+    stall_games = [r for r in all_rows if r["n"] < 360 and r["t"] < 300.0]
+    cur = sum(r["n"] for r in all_rows)
+    hi = sum(600 if (r["n"] < 360 and r["t"] < 300.0) else r["n"] for r in all_rows)
+    lo = sum(max(r["n"], 360) if (r["n"] < 360 and r["t"] < 300.0) else r["n"] for r in all_rows)
+    print(f"  早停结束的对局 = {len(stall_games)}/{len(all_rows)}（{len(stall_games)/len(all_rows):.1%}）"
+          f"，其帧数中位 {sorted(r['n'] for r in stall_games)[len(stall_games)//2] if stall_games else 0}")
+    print(f"  总帧数：现状 {cur} → 停用后【下界】{lo}（+{(lo-cur)/cur:.1%}）"
+          f" / 【上界】{hi}（+{(hi-cur)/cur:.1%}，假设这些局仍无人破塔 ⇒ 打满 600 帧）")
+    print(f"  ⇒ 评估墙钟近似按同比例上升；同 `--total-steps 20000` 对应的**局数**从 "
+          f"{20000*len(all_rows)/cur:.0f} 降到 {20000*len(all_rows)/hi:.0f}~{20000*len(all_rows)/lo:.0f}")
+
     # 配对变化
     print(f"\n{'=' * 108}\n配对变化（同一批对局，只换标签口径）：")
     ch = Counter()

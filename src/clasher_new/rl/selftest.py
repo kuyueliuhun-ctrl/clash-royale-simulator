@@ -1715,7 +1715,12 @@ def test_play_pair_env_reuse():
 
 
 def test_eval_stall_early_stop():
-    """僵局早停集成：双方都不部署 → 连续零塔损判平，远早于打满 max_steps。"""
+    """僵局早停：**2026-09-17 起默认关闭**（用户拍板：零塔损局必须打满，接受时间损失）。
+
+    断言（配套 `config.train_stall_stop` 默认 True→False）：
+      - **默认**（stall_stop=False）：双方都不部署 → **不早停**，一路打到 t≈300s 由引擎裁决（判平）；
+      - **显式 stall_stop=True**：旧行为仍可逐位复现（约 50s 就 break 判平）。
+    """
     import time
     from rl.env_wrapper import RLEnv
     from rl.action_bundle import ActionBundle
@@ -1729,15 +1734,28 @@ def test_eval_stall_early_stop():
             return ActionBundle.noop()
 
     idle = Idle()
+
+    # ① 默认：不早停 → 打满到加时硬顶（300s）
     env = RLEnv(opponent=None, seed=3)
     _prepare_env(env, idle, idle)
-    t0 = time.monotonic()
     w = _run_side0(env, idle, BeliefInference(opp_deck=env.deck1, n_particles=16, seed=3),
                    BeliefPlanner(), max_steps=600, reset_seed=3)
+    assert w is None, "零塔损僵局最终仍由引擎按塔血合计判平"
+    assert env.battle.time >= 299.0, \
+        f"默认必须打满到 300s（实际 {env.battle.time:.1f}s）——早停应当已关闭"
+
+    # ② 显式开启：旧行为（约 50s 判平）仍可复现
+    env2 = RLEnv(opponent=None, seed=3)
+    _prepare_env(env2, idle, idle)
+    t0 = time.monotonic()
+    w2 = _run_side0(env2, idle, BeliefInference(opp_deck=env2.deck1, n_particles=16, seed=3),
+                    BeliefPlanner(), max_steps=600, reset_seed=3, stall_stop=True)
     dt = time.monotonic() - t0
-    assert w is None, "僵局应判平"
-    assert dt < 12.0, f"僵局应提前结束（实际 {dt:.1f}s），否则早停未触发"
-    print(f"[PASS] 僵局早停：{dt:.1f}s 判平（对照打满 600 步 ~23s）")
+    assert w2 is None, "开启早停时僵局判平"
+    assert env2.battle.time < 180.0, \
+        f"开启早停应远早于 180s（实际 {env2.battle.time:.1f}s）"
+    print(f"[PASS] 僵局早停：默认关闭（打满 {env.battle.time:.0f}s 由引擎裁决）；"
+          f"显式 stall_stop=True 复现旧行为（{env2.battle.time:.0f}s / {dt:.1f}s 判平）")
 
 
 def test_draw_penalty_as_loss():
@@ -1778,7 +1796,8 @@ def test_draw_penalty_as_loss():
     from rl.action_bundle import ActionBundle
 
     class Noop(FollowerPolicy):
-        """act 恒返回 noop：双方都不部署 → 僵局早停必判平，mean_reward 确定性可断言。"""
+        """act 恒返回 noop：双方都不部署 → 打满 300s 后引擎按塔血合计判平（早停已默认关闭），
+        mean_reward 仍然确定性可断言（= 平局罚）。"""
         def act(self, obs, belief_token, plan_token, get_mask,
                 hidden=None, deterministic=False):
             return ActionBundle.noop(), 0.0, 0.0, hidden, {}

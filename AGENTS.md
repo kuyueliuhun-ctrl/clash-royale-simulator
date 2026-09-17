@@ -79,7 +79,9 @@ python rl/run_league.py --mode solo --config economy --config-name <name> --fres
   --ppo-epochs 4 --ppo-minibatch 32 --ppo-shuffle
 ```
 > `opp_mix` **没有 CLI flag**；恢复文档配比（frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1）
-> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**✅ 2026-09-17 更正（我 2026-09-14 写错过，留证）**：原文称 `runs/economy_9k_ft` / `runs/economy_9j`「已不存在」——**错**。真相：**本文件里所有 `runs/...` 都是 cwd 相对路径**，而所有命令都在 `src/clasher_new` 下跑 ⇒ 实际是 **`src/clasher_new/runs/`**（4.7 GB，`economy_9k_ft`/`economy_9j`/`d1_long_100k` 都在）；仓库根那个 `runs/`（2.1 GB，含 `archive/economy_100k_v1_ungated` 53 个快照）是**另一份旧目录**。实测（2026-09-17 `demo20k` 试跑）：`[solo] 对手池: hist ckpts=12（其中 12 来自补种目录 [economy_9k_ft, economy_9j]）mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1` ⇒ **协议照抄即完整生效**。
+> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**✅ 2026-09-17 更正（我 2026-09-14 写错过）**：`runs/...` 全是 **cwd 相对**路径，命令在 `src/clasher_new` 下跑 ⇒
+真实位置是 **`src/clasher_new/runs/`**（4.7 GB，三个目录都在）；仓库根那个 `runs/`（2.1 GB）是另一份旧目录。
+实测 `demo20k`：对手池 `hist ckpts=12 来自 [economy_9k_ft, economy_9j]`、mix 0.1/0.6/0.2/0.1 ⇒ **协议照抄即生效**。
 
 ### 2.3 100k 长跑 + 评估节奏 C（密锚点 + 稀全块）
 
@@ -158,13 +160,12 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
   ⇒ 谷底只有 **1 个评估点宽（≲5000 步）**。
 - **成本**：纯训练 **26 步/s**（≥2 处独立互证）；一个**全点**（4 块×40 局=160 局）≈**210 s**、
   一个**轻点**（只跑锚点 40 局）≈**53 s**；20k 协议里**评估占 73% 墙钟**。
-- **平局裁决口径（2026-09-17 用户拍板，**打断与历史 run 的标签可比性**）**：皇冠优先 → 皇冠相同则
-  **三塔血量合计**多者胜 → **合计完全相等才平局**；单一来源 = `BattleState.tower_hp_total()/timeout_winner()`
-  （`rl/overtime`、`run_league.timeout_winner`、`settle_stall(margin=0)` 全部委托）。旧口径（存活塔**最低血量百分比**）
-  已删；C′"细差 < `stall_draw_margin` 记平局"**默认关**（0.0；`--stall-draw-margin 0.05` 复现旧标签）。
-  实测 280 局回放配对（复现校验 280/280）：训练侧平局 **54→33**、评估侧 **33→33**（其中 **32/33 是"全程零塔损"
-  的 50 s 僵局** ⇒ 按新口径本就该判平，属【O3】行为症状而非标签 bug）；**21/280=7.5% 标签变了**。
-  见 `docs/draw_rule_verdict_2026-09-17.md`。
+- **平局裁决口径 + 僵局早停（2026-09-17 用户拍板，**打断与历史 run 的可比性**）**：① 皇冠优先 → 皇冠相同则
+  **三塔血量合计**多者胜 → 完全相等才平局（单一来源 `BattleState.timeout_winner()`；旧"最低血量百分比"已删；
+  C′ 细差判平默认关）；② **僵局早停默认关**（`train_stall_stop=False`）⇒ 零塔损局打满 180s/300s，不再 50 s 判平。
+  实测 280 局配对（复现 280/280）：训练侧平局 54→33、评估侧 33→33、**21/280 标签变了**；代价：原本 **96.8%** 的对局
+  被早停截断过 ⇒ 总帧数 **+96%~+222%**、同 20k 步局数 109→34~55、终局罚可见度 0.27→3e-4。旧行为：`--stall-draw-margin 0.05`
+  / `--train-stall-stop`。判读（含补偿方案）`docs/draw_rule_verdict_2026-09-17.md`。
 - **判读禁则**：**不判** main 曲线与单点胜率。机理：`main vs 冻结副本` 结构性≈0.5，且当
   `copy_every` 与 `steps_per_eval` 整除时，"同步→评估"的顺序会让评估对手**恒为刚同步的 main 自己**
   （已改"先评估后同步"）；⇒ **`main vs 冻结副本` 的 0.85 这类读数不得当作"变强"证据**——
@@ -185,6 +186,7 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | `DEFAULT_OPP_MIX`（= `train_solo._OPP_MIX`） | `frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1` | D1 后的对手分布（改它要同步两处） |
 | `_HIST_POOL_MAX` | 12 | hist 池上限；本目录 ckpt 优先 ⇒ **长 run 会把 `--hist-seed-dir` 的外部补种挤出**（脚本复算：首次"本目录 12"在 **28k** 步，`N(t)=⌊t/2500⌋+1`；`d1_long_100k_verdict` 写的 40k 属口径漂移）。选择规则是 `linspace(0,N−1,12)` **含端点 0** ⇒ `solo_main_0.pt`（未训练起点）**永久钉在 0 号槽**，池成员平均年龄 ≈ t/2 |
 | `_PFSP_ALPHA` / `_PFSP_GATE_HI` / `_PFSP_GATE_PENALTY` | 0.20 / 0.85 / 0.2 | PFSP EMA 学习率 / 易胜对手门槛 / 门禁惩罚（`rl/pfsp.py` 默认值仍 = 旧行为） |
+| `train_stall_stop` | **False**（2026-09-17 起；旧值 True） | 僵局早停（连续 100 步零塔损 → 判平截断）：默认关 = 打满 180s/300s；`--train-stall-stop` 复现旧行为。代价见 §3 与判读 §9 |
 | `stall_draw_margin` | **0.0**（2026-09-17 起；旧值 0.05） | 早停局裁定：0 = 新口径（皇冠 → 三塔血量合计，完全相等才平局）；>0 = C′ 旧路径（最低血量%差 < 阈值记平局，仅供复现旧标签）。`rl/config.py` |
 | `eval_workers` 安全档 | 12 | 16 有 commit 压力风险（见 R1）。**⚠️ 更正（2026-09-14 实测）**：`economy` 预设**未设置**该字段 ⇒ 继承 dataclass 默认 `min(16, os.cpu_count())`，本机实测 **= 16**（原文"预设为 0（串行）"**已作废**）⇒ 不显式传参就会落在风险档位 |
 

@@ -266,16 +266,20 @@ def _stall_probe(env, last_hp, stall_count):
     return False, hp, 0
 
 
-def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed=None):
+def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed=None,
+               stall_stop=False):
     """policy 以 player-0 身份打完整对局；返回 winner（0/1/None=平）。
 
     支持 FollowerPolicy（完整信念/plan 链路）与 ScriptedPolicy（随机合法出牌）。
     recorder: LeagueGameRecorder 可选，逐帧记录联赛录像。
     reset_seed: 传入时 env.reset(seed=reset_seed)（play_pair 复用 env 时保持逐局种子）。
-    僵局早停：连续 100 步双方塔血零变化 → 判平（STALL_WINDOW/STALL_LIMIT）。
+    僵局早停（**2026-09-17 起默认关闭**，见 `TrainConfig.train_stall_stop`）：连续 100 步双方
+    塔血零变化 → 判平（STALL_WINDOW/STALL_LIMIT）；`stall_stop=True` 可复现旧行为。
     """
     if isinstance(policy, ScriptedPolicy):
-        return _run_side0_scripted(env, policy, max_steps, recorder, reset_seed=reset_seed)
+        # ⚠️ 转发必须带上 stall_stop，否则脚本对手路径会静默丢掉开关（2026-09-17 踩过）
+        return _run_side0_scripted(env, policy, max_steps, recorder,
+                                   reset_seed=reset_seed, stall_stop=stall_stop)
     obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
     belief.reset(env.deck1)
     if recorder is not None:
@@ -287,10 +291,10 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
     last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
     while not done and (steps < max_steps or overtime_open(env.battle)):
-        if steps % STALL_WINDOW == 0:
+        if stall_stop and steps % STALL_WINDOW == 0:
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
-                break   # 僵局判平，提前结束
+                break   # 僵局判平，提前结束（默认关闭：见 config.train_stall_stop）
         plan = bp.plan(env.battle, belief.state(), obs)
         tok = belief.encode(obs, None)
         bundle, _, _, hidden, _ = policy.act(obs, tok, plan.to_vector(),
@@ -311,7 +315,8 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
     return w
 
 
-def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None):
+def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=None,
+                        stall_stop=False):
     obs, _ = env.reset() if reset_seed is None else env.reset(seed=reset_seed)
     if recorder is not None:
         recorder.set_decks(env.deck0, env.deck1)   # reset 后才会重采样出本局实际卡组
@@ -321,10 +326,10 @@ def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=No
     last_hp = None
     opp_side = env.opponent if isinstance(env.opponent, FollowerOpponent) else None
     while not done and (steps < max_steps or overtime_open(env.battle)):
-        if steps % STALL_WINDOW == 0:
+        if stall_stop and steps % STALL_WINDOW == 0:
             early, last_hp, stall_count = _stall_probe(env, last_hp, stall_count)
             if early:
-                break   # 僵局判平，提前结束
+                break   # 僵局判平，提前结束（默认关闭）
         bundle = policy.play(env, 0)
         agent_played = _bundle_cards(bundle, obs)
         obs, reward, term, trunc, info = env.step(bundle)
@@ -1263,8 +1268,11 @@ def main():
     ap.add_argument("--hist-seed-dir", action="append", default=None,
                     help="热启动 run 的对手池补种目录（可多次）。本目录无 solo_main_*.pt 时"
                          "从这些目录抽 hist ckpt，修对手池退化为 frozen+defend 的问题")
+    ap.add_argument("--train-stall-stop", action="store_true",
+                    help="solo：**开启**僵局早停（2026-09-17 起默认关；开=旧行为：连续 100 步"
+                         "零塔损即判平截断）。默认关的理由见 TrainConfig.train_stall_stop 注释")
     ap.add_argument("--no-train-stall-stop", action="store_true",
-                    help="solo：关闭训练环僵局早停（默认开；关=旧行为拖满 max_ep_steps）")
+                    help="solo：关闭训练环僵局早停（**自 2026-09-17 起这是默认值**，本开关保留兼容）")
     ap.add_argument("--adv-inert-probe", action="store_true",
                     help="critic 惰性检验【纯测量】：每个诊断更新额外算一份 V≡常数 的优势，"
                          "报告 corr/resid_frac/grad_cos（不改训练行为）。"
@@ -1329,6 +1337,8 @@ def main():
         overrides["value_independent"] = False
     if args.no_train_stall_stop:
         overrides["train_stall_stop"] = False
+    if args.train_stall_stop:
+        overrides["train_stall_stop"] = True
     if args.adv_inert_probe:
         overrides["adv_inert_probe"] = True
     if args.critic_baseline is not None:
