@@ -99,3 +99,33 @@ PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe -u rl/dashboard.py \
 Giant 30`（累计 1235 次）——即**便宜卡几乎均匀、唯一赢牌手段 Giant 只占 2.4%**，
 与【未决 O3】在 solo 侧的取证（"手里有什么便宜的就打什么"、Xbow 出手 0.03%）**方向一致**。
 n=1 个 run、2 个评估点、无对照 ⇒ 按【红线 R5】**只能当作描述**，不得据此下判决。
+
+
+---
+
+## 10. 2026-09-18 修复两项（启动 `run100k` 的 dashboard 时实测暴露）
+
+### 10.1 ⚠️ `dashboard.py` 缺 UTF-8 stdout 兜底 ⇒ **整个服务崩掉（exit 1）**
+
+- **现象**：把 dashboard 输出重定向到管道启动时，`main()` 里那句
+  `print(f"[dashboard] ⚠ …（目录里还没有 league_state.json）")` 抛
+  `UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0'` ⇒ **服务起不来**。
+- **根因**：`dashboard.py` **全文件没有任何** `_force_utf8_stdout` / `reconfigure` / `print_safe`
+  （`grep` 零命中），而 `rl/run_league.py:1469` 有规范实现。这正是 `docs/agents/env.md` §2 记的陷阱
+  （「新脚本一律自带 UTF-8 stdout reconfigure」）。
+- **修法**：把 `run_league.py` 的 `_force_utf8_stdout` **逐字搬来**，在 `main()` 首行调用。
+- **为什么以前没炸**：不重定向（直接开控制台）时走的是 Wide 输出路径；**一旦被管道/重定向接管就炸**。
+
+### 10.2 ⚠️ `--state runs/<name>` 目录入口**只在启动时解析一次** ⇒ 联赛面板被永久关闭
+
+- **现象**：先起 dashboard、再起训练（长跑的正常姿势）时，启动那刻 `league_state.json` 还不存在
+  ⇒ `resolve_state_path` 返回 `None` ⇒ 该进程**永远**认为"state 未指定"，**联赛面板整场关闭**。
+- **修法**：目录入口**按需重解析** —— `Handler.state_dir_lazy` + 每个 `/api/state` 请求时重查一次，
+  查到就缓存进 `Handler.state_path`。文件入口行为不变。
+- **附带**：启动告警与启动信息改为"会持续按需重查 / 等待第一个评估点"，不再假装面板关闭。
+
+### 10.3 验证
+
+- 回归：`run_selftests.py test_dashboard_replays test_dashboard_league_payload test_dashboard_card_stats` ⇒ **3/3 PASS**；
+- 实跑（`runs/run100k`）：`/` 200、`/api/state` 200，`run_meta` 的
+  `plan_points 14 / plan_big 2 / plan_small 12` 与 `eval_schedule` 一致，`round_stats = [(0,'big',20)]`。

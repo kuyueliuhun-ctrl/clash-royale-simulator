@@ -81,6 +81,7 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/probe_v3_mono_check.py` + `summarize_probe_v3_mono.py`（2026-09-14） | **超参一致性对账**：逐位验证包含关系 + 每层 α 曲线 + 共同 α 阶梯（闸门 11/12 的执行器） |
 | `scripts/probe_reward_composition.py`（2026-09-14） | **逐帧奖励分量分解**（内存包装 `compute_reward`，不改代码）；拆 crown/edw/tower/unit/terminal 五项。**只读** |
 | `scripts/value_displacement_scan.py` | 逐窗 `‖ΔW‖/‖W‖` 参数位移指纹（R14 的 M1/M2 判别） |
+| `scripts/kill_orphan_workers.ps1`（2026-09-18） | **清【R1】孤儿 spawn worker**（父进程已死的 `--multiprocessing-fork`）：默认 **dry-run 只列**，`-Kill` 才杀，且只杀父进程确认不存在的。实测 14 个孤儿占 **7.7 GB**、把可用提交从 23.2 GB 压到 **7.51 GB**（⇒ 误触发降档）。**长跑前与 `check_commit.py` 配对跑**。⚠️ 该 `.ps1` **必须带 UTF-8 BOM**（PS 5.1 对无 BOM 的 UTF-8 按 GBK 解码，中文会打乱语法）|
 | `scripts/check_commit.py`（2026-09-17） | **长跑前宿主提交内存检查**（【R1】的 `wmic` 替代品，因 wmic 已被 Windows 移除）；可用提交 < 12 GB ⇒ 降 `--eval-workers` 档 |
 | `scripts/_agents_split.py --check`（2026-09-18） | **AGENTS 拆分的不丢内容校验**：【1】注入尺寸余量、【2】**原文每个非空行逐字出现在新 `AGENTS.md` 或分册之一（缺 0 行才算过）**、【3】相对链接可解析、【4】原节号 1..9 全被分册覆盖。改动 `AGENTS.md` 或 `docs/agents/*` 后跑一次 |
 | `scripts/run_selftests.py`（2026-09-14） | 按名跑**子集** selftest（【R19】默认用法；不改 `selftest.py`） |

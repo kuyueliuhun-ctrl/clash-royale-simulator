@@ -2703,7 +2703,15 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/" or route == "/index.html":
             self._send(200, _HTML.encode("utf-8"), "text/html; charset=utf-8")
         elif route == "/api/state":
-            self._send(200, json.dumps(build_payload(self.state_path)).encode("utf-8"),
+            # 目录入口（`--state runs/<name>`）**按需重解析**：长跑常常是"先起 dashboard 再起训练"，
+            # 启动时 league_state.json 还不存在（要等第一个评估点写完）。若只在启动时解析一次，
+            # 联赛面板会被**永久关闭**（2026-09-18 实测）。文件入口不受影响。
+            _sp = self.state_path
+            if not _sp and getattr(Handler, "state_dir_lazy", False):
+                _sp = resolve_state_path(Handler.state_arg)
+                if _sp:
+                    Handler.state_path = _sp
+            self._send(200, json.dumps(build_payload(_sp)).encode("utf-8"),
                        "application/json; charset=utf-8")
         elif route == "/api/sweep":
             self._send(200, json.dumps(build_sweep_payload(self.sweep_root)).encode("utf-8"),
@@ -2918,7 +2926,24 @@ def make_demo_solo(path, n_points=10, seed=3):
     print(f"[demo] 已生成演示 solo 状态 -> {path}（{len(history)} 个评估点）")
 
 
+def _force_utf8_stdout():
+    """把 stdout/stderr 切到 UTF-8 + errors='replace'（与 `rl/run_league.py:1469` 同一实现）。
+
+    本文件此前**没有**这个兜底 ⇒ 2026-09-18 实测：把 dashboard 的输出重定向到管道时，
+    `main()` 里那句 `print(f"[dashboard] ⚠ ...")`（目录里还没有 league_state.json 时的告警）
+    在 GBK locale 下抛 `UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0'`
+    ⇒ **整个 dashboard 直接崩掉（exit 1），服务起不来**。
+    这正是 `docs/agents/env.md` §2 记的陷阱：「新脚本一律自带 UTF-8 stdout reconfigure」。
+    """
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 def main():
+    _force_utf8_stdout()
     ap = argparse.ArgumentParser(description="RL 训练仪表盘（Elo / flow-sweep / solo 自对弈 + 回放）")
     ap.add_argument("--state", type=str, default=None,
                     help="run 模式训练目录或 league_state.json（`--state runs/long1m` 亦可；"
@@ -2949,8 +2974,8 @@ def main():
     # --state 接受 JSON 文件或 runs/<name> 目录（目录里自动找 league_state.json）
     state_abs = resolve_state_path(args.state) if args.state else None
     if args.state and os.path.isdir(os.path.abspath(args.state)) and state_abs is None:
-        print(f"[dashboard] ⚠ {args.state} 是目录但里面没有 league_state.json"
-              f"（run 模式还没写出第一个评估点？）", flush=True)
+        print(f"[dashboard] ⚠ {args.state} 是目录但里面还没有 league_state.json；"
+              f"**会持续按需重查**（run 模式写完第一个评估点后自动生效）", flush=True)
     if args.demo and not (state_abs and os.path.exists(state_abs)):
         state_abs = state_abs or os.path.join(os.path.abspath("."), "league_state.json")
         make_demo_state(state_abs, n_points=args.demo_points)
@@ -2984,6 +3009,8 @@ def main():
     if args.demo:
         make_demo_replays(replays_abs)
     Handler.state_path = state_abs
+    Handler.state_arg = args.state
+    Handler.state_dir_lazy = bool(args.state) and os.path.isdir(os.path.abspath(args.state))
     Handler.replays_dir = replays_abs
     Handler.sweep_root = sweep_abs
     Handler.solo_path = solo_abs
@@ -3002,7 +3029,10 @@ def main():
             from rl.config import TrainConfig
             Handler.play_cfg = TrainConfig.resolve(args.play_config)
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
-    print(f"[dashboard] http://{args.host}:{args.port}  (state={Handler.state_path or '未指定，联赛面板关闭'})",
+    _state_note = Handler.state_path or (
+        f"{args.state}（目录入口·等待第一个评估点）" if Handler.state_dir_lazy
+        else "未指定，联赛面板关闭")
+    print(f"[dashboard] http://{args.host}:{args.port}  (state={_state_note})",
           flush=True)
     if Handler.sweep_root:
         print(f"[dashboard] flow-sweep 目录: {Handler.sweep_root}", flush=True)
