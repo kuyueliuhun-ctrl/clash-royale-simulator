@@ -316,6 +316,15 @@ def _run_side0(env, policy, belief, bp, max_steps=300, recorder=None, reset_seed
         belief.update(obs, info.get("opp_played"))
         done = term or trunc
         steps += 1
+    # S2（2026-09-18 第五轮）：局末把仍开着的局面结掉，并**补进最后一帧的测量明细**
+    # —— 否则录像的 `et` 会漏掉尾部窗口（奖励侧本来也拿不到这部分，见 flush 的 docstring）。
+    _tail = env.flush_engagement_trade()
+    if recorder is not None and getattr(recorder, "frames", None) and _tail["n"]:
+        _f = recorder.frames[-1]
+        _e = list(_f.get("et") or [0.0, 0.0, 0.0, 0, 0.0, 0.0])
+        _e[0] += _tail["phi"]; _e[1] += _tail["tau"]; _e[3] += _tail["n"]
+        _f["et"] = _e
+        _f["et_tail"] = _tail
     w = env.battle.winner
     if w is None and not env.battle.game_over:
         # 僵局早停/步数截断早于引擎结算：皇冠差已定胜负，平才记平局
@@ -347,6 +356,15 @@ def _run_side0_scripted(env, policy, max_steps=300, recorder=None, reset_seed=No
             opp_side.observe_opponent_played(agent_played)
         done = term or trunc
         steps += 1
+    # S2（2026-09-18 第五轮）：局末把仍开着的局面结掉，并**补进最后一帧的测量明细**
+    # —— 否则录像的 `et` 会漏掉尾部窗口（奖励侧本来也拿不到这部分，见 flush 的 docstring）。
+    _tail = env.flush_engagement_trade()
+    if recorder is not None and getattr(recorder, "frames", None) and _tail["n"]:
+        _f = recorder.frames[-1]
+        _e = list(_f.get("et") or [0.0, 0.0, 0.0, 0, 0.0, 0.0])
+        _e[0] += _tail["phi"]; _e[1] += _tail["tau"]; _e[3] += _tail["n"]
+        _f["et"] = _e
+        _f["et_tail"] = _tail
     w = env.battle.winner
     if w is None and not env.battle.game_over:
         # 僵局早停/步数截断早于引擎结算：皇冠差已定胜负，平才记平局

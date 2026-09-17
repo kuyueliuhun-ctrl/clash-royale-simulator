@@ -408,6 +408,27 @@ class RLEnv(gym.Env):
 
     # ---- 观测 ----
 
+    def flush_engagement_trade(self):
+        """局末（**含按步数截断**）调用：把仍开着的局面结掉，返回尾部明细。
+
+        ⚠️ 两件事必须分清（2026-09-18 第五轮）：
+        * 对**奖励**：这部分 score **进不了任何一帧**（奖励已随最后一帧返回）
+          ⇒ 若 `engagement_trade > 0`，尾部信用**丢失**。这是**设计取舍**而非 bug：
+          "局已结束"时结算一个未走完的局面本身就有争议。
+        * 对**测量**：必须结掉，否则录像里的 `et` 会漏掉尾部窗口，
+          使测量口径与"结算式"定义不一致（第四轮的 Δρ 就是在这个口径下量的）。
+        返回 `{"score","phi","tau","n"}`（p0 视角；无监视器时全 0）。
+        """
+        if self._et is None:
+            return {"score": 0.0, "phi": 0.0, "tau": 0.0, "n": 0}
+        self._et.flush(self.battle, self._active_v)
+        det = self._et.pop_detail()
+        score = self._et.pop_scores()
+        return {"score": float(score),
+                "phi": float(sum(d["phi_part"] for d in det)),
+                "tau": float(sum(d["tau"] for d in det)),
+                "n": int(len(det))}
+
     def observe(self, player_id: int = 0) -> dict:
         return observe(self.battle, player_id)
 
