@@ -62,7 +62,8 @@
 | **`long1m` 提前终止的账**（12.8% 的实际状态） | [`docs/long1m_stopped_2026-09-18.md`](docs/long1m_stopped_2026-09-18.md) |
 | **当前新方案**：按局面结算的圣水交换信用分配（§7–§9 规格） | [`docs/frame_credit_proposal_review_2026-09-18.md`](docs/frame_credit_proposal_review_2026-09-18.md) |
 | **新方案预注册**（判据 / 失败分支 / 不变量 / S1–S3；**实现前必读**） | [`docs/engagement_trade_prereg_2026-09-18.md`](docs/engagement_trade_prereg_2026-09-18.md) |
-| **S2 实施进度**（已落地：录像 schema 3→4，实体带 `id`+`target_id` ⇒ 离线可重建仇恨图） | 同上预注册 §11 |
+| **S2 实施进度**（schema 3→4 实体带 `id`+`target_id`；§11.5 = 仪器 + 门禁判读） | 同上预注册 §11 |
+| **★ S2 实测与门禁判读**（P3 被推翻 / P1P2 否决 / P4b 唯一候选 / 5 个口径缺陷） | [`docs/s2_instrument_2026-09-18.md`](docs/s2_instrument_2026-09-18.md) |
 | 长跑工程（两级评估 + 评估并行分片） | [`docs/long1m_prereg_2026-09-18.md`](docs/long1m_prereg_2026-09-18.md) |
 | **`run100k` 启动记录（正在跑，100k 两级评估）** | [`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md) |
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
@@ -90,3 +91,11 @@
    - 规格与判据：[`docs/frame_credit_proposal_review_2026-09-18.md`](docs/frame_credit_proposal_review_2026-09-18.md) §7–§9
    - **预注册（判据/失败分支/不变量/S1–S3）**：[`docs/engagement_trade_prereg_2026-09-18.md`](docs/engagement_trade_prereg_2026-09-18.md)
    - **已落地第一步**：录像 schema 3→4（实体 `id` + `target_id`，末尾追加、向后兼容）⇒ 离线可重建索敌关系图；见预注册 §11
+   - **已落地第二步（S2 仪器 + 门禁判读）**：`scripts/offline_engagement_trade.py`；不变量 **6/6 PASS**
+     （`scripts/selftest_offline_engagement_trade.py`，合成帧、零引擎依赖）。
+     ★ **预注册首选 P3 被实测推翻**（`τ ≤ kill_credit` 恒成立 ⇒ 只是已有 Φ 击杀项的重新加权，非新信息）；
+     **P1/P2 否决**（P1 量纲是 `ΔΦ` 的 ~80 倍，且 ρ(胜) **5/5 批为负**）；**唯一候选 = 新构造 P4b**
+     （方向 5/5 批稳定，但幅度未超批间散布）。缺口实测：**20.6%** 的窗口「钉住但没打死」，
+     其 `Trade` 中位 0、均值 **−0.43**（`p25 = −1.00`）⇒「正解被记为负」成立。
+     ⇒ **门禁判「有候选、无判决」：S3 不得按原样开跑（其 `tower_term` 用的是已被推翻的 P3），
+     唯一允许的干预臂是 `p4b`**。全文：[`docs/s2_instrument_2026-09-18.md`](docs/s2_instrument_2026-09-18.md)；预注册 §11.5
