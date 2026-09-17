@@ -1,6 +1,6 @@
 # Elite17 实现规格 — 17 张精英卡 (Hero 化变体)
 
-> 数据契约: **内存 = 官方 15.535 权威** (re/official/memdump); Fandom = 结构/数值补充 (docs/_elite_*.txt, 抓取于本会话)。
+> 数据契约: **内存 = 官方 15.535 权威** (re/official/memdump); Fandom = 结构/数值补充 (docs/_elite_*.txt, 抓取于本会话；**原始落盘已于 2026-09-14 清理**，抓取工具 `scripts/cdp_extract.js` 保留)。
 > 冲突双记。证据附录: `re/official/extracted/elite17/_memory_appendix.md`; 每卡原始提取: `re/official/extracted/elite17/<卡名>.json`。
 > 本文件只做数据与规格, 不含引擎改动 (src/ 未触碰)。
 

@@ -1,7 +1,7 @@
 # 2025 新觉醒 7 张 — 实现规格（Fandom CDP 采集 2026-09-03）
 
 > 周期表已更新（evolutions.py，42 张闭环）；本 7 张快照无 evolvedSpellsData，需要数据层新建 + 引擎钩子。
-> 来源：docs/_page_1..7.txt（原始抓取）、re/fandom_stats/evo_42.json、evo7_mechanics.json
+> 来源：docs/_page_1..7.txt（原始抓取，**已于 2026-09-14 清理**）、re/fandom_stats/evo_42.json、evo7_mechanics.json
 >
 > **M6 实现状态（2026-09-03）**：✅ 7 张全部落地。
 > - 数据层：`src/clasher_new/evo_2025_data.py`（evolvedSpellsData 等价数据 + evo2025Hooks 钩子参数包 +

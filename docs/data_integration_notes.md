@@ -2,7 +2,7 @@
 
 > 覆盖：Ronin（格挡反击）/ Vines（藤蔓束缚）/ Spirit Empress（双费用形态）。
 > 数据层（gamedata.json 注入 + 官方数值表行）在上批已就绪并验证；本批只做引擎钩子。
-> 来源标注约定：[gamedata]=快照注入字段、[Fandom]=docs/_fp_*.txt（2026-09-03 CDP）、[假设]=无数据来源的合理值。
+> 来源标注约定：[gamedata]=快照注入字段、[Fandom]=docs/_fp_*.txt（2026-09-03 CDP，**原始落盘已于 2026-09-14 清理**）、[假设]=无数据来源的合理值。
 > 验收：`scripts/test_m5_data.py` 40 断言全绿；回归 test_m2 72/72、test_m3_evo 62/62、
 > test_m4_evo7 51/51、batch_smoke 197/197。
 

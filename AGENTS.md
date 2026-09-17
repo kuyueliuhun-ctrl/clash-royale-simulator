@@ -79,7 +79,7 @@ python rl/run_league.py --mode solo --config economy --config-name <name> --fres
   --ppo-epochs 4 --ppo-minibatch 32 --ppo-shuffle
 ```
 > `opp_mix` **没有 CLI flag**；恢复文档配比（frozen 0.1 / hist 0.6 / defend 0.2 / rand_anchor 0.1）
-> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。
+> 的唯一途径是 `--hist-seed-dir`（可 append）。**⚠️ 2026-09-14 更正（脚本实测，见 `docs/training_method.md` §B.9）**：`economy` 预设**并不设置** `eval_workers`，实际继承 dataclass 默认 `config.py:209` = `min(16, os.cpu_count())` ⇒ 本机（16 核）实测 **`TrainConfig.resolve('economy').eval_workers == 16`**，**不是 0（串行）**。原文"economy=0（串行）"已作废。**这反而更危险**：不显式传 `--eval-workers` 就会落到 R1 标注的 **16 有 commit 压力风险**档位 ⇒ **长跑仍必须显式传 `--eval-workers 12`**。**⚠️ 2026-09-14 清理时发现（待确认）**：`runs/economy_9k_ft` / `runs/economy_9j` **在磁盘上已不存在**（`find runs -name "*economy_9*"` 为空；`runs/` 在 `.gitignore` 内 ⇒ 无 git 副本）⇒ 上面这条命令**照抄会因 hist 目录缺失而退化**；要复刻该对手分布需另备 baseline 快照（或改走 `--mode run` 的流派池）。**未定**：这两个目录是被清理迁移还是本来就未入库。
 
 ### 2.3 100k 长跑 + 评估节奏 C（密锚点 + 稀全块）
 
@@ -296,4 +296,4 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe rl/s
 | RL 代码导读与训练入口 | [`src/clasher_new/rl/README.md`](src/clasher_new/rl/README.md) |
 | 自检 / 回归 | **`scripts/run_selftests.py`（按名跑子集，【R19】默认用法）**、`src/clasher_new/rl/selftest.py`（全量，仅 R19 例外情形）、`scripts/test_m*.py`、`scripts/batch_smoke.py` |
 | 判读工具 | `scripts/judge_anchor_blocks.py`、`scripts/summarize_solo_run.py`、`scripts/diag_*.py` |
-| **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/full_code_reference.md`](docs/full_code_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`，素材 `docs/_survey/`（147 个 `.py`／1479 符号 100% 覆盖、0 参数缺失） |
+| **代码摸底产物**（逐文件函数全解 / 训练方法 / 游戏引擎；后两者另有 .docx）★ | [`docs/full_code_reference.md`](docs/full_code_reference.md)、[`docs/training_method.md`](docs/training_method.md)、[`docs/game_engine.md`](docs/game_engine.md)；工具链 `scripts/_survey_*.py`（完整保留）；素材 `docs/_survey/` —— ⚠️ **parts/drafts 已于 2026-09-14 清理**，coverage/audit/reverse_check 报告保留（它们是「147 个 `.py`／1479 符号 100% 覆盖」这条结论的证据）；见 `docs/docs_cleanup_2026-09-14.md` |

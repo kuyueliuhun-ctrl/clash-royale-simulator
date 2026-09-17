@@ -25,8 +25,8 @@
 
 | 文档 | 内容 | 关联源文件/数据 |
 |---|---|---|
-| `full_code_reference.md` | **项目内容全解（2026-09-14）**：对 `src/` `scripts/` 及仓库根目录共 **170 个代码文件**做逐文件函数级摸底——每个类/函数/方法给出类型、签名（含默认值）、作用、参数、返回、实现步骤、调用关系、置信度，全部带源码行号；含代码库总览、非代码文件清单、**覆盖对账**（147 个 `.py` / 1479 个符号 100% 覆盖）、**签名·行号·参数抽检**（对账 1479 符号：0 类型不符、0 参数缺失；共 170 文件 / 46917 行 / 1554 条索引）与**全局符号索引**（1528 条） | 全仓库代码；生成链 `scripts/_survey_{inventory,groups,brief,verify,audit,merge}.py`；素材 `docs/_survey/` |
-| `training_method.md` / `.docx` | **训练方法文档（2026-09-14）**：三种训练模式、一次训练的数据流（观测→前向→动作→奖励→GAE→PPO）、网络逐层结构、**TrainConfig 全 47 字段**、`run_league.py` 全 54 个 CLI 参数、检查点与恢复、评估诊断口径、辅助训练脚本、**rl 全包函数索引**（含字母序快速索引） | `src/clasher_new/rl/*.py`、`battle.py`；素材 `docs/_survey/drafts/training_*.md` |
+| `full_code_reference.md` | **项目内容全解（2026-09-14）**：对 `src/` `scripts/` 及仓库根目录共 **170 个代码文件**做逐文件函数级摸底——每个类/函数/方法给出类型、签名（含默认值）、作用、参数、返回、实现步骤、调用关系、置信度，全部带源码行号；含代码库总览、非代码文件清单、**覆盖对账**（147 个 `.py` / 1479 个符号 100% 覆盖）、**签名·行号·参数抽检**（对账 1479 符号：0 类型不符、0 参数缺失；共 170 文件 / 46917 行 / 1554 条索引）与**全局符号索引**（1528 条） | 全仓库代码；生成链 `scripts/_survey_{inventory,groups,brief,verify,audit,merge}.py`（完整保留）；素材 `docs/_survey/`（⚠️ 2026-09-14 已清理 `parts/` 51 份稿件碎片 —— 内容已全文并入本文件；`inventory/groups/coverage/audit/reverse_check` 报告保留） |
+| `training_method.md` / `.docx` | **训练方法文档（2026-09-14）**：三种训练模式、一次训练的数据流（观测→前向→动作→奖励→GAE→PPO）、网络逐层结构、**TrainConfig 全 47 字段**、`run_league.py` 全 54 个 CLI 参数、检查点与恢复、评估诊断口径、辅助训练脚本、**rl 全包函数索引**（含字母序快速索引） | `src/clasher_new/rl/*.py`、`battle.py`；素材 `docs/_survey/drafts/training_*.md`（⚠️ 2026-09-14 已清理，内容已并入本文件） |
 | `game_engine.md` / `.docx` | **游戏引擎文档（2026-09-14）**：地图与坐标系统、实体体系、`step(dt)` 逐阶段战斗主循环、伤害与命中、皇家塔与胜负判定、**寻路**（两套实现与 A* 代价）、**索敌与目标选择**、卡牌机制分类、法术落点与命中公式、部署合法性 | `battle.py` `arena.py` `core.py` `player.py` `pathfinding*.py` `card_mechanics.py` `spell_module.py` `threat_calc.py` `rl/action_mask.py` |
 | `../AGENTS.md` | **红线与结论索引**（2026-09-13 重构）：12 条红线（R）+ 10 条已确证（C）+ 9 条已否证（X）+ 5 条未决（O）+ 计划台账 + run 台账；条目编号可引用 | 全部 `rl/` 与 `scripts/`；过程细节见 `agents_archive_2026-09.md` |
 | `plan_master.md` | **计划总纲（所有计划的整合视图）**：决策地图（8 个方向的通/否/未决）、阶段结论、13 份计划的谱系台账、**当前优先级 P0-P4（含判据设计要点与成本）**、纪律清单 | `rl_training_fix_plan_v1/v2/v3.md`、`rl_review_fix_plan.md`、`rl_reward_plan_v2.md`、`rl_plan_design_v1.md`、`ai_training_plan.md`、`P0-mechanics-plan.md`、`mcts_design.md` |
@@ -73,6 +73,12 @@
 | ④ 循环规划器 | 未实现 | 牌序 depth/过牌 ETA 特征（私有信息+确定性队列） | — |
 
 ## 3. 原始采集数据（`_` 前缀 / `.cdp*` / `.wikitext`，只读证据）
+
+> **⚠️ 2026-09-14 已清理（用户指令「清除编写文档的中间文件」）**：本节列出的原始抓取文件
+> （`_page_*` / `_elite_*` / `_fp_*` / `_evo_*` / `_fandom_*` / `_hero_*` / `_spell_*` / `_*_evo.txt` / 页面级 `.cdp*.js`，
+> 共 **190 个 / 6.88 MB**）**已删除**。下表保留**命名约定与引用方**，供将来重新抓取。
+> 重新抓取：`node scripts/cdp_extract.js`（通用页）、`node scripts/cdp_evo.js`（觉醒页）。
+> 清单与保留项：`docs/docs_cleanup_2026-09-14.md`。
 
 由 CDP 脚本从 Fandom Wiki 抓取，被上表 curated 文档按 `[Fandom]` 标注引用。**禁止手改**；
 数值疑义以 `gamedata.json`（游戏快照）为权威，Fandom 只作机制参考（用户三原则）。
