@@ -27,10 +27,12 @@
 
 **上游 24 个提交里另外 18 个只动非引擎**（RL 训练/评估/手写策略/可视化/文档/benchmark）。这些**对我们零影响**：我方主训练与对局路径 `src/clasher_new/rl/` 对 `environment.py` 的引用数 = **0**（62 个 `.py` 全为 0 命中），而被上游改动的 `environment.py`/`train*.py`/`evaluate.py`/`agent_pool.py`/`benchmark_speed.py` 全部属于**我方已冻结在分叉点的旧训练路径**（§6）。
 
-⚠️ **顺带查出两处「我们自己的」引擎潜在问题**（不是上游引入的；上游一个同源、一个在它那边不可达）——见 §5，都带可复现计数：
+⚠️ **顺带查出四处「我们自己的」引擎潜在问题**（不是上游引入的；上游两个同源、一个在它那边是死代码）——见 §5，都带可复现计数或实跑原始输出：
 
 - **P1** `battle.py:3292` `if abs(direction_vector) == 0: return` 用的是 `return` 而不是 `continue` ⇒ **同心重叠会把本 tick 剩余的碰撞对全部跳过**（上游同一行**逐字相同**，作者未修）。
 - **P2** 桥面最外侧各半格在 `tilemap_lane_grid.txt` 里是 `W`，而 `arena.is_walkable` 判它们**可走** ⇒ A\* 对它们计价 **800**（×10/14） ⇒ **名义 3 格宽的桥，对行军实际只有 2 格宽**（16 个格，左右桥各 8）。
+- **P3**（**高**）过河 jump 是**无界闩锁**：复位只认"越过 `y>17`"这一个终态、而位移分支条件含 `or jumping_across_river` ⇒ 目标停在河带 `[15,17]`（**桥上**）或回到自己一侧时，单位**永久停在 jump 态**：贴脸也**永不攻击**（实测 18 s、承伤 **0**）且被误判成空军。**上游 HEAD 把整个 jump 实现注释掉了（死代码）⇒ 这条只在我们暴露**。
+- **P4** `arena.walkable_cache` 是**模块级全局**字典且键用 `int(x)` 向零截断 ⇒ **一次越界查询就把相邻合法格永久写成不可走**（`(0,y)` / `(6..11,0)`），跨局、跨 run 生效。**上游同一段逐字同构、同样未修**。
 
 ---
 
@@ -271,6 +273,8 @@ elif waypoint_in_river:
 | **E4 注释** | **不做** | — | — |
 | **E5 河面 A\*** | **不照搬**；但把 §5-P2（桥面 sliver 计价 800）**单独立项** | P2 若修：判据 = 修前后**同一批录像**里「实际走桥的路径点集合」宽度分布，以及桥头「近似零位移」事件的计数（`battle.py:1253-1263` 已埋点） | 若宽度分布不变 ⇒ 判「A\* 本来就没走进 sliver，P2 是纯一致性问题」，按低优先级记档 |
 | **E6 river jump** | **不照搬**（上游为死代码） | — | — |
+| **P3 jump 闩锁**（我方独有，§5） | **先测**（改判定逻辑 ⇒【R13】【R8】，且须拍板） | 复刻 §5-P3 的受控剧本成**只读回归**：蓝 Assassin vs 钉在 `(3.5,16.50)` 的目标，断言 **300 tick 内 `jumping_across_river` 必须归位**且**出现 `on_attack`**（当前实现必失败 ⇒ 判别力天然具备） | 若修后该断言仍不通过/或自然发生率测出为 0 ⇒ 记「机制确证但自然发生率未证实」，**不写成"训练被污染"** |
+| **P4 cache 污染**（双方同源，§5） | **改**（一行级） | 冷进程断言：`is_walkable(-0.3,10.5)` 之后 `is_walkable(0.5,10.5)` **必须为 True**；`is_walkable(6.5,-0.3)` 之后 `(6.5,0.5)` 同理 | 若反向顺序对照也被污染 ⇒ 说明我复现错（当前对照已证明是**顺序依赖**，不是普遍污染） |
 
 **移植成本口径（供拍板用）**：引擎侧任何改动都要过【R13】（改判定逻辑必须位图对账）与【R18】（改代码同步改文档）；
 E1/E3 都会改变逐帧位置 ⇒ **现有录像不能作为判据基线**（旧录像与新引擎不可逐位对拍），必须走「改动前后各自重跑同一批 seed」的路子。
@@ -341,6 +345,128 @@ PY
 ② 或让 `pathfinding_heap` 的 `W` 判定改用 `arena.is_walkable`（等价于「合法即可走，河面本就到不了」）。
 **不选哪个先不定** —— 需要先有一份「单位是否真的走不进这 16 格」的只读实测（录像里按格统计路径点）。
 
+### P3 过河 jump 是**无界闩锁**：跳出去回不来 ⇒ 该单位**永久 0 输出**，且被误判成空军（**高**）
+
+> 来源：本轮编排的子任务在过河/寻路对象下独立查出（编号 B1），**我又用自己的脚本独立复现了一遍**（下面 E-repro 的原始输出是本机实跑）。
+
+**机制（三处代码合起来才是 bug）**：
+
+```python
+# battle.py:1187-1190  唯一复位口（每次 Troop.update 开头）
+if self.jumping_across_river and self.on_both_sides_of_river(self.start_jumping_position):
+    self.jumping_across_river = False
+    self.data.is_air_unit = Card(self.name).is_air_unit
+    self.speed = self.data.speed
+
+# battle.py:811-816  复位判据只看「自己相对 start 的终态」
+if y < 15.0: return self.position.y > 17.0      # 蓝方单位：必须 y>17
+else:        return self.position.y < 15.0      # 红方单位：必须 y<15
+
+# battle.py:1233-1241  位移分支的条件里带 `or self.jumping_across_river`
+if (not self.in_attack_range(current_target)) or self.jumping_across_river:   # ← 闩锁期间恒真
+    has_jump_ability = self.data.jump_speed and self.on_both_sides_of_river(current_target) and self.near_river() and self.in_sight_range(current_target)
+    if not self.jumping_across_river and has_jump_ability:
+        self.start_jumping_position = Position(self.position.x, self.position.y)
+        self.jumping_across_river = True          # 全场唯一置 True 处
+        self.data.is_air_unit = True
+        self.speed = self.data.jump_speed
+    if self.data.is_air_unit:
+        self.move_towards(current_target.position, dt, True)   # 直奔目标、无视河道/占位
+```
+
+复位判据**与当前目标在哪一侧无关**，而位移分支因为 `or self.jumping_across_river` **恒为真** ⇒ 即使目标已经贴脸，单位**也永远不进攻击分支**。
+只要目标停在河带 `y ∈ [15,17]`（**站在桥上的防守方就在这个带里**）或走回起跳者自己一侧，`y>17`（蓝方）**永远不可达** ⇒ 闩锁无出路。
+
+**★★ 我的独立复现（只读、原始输出，可逐条复跑）**
+
+```bash
+cd /mnt/e/clash-royale-simulator-main/src/clasher_new
+PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -B - <<'PY'
+import sys; sys.path.insert(0,'.')
+import battle as B, player as P
+from core import Position
+DECK=['Knight','Arrows','Fireball','Musketeer','Giant','Minions','MiniPekka','Skeletons']
+bs=B.BattleState(P.PlayerState(0,list(DECK),10.0),P.PlayerState(1,list(DECK),10.0),card_level=11)
+bs.step(1/60)
+bs.players[0].cycle=['Assassin']+[c for c in bs.players[0].cycle if c!='Assassin']
+bs.players[1].cycle=['Musketeer']+[c for c in bs.players[1].cycle if c!='Musketeer']
+bs.deploy_card(0,'Assassin',Position(3.5,14.5)); bs.deploy_card(1,'Musketeer',Position(3.5,17.5))
+a=next(e for e in bs.entities.values() if e.name=='Assassin')
+m=next(e for e in bs.entities.values() if e.name=='Musketeer')
+for e in bs.entities.values():
+    if e.id<=6: e.attack_cooldown=1e9        # 塔静音
+m.hp=1e9
+for i in range(1200):
+    bs.step(1/60)
+    if a.jumping_across_river: m.position.x, m.position.y = 3.5, 16.50   # 起跳后把目标钉在桥上
+    if i%120==0:
+        print("t=%.2f y=%.4f air=%s jump=%s spd=%.3f dist=%.4f inrange=%s tgt_hp=%.0f cd=%.3f"%(
+            1/60*(i+1),a.position.y,a.data.is_air_unit,a.jumping_across_river,a.speed,
+            a.position.distance_to(m.position),a.in_attack_range(m),m.hp,a.attack_cooldown))
+PY
+```
+
+原始输出（本机实跑，节选）：
+
+```
+JUMP START t=1.02 y=14.639 spd=8.333
+t=1.52 y=16.5833 air=True jump=True spd=8.333 dist=0.0833 inrange=True tgt_hp=1000000000 cd=0.400
+t=3.02 y=16.5833 air=True jump=True spd=8.333 dist=0.0833 inrange=True tgt_hp=1000000000 cd=0.400
+t=6.02 y=16.4444 air=True jump=True spd=8.333 dist=0.0556 inrange=True tgt_hp=1000000000 cd=0.400
+...
+t=18.02 y=16.4444 air=True jump=True spd=8.333 dist=0.0556 inrange=True tgt_hp=1000000000 cd=0.400
+FINAL jump=True air=True tgt_hp=1000000000
+```
+
+⇒ **贴脸 0.056 格、18 秒、`in_attack_range=True`、目标 HP 一点没掉（承伤 = 0）**，`attack_cooldown` 恒为 0.400（= `hit_speed − load_time` 地板，从未触发 `on_attack`）。
+
+**为什么它稳定不越过**：`move_towards(..., can_overshoot=True)` 每 tick 位移 = `speed·dt` = 8.333/60 = **0.139 格**，**大于**当时到目标的距离（0.056）⇒ 越过目标后，下一 tick 因为目标（被钉）又回到下方，单位再被拉回 ⇒ `y` 在 **16.4444 ↔ 16.5833 之间做 2-tick 振荡**，永远到不了复位所需的 `y>17`。
+
+**上游对照**：上游 HEAD 的复位块（`by-jason/src/clasher_new/battle.py:284-285`）**被注释掉**、触发块（`:304-309`）**整段被注释**、`:302` 的条件里**没有** `or self.jumping_across_river` ⇒ 上游该功能是**死代码**，所以**这条只在我们（活代码）暴露** —— 这是"上游改过、我们没跟"里唯一**对我们不利**的一条（其余都是上游 WIP 或性能取舍）。
+
+**自然发生率：未实测**（子任务 3 局 × 55.5 s 自然跑：`jumping` 共 171 tick、其中 `jumping ∧ in_attack_range` 105 tick、**最长连续 35 tick = 0.58 s、≥3 s 的事件 0 次**）。
+⇒ 只能写「**机制已确证（受控剧本下确定可复现 + 我独立复现）**，**自然发生率未证实**」，**不得**写成「训练里经常发生」。
+
+**暴露面**（子任务核对）：标准 solo 卡组不含 jumper（`rl/train_solo.py:56` `DEFAULT_SOLO_DECK`）⇒ **最近两轮 100k（A_et / B_ctrl）不受影响**；有暴露的是 `FOUR_DECK_SET`（`rl/opponents.py:30-48`，速猪副含 HogRider、攻城槌副含 BattleRam）与 `run`/`flow` 的 139 卡池（Assassin 等 `jumpSpeed>0` 卡）。
+**建议**：**先测再改**（属"改判定逻辑" ⇒【R13】位图对账 +【R8】跨局回归，且须你拍板）。最小形态二选一：① 去掉 `:1233` 的 `or self.jumping_across_river` **并**给 jump 加超时/目标侧重锚；② 只加超时（改动最小，但保留 `is_air_unit` 误判）。
+
+### P4 `arena.walkable_cache` 越界查询会**永久污染相邻合法格**（进程级，**中**）
+
+> 来源同上（子任务编号 B2）；**我也独立复现了一遍**，并补了"反向顺序"对照。
+
+```python
+# arena.py:5     walkable_cache = {}          # 模块级全局字典：跨局、跨 run、永不失效、无容量上限
+# arena.py:106-119
+int_pos = (int(x), int(y))                   # int() 向零截断 ⇒ int(-0.3) == 0
+if int_pos in walkable_cache: return walkable_cache[int_pos]
+if not self.is_valid_position(pos) or self.is_blocked_tile(int(pos.x), int(pos.y)):
+    walkable_cache[int_pos] = False          # ← 越界查询把**合法格**写成 False
+```
+
+**我的独立复现（原始输出）**：
+
+```
+cache before: {}
+q1 (-0.3,10.5) -> False
+q2 ( 0.5,10.5) -> False   <-- 合法格被污染
+cache[(0,10)] = False
+q1 (6.5,-0.3) -> False
+q2 (6.5, 0.5) -> False    <-- 王区格被污染
+cache[(6,0)] = False
+--- reverse order control（先查合法格）
+legal first (0.5,10.5) -> True
+then  (-0.3,10.5)      -> True
+cache[(0,10)] = True      <-- 先合法后越界 ⇒ 不毁图
+```
+
+⇒ **顺序依赖**（合法格先入缓存则不毁图），所以是**竞态式潜伏 bug**：一旦某次越界查询抢在合法查询之前，`(0,y)` 与 `(6..11,0)` 就会在**整个进程**里永久不可走。
+
+**真实可达路径（静态）**：`BattleState.ensure_walkability`（`battle.py:2681`）是**先**用**未夹取**的当前位置调 `ground_walkable`、**后**才夹取（`:2683-2692`）⇒ 单位被击退/过冲推到 `x∈(-1,0)` 的那一帧就会完成污染。（子任务另指出 `battle.py:2003-2004` 击退用未夹取的 `nx,ny`。）
+**上游对照**：上游 `arena.py` 同一段**逐字同构** ⇒ **双方共有的同源缺陷、作者同样未修**。
+**建议**：**一行级修改**（把越界判定提到缓存写入之前，越界直接 `return False` 不入缓存；或只在 `is_valid_position` 为真时写缓存）。改的是"合法格判定" ⇒【R13】位图对账。
+**判据（先写死）**：冷进程内断言 `is_walkable(-0.3,10.5)` 之后 `is_walkable(0.5,10.5)` **必须为 True**；再补「在左边缘击退一次后 `(0,y)` 仍可走」的跨局回归。
+**未实测**：真实对局里"越界查询先于合法查询"的**发生率**未统计（只证明了顺序依赖与必然污染）。
+
 ---
 
 ## §6 非引擎部分：**对我们零影响**
@@ -357,7 +483,9 @@ PY
 
 1. **上游 `d1e0a16` 的症状原文**：`@billy948787` 报告的 issue 原文**未取得**（web 检索无命中）⇒ §3.1 的「症状是否在我方存在」**只能推理，不能断言**；E1 的判据因此写成「先测」。
 2. **P1 / P2 的发生率未实测**：两条都只有**静态可达性分析 + 计数**，**没有**跑录像统计发生率（本轮纪律 = 只读核查上游增量，不做新的引擎实验）。
-3. **我方视角的 river/jump 深层缺陷**：本轮由子任务做过一轮（含用系统 `python3` 经 stdin 跑真实引擎的受控实验），**其结论稿在传回时被截断**，未验证部分已在该稿中标注；本轮**不代为补写**（见 [`upstream_four_sections_merge_2026-09-19.md`](upstream_four_sections_merge_2026-09-19.md) §0.2 稿 2 行）。
+3. **我方视角的 river/jump 深层缺陷**：本轮先由子任务做过一轮（含用系统 `python3` 经 stdin 跑真实引擎的受控实验），其结论稿在传回时被截断；**随后已按同一纪律重做该节取证**，产出即 §5 的 **P3 / P4**（其中 P3、P4 我又各自独立复现了一遍，原始输出在正文）。
+   **仍未验证的部分**：P3 的**自然发生率**（仅 3 局 × 55.5 s 自然跑，`jumping` 最长连续 35 tick = 0.58 s、**≥3 s 事件 0 次**）与 P4 的**真实触发率**（只证明"越界先于合法格 ⇒ 必然污染"，未统计对局里越界查询的频次）。
+   ⚠️ **原始稿 2 的 §4 正文并未落盘**（`upstream_four_sections_merge_2026-09-19.md` §0.2 把它列为"未收到"）⇒ 若引用「稿 2 §4 原文」，只能写「**原文未保留，§5-P3/P4 为按同纪律重取证重建**」。
 4. **`*0.5` 的稳态重叠解析式**（≈0.02 格 vs 原式 ≈0.002 格）是**解析近似**（r 恒定、忽略多体耦合与遍历顺序），**未实测**。
 5. **两仓关系之争未裁决**：§1.2 只并列两说与原始命令，**不判定另一会话文档对错**（该文件属另一会话，本文件不改动它）。
 6. **未评估「移植 E1/E3/E5 是否影响训练读数」**：那需要改动引擎 + 重跑，超出本轮「只读核查」的范围。
@@ -418,4 +546,4 @@ grep -rn "environment" $A/src/clasher_new/rl/ --include=*.py | wc -l    # 0
 
 - **上游引擎增量 = 4 个文件 / 6 个提交**，其中 **2 条我们自己已经修好、1 条与我们无关、1 条是注释**；
 - 真正「上游改了、我们没改」的只有 **3 条**：碰撞 `*0.5`（建议先测）、20 Hz（建议不跟）、河面 A\*（建议不照搬，上游自己是半成品）；
-- 本轮更值得动手的其实是**我们自己的两处**：`return`→`continue`（P1）与桥面 sliver 计价 800（P2）——**都待你拍板，本轮一行代码都没改**。
+- 本轮更值得动手的其实是**我们自己的四处**：`return`→`continue`（P1）、桥面 sliver 计价 800（P2）、**过河 jump 无界闩锁（P3，高）**、**`walkable_cache` 越界污染（P4）** —— **都待你拍板，本轮一行代码都没改**。
