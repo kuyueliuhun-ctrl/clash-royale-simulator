@@ -1,3 +1,4 @@
+import os
 import pygame
 import json
 from threading import Thread
@@ -60,7 +61,9 @@ def swipe(slot, y, x):
 def w2s(x, y):
     return int(AX + x * TILE), int(AY + y * TILE)
 
-with open('cards.json', encoding='utf-8') as f:
+# T3-2（2026-09-19）：与 card_utils / card_aliases 同口径 —— 用 __file__ 定位，不再依赖 cwd。
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cards.json'),
+          encoding='utf-8') as f:
     card_data = json.loads(f.read())
 cards = {each['id']: each['name'] for each in card_data['items']}
 

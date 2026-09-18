@@ -4,24 +4,31 @@ import os
 
 
 def _resolve_data(name: str) -> str:
-    """数据文件路径解析（T0-4：**只加报错信息，不改 cwd 契约**）。
+    """数据文件路径解析（**取消 cwd 契约** —— Tier 3 · T3-2，2026-09-19 升级）。
 
-    本仓历史契约是「**裸相对路径** ⇒ cwd 必须是 `src/clasher_new`」（见
-    `docs/structure_optimization_plan_2026-09-19.md` §4.4：`card_utils` 是全仓
-    importer 最多的模块，20 个）。本函数**故意不**改成
-    `os.path.join(os.path.dirname(__file__), name)` —— 那会改掉该契约，
-    属 Tier 3 的 **T3-2** 范围，必须与数据文件归拢一起做并对账。
+    **改了什么**：T0-4 只加了报错信息、**保留**「裸相对路径 ⇒ cwd 必须是 `src/clasher_new`」的旧契约；
+    T3-2 把它改成**与 `card_aliases.py:432` 同样的做法** —— 用 `__file__` 定位数据文件。
+    `card_aliases.py` 一直是这么写的 ⇒ `card_utils` 本是全仓的**异类**，而它恰好是
+    **被依赖最多的模块**（20 个 importer，其中 12 个是 rl 模块）⇒ 它的 cwd 契约定格成了**全仓的隐性约束**
+    （见 `docs/structure_optimization_plan_2026-09-19.md` §4.4）。
 
-    这里只做一件事：把「打不开」从裸 `FileNotFoundError: gamedata.json`
-    （看不出 cwd 问题）变成**带期望 cwd 的报错**。成功路径返回**原样的裸文件名**
-    ⇒ 行为逐字不变。
+    **优先级**：① `__file__` 同目录（= 正常布局，**无歧义**）→ ② 原样的裸相对路径（= 兼容旧 cwd 用法）。
+
+    **行为等价性**：在**文档口径**（`cwd = src/clasher_new`）下两个候选**指向同一个文件** ⇒ 逐字不变；
+    额外收益是**任何 cwd 都能跑**。A/B 用派生结构的 `pickle` 逐字节指纹对账（7/7 SAME）。
+
+    **为什么不顺便把数据文件搬进 `assets/`**：那会打断 **~20 份文档** + `client_side/*` + `minimal_visualizer.py`
+    的路径引用，而**病因是路径契约、不是文件位置**；契约修好后"搬文件"只剩整理意义、没有功能收益
+    ⇒ 明确**不做**，理由记在 `docs/structure_tier3_2026-09-19.md`。
     """
-    if not os.path.exists(name):
-        raise FileNotFoundError(
-            "数据文件 {!r} 不存在。当前 cwd = {!r}；本仓约定 cwd 必须为 {!r}（src/clasher_new）。"
-            "请在 src/clasher_new 下运行，或经 scripts/rl/*.py 包装脚本（它们会 os.chdir）。".format(
-                name, os.getcwd(), os.path.dirname(os.path.abspath(__file__))))
-    return name
+    here = os.path.dirname(os.path.abspath(__file__))
+    for cand in (os.path.join(here, name), name):
+        if os.path.exists(cand):
+            return cand
+    raise FileNotFoundError(
+        "数据文件 {!r} 不存在。已试过：① {!r}（本模块同目录，正常布局）；② 当前 cwd {!r} 下的同名文件。"
+        "若两者都没有，说明仓库数据文件缺失或被移动。".format(
+            name, os.path.join(here, name), os.getcwd()))
 
 
 with open(_resolve_data('gamedata.json'), encoding='utf-8') as f:
