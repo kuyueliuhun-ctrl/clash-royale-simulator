@@ -390,3 +390,71 @@ T2-6 的风险**不在功能面而在文档面**，所以先按家族把「引�
 
 > **未来若真要搬**（写进 README）：必须**同批**改 `env.md §2.4` / `AGENTS.md` / `docs/README.md` /
 > `docs/agents/scripts_inventory.md` / 3 个 `.sh`，并在 98 份历史文档**顶部加一行「路径已迁移」**（而不是改写正文）。
+
+---
+
+## 11. T2-7 抽奖励簇 → `rl/reward.py`（**用户拍板「做」**；本项做成了，因为**有逐位对账手段**）
+
+### 11.1 搬了什么
+
+| | |
+|---|---|
+| 搬运范围 | `env_wrapper.py` **L38-264**（**227 行**，14 个定义）：`_DEFAULT_REWARD` … `compute_reward` |
+| 结果 | `env_wrapper.py` **812 → 598 行**；新增 `rl/reward.py` **252 行** |
+| **纯搬运** | 块内**每个字符**与 `git show HEAD:src/clasher_new/rl/env_wrapper.py` 的 L38-264 **逐字节相同**（对账 = `True`）；**没有**动任何权重数值 |
+| **刻意不做的事** | **没有**把 `_DEFAULT_REWARD` 改成从 `rl/config.DEFAULT_REWARD` **派生** —— 那会引入"两处口径何时相等"的新风险（该 dict 上方那行写着「与 `rl/config.DEFAULT_REWARD` 保持一致；勿单独改一处」） |
+| 重导出 | `env_wrapper` **显式列出 14 个名字**（**含下划线名** —— `from x import *` **不带**下划线）⇒ 既有调用方（`flow_league.py` / `mcts.py` / `action_mask.py` / `scripts/probe_reward_composition.py` / `scripts/phi_offline_check.py` …）**一行都不用改** |
+
+### 11.2 边界是**读代码**定的（不是拍的）
+
+| 留在 `env_wrapper` | 搬走 |
+|---|---|
+| `_PARENT`(L15)、`DEFAULT_DECK*`(L35-36)、`_NUM_IDS`(L266 → 依赖引擎的 `ENTITY_NAMES`)、`ActionBundleSpace`、`RLEnv` | `_PARENT` 之后的整个奖励块：`_DEFAULT_REWARD` / `TOWER_TROOP_HP_LV11` / `KING_TOWER_HP_LV11` / `tower_total_hp` / `_TOWER_HP_ANCHOR` / `PHASE_SWITCH_S` / `DEFAULT_TOWER_PREMIUM_K` / `DEFAULT_KING_GATE` / `tower_value_mult` / `tower_premium_k` / `_princesses_alive` / `_per_tower_norm_dmg` / `_phase_weights` / `compute_reward` |
+
+**为什么 `_DEFAULT_REWARD` 必须跟着搬**：`_phase_weights` 与 `compute_reward` 的函数体里都有
+`rw = dict(_DEFAULT_REWARD, **(rw or {}))` —— 它是**模块级绑定**，不是参数。**搬运块内零 `import`**
+（已断言块内不含 `import `/`np.`/`math.`）⇒ 这是一个**自足的纯函数模块**。
+
+### 11.3 ★ 验证 = **数值逐位 A/B**（本项的核心证据）
+
+`compute_reward` 是**纯函数**（输入→输出、无状态、无 RNG、无设备）⇒ 可以做**真正的逐位对账**：
+
+1. 把 HEAD 的**同一块**独立加载（`git show HEAD:` 取 L38-264 → `exec` 成一个临时模块）；
+2. 固定 seed（`20260919`）生成覆盖各分支的输入网格：
+   per-tower 参数**逐侧独立**地给/不给、`normalize_tower_dmg` 开/关、`elixir_diff_weight` 0/0.5、
+   `winner` ∈ {None,0,1,2}、`game_over`、`invalid_count` ∈ {0,1,3}、自定义 `draw_penalty`、
+   `blue/red_hps_max` 给/不给（含 0）、`king_gate` 三种值；
+3. 比 `repr(返回值)`（比 `==` 更严 —— 能抓 `nan` 与**符号零**差异）。
+
+| 对象 | 例数 | 结果 |
+|---|---:|---|
+| `compute_reward` | **4,000** | **不一致 0 例 ⇒ 逐位相同** |
+| `tower_value_mult` | 3,000 | 逐位相同 |
+| `_per_tower_norm_dmg` | 2,000 | 逐位相同 |
+| `_phase_weights` | 16 | 逐位相同 |
+| `tower_premium_k` / `tower_total_hp` | 2 / 3 | 逐位相同 |
+
+**外加两条"不存在偷换"的检查**：
+- `rl.env_wrapper.compute_reward is rl.reward.compute_reward` ⇒ **`True`**（不是包装器 ⇒ 排除"包一层改了行为"）；
+- `rl.env_wrapper._DEFAULT_REWARD is rl.reward._DEFAULT_REWARD` ⇒ **`True`**（同一个 dict 对象）。
+
+### 11.4 回归
+
+| 检查 | 结果 |
+|---|---|
+| 奖励相关子集（`config_reward_weights` / `reward_economy_*` / `draw_penalty_as_loss` / `reward_v2_ledger` / `spell_*_gate` / `reward_tower_premium*` / `tower_troop_hp_reference` / `tower_value_mult` / `model_reward_overrides` / `mcts_basic` / `mcts_defense_and_wait`） | **16/16 PASS** |
+| **全量套件** | **`共 100 个测试：100 通过 / 0 失败；跳过 0 个` + `ALL SELFTESTS PASSED` + EXIT=0** |
+| `selftest_io_bootstrap` / `selftest_offline_engagement_trade` / `selftest_engagement_trade_online` | ALL PASS / PASS / **3/3 PASS** |
+| M8 引擎验收 `test_m6_elite.py` | **84 / 0** |
+| 核对器自检 + 硬门禁（含 ③ 反向边 0、⑪ = 0） | ALL PASS / rc=0 |
+| 规模 | `engine_top` 29/9,650 不变；`rl` **52 → 53 文件**（24,331 行，净 +37 = `reward.py` 252 行 − `env_wrapper` 少 215 行 + 12 行重导出） |
+
+### 11.5 ★ 为什么**这一项能证到位**，而 T2-4 不能
+
+| | **T2-7（做了）** | T2-4（判定不做） |
+|---|---|---|
+| 被搬的东西 | **纯函数**（输入→输出；无状态、无 RNG、无设备） | `run_solo` **训练循环**（RNG 调用次序 + CUDA 反向原子累加） |
+| 逐位对账 | ✅ **可以** —— 本题实测 **4,000 例 0 不一致** | ❌ **不能** —— 同 seed 同配置重跑实测**单点差 0.60** |
+
+⇒ 两者同属【R2】区，**能做与不能做的分界不是"胆子大不大"，而是"有没有逐位对账手段"**。
+这也是本方案里"允许纯搬运、禁止行为改动"那条规则**真正可执行**的方式。
