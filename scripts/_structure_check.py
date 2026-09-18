@@ -460,6 +460,89 @@ def check_bootstrap_order(root: Path) -> dict:
     return {"files": len(warns), "detail": sorted(warns)}
 
 
+# ---------------------------------------------------------------- ⑩ scripts/README.md 漂移
+#: `scripts/` 的分类规则（**按文件名前缀**，确定性、可复现）。判据 = 生成的 README 必须与磁盘上的
+#: 实际文件集一致 ⇒ 新增/删除脚本而忘了更新索引时会 **FAIL**。
+#: 分类只影响"读到哪一行"，**不影响任何运行行为**（不是 import 路径、不是包结构）。
+SCRIPTS_CATEGORIES = [
+    ("① 测试（引擎验收）", ("test_m",),
+     "引擎机制验收脚本（`test_m2/m3_evo/m4_evo7/m5_data/m6_elite/m1`）。**不属于** `run_selftests.py` 那套。"),
+    ("② 一次性取证 / 归档工具（`_` 前缀）", ("_",),
+     "按仓内既有约定：`_` = 不进正式仪器表；多为**一次性**取证/迁移工具，**保留作证据**。"),
+    ("③ 探针 / 诊断（可复用仪器）", ("probe_", "diag_", "forensics_", "analyze_", "coverage",
+                                    "bench_", "judge_", "phi_", "pomdp_", "value_", "duel_",
+                                    "batch_", "summarize_", "health_", "offline_", "random_",
+                                    "pass_", "s1_", "s2_", "check_", "finalize_", "kill_",
+                                    "run_selftests", "selftest_"),
+     "可复跑的判读/诊断仪器（多数已在 `docs/agents/env.md` §2.4 登记）。"),
+    ("④ 其它（脚本 / 引擎侧辅助 / 待归类）", (),
+     "未落入上面三类者：领域脚本、引擎侧辅助、以及**待归类**项。"),
+]
+
+
+def classify_script(name: str) -> str:
+    for label, prefixes, _ in SCRIPTS_CATEGORIES:
+        if not prefixes:            # 兜底类放最后
+            continue
+        if any(name.startswith(x) for x in prefixes):
+            return label
+    return SCRIPTS_CATEGORIES[-1][0]
+
+
+def render_scripts_readme(root: Path) -> str:
+    """生成 `scripts/README.md`（确定性；由 `--write-scripts-readme` 写盘，由 ⑩ 校验）。"""
+    names = sorted(x.name for x in (root / "scripts").glob("*.py"))
+    buckets = {label: [] for label, _, _ in SCRIPTS_CATEGORIES}
+    for n in names:
+        buckets[classify_script(n)].append(n)
+    L = ["# `scripts/` 分类索引（**自动生成，勿手改**）", "",
+         "> 生成器 / 校验器：`scripts/_structure_check.py`（`--write-scripts-readme` 重写；检查 **⑩** 防漂移）。",
+         "> 逐文件的 docstring / `--selftest` / assert 数 / 是否已被 `env.md` 登记 ⇒ 见",
+         "> [`../docs/agents/scripts_inventory.md`](../docs/agents/scripts_inventory.md)。", "",
+         "## ★ 为什么**没有**把 `scripts/` 拆成子目录（Tier 2 · T2-6 的决定）", "",
+         "方案原写「`scripts/` 分目录（tools / probes / tests）」。**实测代价后判定不做**，理由是数字：", "",
+         "| 家族 | 文件数 | 文档提及 | 其中活跃索引 | 涉及**历史留证**文档数 |",
+         "|---|---:|---:|---:|---:|",
+         "| `test_m*.py` | 6 | 193 | 4 | 13 |",
+         "| `_survey_*.py` | 9 | 128 | 0 | 8 |",
+         "| 其它 `_*.py` | 13 | 138 | 15 | 36 |",
+         "| `probe_/diag_/forensics_*` | 30 | 264 | 30 | 59 |",
+         "| 其它 | 35 | 552 | 75 | 72 |",
+         "",
+         "- **全仓 `scripts/<名>.py` 被提及 1,293 次 / 113 份文档**，其中 **~1,167 次落在 `docs/*.md` 的历史留证文档里**；",
+         "- 本仓纪律是「新决策先写 docs（可改）」+「**只增不改历史结论**」⇒ 搬迁必然要么**漏改**（文档说谎），",
+         "  要么**改写历史**（违反纪律）。**即使只搬最小的家族（`_survey_*` 9 个）也要碰 8 份历史文档**；",
+         "- **功能面其实很小**：`.sh` 5 处（`finalize_et_solo100k.sh` / `run_probe_v3.sh` / `_apply_s2_channel_when_idle.sh`）、",
+         "  `.bat` 只引用 `scripts/rl/*`（方案本就要求**保持原位**）、`.ps1` 1 处且是散文 ⇒ **风险不在功能面，全在文档面**；",
+         "- 而 T2-6 想要的「可寻性」已经由 **T0-3 的 `docs/agents/scripts_inventory.md`**（91 个脚本 + docstring + 4 分类）",
+         "  与本文件（分类 + 漂移检查）**给到**，无需搬文件。", "",
+         "> 若将来确实要搬：**必须同批**改 `env.md §2.4` / `AGENTS.md` / `docs/README.md` / 3 个 `.sh` /",
+         "> `docs/agents/scripts_inventory.md`，并在 98 份历史文档**顶部加一行「路径已迁移」备注**（而不是改写正文）。", "",
+         "## 分类", ""]
+    for label, prefixes, desc in SCRIPTS_CATEGORIES:
+        items = buckets[label]
+        L += [f"### {label}（{len(items)} 个）", "", desc, ""]
+        L += ["`" + "`, `".join(items) + "`" if items else "（空）", ""]
+    L += [f"**合计 {len(names)} 个 `*.py`**（另有 `scripts/rl/*.py` **11 个**：`start_rl.bat` 依赖其位置的入口包装脚本，**不参与**本分类）。", ""]
+    return "\n".join(L)
+
+
+def check_scripts_readme(root: Path) -> dict:
+    """检查 ⑩：`scripts/README.md` 是否与磁盘上的脚本集**一致**（防漂移）。"""
+    p = root / "scripts" / "README.md"
+    want = render_scripts_readme(root)
+    if not p.is_file():
+        return {"ok": False, "reason": "scripts/README.md 不存在",
+                "hint": "python scripts/_structure_check.py --write-scripts-readme"}
+    got = p.read_text(encoding="utf-8").replace("\r\n", "\n")
+    # 只比"分类清单"部分（正文里的说明段落允许人工润色）
+    def lists_of(txt):
+        return [ln for ln in txt.split("\n") if ln.startswith("`") and ln.endswith("`")]
+    return {"ok": lists_of(want) == lists_of(got), "n_scripts": len(list(x.name for x in (root / "scripts").glob("*.py"))),
+            "hint": "python scripts/_structure_check.py --write-scripts-readme",
+            "diff": [x for x in lists_of(want) if x not in lists_of(got)][:2]}
+
+
 CHECKS = {
     "areas": check_areas,
     "utf8": check_utf8,
@@ -470,6 +553,7 @@ CHECKS = {
     "selftest": check_selftest,
     "bare_reconf": check_bare_reconfigure,
     "boot_order": check_bootstrap_order,
+    "scripts_readme": check_scripts_readme,
 }
 
 
@@ -521,6 +605,13 @@ def render(res: dict) -> str:
              f"（{100 * _a.get('lazy_frac', 0):.1f}%）")
     L.append(f"     排除 selftest.py：{_e.get('lazy')}/{_e.get('total')}"
              f"（{100 * _e.get('lazy_frac', 0):.1f}%）")
+    sr = res.get("scripts_readme", {})
+    L.append("== ⑩ scripts/README.md 与脚本集一致 = {}（{} 个 *.py）".format(
+        "OK" if sr.get("ok") else "**FAIL/DRIFT**", sr.get("n_scripts")))
+    if not sr.get("ok"):
+        L.append("     修法：{}".format(sr.get("hint")))
+        for d in (sr.get("diff") or []):
+            L.append("     期待: " + d[:120])
     bo = res.get("boot_order", {})
     L.append("== ⑨ io_bootstrap import 早于 path 引导（**只报告、不设门禁**）= {} 个".format(bo.get("files")))
     for f in (bo.get("detail") or [])[:8]:
@@ -634,6 +725,17 @@ def _selftest() -> int:
         #    （我第一版写成 1 ⇒ 失败。**教训：自检会改写自己的合成树，后面的断言必须按改写后的树算。**）
         ck("⑧ 删掉 bare.py 后归 0（反向验证：不是恒不匹配）",
            _r8["bare_reconf"]["ok"] is True and _r8["bare_reconf"]["files"] == 0)
+        # ⑩：合成树里先写 README ⇒ 必须 OK；再加一个脚本 ⇒ **必须报漂移**；删掉 ⇒ 必须回 OK。
+        #    ⚠️ 没有这条，⑩ 的「OK」可能只是**空检查**（README 根本不存在 vs 内容真的对得上）。
+        (root / "scripts" / "README.md").write_text(
+            render_scripts_readme(root), encoding="utf-8")
+        _r10a = run_all(root)
+        ck("⑩ 生成 README 后判 OK", _r10a["scripts_readme"]["ok"] is True)
+        (root / "scripts" / "brand_new_tool.py").write_text("x = 1\n", encoding="utf-8")
+        _r10b = run_all(root)
+        ck("⑩ 新增脚本后**报漂移**（判别力）", _r10b["scripts_readme"]["ok"] is False)
+        (root / "scripts" / "brand_new_tool.py").unlink()
+        ck("⑩ 删掉后回 OK（反向验证）", run_all(root)["scripts_readme"]["ok"] is True)
         ck("④ 死件复活 = 1（pathfinding.py）", res["deadfiles"]["revived"] == 1)
         ck("⑤ 抓到 1 处硬编码绝对路径", res["abspaths"]["hits"] == 1
            and "E:/x/y/src" in res["abspaths"]["detail"][0]["path"])
@@ -658,12 +760,19 @@ def main() -> int:
     ap.add_argument("--json", default=None, help="另写一份 JSON 到该路径")
     ap.add_argument("--selftest", action="store_true", help="自检（合成目录，零仓库依赖）")
     ap.add_argument("--root", default=None, help="仓库根（缺省从 __file__ 推）")
+    ap.add_argument("--write-scripts-readme", action="store_true",
+                    help="重新生成 scripts/README.md（分类索引；检查 ⑩ 会校验它）")
     args = ap.parse_args()
 
     if args.selftest:
         return _selftest()
 
     root = Path(args.root).resolve() if args.root else _ROOT
+    if args.write_scripts_readme:
+        out = root / "scripts" / "README.md"
+        out.write_text(render_scripts_readme(root), encoding="utf-8")
+        print(f"已重写 {out}")
+        return 0
     res = run_all(root)
     print(f"仓库根：{root}")
     print(render(res))
@@ -677,7 +786,8 @@ def main() -> int:
     hard = [res.get("layering", {}).get("ok", False),
             res.get("deadfiles", {}).get("ok", False),
             res.get("selftest", {}).get("ok", False),
-            res.get("bare_reconf", {}).get("ok", False)]
+            res.get("bare_reconf", {}).get("ok", False),
+            res.get("scripts_readme", {}).get("ok", False)]
     return 0 if all(hard) else 1
 
 
