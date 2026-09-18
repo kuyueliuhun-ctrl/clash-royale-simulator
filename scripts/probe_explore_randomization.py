@@ -99,7 +99,8 @@ def hand_bound():
 # A. 解析上界（离线，只读录像）
 # ----------------------------------------------------------------------
 def analytic(replay_dirs, regen=REGEN, target=XBOW_COST,
-             p_list=(-1, 0.5, 1.0 / 3.0, 1.0 / 6.0, 0.07)):
+             p_list=(-1, 0.5, 1.0 / 3.0, 1.0 / 6.0, 0.07,
+                     0.7, 0.8, 0.9, 0.95, 0.99)):
     """每 100k 决策帧的「攒到 target 费」事件数**上界**。
 
     起窗口径（写死，避免事后挑窗口）：**只在"上一帧刚花过钱"的帧起窗**（= 圣水的局部谷底，
@@ -266,6 +267,60 @@ def _uniform_bundle(env, get_mask, rng, torch):
     return b, cell_choice
 
 
+def _biased_bundle(env, get_mask, rng, p0, torch, q_stop=0.9, alpha=0.0):
+    """**非等概率**的随机提案（用户 2026-09-18 第二问）：
+
+        P(STOP) = q_stop                                    （抬"不出牌"）
+        剩余 (1-q_stop) 在合法槽位/ability 上按 `卡费**alpha` 加权（抬"大费牌"）
+
+    落点仍在**合法格**里均匀抽（与 `uniform` 臂同口径，便于单变量对比）。
+    只为**覆盖率取证**：它对应"外部偏置提案"，**不是**训练写法（见文档 §PPO 面）。
+    """
+    from card_utils import Card
+    from rl.follower import K_MAX, ABILITY_IDX, STOP_IDX
+    from rl.action_mask import ActionBundle
+    costs = []
+    for c in list(getattr(p0, "cycle", []) or [])[:K_MAX]:
+        try:
+            costs.append(float(Card(c).elixir))
+        except Exception:
+            costs.append(1.0)
+    b = ActionBundle()
+    cell_choice = None
+    for _ in range(K_MAX + 2):
+        m = get_mask(b)
+        opts = [s for s in range(K_MAX) if bool(m["slots"][s])]
+        if m.get("ability_legal"):
+            opts.append(ABILITY_IDX)
+        if m.get("at_cap"):
+            opts = []
+        if not opts or float(rng.random()) < q_stop:
+            break                                   # STOP（含"没得选"的被迫停）
+        w = np.asarray([(costs[s] if s < len(costs) else 1.0) ** alpha for s in opts],
+                       dtype=float)
+        if not np.isfinite(w).all() or w.sum() <= 0:
+            w = np.ones(len(opts))
+        w = w / w.sum()
+        o = int(opts[int(rng.choice(len(opts), p=w))])
+        if o == ABILITY_IDX:
+            b.add_ability()
+            continue
+        m2 = np.asarray(m["cells"][o])
+        flat = m2.reshape(-1)
+        legal = np.flatnonzero(flat > 0)
+        if legal.size == 0:
+            b = ActionBundle()
+            break
+        c = int(legal[int(rng.integers(legal.size))])
+        if m2.ndim == 2:
+            y, x = divmod(c, m2.shape[1])
+        else:
+            y, x = c, 0
+        b.add(o + 1, int(x), int(y))
+        cell_choice = (o + 1, int(x), int(y), int(legal.size))
+    return b, cell_choice
+
+
 def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
     from rl.env_wrapper import RLEnv
     from rl.belief import BeliefInference
@@ -277,20 +332,37 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
     opp_pol = load_policy(ckpt, device, torch)
     bp = BeliefPlanner()
     out = {}
+    #: STOP logit 的 ckpt 原值（按臂加偏置后再复位；**只加在被测策略 p0 上**，对手保持原样）
+    _stop_base = float(pol.slot_head.bias.detach()[5].item())
     for arm in arms:
+        arm_label = arm          # 完整臂名（含 `@β`）用于打印/落盘键，避免同名覆盖
         # 稳定种子：Python 的 str hash 逐进程随机化，不能用 hash(arm)
         import zlib
-        rng = np.random.default_rng(seed * 7919 + zlib.crc32(arm.encode("utf-8")))
+        rng = np.random.default_rng(seed * 7919 + zlib.crc32(arm_label.encode("utf-8")))
+        # `名@β`：给 STOP logit 加偏置 β（= **on-policy** 版本的"提高不出牌概率"）
+        beta = 0.0
+        if "@" in arm:
+            arm, _b = arm.split("@", 1)
+            beta = float(_b)
+        with torch.no_grad():
+            pol.slot_head.bias.data[5] = _stop_base + beta
         mode, p_uniform = arm, 0.0
         hold_max, hold_q = 0, 0.0
+        q_stop, alpha = 0.0, 0.0
         if arm.startswith("mix"):
             mode, p_uniform = "mix", float(arm[3:])
+        elif arm.startswith("bias"):
+            # bias_<q_stop>_<alpha>：非等概率提案（抬不出牌 / 抬大费牌）
+            _p = arm.split("_")
+            mode, q_stop, alpha = "bias", float(_p[1]), float(_p[2])
         elif arm.startswith("hold"):
             # 对照臂：**带时长的随机**（"hold d 帧"，d~U{1..hold_max}），进 hold 的概率
             # hold_q 写死 0.3（只为与 i.i.d. 方案比**量级**，不是建议超参）
             mode, hold_max, hold_q = "hold", int(arm[4:] or 40), 0.3
         rec = {"frames": 0, "games": 0, "elix": [], "n_legal_cards": [],
                "declined_legal": 0, "forced_pass": 0, "plays": 0,
+               "choice_frames": 0, "reward_sum": 0.0, "ep_frames": [],
+               "cards": {},
                "xbow_plays": 0, "spend_flags": [], "cells": [], "log_ncell": [],
                "streaks_all": []}
         t0 = time.time()
@@ -334,6 +406,10 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
                 if do_hold:
                     from rl.action_mask import ActionBundle
                     bundle = ActionBundle()          # 空 bundle = 不出牌（合法动作）
+                elif mode == "bias":
+                    bundle, cell_info = _biased_bundle(
+                        env, env.get_action_mask, rng, p0, torch,
+                        q_stop=q_stop, alpha=alpha)
                 elif do_uniform:
                     bundle, cell_info = _uniform_bundle(env, env.get_action_mask, rng, torch)
                 else:
@@ -344,6 +420,8 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
                 rec["frames"] += 1
                 rec["elix"].append(E)
                 rec["n_legal_cards"].append(nl)
+                if nl >= 1:
+                    rec["choice_frames"] += 1
                 deploys = [sa for sa in bundle.sub_actions if sa.kind == "deploy"]
                 if not deploys:
                     if nl >= 1:
@@ -357,15 +435,30 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
                     cur_nospend = 0
                 if deploys:
                     sd = deploys[0]
+                    # 打出牌名统计（含 Xbow）——⚠️ 2026-09-18：本计数**曾经从未累加**
+                    # （patch 的锚点没匹配上），导致所有臂 `xbow_plays` 恒 0；已修，
+                    # 修前的那批 JSON 里 `xbow_plays: 0` **不可引用**。
+                    for _sa in deploys:
+                        try:
+                            _nm = _sa.card_name(p0)
+                        except Exception:
+                            _nm = None
+                        if _nm:
+                            rec["cards"][_nm] = rec["cards"].get(_nm, 0) + 1
+                    if any(getattr(a_, "card_name", None) and a_.card_name(p0) == "Xbow"
+                           for a_ in deploys):
+                        rec["xbow_plays"] += 1
                     m_chosen = env.get_action_mask(None)
                     cells = np.asarray(m_chosen["cells"][sd.slot - 1]).reshape(-1)
                     L = int(np.sum(cells > 0))
                     rec["cells"].append((sd.slot, int(sd.x), int(sd.y)))
                     rec["log_ncell"].append(math.log(max(1, L)))
                 obs, _r, term, trunc, info = env.step(bundle)
+                rec["reward_sum"] += float(_r)
                 belief.update(obs, info.get("opp_played"))
                 if term or trunc:
                     rec["streaks_all"].append(cur_nospend)
+                    rec["ep_frames"].append(int(_step) + 1)
                     break
             else:
                 rec["streaks_all"].append(cur_nospend)
@@ -375,7 +468,8 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
         st = np.asarray(rec["streaks_all"], dtype=int)
         cells = rec["cells"]
         summ = {
-            "arm": arm, "games": rec["games"], "frames": rec["frames"],
+            "arm": arm_label, "stop_logit_beta": beta, "stop_logit_abs": _stop_base + beta,
+            "games": rec["games"], "frames": rec["frames"],
             "seconds": rec["seconds"],
             "elixir_mean": float(el.mean()), "elixir_median": float(np.median(el)),
             "elixir_p90": float(np.percentile(el, 90)), "elixir_max": float(el.max()),
@@ -384,6 +478,13 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
             "frac_ge6": float(np.mean(el >= 6.0)),
             "plays": rec["plays"], "xbow_plays": rec["xbow_plays"],
             "declined_while_legal": rec["declined_legal"],
+            "choice_frames": rec["choice_frames"],
+            "reward_sum": rec["reward_sum"],
+            "cards": dict(sorted(rec["cards"].items(), key=lambda kv: -kv[1])),
+            "reward_per_game": rec["reward_sum"] / max(1, rec["games"]),
+            "frames_per_game": float(np.mean(rec["ep_frames"])) if rec["ep_frames"] else 0.0,
+            "realized_pass_rate": (rec["declined_legal"] / rec["choice_frames"]
+                                   if rec["choice_frames"] else 0.0),
             "forced_pass": rec["forced_pass"],
             "max_hold_streak": int(st.max()) if st.size else 0,
             "n_streak_ge17": int(np.sum(st >= 17)),
@@ -395,8 +496,8 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
         }
         # Xbow 统计兜底：直接看 elixir 是否真的花掉 6（会计口径，不依赖 cards 字段）
         summ["xbow_note"] = "xbow_plays 依赖 bundle 卡名重建；若为 0 请对照 frac_ge6"
-        out[arm] = summ
-        print(f"  [{arm}] {summ['frames']} 帧 / {summ['games']} 局 / {summ['seconds']}s "
+        out[arm_label] = summ
+        print(f"  [{arm_label}] {summ['frames']} 帧 / {summ['games']} 局 / {summ['seconds']}s "
               f"| 圣水中位 {summ['elixir_median']:.2f} max {summ['elixir_max']:.2f} "
               f"| ≥6 占比 {100*summ['frac_ge6']:.3f}% | 出牌 {summ['plays']} "
               f"| 最长不花 {summ['max_hold_streak']} 帧")
@@ -461,6 +562,30 @@ def placement(replay_dirs):
     return {"per_dir": per_dir}
 
 
+def mixture_weight_table(an, pi_stop=0.07, ps=(0.3, 0.5, 1.0)):
+    """**混合即策略**写法下「抽中不出牌」这一维的梯度权重，与覆盖率的乘积。
+
+    `pi_train = (1-p)·pi_θ + p·q` ⇒ `∇log pi_train(STOP) = w·∇log pi_θ(STOP)`，
+    `w = (1-p)·pi_θ / ((1-p)·pi_θ + p·q)`（`pi_θ` = 策略自己的 P(不出牌)，实测 ≈0.07）。
+    ⇒ **每 100k 步的可用梯度信号 ∝ 覆盖率(q) × w(q)**（相对量，只看趋势）。
+    对照：**on-policy 的 STOP logit 偏置写法 w ≡ 1**（无任何折扣，见文档 §PPO 面）。
+    """
+    rows = []
+    for lab, v in an["per_dir"].items():
+        ev = v["by_k_bucket"].get("k=17", {}).get("ev_per_100k", {})
+        for key, e in ev.items():
+            q = float(key.split("=")[1])
+            row = {"label": lab, "q": q, "events_per_100k_k17": float(e)}
+            for p_ in ps:
+                den = (1 - p_) * pi_stop + p_ * q
+                w = ((1 - p_) * pi_stop / den) if den > 0 else 0.0
+                row[f"w_p{p_:.1f}"] = w
+                row[f"signal_p{p_:.1f}"] = float(e) * w
+            rows.append(row)
+        break                       # 一张表足够（两臂同结构）
+    return {"pi_stop_measured": pi_stop, "ps": list(ps), "rows": rows}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="both",
@@ -509,6 +634,16 @@ def main():
                     f"{kk.split('=')[1]}→{vv:.3e}" for kk, vv in b["ev_per_100k"].items())
                 print(f"        · 分桶 {bname}：尝试 {b['n_attempts']} 次"
                       f"（{b['attempts_per_100k']:.0f}/100k 帧）⇒ {line}")
+
+        try:
+            result["mixture_weight"] = mixture_weight_table(result["analytic"])
+            print("  -- 偏置强度 vs 可用梯度信号（混合即策略写法；on-policy 偏置写法 w≡1）--")
+            for r in result["mixture_weight"]["rows"]:
+                print(f"     q={r['q']:.3f}  覆盖率(k≥17)={r['events_per_100k_k17']:.4g}/100k  "
+                      f"w(p=0.5)={r['w_p0.5']:.4f}  信号(p=0.5)={r['signal_p0.5']:.4g}  "
+                      f"信号(p=1.0)={r['signal_p1.0']:.4g}")
+        except Exception as exc:                                        # 缺桶时不静默
+            print(f"  [warn] mixture_weight 表未生成：{exc}")
 
     if a.mode in ("placement", "all"):
         if not rep:
