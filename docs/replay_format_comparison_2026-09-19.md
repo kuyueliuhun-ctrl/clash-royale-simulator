@@ -253,6 +253,73 @@ royaleapi_replay.py:1928   grid = coordinates.get("grid_cell_floor")
 
 ---
 
+### 2.13 ★ 三个直接问答：终局结果 / 塔血 / 塔血是否逐次记录
+
+> 复跑：`/usr/bin/python3 scripts/_il_replay_format_scan.py --check-terminal-state --actions /tmp/il_actions.parquet --replays /tmp/il_replays.parquet --out docs/il_replay_probe_2026-09-19/format_terminal_state.json`
+> 覆盖：分片0 的 **5,000 局 / 384,275 事件**；另在分片 25/51 **逐事件穷举复核**，合计 **10,852 局 / 802,854 事件**。
+
+#### Q1 「包括最终对局结果吗？」—— ✅ **有，而且有两份**
+
+| 位置 | 字段 | 实测 |
+|---|---|---|
+| payload | `battle.result` ∈ {`victory`,`defeat`,`draw`} + `battle.<side>.crowns` | 5,000 局：**victory 3349 / defeat 1617 / draw 34** |
+| parquet 列 | `result` / `team_crowns` / `opponent_crowns` | 与 payload **5,000/5,000 完全一致**（无口径分歧） |
+| FL 读哪份 | **读 payload 那份** | `_winner`（`royaleapi_replay.py:1721-1727`）+ 终局保真校验（`producer.py:276-288`）；**parquet 列 FL 不读** |
+
+#### Q2 「包括塔血吗？」—— ✅ **有，但只有「终局」一份**
+
+`battle.<side>.players[0].final_tower_hitpoints = {king, princess_left, princess_right, total}`
+
+| 检查 | 读数 |
+|---|---|
+| 字段缺失 | **0**（5,000 局 × 双侧） |
+| 恒等式 `total == king + princess_left + princess_right` | **10,000 / 10,000 成立**（0 反例） |
+| 取值形态 | **绝对值、连续**（king **2,210** 个不同取值 / princess **4,062** 个）⇒ 不是分档近似 |
+| 满塔血（该等级未受损） | king **7,728**（4,305 次）/ princess **4,858**（1,413 次） |
+| `0` 的含义 | 塔被摧毁（king **775** 次 / princess **6,854** 次） |
+| 等级相关 | `tower_card.level` 分布 = **16**(9004) / 11(938) / 0(42) / 15(15) / 12(1) |
+| ⚠️ FL 的 IL 主路径 | **不读**（§2.12 ⑤）；只有**旁路**实验工具 `build_hog_expert_manifest.py:57-64` 用它挑「小分差负局」做专家样本 |
+
+#### Q3 「塔血在每次变化时有记录吗？」—— ❌ **没有。一条都没有。**
+
+三条独立证据（**跨 10,852 局 / 802,854 事件穷举**）：
+
+| # | 证据 | 读数 |
+|---|---|---|
+| ① | **事件键并集**（遍历每局的**全部**事件，不是抽样） | **恰好 13 个键，且 100% 恒存在**；其中**没有任何** `hp` / `health` / `tower` / `damage` 字段（`per_event_tower_fields = []`） |
+| ② | **`kind` 只有 2 种** | `play_card` / `activate_ability` ⇒ **不存在「塔被破坏」或「塔掉血」这一类事件** |
+| ③ | **整份 payload 的关键词路径只有 4 类** | `battle.<side>.crowns`（终局皇冠）、`...final_tower_hitpoints`（**终局**塔血）、`...tower_card`（塔兵**类型**，不是塔血）、`replay.card_counts.*.{bomb,inferno}-tower`（**那是卡名**） |
+| ④ | `actions` 表的 `event_json` 列 | 解析出的键 = 与 `events[]` **完全相同**的 13 个 ⇒ **没有未展开的隐藏字段** |
+
+⇒ **`final_*` 里的 "final" 是字面意思**：塔血只有**对局结束时的一份快照**，
+**既没有逐次变化记录，也无法从事件流反推「何时掉的塔」**（事件里既无塔的血量、也无单位状态、也无伤害事件）。
+⇒ 想拿「塔血随时间」，**唯一路径 = 起引擎重演**（这正是 FL 的做法，§2.12 ⑤）。
+
+#### ★ 附带查出：我们引擎的**塔血等级阶梯与线上不一致**（lv11 一致，lv16 不一致）
+
+| 塔等级 | 线上（数据集实测满塔血） | 我们引擎（**实体** HP） | 一致？ |
+|---|---|---|---|
+| **lv11** | king **4824** / princess **3052** | **4824 / 3052** | ✅ |
+| lv12 | —（该分片只 1 侧） | 6744 / 3934 | 无法比 |
+| lv13 | —（0 侧） | 7416 / 4326 | 无法比 |
+| lv14 | —（0 侧） | 8136 / 4746 | 无法比 |
+| lv15 | —（15 侧，未取到满血值） | 8928 / 5208 | 无法比 |
+| **lv16**（数据集 **9,004/10,000 侧**） | king **7728** / princess **4858** | king **9816** / princess **5726** | ❌ **不一致** |
+
+- 数据集**全局最大塔血 = 7728**；我们 lv16 的 **9816 在数据集里一次都没出现**；
+- ⇒ **至少 lv16 的塔血表与线上不符**（lv11 相符）。**成因未定**（【R10】）：可能是平衡性改动、
+  等级口径不同（`tower_card.level` 是**塔兵卡**等级，是否等同王塔等级**未验证**），或我们的表有误。
+- ⚠️ **影响面**：`_TOWER_HP_ANCHOR = 10928` 恰等于 **我们 lv11 的满塔血**（4824 + 3052×2）。
+  若在 lv16 用我们的表重放真人局，单侧塔血尺度是 **21,268 vs 线上 17,444（高 ≈22%）**
+  ⇒ 会直接改变 `tower_dmg_*` / `tower_premium_k` 的归一化口径。
+- ⚠️ 另一处**易踩的坑**（本轮实测）：`PlayerState.king_tower_hp` 等**字段在构造时恒为 lv11 值（4824/3052）**、
+  **不随 `card_level` 变**；真正的等级缩放在**实体**上，字段要经 `BattleState.update_player_hp()`
+  （`battle.py:2796`；`step()` 在 `game_over` 早退之后**第一件事**就是它）才同步。
+  ⇒ 直接读 `p.king_tower_hp` 拿等级化塔血**会读到错值**；而 `rl/replay.py:134-135` 写的 `towers0/towers1`
+  **正是这两个字段** ⇒ 只有在"至少推进过一帧"的帧上才是真值。
+
+---
+
 ## 3. 我们自己的联赛录像格式（schema 5，源码为权威）
 
 ### 3.1 顶层与 meta

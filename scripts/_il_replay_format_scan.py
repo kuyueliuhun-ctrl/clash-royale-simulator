@@ -223,6 +223,75 @@ def check_cycle_elixir(rep_tbl, limit, rel_src):
             "unmappable_sides": unmapped, "outcome": flips, "examples": rows[:20]}
 
 
+def check_terminal_state(rep_tbl, act_tbl):
+    """终局结果 / 塔血 / 是否逐次记录 —— 穷举取证。"""
+    rp = rep_tbl.to_pydict()
+    ac = act_tbl.to_pydict()
+    n = len(rp["replay_tag"])
+    ekeys, kinds, results, lvls = collections.Counter(), collections.Counter(), collections.Counter(), collections.Counter()
+    king_vals, princess_vals = collections.Counter(), collections.Counter()
+    hp_missing = 0
+    total_ok = total_bad = 0
+    bad_examples = []
+    table_matches_payload = 0
+    for i in range(n):
+        pj = json.loads(rp["payload_json"][i])
+        b = pj.get("battle") or {}
+        results[b.get("result")] += 1
+        for e in pj.get("events") or []:
+            for k in e:
+                ekeys[k] += 1
+            kinds[e.get("kind")] += 1
+        for side in ("team", "opponent"):
+            blk = b.get(side) or {}
+            p = (blk.get("players") or [{}])[0]
+            hp = p.get("final_tower_hitpoints")
+            lvls[(p.get("tower_card") or {}).get("level")] += 1
+            if not hp:
+                hp_missing += 1
+                continue
+            k, l, r, t = (hp.get("king"), hp.get("princess_left"),
+                          hp.get("princess_right"), hp.get("total"))
+            if None in (k, l, r, t):
+                hp_missing += 1
+                continue
+            if k + l + r == t:
+                total_ok += 1
+            else:
+                total_bad += 1
+                if len(bad_examples) < 3:
+                    bad_examples.append({side: [k, l, r, t]})
+            king_vals[k] += 1
+            princess_vals[l] += 1
+            princess_vals[r] += 1
+        if (rp["result"][i] == b.get("result")
+                and rp["team_crowns"][i] == (b.get("team") or {}).get("crowns")
+                and rp["opponent_crowns"][i] == (b.get("opponent") or {}).get("crowns")):
+            table_matches_payload += 1
+
+    # 只扫这份 actions 分片里属于本表 replay 的行（分片必须来自同一 dataset_root）
+    in_tbl = set(rp["replay_tag"])
+    act_rows = sum(1 for t in ac["replay_tag"] if t in in_tbl)
+    return {"mode": "check_terminal_state", "replays": n,
+            "event_key_union": dict(ekeys), "event_kinds": dict(kinds),
+            "action_rows_matched": act_rows,
+            "terminal_result": dict(results),
+            "terminal_hp_fields_missing": hp_missing,
+            "terminal_hp_total_identity_ok": total_ok,
+            "terminal_hp_total_identity_bad": total_bad,
+            "terminal_hp_bad_examples": bad_examples,
+            "table_columns_match_payload": table_matches_payload,
+            "tower_card_level_histogram": {str(k): v for k, v in lvls.items()},
+            "king_hp_distinct_nonzero": len([v for v in king_vals if v]),
+            "king_hp_max": max([v for v in king_vals if v], default=None),
+            "princess_hp_distinct_nonzero": len([v for v in princess_vals if v]),
+            "princess_hp_max": max([v for v in princess_vals if v], default=None),
+            "king_hp_top": king_vals.most_common(8),
+            "princess_hp_top": princess_vals.most_common(8),
+            "per_event_tower_fields": sorted(
+                k for k in ekeys if any(t in k.lower() for t in ("hp", "health", "tower", "damage")))}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--actions", required=True)
@@ -230,6 +299,7 @@ def main(argv=None):
     ap.add_argument("--schema", action="store_true")
     ap.add_argument("--stats", action="store_true")
     ap.add_argument("--check-cycle-elixir", action="store_true")
+    ap.add_argument("--check-terminal-state", action="store_true")
     ap.add_argument("--src", default=None, help="src/clasher_new 路径（--check-cycle-elixir 用）")
     ap.add_argument("--n", type=int, default=3)
     ap.add_argument("--limit", type=int, default=1000)
@@ -242,6 +312,8 @@ def main(argv=None):
         out = schema_mode(rt, at, args.n, args.tag)
     elif args.stats:
         out = stats_mode(rt, at, args.limit)
+    elif args.check_terminal_state:
+        out = check_terminal_state(rt, at)
     elif args.check_cycle_elixir:
         rel_src = args.src or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                            "src", "clasher_new")
@@ -260,6 +332,18 @@ def main(argv=None):
             print(f"  {p:70s} {','.join(v['types'])}{ll}  {v['sample'] or ''}")
         print(f"  replays_table_cols={out['replays_table_cols']}")
         print(f"  actions_table_cols={out['actions_table_cols']}")
+    elif out["mode"] == "check_terminal_state":
+        print(f"[terminal] replays={out['replays']} action_rows={out['action_rows_matched']}")
+        print(f"  event_kinds={out['event_kinds']}")
+        print(f"  event_key_union({len(out['event_key_union'])})={sorted(out['event_key_union'])}")
+        print(f"  per-event tower/hp/damage fields={out['per_event_tower_fields']}")
+        print(f"  result={out['terminal_result']}")
+        print(f"  terminal HP: missing={out['terminal_hp_fields_missing']} "
+              f"total_identity ok={out['terminal_hp_total_identity_ok']} bad={out['terminal_hp_total_identity_bad']}")
+        print(f"  table cols match payload={out['table_columns_match_payload']}")
+        print(f"  tower_card.level={out['tower_card_level_histogram']}")
+        print(f"  king HP max={out['king_hp_max']} distinct={out['king_hp_distinct_nonzero']} top={out['king_hp_top'][:4]}")
+        print(f"  princess HP max={out['princess_hp_max']} distinct={out['princess_hp_distinct_nonzero']} top={out['princess_hp_top'][:4]}")
     elif out["mode"] == "check_cycle_elixir":
         print(f"[cycle] replays={out['replays_scanned']} sides={out['sides_compared']} "
               f"unmappable={out['unmappable_sides']} outcome={out['outcome']}")

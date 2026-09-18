@@ -1,0 +1,114 @@
+{
+ "mode": "check_terminal_state",
+ "replays": 5000,
+ "event_key_union": {
+  "ability_source_authoritative": 384275,
+  "ability_source_candidates": 384275,
+  "card_key": 384275,
+  "card_play_number": 384275,
+  "coordinates": 384275,
+  "deck_card_key_candidates": 384275,
+  "form_at_play": 384275,
+  "kind": 384275,
+  "replay_tick_20hz": 384275,
+  "side": 384275,
+  "source_fields": 384275,
+  "source_index": 384275,
+  "time_seconds": 384275
+ },
+ "event_kinds": {
+  "play_card": 365362,
+  "activate_ability": 18913
+ },
+ "action_rows_matched": 384275,
+ "terminal_result": {
+  "victory": 3349,
+  "defeat": 1617,
+  "draw": 34
+ },
+ "terminal_hp_fields_missing": 0,
+ "terminal_hp_total_identity_ok": 10000,
+ "terminal_hp_total_identity_bad": 0,
+ "terminal_hp_bad_examples": [],
+ "table_columns_match_payload": 5000,
+ "tower_card_level_histogram": {
+  "16": 9004,
+  "15": 15,
+  "11": 938,
+  "0": 42,
+  "12": 1
+ },
+ "king_hp_distinct_nonzero": 2210,
+ "king_hp_max": 7728,
+ "princess_hp_distinct_nonzero": 4062,
+ "princess_hp_max": 4858,
+ "king_hp_top": [
+  [
+   7728,
+   4305
+  ],
+  [
+   0,
+   775
+  ],
+  [
+   4824,
+   478
+  ],
+  [
+   7524,
+   77
+  ],
+  [
+   7422,
+   55
+  ],
+  [
+   7688,
+   50
+  ],
+  [
+   7453,
+   46
+  ],
+  [
+   7678,
+   45
+  ]
+ ],
+ "princess_hp_top": [
+  [
+   0,
+   6854
+  ],
+  [
+   4858,
+   1413
+  ],
+  [
+   3052,
+   158
+  ],
+  [
+   4808,
+   126
+  ],
+  [
+   4802,
+   95
+  ],
+  [
+   4728,
+   47
+  ],
+  [
+   4164,
+   46
+  ],
+  [
+   4786,
+   42
+  ]
+ ],
+ "per_event_tower_fields": []
+}
