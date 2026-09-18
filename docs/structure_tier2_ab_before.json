@@ -1,0 +1,10 @@
+{
+ "runs/rand100_eval|build_payload": "ERR:PermissionError",
+ "runs/rand100_eval|build_solo_payload": "ERR:PermissionError",
+ "runs/rand100_eval|build_replays_payload": "2c6f586e2e17cc439eff",
+ "runs/rand100_eval|build_card_stats_payload": "b9832f85c2184347780c",
+ "runs/et_ctrl100k|build_payload": "ERR:PermissionError",
+ "runs/et_ctrl100k|build_solo_payload": "ERR:PermissionError",
+ "runs/et_ctrl100k|build_replays_payload": "0efd3f72c117ca521dc7",
+ "runs/et_ctrl100k|build_card_stats_payload": "47d48af506e097530457"
+}

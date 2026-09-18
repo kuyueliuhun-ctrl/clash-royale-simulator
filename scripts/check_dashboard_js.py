@@ -227,12 +227,37 @@ process.exit(fail2 ? 1 : 0);
 
 
 def extract_js():
-    with io.open(_DASH, encoding="utf-8") as f:
-        src = f.read()
-    m = re.search(r"<script>(.*?)</script>", src, re.S)
-    if not m:
-        raise SystemExit("[FAIL] dashboard.py 里找不到 <script> 块")
-    return m.group(1)
+    """抽出内嵌页面的 `<script>` 块内容。
+
+    ⚠️ **2026-09-19（Tier 2 · T2-1）**：页面常量 `_HTML` 已从 `rl/dashboard.py` 抽到
+    `rl/dashboard_html.py` ⇒ 本函数原先"只读 `dashboard.py` 源码文本"的做法会**直接失效**
+    （实测报 `[FAIL] dashboard.py 里找不到 <script> 块`）。现按**优先级**取：
+
+      1. `rl/dashboard_html.py`（当前位置）；
+      2. `rl/dashboard.py`（抽走前的历史位置 —— 保留，向后兼容）；
+      3. 都找不到时，**退化为 import** `rl.dashboard._HTML`（最权威，但要拉起 torch）。
+
+    抽走前后本函数返回的字符串**逐字相同**（T2-1 的 sha256 对账已证 `_HTML` 值不变）。
+    """
+    for path in (os.path.join(_SRC, "rl", "dashboard_html.py"), _DASH):
+        if not os.path.isfile(path):
+            continue
+        with io.open(path, encoding="utf-8") as f:
+            src = f.read()
+        m = re.search(r"<script>(.*?)</script>", src, re.S)
+        if m:
+            return m.group(1)
+    # 退化路径：直接取常量（权威但重）
+    try:
+        sys.path.insert(0, _SRC)
+        from rl.dashboard import _HTML as _html  # noqa
+        m = re.search(r"<script>(.*?)</script>", _html, re.S)
+        if m:
+            return m.group(1)
+    except Exception as e:  # pragma: no cover
+        raise SystemExit(f"[FAIL] 既读不到 dashboard_html.py / dashboard.py 的 <script>，"
+                         f"也 import 不到 rl.dashboard._HTML：{e!r}")
+    raise SystemExit("[FAIL] dashboard_html.py / dashboard.py / rl.dashboard._HTML 里都找不到 <script> 块")
 
 
 def _node_runner():
