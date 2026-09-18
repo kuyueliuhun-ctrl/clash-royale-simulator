@@ -1,0 +1,39 @@
+$ E:\clash-royale-simulator-main\.venv\Scripts\python.exe E:\clash-royale-simulator-main\scripts\offline_engagement_trade.py --replays E:\clash-royale-simulator-main\src\clasher_new\runs\et_solo100k\replays\league_32000.pkl --phi-mode global --tower-mode p4b
+
+================================================================================
+离线「局面圣水交换」仪器（S2 仪器，只读回放）
+================================================================================
+  league_32000.pkl                             schema=5  games=20   实体元组长度={15: 2471}
+
+[v 来源] 帧内真值（schema≥5 带帧内 v0/v1 ⇒ 精确；否则重建 ⇒ 近似，见文档 §11.5）
+[口径] settle_frames=1（=30 tick）｜identity=core｜tower_mode=p4b｜tower_transfer=zero-sum｜phi_mode=global｜recon=costname｜θ=1.0
+
+① 局面窗口 3162 个（158.10 个/局）｜跨度(帧): n=3162 min=+1.00 p25=+2.00 med=+2.00 p75=+2.00 max=+193.00 mean=+4.16 σ=17.01 MAD=0.00
+   结算原因: {'split_or_vanish': 3018, 'merge': 97, 'episode_end': 40, 'no_engagement_K': 7}
+   Trade_p0: n=3162 min=-4.71 p25=-0.00 med=+0.36 p75=+0.36 max=+9.75 mean=+0.13 σ=1.06 MAD=0.00
+   τ(p4b): n=3162 min=+0.00 p25=+0.00 med=+0.00 p75=+0.00 max=+6.75 mean=+0.11 σ=0.58 MAD=0.00
+   窗口内敌方死亡注销额: n=3162 min=+0.00 p25=+0.00 med=+0.00 p75=+0.00 max=+5.00 mean=+0.04 σ=0.34 MAD=0.00
+   ★ τ == kill_credit 的窗口占比 = 91.4%（τ ≤ kill_credit 占比 91.6%）
+
+③ 「被非塔实体钉住」的窗口占比 = 8.8%；其中零死亡（钉住但没打死）= 6.9%（占有钉住窗口 77.8%）
+   宽口径（任意跨边含塔）窗口占比 = 100.0%
+   钉住未杀窗口的 Trade_p0: n=217 min=-4.52 p25=-0.00 med=+0.12 p75=+0.48 max=+3.12 mean=-0.10 σ=0.97 MAD=0.13
+
+④ score>0 窗口占比 = 2.8%
+   ★ 门禁·优势兑现率（N=40 帧 = 20 s，θ=1.0）: 合格窗口 88 个（4.4/局）
+     兑现率 = 98.9%（花费达标 88.6% ／ 打出塔伤 78.4%）
+   对账 |净支出(原始圣水) − ΔΦ| : n=3162 min=+0.00 p25=+0.00 med=+0.36 p75=+0.36 max=+25.78 mean=+0.51 σ=2.41 MAD=0.00
+   反对称：max|Trade_p0 + Trade_p1| = 0.000e+00
+   ★ 重建 V vs 帧内真值 V：max 误差 = 5.000e+00（schema 5 专有对账）
+   秩相关(局级 Trade vs 终局 Φ 差) = -0.211
+   秩相关(局级 Trade 去掉 τ vs 终局 Φ 差) = -0.191
+
+窗口样例（跨度前 8）:
+   [   2, 194] episode_end      span=193  ΔΦ=(+7.42,+4.64) τ=+4.00 kill=+4.00 Trade0=+4.78 score=+3.78
+   [  15, 187] episode_end      span=173  ΔΦ=(+5.80,+2.32) τ=+4.00 kill=+3.00 Trade0=+5.48 score=+4.48
+   [   2, 172] episode_end      span=171  ΔΦ=(+9.38,+6.64) τ=+4.00 kill=+3.00 Trade0=+4.74 score=+3.74
+   [  17, 187] episode_end      span=171  ΔΦ=(+5.44,+1.96) τ=+4.00 kill=+3.00 Trade0=+5.48 score=+4.48
+   [  15, 180] episode_end      span=166  ΔΦ=(+7.49,+4.32) τ=+4.00 kill=+3.00 Trade0=+5.17 score=+4.17
+   [  16, 181] episode_end      span=166  ΔΦ=(+8.49,+2.14) τ=+6.75 kill=+5.00 Trade0=+9.73 score=+8.73
+   [  17, 181] episode_end      span=165  ΔΦ=(+8.32,+1.96) τ=+6.50 kill=+5.00 Trade0=+9.60 score=+8.60
+   [  17, 180] episode_end      span=164  ΔΦ=(+7.14,+3.96) τ=+4.00 kill=+3.00 Trade0=+5.17 score=+4.17

@@ -1,0 +1,39 @@
+$ E:\clash-royale-simulator-main\.venv\Scripts\python.exe E:\clash-royale-simulator-main\scripts\offline_engagement_trade.py --replays E:\clash-royale-simulator-main\src\clasher_new\runs\et_ctrl100k\replays\league_64000.pkl --phi-mode global --tower-mode p4b
+
+================================================================================
+离线「局面圣水交换」仪器（S2 仪器，只读回放）
+================================================================================
+  league_64000.pkl                             schema=5  games=20   实体元组长度={15: 2533}
+
+[v 来源] 帧内真值（schema≥5 带帧内 v0/v1 ⇒ 精确；否则重建 ⇒ 近似，见文档 §11.5）
+[口径] settle_frames=1（=30 tick）｜identity=core｜tower_mode=p4b｜tower_transfer=zero-sum｜phi_mode=global｜recon=costname｜θ=1.0
+
+① 局面窗口 4566 个（228.30 个/局）｜跨度(帧): n=4566 min=+1.00 p25=+2.00 med=+2.00 p75=+8.00 max=+134.00 mean=+6.86 σ=10.10 MAD=1.00
+   结算原因: {'split_or_vanish': 1989, 'merge': 2486, 'episode_end': 71, 'no_engagement_K': 20}
+   Trade_p0: n=4566 min=-14.33 p25=-0.50 med=+0.00 p75=+0.67 max=+10.37 mean=+0.05 σ=2.36 MAD=0.58
+   τ(p4b): n=4566 min=+0.00 p25=+0.00 med=+0.25 p75=+1.00 max=+10.75 mean=+0.83 σ=1.38 MAD=0.25
+   窗口内敌方死亡注销额: n=4566 min=+0.00 p25=+0.00 med=+0.00 p75=+0.00 max=+7.33 mean=+0.40 σ=1.14 MAD=0.00
+   ★ τ == kill_credit 的窗口占比 = 39.5%（τ ≤ kill_credit 占比 49.5%）
+
+③ 「被非塔实体钉住」的窗口占比 = 66.9%；其中零死亡（钉住但没打死）= 48.8%（占有钉住窗口 72.9%）
+   宽口径（任意跨边含塔）窗口占比 = 100.0%
+   钉住未杀窗口的 Trade_p0: n=2227 min=-10.00 p25=-1.00 med=+0.00 p75=+0.75 max=+8.00 mean=-0.08 σ=2.38 MAD=0.83
+
+④ score>0 窗口占比 = 23.0%
+   ★ 门禁·优势兑现率（N=40 帧 = 20 s，θ=1.0）: 合格窗口 1055 个（52.8/局）
+     兑现率 = 95.5%（花费达标 93.2% ／ 打出塔伤 52.7%）
+   对账 |净支出(原始圣水) − ΔΦ| : n=4566 min=+0.00 p25=+0.00 med=+0.00 p75=+0.00 max=+0.36 mean=+0.05 σ=0.10 MAD=0.00
+   反对称：max|Trade_p0 + Trade_p1| = 0.000e+00
+   ★ 重建 V vs 帧内真值 V：max 误差 = 1.136e+01（schema 5 专有对账）
+   秩相关(局级 Trade vs 终局 Φ 差) = +0.608
+   秩相关(局级 Trade 去掉 τ vs 终局 Φ 差) = +0.624
+
+窗口样例（跨度前 8）:
+   [  29, 162] merge            span=134  ΔΦ=(-0.07,+2.93) τ=+0.00 kill=+6.67 Trade0=-3.00 score=+0.00
+   [  65, 159] merge            span=95   ΔΦ=(-0.70,-0.37) τ=+0.00 kill=+3.67 Trade0=-0.33 score=+0.00
+   [ 163, 251] merge            span=89   ΔΦ=(+6.03,-2.97) τ=+0.00 kill=+6.33 Trade0=+9.00 score=+8.00
+   [ 112, 191] merge            span=80   ΔΦ=(-3.71,-0.71) τ=+0.00 kill=+3.33 Trade0=-3.00 score=+0.00
+   [ 132, 209] merge            span=78   ΔΦ=(-1.07,-1.40) τ=+0.00 kill=+3.33 Trade0=+0.33 score=+0.00
+   [ 134, 211] merge            span=78   ΔΦ=(-1.07,-0.07) τ=+0.00 kill=+6.67 Trade0=-1.00 score=+0.00
+   [ 135, 211] merge            span=77   ΔΦ=(-1.25,-0.25) τ=+0.00 kill=+6.67 Trade0=-1.00 score=+0.00
+   [ 204, 277] merge            span=74   ΔΦ=(+1.33,+4.99) τ=+0.00 kill=+6.67 Trade0=-3.67 score=+0.00
