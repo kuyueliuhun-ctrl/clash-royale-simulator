@@ -719,10 +719,53 @@ def _make_env(cfg, seed):
                  card_level=cfg.card_level)
 
 
+def _report_trainer_wiring(cfg, ppo):
+    """把「**实际生效**的 PPO 更新预算」打进日志（H1，2026-09-19）。
+
+    背景：`run` 模式的 argparse **确实**收下 `--ppo-epochs / --ppo-minibatch / --ppo-shuffle /
+    --value-norm / --diagnose-every` 并写进 `cfg`（见 main() 的 overrides 段），
+    但 `_make_trainer` 的 8 参调用**没有**把它们传给 `PPOTrainer`
+    ⇒ 实际生效值 = 构造函数默认（`n_epochs=1, minibatch_size=0, shuffle=False,
+    value_norm="none", diagnose_every=0`）。这段差异以前**在日志里不可见**，
+    会让人按 `--ppo-epochs 4` 去解读运行结果与成本。
+
+    ⚠️ **本函数只报告，不改行为**（【R2】：默认参数 = 旧行为；要真正接线必须单独拍板 + 预注册）。
+    实测断言见 `scripts/probe_run_trainer_params.py`（5/5，含"显式传就会生效"的反向用例）。
+    """
+    req = {
+        "ppo_epochs": int(cfg.ppo_epochs),
+        "ppo_minibatch": int(cfg.ppo_minibatch),
+        "ppo_shuffle": bool(cfg.ppo_shuffle),
+        "value_norm": str(cfg.value_norm),
+        "diagnose_every": int(cfg.diagnose_every),
+    }
+    eff = {
+        "ppo_epochs": int(ppo.n_epochs),
+        "ppo_minibatch": int(ppo.minibatch_size),
+        "ppo_shuffle": bool(ppo.shuffle),
+        "value_norm": str(ppo.value_norm),
+        "diagnose_every": int(ppo.diagnose_every),
+    }
+    print(f"[run] PPO 生效预算: epochs={eff['ppo_epochs']} minibatch={eff['ppo_minibatch']} "
+          f"shuffle={eff['ppo_shuffle']} value_norm={eff['value_norm']} "
+          f"diagnose_every={eff['diagnose_every']}", flush=True)
+    diff = {k: (req[k], eff[k]) for k in req if req[k] != eff[k]}
+    if diff:
+        # ⚠️ 本行**只用 GBK 可编码字符**（不用 ⇒ / ⚠ 之类）：训练日志可能被 GBK 终端消费，
+        # 而 stdout 未必已切 UTF-8（本环境实测 `PYTHONIOENCODING=utf-8` 不生效）。
+        # 2026-09-19 真事故：用了 '⇒' ⇒ 本函数在探针里抛 UnicodeEncodeError('gbk')。
+        print("[run][WARN] 以下 CLI/预设开关在 run 模式**不生效**（只进了 cfg，未传给 PPOTrainer）："
+              f"{diff} -> 每 update 只走 legacy 单批路径（1 次 opt.step()）；"
+              "详见 docs/agents/structure.md 的 H1 与 scripts/probe_run_trainer_params.py",
+              flush=True)
+
+
 def _make_trainer(main, cfg):
-    return PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
-                      clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
-                      max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm)
+    ppo = PPOTrainer(main, lr=cfg.lr, gamma=cfg.gamma, gae_lambda=cfg.gae_lambda,
+                     clip=cfg.clip, vf_coef=cfg.vf_coef, ent_coef=cfg.ent_coef,
+                     max_grad_norm=cfg.max_grad_norm, adv_norm=cfg.adv_norm)
+    _report_trainer_wiring(cfg, ppo)
+    return ppo
 
 
 def _load_run_state(cfg):

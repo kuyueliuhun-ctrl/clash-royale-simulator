@@ -22,7 +22,16 @@
 """
 
 
-#: 默认奖励权重（与 rl/config.DEFAULT_REWARD 保持一致；勿单独改一处）
+#: 默认奖励权重 —— **env 侧基表**（`compute_reward` 的基线，`reward.py:197` 起合并）。
+#: ⚠️ 与 `rl/config.DEFAULT_REWARD`（**22 键**）**不是同一张表**：本表 **16 键**，差的 6 键为
+#:   ① 5 个 `engagement_trade*`：**config-only 的设计选择**（只有经 `reward_to_env()` 才进 env）；
+#:   ② `draw_penalty`：**真实缺口** —— 本文件的 `compute_reward` 用
+#:      `.get("draw_penalty", rw["lose_penalty"])` 回退，所以裸 `RLEnv()` 的平局罚 = `lose_penalty`
+#:      （**数值上今天恰好相等**，因为两者缺省都是 10.0；一旦有人自定义 `lose_penalty` 而不传
+#:      `draw_penalty`，或者把 `draw_penalty` 补进本表，行为就会变）。
+#:   **两表共有的 16 键取值必须逐键相同** ⇒ 由 `scripts/selftest_reward_tables.py` 对账（【R7】，6/6）。
+#: 历史：2026-09-19 之前此处写「与 rl/config.DEFAULT_REWARD 保持一致；勿单独改一处」——
+#: **那句话与代码不符**（差 6 键），已按事实改写。
 #: reward v2（2026 重构）：费差=资源账（手牌圣水+场上部署份额）；价格两段离散
 #: （120s 切双倍：tower_dmg_late 塔血贵、elixir_diff_late 费贱）；unit_dmg_k 单位受伤 shaping。
 _DEFAULT_REWARD = {
