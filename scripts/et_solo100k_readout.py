@@ -626,6 +626,89 @@ def render(report):
     return "\n".join(L)
 
 
+def render_judgment(report, logs):
+    """按预注册 §11.13.8 的**必写条目**顺序，生成判读文档骨架。
+
+    ⚠️ 本函数只做两件事：① 把**静态条目**（声明/更正清单/明确未做/台账落点）写全；
+    ② 把四层读数与**可机械计算的谓词**填进去。它**不替人下判决** —— 依赖方向判断的分支
+    （§11.13.4 的 1、2）只列**输入**并标「须人工判读」，因为 §11.13.11 已实测
+    n=1 时胜率/奖励层差异**不可归因**。
+    """
+    L = []
+    A = L.append
+    A("# `et_solo100k` 判读（`A_et` vs `B_ctrl`）—— 按预注册 §11.13.8 结构\n")
+
+    # ---- 1) 置顶声明（§11.13.3，必须置顶）----
+    A("## 0. ★ 不构成判决声明（预注册 §11.13.3，逐条）\n")
+    A("1. **缺阳性对照**（§5.2 的 `C_pos = elixir_diff_weight 0.5→0`）⇒ 按 §5.2 **无法判 `VALID`**。")
+    A("2. **n = 1 seed/臂**（§8 原本要求 2 seed/臂）⇒ 按【R5】**只能看大效应**；跨 run 数字不可直接比。")
+    A("3. ⇒ 本轮**只出「观察 + 机制层读数」**；**不得**写成「修好了」或「确认无效」；")
+    A("   只允许三种写法：**观察到什么 / 未达行为可见阈值 / 不可分辨**。")
+    A("4. ★ **§11.13.11 实测标定**：同 seed 同配置、仅差一个测量开关的运行之间 `eval@8000` 可相差 **0.60**"
+      "（0.800 vs 0.200），而既有**同配置三连跑**末点胜率极差已达 **0.313**"
+      "⇒ **胜率/奖励层的 A vs B 差异在 n=1/臂 下一律不可归因**；失败分支 1、2 **只能读方向**。\n")
+
+    # ---- 2) 臂与命令 + 更正清单 ----
+    A("## 1. 臂、命令与四处更正（必须显式列出，§11.13.8 第 2 条）\n")
+    A("| 臂 | 配置 | 说明 |")
+    A("|---|---|---|")
+    A("| `A_et`（干预） | `--config economy_et` | `engagement_trade = 0.5`，与 `elixir_diff_weight` **同汇率**（【R7】） |")
+    A("| `B_ctrl`（阴性对照） | `--config economy_etm` | `= economy`；**唯一**有效差异 `engagement_trade_measure_only 0→1` |")
+    A("")
+    A("两臂逐字同参同 seed、`solo` 模式、顺序串跑，且**均带** `--adv-inert-probe` 与 `--diagnose-every 1`。")
+    A("")
+    A("**四处发射/口径更正（都不是最初的命令）**：")
+    A("")
+    A("| # | 节 | 问题 | 处置 |")
+    A("|---|---|---|---|")
+    A("| 1 | §11.13.6 | 首次发射**漏 `--adv-inert-probe`** ⇒ `resid_norm`/`grad_cos` 读不出来（日志 0 行） | 两臂对称补上后重启（纯测量） |")
+    A("| 2 | §11.13.7 | `_set_et_measure` 使 `--config economy` 的**评估录像没有 `et`** ⇒ 门禁对照列为空 | 对照臂改 `economy_etm` |")
+    A("| 3 | §11.13.9 | §11.13.2 **自身不一致**：`diagnose_every 10` 下 100k 只有 ~76 点 ⇒ `n_later = 0`、**主判据不可执行** | **不改 N**（那会犯【R16】），改采集：两臂 `--diagnose-every 1` |")
+    A("| 4 | §11.13.10 | 门禁行把**指标**（兑现率）与**仪器**（`analyze_online_trade`）写岔了 —— 兑现率只在 `offline_engagement_trade` 里 | 两者都算：层 3a 离线口径 + 层 3b 在线口径 |")
+    A("")
+    A(f"日志：`A_et` = `{logs[0]}`；`B_ctrl` = `{logs[1]}`\n")
+
+    # ---- 3) 四层读数（固定顺序）----
+    A("## 2. 四层读数（**脚本复算**，顺序 = 机制（主）→ 行为 → 门禁 → 项体检）\n")
+    # 内嵌时把 render() 的 `##` 降一级，避免与外层章节号打架
+    A(render(report).replace("\n## ", "\n### "))
+    A("")
+
+    # ---- 4) 失败分支判定表 ----
+    mech = report.get("mechanism") or {}
+    ev = report.get("ev") or {}
+    beh = report.get("behaviour") or {}
+    rz = report.get("realization") or {}
+    ind = list(mech.get("indistinguishable_metrics") or []) + list(ev.get("indistinguishable_metrics") or [])
+    all_ind = bool(mech.get("all_indistinguishable")) and bool(
+        (ev.get("compare") or {}).get("EVb", {}).get("indistinguishable"))
+    A("## 3. 失败分支逐条判定（§11.13.4；依据必须写出）\n")
+    A("| # | 分支 | 机械输入 | 判定 |")
+    A("|---|---|---|---|")
+    A(f"| 1 | 机制层改善但行为层三项全无改善 ⇒ 未达行为可见阈值 | 行为层配对差见层 2 的 `A_et − B_ctrl` 表 | **须人工判读**（依赖方向；且 §11.13.11 限制） |")
+    A(f"| 2 | 门禁（兑现率）显著低于 `B_ctrl` ⇒ 买到只守不推 | 层 3a 逐批兑现率配对差（方向计数见该表下方） | **须人工判读**（n=1 ⇒ 只能读方向） |")
+    A(f"| 3 | 跨臂差异 < 两者自身窗口散布 ⇒ 不可分辨 | 机制层判「不可分辨」的指标 = `{', '.join(ind) or '（无）'}` | **{'触发' if all_ind else '未触发'}** |")
+    A(f"| 4 | 训练跑不动/降级/异常 ⇒ 按【R1】先归因外部、不自动降档 | 各层 status：机制 `{mech.get('status')}` / 行为 `{beh.get('status')}` / 兑现率 `{rz.get('status')}` | **须人工判读**（异常须在正文留证） |")
+    A("")
+
+    # ---- 5) 明确未做 ----
+    A("## 4. 明确未做（§11.13.8 第 5 条）\n")
+    A("- **没有**跑阳性对照 `C_pos`（`elixir_diff_weight 0.5→0`）⇒ 按 §5.2 无法判 `VALID`。")
+    A("- **没有**跑 2 seed/臂（§8 的原始要求）⇒ 无法把差异与 run 间散布区分开。")
+    A("- **没有**用 §11.10 的 λ 扫描去挑权重（那是 in-sample 事后选择，【R16】禁止）。")
+    A("- **没有**因为单点胜率难看而改档/降级（【R1】：先归因外部，本轮实测一次 worker 收尾空转即属此类）。")
+    A("- **没有**改任何判据（N 仍 = 100）；四处更正全部在**测量侧**，依据是代码核对与回归测试。")
+    A("")
+
+    # ---- 6) 台账落点 ----
+    A("## 5. 台账落点（§11.13.8 第 6 条）\n")
+    A("- `docs/agents/ledger.md`：新增/更新结论条目（X 或 O）。")
+    A("- `docs/agents/plans_runs_docs.md` §8：run 台账行。")
+    A("- `AGENTS.md`：加/改一行指针（`python3 scripts/_agents_split.py --check` 必须 PASS）。")
+    A("- 本文件同目录的原始仪器输出（`*.txt`）作为证据一并保留。")
+    return "\n".join(L)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--log-a", required=True)
@@ -634,6 +717,8 @@ def main():
     ap.add_argument("--run-b", required=True)
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--markdown", default=None)
+    ap.add_argument("--judgment", default=None,
+                    help="按预注册 §11.13.8 结构输出判读文档（静态条目 + 四层读数 + 分支输入表）")
     ap.add_argument("--json", dest="json_path", default=None)
     ap.add_argument("--baseline-n", type=int, default=100)
     ap.add_argument("--baseline-k", type=float, default=3.0)
@@ -653,6 +738,11 @@ def main():
     if args.markdown:
         with open(args.markdown, "w", encoding="utf-8") as f:
             f.write(md + "\n")
+    if args.judgment:
+        jm = render_judgment(report, (args.log_a, args.log_b))
+        with open(args.judgment, "w", encoding="utf-8") as f:
+            f.write(jm + "\n")
+        print(f"\n[judgment] §11.13.8 结构判读骨架已写出：{args.judgment}")
     if args.json_path:
         with open(args.json_path, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2, default=str)
