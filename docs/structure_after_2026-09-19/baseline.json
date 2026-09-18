@@ -1,0 +1,292 @@
+{
+ "areas": {
+  "engine_top": {
+   "files": 28,
+   "loc": 9581
+  },
+  "rl": {
+   "files": 41,
+   "loc": 23869
+  },
+  "scripts": {
+   "files": 102,
+   "loc": 26859
+  },
+  "_total": {
+   "files": 171,
+   "loc": 60309
+  }
+ },
+ "utf8": {
+  "count": 3,
+  "distinct_bodies": 3,
+  "identical": false,
+  "impls": {
+   "src/clasher_new/rl/dashboard.py": {
+    "lineno": 3033,
+    "digest": "9b949de4af47"
+   },
+   "src/clasher_new/rl/run_league.py": {
+    "lineno": 1538,
+    "digest": "120119f112c6"
+   },
+   "scripts/probe_value_ln.py": {
+    "lineno": 116,
+    "digest": "c6d01f8c80cc"
+   }
+  }
+ },
+ "layering": {
+  "engine_files": 28,
+  "reverse_edges": 0,
+  "reverse_files": [],
+  "ok": true
+ },
+ "deadfiles": {
+  "checked": 15,
+  "revived": 0,
+  "revived_paths": [],
+  "ok": true
+ },
+ "abspaths": {
+  "hits": 9,
+  "files": 7,
+  "detail": [
+   {
+    "file": "scripts/_schema5_probe.py",
+    "lineno": 10,
+    "path": "E:\\clash-royale-simulator-main\\scripts"
+   },
+   {
+    "file": "scripts/assassin_left_bridge_test.py",
+    "lineno": 7,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new"
+   },
+   {
+    "file": "scripts/assassin_vs_megaknight.py",
+    "lineno": 7,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new"
+   },
+   {
+    "file": "scripts/assassin_vs_sparky.py",
+    "lineno": 9,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new"
+   },
+   {
+    "file": "scripts/duel_search.py",
+    "lineno": 14,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new"
+   },
+   {
+    "file": "scripts/question_bank_poc.py",
+    "lineno": 9,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new"
+   },
+   {
+    "file": "scripts/question_bank_poc.py",
+    "lineno": 217,
+    "path": "E:/clash-royale-simulator-main/runs/archive/"
+   },
+   {
+    "file": "scripts/question_bank_poc.py",
+    "lineno": 219,
+    "path": "E:/clash-royale-simulator-main/src/clasher_new/"
+   },
+   {
+    "file": "scripts/s2_trade_probe.py",
+    "lineno": 12,
+    "path": "E:\\clash-royale-simulator-main\\scripts"
+   }
+  ],
+  "ok": false
+ },
+ "lazyimp": {
+  "per_file": {
+   "src/clasher_new/rl/__init__.py": {
+    "top": 2,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/action_bundle.py": {
+    "top": 6,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/action_mask.py": {
+    "top": 7,
+    "lazy": 2
+   },
+   "src/clasher_new/rl/bayes_filter.py": {
+    "top": 4,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/belief.py": {
+    "top": 9,
+    "lazy": 5
+   },
+   "src/clasher_new/rl/belief_planner.py": {
+    "top": 7,
+    "lazy": 3
+   },
+   "src/clasher_new/rl/config.py": {
+    "top": 3,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/dashboard.py": {
+    "top": 13,
+    "lazy": 9
+   },
+   "src/clasher_new/rl/decks.py": {
+    "top": 7,
+    "lazy": 2
+   },
+   "src/clasher_new/rl/diagnostics.py": {
+    "top": 3,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/elo.py": {
+    "top": 2,
+    "lazy": 2
+   },
+   "src/clasher_new/rl/engagement.py": {
+    "top": 1,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/env_wrapper.py": {
+    "top": 14,
+    "lazy": 3
+   },
+   "src/clasher_new/rl/evaluate.py": {
+    "top": 16,
+    "lazy": 2
+   },
+   "src/clasher_new/rl/export_replay.py": {
+    "top": 9,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/flow_league.py": {
+    "top": 22,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/follower.py": {
+    "top": 10,
+    "lazy": 3
+   },
+   "src/clasher_new/rl/human_play.py": {
+    "top": 18,
+    "lazy": 4
+   },
+   "src/clasher_new/rl/launcher_menu.py": {
+    "top": 5,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/league.py": {
+    "top": 5,
+    "lazy": 4
+   },
+   "src/clasher_new/rl/mcts.py": {
+    "top": 12,
+    "lazy": 8
+   },
+   "src/clasher_new/rl/observation.py": {
+    "top": 3,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/opponents.py": {
+    "top": 6,
+    "lazy": 1
+   },
+   "src/clasher_new/rl/pfsp.py": {
+    "top": 4,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/plan_space.py": {
+    "top": 5,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/ppo.py": {
+    "top": 7,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/prophet.py": {
+    "top": 6,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/replay.py": {
+    "top": 4,
+    "lazy": 5
+   },
+   "src/clasher_new/rl/run_league.py": {
+    "top": 26,
+    "lazy": 10
+   },
+   "src/clasher_new/rl/selftest.py": {
+    "top": 7,
+    "lazy": 471
+   },
+   "src/clasher_new/rl/threat_precise.py": {
+    "top": 3,
+    "lazy": 7
+   },
+   "src/clasher_new/rl/train_baseline.py": {
+    "top": 11,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/train_bc.py": {
+    "top": 12,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/train_belief.py": {
+    "top": 9,
+    "lazy": 6
+   },
+   "src/clasher_new/rl/train_exploiter.py": {
+    "top": 10,
+    "lazy": 1
+   },
+   "src/clasher_new/rl/train_follower.py": {
+    "top": 16,
+    "lazy": 1
+   },
+   "src/clasher_new/rl/train_health.py": {
+    "top": 3,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/train_prophet.py": {
+    "top": 12,
+    "lazy": 0
+   },
+   "src/clasher_new/rl/train_solo.py": {
+    "top": 22,
+    "lazy": 16
+   },
+   "src/clasher_new/rl/workers.py": {
+    "top": 10,
+    "lazy": 1
+   }
+  },
+  "all": {
+   "top": 351,
+   "lazy": 566,
+   "total": 917,
+   "lazy_frac": 0.6172
+  },
+  "excl_selftest": {
+   "top": 344,
+   "lazy": 95,
+   "total": 439,
+   "lazy_frac": 0.2164
+  },
+  "top": 351,
+  "lazy": 566,
+  "total": 917,
+  "lazy_frac": 0.6172
+ },
+ "selftest": {
+  "defined": 100,
+  "called_in_main": 100,
+  "defined_not_called": [],
+  "called_not_defined": [],
+  "has_main": true,
+  "loc": 5909,
+  "ok": true
+ }
+}

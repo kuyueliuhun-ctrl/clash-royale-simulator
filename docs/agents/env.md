@@ -104,6 +104,14 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/run_selftests.py`（2026-09-14） | 按名跑**子集** selftest（【R19】默认用法；不改 `selftest.py`） |
 | `scripts/check_dashboard_js.py`（2026-09-17，**2026-09-18 加 health 正面路径**） | **dashboard 前端回归**：node + DOM 桩跑内嵌 JS 渲染冒烟（经 stdin 管道；Windows 下回退 `wsl.exe node`）；**`--league-run runs/<name>`** 加跑联赛/长跑面板（进度条+大点+胜率曲线）。2026-09-18 新增「训练健康」面板回归：用后端**真实** `build_health_payload`（同一个实现，不造假数据）跑**正面路径**——断言图例含「策略熵」、注里出现**平台读数**与「非预注册判据」，另加「无日志不抛」空分支。⚠️ 这条正面路径**上线当天就抓到一个真 bug**（仓库根推错一层 ⇒ 面板永远"没有日志"，见 `docs/train_health_metrics_2026-09-18.md` §8.2）——只测"没数据不抛"是抓不到的 |
 
+> **📋 全量登记表（2026-09-19 加，Tier 0 · T0-3）**：**本表只登记判读/诊断主用工具**——
+> 实测本表引用了 **34** 个 `.py` 名，而 `scripts/` 顶层实有 **91** 个 `.py` ⇒ **57 个未登记**
+> （另有 11 个 `scripts/rl/*.py` 包装脚本与 14 个 `.sh/.ps1/.js`）。
+> **全量清单**（每个脚本的 docstring 首行 / 是否含 `--selftest` / `assert` 数 / 是否已被本表登记）
+> 见 [`scripts_inventory.md`](scripts_inventory.md) —— 由脚本抽取，**不手抄**。
+> ⚠️ **两套口径并列**（【R17】）：本段按**顶层 `scripts/*.py`（91 个）**算「未登记 57」；
+> `docs/structure_optimization_plan_2026-09-19.md` §5 写的「69 个未登记」按**含 `.sh/.ps1/.js` 与 `scripts/rl/` 的 105 个文件**算 ⇒ 两者**不调和**，引用时须带口径。
+
 > **脚本对手陷阱**：`ScriptedPolicy(mode="heuristic")` 实为 **mask 随机**（P0-3 时代占位）；
 > 要"会防守的脚本对手"必须用 `SelfDefenderPolicy`——其反制落点是**世界坐标**，
 > 塞进 `ActionBundle` 前必须做**世界→本地网格逆变换**（P1 有镜像；曾直接塞导致部署非法）。

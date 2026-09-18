@@ -1,20 +1,43 @@
 import json
+import os
 # （原依赖 fastcore.nested_idx，仅一处嵌套取值，已内联等价实现——消除非必要依赖）
 
-with open('gamedata.json', encoding='utf-8') as f:
+
+def _resolve_data(name: str) -> str:
+    """数据文件路径解析（T0-4：**只加报错信息，不改 cwd 契约**）。
+
+    本仓历史契约是「**裸相对路径** ⇒ cwd 必须是 `src/clasher_new`」（见
+    `docs/structure_optimization_plan_2026-09-19.md` §4.4：`card_utils` 是全仓
+    importer 最多的模块，20 个）。本函数**故意不**改成
+    `os.path.join(os.path.dirname(__file__), name)` —— 那会改掉该契约，
+    属 Tier 3 的 **T3-2** 范围，必须与数据文件归拢一起做并对账。
+
+    这里只做一件事：把「打不开」从裸 `FileNotFoundError: gamedata.json`
+    （看不出 cwd 问题）变成**带期望 cwd 的报错**。成功路径返回**原样的裸文件名**
+    ⇒ 行为逐字不变。
+    """
+    if not os.path.exists(name):
+        raise FileNotFoundError(
+            "数据文件 {!r} 不存在。当前 cwd = {!r}；本仓约定 cwd 必须为 {!r}（src/clasher_new）。"
+            "请在 src/clasher_new 下运行，或经 scripts/rl/*.py 包装脚本（它们会 os.chdir）。".format(
+                name, os.getcwd(), os.path.dirname(os.path.abspath(__file__))))
+    return name
+
+
+with open(_resolve_data('gamedata.json'), encoding='utf-8') as f:
     data = json.load(f)
 
-with open('cards_stats_characters.json', encoding='utf-8') as f:
+with open(_resolve_data('cards_stats_characters.json'), encoding='utf-8') as f:
     characters_data = json.load(f)
     air_units = [each['name'] for each in characters_data if each['flying_height'] != 0]
     characters = {each['name']:each for each in characters_data}
-with open('cards_stats_spell.json', encoding='utf-8') as f:
+with open(_resolve_data('cards_stats_spell.json'), encoding='utf-8') as f:
     spells_data = json.load(f)
     spells = {each['name']:each for each in spells_data}
-with open('cards_stats_building.json', encoding='utf-8') as f:
+with open(_resolve_data('cards_stats_building.json'), encoding='utf-8') as f:
     buildings_data = json.load(f)
     buildings = {each['name']:each for each in buildings_data}
-with open('cards_stats_projectile.json', encoding='utf-8') as f:
+with open(_resolve_data('cards_stats_projectile.json'), encoding='utf-8') as f:
     projectiles = {each['name']:each for each in json.load(f)}
 
 data = data['items']['spells']
