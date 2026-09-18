@@ -1,0 +1,770 @@
+{
+ "mode": "stats",
+ "replays_scanned": 1000,
+ "replays_total_in_shard": 5000,
+ "key_presence": {
+  "": 1000,
+  "battle": 1000,
+  "battle.battle_type": 1000,
+  "battle.game_mode": 1000,
+  "battle.opponent": 1000,
+  "battle.opponent.crowns": 1000,
+  "battle.opponent.players": 1000,
+  "battle.opponent.players[]": 1000,
+  "battle.opponent.players[].average_elixir": 1000,
+  "battle.opponent.players[].deck": 1000,
+  "battle.opponent.players[].deck[]": 1000,
+  "battle.opponent.players[].deck[].card_key": 1000,
+  "battle.opponent.players[].deck[].level": 1000,
+  "battle.opponent.players[].deck[].name": 1000,
+  "battle.opponent.players[].elixir_leaked": 1000,
+  "battle.opponent.players[].final_tower_hitpoints": 1000,
+  "battle.opponent.players[].final_tower_hitpoints.king": 1000,
+  "battle.opponent.players[].final_tower_hitpoints.princess_left": 1000,
+  "battle.opponent.players[].final_tower_hitpoints.princess_right": 1000,
+  "battle.opponent.players[].final_tower_hitpoints.total": 1000,
+  "battle.opponent.players[].four_card_cycle_elixir": 1000,
+  "battle.opponent.players[].tower_card": 1000,
+  "battle.opponent.players[].tower_card.card_key": 1000,
+  "battle.opponent.players[].tower_card.level": 1000,
+  "battle.opponent.players[].tower_card.name": 1000,
+  "battle.result": 1000,
+  "battle.team": 1000,
+  "battle.team.crowns": 1000,
+  "battle.team.players": 1000,
+  "battle.team.players[]": 1000,
+  "battle.team.players[].average_elixir": 1000,
+  "battle.team.players[].deck": 1000,
+  "battle.team.players[].deck[]": 1000,
+  "battle.team.players[].deck[].card_key": 1000,
+  "battle.team.players[].deck[].level": 1000,
+  "battle.team.players[].deck[].name": 1000,
+  "battle.team.players[].elixir_leaked": 1000,
+  "battle.team.players[].final_tower_hitpoints": 1000,
+  "battle.team.players[].final_tower_hitpoints.king": 1000,
+  "battle.team.players[].final_tower_hitpoints.princess_left": 1000,
+  "battle.team.players[].final_tower_hitpoints.princess_right": 1000,
+  "battle.team.players[].final_tower_hitpoints.total": 1000,
+  "battle.team.players[].four_card_cycle_elixir": 1000,
+  "battle.team.players[].tower_card": 1000,
+  "battle.team.players[].tower_card.card_key": 1000,
+  "battle.team.players[].tower_card.level": 1000,
+  "battle.team.players[].tower_card.name": 1000,
+  "collection_schema_version": 1000,
+  "events": 1000,
+  "events[]": 1000,
+  "events[].ability_source_authoritative": 1000,
+  "events[].ability_source_candidates": 1000,
+  "events[].card_key": 1000,
+  "events[].card_play_number": 1000,
+  "events[].coordinates": 1000,
+  "events[].coordinates.arena_label_from_blue": 1000,
+  "events[].coordinates.arena_label_from_blue.column": 1000,
+  "events[].coordinates.arena_label_from_blue.row": 1000,
+  "events[].coordinates.display_royaleapi_units": 1000,
+  "events[].coordinates.display_royaleapi_units.x": 1000,
+  "events[].coordinates.display_royaleapi_units.y": 1000,
+  "events[].coordinates.grid_cell_floor": 1000,
+  "events[].coordinates.grid_cell_floor.x": 1000,
+  "events[].coordinates.grid_cell_floor.y": 1000,
+  "events[].coordinates.inside_18x32_arena": 1000,
+  "events[].coordinates.inversion_applied": 1000,
+  "events[].coordinates.native_world_units": 1000,
+  "events[].coordinates.native_world_units.x": 1000,
+  "events[].coordinates.native_world_units.y": 1000,
+  "events[].coordinates.raw_royaleapi_units": 1000,
+  "events[].coordinates.raw_royaleapi_units.x": 1000,
+  "events[].coordinates.raw_royaleapi_units.y": 1000,
+  "events[].coordinates.subcell_offset_from_floor_center": 1000,
+  "events[].coordinates.subcell_offset_from_floor_center.x": 1000,
+  "events[].coordinates.subcell_offset_from_floor_center.y": 1000,
+  "events[].deck_card_key_candidates": 1000,
+  "events[].deck_card_key_candidates[]": 1000,
+  "events[].form_at_play": 1000,
+  "events[].kind": 1000,
+  "events[].replay_tick_20hz": 1000,
+  "events[].side": 1000,
+  "events[].source_fields": 1000,
+  "events[].source_fields.data_c": 1000,
+  "events[].source_fields.data_i": 1000,
+  "events[].source_fields.data_s": 1000,
+  "events[].source_fields.data_t": 1000,
+  "events[].source_fields.data_x": 1000,
+  "events[].source_fields.data_y": 1000,
+  "events[].source_fields.timeline_card_key": 1000,
+  "events[].source_index": 1000,
+  "events[].time_seconds": 1000,
+  "replay": 1000,
+  "replay.aggregate_stats": 1000,
+  "replay.aggregate_stats.opponent": 1000,
+  "replay.aggregate_stats.opponent.ability": 1000,
+  "replay.aggregate_stats.opponent.ability[]": 1000,
+  "replay.aggregate_stats.opponent.building": 1000,
+  "replay.aggregate_stats.opponent.building[]": 1000,
+  "replay.aggregate_stats.opponent.leaked": 1000,
+  "replay.aggregate_stats.opponent.spell": 1000,
+  "replay.aggregate_stats.opponent.spell[]": 1000,
+  "replay.aggregate_stats.opponent.total": 1000,
+  "replay.aggregate_stats.opponent.total[]": 1000,
+  "replay.aggregate_stats.opponent.troop": 1000,
+  "replay.aggregate_stats.opponent.troop[]": 1000,
+  "replay.aggregate_stats.team": 1000,
+  "replay.aggregate_stats.team.ability": 1000,
+  "replay.aggregate_stats.team.ability[]": 1000,
+  "replay.aggregate_stats.team.building": 1000,
+  "replay.aggregate_stats.team.building[]": 1000,
+  "replay.aggregate_stats.team.leaked": 1000,
+  "replay.aggregate_stats.team.spell": 1000,
+  "replay.aggregate_stats.team.spell[]": 1000,
+  "replay.aggregate_stats.team.total": 1000,
+  "replay.aggregate_stats.team.total[]": 1000,
+  "replay.aggregate_stats.team.troop": 1000,
+  "replay.aggregate_stats.team.troop[]": 1000,
+  "replay.card_counts": 1000,
+  "replay.card_counts.opponent": 1000,
+  "replay.card_counts.team": 1000,
+  "replay.duration": 1000,
+  "replay.duration.display_label": 1000,
+  "replay.duration.display_seconds": 1000,
+  "replay.duration.timeline_seconds": 1000,
+  "schema_version": 1000,
+  "source": 1000,
+  "source.anonymized": 1000,
+  "source.replay_tag": 1000,
+  "source.site": 1000,
+  "validation": 1000,
+  "validation.ability_event_count": 1000,
+  "validation.coordinate_event_count": 1000,
+  "validation.map_marker_count": 1000,
+  "validation.normalized_event_count": 1000,
+  "validation.timeline_event_count": 1000,
+  "validation.unmatched_timeline_event_count": 1000,
+  "replay.card_counts.team.cannon": 353,
+  "replay.card_counts.team.skeletons": 346,
+  "replay.card_counts.opponent.skeletons": 291,
+  "replay.card_counts.team.the-log": 288,
+  "replay.card_counts.opponent.barbarian-barrel": 274,
+  "replay.card_counts.team.goblin-barrel": 274,
+  "replay.card_counts.team.princess": 272,
+  "replay.card_counts.team.barbarian-barrel": 262,
+  "replay.card_counts.team.ice-spirit": 245,
+  "replay.card_counts.opponent.berserker": 227,
+  "replay.card_counts.opponent.the-log": 223,
+  "replay.card_counts.team.mighty-miner": 213,
+  "replay.card_counts.team.electro-spirit": 212,
+  "replay.card_counts.opponent.fireball": 210,
+  "replay.card_counts.team.hog-rider": 201,
+  "replay.card_counts.opponent.zap": 201,
+  "replay.card_counts.team.berserker": 197,
+  "replay.card_counts.team.rocket": 196,
+  "replay.card_counts.opponent.elite-barbarians": 188,
+  "replay.card_counts.opponent.hog-rider": 179,
+  "replay.card_counts.team.zap": 173,
+  "replay.card_counts.opponent.cannon": 172,
+  "replay.card_counts.opponent.bomber": 161,
+  "replay.card_counts.opponent.arrows": 159,
+  "replay.card_counts.team.wall-breakers": 158,
+  "replay.card_counts.opponent.electro-spirit": 155,
+  "replay.card_counts.team.elite-barbarians": 153,
+  "replay.card_counts.opponent.giant-snowball": 143,
+  "replay.card_counts.team.earthquake": 139,
+  "replay.card_counts.team.firecracker": 138,
+  "replay.card_counts.opponent.minions": 134,
+  "replay.card_counts.opponent.tornado": 131,
+  "replay.card_counts.team.valkyrie": 131,
+  "replay.card_counts.team.knight": 130,
+  "replay.card_counts.team.skeleton-army": 127,
+  "replay.card_counts.team.minions": 121,
+  "replay.card_counts.team.tornado": 117,
+  "replay.card_counts.opponent.ice-golem": 114,
+  "replay.card_counts.team.goblin-gang": 113,
+  "replay.card_counts.opponent.lightning": 112,
+  "replay.card_counts.opponent.inferno-dragon": 110,
+  "replay.card_counts.team.dart-goblin": 110,
+  "replay.card_counts.opponent.ice-spirit": 108,
+  "replay.card_counts.opponent.tesla": 107,
+  "replay.card_counts.opponent.balloon": 105,
+  "replay.card_counts.opponent.bowler": 102,
+  "replay.card_counts.team.goblins": 102,
+  "replay.card_counts.team.giant": 101,
+  "replay.card_counts.team.fireball": 99,
+  "replay.card_counts.team.arrows": 98,
+  "replay.card_counts.opponent.skeleton-army": 96,
+  "replay.card_counts.opponent.valkyrie": 96,
+  "replay.card_counts.opponent.firecracker": 92,
+  "replay.card_counts.team.tesla": 92,
+  "replay.card_counts.opponent.battle-ram": 91,
+  "replay.card_counts.team.heal-spirit": 90,
+  "replay.card_counts.team.mortar": 90,
+  "replay.card_counts.opponent.musketeer": 89,
+  "replay.card_counts.team.fire-spirit": 89,
+  "replay.card_counts.team.freeze": 86,
+  "replay.card_counts.opponent.miner": 86,
+  "replay.card_counts.opponent.freeze": 84,
+  "replay.card_counts.team.bowler": 83,
+  "replay.card_counts.team.lightning": 83,
+  "replay.card_counts.opponent.zappies": 82,
+  "replay.card_counts.team.minion-horde": 80,
+  "replay.card_counts.opponent.mother-witch": 79,
+  "replay.card_counts.team.bomber": 79,
+  "replay.card_counts.team.monk": 79,
+  "replay.card_counts.team.elixir-collector": 78,
+  "replay.card_counts.team.three-musketeers": 78,
+  "replay.card_counts.opponent.baby-dragon": 75,
+  "replay.card_counts.opponent.knight": 75,
+  "replay.card_counts.team.vines": 74,
+  "replay.card_counts.team.wizard": 74,
+  "replay.card_counts.opponent.poison": 73,
+  "replay.card_counts.opponent.minion-horde": 72,
+  "replay.card_counts.opponent.heal-spirit": 72,
+  "replay.card_counts.opponent.goblin-gang": 71,
+  "replay.card_counts.opponent.mortar": 71,
+  "replay.card_counts.opponent.royal-ghost": 70,
+  "replay.card_counts.opponent.rocket": 69,
+  "replay.card_counts.opponent.wizard": 68,
+  "replay.card_counts.team.miner": 68,
+  "replay.card_counts.opponent.giant-skeleton": 64,
+  "replay.card_counts.team.executioner": 63,
+  "replay.card_counts.opponent.princess": 63,
+  "replay.card_counts.opponent.earthquake": 62,
+  "replay.card_counts.opponent.mighty-miner": 62,
+  "replay.card_counts.opponent.goblin-barrel": 62,
+  "replay.card_counts.opponent.elixir-collector": 61,
+  "replay.card_counts.opponent.electro-wizard": 61,
+  "replay.card_counts.opponent.skeleton-barrel": 60,
+  "replay.card_counts.opponent.giant": 60,
+  "replay.card_counts.opponent.golden-knight": 58,
+  "replay.card_counts.opponent.goblin-drill": 58,
+  "replay.card_counts.team.rage": 58,
+  "replay.card_counts.opponent.furnace": 57,
+  "replay.card_counts.opponent.dart-goblin": 57,
+  "replay.card_counts.opponent.vines": 56,
+  "replay.card_counts.team.barbarians": 55,
+  "replay.card_counts.opponent.goblinstein": 54,
+  "replay.card_counts.team.balloon": 54,
+  "replay.card_counts.team.cannon-cart": 54,
+  "replay.card_counts.opponent.rage": 53,
+  "replay.card_counts.team.giant-snowball": 53,
+  "replay.card_counts.opponent.royal-hogs": 51,
+  "replay.card_counts.team.goblin-drill": 51,
+  "replay.card_counts.opponent.lava-hound": 50,
+  "replay.card_counts.opponent.tombstone": 50,
+  "replay.card_counts.opponent.void": 50,
+  "replay.card_counts.opponent.graveyard": 50,
+  "replay.card_counts.opponent.cannon-cart": 50,
+  "replay.card_counts.team.royal-ghost": 50,
+  "replay.card_counts.opponent.dark-prince": 49,
+  "replay.card_counts.opponent.wall-breakers": 49,
+  "replay.card_counts.team.mother-witch": 49,
+  "replay.card_counts.opponent.barbarians": 48,
+  "replay.card_counts.opponent.ice-wizard": 48,
+  "replay.card_counts.opponent.guards": 46,
+  "replay.card_counts.team.battle-ram": 46,
+  "replay.card_counts.opponent.three-musketeers": 44,
+  "replay.card_counts.opponent.mini-pekka": 44,
+  "replay.card_counts.opponent.bats": 44,
+  "replay.card_counts.team.little-prince": 44,
+  "replay.card_counts.opponent.bandit": 44,
+  "replay.card_counts.team.furnace": 44,
+  "replay.card_counts.opponent.skeleton-king": 42,
+  "replay.card_counts.opponent.golem": 42,
+  "replay.card_counts.team.poison": 42,
+  "replay.card_counts.team.mega-minion": 42,
+  "replay.card_counts.team.zappies": 42,
+  "replay.card_counts.team.baby-dragon": 41,
+  "replay.card_counts.team.pekka": 41,
+  "replay.card_counts.team.ram-rider": 41,
+  "replay.card_counts.opponent.witch": 40,
+  "replay.card_counts.opponent.mega-knight": 40,
+  "replay.card_counts.opponent.fire-spirit": 39,
+  "replay.card_counts.opponent.electro-giant": 39,
+  "replay.card_counts.opponent.lumberjack": 39,
+  "replay.card_counts.opponent.sparky": 39,
+  "replay.card_counts.opponent.pekka": 39,
+  "replay.card_counts.opponent.night-witch": 39,
+  "replay.card_counts.team.giant-skeleton": 39,
+  "replay.card_counts.team.inferno-dragon": 39,
+  "replay.card_counts.team.skeleton-barrel": 38,
+  "replay.card_counts.team.boss-bandit": 37,
+  "replay.card_counts.opponent.goblin-cage": 37,
+  "replay.card_counts.opponent.royal-recruits": 37,
+  "replay.card_counts.opponent.mega-minion": 36,
+  "replay.card_counts.opponent.bomb-tower": 36,
+  "replay.card_counts.team.rascals": 36,
+  "replay.card_counts.team.bats": 36,
+  "replay.card_counts.opponent.rascals": 35,
+  "replay.card_counts.team.night-witch": 34,
+  "replay.card_counts.team.bomb-tower": 34,
+  "replay.card_counts.opponent.hunter": 33,
+  "replay.card_counts.team.bandit": 33,
+  "replay.card_counts.opponent.fisherman": 33,
+  "replay.card_counts.opponent.executioner": 32,
+  "replay.card_counts.team.golden-knight": 32,
+  "replay.card_counts.opponent.goblin-hut": 31,
+  "replay.card_counts.opponent.royal-giant": 31,
+  "replay.card_counts.team.mini-pekka": 29,
+  "replay.card_counts.opponent.goblin-demolisher": 29,
+  "replay.card_counts.opponent.royal-delivery": 28,
+  "replay.card_counts.team.skeleton-dragons": 28,
+  "replay.card_counts.team.sparky": 28,
+  "replay.card_counts.opponent.rune-giant": 28,
+  "replay.card_counts.opponent.skeleton-dragons": 28,
+  "replay.card_counts.team.golem": 28,
+  "replay.card_counts.team.magic-archer": 27,
+  "replay.card_counts.opponent.suspicious-bush": 26,
+  "replay.card_counts.opponent.goblin-curse": 26,
+  "replay.card_counts.team.goblin-cage": 26,
+  "replay.card_counts.team.lumberjack": 26,
+  "replay.card_counts.team.graveyard": 25,
+  "replay.card_counts.opponent.archers": 24,
+  "replay.card_counts.opponent.goblins": 24,
+  "replay.card_counts.team.electro-giant": 24,
+  "replay.card_counts.team.archers": 23,
+  "replay.card_counts.opponent.little-prince": 22,
+  "replay.card_counts.opponent.spirit-empress": 22,
+  "replay.card_counts.team.goblinstein": 22,
+  "replay.card_counts.opponent.magic-archer": 20,
+  "replay.card_counts.team.inferno-tower": 20,
+  "replay.card_counts.opponent.flying-machine": 19,
+  "replay.card_counts.opponent.x-bow": 18,
+  "replay.card_counts.opponent.inferno-tower": 18,
+  "replay.card_counts.team.tombstone": 18,
+  "replay.card_counts.team.goblin-demolisher": 18,
+  "replay.card_counts.opponent.phoenix": 17,
+  "replay.card_counts.opponent.elixir-golem": 16,
+  "replay.card_counts.opponent.electro-dragon": 16,
+  "replay.card_counts.opponent.goblin-giant": 15,
+  "replay.card_counts.opponent.archer-queen": 15,
+  "replay.card_counts.opponent.ronin": 14,
+  "replay.card_counts.opponent.monk": 13,
+  "replay.card_counts.team.royal-hogs": 13,
+  "replay.card_counts.team.guards": 10,
+  "replay.card_counts.opponent.prince": 10,
+  "replay.card_counts.team.flying-machine": 10,
+  "replay.card_counts.team.skeleton-king": 9,
+  "replay.card_counts.team.void": 9,
+  "replay.card_counts.team.rune-giant": 9,
+  "replay.card_counts.team.suspicious-bush": 8,
+  "replay.card_counts.opponent.clone": 7,
+  "replay.card_counts.team.archer-queen": 7,
+  "replay.card_counts.team.goblin-hut": 7,
+  "replay.card_counts.opponent.ram-rider": 6,
+  "replay.card_counts.opponent.spear-goblins": 6,
+  "replay.card_counts.team.fisherman": 6,
+  "replay.card_counts.team.hunter": 6,
+  "replay.card_counts.team.royal-giant": 6,
+  "replay.card_counts.opponent.boss-bandit": 6,
+  "replay.card_counts.team.electro-wizard": 6,
+  "replay.card_counts.team.goblin-curse": 4,
+  "replay.card_counts.team.lava-hound": 4,
+  "replay.card_counts.team.royal-delivery": 3,
+  "replay.card_counts.team.dark-prince": 3,
+  "replay.card_counts.opponent.mirror": 3,
+  "replay.card_counts.team.ice-wizard": 2,
+  "replay.card_counts.opponent.goblin-machine": 2,
+  "replay.card_counts.team.electro-dragon": 2,
+  "replay.card_counts.team.clone": 2,
+  "replay.card_counts.team.ronin": 2,
+  "replay.card_counts.team.musketeer": 2,
+  "replay.card_counts.team.ice-golem": 2,
+  "replay.card_counts.team.spear-goblins": 2,
+  "replay.card_counts.team.elixir-golem": 1,
+  "replay.card_counts.team.prince": 1,
+  "replay.card_counts.opponent.battle-healer": 1,
+  "replay.card_counts.team.mega-knight": 1,
+  "replay.card_counts.team.spirit-empress": 1
+ },
+ "constant_fields": {
+  "schema_version": {
+   "royaleapi-battle-actions.v1": 1000
+  },
+  "collection_schema_version": {
+   "royaleapi-replay-collection.v1": 1000
+  },
+  "battle.team.crowns": {
+   "3": 113,
+   "0": 264,
+   "1": 558,
+   "2": 65
+  },
+  "battle.opponent.crowns": {
+   "0": 643,
+   "1": 292,
+   "2": 31,
+   "3": 34
+  },
+  "battle.game_mode": {
+   "Ranked": 904,
+   "1v1 Battle": 46,
+   "Grand Challenge": 14,
+   "Ladder": 28,
+   "1v1": 4,
+   "Classic Challenge": 3,
+   "1v1 Showdown": 1
+  },
+  "battle.battle_type": {
+   "pathOfLegend": 904,
+   "friendly": 11,
+   "clanMate": 35,
+   "trail": 46,
+   "riverRacePvP": 4
+  },
+  "battle.result": {
+   "victory": 698,
+   "defeat": 285,
+   "draw": 17
+  }
+ },
+ "variant_suffix_counts": {
+  "-ev1": 3766,
+  "-hero": 1441
+ },
+ "deck_level_counts": {
+  "16": 14797,
+  "15": 149,
+  "14": 29,
+  "11": 1024,
+  "13": 1
+ },
+ "tower_card_counts": {
+  "tower-princess": 1920,
+  "dagger-duchess": 28,
+  "cannoneer": 23,
+  "royal-chef": 29
+ },
+ "numeric_summaries": {
+  "duration_timeline_seconds": {
+   "n": 1000,
+   "min": 43.05,
+   "p50": 228.55,
+   "max": 314.05,
+   "mean": 233.2105,
+   "distinct": 325
+  },
+  "validation.ability_event_count": {
+   "n": 1000,
+   "min": 0.0,
+   "p50": 3.0,
+   "max": 18.0,
+   "mean": 3.908,
+   "distinct": 18
+  },
+  "validation.coordinate_event_count": {
+   "n": 1000,
+   "min": 1.0,
+   "p50": 70.0,
+   "max": 176.0,
+   "mean": 77.083,
+   "distinct": 153
+  },
+  "validation.map_marker_count": {
+   "n": 1000,
+   "min": 1.0,
+   "p50": 73.0,
+   "max": 180.0,
+   "mean": 80.991,
+   "distinct": 158
+  },
+  "validation.normalized_event_count": {
+   "n": 1000,
+   "min": 1.0,
+   "p50": 73.0,
+   "max": 180.0,
+   "mean": 80.991,
+   "distinct": 158
+  },
+  "validation.timeline_event_count": {
+   "n": 1000,
+   "min": 1.0,
+   "p50": 73.0,
+   "max": 180.0,
+   "mean": 80.991,
+   "distinct": 158
+  },
+  "validation.unmatched_timeline_event_count": {
+   "n": 1000,
+   "min": 0.0,
+   "p50": 0.0,
+   "max": 0.0,
+   "mean": 0.0,
+   "distinct": 1
+  }
+ },
+ "actions_rows_in_shard": 384275,
+ "actions_columns": {
+  "schema_version": {
+   "dtype": "str",
+   "n_distinct": 1,
+   "top": [
+    [
+     "royaleapi-replay-parquet.v1",
+     200000
+    ]
+   ]
+  },
+  "replay_tag": {
+   "dtype": "str",
+   "n_distinct": 2510,
+   "top": [
+    [
+     "e1f085e137f24716b324a9fead4f9fd6",
+     180
+    ],
+    [
+     "ec1a79a659e84d94a1a4b326d39e359b",
+     178
+    ],
+    [
+     "226c72926f25486eae1b555e3c1bf37c",
+     169
+    ],
+    [
+     "ff5cdac239744c6abc9abcc9e3c399a7",
+     167
+    ],
+    [
+     "deae8b9a6c794e53a43448e369bdd638",
+     167
+    ],
+    [
+     "2803bdbe543f4a39930d274b1879c29f",
+     165
+    ],
+    [
+     "359aad2cbf9b4c96bcd3b04fbfe1ac39",
+     165
+    ],
+    [
+     "57d3546d0b7c413ebf4aeb5039bdb8ea",
+     164
+    ]
+   ]
+  },
+  "event_index": {
+   "dtype": "int",
+   "min": 0,
+   "max": 179,
+   "n_distinct_first200k": 180
+  },
+  "source_index": {
+   "dtype": "int",
+   "min": 0,
+   "max": 179,
+   "n_distinct_first200k": 180
+  },
+  "kind": {
+   "dtype": "str",
+   "n_distinct": 2,
+   "top": [
+    [
+     "play_card",
+     190401
+    ],
+    [
+     "activate_ability",
+     9599
+    ]
+   ]
+  },
+  "side": {
+   "dtype": "str",
+   "n_distinct": 2,
+   "top": [
+    [
+     "team",
+     104974
+    ],
+    [
+     "opponent",
+     95026
+    ]
+   ]
+  },
+  "card_key": {
+   "dtype": "str",
+   "n_distinct": 122,
+   "top": [
+    [
+     "skeletons",
+     11676
+    ],
+    [
+     "electro-spirit",
+     7471
+    ],
+    [
+     "berserker",
+     7116
+    ],
+    [
+     "barbarian-barrel",
+     6836
+    ],
+    [
+     "the-log",
+     6833
+    ],
+    [
+     "ice-spirit",
+     5596
+    ],
+    [
+     "cannon",
+     5002
+    ],
+    [
+     "hog-rider",
+     4745
+    ]
+   ]
+  },
+  "card_play_number": {
+   "dtype": "int",
+   "min": 1,
+   "max": 17,
+   "n_distinct_first200k": 17
+  },
+  "replay_tick_20hz": {
+   "dtype": "int",
+   "min": 108,
+   "max": 5979,
+   "n_distinct_first200k": 5285
+  },
+  "time_seconds": {
+   "dtype": "float",
+   "min": 5.4,
+   "max": 298.95,
+   "n_distinct_first200k": 5285
+  },
+  "form_at_play": {
+   "dtype": "str",
+   "n_distinct": 1,
+   "top": [
+    [
+     "unknown",
+     190401
+    ]
+   ]
+  },
+  "ability_source_authoritative": {
+   "dtype": "bool",
+   "min": false,
+   "max": false,
+   "n_distinct_first200k": 1
+  },
+  "native_x": {
+   "dtype": "int",
+   "min": 499,
+   "max": 17501,
+   "n_distinct_first200k": 57
+  },
+  "native_y": {
+   "dtype": "int",
+   "min": 500,
+   "max": 31500,
+   "n_distinct_first200k": 116
+  },
+  "grid_x": {
+   "dtype": "int",
+   "min": 0,
+   "max": 17,
+   "n_distinct_first200k": 18
+  },
+  "grid_y": {
+   "dtype": "int",
+   "min": 0,
+   "max": 31,
+   "n_distinct_first200k": 32
+  },
+  "arena_column": {
+   "dtype": "str",
+   "n_distinct": 18,
+   "top": [
+    [
+     "J",
+     24422
+    ],
+    [
+     "I",
+     21985
+    ],
+    [
+     "O",
+     20842
+    ],
+    [
+     "D",
+     19170
+    ],
+    [
+     "P",
+     10122
+    ],
+    [
+     "Q",
+     9954
+    ],
+    [
+     "B",
+     9800
+    ],
+    [
+     "C",
+     9264
+    ]
+   ]
+  },
+  "arena_row": {
+   "dtype": "int",
+   "min": 1,
+   "max": 32,
+   "n_distinct_first200k": 32
+  },
+  "deck_card_key_candidates": {
+   "dtype": "other",
+   "sample": "['guards']"
+  },
+  "ability_source_candidates": {
+   "dtype": "other",
+   "sample": "[]"
+  },
+  "event_json": {
+   "dtype": "str",
+   "n_distinct": 199795,
+   "top": [
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"hog-rider\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"Q\",\"row\":15},\"display_royaleapi_units\":{\"x\":16500,\"y\":17499},\"grid_cell_floor\":{\"x\":16,\"y\":14},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":16500,\"y\":14501},\"raw_royaleapi_units\":{\"x\":16500,\"y\":17499},\"subcell_offset_from_floor_center\":{\"x\":0.0,\"y\":0.001}},\"deck_card_key_candidates\":[\"hog-rider\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":191,\"side\":\"team\",\"source_fields\":{\"data_c\":\"hog-rider\",\"data_i\":0,\"data_s\":\"t\",\"data_t\":191,\"data_x\":16500,\"data_y\":17499,\"timeline_card_key\":\"hog-rider\"},\"source_index\":0,\"time_seconds\":9.55}",
+     5
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"goblin-barrel\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"O\",\"row\":26},\"display_royaleapi_units\":{\"x\":14501,\"y\":6500},\"grid_cell_floor\":{\"x\":14,\"y\":25},\"inside_18x32_arena\":true,\"inversion_applied\":true,\"native_world_units\":{\"x\":14501,\"y\":25500},\"raw_royaleapi_units\":{\"x\":3499,\"y\":25500},\"subcell_offset_from_floor_center\":{\"x\":0.001,\"y\":0.0}},\"deck_card_key_candidates\":[\"goblin-barrel\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":195,\"side\":\"team\",\"source_fields\":{\"data_c\":\"goblin-barrel\",\"data_i\":1,\"data_s\":\"t\",\"data_t\":195,\"data_x\":3499,\"data_y\":25500,\"timeline_card_key\":\"goblin-barrel\"},\"source_index\":0,\"time_seconds\":9.75}",
+     4
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"goblin-barrel\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"O\",\"row\":26},\"display_royaleapi_units\":{\"x\":14500,\"y\":6499},\"grid_cell_floor\":{\"x\":14,\"y\":25},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":14500,\"y\":25501},\"raw_royaleapi_units\":{\"x\":14500,\"y\":6499},\"subcell_offset_from_floor_center\":{\"x\":0.0,\"y\":0.001}},\"deck_card_key_candidates\":[\"goblin-barrel\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":211,\"side\":\"team\",\"source_fields\":{\"data_c\":\"goblin-barrel\",\"data_i\":0,\"data_s\":\"t\",\"data_t\":211,\"data_x\":14500,\"data_y\":6499,\"timeline_card_key\":\"goblin-barrel\"},\"source_index\":0,\"time_seconds\":10.55}",
+     3
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"goblin-barrel\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"O\",\"row\":26},\"display_royaleapi_units\":{\"x\":14500,\"y\":6499},\"grid_cell_floor\":{\"x\":14,\"y\":25},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":14500,\"y\":25501},\"raw_royaleapi_units\":{\"x\":14500,\"y\":6499},\"subcell_offset_from_floor_center\":{\"x\":0.0,\"y\":0.001}},\"deck_card_key_candidates\":[\"goblin-barrel\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":181,\"side\":\"team\",\"source_fields\":{\"data_c\":\"goblin-barrel\",\"data_i\":0,\"data_s\":\"t\",\"data_t\":181,\"data_x\":14500,\"data_y\":6499,\"timeline_card_key\":\"goblin-barrel\"},\"source_index\":0,\"time_seconds\":9.05}",
+     3
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"hog-rider\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"B\",\"row\":15},\"display_royaleapi_units\":{\"x\":1500,\"y\":17500},\"grid_cell_floor\":{\"x\":1,\"y\":14},\"inside_18x32_arena\":true,\"inversion_applied\":true,\"native_world_units\":{\"x\":1500,\"y\":14500},\"raw_royaleapi_units\":{\"x\":16500,\"y\":14500},\"subcell_offset_from_floor_center\":{\"x\":0.0,\"y\":0.0}},\"deck_card_key_candidates\":[\"hog-rider\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":201,\"side\":\"team\",\"source_fields\":{\"data_c\":\"hog-rider\",\"data_i\":1,\"data_s\":\"t\",\"data_t\":201,\"data_x\":16500,\"data_y\":14500,\"timeline_card_key\":\"hog-rider\"},\"source_index\":0,\"time_seconds\":10.05}",
+     3
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"hog-rider\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"B\",\"row\":15},\"display_royaleapi_units\":{\"x\":1499,\"y\":17499},\"grid_cell_floor\":{\"x\":1,\"y\":14},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":1499,\"y\":14501},\"raw_royaleapi_units\":{\"x\":1499,\"y\":17499},\"subcell_offset_from_floor_center\":{\"x\":-0.001,\"y\":0.001}},\"deck_card_key_candidates\":[\"hog-rider\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":208,\"side\":\"team\",\"source_fields\":{\"data_c\":\"hog-rider\",\"data_i\":0,\"data_s\":\"t\",\"data_t\":208,\"data_x\":1499,\"data_y\":17499,\"timeline_card_key\":\"hog-rider\"},\"source_index\":0,\"time_seconds\":10.4}",
+     3
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"skeleton-barrel\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"R\",\"row\":19},\"display_royaleapi_units\":{\"x\":17500,\"y\":13500},\"grid_cell_floor\":{\"x\":17,\"y\":18},\"inside_18x32_arena\":true,\"inversion_applied\":true,\"native_world_units\":{\"x\":17500,\"y\":18500},\"raw_royaleapi_units\":{\"x\":500,\"y\":18500},\"subcell_offset_from_floor_center\":{\"x\":0.0,\"y\":0.0}},\"deck_card_key_candidates\":[\"skeleton-barrel-ev1\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":189,\"side\":\"opponent\",\"source_fields\":{\"data_c\":\"skeleton-barrel\",\"data_i\":1,\"data_s\":\"o\",\"data_t\":189,\"data_x\":500,\"data_y\":18500,\"timeline_card_key\":\"skeleton-barrel\"},\"source_index\":0,\"time_seconds\":9.45}",
+     3
+    ],
+    [
+     "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"skeletons\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"J\",\"row\":1},\"display_royaleapi_units\":{\"x\":9501,\"y\":31500},\"grid_cell_floor\":{\"x\":9,\"y\":0},\"inside_18x32_arena\":true,\"inversion_applied\":true,\"native_world_units\":{\"x\":9501,\"y\":500},\"raw_royaleapi_units\":{\"x\":8499,\"y\":500},\"subcell_offset_from_floor_center\":{\"x\":0.001,\"y\":0.0}},\"deck_card_key_candidates\":[\"skeletons\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":168,\"side\":\"team\",\"source_fields\":{\"data_c\":\"skeletons\",\"data_i\":1,\"data_s\":\"t\",\"data_t\":168,\"data_x\":8499,\"data_y\":500,\"timeline_card_key\":\"skeletons\"},\"source_index\":0,\"time_seconds\":8.4}",
+     3
+    ]
+   ]
+  }
+ }
+}

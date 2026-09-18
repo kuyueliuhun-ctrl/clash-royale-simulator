@@ -1,0 +1,153 @@
+{
+ "mode": "check_cycle_elixir",
+ "replays_scanned": 1000,
+ "sides_compared": 1941,
+ "unmappable_sides": 59,
+ "outcome": {
+  "declared_lt": 0,
+  "declared_gt": 0,
+  "equal": 1941
+ },
+ "examples": [
+  {
+   "replay": "84a066ec0b0a",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "84a066ec0b0a",
+   "side": "opponent",
+   "declared": 12.0,
+   "ours_cheapest4": 12.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "21daddc43118",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "21daddc43118",
+   "side": "opponent",
+   "declared": 7.0,
+   "ours_cheapest4": 7.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "09589b9d2315",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "09589b9d2315",
+   "side": "opponent",
+   "declared": 6.0,
+   "ours_cheapest4": 6.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "4949e8527a4c",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "4949e8527a4c",
+   "side": "opponent",
+   "declared": 9.0,
+   "ours_cheapest4": 9.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "cd3e00e12374",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "cd3e00e12374",
+   "side": "opponent",
+   "declared": 11.0,
+   "ours_cheapest4": 11.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "970a1aa2bbb7",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "970a1aa2bbb7",
+   "side": "opponent",
+   "declared": 6.0,
+   "ours_cheapest4": 6.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "1758832e2562",
+   "side": "team",
+   "declared": 7.0,
+   "ours_cheapest4": 7.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "1758832e2562",
+   "side": "opponent",
+   "declared": 8.0,
+   "ours_cheapest4": 8.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "3729f0233836",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "3729f0233836",
+   "side": "opponent",
+   "declared": 10.0,
+   "ours_cheapest4": 10.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "fbc6cfcff7f6",
+   "side": "team",
+   "declared": 13.0,
+   "ours_cheapest4": 13.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "fbc6cfcff7f6",
+   "side": "opponent",
+   "declared": 10.0,
+   "ours_cheapest4": 10.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "b2144dd6c717",
+   "side": "team",
+   "declared": 7.0,
+   "ours_cheapest4": 7.0,
+   "deck_size": 8
+  },
+  {
+   "replay": "b2144dd6c717",
+   "side": "opponent",
+   "declared": 12.0,
+   "ours_cheapest4": 12.0,
+   "deck_size": 8
+  }
+ ]
+}

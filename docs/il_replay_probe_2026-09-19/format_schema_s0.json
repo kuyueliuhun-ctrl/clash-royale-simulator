@@ -1,0 +1,1388 @@
+{
+ "mode": "schema",
+ "n_replays": 3,
+ "replays_table_cols": [
+  "battle_type",
+  "event_count",
+  "game_mode",
+  "opponent_crowns",
+  "payload_json",
+  "replay_tag",
+  "requested_player_tag",
+  "result",
+  "schema_version",
+  "team_crowns",
+  "warning_count"
+ ],
+ "actions_table_cols": [
+  "ability_source_authoritative",
+  "ability_source_candidates",
+  "arena_column",
+  "arena_row",
+  "card_key",
+  "card_play_number",
+  "deck_card_key_candidates",
+  "event_index",
+  "event_json",
+  "form_at_play",
+  "grid_x",
+  "grid_y",
+  "kind",
+  "native_x",
+  "native_y",
+  "replay_tag",
+  "replay_tick_20hz",
+  "schema_version",
+  "side",
+  "source_index",
+  "time_seconds"
+ ],
+ "payload_paths": {
+  "": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.battle_type": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'pathOfLegend'"
+  },
+  "battle.game_mode": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Ranked'"
+  },
+  "battle.opponent": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.opponent.crowns": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "battle.opponent.players": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    1
+   ],
+   "sample": null
+  },
+  "battle.opponent.players[]": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.opponent.players[].average_elixir": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "4.3"
+  },
+  "battle.opponent.players[].deck": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    8
+   ],
+   "sample": null
+  },
+  "battle.opponent.players[].deck[]": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.opponent.players[].deck[].card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'firecracker-ev1'"
+  },
+  "battle.opponent.players[].deck[].level": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16"
+  },
+  "battle.opponent.players[].deck[].name": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Firecracker'"
+  },
+  "battle.opponent.players[].elixir_leaked": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "2.75"
+  },
+  "battle.opponent.players[].final_tower_hitpoints": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.opponent.players[].final_tower_hitpoints.king": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "battle.opponent.players[].final_tower_hitpoints.princess_left": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "battle.opponent.players[].final_tower_hitpoints.princess_right": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "battle.opponent.players[].final_tower_hitpoints.total": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "battle.opponent.players[].four_card_cycle_elixir": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "12.0"
+  },
+  "battle.opponent.players[].tower_card": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.opponent.players[].tower_card.card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'tower-princess'"
+  },
+  "battle.opponent.players[].tower_card.level": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16"
+  },
+  "battle.opponent.players[].tower_card.name": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Tower Princess'"
+  },
+  "battle.result": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'victory'"
+  },
+  "battle.team": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.team.crowns": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "battle.team.players": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    1
+   ],
+   "sample": null
+  },
+  "battle.team.players[]": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.team.players[].average_elixir": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "4.4"
+  },
+  "battle.team.players[].deck": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    8
+   ],
+   "sample": null
+  },
+  "battle.team.players[].deck[]": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.team.players[].deck[].card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'elite-barbarians-ev1'"
+  },
+  "battle.team.players[].deck[].level": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16"
+  },
+  "battle.team.players[].deck[].name": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Elite Barbarians'"
+  },
+  "battle.team.players[].elixir_leaked": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "1.04"
+  },
+  "battle.team.players[].final_tower_hitpoints": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.team.players[].final_tower_hitpoints.king": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "7728"
+  },
+  "battle.team.players[].final_tower_hitpoints.princess_left": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "4239"
+  },
+  "battle.team.players[].final_tower_hitpoints.princess_right": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "4802"
+  },
+  "battle.team.players[].final_tower_hitpoints.total": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16769"
+  },
+  "battle.team.players[].four_card_cycle_elixir": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "13.0"
+  },
+  "battle.team.players[].tower_card": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "battle.team.players[].tower_card.card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'tower-princess'"
+  },
+  "battle.team.players[].tower_card.level": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16"
+  },
+  "battle.team.players[].tower_card.name": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Tower Princess'"
+  },
+  "collection_schema_version": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'royaleapi-replay-collection.v1'"
+  },
+  "events": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    37,
+    80,
+    106
+   ],
+   "sample": null
+  },
+  "events[]": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].ability_source_authoritative": {
+   "types": [
+    "NoneType"
+   ],
+   "list_len": [],
+   "sample": "None"
+  },
+  "events[].ability_source_candidates": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    0
+   ],
+   "sample": null
+  },
+  "events[].card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'guards'"
+  },
+  "events[].card_play_number": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "events[].coordinates": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.arena_label_from_blue": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.arena_label_from_blue.column": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'Q'"
+  },
+  "events[].coordinates.arena_label_from_blue.row": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "31"
+  },
+  "events[].coordinates.display_royaleapi_units": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.display_royaleapi_units.x": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16501"
+  },
+  "events[].coordinates.display_royaleapi_units.y": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1501"
+  },
+  "events[].coordinates.grid_cell_floor": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.grid_cell_floor.x": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16"
+  },
+  "events[].coordinates.grid_cell_floor.y": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "30"
+  },
+  "events[].coordinates.inside_18x32_arena": {
+   "types": [
+    "bool"
+   ],
+   "list_len": [],
+   "sample": "True"
+  },
+  "events[].coordinates.inversion_applied": {
+   "types": [
+    "bool"
+   ],
+   "list_len": [],
+   "sample": "True"
+  },
+  "events[].coordinates.native_world_units": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.native_world_units.x": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "16501"
+  },
+  "events[].coordinates.native_world_units.y": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "30499"
+  },
+  "events[].coordinates.raw_royaleapi_units": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.raw_royaleapi_units.x": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1499"
+  },
+  "events[].coordinates.raw_royaleapi_units.y": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "30499"
+  },
+  "events[].coordinates.subcell_offset_from_floor_center": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].coordinates.subcell_offset_from_floor_center.x": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "0.001"
+  },
+  "events[].coordinates.subcell_offset_from_floor_center.y": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "-0.001"
+  },
+  "events[].deck_card_key_candidates": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    1
+   ],
+   "sample": null
+  },
+  "events[].deck_card_key_candidates[]": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'guards'"
+  },
+  "events[].form_at_play": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'unknown'"
+  },
+  "events[].kind": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'play_card'"
+  },
+  "events[].replay_tick_20hz": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "216"
+  },
+  "events[].side": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'opponent'"
+  },
+  "events[].source_fields": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "events[].source_fields.data_c": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'guards'"
+  },
+  "events[].source_fields.data_i": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "events[].source_fields.data_s": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'o'"
+  },
+  "events[].source_fields.data_t": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "216"
+  },
+  "events[].source_fields.data_x": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1499"
+  },
+  "events[].source_fields.data_y": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "30499"
+  },
+  "events[].source_fields.timeline_card_key": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'guards'"
+  },
+  "events[].source_index": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "events[].time_seconds": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "10.8"
+  },
+  "replay": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.aggregate_stats": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.ability": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.ability[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "replay.aggregate_stats.opponent.building": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.building[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "replay.aggregate_stats.opponent.leaked": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "2.75"
+  },
+  "replay.aggregate_stats.opponent.spell": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.spell[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "4"
+  },
+  "replay.aggregate_stats.opponent.total": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.total[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "19"
+  },
+  "replay.aggregate_stats.opponent.troop": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.opponent.troop[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "15"
+  },
+  "replay.aggregate_stats.team": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.ability": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.ability[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "replay.aggregate_stats.team.building": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.building[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "replay.aggregate_stats.team.leaked": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "1.04"
+  },
+  "replay.aggregate_stats.team.spell": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.spell[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "replay.aggregate_stats.team.total": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.total[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "15"
+  },
+  "replay.aggregate_stats.team.troop": {
+   "types": [
+    "list"
+   ],
+   "list_len": [
+    2
+   ],
+   "sample": null
+  },
+  "replay.aggregate_stats.team.troop[]": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "12"
+  },
+  "replay.card_counts": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.card_counts.opponent": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.card_counts.opponent.barbarians": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "replay.card_counts.opponent.berserker": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "5"
+  },
+  "replay.card_counts.opponent.cannon": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "9"
+  },
+  "replay.card_counts.opponent.earthquake": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "replay.card_counts.opponent.electro-spirit": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "9"
+  },
+  "replay.card_counts.opponent.firecracker": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "replay.card_counts.opponent.giant-skeleton": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "replay.card_counts.opponent.goblin-barrel": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "6"
+  },
+  "replay.card_counts.opponent.guards": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "4"
+  },
+  "replay.card_counts.opponent.hog-rider": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "replay.card_counts.opponent.lightning": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  },
+  "replay.card_counts.opponent.mighty-miner": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "7"
+  },
+  "replay.card_counts.opponent.minion-horde": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "replay.card_counts.opponent.princess": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "5"
+  },
+  "replay.card_counts.opponent.rocket": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "replay.card_counts.opponent.skeletons": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "11"
+  },
+  "replay.card_counts.opponent.tesla": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "7"
+  },
+  "replay.card_counts.opponent.the-log": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "4"
+  },
+  "replay.card_counts.team": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.card_counts.team.boss-bandit": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.elite-barbarians": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.executioner": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.freeze": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.guards": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.hog-rider": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.minion-horde": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "2"
+  },
+  "replay.card_counts.team.zap": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "1"
+  },
+  "replay.duration": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "replay.duration.display_label": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'2:44'"
+  },
+  "replay.duration.display_seconds": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "164"
+  },
+  "replay.duration.timeline_seconds": {
+   "types": [
+    "float"
+   ],
+   "list_len": [],
+   "sample": "164.05"
+  },
+  "schema_version": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'royaleapi-battle-actions.v1'"
+  },
+  "source": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "source.anonymized": {
+   "types": [
+    "bool"
+   ],
+   "list_len": [],
+   "sample": "True"
+  },
+  "source.replay_tag": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'84a066ec0b0a4bef801ae287e4d45960'"
+  },
+  "source.site": {
+   "types": [
+    "str"
+   ],
+   "list_len": [],
+   "sample": "'RoyaleAPI'"
+  },
+  "validation": {
+   "types": [
+    "dict"
+   ],
+   "list_len": [],
+   "sample": null
+  },
+  "validation.ability_event_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "3"
+  },
+  "validation.coordinate_event_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "34"
+  },
+  "validation.map_marker_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "37"
+  },
+  "validation.normalized_event_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "37"
+  },
+  "validation.timeline_event_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "37"
+  },
+  "validation.unmatched_timeline_event_count": {
+   "types": [
+    "int"
+   ],
+   "list_len": [],
+   "sample": "0"
+  }
+ },
+ "replays": [
+  {
+   "replay_tag": "84a066ec0b0a4bef801ae287e4d45960",
+   "table_row": {
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "replay_tag": "84a066ec0b0a4bef801ae287e4d45960",
+    "battle_type": "pathOfLegend",
+    "game_mode": "Ranked",
+    "result": "victory",
+    "team_crowns": 3,
+    "opponent_crowns": 0,
+    "event_count": 37,
+    "warning_count": 0,
+    "requested_player_tag": ""
+   },
+   "payload_top_keys": [
+    "battle",
+    "collection_schema_version",
+    "events",
+    "replay",
+    "schema_version",
+    "source",
+    "validation"
+   ],
+   "n_action_rows": 37,
+   "first_action_row": {
+    "ability_source_authoritative": null,
+    "ability_source_candidates": [],
+    "arena_column": "Q",
+    "arena_row": 31,
+    "card_key": "guards",
+    "card_play_number": 1,
+    "deck_card_key_candidates": [
+     "guards"
+    ],
+    "event_index": 0,
+    "event_json": "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"guards\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"Q\",\"row\":31},\"display_royaleapi_units\":{\"x\":16501,\"y\":1501},\"grid_cell_floor\":{\"x\":16,\"y\":30},\"inside_18x32_arena\":true,\"inversion_applied\":true,\"native_world_units\":{\"x\":16501,\"y\":30499},\"raw_royaleapi_units\":{\"x\":1499,\"y\":30499},\"subcell_offset_from_floor_center\":{\"x\":0.001,\"y\":-0.001}},\"deck_card_key_candidates\":[\"guards\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":216,\"side\":\"opponent\",\"source_fields\":{\"data_c\":\"guards\",\"data_i\":1,\"data_s\":\"o\",\"data_t\":216,\"data_x\":1499,\"data_y\":30499,\"timeline_card_key\":\"guards\"},\"source_index\":0,\"time_seconds\":10.8}",
+    "form_at_play": "unknown",
+    "grid_x": 16,
+    "grid_y": 30,
+    "kind": "play_card",
+    "native_x": 16501,
+    "native_y": 30499,
+    "replay_tag": "84a066ec0b0a4bef801ae287e4d45960",
+    "replay_tick_20hz": 216,
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "side": "opponent",
+    "source_index": 0,
+    "time_seconds": 10.8
+   },
+   "kinds": {
+    "play_card": 34,
+    "activate_ability": 3
+   },
+   "sides": {
+    "opponent": 19,
+    "team": 18
+   }
+  },
+  {
+   "replay_tag": "21daddc4311842699aa782d4059d4454",
+   "table_row": {
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "replay_tag": "21daddc4311842699aa782d4059d4454",
+    "battle_type": "pathOfLegend",
+    "game_mode": "Ranked",
+    "result": "defeat",
+    "team_crowns": 0,
+    "opponent_crowns": 1,
+    "event_count": 106,
+    "warning_count": 0,
+    "requested_player_tag": ""
+   },
+   "payload_top_keys": [
+    "battle",
+    "collection_schema_version",
+    "events",
+    "replay",
+    "schema_version",
+    "source",
+    "validation"
+   ],
+   "n_action_rows": 106,
+   "first_action_row": {
+    "ability_source_authoritative": null,
+    "ability_source_candidates": [],
+    "arena_column": "B",
+    "arena_row": 18,
+    "card_key": "hog-rider",
+    "card_play_number": 1,
+    "deck_card_key_candidates": [
+     "hog-rider"
+    ],
+    "event_index": 0,
+    "event_json": "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"hog-rider\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"B\",\"row\":18},\"display_royaleapi_units\":{\"x\":1499,\"y\":14500},\"grid_cell_floor\":{\"x\":1,\"y\":17},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":1499,\"y\":17500},\"raw_royaleapi_units\":{\"x\":1499,\"y\":14500},\"subcell_offset_from_floor_center\":{\"x\":-0.001,\"y\":0.0}},\"deck_card_key_candidates\":[\"hog-rider\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":292,\"side\":\"opponent\",\"source_fields\":{\"data_c\":\"hog-rider\",\"data_i\":0,\"data_s\":\"o\",\"data_t\":292,\"data_x\":1499,\"data_y\":14500,\"timeline_card_key\":\"hog-rider\"},\"source_index\":0,\"time_seconds\":14.6}",
+    "form_at_play": "unknown",
+    "grid_x": 1,
+    "grid_y": 17,
+    "kind": "play_card",
+    "native_x": 1499,
+    "native_y": 17500,
+    "replay_tag": "21daddc4311842699aa782d4059d4454",
+    "replay_tick_20hz": 292,
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "side": "opponent",
+    "source_index": 0,
+    "time_seconds": 14.6
+   },
+   "kinds": {
+    "play_card": 95,
+    "activate_ability": 11
+   },
+   "sides": {
+    "opponent": 64,
+    "team": 42
+   }
+  },
+  {
+   "replay_tag": "09589b9d2315437ebb84872f9b993137",
+   "table_row": {
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "replay_tag": "09589b9d2315437ebb84872f9b993137",
+    "battle_type": "pathOfLegend",
+    "game_mode": "Ranked",
+    "result": "victory",
+    "team_crowns": 1,
+    "opponent_crowns": 0,
+    "event_count": 80,
+    "warning_count": 0,
+    "requested_player_tag": ""
+   },
+   "payload_top_keys": [
+    "battle",
+    "collection_schema_version",
+    "events",
+    "replay",
+    "schema_version",
+    "source",
+    "validation"
+   ],
+   "n_action_rows": 80,
+   "first_action_row": {
+    "ability_source_authoritative": null,
+    "ability_source_candidates": [],
+    "arena_column": "I",
+    "arena_row": 32,
+    "card_key": "electro-spirit",
+    "card_play_number": 1,
+    "deck_card_key_candidates": [
+     "electro-spirit"
+    ],
+    "event_index": 0,
+    "event_json": "{\"ability_source_authoritative\":null,\"ability_source_candidates\":[],\"card_key\":\"electro-spirit\",\"card_play_number\":1,\"coordinates\":{\"arena_label_from_blue\":{\"column\":\"I\",\"row\":32},\"display_royaleapi_units\":{\"x\":8499,\"y\":500},\"grid_cell_floor\":{\"x\":8,\"y\":31},\"inside_18x32_arena\":true,\"inversion_applied\":false,\"native_world_units\":{\"x\":8499,\"y\":31500},\"raw_royaleapi_units\":{\"x\":8499,\"y\":500},\"subcell_offset_from_floor_center\":{\"x\":-0.001,\"y\":0.0}},\"deck_card_key_candidates\":[\"electro-spirit\"],\"form_at_play\":\"unknown\",\"kind\":\"play_card\",\"replay_tick_20hz\":316,\"side\":\"opponent\",\"source_fields\":{\"data_c\":\"electro-spirit\",\"data_i\":0,\"data_s\":\"o\",\"data_t\":316,\"data_x\":8499,\"data_y\":500,\"timeline_card_key\":\"electro-spirit\"},\"source_index\":0,\"time_seconds\":15.8}",
+    "form_at_play": "unknown",
+    "grid_x": 8,
+    "grid_y": 31,
+    "kind": "play_card",
+    "native_x": 8499,
+    "native_y": 31500,
+    "replay_tag": "09589b9d2315437ebb84872f9b993137",
+    "replay_tick_20hz": 316,
+    "schema_version": "royaleapi-replay-parquet.v1",
+    "side": "opponent",
+    "source_index": 0,
+    "time_seconds": 15.8
+   },
+   "kinds": {
+    "play_card": 70,
+    "activate_ability": 10
+   },
+   "sides": {
+    "opponent": 49,
+    "team": 31
+   }
+  }
+ ]
+}
