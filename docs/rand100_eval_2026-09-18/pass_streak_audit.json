@@ -1,0 +1,57 @@
+{
+ "rand100": {
+  "dir": "src\\clasher_new\\runs\\rand100_eval\\replays",
+  "agg": {
+   "n": 31491,
+   "A": 28477,
+   "B": 0,
+   "C": 3014,
+   "A_ge6": 0,
+   "B_ge6": 0,
+   "C_ge6": 0,
+   "a_run_max": 24,
+   "a_run_peak": 5.178571428571441,
+   "b_run_max": 0,
+   "anomaly": 0,
+   "b_dup": 0,
+   "b_over": 0,
+   "b_unknown": 0,
+   "lvl": {
+    "3": 898,
+    "4": 55,
+    "5": 27,
+    "6": 0,
+    "8": 0
+   },
+   "per_ge6_frames": 0
+  },
+  "regen_median_per_frame": 0.17857142857142794,
+  "per_point": [
+   {
+    "n": 31491,
+    "A": 28477,
+    "B": 0,
+    "C": 3014,
+    "A_ge6": 0,
+    "B_ge6": 0,
+    "C_ge6": 0,
+    "b_dup": 0,
+    "b_over": 0,
+    "b_unknown": 0,
+    "anomaly": 0,
+    "a_run_max": 24,
+    "a_run_peak": 5.178571428571441,
+    "b_run_max": 0,
+    "lvl": {
+     "3": 898,
+     "4": 55,
+     "5": 27,
+     "6": 0,
+     "8": 0
+    }
+   }
+  ],
+  "b_run_top": [],
+  "a_run_top": []
+ }
+}

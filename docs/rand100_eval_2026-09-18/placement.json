@@ -1,0 +1,89 @@
+{
+  "mode": "placement",
+  "args": {
+    "mode": "placement",
+    "replays": [
+      "rand100=runs/rand100_eval/replays"
+    ],
+    "ckpt": null,
+    "arms": "greedy,sample,uniform,mix0.5",
+    "games": 8,
+    "seed": 0,
+    "max_frames": 400,
+    "json": "../../docs/rand100_eval_2026-09-18/placement.json",
+    "gate_mode": null
+  },
+  "placement": {
+    "per_dir": {
+      "rand100": {
+        "n_games": 100,
+        "n_deploys": 3062,
+        "grid": [
+          32,
+          18
+        ],
+        "n_distinct_cells": 484,
+        "grid_cells": 576,
+        "empirical_entropy_bits": 8.474457718335715,
+        "uniform_entropy_bits": 9.169925001442312,
+        "effective_cells": 355.68534378463664,
+        "top1_mass": 0.006858262573481384,
+        "top10_mass": 0.05878510777269758,
+        "x_hist": [
+          170,
+          188,
+          167,
+          167,
+          182,
+          207,
+          187,
+          155,
+          162,
+          137,
+          144,
+          207,
+          169,
+          171,
+          162,
+          141,
+          188,
+          158
+        ],
+        "y_hist": [
+          87,
+          173,
+          150,
+          166,
+          160,
+          136,
+          147,
+          140,
+          184,
+          200,
+          208,
+          177,
+          186,
+          196,
+          195,
+          42,
+          59,
+          68,
+          51,
+          52,
+          49,
+          15,
+          31,
+          13,
+          31,
+          24,
+          21,
+          13,
+          18,
+          22,
+          22,
+          26
+        ]
+      }
+    }
+  }
+}
