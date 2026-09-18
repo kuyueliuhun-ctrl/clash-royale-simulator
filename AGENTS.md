@@ -73,6 +73,7 @@
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
 | **★★ `et_solo100k` 两臂干预长跑：已跑完 + 判读**（含**三次发射** + **六处测量侧更正** §11.13.6/7/9/10/12/13 + **★分辨率实测标定 §11.13.11**；**结论 = 没有任何一项能用现有仪器分辨出疗效，不构成判决**） | 判读 [`docs/et_solo100k_judgment_2026-09-18.md`](docs/et_solo100k_judgment_2026-09-18.md)、读数 [`docs/readout_et_solo100k.md`](docs/readout_et_solo100k.md)、run 记录 [`docs/et_solo100k_2026-09-18.md`](docs/et_solo100k_2026-09-18.md)、台账 **O8** |
 | **★ 训练健康指标**（价值损失 / 策略熵 = **本来就有、只是 UI 看不见**；**能不能判「步数瓶颈」**；A_et 实测熵平台读数；GBK 陷阱新证据） | [`docs/train_health_metrics_2026-09-18.md`](docs/train_health_metrics_2026-09-18.md) |
+| **★ 「不出牌」概率（P(STOP)）实测**（用户提问）：**开局帧** A_et **0.052** / B_ctrl 0.034 / 未训练 0.081；**有牌可出时的选择概率** 0.058~0.09（未训练 0.15~0.20）；**全程 ≈0.90 是"没得选"**——**88%~91% 的帧买不起任何手牌**（圣水中位 1.50），「不裸下」门禁 **0** 帧；⇔ 纠正 `P(STOP)=0.945/0.929` 的老读法 | 读数 [`docs/pass_prob_2026-09-18.md`](docs/pass_prob_2026-09-18.md)、仪器 `scripts/probe_pass_prob.py` |
 
 ---
 
