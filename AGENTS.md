@@ -71,6 +71,7 @@
 | 长跑工程（两级评估 + 评估并行分片） | [`docs/long1m_prereg_2026-09-18.md`](docs/long1m_prereg_2026-09-18.md) |
 | **`run100k` 启动记录（正在跑，100k 两级评估）** | [`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md) |
 | 仪表盘对接长跑（进度条 / 大点 / 逐对手胜率） | [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md) |
+| **★ `et_solo100k` 两臂干预长跑记录**（进行中；含两次发射 + 两处测量侧更正 + `eval@0` 三层读数） | [`docs/et_solo100k_2026-09-18.md`](docs/et_solo100k_2026-09-18.md) |
 
 ---
 
@@ -179,7 +180,7 @@
      记录与落地步骤：[`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md)
 3. **★ 第八轮：用户直接要求的 `economy_et` 100k 干预长跑（两臂，进行中）**
    - 臂：**`A_et`**（`--config economy_et`，`engagement_trade=0.5` 与 `edw` 同汇率）+ **阴性对照 `B_ctrl`**
-     （`--config economy`），逐字同参同 seed，**顺序跑**。模式 = **`solo`**（预注册 §8 强制）。
+     （`--config economy_etm`，见下 §11.13.7），逐字同参同 seed，**顺序跑**。模式 = **`solo`**（预注册 §8 强制）。
    - 判据在开跑前写死：预注册 [`§11.13`](docs/engagement_trade_prereg_2026-09-18.md)（机制/行为/门禁/项体检 + 4 条失败分支）。
    - ⚠️ **本轮不构成判决**：缺阳性对照（§5.2 无法判 `VALID`）+ n=1 seed/臂（【R5】）⇒
      **不得**写成「修好了」或「确认无效」，只能写「观察到什么 / 未达行为可见阈值 / 不可分辨」。
@@ -189,6 +190,11 @@
      ⇒ 不耗 RNG；回归测试 1/1 PASS）⇒ **两臂对称补上后重启**，判据一字未改。
      第一次发射在 **step 7547** 主动终止、进度作废（留证 `runs/_discarded_et_solo100k_noprobe/`
      与 `docs/train_et_solo100k_noprobe_discarded.log`）。
+   - ★ **第二处发射问题（§11.13.7）**：`_set_et_measure` 只在 `measure_only` 或 `engagement_trade>0`
+     时才让**评估局**记 `et` ⇒ `B_ctrl = --config economy` **两个都不满足**、评估录像**没有 `et`**
+     ⇒ §11.13.2 的**门禁对照列是空的**。改用 `economy_etm`（**唯一**有效差异 = `measure_only 0→1`，
+     【R4】脚本复算；`test_measure_only_is_behavior_neutral` 逐位中性，复跑 **3/3 PASS**）；
+     `A_et` **不中断**，由监视脚本在 `B_ctrl` 刚起来时换掉（损失 < 1 分钟）。
    - 仪器：`scripts/judge_critic_inertia.py` 新增 `--baseline within`（本 run 前 100 诊断点中位 ± 3×MAD，
      **原始 MAD** 不乘 1.4826；【R4】脚本复算；`--selftest` 4/4 PASS）；
      `advinert` 实测密度 145 点/20k 步 ⇒ 100k 约 725 点 ⇒「前 100 点」≈ 前 ~1.4 万步。

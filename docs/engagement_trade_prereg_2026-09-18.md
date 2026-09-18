@@ -711,3 +711,45 @@ eval@0（20 局）实测 **156 s** ⇒ 单臂 ≈ **85 min 训练 + 42 min 评�
 前段该指标恒定 ⇒ 标 `⚠退化`，此时**不得**据此判显著。
 **向后兼容**：默认 `--baseline prereg` 仍走原 critic 惰性预注册的 P1/P2 固定阈值，行为不变。
 回归测试：`--selftest` ⇒ **4/4 PASS**。
+
+**重启后的第一手对账（2026-09-18 10:03，重启运行已越 step 2.9k）**：
+- 探针**确实生效**：`[solo advinert 2921] corr=0.9970 resid=0.1670 resid_norm=0.0780
+  lvl_shift=0.2823 level_gap=7.6679 grad_cos=+0.9969 gnorm_ratio=0.793`（这是第一次发射**根本拿不到**的量）。
+- **eval@0 与第一次发射逐字相同**：`0.650±0.107 (13W/7L/0D, 20局) mean_reward=19.825`，
+  三个 baseline 行也全同（0.350 / 0.250 / 0.600）。eval 墙钟 156.1 s → 160.7 s（差异在并行抖动内）。
+- ⚠️ **这条对账能证什么、不能证什么，必须分清**（【R10】）：eval@0 发生在**任何训练之前**、
+  且**不走探针路径**，所以它只能证明「两次发射的初态与 eval 路径一致 + eval 可复现」；
+  **它不能**证明训练梯度路径未被扰动 —— 后者依据的是上面的**代码核对 + 无 dropout** 论证，
+  而非这条对账。两者证据等级不同，不得混为一谈。
+
+### 11.13.7 ★ 第二处发射问题：对照臂的评估录像**不会带 `et`** ⇒ 门禁对照不可算（更正写于 `B_ctrl` 起跑**之前**）
+
+**发现**：§11.13.2 的门禁行要求「`B_ctrl` 同批」做对照，但 `_set_et_measure(cfg)`
+（`run_league.py:478`）只在 `engagement_trade_measure_only` 为真**或** `engagement_trade > 0` 时，
+才让**评估局**把在线明细记进录像。`B_ctrl = --config economy` **两个条件都不满足**
+⇒ 它的评估录像里**没有 `et` 键** ⇒ 门禁（兑现率 / Δρ）在对照臂上**无法计算**
+（`A_et` 因 `engagement_trade=0.5 > 0` 会记录）。
+⇒ 若按原计划跑，§11.13.2 的门禁行**只有干预臂一半、对照列是空的**。
+
+**更正**：`B_ctrl` 改用 `--config economy_etm`（= `economy` 的 **measure-only** 版，预设已存在）。
+
+**等价性证明（【R4】脚本复算，非目视）**：
+1. 除 `reward` 外，只有 `name` / `description` 不同；
+2. `reward` 内**非** `engagement_trade*` 的字段差异 = **NONE**；
+3. 套上 `DEFAULT_REWARD` 默认值后，**有效字段差异只有一个**：`engagement_trade_measure_only` **0→1**；
+4. `economy_etm.engagement_trade = 0.0` ⇒ **一分奖励都不加**；
+5. θ / `t_ref` / gate 仍是登记值 **1.0 / 2.0 / 1**。
+
+**中性有回归测试**：`test_measure_only_is_behavior_neutral` ⇒ 行为与不接线**逐位相同**
+（digest `7e5471196774…`）且同时结算 4 个窗口；本轮复跑 `scripts/selftest_engagement_trade_online.py`
+（须在 `src/clasher_new` 下运行）⇒ **3/3 PASS**。
+
+**单变量性（【R3】）不变**：两臂唯一的**奖励**差异仍是 `engagement_trade` **0.5 vs 0.0**；
+measure-only 只让监视器在**训练侧也跑起来**（对 `A_et` 本来就在跑）⇒ 两臂在"监视器开销"上反而**更对称**。
+⚠️ 与 §11.13.6 同类：这是**测量侧**更正，**判据一字未改**。
+
+**执行方式**：`A_et` **不中断**（它已经带 `et`）。`bash-44` 里串好的第二段（`--config economy`）
+会在 `A_et` 结束后自动起跑 ⇒ 用监视脚本在它刚起来时终止，改用 `economy_etm` 重启
+（`B_ctrl` 因此损失 < 1 分钟；`A_et` 的进度与身份不受影响）。
+
+
