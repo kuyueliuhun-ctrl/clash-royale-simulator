@@ -1,0 +1,7 @@
+0. **`run100k` 已跑完**（`run` 模式 **100k 步**、**两级评估** 14 点 / 800 局、`--only-vs-main`）
+   ⇒ `runs/run100k/`：**14 个 schema-4 录像**（`league_{0,8000,…,100000}.pkl`）+ 14 ckpt；
+   启动前【R1】实测 **14 个孤儿 spawn worker 占 7.7 GB** ⇒ 清掉后可用提交 7.51→**23.24 GB**、
+   档位判回 12 OK（工具 `scripts/kill_orphan_workers.ps1`）。
+   **它的 14 个录像就是 S2 第一/二轮全部读数的数据源**（schema 4 ⇒ 带 §11.9.3 的重建误差）。
+   记录：[`docs/run100k_2026-09-18.md`](docs/run100k_2026-09-18.md)
+   ⚠️ 新源：`runs/run_schema5/`（落地验证用的短 smoke，**schema 5**，60 局）—— 精确口径的对照数据。
