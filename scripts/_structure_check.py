@@ -129,9 +129,12 @@ def rel(root: Path, p: Path) -> str:
 
 # ---------------------------------------------------------------- ① areas
 def check_areas(root: Path) -> dict:
+    # ⚠️ **`rl` 必须递归**（T2-8 教训）：原先是 `recursive=False` ⇒ `rl/selftests/part*.py`
+    # （6,164 行）被**静默漏掉**，`rl` 的读数从 24,145 掉到 18,495 —— **看起来像"代码少了 5,650 行"**，
+    # 实际只是新子包没被数到。这类"仪器没跟上结构"的假读数最危险：没人会去质疑"行数变少了"。
     areas = {
         "engine_top": iter_py(root, "src/clasher_new", recursive=False),
-        "rl": iter_py(root, "src/clasher_new/rl", recursive=False),
+        "rl": iter_py(root, "src/clasher_new/rl", recursive=True),
         "scripts": iter_py(root, "scripts", recursive=True),
     }
     out = {}
