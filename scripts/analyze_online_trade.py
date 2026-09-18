@@ -270,10 +270,17 @@ def main():
         print("   λ=%-5s %s" % (lam, "   ".join(line)))
     rtp = [b.get("rho_tau_phi") for b in batches if b.get("n_games")]
     rtp = [x for x in rtp if x is not None]
+    # ★ 2026-09-18 修：`rtp` 为空时旧代码仍去求 `statistics.mean(rtp)` ⇒
+    # `StatisticsError: mean requires at least one data point` ⇒ **整条命令非零退出**。
+    # 什么时候会全空：**只喂一个零方差批次**（实测 `runs/et_solo100k/replays/league_32000.pkl`，
+    # 该点 20W/0L ⇒ ρ(win) 无定义；单独跑该文件时 13 个批次汇总里只剩它 ⇒ rtp 空）。
+    # 汇总多批时不触发（其它批有定义），所以这个坑只在"逐批单跑"的用法下暴露。
+    _rtp_mean = statistics.mean(rtp) if rtp else None
     print("   ρ(τ, φ) 逐批 %s  均值 %s  ⇒ %s"
-          % ([round(x, 3) for x in rtp], _r(statistics.mean(rtp)),
-             "**冗余**（τ 的信息已在 φ 里）" if rtp and statistics.mean(rtp) > 0.5
-             else "**不冗余**（τ 有独立信息）" if rtp else "n/a"))
+          % ([round(x, 3) for x in rtp], _r(_rtp_mean),
+             "**冗余**（τ 的信息已在 φ 里）" if (_rtp_mean is not None and _rtp_mean > 0.5)
+             else "**不冗余**（τ 有独立信息）" if _rtp_mean is not None
+             else "n/a（所喂批次里 ρ(τ,φ) 全部无定义）"))
 
     print("\n★ 跨批**配对**汇总（同批内 p4b − none；【R16】）")
     for oc in OUTCOMES:

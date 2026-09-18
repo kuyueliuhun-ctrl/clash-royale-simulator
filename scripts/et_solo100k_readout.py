@@ -49,6 +49,15 @@ def _fmt(x, nd=5):
     return "None" if x is None else f"{x:.{nd}f}"
 
 
+def _fx(x, nd=3):
+    """带正号的定长格式，`None` → ``n/a``（零方差批次会导致某些 ρ **无定义**；见 `_num_or_none`）。
+
+    表格里**必须**保留这些行并标 `n/a` —— 丢掉它们等于把"这个评估点全胜、ρ(win) 不可算"
+    这个**事实**从判读产物里删掉（2026-09-18 第五处更正实测踩到）。
+    """
+    return "n/a" if x is None else f"{x:+.{nd}f}"
+
+
 def run_instrument(cmd, out_path):
     """跑一个既有仪器，stdout+stderr 原文落盘，返回 (text, returncode)。"""
     env = dict(os.environ)
@@ -299,9 +308,67 @@ _RE_ELIGIBLE = re.compile(r"合格窗口\s*(\d+)\s*个（([\d.]+)/局）")
 _RE_POOL_FULL = re.compile(r"\[POOLED\]\s*全帧 elixir0\s+n=(\d+).*?≥6=([\d.]+)%")
 _RE_PRE = re.compile(r"\[POOLED\]\s*pre \(=post\+费\)\s+n=(\d+).*?median=([\d.]+)")
 _RE_NEVER = re.compile(r"牌组里从未打出的卡:\s*\[(.*?)\]")
-_RE_GATE_BATCH = re.compile(r"^(\S+\.pkl)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)",
-                            re.M)
+_RE_GATE_BATCH = re.compile(
+    r"^(\S+\.pkl)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+"
+    r"([+-][\d.]+|n/a)\s+([+-][\d.]+|n/a)\s+([+-][\d.]+|n/a)\s+([+-][\d.]+|n/a)\s+([+-][\d.]+|n/a)",
+    re.M)
+_RE_GATE_ROW = re.compile(r"^(\S+\.pkl)\s+\d+\s+[\d.]+\s+[\d.]+\s", re.M)
 _RE_TAU_PHI = re.compile(r"ρ\(τ, φ\)\s*逐批.*?均值\s*([+-][\d.]+)")
+_RE_POOL_PLAYS = re.compile(r"卡牌打出（帧内去重槽位）=(\d+)")
+_RE_XBOW_ROW = re.compile(r"^\s+Xbow\s+(\d+)\s+([\d.]+)%", re.M)
+
+
+def parse_xbow_rate(text):
+    """**按 S1 门禁写死的口径**算 Xbow 出手率（`docs/s1_gate_2026-09-18.md:97`）：
+
+        「帧内**去重槽位**后 `Xbow` 次数 ÷ 卡牌打出总次数」，且**只取 POOLED 段**。
+
+    ⚠️ 仪器 `forensics_card_usage.py` 会打**两个** `§2 卡牌使用` 段：`（POOLED）` 与
+    `（仅 <最后一个回放>）`。两段的「从未打出的卡」列表**可以不同**（实测 A_et：POOLED `[]`
+    而仅-league_100000 `['Xbow']`）—— 取错段就会得到相反的 `never` 结论。
+    本函数显式切出 POOLED 段，避免"取第一个匹配"这种靠运气的事。
+    """
+    i = text.find("§2 卡牌使用（POOLED）")
+    seg = text
+    if i >= 0:
+        j = text.find("§2 卡牌使用（仅", i)
+        seg = text[i:j] if j > i else text[i:]
+    m_tot = _RE_POOL_PLAYS.search(seg)
+    if not m_tot:
+        return {"rate": None, "plays": None, "total": None}
+    total = int(m_tot.group(1))
+    m_row = _RE_XBOW_ROW.search(seg)
+    plays = int(m_row.group(1)) if m_row else 0     # 表里没有该行 = 一次没打
+    return {"rate": (plays / total if total else None), "plays": plays, "total": total}
+
+
+def _num_or_none(s):
+    """``n/a`` → None（**不许**让 n/a 把整行从解析结果里挤出去）。
+
+    ★ 2026-09-18 第五处更正（测量侧，判读产物）：仪器对**零方差批次**会打 ``n/a`` ——
+    实例 = `A_et` 的 `eval@32000`（**20W/0L/0D**，`winrate=1.000±0.000`）⇒ 该批 `ρ(win)` **无定义**。
+    旧正则只认数字 ⇒ 那一行**匹配失败、被静默丢掉**（层 3b 的 A 表 14 批变 **13** 批，
+    md 与"按批次配对"表都少一行），而 `status` 仍是 `OK`。这正是本仓反复吃亏的
+    「静默漏数」。现在：① 允许 `n/a` 并记 `None`；② 与原始表**行数对账**，不一致就降级 + 写 note。
+    """
+    if s is None or s == "n/a":
+        return None
+    return float(s)
+
+
+def parse_gate_batches(text):
+    """仪器 stdout → 逐批 dict 列表（`n/a` 记 `None`，**不丢行**；见 `_num_or_none`）。"""
+    out = []
+    for m in _RE_GATE_BATCH.finditer(text):
+        out.append({"batch": m.group(1), "games": int(m.group(2)),
+                    "windows_per_game": float(m.group(3)),
+                    "tau_phi_ratio": float(m.group(4)),
+                    "rho_none_tower": _num_or_none(m.group(5)),
+                    "rho_p4b_tower": _num_or_none(m.group(6)),
+                    "rho_none_win": _num_or_none(m.group(7)),
+                    "rho_p4b_win": _num_or_none(m.group(8)),
+                    "d_rho_tower": _num_or_none(m.group(9))})
+    return out
 
 
 def layer_behaviour(run_a, run_b, out_dir):
@@ -319,18 +386,30 @@ def layer_behaviour(run_a, run_b, out_dir):
             os.path.join(out_dir, f"forensics_{tag}.txt"))
         m6 = _RE_POOL_FULL.search(text)
         mpre = _RE_PRE.search(text)
-        mnever = _RE_NEVER.search(text)
+        mnever = _RE_NEVER.search(text)   # 注意：取**第一处** = POOLED 段（不是"仅某回放"段）
         xbow_never = None
         if mnever:
             xbow_never = "Xbow" in [s.strip().strip("'\"") for s in mnever.group(1).split(",")]
-        arm = {"status": "OK" if (m6 and mpre) else "PARSE_FAIL",
+        xb = parse_xbow_rate(text)
+        arm = {"status": "OK" if (m6 and mpre and xb["rate"] is not None) else "PARSE_FAIL",
                "raw": f"forensics_{tag}.txt", "rc": rc}
         arm["elixir_ge6_pct"] = float(m6.group(2)) if m6 else None
         arm["full_frames_n"] = int(m6.group(1)) if m6 else None
         arm["pre_deploy_median"] = float(mpre.group(2)) if mpre else None
         arm["pre_deploy_n"] = int(mpre.group(1)) if mpre else None
         arm["xbow_never_played"] = xbow_never
-        arm["xbow_play_rate"] = 0 if xbow_never else None  # 未打出 ⇒ 0；否则需查表
+        # ★ 2026-09-18 第六处更正（测量侧）：旧写法 `0 if xbow_never else None`
+        #   —— 注释写着「否则需查表」，而**查表从未实现** ⇒ 只要该臂打过 1 次 Xbow，
+        #   行为层第 3 项（预注册 §11.13.2 明列）在判读产物里就**恒为 None**（两臂都是）。
+        #   现在按 S1 门禁写死的口径直接算：`docs/s1_gate_2026-09-18.md:97`
+        #   「帧内去重槽位后 Xbow 次数 ÷ 卡牌打出总次数」，且**只取 POOLED 段**。
+        arm["xbow_plays"] = xb["plays"]
+        arm["xbow_plays_total"] = xb["total"]
+        arm["xbow_play_rate"] = xb["rate"]
+        if (xbow_never is True and (xb["plays"] or 0) > 0) or \
+           (xbow_never is False and xb["plays"] == 0):
+            arm["xbow_note"] = (f"⚠️ 内部不一致：POOLED「从未打出」={xbow_never} 而计数={xb['plays']}"
+                                "（仪器口径需复核）")
         res["arms"][tag] = arm
     if any(v.get("status") != "OK" for v in res["arms"].values()):
         res["status"] = "PARTIAL"
@@ -361,23 +440,32 @@ def layer_gate(run_a, run_b, out_dir):
             [sys.executable, os.path.join(_HERE, "analyze_online_trade.py"),
              "--replays", rep],
             os.path.join(out_dir, f"gate_{tag}.txt"))
-        arms_pairs = []
-        for m in _RE_GATE_BATCH.finditer(text):
-            arms_pairs.append({"batch": m.group(1), "games": int(m.group(2)),
-                               "windows_per_game": float(m.group(3)),
-                               "tau_phi_ratio": float(m.group(4)),
-                               "rho_none_tower": float(m.group(5)),
-                               "rho_p4b_tower": float(m.group(6)),
-                               "rho_none_win": float(m.group(7)),
-                               "rho_p4b_win": float(m.group(8)),
-                               "d_rho_tower": float(m.group(9))})
+        arms_pairs = parse_gate_batches(text)
+        # 行数对账：原始表的行数 vs 解析到的行数。**不静默丢批次**（第五处更正，见 _num_or_none）。
+        n_raw = len(_RE_GATE_ROW.findall(text))
+        notes = []
+        if n_raw != len(arms_pairs):
+            notes.append(f"原始表 {n_raw} 行 vs 解析 {len(arms_pairs)} 行（有批次未被解析）")
+        n_win_na = sum(1 for x in arms_pairs
+                       if x["rho_none_win"] is None or x["rho_p4b_win"] is None)
+        if n_win_na:
+            bad = [x["batch"] for x in arms_pairs
+                   if x["rho_none_win"] is None or x["rho_p4b_win"] is None]
+            notes.append(f"ρ(win) 无定义的批次 {n_win_na} 个（零方差，如全胜/全负）：{', '.join(bad)}")
+        if rc != 0:
+            notes.append(f"仪器 returncode={rc}（该臂整体非零退出，逐批读数可能不全）")
         m_tp = _RE_TAU_PHI.search(text)
+        _st = "OK" if arms_pairs else "PARSE_FAIL"
+        if _st == "OK" and (n_raw != len(arms_pairs) or rc != 0):
+            _st = "PARTIAL"
         res["arms"][tag] = {
-            "status": "OK" if arms_pairs else "PARSE_FAIL",
-            "raw": f"gate_{tag}.txt", "rc": rc,
-            "batches": arms_pairs,
+            "status": _st, "raw": f"gate_{tag}.txt", "rc": rc,
+            "batches": arms_pairs, "n_raw_rows": n_raw,
+            "n_win_rho_undefined": n_win_na,
             "rho_tau_phi": float(m_tp.group(1)) if m_tp else None,
         }
+        if notes:
+            res["arms"][tag]["note"] = "；".join(notes)
     if any(v.get("status") != "OK" for v in res["arms"].values()):
         res["status"] = "PARTIAL"
     # 按**批次名**配对（两臂评估节奏相同 ⇒ 批次名可比对），供失败分支 2 用
@@ -529,6 +617,14 @@ def render(report):
 
     A("\n## 层 2 · 行为（可复算）\n")
     b = report["behaviour"]
+
+    def _xbow_cell(arm):
+        """出手率**连同计数**一起显示（【R4】：判据的分子/分母要看得见，别只给一个比值）。"""
+        r = arm.get("xbow_play_rate")
+        if r is None:
+            return "None"
+        return f"{r:.6f}（{arm.get('xbow_plays')}/{arm.get('xbow_plays_total')}）"
+
     A("| 指标 | A_et | B_ctrl |")
     A("|---|---|---|")
     for key, name in (("elixir_ge6_pct", "全帧圣水 ≥6 占比 (%)"),
@@ -537,10 +633,20 @@ def render(report):
                       ("pre_deploy_n", "部署前 n"),
                       ("xbow_play_rate", "Xbow 出手率"),
                       ("xbow_never_played", "Xbow 从未打出")):
+        if key == "xbow_play_rate":
+            A(f"| {name} | {_xbow_cell(b['arms'].get('A_et', {}))} | "
+              f"{_xbow_cell(b['arms'].get('B_ctrl', {}))} |")
+            continue
         va = b["arms"].get("A_et", {}).get(key)
         vb = b["arms"].get("B_ctrl", {}).get(key)
         A(f"| {name} | {va} | {vb} |")
+    for tag in ("A_et", "B_ctrl"):
+        if b["arms"].get(tag, {}).get("xbow_note"):
+            A(f"| `{tag}` 提示 | {b['arms'][tag]['xbow_note']} |  |")
     A("")
+    A("> 层 2 的口径（预注册未逐字写死比值，故在这里显式标注）：**全帧圣水 ≥6 占比** = 全部帧里"
+      "圣水≥6 的占比（`[POOLED] 全帧`）；**部署前圣水中位** = `[POOLED] pre (=post+费)` 的中位；"
+      "**Xbow 出手率** = 帧内去重槽位后 Xbow 次数 ÷ 卡牌打出总次数（口径同 `docs/s1_gate_2026-09-18.md:97`）。\n")
     p = b.get("paired") or {}
     if any(v.get("A_minus_B") is not None for v in p.values()):
         A("**配对差 `A_et − B_ctrl`**（失败分支 1 的输入；n=1 seed/臂 ⇒ **不下显著结论**，【R5】/【R16】）\n")
@@ -598,9 +704,14 @@ def render(report):
             A("|---|---|---|---|---|---|---|")
             for x in arm["batches"]:
                 A(f"| {x['batch']} | {x['games']} | {x['windows_per_game']} | {x['tau_phi_ratio']} | "
-                  f"{x['rho_none_tower']:+.3f} | {x['rho_p4b_tower']:+.3f} | {x['d_rho_tower']:+.3f} |")
+                  f"{_fx(x['rho_none_tower'])} | {_fx(x['rho_p4b_tower'])} | {_fx(x['d_rho_tower'])} |")
         A(f"")
         A(f"- ρ(τ, φ) = **{arm.get('rho_tau_phi')}**（不冗余的判据）")
+        if arm.get("note"):
+            A(f"- ⚠️ {arm['note']}")
+        if arm.get("n_win_rho_undefined"):
+            A(f"- ⚠️ `ρ(win)` 无定义（**零方差**：该评估点全胜或全负）⇒ 该批的胜率侧 Δρ **不参与**任何判定；"
+              f"`ρ(塔血)` 列仍有效")
         A("")
     gp = g.get("paired") or []
     if gp:
@@ -608,8 +719,8 @@ def render(report):
         A("| 批次 | A_et Δρ | B_ctrl Δρ | A − B |")
         A("|---|---|---|---|")
         for x in gp:
-            A(f"| {x['batch']} | {x['d_rho_tower_A']:+.3f} | {x['d_rho_tower_B']:+.3f} | "
-              f"{x['d_rho_tower_A_minus_B']:+.3f} |")
+            A(f"| {x['batch']} | {_fx(x['d_rho_tower_A'])} | {_fx(x['d_rho_tower_B'])} | "
+              f"{_fx(x['d_rho_tower_A_minus_B'])} |")
         A("")
 
     A("## 层 4 · 项自身体检（`et` 明细）\n")
@@ -657,7 +768,7 @@ def render_judgment(report, logs):
     A("")
     A("两臂逐字同参同 seed、`solo` 模式、顺序串跑，且**均带** `--adv-inert-probe` 与 `--diagnose-every 1`。")
     A("")
-    A("**四处发射/口径更正（都不是最初的命令）**：")
+    A("**六处发射/口径更正（都不是最初的命令）**：")
     A("")
     A("| # | 节 | 问题 | 处置 |")
     A("|---|---|---|---|")
@@ -665,6 +776,8 @@ def render_judgment(report, logs):
     A("| 2 | §11.13.7 | `_set_et_measure` 使 `--config economy` 的**评估录像没有 `et`** ⇒ 门禁对照列为空 | 对照臂改 `economy_etm` |")
     A("| 3 | §11.13.9 | §11.13.2 **自身不一致**：`diagnose_every 10` 下 100k 只有 ~76 点 ⇒ `n_later = 0`、**主判据不可执行** | **不改 N**（那会犯【R16】），改采集：两臂 `--diagnose-every 1` |")
     A("| 4 | §11.13.10 | 门禁行把**指标**（兑现率）与**仪器**（`analyze_online_trade`）写岔了 —— 兑现率只在 `offline_engagement_trade` 里 | 两者都算：层 3a 离线口径 + 层 3b 在线口径 |")
+    A("| 5 | §11.13.12 | **读数脚本静默丢批次**：仪器对**零方差批次**（`A_et` 的 `eval@32000` = **20W/0L** ⇒ `ρ(win)` 无定义）打 `n/a`，而解析正则只认数字 ⇒ 该行被丢掉（层 3b 的 A 表 14→**13** 批，`status` 仍 `OK`） | 正则接受 `n/a`（记 `None`）+ **与原始表行数对账**（不符 ⇒ `PARTIAL` + note）+ 仪器零方差批次不再抛 `StatisticsError`；回归 `--selftest` |")
+    A("| 6 | §11.13.13 | **行为层第 3 项恒 `None`**：`xbow_play_rate` 写成 `0 if never else None`（注释「否则需查表」）而**查表从未实现** ⇒ 只要该臂打过 1 次 Xbow，预注册明列的「Xbow 出手率」在产物里就永远读不到 | 按 S1 门禁口径（`docs/s1_gate_2026-09-18.md:97`）**显式切 POOLED 段**算 `次数/总打出`，并把**分子分母一起显示**；回归 `--selftest` |")
     A("")
     A(f"日志：`A_et` = `{logs[0]}`；`B_ctrl` = `{logs[1]}`\n")
 
@@ -697,7 +810,7 @@ def render_judgment(report, logs):
     A("- **没有**跑 2 seed/臂（§8 的原始要求）⇒ 无法把差异与 run 间散布区分开。")
     A("- **没有**用 §11.10 的 λ 扫描去挑权重（那是 in-sample 事后选择，【R16】禁止）。")
     A("- **没有**因为单点胜率难看而改档/降级（【R1】：先归因外部，本轮实测一次 worker 收尾空转即属此类）。")
-    A("- **没有**改任何判据（N 仍 = 100）；四处更正全部在**测量侧**，依据是代码核对与回归测试。")
+    A("- **没有**改任何判据（N 仍 = 100）；**六处**更正全部在**测量侧**（含 §11.13.12「不静默丢批次」、§11.13.13「行为层第 3 项恒 None」），依据是代码核对与回归测试。")
     A("")
 
     # ---- 6) 台账落点 ----
@@ -709,13 +822,83 @@ def render_judgment(report, logs):
     return "\n".join(L)
 
 
+def _selftest():
+    """【R8】回归测试：护栏 —— 仪器输出里的 `n/a` 行**不许**被解析丢掉（§11.13.12）。
+
+    真实触发例：`A_et` 的 `eval@32000` = **20W/0L/0D**（`winrate=1.000±0.000`）⇒ 该批 `ρ(win)`
+    **零方差无定义** ⇒ 仪器打 `n/a` ⇒ 旧正则（只认数字）匹配失败 ⇒ 该行被**静默丢弃**。
+    """
+    table = "\n".join([
+        "league_0.pkl               20     19.8     0.033    +0.329    +0.353    +0.409    +0.427     +0.024",
+        "league_100000.pkl          20      8.0     0.091    -0.095    +0.005    +0.000    +0.088     +0.099",
+        "league_32000.pkl           20      3.7     0.000    +0.096    +0.096       n/a       n/a     +0.000",
+        "league_40000.pkl           20     35.3     0.034    +0.701    +0.708    +0.763    +0.763     +0.008",
+    ])
+    old = re.compile(r"^(\S+\.pkl)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)\s+"
+                     r"([+-][\d.]+)\s+([+-][\d.]+)\s+([+-][\d.]+)", re.M)
+    ok = True
+
+    got = parse_gate_batches(table)
+    t1 = len(got) == 4 and len(old.findall(table)) == 3
+    print(f"[{'PASS' if t1 else 'FAIL'}] 含 n/a 的表：新解析 {len(got)} 行（期望 4）、"
+          f"旧正则 {len(old.findall(table))} 行（期望 3，即**会丢**该行）")
+    ok &= t1
+
+    row = [x for x in got if x["batch"] == "league_32000.pkl"][0]
+    t2 = (row["rho_none_win"] is None and row["rho_p4b_win"] is None
+          and row["rho_none_tower"] == 0.096 and row["d_rho_tower"] == 0.0)
+    print(f"[{'PASS' if t2 else 'FAIL'}] n/a 行：win 侧 = None、塔血侧仍为数字 "
+          f"（tower={row['rho_none_tower']} d={row['d_rho_tower']}）")
+    ok &= t2
+
+    t3 = _RE_GATE_ROW.findall(table).__len__() == 4
+    print(f"[{'PASS' if t3 else 'FAIL'}] 行数对账正则 `_RE_GATE_ROW` 也认这一行（4/4）")
+    ok &= t3
+
+    t4 = _fx(None) == "n/a" and _fx(0.0) == "+0.000" and _fmt(None) == "None"
+    print(f"[{'PASS' if t4 else 'FAIL'}] None 安全格式化：_fx(None)={_fx(None)!r}、"
+          f"_fx(0.0)={_fx(0.0)!r}")
+    ok &= t4
+
+    # ---- 第六处更正：Xbow 出手率必须真的算出来（旧实现只要打过就恒 None），且必须取 POOLED 段 ----
+    forensics = "\n".join([
+        "--- §2 卡牌使用（POOLED）---",
+        "  卡牌打出（帧内去重槽位）=8769  子动作直方图={'1': 7113}",
+        "    Skeletons      1872   21.35%  费=1.0  最大落点 y=20",
+        "    Xbow              5    0.06%  费=6.0  最大落点 y=9",
+        "  牌组里从未打出的卡: []",
+        "--- §2 卡牌使用（仅 league_100000.pkl）---",
+        "  卡牌打出（帧内去重槽位）=306  子动作直方图={'1': 232}",
+        "  牌组里从未打出的卡: ['Xbow']",
+    ])
+    xb = parse_xbow_rate(forensics)
+    t5 = (xb["plays"] == 5 and xb["total"] == 8769 and abs(xb["rate"] - 5 / 8769) < 1e-12)
+    print(f"[{'PASS' if t5 else 'FAIL'}] Xbow 出手率真算出来：{xb['plays']}/{xb['total']}"
+          f"={xb['rate']:.6f}（旧实现 `0 if never else None` 恒 None）")
+    ok &= t5
+    t6 = _RE_NEVER.search(forensics).group(1).strip() == ""
+    print(f"[{'PASS' if t6 else 'FAIL'}] 『从未打出』取到的是 **POOLED** 段（空表），"
+          f"不是『仅-回放』段的 ['Xbow']（取错段会得到相反结论）")
+    ok &= t6
+    xb0 = parse_xbow_rate(forensics.replace(
+        "    Xbow              5    0.06%  费=6.0  最大落点 y=9\n", ""))
+    t7 = (xb0["plays"] == 0 and xb0["rate"] == 0.0)
+    print(f"[{'PASS' if t7 else 'FAIL'}] 表里没有 Xbow 行（真的没打过）⇒ plays=0、rate=0.0")
+    ok &= t7
+
+    print(f"\n{'ALL PASS' if ok else 'FAILED'} (7/7 期望)")
+    return 0 if ok else 1
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--log-a", required=True)
-    ap.add_argument("--log-b", required=True)
-    ap.add_argument("--run-a", required=True)
-    ap.add_argument("--run-b", required=True)
-    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--log-a", default=None)
+    ap.add_argument("--log-b", default=None)
+    ap.add_argument("--run-a", default=None)
+    ap.add_argument("--run-b", default=None)
+    ap.add_argument("--out-dir", default=None)
+    ap.add_argument("--selftest", action="store_true",
+                    help="只跑护栏回归（不碰数据；§11.13.12 的 n/a 行不许被丢）")
     ap.add_argument("--markdown", default=None)
     ap.add_argument("--judgment", default=None,
                     help="按预注册 §11.13.8 结构输出判读文档（静态条目 + 四层读数 + 分支输入表）")
@@ -723,6 +906,12 @@ def main():
     ap.add_argument("--baseline-n", type=int, default=100)
     ap.add_argument("--baseline-k", type=float, default=3.0)
     args = ap.parse_args()
+
+    if args.selftest:
+        return _selftest()
+    for req in ("log_a", "log_b", "run_a", "run_b", "out_dir"):
+        if not getattr(args, req):
+            ap.error(f"--{req.replace('_', '-')} 必填（或 --selftest）")
 
     os.makedirs(args.out_dir, exist_ok=True)
     print(f"[readout] out_dir 解析为 {os.path.abspath(args.out_dir)}")
