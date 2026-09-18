@@ -82,6 +82,9 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/selftest_offline_engagement_trade.py`（2026-09-18） | **预注册 §7 不变量 1–6 的测试**（6/6 PASS，合成帧、零引擎依赖、秒级）：反对称 / 桶守恒 / 产物恒 0 费 / 窗口等式 / 局面切分 8 场景 / 跨局重置。不需要经过 `rl/selftest.py`（【R19】） |
 | `scripts/forensics_card_usage.py`（2026-09-14） | **回放行为取证**：卡牌使用分布 / 圣水（部署前·后·全帧）/ 部署节奏 / **费用可达性表** / 合法性核验。**只读**，11 个回放文件约 10 秒 |
 | `scripts/et_solo100k_readout.py`（2026-09-18） | **`et_solo100k` 两臂判读执行器**：一条命令跑完 §11.13.2 的**四层**——机制层（主，复用 `judge_critic_inertia` 的 within-run 中位±3×MAD 与跨臂「不可分辨」判定；**含层 1b 的 `EVb`／池化 EV**）、行为层（调 `forensics_card_usage`）、门禁层（调 `analyze_online_trade`，含按批次配对 A−B）、项体检（`et` 的 φ/τ/score 分布与 `τ≠0` 占比）。**只编排+复算，不另造口径**（【R17】）；各仪器**原始 stdout 落盘留证**；缺数据**大声失败**不静默填 0。满量程彩排 5 批次/250 局/臂 = **1 min 13 s**（含逐批兑现率，每个评估点单独跑一次离线仪器）。`--judgment <path>` 额外按预注册 **§11.13.8** 的必写条目顺序产出判读文档骨架：**静态条目写全**（不构成判决声明 / 四处更正清单 / 明确未做 / 台账落点）+ 四层读数 + **失败分支输入表**；其中**分支 3 机械判定**（触发/未触发），分支 1·2·4 只列输入并标「须人工判读」。⚠️ 用 Windows python 跑，`--out-dir` 用仓库内相对路径 |
+| `scripts/judge_critic_inertia.py`（2026-09-18） | **critic 惰性 / 机制层判据**：`--baseline within` = 本 run **前 100 个诊断点**中位 ± k×MAD（**原始 MAD**，不乘 1.4826），`--baseline prereg` 为旧的固定基线；`--selftest` **4/4 PASS**。2026-09-18 加**可选** `keys=` 形参（默认仍是原六项，**行为逐位不变**），以便 `scripts/health_curve.py` 复用**同一实现**而不是照抄公式（【R17】不得出现两套口径） |
+| `scripts/health_curve.py`（2026-09-18） | **训练健康曲线读数**（用户直接要的两个指标）：**价值损失**（用**原始 MSE `vraw=`**，不是 ÷`v_scale²` 的 `value=`）与**策略熵**（掩码后一次决策内各 decoder 步熵之**和**，nat）。二者**本来就逐 update 打在日志里**（solo `[solo step N]` / run `[step N]`，100k ≈ **781 点**），只是 `solo_state.json` 的 32 键里**没有** ⇒ UI 一直看不见。输出 = 分段表 + **局部平台读数**（末窗 vs 紧邻前窗，阈值 k×前窗 MAD）+ §11.13.2 within-run 带（复用 jci 同一实现）+ 可选 `--log-b` 跨臂配对表；`--json` 与 dashboard **同源**；`--selftest` **5/5 PASS**。⚠️ **全部输出是描述性、非预注册判据**；口径与 A_et 实测读数见 [`docs/train_health_metrics_2026-09-18.md`](../train_health_metrics_2026-09-18.md) |
+| `src/clasher_new/rl/train_health.py`（2026-09-18） | 上面脚本与 dashboard `/api/health` 的**共用实现**（`parse_line`/`parse_log`/`blocks`/`mad`/`plateau_read`/`health_summary`/`derive_train_log`）——一份口径两处用，避免 UI 与 CLI 各读各的。**训练路径不导入它**（对训练零影响） |
 | `scripts/kill_by_cmdline.ps1`（2026-09-18） | **按命令行精准定位/终止 `python.exe`**：`-Marker <子串>` 杀，`-DryRun` 只列；**退出码可当存活判定**（0=有匹配/1=无匹配）。⚠️ 必须**写成文件**再 `-File` 调用（bash 内联传 `$_` 会变成 `\$` ⇒ 过滤器**静默失配、恒返回 0** ⇒「无孤儿」变**假阴性**）；WSL 里也不能直接跑 `powershell`，须经 `cmd.exe /c`；**脚本保持 ASCII-only**（PS 5.1 无 BOM 按 GBK 读 `.ps1` ⇒ 中文注释会解析失败） |
 | `scripts/ps_list_python.ps1`（2026-09-18） | **归因用进程快照**（【R1】）：列出 `python.exe` 的 **PID / PPID / 累计 CPU 秒 / 存活秒 / 命令行**；采样两次即可判断某进程是**在算**还是**阻塞**（本机实测抓到过一次「评测 worker 收尾期主进程空转约 5 min」）。**只读**，ASCII-only |
 | `scripts/probe_value_ln.py --ladder v3`（2026-09-14） | **前端定位阶梯**：`raw_obs/raw_nongrid/[grid_x]/cnn_pre_ln/grid_ln_out/fused 五块/enc`；`--rollout-only` + `--save-npz` 两阶段、`--exclude` 省内存。**只读**；`_capture_parts` 与原实现逐帧断言逐位一致 |
@@ -94,7 +97,7 @@ python rl/run_league.py --mode solo --config economy --config-name d1_long_100k 
 | `scripts/check_commit.py`（2026-09-17） | **长跑前宿主提交内存检查**（【R1】的 `wmic` 替代品，因 wmic 已被 Windows 移除）；可用提交 < 12 GB ⇒ 降 `--eval-workers` 档 |
 | `scripts/_agents_split.py --check`（2026-09-18） | **AGENTS 拆分的不丢内容校验**：【1】注入尺寸余量、【2】**原文每个非空行逐字出现在新 `AGENTS.md` 或分册之一（缺 0 行才算过）**、【3】相对链接可解析、【4】原节号 1..9 全被分册覆盖。改动 `AGENTS.md` 或 `docs/agents/*` 后跑一次 |
 | `scripts/run_selftests.py`（2026-09-14） | 按名跑**子集** selftest（【R19】默认用法；不改 `selftest.py`） |
-| `scripts/check_dashboard_js.py`（2026-09-17） | **dashboard 前端回归**：node + DOM 桩跑内嵌 JS 渲染冒烟（经 stdin 管道；Windows 下回退 `wsl.exe node`）；**`--league-run runs/<name>`** 加跑联赛/长跑面板（进度条+大点+胜率曲线） |
+| `scripts/check_dashboard_js.py`（2026-09-17，**2026-09-18 加 health 正面路径**） | **dashboard 前端回归**：node + DOM 桩跑内嵌 JS 渲染冒烟（经 stdin 管道；Windows 下回退 `wsl.exe node`）；**`--league-run runs/<name>`** 加跑联赛/长跑面板（进度条+大点+胜率曲线）。2026-09-18 新增「训练健康」面板回归：用后端**真实** `build_health_payload`（同一个实现，不造假数据）跑**正面路径**——断言图例含「策略熵」、注里出现**平台读数**与「非预注册判据」，另加「无日志不抛」空分支。⚠️ 这条正面路径**上线当天就抓到一个真 bug**（仓库根推错一层 ⇒ 面板永远"没有日志"，见 `docs/train_health_metrics_2026-09-18.md` §8.2）——只测"没数据不抛"是抓不到的 |
 
 > **脚本对手陷阱**：`ScriptedPolicy(mode="heuristic")` 实为 **mask 随机**（P0-3 时代占位）；
 > 要"会防守的脚本对手"必须用 `SelfDefenderPolicy`——其反制落点是**世界坐标**，
@@ -109,6 +112,12 @@ python rl/dashboard.py --solo  runs/<run> --port 8700   # solo
 > **2026-09-18 起（长跑对接）**：`--state` 也接受**目录**（自动找 `league_state.json`）；同目录 `run_state.json`+`config.json` ⇒ **进度条**（步数/评估点 n/N/粗估剩余；`state_age_s>15min` 变红=疑似卡死）；两级评估点按 `kind` 画竖虚线；新增**指标多选器**（默认 Elo / 可切**逐对手胜率**，由 `history`+`round_stats.games` 切分复原）。详见 [`docs/dashboard_long1m_2026-09-18.md`](docs/dashboard_long1m_2026-09-18.md)
 > `--solo` 可传**目录**（自动找 `solo_state.json`）。**2026-09-17 起**：solo 曲线改为**指标多选器**
 > （默认行为指标，胜率降级进「⚠ 自引用（禁读）」组）；卡牌统计新增「**按卡组**」矩阵（行=卡牌、列=卡组）。
+> **2026-09-18 新增「训练健康」组**（策略熵 · 价值损失）：数据源**不是** `solo_state.json`，而是
+> **训练日志**（`/api/health`；日志路径由 `--train-log` 显式给，或从 `--solo` 目录名推
+> `<repo>/docs/train_<run>.log`；推不到就显示"不可用"而**不会**拿别的 run 顶上）。
+> 注里直接给出**局部平台读数**（末窗 vs 前窗、diff、3×MAD、snr）并标注「非预注册判据」。
+> 口径与实测读数：[`docs/train_health_metrics_2026-09-18.md`](../train_health_metrics_2026-09-18.md)。
+> ⚠️ 早期点数少时该读数**无信息量**（窗只有 5% 点数、MAD 很大）⇒ 看读数前先看 snr 与窗口宽度。
 > **⚠️ 2026-09-17 环境漂移（实测）：8090 已不可用**——`netsh int ipv4 show excludedportrange protocol=tcp`
 > 显示 **8013–8112 被系统保留**（Hyper-V/WinNAT）⇒ 绑定抛 `PermissionError: [WinError 10013]`，
 > 而 `netstat -ano | findstr :8090` **查不到任何监听**（所以别误判成"端口被占"）。**改用 `--port 8700`**（实测 200 OK）。

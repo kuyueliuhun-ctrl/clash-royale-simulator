@@ -115,6 +115,29 @@ t("controls 曲线 = 3 条外生对照", function(){
 t("winrate 曲线（含 SE 竖线路径）可绘制", function(){
   curSoloMetric = "winrate"; drawSoloMetricChart(); curSoloMetric = "behavior"; drawSoloMetricChart();
 });
+/* 训练健康面板（策略熵 / 价值损失）：数据源是训练日志，不是 solo_state.json。
+   2026-09-18 新增 —— 【R8】新能力必须带**正面路径**回归，不能只测"没数据不抛"。 */
+if (_HEALTH_PAYLOAD && _HEALTH_PAYLOAD.ok){
+  t("health 正面路径：真实日志 payload 可绘制 + 读数写进 note", function(){
+    health = _HEALTH_PAYLOAD;
+    curSoloMetric = "health"; drawSoloMetricChart();
+    const leg = document.getElementById("soloMetricLegend").innerHTML;
+    if (leg.indexOf("策略熵") < 0) throw new Error("图例缺策略熵: " + leg.slice(0,120));
+    const note = document.getElementById("soloMetricNote").textContent;
+    if (note.indexOf("平台读数") < 0) throw new Error("note 里没有平台读数: " + note.slice(0,200));
+    if (note.indexOf("非预注册判据") < 0) throw new Error("note 缺『非预注册判据』声明");
+    curSoloMetric = "behavior"; drawSoloMetricChart();
+  });
+} else {
+  out.push("SKIP health 正面路径（该 run 未提供训练日志）");
+}
+t("health 无日志 ⇒ 走『不可用』分支（不抛）", function(){
+  const keep = health;
+  health = {ok: false, error: "未找到训练日志", points: [], read: {}};
+  curSoloMetric = "health"; drawSoloMetricChart();
+  curSoloMetric = "behavior"; drawSoloMetricChart();
+  health = keep;
+});
 t("renderCardStats（按模型矩阵）", function(){ cardStats = csPayload; renderCardStats(); });
 t("按卡组矩阵已渲染", function(){
   const h = document.getElementById("statsDeckTable").innerHTML;
@@ -277,23 +300,35 @@ def main() -> int:
     cs_old = (D.build_card_stats_payload(old_replays, None, 1)
               if os.path.isdir(old_replays) else {"ok": False, "error": "no old replays"})
     n_controls = len({r.get("vs") for r in (solo_pl.get("controls_history") or [])})
+    # 训练健康（策略熵/价值损失）：从**训练日志**取真实 payload。【R8】给新面板配正面路径回归：
+    # 用后端真正的 build_health_payload（同一实现），而不是前端造一份假数据。
+    h_log = D.derive_train_log(solo_dir=run_dir, repo_root=D._REPO_ROOT)
+    health_pl = (D.build_health_payload(h_log) if h_log
+                 else {"ok": False, "error": "未找到训练日志", "log": None})
     print(f"[dashboard-js] payload：history={len(solo_pl.get('history') or [])} "
           f"controls={len(solo_pl.get('controls_history') or [])}（{n_controls} 路） "
-          f"decks={len(cs_pl.get('decks') or [])} old_decks={len(cs_old.get('decks') or [])}")
+          f"decks={len(cs_pl.get('decks') or [])} old_decks={len(cs_old.get('decks') or [])} "
+          f"health_ok={health_pl.get('ok')} health_points={len(health_pl.get('points') or [])} "
+          f"log={os.path.basename(h_log) if h_log else None}")
+    if not health_pl.get("ok"):
+        print(f"[WARN] health 面板只有空分支可测：{h_log or '（该 run 推不出训练日志）'}")
     if n_controls < 1:
         print("[WARN] 该 run 没有 _controls_history ⇒ controls 曲线条数判据会用 0，跳过该断言")
         n_controls = 0
 
     tmp = os.path.join(_SRC, "runs", "_tmp_dashjs")
     os.makedirs(tmp, exist_ok=True)
-    for name, obj in (("_solo.json", solo_pl), ("_cs.json", cs_pl), ("_cs_old.json", cs_old)):
+    for name, obj in (("_solo.json", solo_pl), ("_cs.json", cs_pl), ("_cs_old.json", cs_old),
+                      ("_health.json", health_pl)):
         with io.open(os.path.join(tmp, name), "w", encoding="utf-8") as f:
             f.write(json.dumps(obj, ensure_ascii=False, indent=1))
     # payload 直接**内嵌**进 JS（不读文件）⇒ 与路径无关
-    prelude = ("const _SOLO_PAYLOAD = %s;\nconst _CS_PAYLOAD = %s;\nconst _CS_OLD_PAYLOAD = %s;\n"
+    prelude = ("const _SOLO_PAYLOAD = %s;\nconst _CS_PAYLOAD = %s;\n"
+               "const _CS_OLD_PAYLOAD = %s;\nconst _HEALTH_PAYLOAD = %s;\n"
                % (json.dumps(solo_pl, ensure_ascii=False),
                   json.dumps(cs_pl, ensure_ascii=False),
-                  json.dumps(cs_old, ensure_ascii=False)))
+                  json.dumps(cs_old, ensure_ascii=False),
+                  json.dumps(health_pl, ensure_ascii=False)))
     tail = _TAIL % {"base": "unused/", "n_controls": n_controls}
     tail = (tail.replace('const soloPayload = JSON.parse(fs.readFileSync(B + "_solo.json", "utf8"));',
                          'const soloPayload = _SOLO_PAYLOAD;')

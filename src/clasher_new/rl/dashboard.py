@@ -48,8 +48,18 @@ _PARENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PARENT not in sys.path:
     sys.path.insert(0, _PARENT)
 
+# 仓库根。⚠️ `_PARENT` = `src/clasher_new`（= `rl` 包的父目录，供 `import rl.*`），**不是** `src`。
+# 2026-09-18 我第一版写成 `os.path.dirname(_PARENT)` ⇒ 得到 `src` ⇒ `<repo>/docs/train_<run>.log`
+# 一个也推不出来、面板永远显示"没有日志"。这个 bug 是 `scripts/check_dashboard_js.py` 新加的
+# **正面路径回归**抓出来的（它打印 `log=None` 而不是让 SKIP 悄悄过去）。
+_REPO_ROOT = os.path.dirname(os.path.dirname(_PARENT))
+
 from rl.replay import save_league_replays
 from rl.config import eval_schedule
+# 训练健康曲线（价值损失 / 策略熵）：**从训练日志读**，不碰 solo_state.json。
+# 为什么单独一条路：这两个量只在 `[solo step N]` / `[step N]` 行里（**逐 update**，100k 约 781 点），
+# 而 solo_state.json 的 history[] 是逐评估点（14 点）且**不含**这两项（2026-09-18 实测）。
+from rl.train_health import derive_train_log, health_summary
 
 MODEL_COLORS = {
     "main": "#2563eb",
@@ -314,6 +324,42 @@ def build_sweep_payload(sweep_root):
             "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         })
     return {"ok": True, "sweep_root": sweep_root, "strategies": strategies}
+
+
+# ---------------------------------------------------------------------------
+# 训练健康（价值损失 / 策略熵）：数据源 = **训练日志**，不是 solo_state.json
+# ---------------------------------------------------------------------------
+
+_HEALTH_CACHE = {}      # {path: (mtime, size, payload)}：3 s 轮询不必每轮重解析 800 行
+
+
+def build_health_payload(log_path):
+    """训练日志 → 熵 / 价值损失稠密曲线 + 平台读数（`/api/health`）。
+
+    ⚠️ 口径（与 `rl/train_health.py` 模块 docstring 一致，别在 UI 上另立一套）：
+    - `entropy` = **掩码后**、一次决策内各 decoder 步熵**之和**（nat）⇒ 随 bundle 长度有混杂；
+    - `value_loss_raw` = 原始 MSE ⇒ **判读用这个**；`value_loss`（日志 `value=`）是 ÷ v_scale² 的
+      缩放量，`value_norm=running` 时 v_scale 会长（A_et 实测 1.75 -> 24.87）⇒ **跨时间不可比**，
+      单独看它会得到"损失在降"的**假读数**。UI 所以两条都画、并在注里写明。
+    - 读数一律**描述性**，非预注册判据（不得并入 §11.13 的判据集，【R3】）。
+    """
+    if not log_path:
+        return {"ok": False, "error": "未找到训练日志（--train-log 未指定且未能从 --solo 目录推出）",
+                "log": None}
+    try:
+        mtime = os.path.getmtime(log_path)
+        size = os.path.getsize(log_path)
+    except OSError as e:
+        return {"ok": False, "error": f"训练日志不可读: {e}", "log": log_path}
+    hit = _HEALTH_CACHE.get(log_path)
+    if hit and hit[0] == mtime and hit[1] == size:
+        return hit[2]
+    try:
+        payload = health_summary(log_path)
+    except Exception as e:
+        return {"ok": False, "error": f"解析失败: {type(e).__name__}: {e}", "log": log_path}
+    _HEALTH_CACHE[log_path] = (mtime, size, payload)
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -995,6 +1041,9 @@ _HTML = r"""<!DOCTYPE html>
         <option value="critic">critic EV · value÷R std</option>
         <option value="vitality">GRU h 跨帧 std · n(abs)</option>
       </optgroup>
+      <optgroup label="训练健康（读训练日志 · 逐 update；⚠ 描述性读数，非预注册判据）">
+        <option value="health">策略熵 · 价值损失(原始MSE)</option>
+      </optgroup>
       <optgroup label="外生对照（唯一可测绝对强度的仪器）">
         <option value="controls">baseline0 / prev / rand 胜率</option>
       </optgroup>
@@ -1144,16 +1193,20 @@ let payload = {ok:false, agents:[], elo_history:{}, round_stats:[], total_steps:
                winrate_curves:{}, winrate_counts:{}, winrates:{}, run_meta:null};
 let sweep = {ok:false, strategies:[]};
 let solo = {ok:false, history:[]};
+/* 训练健康（价值损失 / 策略熵）：来自 /api/health，数据源是**训练日志**（逐 update），
+   与 solo.history（逐评估点）无关。ok=false 通常 = 没给 --train-log 且目录名推不出日志。 */
+let health = {ok:false, points:[], read:{}, log:null};
 
 async function refresh(){
   try{
     // 时间戳 query 防任何中间层/浏览器缓存，保证 3s 轮询拿到最新状态
-    const [rs, sw, so] = await Promise.all([
+    const [rs, sw, so, he] = await Promise.all([
       fetch("/api/state?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
       fetch("/api/sweep?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
-      fetch("/api/solo?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
+      fetch("/api/solo?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json()),
+      fetch("/api/health?_t=" + Date.now(), {cache: "no-store"}).then(r=>r.json())
     ]);
-    payload = rs; sweep = sw; solo = so;
+    payload = rs; sweep = sw; solo = so; health = he;
     await refreshPlay();   // 先拿到 play 状态再决定状态栏显示
     const src = document.getElementById("datasrc");
     const hasSweep = sweep.ok && sweep.strategies.length;
@@ -1742,6 +1795,19 @@ const SOLO_METRICS = {
       {key: "gru_n_abs", label: "GRU n(abs)", color: "#f87171", pct: false},
     ],
   },
+  health: {
+    fromHealth: true,
+    note: "训练健康：数据源 = 训练日志的逐 update 行（100k 约 781 点），不是评估点。"
+        + "「策略熵」= 掩码后一次决策内各 decoder 步分布熵之**和**（nat）⇒ 与 bundle 长度有非零混杂；"
+        + "平台 = 策略锐度不再变化，但⚠ ent_coef 固定时熵**本就**趋于平衡点 ⇒ 熵平台≠性能平台。"
+        + "「价值损失」画**原始 MSE**（日志 vraw）：日志里的 value= 是 ÷v_scale² 的缩放量，"
+        + "value_norm=running 时 scale 会长（A_et 实测 1.75→24.87）⇒ 只看 value= 会读到「损失在降」的假象。"
+        + "⚠ 全部为描述性读数，非预注册判据，不得并入 §11.13 判据集。",
+    series: [
+      {key: "entropy", label: "策略熵（nat）", color: "#22c55e", pct: false},
+      {key: "value_loss_raw", label: "价值损失(原始MSE)", color: "#38bdf8", pct: false},
+    ],
+  },
   controls: {
     note: "外生对照（**目前唯一能测绝对强度的仪器**）：baseline0 = 训练起点、baseline_prev = 上一评估点、baseline_rand = 固定种子的随机策略。三路各 40 局且每点重抽 ⇒ 1σ≈0.078。",
     fromControls: true,
@@ -1774,7 +1840,31 @@ function drawSoloMetricChart(){
   if (!canvas) return;
   const spec = SOLO_METRICS[curSoloMetric] || SOLO_METRICS.behavior;
   const noteEl = document.getElementById("soloMetricNote");
-  if (noteEl) noteEl.textContent = spec.note || "";
+  const hist = solo.history || [];
+  const ctrl = solo.controls_history || [];
+  const hpts = (health && health.points) || [];
+  const _READ_ZH = {plateau: "平台", moving_down: "仍在下降", moving_up: "仍在上升",
+                    unresolvable: "不可判"};
+  if (noteEl){
+    let t = spec.note || "";
+    if (spec.fromHealth){
+      if (health && health.log) t += " ｜ 日志：" + String(health.log).split(/[\\/]/).pop();
+      const parts = spec.series.map(s => {
+        const r = health && health.read && health.read[s.key];
+        if (!r) return null;
+        const zh = _READ_ZH[r.verdict] || r.verdict;
+        const win = r.tail ? `末窗 step ${r.tail.step_lo}-${r.tail.step_hi}` : "末窗";
+        const base = r.base ? `前窗中位 ${_fmtVal(r.base.median)}` : "";
+        const thr = _fmtVal(3 * (r.spread || 0));
+        const snr = (r.snr === null || r.snr === undefined) ? "n/a" : r.snr.toFixed(2);
+        return `${s.label}：${zh}（${win} 中位 ${_fmtVal(r.tail ? r.tail.median : null)} vs ${base}，`
+             + `diff=${_fmtVal(r.diff)}，阈值 3×MAD=${thr}，snr=${snr}）`;
+      }).filter(Boolean);
+      if (parts.length) t += " ｜ 局部平台读数（描述性）：" + parts.join("；");
+      else t += " ｜ 尚无读数";
+    }
+    noteEl.textContent = t;
+  }
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.clientWidth || 600, H = canvas.clientHeight || 300;
   canvas.width = W * dpr; canvas.height = H * dpr;
@@ -1783,17 +1873,27 @@ function drawSoloMetricChart(){
   ctx.clearRect(0, 0, W, H);
   const padL = 54, padR = 16, padT = 30, padB = 34;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const hist = solo.history || [];
-  const ctrl = solo.controls_history || [];
   const legendEl = document.getElementById("soloMetricLegend");
   ctx.fillStyle = "#94a3b8"; ctx.font = "12px sans-serif";
-  if (!(spec.fromControls ? ctrl.length : hist.length)){
-    ctx.fillText("等待首次评估…", padL, padT + 20);
+  const _has = spec.fromHealth ? hpts.length : (spec.fromControls ? ctrl.length : hist.length);
+  if (!_has){
+    if (spec.fromHealth){
+      // 三种"没数据"要分开报，否则用户会把"没接上日志"误读成"这一项没测"
+      ctx.fillText(health && health.ok === false
+        ? ("训练健康不可用：" + (health.error || "无日志"))
+        : "等待训练日志出现可解析的 step 行…", padL, padT + 20);
+    } else {
+      ctx.fillText("等待首次评估…", padL, padT + 20);
+    }
+    if (legendEl) legendEl.innerHTML = "";
     return;
   }
   const lines = spec.series.map(s => {
     let pts;
-    if (spec.fromControls){
+    if (spec.fromHealth){
+      pts = hpts.filter(r => r[s.key] !== undefined && r[s.key] !== null)
+                .map(r => [r.step, r[s.key], null]);
+    } else if (spec.fromControls){
       pts = ctrl.filter(r => r.vs === s.key && r.winrate !== undefined && r.winrate !== null)
                 .map(r => [r.step, r.winrate, r.winrate_se || 0]);
     } else {
@@ -2719,6 +2819,10 @@ class Handler(BaseHTTPRequestHandler):
         elif route == "/api/solo":
             self._send(200, json.dumps(build_solo_payload(self.solo_path)).encode("utf-8"),
                        "application/json; charset=utf-8")
+        elif route == "/api/health":
+            # 训练健康（价值损失 / 策略熵）：读训练日志，与 solo_state.json 无关
+            self._send(200, json.dumps(build_health_payload(Handler.train_log)).encode("utf-8"),
+                       "application/json; charset=utf-8")
         elif route == "/api/play/state":
             sess = self._ensure_play()
             if Handler.play_error:
@@ -2965,6 +3069,10 @@ def main():
                     help="人机对战奖励配置（缺省 standard）")
     ap.add_argument("--replays", type=str, default=None,
                     help="回放目录（缺省 = 状态文件同目录/replays）")
+    ap.add_argument("--train-log", type=str, default=None,
+                    help="训练日志（供「训练健康」面板读价值损失/策略熵；缺省 = 从 --solo 目录名推 "
+                         "<repo>/docs/train_<run>.log）。这两个量只在逐 update 的日志行里，"
+                         "solo_state.json 没有。")
     ap.add_argument("--host", type=str, default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8090)
     ap.add_argument("--demo", action="store_true",
@@ -3014,6 +3122,19 @@ def main():
     Handler.replays_dir = replays_abs
     Handler.sweep_root = sweep_abs
     Handler.solo_path = solo_abs
+    # 训练健康面板（价值损失 / 策略熵）的日志：--train-log 优先，否则从 --solo 的目录名推
+    # <repo>/docs/train_<run>.log。推不到就**明确报"没有"**，绝不拿别的 run 的日志顶上
+    # （否则会把 A 臂的熵画在 B 臂的面板上，是比"没图"坏得多的错）。
+    _log_arg = os.path.abspath(args.train_log) if args.train_log else None
+    Handler.train_log = derive_train_log(
+        solo_dir=(os.path.dirname(solo_abs) if solo_abs else None),
+        repo_root=_REPO_ROOT, explicit=_log_arg)
+    if _log_arg and not os.path.exists(_log_arg):
+        print(f"[dashboard] 警告：--train-log 不存在：{_log_arg}")
+    if Handler.train_log:
+        print(f"[dashboard] 训练健康面板日志: {Handler.train_log}")
+    else:
+        print("[dashboard] 训练健康面板：未找到训练日志（可用 --train-log 显式指定）")
     # 人机对战：--play 指向 checkpoint 或 runs/<name> 目录（自动挑主模型）
     if args.play:
         p = os.path.abspath(args.play)

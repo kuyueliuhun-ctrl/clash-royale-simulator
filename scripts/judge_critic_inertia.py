@@ -107,7 +107,10 @@ def mad(v, med=None):
     return _median([abs(x - med) for x in v])
 
 
-def within_run_baseline(rows, n_base=100, k=3.0):
+_WITHIN_KEYS = ("cos", "resid_norm", "corr", "lvl", "gap", "gr")
+
+
+def within_run_baseline(rows, n_base=100, k=3.0, keys=_WITHIN_KEYS):
     """§11.13.2 的**机制层主判据**：本 run 自己**前 `n_base` 次诊断更新**的中位 ± k×MAD。
 
     为什么用「run 自己的前段」当对照（而不是跨 run 基线）：『R15』『R16』—— 阈值必须在**本实验
@@ -116,13 +119,18 @@ def within_run_baseline(rows, n_base=100, k=3.0):
 
     ⚠️ MAD 可能为 0（前段该指标恒定）⇒ 带退化成一个点。此时 `degenerate=True`，
     后续任何偏离都算越界；调用方**不得**据此判显著，只能记为「带退化，不可判」。
+
+    `keys`（2026-09-18 新增，**向后兼容**）：要统计的指标键名，默认 = §11.13.2 写死的六项。
+    加这个形参是为了让 `scripts/health_curve.py`（策略熵 / 价值损失）**复用同一个实现**，
+    而不是照抄一份公式出来（【R17】不得出现两套口径）。传自定义 `keys` 时，`rows` 需是对应
+    形状的 dict 列表（键名即 `keys`）。默认调用行为**逐位不变**。
     """
     if not rows:
         return {}
     nb = min(int(n_base), len(rows))
     base_rows, later = rows[:nb], rows[nb:]
     out = {"n_base": nb, "n_later": len(later), "k": float(k), "metrics": {}}
-    for key in ("cos", "resid_norm", "corr", "lvl", "gap", "gr"):
+    for key in keys:
         bv = [r[key] for r in base_rows]
         med = _median(bv)
         m = mad(bv, med)
