@@ -248,6 +248,47 @@ def layer_realization(run_a, run_b, out_dir):
         res["status"] = "PARTIAL"
     a, b = res["arms"].get("A_et", {}), res["arms"].get("B_ctrl", {})
     res["paired"] = _delta(a.get("realize_rate_pct"), b.get("realize_rate_pct"))
+    # 逐批（每个评估点单独跑一次仪器）⇒ 可做 A/B **按批次配对**，为失败分支 2 提供
+    # 「方向稳不稳」的证据（不只是两个聚合数字相减）。每个 pkl 约 1.5 s。
+    per_dir = os.path.join(out_dir, "realization_perbatch")
+    os.makedirs(per_dir, exist_ok=True)
+    per = {}
+    for tag, run in (("A_et", run_a), ("B_ctrl", run_b)):
+        rep = os.path.abspath(os.path.join(run, "replays"))
+        rows = []
+        if os.path.isdir(rep):
+            for fn in sorted(os.listdir(rep)):
+                if not fn.endswith(".pkl"):
+                    continue
+                t_i, rc_i = run_instrument(
+                    [sys.executable, os.path.join(_HERE, "offline_engagement_trade.py"),
+                     "--replays", os.path.join(rep, fn),
+                     "--phi-mode", "global", "--tower-mode", "p4b"],
+                    os.path.join(per_dir, f"{tag}_{fn}.txt"))
+                mr = _RE_REALIZE.search(t_i)
+                me = _RE_ELIGIBLE.search(t_i)
+                rows.append({"batch": fn, "rc": rc_i,
+                             "realize_rate_pct": float(mr.group(1)) if mr else None,
+                             "spend_ok_pct": float(mr.group(2)) if mr else None,
+                             "tower_dmg_pct": float(mr.group(3)) if mr else None,
+                             "eligible_windows": int(me.group(1)) if me else None})
+        per[tag] = rows
+    by = {t: {r["batch"]: r for r in per[t]} for t in per}
+    paired_pb = []
+    for name in sorted(set(by.get("A_et", {})) & set(by.get("B_ctrl", {}))):
+        ra, rb = by["A_et"][name], by["B_ctrl"][name]
+        d = (None if (ra["realize_rate_pct"] is None or rb["realize_rate_pct"] is None)
+             else ra["realize_rate_pct"] - rb["realize_rate_pct"])
+        paired_pb.append({"batch": name, "A": ra["realize_rate_pct"], "B": rb["realize_rate_pct"],
+                          "A_minus_B": d,
+                          "eligible_A": ra["eligible_windows"], "eligible_B": rb["eligible_windows"]})
+    res["per_batch"] = paired_pb
+    ds = [x["A_minus_B"] for x in paired_pb if x["A_minus_B"] is not None]
+    res["per_batch_summary"] = {
+        "n": len(ds),
+        "n_pos": sum(1 for d in ds if d > 0), "n_neg": sum(1 for d in ds if d < 0),
+        "n_zero": sum(1 for d in ds if d == 0),
+        "mean_A_minus_B": (sum(ds) / len(ds)) if ds else None}
     return res
 
 
@@ -532,6 +573,19 @@ def render(report):
         A("")
         A(f"- 配对 A − B：**{pp.get('A_minus_B')}** 个百分点"
           "（**只报数**；n=1 seed/臂 ⇒ 不下结论，【R5】/【R16】）")
+        pb = rz.get("per_batch") or []
+        if pb:
+            sm = rz.get("per_batch_summary") or {}
+            A("")
+            A("**逐批兑现率（每个评估点单独跑一次仪器；失败分支 2 的「方向稳不稳」证据）**\n")
+            A("| 批次 | A_et 兑现率 % | B_ctrl 兑现率 % | A − B | A 合格窗口 | B 合格窗口 |")
+            A("|---|---|---|---|---|---|")
+            for x in pb:
+                A(f"| {x['batch']} | {x['A']} | {x['B']} | {x['A_minus_B']} | "
+                  f"{x['eligible_A']} | {x['eligible_B']} |")
+            A("")
+            A(f"- 配对差方向：正 **{sm.get('n_pos')}** / 负 **{sm.get('n_neg')}** / 零 **{sm.get('n_zero')}**"
+              f"（n = {sm.get('n')}），均值 **{_fmt(sm.get('mean_A_minus_B'), 4)}** 个百分点")
         A("")
     A("### 层 3b · 配对 Δρ（`analyze_online_trade.py`，在线口径）\n")
     g = report["gate"]
