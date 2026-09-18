@@ -213,8 +213,16 @@ def do_check(orig_text=None):
     if orig_text:
         head, secs = split_sections(orig_text)
         pool = new_agents_md(secs) if False else open(AGENTS, encoding="utf-8").read()
-        for fname, *_ in BOOKS:
-            pool += "\n" + open(os.path.join(OUTDIR, fname), encoding="utf-8").read()
+        # 比对池 = AGENTS.md + **docs/agents/ 下的全部 .md**（不只 BOOKS 里那 5 册）。
+        # 2026-09-19 修：原实现只池化 `BOOKS` 的固定 5 个文件名 ⇒ **新增一个分册
+        # （如 `structure.md`）会被判「丢内容」**，而本文件的语义明明是
+        # 「逐字出现在新 AGENTS.md **或某个分册**里」⇒ 固定清单是实现与语义不符。
+        import glob as _glob
+        for path in sorted(_glob.glob(os.path.join(OUTDIR, "*.md"))):
+            try:
+                pool += "\n" + open(path, encoding="utf-8").read()
+            except Exception:
+                pass
         missing = []
         for n, body in sorted(secs.items()):
             for line in body.split("\n"):

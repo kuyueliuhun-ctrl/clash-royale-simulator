@@ -9,8 +9,8 @@ import sys
 TREE = sys.argv[1]
 os.chdir(TREE)
 sys.path.insert(0, TREE)
-sys.path.insert(0, "/mnt/e/clash-royale-simulator-main/scripts" if os.name != "nt"
-                else r"E:\clash-royale-simulator-main\scripts")
+# T1-2：本文件就在 `scripts/` 下，直接由 `__file__` 推导 ⇒ 不再硬编码 WSL/Windows 两套绝对路径
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import battle                                       # noqa: E402
 from player import PlayerState                      # noqa: E402

@@ -45,6 +45,10 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from rl.config import TrainConfig  # noqa: E402
+# T1-1：UTF-8 兜底收敛到**单一实现**。这里原先是个**弱化版**（只碰 `sys.stdout`、且**缺**
+# `errors="replace"`、也不管 stderr）⇒ 现改为共享实现，**行为只增不减**（多处理 stderr +
+# 遇不可编码字符改为替换而非抛）。别名导入 ⇒ 调用点 `_force_utf8_stdout()` **不变**。
+from rl.io_bootstrap import force_utf8_stdout as _force_utf8_stdout  # noqa: E402
 from rl.belief import BeliefInference  # noqa: E402
 from rl.belief_planner import BeliefPlanner  # noqa: E402
 from rl.plan_space import PLAN_DIM  # noqa: E402
@@ -111,13 +115,6 @@ REPRO_REF = {
     "EV_fused": 0.04312000460119425,      # EV_within(fused)，α=1e4
     "var_within": 58.83,                  # Var(R)_within（打印值，容差 1%）
 }
-
-
-def _force_utf8_stdout():
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
 
 
 def _capture_parts(pol, obs, belief_token, plan_token):

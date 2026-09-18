@@ -193,10 +193,8 @@ def summarize(batches):
 
 
 def main():
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+    force_utf8_stdout()
     ap = argparse.ArgumentParser(description="用在线口径量局面圣水交换（measure-only 录像）")
     ap.add_argument("--replays", nargs="+", required=True)
     ap.add_argument("--theta", type=float, default=1.0)

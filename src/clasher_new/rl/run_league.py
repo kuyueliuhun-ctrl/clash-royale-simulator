@@ -66,6 +66,7 @@ from rl.config import TrainConfig, reward_to_env, eval_schedule
 from rl.overtime import (NORMAL_TIME_S, OVERTIME_END_S, overtime_open,
                          timeout_winner as _overtime_timeout_winner)
 from rl.replay import battle_snapshot, save_league_replays
+from rl.io_bootstrap import force_utf8_stdout
 
 
 def _cuda_hint() -> str:
@@ -1535,20 +1536,15 @@ def run_league(cfg: TrainConfig, resume=False, record_replays=True):
     return _run_single(cfg, resume=resume, record_replays=record_replays)
 
 
-def _force_utf8_stdout():
-    """把 stdout/stderr 切到 UTF-8 + errors='replace'。
-
-    训练日志含中文/emoji（如 GRU 活力告警的 ⚠️）。Windows 控制台默认 cp936，
-    管道/重定向时 Python 用 locale 编码 → `print` 抛 UnicodeEncodeError；
-    更坏的是它会被 `eval_and_write` 的 `except Exception` 吃掉后**再次**在
-    except 处理器里抛（`{e!r}` 内嵌不可编码字符），直接崩掉训练
-    （2026-09-11 由 test_solo_resume 实际复现）。这里统一兜底。
-    """
-    for _stream in (sys.stdout, sys.stderr):
-        try:
-            _stream.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
+# T1-1：实现已收敛到 `rl/io_bootstrap.force_utf8_stdout`（**单一来源**）。本名保留为**别名**
+# ⇒ 调用点（本文件 `main()`）无需改动。收敛前此处的**强版**函数体（两路 + errors="replace"）
+# 与 `rl/io_bootstrap` 逐字等价 ⇒ 行为不变；由 `scripts/_structure_check.py` ② 复核。
+#
+# 历史背景（保留自查）：训练日志含中文/emoji（如 GRU 活力告警的 ⚠️）。Windows 控制台默认 cp936，
+# 管道/重定向时 Python 用 locale 编码 → `print` 抛 UnicodeEncodeError；更坏的是它会被
+# `eval_and_write` 的 `except Exception` 吃掉后**再次**在 except 处理器里抛
+# （`{e!r}` 内嵌不可编码字符），直接崩掉训练（2026-09-11 由 test_solo_resume 实际复现）。
+_force_utf8_stdout = force_utf8_stdout
 
 
 def main():

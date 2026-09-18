@@ -20,11 +20,15 @@ threat_calc/simulate_exchange 证实，快照构造不影响判卷口径。
 """
 import copy
 import io
+import os
 import sys
 import time
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-sys.path.insert(0, r"E:/clash-royale-simulator-main/src/clasher_new")
+# T1-2：不再硬编码 `E:/clash-royale-simulator-main/...`（换机器/换目录即失效）。
+# 本文件在 `scripts/` 下 ⇒ 仓库根 = 上两级目录 ⇒ 引擎源码在 `<root>/src/clasher_new`。
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_ROOT, "src", "clasher_new"))
 
 import battle as battle_mod
 import player as player_mod
@@ -232,8 +236,10 @@ if __name__ == "__main__":
     print(f"\n对账 {'全部通过' if ok else '存在 FAIL'}，耗时 {time.time()-t0:.0f}s")
 
     if "--quiz" in sys.argv:
-        checkpoint_quiz(qs, "E:/clash-royale-simulator-main/runs/archive/"
-                            "economy_100k_v1_ungated/solo_main.pt", "100k archive (9j era)")
-        checkpoint_quiz(qs, "E:/clash-royale-simulator-main/src/clasher_new/"
-                            "main_ckpt_32000.pt", "main_ckpt_32000 (旧底座)")
+        # T1-2：路径由 `_ROOT`（= `__file__` 推上两级）派生，不再硬编码盘符
+        checkpoint_quiz(qs, os.path.join(_ROOT, "runs", "archive",
+                                        "economy_100k_v1_ungated", "solo_main.pt"),
+                        "100k archive (9j era)")
+        checkpoint_quiz(qs, os.path.join(_ROOT, "src", "clasher_new",
+                                        "main_ckpt_32000.pt"), "main_ckpt_32000 (旧底座)")
         print(f"\n总耗时 {time.time()-t0:.0f}s")

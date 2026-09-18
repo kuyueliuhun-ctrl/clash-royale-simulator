@@ -18,8 +18,8 @@ TREE = sys.argv[1]
 MODE = sys.argv[2] if len(sys.argv) > 2 else "off"
 os.chdir(TREE)
 sys.path.insert(0, TREE)
-SCRIPTS = (r"E:\clash-royale-simulator-main\scripts" if os.name == "nt"
-           else "/mnt/e/clash-royale-simulator-main/scripts")
+# T1-2：本文件就在 `scripts/` 下 ⇒ 由 `__file__` 推导，不再硬编码 WSL/Windows 两套绝对路径
+SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPTS)
 
 from rl.env_wrapper import RLEnv                                   # noqa: E402

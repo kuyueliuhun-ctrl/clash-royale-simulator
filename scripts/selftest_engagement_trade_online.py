@@ -244,10 +244,8 @@ _TESTS = [("test_engagement_trade_default_off", test_engagement_trade_default_of
 
 
 def main():
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+    force_utf8_stdout()
     ok = 0
     for name, fn in _TESTS:
         try:

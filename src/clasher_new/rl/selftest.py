@@ -35,6 +35,101 @@ import numpy as np
 from card_utils import Card
 
 
+# ======================================================================================
+# T1-3 / T1-5：测试运行的**可见性**（x/y 计数、逐测试耗时、显式 SKIP）
+# --------------------------------------------------------------------------------------
+# **硬约束（【R19】+ 并发会话）**：`main()` 里那 **100 行手工调用**的**顺序与内容不得改动** ——
+# 它是全量路径"逐位不变"的保证，也是 `scripts/_apply_s2_channel_when_idle.sh:70-71`
+# 等外部调用方所依赖的稳定接口。
+# **做法**：在 `main()` **入口**把 `globals()` 里的每个 `test_*` 换成「计时 + 计数」包装。
+# `main()` 的函数体在**调用时**才按名字从 globals 解析 ⇒ 那 100 行**逐字不用动**。
+#
+# 收敛到这里的三个既有问题（均由 T0 盘点实测）：
+#   ① `main()` 无 x/y 计数、无逐测试耗时 ⇒ 长跑只能看"有没有最后那句 PASSED"；
+#   ② 首个失败直接抛栈退出（本包装**不**改这一点，仍是 fail-fast）；
+#   ③ 两个测试在缺 ckpt 时 `print("[SKIP] ...")` 或**静默整段跳过** ⇒ 换机/清 `runs/` 后
+#      **照样全绿**（"假绿"）。现在一律走 `_mark_skip()` ⇒ 醒目标签 + 进汇总计数。
+# ======================================================================================
+
+_RUN_STATS: list = []   # [(name, elapsed_s, ok)]
+_SKIPS: list = []       # [(name, reason)]
+_ORIG_FUNCS: dict = {}  # name -> (原函数, 定义行号)
+_INSTRUMENTED = False
+
+
+def _mark_skip(reason: str) -> None:
+    """登记一次「跳过」（T1-5）。调用方必须是 `test_*`。
+
+    为什么必须显式登记：这些分支原本只打一行 `[SKIP]` 或干脆静默 `if` 掉整段 ⇒
+    在**缺 ckpt 的机器上测试照样全绿**。这条把"没测"与"测过且通过"分开。
+    """
+    import inspect
+    name = "unknown"
+    for fr in inspect.stack()[1:]:
+        if fr.function.startswith("test_"):
+            name = fr.function
+            break
+    _SKIPS.append((name, reason))
+    print(f"[SKIP-NO-CKPT] {name}：{reason}")
+
+
+def _instrument_tests() -> None:
+    """把 `globals()` 里的 `test_*` 换成计时/计数包装（幂等）。"""
+    global _INSTRUMENTED
+    if _INSTRUMENTED:
+        return
+    for name, fn in list(globals().items()):
+        if not (name.startswith("test_") and callable(fn)):
+            continue
+        _ORIG_FUNCS.setdefault(name, (fn, getattr(fn, "__code__", None) and fn.__code__.co_firstlineno or 0))
+        globals()[name] = _make_wrapper(name, fn)
+    _INSTRUMENTED = True
+
+
+def _make_wrapper(name: str, fn):
+    def _wrapped(*a, **kw):
+        t0 = time.perf_counter()
+        try:
+            r = fn(*a, **kw)
+        except BaseException:
+            _RUN_STATS.append((name, time.perf_counter() - t0, False))
+            raise
+        _RUN_STATS.append((name, time.perf_counter() - t0, True))
+        return r
+    _wrapped.__name__ = name
+    _wrapped.__doc__ = getattr(fn, "__doc__", None)
+    _wrapped._selftest_original = True  # type: ignore[attr-defined]
+    return _wrapped
+
+
+def discover_tests() -> list:
+    """全量 `test_*`，按**定义序**（`co_firstlineno`）排列 —— 与 `main()` 的**手工序**无关。
+
+    为什么要这个：`scripts/run_selftests.py --list` 是按 `dir()` 的**字母序**列出的，
+    而 `main()` 是**手工序**，两者不同 ⇒ 子集跑的先后与全量不一致。本函数给出定义序，
+    供 `--order-check` 做差集报告（`scripts/run_selftests.py`）。
+    """
+    _instrument_tests()
+    return [n for n, _ in sorted(_ORIG_FUNCS.items(), key=lambda kv: kv[1][1])]
+
+
+def _report_tests() -> None:
+    """汇总：x/y、跳过清单、最慢的若干项（T1-3/T1-5）。"""
+    n = len(_RUN_STATS)
+    ok = sum(1 for _, _, o in _RUN_STATS if o)
+    print(f"\n[selftest] 共 {n} 个测试：{ok} 通过 / {n - ok} 失败；跳过 {len(_SKIPS)} 个")
+    if _SKIPS:
+        # 跳过必须**重复打一遍**：混在几千行输出里的一行 [SKIP-NO-CKPT] 是看不见的
+        print(f"[selftest] ⚠️ 跳过清单（这些**没有**被验证，别当绿）:")
+        for name, reason in _SKIPS:
+            print(f"    - {name}：{reason}")
+    slow = sorted(_RUN_STATS, key=lambda x: -x[1])[:5]
+    if slow:
+        print("[selftest] 最慢 5 项：" + ", ".join(f"{nm} {s:.1f}s" for nm, s, _ in slow))
+    tot = sum(s for _, s, _ in _RUN_STATS)
+    print(f"[selftest] 全部测试累计 {tot:.1f}s")
+
+
 def test_action_bundle_same_tick():
     from rl.env_wrapper import RLEnv
     from rl.action_bundle import ActionBundle
@@ -1922,24 +2017,32 @@ def test_draw_penalty_as_loss():
                 hidden=None, deterministic=False):
             return ActionBundle.noop(), 0.0, 0.0, hidden, {}
 
-    cfg = TrainConfig(name="selftest_draw_penalty", hidden_dim=32, n_eval_games=2,
-                      max_ep_steps=600, seed=5, out_dir="runs/_tmp_drawtest")
-    env = train_solo.solo_env(cfg, 5)
-    bd = len(BeliefInference(opp_deck=list(train_solo.DEFAULT_SOLO_DECK),
-                             n_particles=128, seed=0).encode(None, None))
-    main = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
-    opp = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
-    main.to_device("cpu")
-    opp.to_device("cpu")
-    train_solo._sync_frozen_copy(main, opp)
-    stats, _ = train_solo.eval_solo(env, main, opp, 2, 600, 5, cfg, record_replays=False)
-    assert stats["draws"] == 2, f"双方 noop 应全平局: {stats}"
-    assert stats["mean_reward"] == -float(std["lose_penalty"]), \
-        f"僵局平局 mean_reward 应含失败罚: {stats['mean_reward']}"
-    print("[PASS] 平局=失败：引擎终局平局/僵局平局均按 lose_penalty 惩罚，普通步不误伤")
-
-    import shutil
-    shutil.rmtree("runs/_tmp_drawtest", ignore_errors=True)
+    # T1-4：临时 run 目录从硬编码 `runs/_tmp_drawtest` 改为 `tempfile.mkdtemp()` + `finally` 清理。
+    # 两个原因（均为 T0 盘点实测）：
+    #   ① 旧写法把清理放在**函数末尾**：断言一旦中途失败，`rmtree` **不会执行**
+    #      ⇒ 在仓库工作区里**留下残留目录**；
+    #   ② 它写的是**相对**路径 ⇒ 只有 cwd=src/clasher_new 时才落在预期位置。
+    # 现在用**绝对临时目录** ⇒ 无论断言成败都不在仓库留痕，且与 cwd 无关。
+    import tempfile
+    _tmp_out = tempfile.mkdtemp(prefix="selftest_draw_penalty_")
+    try:
+        cfg = TrainConfig(name="selftest_draw_penalty", hidden_dim=32, n_eval_games=2,
+                          max_ep_steps=600, seed=5, out_dir=_tmp_out)
+        env = train_solo.solo_env(cfg, 5)
+        bd = len(BeliefInference(opp_deck=list(train_solo.DEFAULT_SOLO_DECK),
+                                 n_particles=128, seed=0).encode(None, None))
+        main = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+        opp = Noop(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd)
+        main.to_device("cpu")
+        opp.to_device("cpu")
+        train_solo._sync_frozen_copy(main, opp)
+        stats, _ = train_solo.eval_solo(env, main, opp, 2, 600, 5, cfg, record_replays=False)
+        assert stats["draws"] == 2, f"双方 noop 应全平局: {stats}"
+        assert stats["mean_reward"] == -float(std["lose_penalty"]), \
+            f"僵局平局 mean_reward 应含失败罚: {stats['mean_reward']}"
+        print("[PASS] 平局=失败：引擎终局平局/僵局平局均按 lose_penalty 惩罚，普通步不误伤")
+    finally:
+        shutil.rmtree(_tmp_out, ignore_errors=True)
 
 
 def test_reward_v2_ledger():
@@ -3933,7 +4036,10 @@ def test_opponent_pool_mix():
     src_candidates = (sorted(glob.glob("runs/economy/solo_main_*.pt")) +
                       sorted(glob.glob("../../runs/archive/*/solo_main_*.pt")))
     if not src_candidates:
-        print("[SKIP] 对手池分布：无可用历史 ckpt（仅验证 defender）")
+        # T1-5：原先只 print 一行 [SKIP] ⇒ 缺 ckpt 时测试**照样全绿**（假绿）。
+        # 现在进 `_mark_skip` 计数器，由 `_report_tests()` 汇总重复打印。
+        _mark_skip("无可用历史 ckpt（runs/economy/solo_main_*.pt 与 ../../runs/archive/*/ 均为空）"
+                   " ⇒ 「真实旧 ckpt 池加载 / 采样分布 / PFSP 败局回填」**未验证**，只验了 defender")
         return
     with tempfile.TemporaryDirectory() as td:
         os.makedirs(os.path.join(td, "economy"), exist_ok=True)
@@ -4263,7 +4369,9 @@ def test_opponent_pool_rand_anchor():
                 assert abs(kinds[k] - exp) <= 0.35 * exp, (k, kinds, mix)
             pool.record(1)   # 锚点/defend 局 record 不得崩（no-op）
     else:
-        print("[SKIP] 有 hist 分布：无可用历史 ckpt（仅验证其余分支）")
+        # T1-5：这个 `else` 原先只 print 一行 [SKIP]（且整段 ②③④ 静默跳过）⇒ 假绿。
+        _mark_skip("无可用历史 ckpt ⇒ 本条 ②③（有 hist 时的采样分布 / 锚点权重与 E1 同种子一致）"
+                   "**未验证**，只跑了 ①④⑤⑥ 其余分支")
 
     # ⑤ 无 hist 退化（空目录）：归一化 + 旧 bug 修复
     with tempfile.TemporaryDirectory() as td:
@@ -5802,6 +5910,9 @@ def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
     _force_utf8_stdout()
+    # T1-3/T1-5：把下面的 `test_*` 换成计时/计数包装。**只是想下面那 100 行一行都别动** ——
+    # 顺序与内容即全量路径的契约（外部调用方 `scripts/_apply_s2_channel_when_idle.sh:70-71`）。
+    _instrument_tests()
     test_action_bundle_same_tick()
     test_action_bundle_ability()
     test_bayes_filter()
@@ -5902,6 +6013,8 @@ def main():
     test_adv_inert_probe_and_const_baseline()
     test_precise_threat()
     test_mask_partial_bundle_invariants()
+    # T1-3/T1-5：以上 100 行**逐字未改**（顺序即契约）；这里只汇总计数/耗时/跳过清单。
+    _report_tests()
     print("\nALL SELFTESTS PASSED")
 
 

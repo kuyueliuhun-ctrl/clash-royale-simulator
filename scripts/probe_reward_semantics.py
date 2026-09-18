@@ -19,10 +19,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                 "src", "clasher_new"))
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+force_utf8_stdout()
 
 from rl.env_wrapper import compute_reward, _phase_weights, _DEFAULT_REWARD, PHASE_SWITCH_S
 

@@ -60,6 +60,7 @@ from rl.config import eval_schedule
 # 为什么单独一条路：这两个量只在 `[solo step N]` / `[step N]` 行里（**逐 update**，100k 约 781 点），
 # 而 solo_state.json 的 history[] 是逐评估点（14 点）且**不含**这两项（2026-09-18 实测）。
 from rl.train_health import derive_train_log, health_summary
+from rl.io_bootstrap import force_utf8_stdout
 
 MODEL_COLORS = {
     "main": "#2563eb",
@@ -3030,20 +3031,16 @@ def make_demo_solo(path, n_points=10, seed=3):
     print(f"[demo] 已生成演示 solo 状态 -> {path}（{len(history)} 个评估点）")
 
 
-def _force_utf8_stdout():
-    """把 stdout/stderr 切到 UTF-8 + errors='replace'（与 `rl/run_league.py:1469` 同一实现）。
-
-    本文件此前**没有**这个兜底 ⇒ 2026-09-18 实测：把 dashboard 的输出重定向到管道时，
-    `main()` 里那句 `print(f"[dashboard] ⚠ ...")`（目录里还没有 league_state.json 时的告警）
-    在 GBK locale 下抛 `UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0'`
-    ⇒ **整个 dashboard 直接崩掉（exit 1），服务起不来**。
-    这正是 `docs/agents/env.md` §2 记的陷阱：「新脚本一律自带 UTF-8 stdout reconfigure」。
-    """
-    for _stream in (sys.stdout, sys.stderr):
-        try:
-            _stream.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:
-            pass
+# T1-1：实现已收敛到 `rl/io_bootstrap.force_utf8_stdout`（**单一来源**）。本名保留为**别名**
+# ⇒ 调用点（本文件 `main()`）无需改动。收敛前此处的函数体与 `rl/run_league.py` 的那一份
+# **逐字相同**（仅 docstring 不同）⇒ 行为不变；由 `scripts/_structure_check.py` ② 复核。
+#
+# 历史背景（保留自查）：本文件此前**没有**这个兜底 ⇒ 2026-09-18 实测：把 dashboard 的输出
+# 重定向到管道时，`main()` 里那句 `print(f"[dashboard] ⚠ ...")`（目录里还没有 league_state.json
+# 时的告警）在 GBK locale 下抛 `UnicodeEncodeError: 'gbk' codec can't encode character '\u26a0'`
+# ⇒ **整个 dashboard 直接崩掉（exit 1），服务起不来**。
+# 这正是 `docs/agents/env.md` §2 记的陷阱：「新脚本一律自带 UTF-8 stdout reconfigure」。
+_force_utf8_stdout = force_utf8_stdout
 
 
 def main():

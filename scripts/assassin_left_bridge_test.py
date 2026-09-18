@@ -14,10 +14,14 @@
 判据：蓝方三塔损失 = 0 为完美解。
 """
 import io
+import os
 import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-sys.path.insert(0, r"E:/clash-royale-simulator-main/src/clasher_new")
+# T1-2：不再硬编码 `E:/clash-royale-simulator-main/...`（换机器/换目录即失效）。
+# 本文件在 `scripts/` 下 ⇒ 仓库根 = 上两级目录 ⇒ 引擎源码在 `<root>/src/clasher_new`。
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "clasher_new"))
 
 import battle as battle_mod
 import player as player_mod

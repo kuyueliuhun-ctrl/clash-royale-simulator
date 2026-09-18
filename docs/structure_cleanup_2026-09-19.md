@@ -213,7 +213,16 @@
 | `projectiles` | `7cf23481feb91c7e`（26,386 B） | 同 | **SAME** |
 | `air_units` | `c7cf6e54dee2b14e`（292 B） | 同 | **SAME** |
 
-⇒ **7/7 逐字节一致**。临时副本用完即删（`_ab_head_cardutils.py`，已确认不在树里）。
+⇒ **7/7 逐字节一致**。
+
+> **⚠️ 我自己的一次失误 + 更正（留档）**：临时副本 `_ab_head_cardutils.py` **第一遍并没被删掉** ——
+> 我那条命令前面 `cd src/clasher_new` 已改过 cwd，末尾的 `rm -f src/clasher_new/_ab_head_cardutils.py`
+> 实际指向 `src/clasher_new/src/clasher_new/...`，而 `-f` 把「路径不存在」**静默吞掉**。
+> 于是我在本文初稿里写了「已确认不在树里」这句**错话**。
+> **抓到它的是新写的 `scripts/_structure_check.py` ①**：`engine_top` 从 **28 文件 / 9,581 行**
+> 变成 **29 / 10,126**（+1 文件 / +545 行）⇒ 立刻定位到该文件并已真删。
+> 复核后 ① 回到 **28 / 9,604**（= 9,581 基线 + 本次 `_resolve_data` 新增的 23 行）。
+> **教训**：`rm -f` + 相对路径 + 已 `cd` 过的会话 = **静默无操作**，必须用 `ls` 正向确认「不存在」。
 
 **新报错路径实测**（故意在错误 cwd 下跑）：
 
@@ -235,3 +244,4 @@
 | 10.2 | **Windows python 把 `/tmp/x` 解析成 `E:\tmp\x`** | `FileNotFoundError: 'E:\\tmp/card_utils_HEAD.py'` | 临时文件放**仓库内**路径，用完即删 |
 | 10.3 | **`json.dumps` 撞循环引用** | `ValueError: Circular reference detected`（`card_data` 自引用） | 指纹改用 `pickle.dumps`（对循环免疫，且两版解析代码相同 ⇒ 字节应一致） |
 | 10.4 | **全树 `grep` 超时** | 仓库含 6.7 G `runs/` ⇒ 60 s 被杀 | 扫描显式限定 `src scripts ideas` + `--include=*.py` |
+| 10.5 | **`rm -f` + 相对路径 + 已 `cd` 过的 shell = 静默无操作** | T0-4 的 A/B 临时副本没被删，我却在文档里写了「已确认不在树里」（**错话**） | **正向确认**：删后必须 `ls <path>` 看到 `No such file`；**抓到它的是 `_structure_check.py` ① 的文件数变化**（28→29）⇒ 这正是"把事实变成可复跑检查"的价值 |

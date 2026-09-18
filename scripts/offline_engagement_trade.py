@@ -1049,10 +1049,8 @@ def _iter_files(paths):
 
 
 def main(argv=None):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+    force_utf8_stdout()
     ap = argparse.ArgumentParser(description="离线「局面圣水交换」仪器（只读回放）")
     ap.add_argument("--replays", nargs="+", default=[],
                     help="录像文件或目录（目录取全部 *.pkl）")

@@ -41,10 +41,8 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _SRC = os.path.join(_ROOT, "src", "clasher_new")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
-try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except Exception:
-    pass
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+force_utf8_stdout()
 
 import numpy as np  # noqa: E402
 

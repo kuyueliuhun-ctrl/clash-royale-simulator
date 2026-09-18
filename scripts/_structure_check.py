@@ -147,25 +147,81 @@ def check_areas(root: Path) -> dict:
 
 
 # ---------------------------------------------------------------- ② utf8
+UTF8_NAMES = ("_force_utf8_stdout", "force_utf8_stdout")
+
+
 def check_utf8(root: Path) -> dict:
-    """`_force_utf8_stdout` 各实现的函数体是否逐字相同（去掉空白差异后比 sha256）。"""
-    impls = {}
+    """UTF-8 兜底是否收敛到**单一实现**（T1-1）。
+
+    ⚠️ **三个阶段必须都能读**（否则这条检查会在收敛后变成空检查）：
+
+    1. **收敛前**：多份 `def _force_utf8_stdout` ⇒ 比**函数体**指纹（`body_distinct`）。
+       把 docstring 也算进去会得到「3 种互异」这个**误导性**结论 —— 实测
+       `rl/run_league.py` 与 `rl/dashboard.py` 的**函数体逐字相同**（仅 docstring 不同），
+       真正不同的是 `scripts/probe_value_ln.py`（**弱化版**）。
+    2. **收敛中**：`def` 与**别名赋值**（`_force_utf8_stdout = force_utf8_stdout`）并存 ⇒ 两边都数。
+    3. **收敛后**：只剩 `rl/io_bootstrap.py` 一处 `def force_utf8_stdout` + N 处别名
+       ⇒ 判据变成「**恰 1 处强定义 + 0 处弱定义 + ≥2 处别名**」。
+
+    弱化判据（实现层的两处硬要求）：必须同时**碰 stderr** 且**带 `errors="replace"`**。
+    """
+    defs, aliases = {}, []
     for f in iter_py(root, "src/clasher_new", recursive=True) + iter_py(root, "scripts", recursive=True):
         tree = parse(f)
         if tree is None:
             continue
+        src = read_text(f)
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name == "_force_utf8_stdout":
-                seg = ast.get_source_segment(read_text(f), node) or ""
-                norm = re.sub(r"\s+", "", seg)
-                digest = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12]
-                impls[rel(root, f)] = {"lineno": node.lineno, "digest": digest}
-    digests = {v["digest"] for v in impls.values()}
+            if isinstance(node, ast.FunctionDef) and node.name in UTF8_NAMES:
+                seg = ast.get_source_segment(src, node) or ""
+                body = [st for st in node.body
+                        if not (isinstance(st, ast.Expr) and isinstance(st.value, ast.Constant)
+                                and isinstance(st.value.value, str))]
+                try:
+                    body_src = "\n".join(ast.unparse(st) for st in body)
+                except Exception:
+                    body_src = seg
+                _n = lambda s: re.sub(r"\s+", "", s)
+                defs[rel(root, f)] = {
+                    "lineno": node.lineno, "name": node.name,
+                    "body_digest": hashlib.sha256(_n(body_src).encode("utf-8")).hexdigest()[:12],
+                    "full_digest": hashlib.sha256(_n(seg).encode("utf-8")).hexdigest()[:12],
+                    "touches_stderr": "stderr" in body_src,
+                    "has_errors_replace": "replace" in body_src,
+                }
+        # 别名两种形态都要认：
+        #   ① 赋值      `_force_utf8_stdout = force_utf8_stdout`
+        #   ② 导入改名  `from rl.io_bootstrap import force_utf8_stdout as _force_utf8_stdout`
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1 \
+                    and isinstance(node.targets[0], ast.Name) \
+                    and node.targets[0].id in UTF8_NAMES:
+                v = node.value
+                vname = v.id if isinstance(v, ast.Name) else (
+                    v.attr if isinstance(v, ast.Attribute) else "")
+                if vname in UTF8_NAMES:
+                    aliases.append({"file": rel(root, f), "lineno": node.lineno,
+                                    "target": node.targets[0].id, "source": vname,
+                                    "form": "assign"})
+            elif isinstance(node, ast.ImportFrom):
+                for al in node.names:
+                    if al.asname in UTF8_NAMES and al.name in UTF8_NAMES:
+                        aliases.append({"file": rel(root, f), "lineno": node.lineno,
+                                        "target": al.asname, "source": al.name,
+                                        "form": "import-as"})
+    body_d = {v["body_digest"] for v in defs.values()}
+    full_d = {v["full_digest"] for v in defs.values()}
+    weak = sorted(k for k, v in defs.items()
+                  if not (v["touches_stderr"] and v["has_errors_replace"]))
+    strong_defs = [k for k in defs if k not in weak]
     return {
-        "count": len(impls),
-        "distinct_bodies": len(digests),
-        "identical": len(digests) <= 1,
-        "impls": impls,
+        "defs": len(defs), "aliases": len(aliases), "alias_detail": aliases,
+        "body_distinct": len(body_d), "full_distinct": len(full_d),
+        "docstrings_differ": len(full_d) > len(body_d),
+        "weak": weak,
+        "single_impl": len(strong_defs) == 1 and not weak,
+        "identical": len(body_d) <= 1 and not weak,   # 兼容旧键：函数体层面一致且无弱版
+        "impls": defs,
     }
 
 
@@ -353,9 +409,15 @@ def render(res: dict) -> str:
     u = res.get("utf8", {})
     _impls = u.get("impls", {}) or {}
     _loc = ", ".join("{}:{}".format(k, v["lineno"]) for k, v in _impls.items())
-    L.append("== ② _force_utf8_stdout：{} 处，互异实现 {} 种 ⇒ {}".format(
-        u.get("count"), u.get("distinct_bodies"),
-        "一致" if u.get("identical") else "**不一致**") + ("（{}）".format(_loc) if _loc else ""))
+    L.append("== ② UTF-8 兜底收敛：定义 {} 处 / 别名 {} 处 ⇒ 函数体 {} 种（含 docstring {} 种）{}".format(
+        u.get("defs"), u.get("aliases"), u.get("body_distinct"), u.get("full_distinct"),
+        "**已收敛为单一实现**" if u.get("single_impl") else "**未收敛**")
+        + ("（定义：{}）".format(_loc) if _loc else "（已无 def）"))
+    if u.get("weak"):
+        L.append("     ⚠️ 弱化实现（未管 stderr 或缺 errors='replace'）：{}".format(", ".join(u["weak"])))
+    for a in (u.get("alias_detail") or [])[:8]:
+        L.append("     别名 {}:{}  {} = {}（{}）".format(
+            a["file"], a["lineno"], a["target"], a["source"], a.get("form", "?")))
     lay = res.get("layering", {})
     L.append(f"== ③ 引擎→rl 反向边 = {lay.get('reverse_edges')}"
              f"（应为 0）{' OK' if lay.get('ok') else ' **FAIL** ' + str(lay.get('reverse_files'))}")
@@ -406,12 +468,21 @@ def _selftest() -> int:
         # rl 模块：一个顶层 import，一个函数体内 import（验 ⑥）
         (root / "src/clasher_new/rl/follower.py").write_text(
             "import torch\n\n\ndef act():\n    import battle\n    return 1\n", encoding="utf-8")
-        # 两处 _force_utf8_stdout，函数体逐字相同（验 ② 判「一致」）
-        for name in ("a.py", "b.py"):
-            (root / "scripts" / name).write_text(
-                "import sys\n\n\ndef _force_utf8_stdout():\n    try:\n"
-                "        sys.stdout.reconfigure(encoding='utf-8')\n    except Exception:\n        pass\n",
-                encoding="utf-8")
+        # ② 三处 _force_utf8_stdout：a/b **函数体逐字相同但 docstring 不同**，c 是**弱化版**
+        #    ⇒ 判据 body_distinct 应为 2（强/弱），full_distinct 应为 3（含 docstring 差），
+        #    weak 必须点出 c.py。这一条正是 T1-1 实操中「把 docstring 算进指纹会得到误导结论」的回归。
+        _strong = ("import sys\n\n\ndef _force_utf8_stdout():\n"
+                   "%s    for _s in (sys.stdout, sys.stderr):\n"
+                   "        try:\n"
+                   "            _s.reconfigure(encoding='utf-8', errors='replace')\n"
+                   "        except Exception:\n            pass\n")
+        (root / "scripts/a.py").write_text(_strong % '    """甲：完整说明。"""\n', encoding="utf-8")
+        (root / "scripts/b.py").write_text(_strong % '    """乙：另一份说明（体相同）。"""\n',
+                                           encoding="utf-8")
+        (root / "scripts/c.py").write_text(
+            "import sys\n\n\ndef _force_utf8_stdout():\n    try:\n"
+            "        sys.stdout.reconfigure(encoding='utf-8')\n    except Exception:\n        pass\n",
+            encoding="utf-8")
         # 硬编码绝对路径（验 ⑤）
         (root / "scripts/hard.py").write_text(
             "import sys\nsys.path.insert(0, r'E:/x/y/src')\n", encoding="utf-8")
@@ -425,7 +496,29 @@ def _selftest() -> int:
         res = run_all(root)
         ck("① areas 数到 3 个引擎文件", res["areas"]["engine_top"]["files"] == 3)
         ck("① rl 数到 2 个文件", res["areas"]["rl"]["files"] == 2)
-        ck("② 两处实现判为一致", res["utf8"]["count"] == 2 and res["utf8"]["identical"])
+        ck("② a/b 函数体判为同一实现、含 docstring 才分得开",
+           res["utf8"]["defs"] == 3 and res["utf8"]["aliases"] == 0
+           and res["utf8"]["body_distinct"] == 2
+           and res["utf8"]["full_distinct"] == 3 and res["utf8"]["docstrings_differ"])
+        ck("② 弱化实现被点名（只碰 stdout 且无 errors=replace）",
+           res["utf8"]["weak"] == ["scripts/c.py"])
+        ck("② 未收敛时 single_impl=False（不能恒真）", res["utf8"]["single_impl"] is False)
+
+        # ② 第三阶段：模拟「收敛后」—— 只留 1 处强定义 + 2 处别名，判据必须翻成 True
+        (root / "scripts/a.py").write_text(
+            "import sys\nfrom rl.io_bootstrap import force_utf8_stdout\n"
+            "_force_utf8_stdout = force_utf8_stdout\n", encoding="utf-8")
+        (root / "scripts/b.py").write_text(
+            "import sys\nfrom rl.io_bootstrap import force_utf8_stdout\n"
+            "_force_utf8_stdout = force_utf8_stdout\n", encoding="utf-8")
+        (root / "scripts/c.py").write_text(
+            "import sys\nfrom rl.io_bootstrap import force_utf8_stdout\n"
+            "_force_utf8_stdout = force_utf8_stdout\n", encoding="utf-8")
+        (root / "scripts/shared.py").write_text(_strong % '    """唯一实现。"""\n', encoding="utf-8")
+        res_c = run_all(root)
+        ck("② 收敛后：1 处强定义 + 3 处别名 ⇒ single_impl=True",
+           res_c["utf8"]["defs"] == 1 and res_c["utf8"]["aliases"] == 3
+           and res_c["utf8"]["single_impl"] is True and res_c["utf8"]["weak"] == [])
         ck("③ 反向边 = 1 且能指出文件", res["layering"]["reverse_edges"] == 1
            and res["layering"]["reverse_files"] == ["src/clasher_new/bad.py"])
         ck("④ 死件复活 = 1（pathfinding.py）", res["deadfiles"]["revived"] == 1)
