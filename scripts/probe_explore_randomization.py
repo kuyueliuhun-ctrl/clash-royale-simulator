@@ -78,6 +78,10 @@ REGEN = 0.1786
 XBOW_COST = 6.0
 #: 单帧"抽中不出牌"的概率上界（最宽松情形：合法项 = {1 张可出牌, STOP}）
 P_PASS_UB = 0.5
+#: 状态门"码内阈值"的**镜像值**（【R7】单一来源）：权威定义在
+#: `rl.belief_planner.PRESSURE_THRESHOLD`；引擎路径启动时会 `assert` 两者相等，
+#: 离线路径（只读录像）无法 import 引擎侧时就退化为本常量并**在输出里标注**。
+GATE_TAU = 2.0
 
 
 def hand_bound():
@@ -267,6 +271,56 @@ def _uniform_bundle(env, get_mask, rng, torch):
     return b, cell_choice
 
 
+# ----------------------------------------------------------------------
+# 压力口径（离线录像与在线引擎**共用同一实现**，避免两套口径）
+# ----------------------------------------------------------------------
+def _is_tower_name(name):
+    return str(name).startswith("King_")
+
+
+def pressure_of_entities(entities, my_towers=None, prev_towers=None):
+    """从 `(name, x, y, hp, player, kind, ...)` 元组序列算三个压力代理。
+
+    - `threat`：**与 `rl.belief_planner._crude_enemy_pressure` 逐字同公式**
+      （`1.0 + max(0,(16-y)/16)` 对每个我方半场的敌方单位求和；该函数把全场敌方单位都算进去，
+      所以 `threat≥1` 只要场上有任何敌方单位）；
+    - `n_enemy_half`：**我半场**（`y<16`）的敌方非塔单位数（= "正在被推进"的直读代理）；
+    - `dmg15`：我方三塔总血在最近 `PRESSURE_DMG_WINDOW` 帧内的**净掉血**（>0 即"最近在挨打"）。
+    """
+    threat = 0.0
+    n_half = 0
+    for e in entities or []:
+        try:
+            name, y, pl = e[0], float(e[2]), int(e[4])
+        except Exception:
+            continue
+        if _is_tower_name(name):
+            continue
+        if pl == 1:
+            threat += 1.0 + max(0.0, (16.0 - y) / 16.0)
+            if y < 16.0:
+                n_half += 1
+    dmg = 0.0
+    if my_towers is not None and prev_towers is not None:
+        dmg = max(0.0, float(sum(prev_towers)) - float(sum(my_towers)))
+    return {"threat": threat, "n_enemy_half": n_half, "dmg15": dmg}
+
+
+#: 掉血窗口（帧）——15 帧 = 7.5 s，与"最近在挨打"同尺度
+PRESSURE_DMG_WINDOW = 15
+
+
+def gate_open(ps, mode):
+    """状态门（"低压才随机"）：`t`=码内阈值 / `h`=我半场无敌人 / `d`=最近没掉血。"""
+    if mode == "t":
+        return float(ps["threat"]) < GATE_TAU
+    if mode == "h":
+        return int(ps["n_enemy_half"]) == 0
+    if mode == "d":
+        return float(ps["dmg15"]) <= 0.0
+    raise SystemExit(f"未知门 '{mode}'（t/h/d）")
+
+
 def _biased_bundle(env, get_mask, rng, p0, torch, q_stop=0.9, alpha=0.0):
     """**非等概率**的随机提案（用户 2026-09-18 第二问）：
 
@@ -327,10 +381,15 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
     from rl.belief_planner import BeliefPlanner
     from rl import train_solo as ts
     from rl import follower as fol
+    from rl.belief_planner import PRESSURE_THRESHOLD
+    assert abs(float(PRESSURE_THRESHOLD) - GATE_TAU) < 1e-12, (
+        f"码内 PRESSURE_THRESHOLD={PRESSURE_THRESHOLD} 与本仪器的镜像值 {GATE_TAU} 不一致"
+        " —— 状态门的口径漂了，先对齐再跑")
 
     pol = load_policy(ckpt, device, torch)
     opp_pol = load_policy(ckpt, device, torch)
     bp = BeliefPlanner()
+
     out = {}
     #: STOP logit 的 ckpt 原值（按臂加偏置后再复位；**只加在被测策略 p0 上**，对手保持原样）
     _stop_base = float(pol.slot_head.bias.detach()[5].item())
@@ -341,8 +400,12 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
         rng = np.random.default_rng(seed * 7919 + zlib.crc32(arm_label.encode("utf-8")))
         # `名@β`：给 STOP logit 加偏置 β（= **on-policy** 版本的"提高不出牌概率"）
         beta = 0.0
+        gate_mode = None
+        _arm_full = arm                     # 保留原文（`holde@D:mode` 需要）
         if "@" in arm:
             arm, _b = arm.split("@", 1)
+            if ":" in _b:
+                _b, gate_mode = _b.split(":", 1)
             beta = float(_b)
         with torch.no_grad():
             pol.slot_head.bias.data[5] = _stop_base + beta
@@ -355,6 +418,12 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
             # bias_<q_stop>_<alpha>：非等概率提案（抬不出牌 / 抬大费牌）
             _p = arm.split("_")
             mode, q_stop, alpha = "bias", float(_p[1]), float(_p[2])
+        elif arm.startswith("holde"):
+            # holde@D:<mode>：**带压力中止的 hold**（用户第三问的正确形态）
+            # = "低压时进入随机持牌 d 帧；一旦压力升高就中止持牌、回到策略"
+            _b2 = _arm_full.split("@", 1)[1] if "@" in _arm_full else "40:h"
+            _d, gate_mode = _b2.split(":", 1)
+            mode, hold_max, hold_q = "holde", int(_d), 0.3
         elif arm.startswith("hold"):
             # 对照臂：**带时长的随机**（"hold d 帧"，d~U{1..hold_max}），进 hold 的概率
             # hold_q 写死 0.3（只为与 i.i.d. 方案比**量级**，不是建议超参）
@@ -362,7 +431,7 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
         rec = {"frames": 0, "games": 0, "elix": [], "n_legal_cards": [],
                "declined_legal": 0, "forced_pass": 0, "plays": 0,
                "choice_frames": 0, "reward_sum": 0.0, "ep_frames": [],
-               "cards": {},
+               "cards": {}, "gate_open": 0, "abort": 0,
                "xbow_plays": 0, "spend_flags": [], "cells": [], "log_ncell": [],
                "streaks_all": []}
         t0 = time.time()
@@ -380,8 +449,24 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
             hidden = None
             cur_nospend = 0
             hold_left = 0
+            tower_hist = []
             for _step in range(max_frames):
                 p0 = env.battle.players[0]
+                # 状态门（"低压才随机"）：本帧的压力状态 → 决定 STOP 偏置是否生效
+                _ents = [{"name": e.name, "player": e.player,
+                          "pos": (e.position.x, e.position.y), "hp": e.hp}
+                         for e in env.battle.entities.values() if e.is_alive]
+                _tuples = [(e["name"], e["pos"][0], e["pos"][1], e["hp"], e["player"], "")
+                           for e in _ents]
+                _tw = [float(p0.king_tower_hp), float(p0.left_tower_hp), float(p0.right_tower_hp)]
+                _prev = tower_hist[-PRESSURE_DMG_WINDOW] if len(tower_hist) >= PRESSURE_DMG_WINDOW else None
+                ps = pressure_of_entities(_tuples, my_towers=_tw, prev_towers=_prev)
+                tower_hist.append(_tw)
+                if gate_mode is not None:
+                    _open = gate_open(ps, gate_mode)
+                    rec["gate_open"] += int(_open)
+                    with torch.no_grad():
+                        pol.slot_head.bias.data[5] = _stop_base + (beta if _open else 0.0)
                 m0 = env.get_action_mask(None)
                 nl = int(np.sum(m0["slots"])) + int(bool(m0.get("ability_legal")))
                 E = float(p0.elixir)
@@ -394,7 +479,17 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
                 btok = belief.encode(obs, None)
                 cell_info = None
                 do_hold = False
-                if mode == "hold":
+                if mode == "holde":
+                    if hold_left > 0 and not gate_open(ps, gate_mode):
+                        hold_left = 0                    # 压力升高 ⇒ **中止持牌**、回到策略
+                        rec["abort"] += 1
+                    if hold_left > 0:
+                        hold_left -= 1
+                        do_hold = True
+                    elif gate_open(ps, gate_mode) and float(rng.random()) < hold_q:
+                        hold_left = int(rng.integers(1, hold_max + 1)) - 1
+                        do_hold = True
+                elif mode == "hold":
                     if hold_left > 0:
                         hold_left -= 1
                         do_hold = True
@@ -481,6 +576,8 @@ def engine(ckpt, arms, n_games, seed, max_frames, device, torch):
             "choice_frames": rec["choice_frames"],
             "reward_sum": rec["reward_sum"],
             "cards": dict(sorted(rec["cards"].items(), key=lambda kv: -kv[1])),
+            "gate_mode": gate_mode, "gate_open_frac": rec["gate_open"] / max(1, rec["frames"]),
+            "hold_aborts": rec["abort"],
             "reward_per_game": rec["reward_sum"] / max(1, rec["games"]),
             "frames_per_game": float(np.mean(rec["ep_frames"])) if rec["ep_frames"] else 0.0,
             "realized_pass_rate": (rec["declined_legal"] / rec["choice_frames"]
@@ -562,6 +659,181 @@ def placement(replay_dirs):
     return {"per_dir": per_dir}
 
 
+# ----------------------------------------------------------------------
+# D. 压力：低压窗口够不够长？（离线，只读录像）
+# ----------------------------------------------------------------------
+def gated_analytic(replay_dirs, gate_mode, q=0.95, pi_stop=0.074,
+                   regen=REGEN, target=XBOW_COST):
+    """**门控版的解析覆盖率**：把"必须逐帧拒绝"的那些帧，按**录像里记录的门状态**逐帧
+    取不同的"抽中不出"概率（门开 = `q`，门关 = `pi_stop` = 策略自己的 P(不出牌)）。
+
+    ⇒ 得到的是**逐帧乘积**而不是 `q^k` —— 这正是门控的代价所在：
+    只要"必须拒绝"的那 `k` 帧里有几帧落在门关的位置，乘积就被 `pi_stop/pi ~ 1/13` 狠狠打掉。
+
+    ⚠️ **非外生**（【R10】）：门状态取自**现状行为的压力轨迹**；真去持牌会改变压力轨迹。
+    所以本函数给的是"按现状轨迹"的读数，用来**看结构**，判决以引擎臂 `gate@β:` / `holde@D:` 为准。
+    """
+    out = {}
+    for label, d in replay_dirs:
+        files = sorted(glob.glob(os.path.join(d, "league_*.pkl")))
+        if not files:
+            raise SystemExit(f"[缺数据] {label}: {d} 里没有 league_*.pkl")
+        n_frames = 0
+        ev = 0.0
+        n_att = 0
+        k_all = []
+        n_open_frames = 0               # 门在**全帧**上的开启率（边际）
+        n_req = 0                       # "必须逐帧拒绝"的帧总数
+        n_req_open = 0                  # 其中门开着的帧数（⇒ 与"买得起"的相关性）
+        for f in files:
+            with open(f, "rb") as fh:
+                data = pickle.load(fh)
+            for g in (data.get("games") or []):
+                fr = g.get("frames") or []
+                n = len(fr)
+                if n == 0:
+                    continue
+                n_frames += n
+                post = [float(x.get("elixir0", np.nan)) for x in fr]
+                pre = [5.0] + post[:-1]
+                spent = [bool(post[i] < pre[i] - 1e-6) for i in range(n)]
+                tw = [list(map(float, x.get("towers0") or [0.0, 0.0, 0.0])) for x in fr]
+                gate = []
+                for i, x in enumerate(fr):
+                    prev = tw[i - PRESSURE_DMG_WINDOW] if i >= PRESSURE_DMG_WINDOW else None
+                    ps = pressure_of_entities(x.get("entities") or [],
+                                              my_towers=tw[i], prev_towers=prev)
+                    gate.append(gate_open(ps, gate_mode))
+                n_open_frames += int(sum(gate))
+                for i, E0 in enumerate(pre):
+                    if E0 >= target:
+                        continue
+                    if i > 0 and not spent[i - 1]:
+                        continue
+                    need = int(math.ceil((target - E0) / regen))
+                    skip = int(math.ceil(max(0.0, 3.0 - E0) / regen))
+                    k = need - skip
+                    if k <= 0:
+                        continue
+                    prod = 1.0
+                    ok = True
+                    for m in range(need):
+                        j = i + m
+                        y = E0 + regen * m
+                        if y < 3.0:
+                            continue                     # 可能被迫不出 ⇒ 免抽
+                        if j >= n:
+                            ok = False
+                            break
+                        n_req += 1
+                        if gate[j]:
+                            n_req_open += 1
+                        prod *= (q if gate[j] else pi_stop)
+                    if not ok:
+                        continue
+                    n_att += 1
+                    k_all.append(k)
+                    ev += prod
+        out[label] = {
+            "n_frames": n_frames, "n_attempts": n_att,
+            "attempts_per_100k": 100000.0 * n_att / max(1, n_frames),
+            "k_median": float(np.median(k_all)) if k_all else 0.0,
+            "events_per_100k": 100000.0 * ev / max(1, n_frames),
+            "open_frac_marginal": n_open_frames / max(1, n_frames),
+            "open_frac_at_required_frames": (n_req_open / n_req) if n_req else 0.0,
+            "n_required_frames": n_req,
+        }
+    return {"gate_mode": gate_mode, "q": q, "pi_stop": pi_stop,
+            "non_exogenous": True, "per_dir": out}
+
+
+def pressure_mode(replay_dirs, modes=("t", "h", "d", "hd")):
+    """**回答"低压时随机"的前提是否成立**：现在有多少帧处于低压、低压窗口有多长、
+    窗口内能攒到多少圣水。
+
+    ⚠️ **这不是外生反事实**：压力轨迹由**当前行为**产生，而"多不出牌"会改变压力轨迹
+    （不防守 ⇒ 压力可能更大）。所以本模式给的是**"按现状压力轨迹"的上界式读数**，
+    真正的检验只能在引擎里跑（`gate@β:<mode>` 臂）。【R10】
+    """
+    try:                                  # 能 import 引擎侧就核对码内阈值（【R7】）
+        from rl.belief_planner import PRESSURE_THRESHOLD as _T
+        assert abs(float(_T) - GATE_TAU) < 1e-12, f"码内阈值 {_T} != 镜像 {GATE_TAU}"
+    except ImportError:
+        print(f"  [warn] 无法 import 引擎核对阈值，本模式用镜像值 GATE_TAU={GATE_TAU}")
+    per_dir = {}
+    for label, d in replay_dirs:
+        files = sorted(glob.glob(os.path.join(d, "league_*.pkl")))
+        if not files:
+            raise SystemExit(f"[缺数据] {label}: {d} 里没有 league_*.pkl")
+        n_frames = 0
+        n_games = 0
+        acc = {m: {"open": 0, "runs": [], "runs_ok": [], "max_run": 0} for m in modes}
+        threat_all = []
+        for f in files:
+            with open(f, "rb") as fh:
+                data = pickle.load(fh)
+            for g in (data.get("games") or []):
+                fr = g.get("frames") or []
+                n = len(fr)
+                if n == 0:
+                    continue
+                n_games += 1
+                n_frames += n
+                post = [float(x.get("elixir0", np.nan)) for x in fr]
+                pre = [5.0] + post[:-1]
+                tw = [list(map(float, x.get("towers0") or [0.0, 0.0, 0.0])) for x in fr]
+                gates = {m: [] for m in modes}
+                for i, x in enumerate(fr):
+                    prev = tw[i - PRESSURE_DMG_WINDOW] if i >= PRESSURE_DMG_WINDOW else None
+                    ps = pressure_of_entities(x.get("entities") or [],
+                                              my_towers=tw[i], prev_towers=prev)
+                    threat_all.append(ps["threat"])
+                    g_t = gate_open(ps, "t") if ("t" in modes) else False
+                    g_h = gate_open(ps, "h") if any(m in modes for m in ("h", "hd")) else False
+                    g_d = gate_open(ps, "d") if any(m in modes for m in ("d", "hd")) else False
+                    for m in modes:
+                        gates[m].append({"t": g_t, "h": g_h, "d": g_d,
+                                         "hd": bool(g_h and g_d)}[m])
+                for m in modes:
+                    arr = gates[m]
+                    acc[m]["open"] += int(sum(arr))
+                    i = 0
+                    while i < n:
+                        if not arr[i]:
+                            i += 1
+                            continue
+                        j = i
+                        while j + 1 < n and arr[j + 1]:
+                            j += 1
+                        L = j - i + 1
+                        E0 = pre[i]
+                        reach = E0 + REGEN * L
+                        acc[m]["runs"].append(L)
+                        acc[m]["max_run"] = max(acc[m]["max_run"], L)
+                        if reach >= XBOW_COST:
+                            acc[m]["runs_ok"].append((L, E0, reach))
+                        i = j + 1
+        out = {"n_games": n_games, "n_frames": n_frames,
+               "threat_median": float(np.median(threat_all)) if threat_all else 0.0,
+               "threat_mean": float(np.mean(threat_all)) if threat_all else 0.0}
+        for m in modes:
+            runs = np.asarray(acc[m]["runs"], dtype=int)
+            out[m] = {
+                "open_frac": acc[m]["open"] / max(1, n_frames),
+                "n_runs": int(runs.size),
+                "runs_per_100k": 100000.0 * runs.size / max(1, n_frames),
+                "max_run": int(acc[m]["max_run"]),
+                "n_run_ge17": int((runs >= 17).sum()),
+                "n_run_ge25": int((runs >= 25).sum()),
+                "n_run_ge34": int((runs >= 34).sum()),
+                "n_run_reach6": len(acc[m]["runs_ok"]),
+                "run_reach6_per_100k": 100000.0 * len(acc[m]["runs_ok"]) / max(1, n_frames),
+            }
+        per_dir[label] = out
+    return {"regen_per_frame": REGEN, "dmg_window": PRESSURE_DMG_WINDOW,
+            "per_dir": per_dir}
+
+
 def mixture_weight_table(an, pi_stop=0.07, ps=(0.3, 0.5, 1.0)):
     """**混合即策略**写法下「抽中不出牌」这一维的梯度权重，与覆盖率的乘积。
 
@@ -589,7 +861,7 @@ def mixture_weight_table(an, pi_stop=0.07, ps=(0.3, 0.5, 1.0)):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="both",
-                    choices=["analytic", "engine", "placement", "both", "all"])
+                    choices=["analytic", "engine", "placement", "pressure", "both", "all"])
     ap.add_argument("--replays", action="append", default=[],
                     help="LABEL=DIR（可多次）")
     ap.add_argument("--ckpt", default=None)
@@ -598,6 +870,8 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-frames", type=int, default=400)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--gate-mode", default=None, choices=[None, "t", "h", "d", "hd"],
+                    help="解析模式附带算「门控覆盖率」（按录像记录的门状态）")
     a = ap.parse_args()
 
     rep = []
@@ -645,6 +919,16 @@ def main():
         except Exception as exc:                                        # 缺桶时不静默
             print(f"  [warn] mixture_weight 表未生成：{exc}")
 
+    if a.mode in ("analytic", "both", "all") and a.gate_mode:
+        print(f"=== A2. 门控解析覆盖率（门={a.gate_mode}，按录像记录的门状态）===")
+        result["gated_analytic"] = gated_analytic(rep, a.gate_mode)
+        for lab, v in result["gated_analytic"]["per_dir"].items():
+            print(f"  [{lab}] 尝试 {v['n_attempts']} 次（{v['attempts_per_100k']:.0f}/100k 帧、"
+                  f"k 中位 {v['k_median']:.0f}）⇒ **门控后事件 {v['events_per_100k']:.4g}/100k 帧**")
+            print(f"      门开启率：边际 {100*v['open_frac_marginal']:.1f}% 帧 vs "
+                  f"**「必须拒绝」的帧上 {100*v['open_frac_at_required_frames']:.1f}%**"
+                  f"（n={v['n_required_frames']}）⇒ 门与「买得起」的相关性")
+
     if a.mode in ("placement", "all"):
         if not rep:
             raise SystemExit("--mode placement 需要 --replays LABEL=DIR")
@@ -660,6 +944,24 @@ def main():
                   f"(≈{v['effective_cells']:.0f} 个有效格；整网格上限 "
                   f"{v['uniform_entropy_bits']:.2f}) | top1 {v['top1_mass']:.3f} "
                   f"top10 {v['top10_mass']:.3f}")
+
+    if a.mode in ("pressure", "all"):
+        if not rep:
+            raise SystemExit("--mode pressure 需要 --replays LABEL=DIR")
+        print("=== D. 压力：低压窗口够不够长（只读录像）===")
+        result["pressure"] = pressure_mode(rep)
+        for lab, v in result["pressure"]["per_dir"].items():
+            print(f"  [{lab}] {v['n_frames']} 帧 / {v['n_games']} 局 | "
+                  f"crude threat 中位 {v['threat_median']:.2f} 均值 {v['threat_mean']:.2f}")
+            for m in ("t", "h", "d", "hd"):
+                if m not in v:
+                    continue
+                q = v[m]
+                print(f"     门[{m}] 开启占 {100*q['open_frac']:.1f}% 帧 | 窗口 {q['n_runs']} 段"
+                      f"（{q['runs_per_100k']:.0f}/100k 帧）最长 {q['max_run']} 帧 | "
+                      f"≥17 {q['n_run_ge17']} / ≥25 {q['n_run_ge25']} / ≥34 {q['n_run_ge34']} | "
+                      f"**窗口内够攒到 6 费** {q['n_run_reach6']} 段"
+                      f"（{q['run_reach6_per_100k']:.0f}/100k 帧）")
 
     if a.mode in ("engine", "both", "all"):
         if not a.ckpt:
