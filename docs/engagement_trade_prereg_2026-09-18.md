@@ -676,3 +676,38 @@ schema 5 首次给出真实数据上的对账（23,986 个"帧 × 方"样本）�
 solo 的步速 **19 步/s**（比 `run` 模式的 ~30 慢，因为对手池 + hist 每 2000 步重扫），
 eval@0（20 局）实测 **156 s** ⇒ 单臂 ≈ **85 min 训练 + 42 min 评估 ≈ 2.1 h**，两臂 **≈ 4.2 h**。
 （先前估"2.5–3 h"偏低，按实测更正；【R10】不猜。）`A_et` 的结果先出。
+
+### 11.13.6 ★ 开跑后发现的**发射遗漏**与更正（更正写于**重启之前**，【R3】）
+
+**发现**：§11.13.2 把 `resid_norm` / `grad_cos` 列为**机制层（主判据）**四个指标中的两个，而这两个量
+**只在 `--adv-inert-probe` 打开时**才计算并打印（`train_solo.py:1673`，gated on `cfg.adv_inert_probe`）。
+**第一次发射漏了这个开关** ⇒ 日志里 `[solo advinert …]` 行数 = **0**（已完成对照：`run100k` 亦为 0）
+⇒ 若按原样跑完，**主判据有两项根本无法读**（其余两项 `EVb`/池化 EV 仍可读）。
+
+**为什么这是"就地更正"而不是"改实验"**（逐条有代码/测试支撑）：
+- **纯测量**：`TrainConfig.adv_inert_probe` 注释写死「**纯测量**开关（默认 False = 逐位旧行为）…
+  不改变任何被写入梯度的量，只多 1 次前向 + 1 次反传」。代码核对（`ppo.py::_apply_grad`）：替代优势
+  **只**喂给 `torch.autograd.grad(pack_alt["p_loss"], params, retain_graph=True)` 用于算
+  `grad_cos` / `grad_norm_ratio`；真正执行 `.backward()` 的 `pack["loss"]` 在两个分支里**完全相同**。
+- **不引入随机性**：策略/价值网络前向**无 dropout**（`grep -rn Dropout rl/*.py` 仅命中
+  `train_follower.py` 的蒸馏 dropout，与本路径无关）⇒ 多出的那次前向**不消耗 RNG** ⇒ 不改训练轨迹。
+- **回归测试在**：`scripts/run_selftests.py test_adv_inert_probe_and_const_baseline` ⇒ **1/1 PASS**（本轮复跑）。
+- 关键：**两臂都加**（`A_et` 与 `B_ctrl` 逐字同参）⇒ 单变量性（【R3】）与**臂对称性不受影响**；
+  被干预的仍只有 `economy_et` vs `economy` 一个变量。**判据一字未改**。
+
+**更正动作**：`A_et` 第一次发射在 **step 7547**（起跑后约 7 分钟）被**主动终止**，进度**作废**；
+两臂命令统一加 `--adv-inert-probe` 后**重启**，其余开关逐字不变。
+**代价**：损失约 7 分钟（≈ 单臂 2.1 h 的 5.5%）。
+【R1】预检：终止后无孤儿 worker；提交可用 **19.27 GB**（≥12）⇒ 档位 12 可用。
+
+**顺带把"前 100 次"的窗口定义写死**（否则该措辞不可执行）：
+`--diagnose-every 10` 下，`advinert` 实测密度 = **145 点 / 20k 步**
+（`docs/train_critic_inert_probe_20k.log`）⇒ 100k 步约 **725 点**
+⇒ §11.13.2 的「前 100 次诊断更新」≈ **前 ~1.4 万步（全程约 14%）**，定义良好。
+
+**仪器改造（【R4】脚本复算）**：`scripts/judge_critic_inertia.py` 新增
+`--baseline within`（配 `--baseline-n 100 --baseline-k 3`），按 §11.13.2 在本 run **自己的前 100 点**上
+复算「中位 ± 3×MAD」；MAD 取**原始**口径（**不乘 1.4826**）并在输出顶部标注；
+前段该指标恒定 ⇒ 标 `⚠退化`，此时**不得**据此判显著。
+**向后兼容**：默认 `--baseline prereg` 仍走原 critic 惰性预注册的 P1/P2 固定阈值，行为不变。
+回归测试：`--selftest` ⇒ **4/4 PASS**。

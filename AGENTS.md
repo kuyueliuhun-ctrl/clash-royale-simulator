@@ -177,3 +177,18 @@
      [`schema5_replay_2026-09-18.diff`](docs/schema5_replay_2026-09-18.diff)、
      [`schema5_run_league_2026-09-18.diff`](docs/schema5_run_league_2026-09-18.diff)；
      记录与落地步骤：[`docs/root_cast_channel_2026-09-18.md`](docs/root_cast_channel_2026-09-18.md)
+3. **★ 第八轮：用户直接要求的 `economy_et` 100k 干预长跑（两臂，进行中）**
+   - 臂：**`A_et`**（`--config economy_et`，`engagement_trade=0.5` 与 `edw` 同汇率）+ **阴性对照 `B_ctrl`**
+     （`--config economy`），逐字同参同 seed，**顺序跑**。模式 = **`solo`**（预注册 §8 强制）。
+   - 判据在开跑前写死：预注册 [`§11.13`](docs/engagement_trade_prereg_2026-09-18.md)（机制/行为/门禁/项体检 + 4 条失败分支）。
+   - ⚠️ **本轮不构成判决**：缺阳性对照（§5.2 无法判 `VALID`）+ n=1 seed/臂（【R5】）⇒
+     **不得**写成「修好了」或「确认无效」，只能写「观察到什么 / 未达行为可见阈值 / 不可分辨」。
+   - ★ **发射遗漏与更正（§11.13.6）**：首次发射**漏了 `--adv-inert-probe`** ⇒ 机制层主判据的
+     `resid_norm`/`grad_cos` 两项**无法读**（日志 0 行）。该开关经代码核对为**纯测量**
+     （替代优势只喂 `autograd.grad(retain_graph=True)`，`.backward()` 路径逐字不变；网络无 dropout
+     ⇒ 不耗 RNG；回归测试 1/1 PASS）⇒ **两臂对称补上后重启**，判据一字未改。
+     第一次发射在 **step 7547** 主动终止、进度作废（留证 `runs/_discarded_et_solo100k_noprobe/`
+     与 `docs/train_et_solo100k_noprobe_discarded.log`）。
+   - 仪器：`scripts/judge_critic_inertia.py` 新增 `--baseline within`（本 run 前 100 诊断点中位 ± 3×MAD，
+     **原始 MAD** 不乘 1.4826；【R4】脚本复算；`--selftest` 4/4 PASS）；
+     `advinert` 实测密度 145 点/20k 步 ⇒ 100k 约 725 点 ⇒「前 100 点」≈ 前 ~1.4 万步。

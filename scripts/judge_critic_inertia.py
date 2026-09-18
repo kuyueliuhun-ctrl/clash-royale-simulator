@@ -92,12 +92,143 @@ def block_worst(series, n_blocks=5):
     return out
 
 
+def mad(v, med=None):
+    """中位绝对偏差 —— **原始 MAD**（不乘 1.4826）。
+
+    与 `engagement_trade_prereg_2026-09-18.md` §11.13.2 的「中位 ± 3×MAD」**字面一致**：
+    该节写的是 MAD，不是 σ 的一致估计（1.4826×MAD）。此处不做换算，并在输出里显式标注，
+    避免读者按 σ 解读（【R10】：口径含糊时写清口径，不留歧义）。
+    """
+    v = [x for x in v if x is not None]
+    if not v:
+        return None
+    if med is None:
+        med = _median(v)
+    return _median([abs(x - med) for x in v])
+
+
+def within_run_baseline(rows, n_base=100, k=3.0):
+    """§11.13.2 的**机制层主判据**：本 run 自己**前 `n_base` 次诊断更新**的中位 ± k×MAD。
+
+    为什么用「run 自己的前段」当对照（而不是跨 run 基线）：『R15』『R16』—— 阈值必须在**本实验
+    自己的量纲**上标定，且不许用单次观测；『R5』—— 跨 run 数字不可直接比。故对照 = 同一次训练
+    的前段自身（程序写死，数值由本函数**脚本复算**，【R4】禁手抄）。
+
+    ⚠️ MAD 可能为 0（前段该指标恒定）⇒ 带退化成一个点。此时 `degenerate=True`，
+    后续任何偏离都算越界；调用方**不得**据此判显著，只能记为「带退化，不可判」。
+    """
+    if not rows:
+        return {}
+    nb = min(int(n_base), len(rows))
+    base_rows, later = rows[:nb], rows[nb:]
+    out = {"n_base": nb, "n_later": len(later), "k": float(k), "metrics": {}}
+    for key in ("cos", "resid_norm", "corr", "lvl", "gap", "gr"):
+        bv = [r[key] for r in base_rows]
+        med = _median(bv)
+        m = mad(bv, med)
+        if med is None:
+            lo = hi = None
+        else:
+            lo, hi = med - k * (m or 0.0), med + k * (m or 0.0)
+        lv = [r[key] for r in later]
+        inside = None
+        if later and lo is not None:
+            inside = sum(1 for x in lv if lo <= x <= hi)
+        out["metrics"][key] = {
+            "base_median": med, "base_mad": m, "lo": lo, "hi": hi,
+            "degenerate": (m == 0.0),
+            "later_median": (_median(lv) if lv else None),
+            "later_inside": inside, "later_n": len(lv)}
+    return out
+
+
+def print_within_run(w):
+    """打印 §11.13.2 的 within-run 对照块。"""
+    if not w:
+        print("\n--- 机制层对照（§11.13.2 within-run）：无诊断点，不可算 ---")
+        return
+    print(f"\n--- 机制层对照（§11.13.2；【R4】脚本复算）---")
+    print(f"  基线窗口 = 本 run 前 {w['n_base']} 次诊断更新；比较窗口 = 其后 {w['n_later']} 次")
+    print(f"  带定义 = 基线中位 ± {w['k']:g} × MAD（**原始 MAD**，未乘 1.4826）")
+    print(f"  {'指标':<14}{'基线中位':>12}{'基线MAD':>12}{'带下':>12}{'带上':>12}"
+          f"{'后续中位':>12}{'带内':>10}")
+    _NAME = {"cos": "grad_cos", "resid_norm": "resid_norm", "corr": "corr",
+             "lvl": "level_shift", "gap": "level_gap", "gr": "gnorm_ratio"}
+    for key, s in w["metrics"].items():
+        if s["base_median"] is None:
+            continue
+        ins = ("n/a" if s["later_inside"] is None
+               else f"{s['later_inside']}/{s['later_n']}")
+        if s["degenerate"]:
+            ins += " ⚠退化"
+        print(f"  {_NAME.get(key, key):<14}{_fmt(s['base_median'], 5):>12}"
+              f"{_fmt(s['base_mad'], 5):>12}{_fmt(s['lo'], 5):>12}{_fmt(s['hi'], 5):>12}"
+              f"{_fmt(s['later_median'], 5):>12}{ins:>10}")
+
+
+def _selftest():
+    """本判读器 within-run 对照的回归测试（【R8】：改判读逻辑必须配测试）。
+
+    合成数据，零引擎依赖：
+      ① MAD 用**原始**口径（不乘 1.4826）；
+      ② 恒定前段 ⇒ degenerate=True 且带退化；
+      ③ 后续整体平移 4×MAD ⇒ 全部越界；
+      ④ n_base 大于总点数 ⇒ 比较窗口为空，不报错。
+    """
+    ok = 0
+
+    def _rows(vals):
+        return [{"step": i + 1, "cos": v, "resid_norm": v, "corr": v,
+                 "lvl": v, "gap": v, "gr": v} for i, v in enumerate(vals)]
+
+    # ① 原始 MAD：数据 [1,2,3,4,100] 中位 3，|x-3| = [2,1,0,1,97] ⇒ 中位 1
+    assert mad([1, 2, 3, 4, 100]) == 1.0, mad([1, 2, 3, 4, 100])
+    ok += 1
+    # ② 恒定前段
+    w = within_run_baseline(_rows([0.5] * 10 + [0.0, 1.0]), n_base=10, k=3.0)
+    assert w["metrics"]["cos"]["base_mad"] == 0.0
+    assert w["metrics"]["cos"]["degenerate"] is True
+    ok += 1
+    # ③ 平移 4×MAD 全部越界：前段 [0,1,2,...,9] 中位 4.5，MAD 中位|.|=2.5 ⇒ 带 [-3,12]
+    #    后续用 100 ⇒ 越界
+    w2 = within_run_baseline(_rows(list(range(10)) + [100.0]), n_base=10, k=3.0)
+    s = w2["metrics"]["cos"]
+    assert s["base_median"] == 4.5 and s["base_mad"] == 2.5, (s["base_median"], s["base_mad"])
+    assert s["later_inside"] == 0, s
+    ok += 1
+    # ④ n_base 超过总点数
+    w3 = within_run_baseline(_rows([1.0, 2.0]), n_base=100, k=3.0)
+    assert w3["n_base"] == 2 and w3["n_later"] == 0
+    assert w3["metrics"]["cos"]["later_inside"] is None
+    ok += 1
+    print(f"[selftest] judge_critic_inertia within-run 对照 {ok}/4 PASS")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--log", required=True)
-    ap.add_argument("--run", required=True, help="探针 run 目录（相对 src/clasher_new）")
+    ap.add_argument("--log", required=False, default=None)
+    ap.add_argument("--run", required=False, default=None,
+                    help="探针 run 目录（相对 src/clasher_new）")
     ap.add_argument("--runs-root", default=os.path.join(_SRC, "runs"))
+    ap.add_argument("--baseline", choices=["prereg", "within"], default="prereg",
+                    help="机制层对照口径：prereg=critic 惰性预注册的 P1/P2 固定阈值（默认，"
+                         "向后兼容）；within=**本 run 自己前 N 次诊断**的中位±k×MAD"
+                         "（engagement_trade_prereg §11.13.2）")
+    ap.add_argument("--baseline-n", type=int, default=100,
+                    help="--baseline within 的基线窗口点数（§11.13.2 写死 =100）")
+    ap.add_argument("--baseline-k", type=float, default=3.0,
+                    help="--baseline within 的 MAD 倍数（§11.13.2 写死 =3）")
+    ap.add_argument("--selftest", action="store_true",
+                    help="跑本判读器 within-run 对照的回归测试后退出")
     args = ap.parse_args()
+
+    if args.selftest:
+        return _selftest()
+    if not args.log:
+        ap.error("--log 必填（除非 --selftest）")
+    if not args.run:
+        ap.error("--run 必填（除非 --selftest）")
 
     rows = parse_log(args.log)
     print("=" * 78)
@@ -153,6 +284,11 @@ def main():
     if _median(lvl) is not None and _median(lvl) > LEVEL_NOTE:
         print(f"  [分解项] level_shift_norm 中位 {_fmt(_median(lvl))} > {LEVEL_NOTE}"
               f" ⇒ 若做 Layer 2，'无差别'不得全归因于状态依赖（水平偏移也是干预的一部分）")
+
+    # —— §11.13.2 的 within-run 对照（engagement_trade 干预长跑用）——
+    if args.baseline == "within":
+        print_within_run(within_run_baseline(rows, n_base=args.baseline_n,
+                                             k=args.baseline_k))
 
     # 次级：锚点对比（描述性，不判决）
     mine = anchor_series(os.path.join(args.runs_root, args.run))
