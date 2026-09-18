@@ -24,6 +24,16 @@ import os
 import re
 import sys
 
+# T1-1 追加（2026-09-19）：UTF-8 兜底。本文件含 **GBK 编不出**的字符（⇒ 无兜底时 `print` 抛
+# UnicodeEncodeError）。本文件**不 import `rl`/引擎** ⇒ 这里补一段自足引导（与本仓其它入口脚本同形态），
+# 再取 T1-1 的**单一实现**（不用第二份 reconfigure 手写块）。
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                                 "src", "clasher_new"))
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTS = os.path.join(ROOT, "AGENTS.md")
 OUTDIR = os.path.join(ROOT, "docs", "agents")

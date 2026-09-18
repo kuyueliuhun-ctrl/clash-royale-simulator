@@ -22,6 +22,12 @@ sys.path.insert(0, TREE)
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPTS)
 
+# T1-1 追加（2026-09-19）：UTF-8 兜底。本文件含 **GBK 编不出**的字符 ⇒ 无兜底时
+# `print` 抛 UnicodeEncodeError（实测：test_m3_evo 因此产生 **10 个假失败**）。
+# 用 T1-1 的**单一实现**；只用在入口脚本上（`rl/` 库模块不加 —— 库不该改宿主 stdout）。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
+
 from rl.env_wrapper import RLEnv                                   # noqa: E402
 from rl.action_bundle import ActionBundle, SubAction               # noqa: E402
 from rl.replay import battle_snapshot                              # noqa: E402

@@ -8,6 +8,13 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'clasher_new'))
 os.chdir(os.path.join(os.path.dirname(__file__), '..', 'src', 'clasher_new'))
 
+# T1-1 追加（2026-09-19）：UTF-8 兜底。本文件含 **GBK 编不出**的字符（样例 '⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳'）⇒
+# 无兜底时 `print` 抛 UnicodeEncodeError（实测：test_m3_evo 因此产生 **10 个假失败**）。
+# 用 T1-1 的**单一实现**；只用在本仓的入口脚本上（`rl/` 库模块不加 —— 库不该改宿主 stdout）。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
+
+
 import battle
 from battle import (BattleState, Troop, Building, Position, Entity,
                     EvoZapZone, EvoEffectZone, interpret_action_group)

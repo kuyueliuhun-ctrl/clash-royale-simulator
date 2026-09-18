@@ -36,6 +36,12 @@ _SRC = os.path.join(_ROOT, "src", "clasher_new")
 sys.path.insert(0, _HERE)   # import judge_critic_inertia（复用 §11.13.2 within-run 口径）
 sys.path.insert(0, _SRC)    # import rl.train_health
 
+# T1-1 追加（2026-09-19）：UTF-8 兜底。本文件含 **GBK 编不出**的字符 ⇒ 无兜底时
+# `print` 抛 UnicodeEncodeError（实测：test_m3_evo 因此产生 **10 个假失败**）。
+# 用 T1-1 的**单一实现**；只用在入口脚本上（`rl/` 库模块不加 —— 库不该改宿主 stdout）。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
+
 # GBK 陷阱（本仓已知，env.md §2；与 judge_critic_inertia.py:19 / et_solo100k_readout.py:32
 # **同一个修法**）：Windows python 的 stdout/stderr 默认 = **gbk**，且**实测** `PYTHONIOENCODING=utf-8`
 # 在本环境**不生效**（加了它 stdlib 仍自报 stdout.encoding=gbk）。后果不只是乱码：任何非 GBK 字符

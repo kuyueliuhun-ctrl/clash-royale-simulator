@@ -138,3 +138,145 @@
 | 5.1 | **WSL 的 `127.0.0.1` ≠ Windows 面板的 `127.0.0.1`** | 从 bash 工具 `curl http://127.0.0.1:8701/api/solo` 得 **HTTP 000**（无响应），**看上去像面板死了** | 本机是 **WSL2**（`Linux 6.18…-microsoft-standard-WSL2`，eth0 `172.28.144.0/20`）⇒ **两个网络命名空间**。真判据：① `ps -ef` 里 4 个 dashboard 进程仍在；② 面板**日志尾部**有 `[dashboard] "GET /api/solo HTTP/1.1" 200`（**服务端自证**）。⚠️ 面板绑的是 `--host 127.0.0.1` ⇒ 从 WSL 侧**根本连不上**，不是配置问题 |
 | 5.2 | **`build_payload` / `build_solo_payload` 的 `PermissionError`** | T2-2 的 A/B 拿不到这两个用例 | 成因（本条**未定**）：怀疑是**运行中的面板占着 `solo_state.json` / 训练日志**（Windows 文件锁）。**但改动前后同样报错** ⇒ 不是本次引入 |
 | 5.3 | **一度把"挂钟"当成"回归"** | 直接比 payload sha256 得 **4 个 DIFF** | 先做**易变性取证**：同码连跑两遍、逐键比 ⇒ 唯一差异键 `updated_at`（`datetime.now().isoformat()`）⇒ 再做剥离后的真 A/B（**4/4 SAME**）。**教训**：payload 类对象的指纹必须先剥时间戳 |
+
+---
+
+## 6. T2-3（判定语义半簇）与 T2-5（`card_mechanics` 拆 M8 段）
+
+### 6.1 T2-3 · 判定语义 → `rl/league_rules.py` ✅（**评估并行半簇未搬**）
+
+**搬了**：`STALL_WINDOW`/`STALL_LIMIT`、`towers_hp`、`_min_alive_tower_pct`、`timeout_winner`、
+`settle_stall_from_counts`、`settle_stall`、`_stall_probe`（原 `L151-275`，`run_league.py` **1,784 → 1,665 行**）。
+`run_league.py` 侧**显式 re-export** 8 个名字 ⇒ 既有调用点（`rl/selftest.py` 的 `run_league.timeout_winner` /
+`settle_stall` / `STALL_LIMIT` / `_stall_probe`；`rl/evaluate.py` 的 `from rl.run_league import timeout_winner`）**一行未动**。
+
+**无环是怎么保证的（实测，不是推测）**：用 AST 逐个函数扫**自由名** ⇒ 该簇对模块内的**唯一**外部依赖是
+`_overtime_timeout_winner`（来自 `rl.overtime`）⇒ `league_rules` **不 import `run_league`**。
+
+| 对账 | 结果 |
+|---|---|
+| 8 个定义的**函数体**（去空白后 sha256）HEAD vs 新模块 | **8/8 SAME** |
+| re-export 可用性 + 与 `league_rules` 同名对象 | True |
+| `rl.evaluate` / `rl.flow_league` / `rl.human_play` 导入 | OK |
+| selftest 子集（加时/平局/僵局/联赛/并行评估 ×10，**含 spawn 多进程**） | **10/10 PASS** |
+
+**★ 为什么「评估并行」半簇（原计划 L581-759）没搬**：它的依赖
+`_play_one_game` / `_spec_to_policy` / `_eval_env` / `_ET_MEASURE` **全部位于该边界之前**，
+而方案又要求 `_ET_MEASURE` / `_set_et_measure`（**S2 接线点**）留在 `run_league.py` 原地
+⇒ 直接搬会形成 `run_league ⇄ league_eval` **循环 import**。破环有两条路，**都不做**：
+① 把 `_ET_MEASURE` 一起搬（违反方案的「保留原地」）；
+② 给 `_run_eval_pairs_parallel` 加 `et_measure` 形参（**改签名**，不再是"纯搬运"）。
+⇒ 记录为未做（§4 已列）。
+
+> **附带查到一条硬约束**：`rl/selftest.py:5298` 断言
+> `run_league._eval_pair_worker_main.__module__ == "rl.run_league"` —— 即**该 worker 必须留在
+> `rl.run_league`**（spawn 的 pickle 路径契约）。这独立佐证了上一条决定。
+
+### 6.2 T2-5 · `card_mechanics.py` 拆 M8 段 → `card_mechanics_elite17.py` ✅（**不是**方案写的「包」）
+
+**方案原写**：「7 族 → `card_mechanics/` 包 + `__init__.py` re-export 全部 58 类」。
+**我改成了两文件切分**，理由是一个**具体的危险**：`battle.py:5` 是 `from card_mechanics import *` ——
+`import *` 的语义是「导出该模块**公开命名空间**」，而拆分前的 `card_mechanics` 会把**它自己的 import**
+（`math` / `BasicCharacter` / `Position` / `Card` / `TileGrid` / `OFFICIAL_OVERRIDES` / `level_scale`）一并**泄漏**给 `battle`。
+改成包、由 `__init__.py` 重新聚合，**未必**能复现这套泄漏 ⇒ 有静默改变 `battle` 命名空间的风险。
+**两文件方案把风险降到 0**：`battle.py:5` **一字不动**，`card_mechanics` 仍是那个聚合模块。
+
+| 项 | 值 |
+|---|---|
+| 切点 | 原 `L856` 的 `# ===== M8：Elite17 …` 横幅；M8 段占 **1,040 行 / 35 个定义 + `HERO_CLASSES`** |
+| 依赖方向（AST 实测） | **基准段引用的 M8 名字 = 0 个** ⇒ 单向、干净 |
+| 结果 | `card_mechanics.py` **1,896 → 861 行**；新增 `card_mechanics_elite17.py` 1,071 行 |
+| 反向需要 | M8 段**精确**需要 5 个基准名：`Balloon` / `Prince` / `DarkPrince` / `IceWizard` / `_HeroBase`（逐函数扫自由名得到，**不是猜的**） |
+
+**★ 「后半部分不能独立导入」这一失败模式，我做了守卫**：若先 `import card_mechanics_elite17`，
+则 `card_mechanics` 末尾的 `import *` 会在该模块**尚未完成**时执行 ⇒ 公共命名空间会**静默少掉 35 个定义**。
+故 `card_mechanics_elite17.py` 顶部加显式检查并**大声抛 `ImportError`**（附正确用法），而不是留个坏模块。
+实测：直接导入 ⇒ **被拒**；`import card_mechanics` / `import battle` ⇒ 正常。
+
+**逐名对账（本步最硬的一条证据）**：
+
+| 检查 | 结果 |
+|---|---|
+| 公开命名空间（`vars(mod)` 里不以 `_` 开头的）拆前 vs 拆后 | **65 名 == 65 名，缺失 0 / 新增 0** |
+| 泄漏名仍指向同一对象（`Position`/`BasicCharacter`/`Card`/`TileGrid`/`OFFICIAL_OVERRIDES`/`math`） | **True** |
+| `HERO_CLASSES` 条目数 | **16**（与拆前同） |
+| `import battle` + `battle.HeroKnight` 解析 | OK（`__module__` 现为 `card_mechanics_elite17`） |
+| **`__module__` 依赖排查** | 全仓**无**对 `card_mechanics` 类 `__module__` 的依赖（唯一命中是 `selftest.py:5298` 对 `_eval_pair_worker_main` 的断言，**与本次无关**） |
+| `scripts/test_m6_elite.py`（M8 机制真实跑 battle） | **通过 84 / 失败 0** |
+
+> ⚠️ **限定**：把类挪到新模块会改 `__module__`。若**将来**有人对这些类做 pickle 或按 `__module__` 查表，
+> 就会踩到（当前**实测无**）。这一条写进 §4 未决。
+
+---
+
+## 7. T2-5 验证过程中的**意外收获**：13 个入口脚本缺 UTF-8 兜底 ⇒ 引擎测试在**假失败**
+
+### 7.1 怎么发现的
+
+T2-5 后按计划跑引擎测试，得到 `scripts/test_m3_evo.py` **通过 39 / 失败 12**、`test_m5_data.py` **39 / 1**。
+**我没有先假设是自己的回归**，而是先做 A/B：`git stash` 掉本次 tracked 改动（`card_mechanics.py` + `run_league.py`）
+再跑同一批 ⇒ **HEAD 上同样是 39/12 与 39/1** ⇒ **既有失败，与本次拆分无关**。
+
+随后把失败条目解出来（`iconv -f gbk`）：
+
+```
+FAIL test_musketeer_snipe 异常  ['gbk' codec can't encode character '\u246a' in position 4: illegal multibyte seq]
+FAIL test_valkyrie_tornado 异常  [ … '\u246b' … ]      ← 同因
+… 共 10 条同因
+FAIL 冲刺后贴脸（<1.5 格）  [d=4.00]                      ← 真实行为失败
+FAIL 落地冲刺伤害 ≈545  [dmg=0]                          ← 真实行为失败
+```
+
+**根因**：该文件的测试名用了 ⑪⑫⑬…（`U+246A` 起）—— **GBK 编不出**；而文件没有 UTF-8 兜底
+⇒ `print(测试名)` 抛 `UnicodeEncodeError`，被本文件的 `try/except` 记成「异常」⇒ **10 个假失败**。
+
+| 加兜底前 | 加兜底后 |
+|---|---|
+| 通过 **39** / 失败 **12** | 通过 **60** / 失败 **2** |
+
+⇒ 不只 10 个假失败消失，**另有 21 个测试现在才真正跑起来**（原先一抛异常就跳过该子测试的断言）。
+**剩下 2 个是真实行为失败**（冲刺贴脸距离、落地冲刺伤害），**本次不动**（属引擎语义，超范围）。
+
+### 7.2 修了什么（**入口脚本 13 个**）
+
+判据：**含 GBK 编不出的字符** ∧ **无任何 UTF-8 兜底**。分两类处置：
+
+| 类 | 个数 | 处置 |
+|---|---:|---|
+| 已有 `sys.path.insert`（⇒ `rl` 可导入） | **10** | 在 path 引导之后 `from rl.io_bootstrap import force_utf8_stdout; force_utf8_stdout()` |
+| **完全不 import `rl`**（纯文本/AST/子进程工具：`_agents_split` / `_patch_battle_root_cast` / `bench_train_speed`） | **3** | 补一段**自足** path 引导（与仓内 69 个脚本同形态）再 import 单一实现 |
+
+**刻意不用「复制一份手写 `reconfigure` 块」**——那会造出 T1-1 刚消灭的**第二份实现**。
+
+**⚠️ 只加在入口脚本上，`rl/` 库模块一律不加**：库在 import 时改宿主的 stdout/stderr 是错的
+（会污染调用方）。⇒ 扫描里 25 个 `rl/*.py` 模块**有意不动**。
+
+### 7.3 顺带发现：仓库实际有**四种** UTF-8 引导形态
+
+| # | 形态 | 实测数量 | 缺陷 |
+|---|---|---:|---|
+| ① | `try: sys.stdout.reconfigure(encoding="utf-8") except: pass` | 见 T1-1b | 不管 stderr、无 `errors="replace"` |
+| ② | 同 ① 但带 `errors="replace"` | 见 T1-1b | 不管 stderr |
+| ③ | `sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")` | **6** | 不管 stderr、无 `errors="replace"`、且**替换** stdout 对象（调用方若持有旧引用会失效） |
+| ④ | `from rl.io_bootstrap import force_utf8_stdout`（T1-1 的单一实现） | **3 + 13** | — |
+
+### 7.4 ★ 我自己在改这 13 个文件时踩的坑（留档）
+
+**第一次插入把 8 个文件改成了语法错误。** 原因与修法：
+
+| 步 | 我做了什么 | 结果 |
+|---|---|---|
+| 1 | 用**正则** `^\s*sys\.path\.insert\(` 找插入点，插在匹配行**之后** | ❌ `assassin_*` / `duel_search` 的 `sys.path.insert(0, os.path.join(` 是**跨行调用** ⇒ 代码被插进**括号中间** ⇒ `SyntaxError`（8 个文件） |
+| 2 | 改用 **AST** 取语句 `end_lineno` | ❌ 我的「点号名提取」只处理 **2 级**属性（`os.chdir`），而 `sys.path.insert` 是 **3 级** ⇒ 一个都没匹配上 ⇒ 断言失败（**这次失败救了场：断言在写入前触发，8 个文件未被再次破坏**） |
+| 3 | 改为**通用属性链**还原（`while isinstance(node, ast.Attribute)` 逐级收集） | ✅ 3 个文件通过；`diag_critic_ev.py` 仍失败 |
+| 4 | 发现 `diag_critic_ev.py` 的 insert **嵌在 `if _SRC not in sys.path:` 里** ⇒ 只看 `tree.body` 漏掉 | 改为 `ast.walk` 全树 + 「必须落在首个产品 import 之前」约束 ⇒ ✅ |
+
+**收尾**：把 8 个被改坏的文件 `git checkout HEAD --` 回退（它们的 T1-2 / T1-1b 改动**已在 HEAD 里**，不会丢），
+再用第 3/4 步的正确方法重做 ⇒ **10/10 编译通过**，并逐个运行时冒烟：
+`test_m3_evo`（**60/2**）、`assassin_left_bridge_test`（真跑引擎，能打出 `✓`）、`duel_search --help`（rc=0）、
+`health_curve --selftest`（**5/5**）、`diag_critic_ev --help`、`_agents_split --check`（**PASS**）、
+`_patch_battle_root_cast --help`、`bench_train_speed --help`。
+
+> **教训（写进 §4 未决）**：**跨行调用**上做文本/正则插入是陷阱；插代码必须用 AST 的 `end_lineno`，
+> 且点号名要**通用**还原（别假设属性级数）。另：一次插入失败后**别在原状上继续改**，
+> 先 `git checkout` 回基线再重做 —— 我这次正是靠这个 + 断言前置于写入，才没有留下半坏的树。
