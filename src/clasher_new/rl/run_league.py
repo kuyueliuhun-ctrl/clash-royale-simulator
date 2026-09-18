@@ -478,8 +478,12 @@ _ET_MEASURE_WEIGHTS = {
 def _set_et_measure(cfg):
     """按配置打开"评估局也记在线明细"。返回最终状态（供日志打印）。"""
     global _ET_MEASURE
-    _ET_MEASURE = bool((getattr(cfg, "reward", None) or {}).get(
-        "engagement_trade_measure_only"))
+    _rw = (getattr(cfg, "reward", None) or {})
+    # 两种情况都要让**评估局**把在线明细记进录像：
+    # ① measure-only（只测不加）；② 干预臂（权重 > 0）—— 评估局的奖励不参与学习，
+    #    所以给它挂 measure-only 权重**不改变任何行为**，却让评估录像带上局面明细。
+    _ET_MEASURE = bool(_rw.get("engagement_trade_measure_only")
+                       or float(_rw.get("engagement_trade", 0.0) or 0.0) > 0.0)
     return _ET_MEASURE
 
 

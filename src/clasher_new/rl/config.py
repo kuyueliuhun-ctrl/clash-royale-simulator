@@ -428,6 +428,27 @@ class TrainConfig:
                 value_independent=True,  # E'（2026-09-12）：独立价值编码器 + MLP 头
                                      # （优先级 independent > bypass）。架构变更 ⇒ 须 --fresh。
                 only_vs_main=True),   # 联赛模式评估只测 main（15 对→5 对，评估量再 ÷3）；solo 不受影响
+            # —— S2 第七轮：**干预臂**（用户 2026-09-18 直接要求"按这个机制再跑一次 10w 步"）——
+            # 与 `economy` 逐字同参，只多"打开新局面圣水交换项"：
+            #   engagement_trade = 0.5   ← 与 `elixir_diff_weight` **同一个汇率**（1 圣水 = 0.5 奖励），
+            #                              满足【R7】：该项以圣水计价 ⇒ 必须与既有费差项同源，不许另设汇率。
+            #   theta = 1.0 / t_ref = 2.0 / gate = 1   ← 预注册 §2.3/§11.7.1 的登记值，**不在此处重新标定**。
+            # ⚠️ 判据与失败分支见预注册 §11.13（**开跑前写死**）。
+            "economy_et": cls(
+                name="economy_et",
+                description="economy + 局面圣水交换项（干预臂；engagement_trade=0.5 与 edw 同汇率）",
+                reward={"crown_weight": 8.0, "win_bonus": 10.0,
+                        "lose_penalty": 10.0, "invalid_penalty": 0.05,
+                        "elixir_bonus": 0.0, "normalize_tower_dmg": True,
+                        "elixir_diff_weight": 0.5,
+                        "engagement_trade": 0.5,
+                        "engagement_trade_theta": 1.0,
+                        "engagement_trade_t_ref": 2.0,
+                        "engagement_trade_gate": 1,
+                        "engagement_trade_measure_only": 0},
+                gae_lambda=0.99, steps_per_eval=8000,
+                value_norm="running", value_bypass=True, value_independent=True,
+                only_vs_main=True),
             # —— S2 第四轮：**measure-only** 口径（预注册 §11.9.4 的放行前置）——
             # 与 `economy` 逐字同参，只多一个 `engagement_trade_measure_only=1`：
             # 跑在线监视器、把每个决策帧结算掉的局面明细写进录像帧的 `et` 键，
