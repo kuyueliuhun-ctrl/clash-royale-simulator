@@ -58,7 +58,7 @@
 | I5 | 样本/优势加权（AWAC·AWR·IQL 形态） | `rl/train_bc.py:107-111` 改 `-(w*lp)`；`w` 有两套约定（`exp(A/λ)` 论文形式 vs **批内 softmax = 两个参考实现的默认**） | ✅ 权重张量可逐元素对账；⚠️ 【R17】须报两套约定 | 中 | **待预注册**；⚠️ **零样本区同样退化**（样本数 0 ⇒ 无 Q/V 可依） |
 | I6 | return-conditioning（DT / RvS） | 需注入 `R̂` 进 `plan_vec`（【R6】`PLAN_DIM`）或新增输入头（**必须 `--fresh`**） | ✅ 输入可逐元素对账；❗ 性能判据不可判（单点差 0.60） | 中高 | **待预注册**；⚠️ 一手反证：DT/RvS 在**随机环境**下「fail dramatically」且「**not due to a lack of data**」（arXiv:2205.15967） |
 | I7 | DAgger / expert iteration | 在线专家 = `rl/belief_planner.py`（`plan()` 只返回 PlanToken，动作仍由 RL 出） | ✅ 纠正帧可复算 | 高 | **待预注册（优先级低于 I2/I3）**；⚠️ **致命前提**：专家自身在 Xbow 卡组 **0 帧**产攒费动作（O7）⇒ 会放大同一局部最优 |
-| **I8** | **IL→RL 锚定：KL-to-reference / BC 正则** | `rl/ppo.py:379-392`；参考 = 冻结 BC ckpt | ✅ `p=0` 时逐位回旧行为 | 中 | **不做（方向与病根相反）**：KL 把策略**拉回参考分布**，而瓶颈是**探索不足**；且 RLHF 的 KL 两条主干理由都以「奖励是学出来的代理」为前提，**我们没有 RM**（`docs/rlhf_kl_penalty_survey_2026-09-19.md` §5）；也触发【R11】 |
+| **I8** | **IL→RL 锚定：KL-to-reference / BC 正则** | ★ **我们仓内没有这个落点**：`grep -c kl rl/ppo.py` = **0**（2026-09-19 复验）；`rl/ppo.py:393` 的损失只有 `p_loss + vf_coef*v_loss − coef*ent_term` ⇒ **要加 KL 得从零建**（不是"在某行加一项"）。参考侧若能做 = 冻结 BC ckpt | 若自建则 `p=0` 须逐位回旧行为 | 中–高 | **不做（方向与病根相反）**：KL 把策略**拉回参考分布**，而瓶颈是**探索不足**；且 RLHF 的 KL 两条主干理由都以「奖励是学出来的代理」为前提，**我们没有 RM**（`docs/rlhf_kl_penalty_survey_2026-09-19.md` §5）；也触发【R11】 |
 | I9 | 奖励塑形 + 退火（OpenAI Five 类） | — | — | — | **不做（非 IL 证据）**；且「OpenAI Five 靠奖励退火」是**误读**（见 §4） |
 
 ### 2.1 我这一轮补上的两条机制解释（子报告未覆盖）

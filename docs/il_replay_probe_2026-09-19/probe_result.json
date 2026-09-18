@@ -1,0 +1,1364 @@
+{
+ "source": {
+  "actions": "il_actions.parquet",
+  "actions_rows": 384275,
+  "distinct_replays_in_shard": 4997,
+  "replays_rows": 5000,
+  "kinds": {
+   "play_card": 365362,
+   "activate_ability": 18913
+  },
+  "picked": [
+   "e1f085e137f24716b324a9fead4f9fd6",
+   "ec1a79a659e84d94a1a4b326d39e359b",
+   "226c72926f25486eae1b555e3c1bf37c"
+  ]
+ },
+ "results": [
+  {
+   "replay_tag": "e1f085e137f24716b324a9fead4f9fd6",
+   "result": "defeat",
+   "crowns": [
+    0,
+    1
+   ],
+   "duration_timeline_seconds": null,
+   "R1": {
+    "distinct_keys": 14,
+    "mapped": 14,
+    "unmapped": [],
+    "renamed_total": 4,
+    "renamed": {
+     "fire-spirit": "FireSpirits",
+     "giant-snowball": "Snowball",
+     "magic-archer": "EliteArcher",
+     "the-log": "Log"
+    }
+   },
+   "R2": {
+    "deck_sizes": {
+     "team": 8,
+     "opponent": 8
+    },
+    "levels": {
+     "team": [
+      16
+     ],
+     "opponent": [
+      16
+     ]
+    },
+    "variant_cards": {
+     "team": [
+      "ev1",
+      "hero",
+      "ev1"
+     ],
+     "opponent": [
+      "ev1",
+      "hero",
+      "ev1"
+     ]
+    },
+    "unmapped": {
+     "team": [],
+     "opponent": []
+    },
+    "tower_card": {
+     "team": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     },
+     "opponent": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     }
+    }
+   },
+   "R5": {
+    "team": {
+     "declared_four_card_cycle_elixir": 6.0,
+     "ours_cheapest_four_elixir": 6.0
+    },
+    "opponent": {
+     "declared_four_card_cycle_elixir": 6.0,
+     "ours_cheapest_four_elixir": 6.0
+    }
+   },
+   "R3": {
+    "raw": {
+     "play_card_events": 173,
+     "accepted": 70,
+     "rejected": 103,
+     "accept_rate": 0.4046242774566474,
+     "ability_events_not_replayed": 7,
+     "buckets": {
+      "unaffordable": 86,
+      "not_in_cycle": 0,
+      "other": 17,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 201,
+       "time": 10.05,
+       "card": "FireSpirits",
+       "pid": 0,
+       "pos": [
+        8.5,
+        0.5
+       ],
+       "elixir": 8.571,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 261,
+       "time": 13.05,
+       "card": "Bomber",
+       "pid": 1,
+       "pos": [
+        8.5,
+        26.5
+       ],
+       "elixir": 9.643,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 471,
+       "time": 23.55,
+       "card": "FireSpirits",
+       "pid": 1,
+       "pos": [
+        6.5,
+        17.5
+       ],
+       "elixir": 8.714,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 568,
+       "time": 28.4,
+       "card": "Miner",
+       "pid": 0,
+       "pos": [
+        2.5,
+        27.5
+       ],
+       "elixir": 8.0,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 642,
+       "time": 32.1,
+       "card": "Skeletons",
+       "pid": 1,
+       "pos": [
+        4.5,
+        21.5
+       ],
+       "elixir": 9.321,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 731,
+       "time": 36.55,
+       "card": "GoblinDrill",
+       "pid": 1,
+       "pos": [
+        1.0,
+        7.0
+       ],
+       "elixir": 8.911,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 1121,
+       "time": 56.05,
+       "card": "Snowball",
+       "pid": 1,
+       "pos": [
+        3.5,
+        22.5
+       ],
+       "elixir": 8.429,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 1586,
+       "time": 79.3,
+       "card": "GoblinDrill",
+       "pid": 1,
+       "pos": [
+        15.0,
+        9.0
+       ],
+       "elixir": 10,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 180.0,
+     "engine_game_over": true,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero": [
+        "EliteArcher"
+       ],
+       "evo_slots_applied": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero_slots_applied": [
+        "EliteArcher"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "Snowball",
+        "Cannon"
+       ],
+       "hero": [
+        "Berserker"
+       ],
+       "evo_slots_applied": [
+        "Cannon",
+        "Snowball"
+       ],
+       "hero_slots_applied": [
+        "Berserker"
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "play_card_events": 173,
+     "accepted": 4,
+     "rejected": 169,
+     "accept_rate": 0.023121387283236993,
+     "ability_events_not_replayed": 7,
+     "buckets": {
+      "unaffordable": 0,
+      "not_in_cycle": 0,
+      "other": 169,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 201,
+       "time": 10.05,
+       "card": "FireSpirits",
+       "pid": 0,
+       "pos": [
+        8.5,
+        31.5
+       ],
+       "elixir": 8.571,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 261,
+       "time": 13.05,
+       "card": "Bomber",
+       "pid": 1,
+       "pos": [
+        8.5,
+        5.5
+       ],
+       "elixir": 9.643,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 344,
+       "time": 17.2,
+       "card": "EliteArcher",
+       "pid": 0,
+       "pos": [
+        6.5,
+        17.5
+       ],
+       "elixir": 10,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 375,
+       "time": 18.75,
+       "card": "Cannon",
+       "pid": 1,
+       "pos": [
+        9.5,
+        13.5
+       ],
+       "elixir": 10,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 471,
+       "time": 23.55,
+       "card": "FireSpirits",
+       "pid": 1,
+       "pos": [
+        6.5,
+        14.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 521,
+       "time": 26.05,
+       "card": "Bats",
+       "pid": 0,
+       "pos": [
+        3.5,
+        17.5
+       ],
+       "elixir": 10,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 568,
+       "time": 28.4,
+       "card": "Miner",
+       "pid": 0,
+       "pos": [
+        2.5,
+        4.5
+       ],
+       "elixir": 10,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 568,
+       "time": 28.4,
+       "card": "Berserker",
+       "pid": 1,
+       "pos": [
+        1.5,
+        6.5
+       ],
+       "elixir": 10,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 298.55,
+     "engine_game_over": false,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero": [
+        "EliteArcher"
+       ],
+       "evo_slots_applied": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero_slots_applied": [
+        "EliteArcher"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "Snowball",
+        "Cannon"
+       ],
+       "hero": [
+        "Berserker"
+       ],
+       "evo_slots_applied": [
+        "Cannon",
+        "Snowball"
+       ],
+       "hero_slots_applied": [
+        "Berserker"
+       ]
+      }
+     }
+    }
+   },
+   "R6": {
+    "raw": {
+     "ours": {
+      "ours_team": {
+       "king": 4824,
+       "princess": [
+        2014.0,
+        3052
+       ]
+      },
+      "ours_opponent": {
+       "king": 3174.75,
+       "princess": [
+        -42.75,
+        2845
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "ours": {
+      "ours_team": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      },
+      "ours_opponent": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      }
+     }
+    },
+    "replay_final_team": {
+     "king": 5980,
+     "princess_left": 3110,
+     "princess_right": 0,
+     "total": 9090
+    },
+    "replay_final_opponent": {
+     "king": 5980,
+     "princess_left": 2462,
+     "princess_right": 488,
+     "total": 8930
+    },
+    "verdict": "NOT_COMPARABLE (hand-cycle order unknown / per-event elixir absent / levels not aligned / replay duration may exceed our 300 s cap) -- computability reading only, NOT an equivalence criterion"
+   }
+  },
+  {
+   "replay_tag": "ec1a79a659e84d94a1a4b326d39e359b",
+   "result": "victory",
+   "crowns": [
+    1,
+    0
+   ],
+   "duration_timeline_seconds": null,
+   "R1": {
+    "distinct_keys": 15,
+    "mapped": 15,
+    "unmapped": [],
+    "renamed_total": 5,
+    "renamed": {
+     "fire-spirit": "FireSpirits",
+     "giant-snowball": "Snowball",
+     "ice-spirit": "IceSpirits",
+     "magic-archer": "EliteArcher",
+     "the-log": "Log"
+    }
+   },
+   "R2": {
+    "deck_sizes": {
+     "team": 8,
+     "opponent": 8
+    },
+    "levels": {
+     "team": [
+      16
+     ],
+     "opponent": [
+      16
+     ]
+    },
+    "variant_cards": {
+     "team": [
+      "ev1",
+      "hero",
+      "ev1"
+     ],
+     "opponent": [
+      "ev1",
+      "hero",
+      "ev1"
+     ]
+    },
+    "unmapped": {
+     "team": [],
+     "opponent": []
+    },
+    "tower_card": {
+     "team": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     },
+     "opponent": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     }
+    }
+   },
+   "R5": {
+    "team": {
+     "declared_four_card_cycle_elixir": 6.0,
+     "ours_cheapest_four_elixir": 6.0
+    },
+    "opponent": {
+     "declared_four_card_cycle_elixir": 6.0,
+     "ours_cheapest_four_elixir": 6.0
+    }
+   },
+   "R3": {
+    "raw": {
+     "play_card_events": 176,
+     "accepted": 75,
+     "rejected": 101,
+     "accept_rate": 0.42613636363636365,
+     "ability_events_not_replayed": 2,
+     "buckets": {
+      "unaffordable": 71,
+      "not_in_cycle": 0,
+      "other": 30,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 191,
+       "time": 9.55,
+       "card": "GoblinDrill",
+       "pid": 1,
+       "pos": [
+        17.0,
+        7.0
+       ],
+       "elixir": 8.411,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 288,
+       "time": 14.4,
+       "card": "Skeletons",
+       "pid": 1,
+       "pos": [
+        3.5,
+        19.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 527,
+       "time": 26.35,
+       "card": "IceSpirits",
+       "pid": 1,
+       "pos": [
+        17.5,
+        21.5
+       ],
+       "elixir": 8.982,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 562,
+       "time": 28.1,
+       "card": "Tesla",
+       "pid": 1,
+       "pos": [
+        11.0,
+        18.0
+       ],
+       "elixir": 9.607,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 948,
+       "time": 47.4,
+       "card": "GoblinDrill",
+       "pid": 1,
+       "pos": [
+        17.0,
+        7.0
+       ],
+       "elixir": 10,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 1026,
+       "time": 51.3,
+       "card": "Snowball",
+       "pid": 1,
+       "pos": [
+        16.5,
+        5.5
+       ],
+       "elixir": 10,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 1096,
+       "time": 54.8,
+       "card": "IceSpirits",
+       "pid": 1,
+       "pos": [
+        4.5,
+        20.5
+       ],
+       "elixir": 8.625,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 1236,
+       "time": 61.8,
+       "card": "GoblinDrill",
+       "pid": 1,
+       "pos": [
+        14.0,
+        9.0
+       ],
+       "elixir": 9.625,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 194.9,
+     "engine_game_over": true,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero": [
+        "EliteArcher"
+       ],
+       "evo_slots_applied": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero_slots_applied": [
+        "EliteArcher"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "GoblinDrill",
+        "Snowball"
+       ],
+       "hero": [
+        "Berserker"
+       ],
+       "evo_slots_applied": [
+        "GoblinDrill",
+        "Snowball"
+       ],
+       "hero_slots_applied": [
+        "Berserker"
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "play_card_events": 176,
+     "accepted": 4,
+     "rejected": 172,
+     "accept_rate": 0.022727272727272728,
+     "ability_events_not_replayed": 2,
+     "buckets": {
+      "unaffordable": 0,
+      "not_in_cycle": 0,
+      "other": 172,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 202,
+       "time": 10.1,
+       "card": "Wallbreakers",
+       "pid": 0,
+       "pos": [
+        8.5,
+        31.5
+       ],
+       "elixir": 8.589,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 252,
+       "time": 12.6,
+       "card": "Bats",
+       "pid": 0,
+       "pos": [
+        14.5,
+        23.5
+       ],
+       "elixir": 9.482,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 288,
+       "time": 14.4,
+       "card": "Skeletons",
+       "pid": 1,
+       "pos": [
+        3.5,
+        12.5
+       ],
+       "elixir": 6.125,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 311,
+       "time": 15.55,
+       "card": "FireSpirits",
+       "pid": 0,
+       "pos": [
+        17.5,
+        27.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 336,
+       "time": 16.8,
+       "card": "Skeletons",
+       "pid": 0,
+       "pos": [
+        17.5,
+        26.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 443,
+       "time": 22.15,
+       "card": "Miner",
+       "pid": 0,
+       "pos": [
+        17.5,
+        6.5
+       ],
+       "elixir": 10,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 472,
+       "time": 23.6,
+       "card": "Berserker",
+       "pid": 1,
+       "pos": [
+        14.5,
+        4.5
+       ],
+       "elixir": 7.411,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 494,
+       "time": 24.7,
+       "card": "Wallbreakers",
+       "pid": 0,
+       "pos": [
+        13.5,
+        17.5
+       ],
+       "elixir": 10,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 295.0,
+     "engine_game_over": false,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero": [
+        "EliteArcher"
+       ],
+       "evo_slots_applied": [
+        "Bats",
+        "Wallbreakers"
+       ],
+       "hero_slots_applied": [
+        "EliteArcher"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "GoblinDrill",
+        "Snowball"
+       ],
+       "hero": [
+        "Berserker"
+       ],
+       "evo_slots_applied": [
+        "GoblinDrill",
+        "Snowball"
+       ],
+       "hero_slots_applied": [
+        "Berserker"
+       ]
+      }
+     }
+    }
+   },
+   "R6": {
+    "raw": {
+     "ours": {
+      "ours_team": {
+       "king": 4824,
+       "princess": [
+        2184.6172765429596,
+        2994
+       ]
+      },
+      "ours_opponent": {
+       "king": 4824,
+       "princess": [
+        -110.25,
+        1297.25
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "ours": {
+      "ours_team": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      },
+      "ours_opponent": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      }
+     }
+    },
+    "replay_final_team": {
+     "king": 7728,
+     "princess_left": 1336,
+     "princess_right": 4714,
+     "total": 13778
+    },
+    "replay_final_opponent": {
+     "king": 7728,
+     "princess_left": 4294,
+     "princess_right": 0,
+     "total": 12022
+    },
+    "verdict": "NOT_COMPARABLE (hand-cycle order unknown / per-event elixir absent / levels not aligned / replay duration may exceed our 300 s cap) -- computability reading only, NOT an equivalence criterion"
+   }
+  },
+  {
+   "replay_tag": "226c72926f25486eae1b555e3c1bf37c",
+   "result": "victory",
+   "crowns": [
+    1,
+    0
+   ],
+   "duration_timeline_seconds": null,
+   "R1": {
+    "distinct_keys": 13,
+    "mapped": 13,
+    "unmapped": [],
+    "renamed_total": 3,
+    "renamed": {
+     "fire-spirit": "FireSpirits",
+     "ice-spirit": "IceSpirits",
+     "the-log": "Log"
+    }
+   },
+   "R2": {
+    "deck_sizes": {
+     "team": 8,
+     "opponent": 8
+    },
+    "levels": {
+     "team": [
+      16
+     ],
+     "opponent": [
+      16
+     ]
+    },
+    "variant_cards": {
+     "team": [
+      "ev1",
+      "ev1"
+     ],
+     "opponent": [
+      "ev1",
+      "hero",
+      "ev1"
+     ]
+    },
+    "unmapped": {
+     "team": [],
+     "opponent": []
+    },
+    "tower_card": {
+     "team": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     },
+     "opponent": {
+      "card_key": "tower-princess",
+      "level": 16,
+      "name": "Tower Princess"
+     }
+    }
+   },
+   "R5": {
+    "team": {
+     "declared_four_card_cycle_elixir": 4.0,
+     "ours_cheapest_four_elixir": 4.0
+    },
+    "opponent": {
+     "declared_four_card_cycle_elixir": 7.0,
+     "ours_cheapest_four_elixir": 7.0
+    }
+   },
+   "R3": {
+    "raw": {
+     "play_card_events": 166,
+     "accepted": 88,
+     "rejected": 78,
+     "accept_rate": 0.5301204819277109,
+     "ability_events_not_replayed": 3,
+     "buckets": {
+      "unaffordable": 30,
+      "not_in_cycle": 0,
+      "other": 48,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 202,
+       "time": 10.1,
+       "card": "HogRider",
+       "pid": 0,
+       "pos": [
+        16.5,
+        14.5
+       ],
+       "elixir": 8.589,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 248,
+       "time": 12.4,
+       "card": "Rocket",
+       "pid": 1,
+       "pos": [
+        15.5,
+        21.5
+       ],
+       "elixir": 9.411,
+       "cost": 6.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4167,
+       "time": 208.35,
+       "card": "FireSpirits",
+       "pid": 0,
+       "pos": [
+        9.5,
+        10.5
+       ],
+       "elixir": 4.286,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4235,
+       "time": 211.75,
+       "card": "Skeletons",
+       "pid": 0,
+       "pos": [
+        9.5,
+        9.5
+       ],
+       "elixir": 4.286,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4346,
+       "time": 217.3,
+       "card": "HogRider",
+       "pid": 0,
+       "pos": [
+        17.5,
+        2.5
+       ],
+       "elixir": 4.286,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4361,
+       "time": 218.05,
+       "card": "Princess",
+       "pid": 1,
+       "pos": [
+        8.5,
+        31.5
+       ],
+       "elixir": 0.911,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4371,
+       "time": 218.55,
+       "card": "IceSpirits",
+       "pid": 0,
+       "pos": [
+        10.5,
+        11.5
+       ],
+       "elixir": 4.286,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 4395,
+       "time": 219.75,
+       "card": "GoblinBarrel",
+       "pid": 1,
+       "pos": [
+        14.5,
+        6.5
+       ],
+       "elixir": 0.911,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 206.9,
+     "engine_game_over": true,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Firecracker",
+        "IceSpirits"
+       ],
+       "hero": [],
+       "evo_slots_applied": [
+        "Firecracker",
+        "IceSpirits"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "Tesla",
+        "Princess"
+       ],
+       "hero": [
+        "Knight"
+       ],
+       "evo_slots_applied": [
+        "Princess",
+        "Tesla"
+       ],
+       "hero_slots_applied": [
+        "Knight"
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "play_card_events": 166,
+     "accepted": 0,
+     "rejected": 166,
+     "accept_rate": 0.0,
+     "ability_events_not_replayed": 3,
+     "buckets": {
+      "unaffordable": 0,
+      "not_in_cycle": 0,
+      "other": 166,
+      "after_time_cap": 0
+     },
+     "samples": [
+      {
+       "tick": 202,
+       "time": 10.1,
+       "card": "HogRider",
+       "pid": 0,
+       "pos": [
+        16.5,
+        17.5
+       ],
+       "elixir": 8.589,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 248,
+       "time": 12.4,
+       "card": "Rocket",
+       "pid": 1,
+       "pos": [
+        15.5,
+        10.5
+       ],
+       "elixir": 9.411,
+       "cost": 6.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 431,
+       "time": 21.55,
+       "card": "MightyMiner",
+       "pid": 0,
+       "pos": [
+        9.5,
+        31.5
+       ],
+       "elixir": 10,
+       "cost": 4.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 547,
+       "time": 27.35,
+       "card": "Skeletons",
+       "pid": 0,
+       "pos": [
+        8.5,
+        22.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 585,
+       "time": 29.25,
+       "card": "Princess",
+       "pid": 1,
+       "pos": [
+        8.5,
+        0.5
+       ],
+       "elixir": 10,
+       "cost": 3.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 722,
+       "time": 36.1,
+       "card": "Log",
+       "pid": 0,
+       "pos": [
+        4.5,
+        17.5
+       ],
+       "elixir": 10,
+       "cost": 2.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 771,
+       "time": 38.55,
+       "card": "FireSpirits",
+       "pid": 0,
+       "pos": [
+        13.5,
+        17.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      },
+      {
+       "tick": 776,
+       "time": 38.8,
+       "card": "Skeletons",
+       "pid": 1,
+       "pos": [
+        9.5,
+        9.5
+       ],
+       "elixir": 10,
+       "cost": 1.0,
+       "in_cycle": true,
+       "exc": null
+      }
+     ],
+     "engine_end_time": 298.55,
+     "engine_game_over": false,
+     "variant_apply": {
+      "team": {
+       "ev1": [
+        "Firecracker",
+        "IceSpirits"
+       ],
+       "hero": [],
+       "evo_slots_applied": [
+        "Firecracker",
+        "IceSpirits"
+       ]
+      },
+      "opponent": {
+       "ev1": [
+        "Tesla",
+        "Princess"
+       ],
+       "hero": [
+        "Knight"
+       ],
+       "evo_slots_applied": [
+        "Princess",
+        "Tesla"
+       ],
+       "hero_slots_applied": [
+        "Knight"
+       ]
+      }
+     }
+    }
+   },
+   "R6": {
+    "raw": {
+     "ours": {
+      "ours_team": {
+       "king": -36.0,
+       "princess": [
+        593.0,
+        -212.0
+       ]
+      },
+      "ours_opponent": {
+       "king": 2024.0,
+       "princess": [
+        -384.0,
+        1398.0
+       ]
+      }
+     }
+    },
+    "flip_y": {
+     "ours": {
+      "ours_team": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      },
+      "ours_opponent": {
+       "king": 4824,
+       "princess": [
+        3052,
+        3052
+       ]
+      }
+     }
+    },
+    "replay_final_team": {
+     "king": 7504,
+     "princess_left": 3827,
+     "princess_right": 1030,
+     "total": 12361
+    },
+    "replay_final_opponent": {
+     "king": 6832,
+     "princess_left": 4522,
+     "princess_right": 0,
+     "total": 11354
+    },
+    "verdict": "NOT_COMPARABLE (hand-cycle order unknown / per-event elixir absent / levels not aligned / replay duration may exceed our 300 s cap) -- computability reading only, NOT an equivalence criterion"
+   }
+  }
+ ]
+}
