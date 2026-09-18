@@ -283,14 +283,14 @@ FAIL 落地冲刺伤害 ≈545  [dmg=0]                          ← 真实行�
 
 ---
 
-## 9. T2-8 拆 `rl/selftest.py`（**6,023 行 → 157 行**）
+## 9. T2-8 拆 `rl/selftest.py`（**6,023 行 → 172 行**）
 
 ### 9.1 拆成什么
 
 | 文件 | 行数 | 内容 |
 |---|---:|---|
-| `rl/selftest.py` | **157** | 原 docstring（回归索引）+ **顶部 path 引导** + 聚合重导出 + **`main()`** + `if __name__` |
-| `rl/selftest_common.py` | 159 | 模块头导入 + `_PARENT` + **4 个模块级状态**（`_RUN_STATS`/`_SKIPS`/`_ORIG_FUNCS`/`_INSTRUMENTED`）+ **10 个 helper** |
+| `rl/selftest.py` | **172** | 原 docstring（回归索引）+ **顶部 path 引导** + 聚合重导出 + **`main()`** + `if __name__` |
+| `rl/selftest_common.py` | 202 | 模块头导入 + `_PARENT` + **4 个模块级状态**（`_RUN_STATS`/`_SKIPS`/`_ORIG_FUNCS`/`_INSTRUMENTED`）+ **10 个 helper** |
 | `rl/selftests/part{1..5}.py` | 各 ~20 测试 | 100 个测试按**定义序**每 20 个切一片（`part1` = `test_action_bundle_same_tick` … ；`part5` 末 = `test_mask_partial_bundle_invariants`） |
 | `rl/selftests/__init__.py` | — | 说明「这 5 个 part **不是**独立可跑模块」 |
 
