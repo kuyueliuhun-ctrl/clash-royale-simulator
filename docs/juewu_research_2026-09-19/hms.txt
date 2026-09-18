@@ -1,0 +1,671 @@
+Hierarchical Macro Strategy Model for
+MOBA Game AI
+1Bin Wu, 1Qiang Fu, 1Jing Liang, 1Peng Qu, 1Xiaoqian Li, 1Liang Wang,
+2Wei Liu, 1Wei Yang, 1Y ongsheng Liu
+1,2Tencent AI Lab
+1{benbinwu, leonfu, masonliang, pengqu, xiaoqianli, enginewang, willyang, kakarliu}@tencent.com
+2wliu@ee.columbia.edu
+Abstract
+The next challenge of game AI lies in Real Time Strategy
+(RTS) games. RTS games provide partially observable gam-
+ing environments, where agents interact with one another in
+an action space much larger than that of GO. Mastering RTS
+games requires both strong macro strategies and delicate mi-
+cro level execution. Recently, great progress has been made
+in micro level execution, while complete solutions for macro
+strategies are still lacking. In this paper, we propose a novel
+learning-based Hierarchical Macro Strategy model for mas-
+tering MOBA games, a sub-genre of RTS games. Trained
+by the Hierarchical Macro Strategy model, agents explicitly
+make macro strategy decisions and further guide their micro
+level execution. Moreover, each of the agents makes indepen-
+dent strategy decisions, while simultaneously communicat-
+ing with the allies through leveraging a novel imitated cross-
+agent communication mechanism. We perform comprehen-
+sive evaluations on a popular 5v5 Multiplayer Online Battle
+Arena (MOBA) game. Our 5-AI team achieves a 48% win-
+ning rate against human player teams which are ranked top
+1% in the player ranking system.
+Introduction
+Light has been shed on artiﬁcial general intelligence after
+AlphaGo defeated world GO champion Lee Seedol (Silver
+et al. 2016). Since then, game AI has drawn unprecedented
+attention from not only researchers but also the public. Game
+AI aims much more than robots playing games. Rather,
+games provide ideal environments that simulate the real
+world. AI researchers can conduct experiments in games,
+and transfer successful AI ability to the real world.
+Although AlphaGo is a milestone to the goal of general
+AI, the class of problems it represents is still simple com-
+pared to the real world. Therefore, recently researchers have
+put much attention to real time strategy (RTS) games such
+as Defense of the Ancients (Dota) (OpenAI 2018a) and Star-
+Craft (Vinyals et al. 2017; Tian et al. 2017), which represents
+a class of problems with next level complexity. Dota is a fa-
+mous set of science ﬁction 5v5 Multiplayer Online Battle
+Arena (MOBA) games. Each player controls one unit and
+cooperate with four allies to defend allies’ turrets, attack en-
+emies’ turrets, collect resources by killing creeps, etc. The
+goal is to destroy enemies’ base.
+Copyright c© 2019, Association for the Advancement of Artiﬁcial
+Intelligence (www.aaai.org). All rights reserved.
+There are four major aspects that make RTS games much
+more difﬁcult compared to GO: 1) Computational com-
+plexity. The computational complexity in terms of action
+space or state space of RTS games can be up to 1020,000,
+while the complexity of GO is about10250 (OpenAI 2018b).
+2) Multi-agent. Playing RTS games usually involves mul-
+tiple agents. It is crucial for multiple agents to coordinate
+and cooporate. 3) Imperfect information. Different to GO,
+many RTS games make use of fog of war (Vinyals et al.
+2017) to increase game uncertainty. When the game map
+is not fully observable, it is essential to consider gaming
+among one another. 4)Sparse and delayed rewards. Learn-
+ing upon game rewards in GO is challenging because the
+rewards are usually sparse and delayed. RTS game length
+could often be larger than 20,000 frames, while each GO
+game is usually no more than 361 steps.
+To master RTS games, players need to have strong skills
+in both macro strategy operation and micro level execu-
+tion. In recent study, much attention and attempts have
+been put to micro level execution (Vinyals et al. 2017;
+Tian et al. 2017; Synnaeve and Bessiere 2011; Wender and
+Watson 2012). So far, Dota2 AI developed by OpenAI us-
+ing reinforcement learning, i.e., OpenAI Five, has made the
+most advanced progress (OpenAI 2018a). OpenAI Five was
+trained directly on micro level action space using proxi-
+mal policy optimization algorithms along with team rewards
+(Schulman et al. 2017). OpenAI Five has shown strong
+teamﬁghts skills and coordination comparable to top pro-
+fessional Dota2 teams during a demonstration match held
+in The International 2018 (DOTA2 2018). OpenAI’s ap-
+proach did not explicitly model macro strategy and tried
+to learn the entire game using micro level play. However,
+OpenAI Five was not able to defeat professional teams due
+to weakness in macro strategy management (Vincent 2018;
+Simonite 2018).
+Related work has also been done in explicit macro strat-
+egy operation, mostly focused on navigation. Navigation
+aims to provide reasonable destination spots and efﬁcient
+routes for agents. Most related work in navigation used in-
+ﬂuence maps or potential ﬁelds (DeLoura 2001; Hagelbäck
+and Johansson 2008; do Nascimento Silva and Chaimow-
+icz 2015). Inﬂuence maps quantify units using handcrafted
+equations. Then, multiple inﬂuence maps are fused using
+rules to provide a single-value output to navigate agents.
+arXiv:1812.07887v1  [cs.MA]  19 Dec 2018
+Providing destination is the most important purpose of nav-
+igation in terms of macro strategy operation. The ability to
+get to the right spots at right time makes essential differ-
+ence between high level players and the others. Planning has
+also been used in macro strategy operation. Ontanon et al.
+proposed Adversarial Hierarchical-Task Network (AHTN)
+Planning (Ontanón and Buro 2015) to search hierarchical
+tasks in RTS game playing. Although AHTN shows promis-
+ing results in a mini-RTS game, it suffers from efﬁciency
+issue which makes it difﬁcult to apply to full MOBA games
+directly.
+Despite of the rich and promising literature, previous
+work in macro strategy failed to provide complete solution:
+First, reasoning macro strategy implicitly by learning
+upon micro level action space may be too difﬁcult. OpenAI
+Five’s ability gap between micro level execution and macro
+strategy operation was obvious. It might be over-optimistic
+to leave models to ﬁgure out high level strategies by sim-
+ply looking at micro level actions and rewards. We consider
+explicit macro strategy level modeling to be necessary.
+Second, previous work on explicit macro strategy heavily
+relied on handcrafted equations for inﬂuence maps/potential
+ﬁelds computation and fusion. In practice, there are usu-
+ally thousands of numerical parameters to manually decide,
+which makes it nearly impossible to achieve good perfor-
+mance. Planning methods on the other hand cannot meet ef-
+ﬁciency requirement of full MOBA games.
+Third, one of the most challenging problems in RTS game
+macro strategy operation is coordination among multiple
+agents. Nevertheless, to the best of our knowledge, previ-
+ous work did not consider it in an explicit way. OpenAI Five
+considers multi-agent coordination using team rewards on
+micro level modeling. However, each agent of OpenAI Five
+makes decision without being aware of allies’ macro strat-
+egy decisions, making it difﬁcult to develop top coordination
+ability in macro strategy level.
+Finally, we have found that modeling strategic phase is
+crucial for MOBA game AI performance. However, to the
+best of our knowledge, previous work did not consider this.
+Teaching agents to learn macro strategy operation, how-
+ever, is challenging. Mathematically deﬁning macro strat-
+egy, e.g., besiege and split push, is difﬁcult in the ﬁrst place.
+Also, incorporating macro strategy on top of OpenAI Five’s
+reinforcement learning framework (OpenAI 2018a) requires
+corresponding execution to gain rewards, while macro strat-
+egy execution is a complex ability to learn by itself. There-
+fore, we consider supervised learning to be a better scheme
+because high quality game replays can be fully leveraged
+to learn macro strategy along with corresponding execution
+samples. Note that macro strategy and execution learned us-
+ing supervised learning can further act as an initial policy for
+reinforcement learning.
+In this paper, we propose Hierarchical Macro Strat-
+egy (HMS) model - a general supervised learning frame-
+work for MOBA games such as Dota. HMS directly tack-
+les with computational complexity and multi-agent chal-
+lenges of MOBA games. More speciﬁcally, HMS is a hi-
+erarchical model which conducts macro strategy operation
+by predicting attention on the game map under guidance
+of game phase modeling. Thereby, HMS reduces computa-
+tional complexity by incorporating game knowledge. More-
+over, each HMS agent conducts learning with a novel mech-
+anism of communication with teammates agents to cope
+with multi-agent challenge. Finally, we have conducted ex-
+tensive experiments in a popular MOBA game to evaluate
+our AI ability. We matched with hundreds of human player
+teams that ranked above 99% of players in the ranked system
+and achieved 48% winning rate.
+The rest of this paper is organized as follows: First, we
+brieﬂy introduce Multiplayer Online Battle Arena (MOBA)
+games and compare the computational complexity with
+GO. Second, we illustrate our proposed Hierarchical Macro
+Strategy model. Then, we present experimental results in the
+fourth section. Finally, we conclude and discuss future work.
+Multiplayer Online Battle Arena (MOBA)
+Games
+Game Description
+MOBA is currently the most popular sub-genre of the RTS
+games. MOBA games are responsible for more than 30%
+of the online gameplay all over the world, with titles such
+as Dota, League of Legends, and Honour of Kings (Mur-
+phy 2015). According to a worldwide digital games market
+report in February 2018, MOBA games ranked ﬁrst in gross-
+ing in both PC and mobile games (SuperData 2018).
+In MOBA, the standard game mode requires two 5-player
+teams play against each other. Each player controls one unit,
+i.e., hero. There are numerous of heroes in MOBA, e.g.,
+more than 80 in Honour of Kings. Each hero is uniquely
+designed with special characteristics and skills. Players con-
+trol movement and skill releasing of heroes via the game
+interface.
+As shown in Figure. 1a, Honour of Kings players use left
+bottom steer button to control movements, while right bot-
+tom set of buttons to control skills. Surroundings are ob-
+servable via the main screen. Players can also learn full map
+situation via the left top corner mini-map, where observable
+turrets, creeps, and heroes are displayed as thumbnails. Units
+are only observable either if they are allies’ units or if they
+are within a certain distance to allies’ units.
+There are three lanes of turrets for each team to defend,
+three turrets in each lane. There are also four jungle areas on
+the map, where creep resources can be collected to increase
+gold and experience. Each hero starts with minimum gold
+and level 1. Each team tries to leverage resources to obtain
+as much gold and experience as possible to purchase items
+and upgrade levels. The ﬁnal goal is to destroy enemy’s base.
+A conceptual map of MOBA is shown in Figure. 1b.
+To master MOBA games, players need to have both excel-
+lent macro strategy operation and proﬁcient micro level exe-
+cution. Common macro strategies consist of opening, laning,
+ganking, ambushing, etc. Proﬁcient micro level execution re-
+quires high accuracy of control and deep understanding of
+damage and effects of skills. Both macro strategy operation
+and micro level execution require mastery of timing to excel,
+which makes it extremely challenging and interesting. More
+(a)
+ (b)
+Figure 1: (a) Game UI of Honour of Kings. Players use left bottom steer button to control movements, while right bottom set of
+buttons to control skills. Players can observe surroundings via the screen and view the mini full map using the left top corner.
+(b) An example map of MOBA. The two teams are colored in blue and red, each possesses nine turrets (circled in rounds) and
+one base (circled in squares). The four jungle areas are numbered from 1 to 4.
+Table 1: Computational complexity comparison between
+GO and MOBA.
+GO MOBA
+Action
+Space
+250150 ≈ 10360 (250
+pos available, 150
+decisions per game
+in average)
+101500 (10 options,
+1500 actions per
+game)
+State
+Space
+3360 ≈ 10170 (361
+pos, 3 states each)
+1020000 (10 heroes,
+2000+pos *
+10+states)
+discussion of MOBA can be found in (Silva and Chaimow-
+icz 2017).
+Next, we will quantify the computational complexity of
+MOBA using Honour of Kings as an example.
+Computational Complexity
+The normal game length of Honour of Kings is about
+20 minutes, i.e., approximately 20,000 frames in terms of
+gamecore. At each frame, players make decision with tens
+of options, including movement button with 24 directions,
+and a few skill buttons with corresponding releasing posi-
+tion/directions. Even with signiﬁcant discretization and sim-
+pliﬁcation, as well as reaction time increased to 200ms, the
+action space is at magnitude of 101,500.
+As for state space, the resolution of Honour of Kings map
+is 130,000 by 130,000 pixels, and the diameter of each unit
+is 1,000. At each frame, each unit may have different status
+such as hit points, levels, gold. Again, the state space is at
+magnitude of 1020,000 with signiﬁcant simpliﬁcation.
+Comparison of action space and state space between
+MOBA and GO is listed in Table. 1.
+MOBA AI Macro Strategy Architecture
+Our motivation of designing MOBA AI macro strategy
+model was inspired from how human players make strategic
+decisions. During MOBA games, experienced human play-
+ers are fully aware of game phases, e.g., opening phase, lan-
+ing phase, mid game phase, and late game phase (Silva and
+Chaimowicz 2017). During each phase, players pay atten-
+tion to the game map and make corresponding decision on
+where to dispatch the heroes. For example, during the laning
+phase players tend to focus more on their own lanes rather
+than backing up allies, while during mid to late phases, play-
+ers pay more attention to teamﬁght spots and pushing ene-
+mies’ base.
+To sum up, we formulate the macro strategy operation
+process as "phase recognition -> attention prediction -> ex-
+ecution". To model this process, we propose a two-layer
+macro strategy architecture, i.e., phase and attention:
+• Phase layer aims to recognize current game phase so that
+attention layer can have better sense about where to pay
+attention to.
+• Attention layer aims to predict the best region on game
+maps to dispatch heroes.
+Phase and Attention layers act as high level guidance for
+micro level execution. We will describe details of model-
+ing in the next section. The network structure of micro level
+model is almost identical to the one used in OpenAI Five 1
+(OpenAI 2018a), but in a supervised learning manner. We
+did minor modiﬁcation to adapt it to Honour of Kings, such
+as deleting Teleport.
+Hierarchical Macro Strategy Model
+We propose a Hierarchical Macro Strategy (HMS) model to
+consider both phase and attention layers in a uniﬁed neural
+network. We will ﬁrst present the uniﬁed network architec-
+ture. Then, we illustrate how we construct each of the phase
+and attention layers.
+1https://d4mucfpksywv.cloudfront.
+net/research-covers/openai-five/
+network-architecture.pdf
+Model Overview
+We propose a Hierarchical Macro Strategy model (HMS) to
+model both attention and phase layers as a multi-task model.
+It takes game features as input. The output consists of two
+tasks, i.e., attention layer as the main task and phase layer as
+an auxiliary task. The output of attention layer directly con-
+veys macro strategy embedding to micro level models, while
+resource layer acts as an axillary task which help reﬁne the
+shared layers between attention and phase tasks.
+The illustrating network structure of HMS is listed in Fig-
+ure. 2. HMS takes both image and vector features as in-
+put, carrying visual features and global features respectively.
+In image part, we use convolutional layers. In vector part,
+we use fully connected layers. The image and vector parts
+merge in two separate tasks, i.e., attention and phase. Ul-
+timately, attention and phase tasks take input from shared
+layers through their own layers and output to compute loss.
+Attention Layer
+Similar to how players make decisions according to the
+game map, attention layer predicts the best region for agents
+to move to. However, it is tricky to tell from data that where
+is a player’s destination. We observe that regions where at-
+tack takes place can be indicator of players’ destination, be-
+cause otherwise players would not have spent time on such
+spots. According to this observation, we deﬁne ground-truth
+regions as the regions where players conduct their next at-
+tack. An illustrating example is shown in Figure. 3.
+Let s to be one session in a game which contains several
+frames, and s − 1 indicates the session right before s. In
+Figure. 3, s − 1 is the ﬁrst session in the game. Let ts to
+be the starting frame of s. Note that a session ends along
+with attack behavior, therefore there exists a region ys in ts
+where the hero conducts attack. As shown in Figure. 3, label
+for s−1 is ys, while label fors is ys+1. Intuitively, by setting
+up labels in this way, we expect agents to learn to move to
+ys at the beginning of game. Similarly, agents are supposed
+to move to appropriate regions given game situation.
+Phase layer
+Phase layer aims to recognize the current phase. Extracting
+game phases ground-truth is difﬁcult because phase deﬁni-
+tion used by human players is abstract. Although roughly
+correlated to time, phases such as opening, laning, and late
+game depend on complicated judgment based on current
+game situation, which makes it difﬁcult to extract ground-
+truth of game phases from replays. Fortunately, we observe
+clear correlation between game phases with major resources.
+For example, during the opening phase players usually aim
+at taking outer turrets and baron, while for late game, players
+operate to destroy enemies’ base.
+Therefore, we propose to model phases with respect to
+major resources. More speciﬁcally, major resources indicate
+turrets, baron, dragon, and base. We marked the major re-
+sources on the map in Figure. 4a. Label deﬁnition of phase
+layer is similar to attention layer. The only difference is that
+ys in phase layer indicates attack behavior on turrets, baron,
+dragon, and base instead of in regions. Intuitively, phase
+layer modeling splits the entire game into several phases via
+modeling which macro resource to take in current phase.
+We do not consider other resources such as lane creeps,
+heroes, and neutral creeps as major objectives because usu-
+ally these resources are for bigger goal, such as destroying
+turrets or base with higher chance. Figure. 4b shows a series
+of attack behavior during the bottom outer turret strategy.
+The player killed two neutral creeps in the nearby jungle
+and several lane creeps in the bottom lane before attacking
+the bottom outer turret.
+We expect the model to learn when and what major re-
+sources to take given game situation, and in the meanwhile
+learn attention distribution that serve each of the major re-
+sources.
+Imitated Cross-agents Communication
+Cross-agents communication is essential for a team of
+agents to cooperate. There is rich literature of cross-agent
+communication on multi-agent reinforcement learning re-
+search (Sukhbaatar, Fergus, and others 2016; Foerster et al.
+2016). However, it is challenging to learn communication
+using training data in supervised learning because the actual
+communication is unknown.
+To enable agents to communicate in supervised learning
+setting, we have designed a novel cross-agents communi-
+cation mechanism. During training phase, we put attention
+labels of allies as features for training. During testing phase,
+we put attention prediction of allies as features and make
+decision correspondingly. In this way, our agents can "com-
+municate" with one another and learn to cooperate upon al-
+lies’ decisions. We name this mechanism as Imitated Cross-
+agents Communication due to its supervised nature.
+Experiments
+In this section, we evaluate our model performance. We ﬁrst
+describe the experimental setup, including data preparation
+and model setup. Then, we present qualitative results such
+as attention distribution under different phase. Finally, we
+list the statistics of matches with human player teams and
+evaluate improvement brought by our proposed model.
+Experimental Setup
+Data Preparation To train a model, we collect around 300
+thousand game replays made of King Professional League
+competition and training records. Finally, 250 million in-
+stances were used for training. We consider both visual and
+attributes features. On visual side, we extract 85 features
+such as position and hit points of all units and then blur the
+visual features into 12*12 resolution. On attributes side, we
+extract 181 features such as roles of heroes, time period of
+game, hero ID, heroes’ gold and level status and Kill-Death-
+Assistance statistics.
+Model Setup We use a mixture of convolutional and
+fully-connected layers to take inputs from visual and at-
+tributes features respectively. On convolutional side, we set
+ﬁve shared convolutional layers, each with 512 channels,
+padding = 1, and one RELU. Each of the tasks has two con-
+volutional layers with exactly the same conﬁguration with
+Figure 2: Network Architecture of Hierarchical Macro Strategy Model
+Figure 3: Illustrating example for label extraction in atten-
+tion layer.
+shared layers. On fully-connected layers side, we set two
+shared fully-connected layers with 512 nodes. Each of the
+tasks has two fully-connected layers with exactly the same
+conﬁguration with shared layers. Then, we use one concate-
+nation layer and two fully-connected layers to fuse results
+of convolutional layers and fully-connected layers. We use
+ADAM as the optimizer with base learning rate at 10e-6.
+Batch size was set at 128. The loss weights of both phase
+and attention tasks are set at 1. We used CAFFE (Jia et al.
+2014) with eight GPU cards. The duration to train an HMS
+model was about 12 hours.
+Finally, the output for attention layer corresponds to 144
+regions of the map, resolution of which is exactly the same
+as the visual inputs. The output of the phase task corresponds
+to 14 major resources circled in Figure. 4a.
+Experimental Results
+Opening Attention Opening is one of the most important
+strategies in MOBA. We show one opening attention of dif-
+ferent heroes learned by our model in Figure. 5. In Figure.
+5, each subﬁgure consists of two square images. The left-
+hand-side square image indicates the attention distribution
+of the right-hand-side MOBA mini-map. The hottest region
+is highlighted with red circle. We list attention prediction of
+four heroes, i.e., Diaochan, Hanxin, Arthur, and Houyi. The
+four heroes belong to master, assasin, warrior, and archer re-
+spectively. According to the attention prediction, Diaochan
+is dispatched to middle lane, Hanxin will move to left jun-
+gle area, and Authur and Houyi will guard the bottom jungle
+area. The ﬁfth hero Miyamoto Musashi, which was not plot-
+ted, will guard the top outer turret. This opening is consid-
+ered safe and efﬁcient, and widely used in Honour of Kings
+games.
+Attention Distribution Affected by Phase Layer We vi-
+sualize attention distribution of different phases in Figure.
+6a and 6b. We can see that attention distributes around the
+major resource of each phase. For example, for upper outer
+turret phase in Figure. 6a, the attention distributes around
+upper outer region, as well as nearby jungle area. Also, as
+shown in Figure. 6b, attention distributes mainly in the mid-
+dle lane, especially area in front of the base. These examples
+show that our phase layer modeling affects attention distri-
+bution in practice. To further examine how phase layer cor-
+relates with game phases, we conduct t-Distributed Stochas-
+tic Neighbor Embedding (t-SNE) on phase layer output. As
+shown in Figure. 7, samples are coloured with respect to dif-
+ferent time stages. We can observe that samples are clearly
+separable with respect to time stages. For example, blue, or-
+ange and green (0-10 minuets) samples place close to one
+another, while red and purple samples (more than 10 min-
+uets) form another group.
+Macro Strategy Embedding We evaluate how important
+is the macro strategy modeling. We removed the macro strat-
+egy embedding and trained the model using micro level ac-
+tions from the replays. The micro level model design is sim-
+ilar to OpenAI Five (OpenAI 2018a). Detail description of
+the micro level modeling is out of the scope of this paper.
+The result is listed in Table. 2, column AI Without Macro
+Strategy. As the result shows, HMS outperformed AI With-
+out Macro Strategy with 75% winning rates. HMS per-
+formed much better than AI Without Macro Strategy in
+terms of number of kills, turrets destruction, and gold. The
+most obvious performance change is that AI Without Macro
+Strategy mainly focused on nearby targets. Agents did not
+(a)
+ (b)
+Figure 4: (a) Major resources (circled, i.e., turrets, base, dragon, and baron) modeled in phase layer. (b) Illustrating example for
+label extraction in phase layer.
+Figure 5: One of the opening strategies learned for different hero roles. The hottest regions are highlighted with red circle.
+(a)
+ (b)
+Figure 6: Attention distribution of different strategies. The
+two attention ﬁgures describe attention distribution of the
+two major resources, i.e., upper outer turret and base respec-
+tively.
+care much about backing up teammates and pushing lane
+creeps in relatively large distance. They spent most of the
+time on killing neutral creeps and nearby lane creeps. The
+performance change can be observed from the compari-
+son of engagement rate and number of turrets in Table. 2.
+This phenomenon may reﬂect how important macro strategy
+modeling is to highlight important spots.
+Match against Human Players To evaluate our AI per-
+formance more accurately, we conduct matches between our
+AI and human players. We invited 250 human player teams
+whose average ranking is King in Honour of Kings rank sys-
+tem (above 1% of human players). Following the standard
+procedure of ranked match in Honour of Kings, we obey
+ban-pick rules to pick and ban heroes before each match.
+The ban-pick module was implemented using simple rules.
+Note that gamecores of Honour of Kings limit commands
+frequency to a level similar with human.
+The overall statistics are listed in Table. 2, column Human
+Teams. Our AI achieved 48% winning rate in the 250 games.
+The statistics show that our AI team did not have advantage
+on teamﬁght over human teams. The number of kills made
+by AI is about 15% less than human teams. Other items such
+as turrets destruction, engagement rate, and gold per minute
+were similar between AI and human. We have further ob-
+served that our AI destroyed 2.5 more turrets than human on
+average in the ﬁrst 10 minutes. After 10 minutes, turrets dif-
+ference shrank due to weaker teamﬁght ability compared to
+human teams. Arguably, our AI’s macro strategy operation
+ability is close to or above our human opponents.
+Imitated Cross-agents Communication To evaluate how
+important the cross-agents communication mechanism is to
+the AI ability, we conduct matches between HMS and HMS
+trained without cross-agents communication. The result is
+listed in Table. 2, column AI Without Communication. HMS
+achieved a 62.5% winning rate over the version without
+communication. We have observed obvious cross-agents co-
+operation learned when cross-agents communication was in-
+troduced. For example, rate of reasonable opening increased
+from 22% to 83% according to experts’ evaluation.
+Figure 7: t-Distributed Stochastic Neighbor Embedding on phase layer output. Embedded data samples are coloured with
+respect to different time stages.
+Table 2: Match statistics. 250 games were played against Human Teams, while 40 games were played against Without Macro
+Strategy, Without Communication, and Without Phase Layer, respectively.
+Opponents AI Without Macro
+Strategy Human Teams AI Without
+Communication AI Without Phase Layer
+Winning rate 75% - 25% 48.3% - 51.7% 62.5% - 37.5% 65% - 35%
+Kill 26.0 - 21.1 22.6 - 26.3 19.9 - 19.4 25.6 - 22.8
+Game Length 16.1 min 16.1 min 18.2 min 18.2 min
+Gold/Min 2399 - 2287 2603 - 2616 2633 - 2554 2500 - 2333
+Engagement Rate 49% - 42% 48% - 48% 49% - 47% 50% - 49%
+Turrets 6.1 - 3.2 6.1 - 6.2 6.21 - 5.26 6.73 - 5.42
+Dragons 1.22 - 0.2 0.55 - 0.55 0.65 - 0.49 1 - 0.41
+Barons 0.62 - 0.31 0.64 - 0.61 0.45 - 0.41 0.71 - 0.2
+Dark Barons 0.41 - 0.22 0.36 - 0.38 0.35 - 0.32 0.49 - 0.04
+Phase layer We evaluate how phase layer affects the per-
+formance of HMS. We removed the phase layer and com-
+pared it with the full version of HMS. The result is listed in
+Table. 2, column AI Without phase layer. The result shows
+that phase layer modeling improved HMS signiﬁcantly with
+65% winning rate. We have also observed obvious AI abil-
+ity downgrade when phase layer was removed. For example,
+agents were no longer accurate about timing when baron ﬁrst
+appears, while the full version HMS agents got ready at 2:00
+to gain baron as soon as possible.
+Conclusion and Future Work
+In this paper, we proposed a novel Hierarchical Macro
+Strategy model which models macro strategy operation for
+MOBA games. HMS explicitly models agents’ attention
+on game maps and considers game phase modeling. We
+also proposed a novel imitated cross-agent communication
+mechanism which enables agents to cooperate.
+We used Honour of Kings as an example of MOBA games
+to implement and evaluate HMS. We conducted matches
+between our AI and top 1% human player teams. Our AI
+achieves a 48% winning rate. To the best of our knowledge,
+our proposed HMS model is the ﬁrst learning based model
+that explicitly models macro strategy for MOBA games.
+HMS used supervised learning to learn macro strategy op-
+eration and corresponding micro level execution from high
+quality replays. A trained HMS model can be further used
+as an initial policy for reinforcement learning framework.
+Our proposed HMS model exhibits a strong potential in
+MOBA games. It may be generalized to more RTS games
+with appropriate adaptations. For example, the attention
+layer modeling may be applicable to StarCraft, where the
+deﬁnition of attention can be extended to more meaningful
+behaviors such as building operation. Also, Imitated Cross-
+agents Communication can be used to learn to cooperate.
+Phase layer modeling is more game-speciﬁc. The resource
+collection procedure in StarCraft is different from that of
+MOBA, where gold is mined near the base. Therefore, phase
+layer modeling may require game-speciﬁc design for differ-
+ent games. However, the underlying idea to capture game
+phases can be generalized to Starcraft as well.
+HMS may also inspire macro strategy modeling in do-
+mains where multiple agents cooperate on a map and histor-
+ical data is available. For example, in robot soccer, attention
+layer modeling and Imitated Cross-agents Communication
+may help robots position and cooperate given parsed soccer
+recordings.
+In the future, we will incorporate planning based on HMS.
+Planning by MCTS roll-outs in Go has been proven essen-
+tial to outperform top human players (Silver et al. 2016). We
+expect planning can be essential for RTS games as well, be-
+cause it may not only be useful for imperfect information
+gaming but also be crucial to bringing in expected rewards
+which supervised learning fails to consider.
+References
+[DeLoura 2001] DeLoura, M. A. 2001. Game programming
+gems 2. Cengage learning.
+[do Nascimento Silva and Chaimowicz 2015] do Nasci-
+mento Silva, V ., and Chaimowicz, L. 2015. On the
+development of intelligent agents for moba games. In
+Computer Games and Digital Entertainment (SBGames),
+2015 14th Brazilian Symposium on, 142–151. IEEE.
+[DOTA2 2018] DOTA2. 2018. The international 2018.
+https://www.dota2.com/international/announcement/.
+[Foerster et al. 2016] Foerster, J. N.; Assael, Y . M.; de Fre-
+itas, N.; and Whiteson, S. 2016. Learning to communicate
+to solve riddles with deep distributed recurrent q-networks.
+arXiv preprint arXiv:1602.02672.
+[Hagelbäck and Johansson 2008] Hagelbäck, J., and Johans-
+son, S. J. 2008. The rise of potential ﬁelds in real time
+strategy bots. In Fourth Artiﬁcial Intelligence and Interac-
+tive Digital Entertainment Conference. Stanford University.
+[Jia et al. 2014] Jia, Y .; Shelhamer, E.; Donahue, J.; Karayev,
+S.; Long, J.; Girshick, R.; Guadarrama, S.; and Darrell, T.
+2014. Caffe: Convolutional architecture for fast feature em-
+bedding. arXiv preprint arXiv:1408.5093.
+[Murphy 2015] Murphy, M. 2015. Most played games:
+November 2015 – fallout 4 and black ops iii arise while
+starcraft ii shines. http://caas.raptr.com/most-played-games-
+november-2015-fallout-4-andblack-ops-iii-arise-while-
+starcraft-ii-shines/.
+[Ontanón and Buro 2015] Ontanón, S., and Buro, M. 2015.
+Adversarial hierarchical-task network planning for complex
+real-time games. In Twenty-Fourth International Joint Con-
+ference on Artiﬁcial Intelligence.
+[OpenAI 2018a] OpenAI. 2018a. Openai blog: Dota 2.
+https://blog.openai.com/dota-2/ (17 Apr 2018).
+[OpenAI 2018b] OpenAI. 2018b. Openai ﬁve.
+https://blog.openai.com/openai-ﬁve/ (25 Jun 2018).
+[Schulman et al. 2017] Schulman, J.; Wolski, F.; Dhariwal,
+P.; Radford, A.; and Klimov, O. 2017. Proximal policy op-
+timization algorithms. arXiv preprint arXiv:1707.06347.
+[Silva and Chaimowicz 2017] Silva, V . D. N., and Chaimow-
+icz, L. 2017. Moba: a new arena for game ai. arXiv preprint
+arXiv:1705.10443.
+[Silver et al. 2016] Silver, D.; Huang, A.; Maddison, C. J.;
+Guez, A.; Sifre, L.; Van Den Driessche, G.; Schrittwieser,
+J.; Antonoglou, I.; Panneershelvam, V .; Lanctot, M.; et al.
+2016. Mastering the game of go with deep neural networks
+and tree search. nature 529(7587):484–489.
+[Simonite 2018] Simonite, T. 2018. Pro gamers
+fend off elon musk-backed ai bots—for now.
+https://www.wired.com/story/pro-gamers-fend-off-elon-
+musks-ai-bots/ (Aug 23, 2018).
+[Sukhbaatar, Fergus, and others 2016] Sukhbaatar, S.; Fer-
+gus, R.; et al. 2016. Learning multiagent communication
+with backpropagation. In Advances in Neural Information
+Processing Systems, 2244–2252.
+[SuperData 2018] SuperData. 2018. World-
+wide digital games market: February 2018.
+https://www.superdataresearch.com/us-digital-games-
+market/.
+[Synnaeve and Bessiere 2011] Synnaeve, G., and Bessiere,
+P. 2011. A bayesian model for rts units control applied to
+starcraft. In Computational Intelligence and Games (CIG),
+2011 IEEE Conference on, 190–196. IEEE.
+[Tian et al. 2017] Tian, Y .; Gong, Q.; Shang, W.; Wu, Y .; and
+Zitnick, C. L. 2017. Elf: An extensive, lightweight and
+ﬂexible research platform for real-time strategy games. In
+Advances in Neural Information Processing Systems, 2656–
+2666.
+[Vincent 2018] Vincent, J. 2018. Humans grab vic-
+tory in ﬁrst of three dota 2 matches against openai.
+https://www.theverge.com/2018/8/23/17772376/openai-
+dota-2-pain-game-human-victory-ai (Aug 23, 2018).
+[Vinyals et al. 2017] Vinyals, O.; Ewalds, T.; Bartunov, S.;
+Georgiev, P.; Vezhnevets, A. S.; Yeo, M.; Makhzani, A.; Küt-
+tler, H.; Agapiou, J.; Schrittwieser, J.; et al. 2017. Star-
+craft ii: a new challenge for reinforcement learning. arXiv
+preprint arXiv:1708.04782.
+[Wender and Watson 2012] Wender, S., and Watson, I. 2012.
+Applying reinforcement learning to small scale combat in
+the real-time strategy game starcraft: Broodwar. In Compu-
+tational Intelligence and Games (CIG), 2012 IEEE Confer-
+ence on, 402–408. IEEE.
