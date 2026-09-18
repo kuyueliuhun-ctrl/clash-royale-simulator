@@ -54,10 +54,9 @@ def _order_report(st) -> int:
         return 2
     src = open(src_path, encoding="utf-8", errors="replace").read()
     tree = ast.parse(src)
-    defined = [n.name for n in tree.body
-               if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")]
-    defined.sort(key=lambda n: next(x.lineno for x in tree.body
-                                    if isinstance(x, ast.FunctionDef) and x.name == n))
+    # T2-8：测试已切到 `rl/selftests/part{1..5}.py` ⇒ `rl/selftest.py` 的 AST 里**一个 `test_*` 都没有**。
+    # 定义序改由 `rl.selftest.discover_tests()` 提供（它知道分片顺序），AST 只用来取 `main()` 的调用清单。
+    defined = st.discover_tests()
     called = []
     for n in tree.body:
         if isinstance(n, ast.FunctionDef) and n.name == "main":

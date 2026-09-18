@@ -349,6 +349,12 @@ def check_lazy_imports(root: Path) -> dict:
 
 # ---------------------------------------------------------------- ⑦ selftest
 def check_selftest(root: Path) -> dict:
+    """`rl/selftest.py` 的登记对账。
+
+    ⚠️ **T2-8 后必须「分片感知」**：`rl/selftest.py` 已拆成「聚合 + `main()`」，100 个 `test_*`
+    搬到了 `rl/selftests/part{1..5}.py` ⇒ 只解析聚合文件会得到「定义 **0** 个」这个**假失败**
+    （我第一版就撞上了）。故定义数从 **聚合文件 + 全部分片** 一起数，`main()` 调用清单仍只看聚合文件。
+    """
     p = root / "src/clasher_new/rl/selftest.py"
     if not p.is_file():
         return {"error": "rl/selftest.py 不存在"}
@@ -357,6 +363,14 @@ def check_selftest(root: Path) -> dict:
         return {"error": "rl/selftest.py 解析失败"}
     defined = {n.name for n in tree.body
                if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")}
+    parts = sorted((root / "src/clasher_new/rl/selftests").glob("part*.py")) \
+        if (root / "src/clasher_new/rl/selftests").is_dir() else []
+    for pf in parts:
+        ptree = parse(pf)
+        if ptree is None:
+            continue
+        defined |= {n.name for n in ptree.body
+                    if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")}
     called = set()
     has_main = False
     for n in tree.body:
@@ -373,6 +387,7 @@ def check_selftest(root: Path) -> dict:
         "called_not_defined": sorted(called - defined),
         "has_main": has_main,
         "loc": loc(p),
+        "parts": [rel(root, x) for x in parts],
         "ok": defined == called and has_main,
     }
 
@@ -413,7 +428,13 @@ def check_bootstrap_order(root: Path) -> dict:
     `rl/` 包内模块**跳过**（它们以 `rl.x` 被导入 ⇒ `rl.io_bootstrap` 天然可导入）。
     """
     warns = []
-    for f in iter_py(root, "scripts", recursive=True):
+    # T2-8 教训：同类失败模式在 `rl/selftest.py` 上又发生了一次（`from rl.selftest_common import`
+    # 排在 `sys.path.insert` **之前** ⇒ `python rl/selftest.py` 直接 ModuleNotFoundError）⇒ 覆盖面
+    # 从 `scripts/` 扩到 `rl/` 与引擎顶层（`__init__.py` 除外：它们本来就在包里）。
+    cands = iter_py(root, "scripts", recursive=True) \
+        + [x for x in iter_py(root, "src/clasher_new/rl", recursive=False) if x.name != "__init__.py"] \
+        + [x for x in iter_py(root, "src/clasher_new", recursive=False) if x.name != "__init__.py"]
+    for f in cands:
         txt = read_text(f)
         tree = parse(f)
         if tree is None:

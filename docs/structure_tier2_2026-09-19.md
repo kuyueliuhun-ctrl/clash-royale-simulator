@@ -280,3 +280,68 @@ FAIL 落地冲刺伤害 ≈545  [dmg=0]                          ← 真实行�
 > **教训（写进 §4 未决）**：**跨行调用**上做文本/正则插入是陷阱；插代码必须用 AST 的 `end_lineno`，
 > 且点号名要**通用**还原（别假设属性级数）。另：一次插入失败后**别在原状上继续改**，
 > 先 `git checkout` 回基线再重做 —— 我这次正是靠这个 + 断言前置于写入，才没有留下半坏的树。
+
+---
+
+## 9. T2-8 拆 `rl/selftest.py`（**6,023 行 → 157 行**）
+
+### 9.1 拆成什么
+
+| 文件 | 行数 | 内容 |
+|---|---:|---|
+| `rl/selftest.py` | **157** | 原 docstring（回归索引）+ **顶部 path 引导** + 聚合重导出 + **`main()`** + `if __name__` |
+| `rl/selftest_common.py` | 159 | 模块头导入 + `_PARENT` + **4 个模块级状态**（`_RUN_STATS`/`_SKIPS`/`_ORIG_FUNCS`/`_INSTRUMENTED`）+ **10 个 helper** |
+| `rl/selftests/part{1..5}.py` | 各 ~20 测试 | 100 个测试按**定义序**每 20 个切一片（`part1` = `test_action_bundle_same_tick` … ；`part5` 末 = `test_mask_partial_bundle_invariants`） |
+| `rl/selftests/__init__.py` | — | 说明「这 5 个 part **不是**独立可跑模块」 |
+
+### 9.2 拆之前先做的**可行性审计**（方案要求的前置，实测）
+
+| 审计项 | 结果 |
+|---|---|
+| `__file__` 出现处 | **仅 3 处**：`_PARENT`(L29) + **两个测试内**（L5615/L5676 自算 root 去 AST 扫 `battle.py`/`rl/*.py`） |
+| 测试依赖的**模块级名字** | **仅 6 个**：`_make_policy_and_tokens`(5 个测试用) / `_tiny_rollout_transitions`(3) / `_mk_env`(2) / `_mark_skip`(2) / `_FakeCfg`(1) / `_intents`(1) |
+| test → test 调用 | **0**（【T0 盘点】已证） |
+| 四条硬约束可否满足 | ✅ 全部可用 re-export 满足（见 9.3） |
+
+### 9.3 四条硬约束**一条都没破**
+
+| 约束 | 怎么满足 |
+|---|---|
+| ① `scripts/run_selftests.py:36-42` 用 `dir()` 反射按名调用 | 聚合模块 `from rl.selftests.partN import *` ⇒ 100 个 `test_*` 都是 `rl.selftest` 的属性（`--list` 实测 **100**） |
+| ② `scripts/rl/selftest.py:5-7` 用 `runpy.run_path(<SRC>/rl/selftest.py)` | `main()` 与末尾 `if __name__` **留在聚合文件** |
+| ③ `main()` 的 100 行手工调用清单逐字不变 | **AST 对账：HEAD 100 个 / 现在 100 个，序列 `True`** |
+| ④ `scripts/_apply_s2_channel_when_idle.sh:70-71` 外部硬编码 4 个测试名 | 实测 4 个名字都 `callable`（`bash -n` 也 OK） |
+
+### 9.4 拆分**必须**配套的 6 处代码改动（缺一个就静默坏或直接崩）
+
+| # | 改动 | 不做会怎样 |
+|---|---|---|
+| 1 | 聚合文件**顶部加 path 引导**（`_PARENT` + `sys.path.insert`），且**必须在任何 `from rl.` 之前** | ✗✗ **实测到过**：`python rl/selftest.py` 时 `sys.path[0]` 是 `rl/` ⇒ `ModuleNotFoundError: No module named 'rl'`（**全量套件根本没跑起来**）。旧文件本就是靠这段，拆分后这段**只能留在聚合文件** |
+| 2 | `_instrument_tests(namespace=None)`：聚合文件显式传 `globals()` | 包装器默认只看 `selftest_common` 的 globals（**一个 `test_*` 都没有**）⇒ **静默**一个测试都不计时、不计数 |
+| 3 | `register_namespace(globals())` + **导入期**就 `_instrument_tests(globals())` | `discover_tests()` / `--order-check` 原先靠 `main()` 的副作用填充 ⇒ 不跑 `main()` 时返回**空** |
+| 4 | `discover_tests()` 的排序键改成 **`(模块名, 局部行号)`** | 各 part 的**局部行号会交错**（part1 第 30 行 vs part2 第 30 行）⇒ 「定义序」失真 |
+| 5 | 两个自算 root 的测试改用 `_PARENT` | 测试搬到 `rl/selftests/` 后 `dirname(dirname(__file__))` 少一层 ⇒ AST 扫不到 `battle.py` |
+| 6 | `_make_wrapper` 用 **`functools.wraps`** | 包装后所有测试的 `__module__` 都变成 `rl.selftest_common` ⇒ 排序键(4)失效、且调试时看不出测试在哪片 |
+
+### 9.5 验证（**全量套件真跑过**）
+
+| 检查 | 结果 |
+|---|---|
+| **`python rl/selftest.py` 全量** | **`[selftest] 共 100 个测试：100 通过 / 0 失败；跳过 0 个`**、**`ALL SELFTESTS PASSED`**、EXIT=0；累计 **218.5 s**；最慢 5 项 `test_solo_resume 42.7s` / `test_solo_mode_smoke 31.9s` / `test_opponent_pool_rand_anchor 13.1s` / `test_league_resume 12.0s` / `test_eval_solo_parallel 11.3s` |
+| `main()` 调用序列 vs HEAD | **100/100 逐字相同** |
+| `run_selftests.py --list` | **100** |
+| `run_selftests.py --order-check` | ① 定义集合 == main() 调用集合 **OK** |
+| **跨 5 个 part 的子集**（每片 2 个，10 个） | **10/10 PASS**（这证明每片的**显式导入完整** —— 缺一个私有 helper 就是 NameError） |
+| `discover_tests()` / `dir()` 里的 `test_*` | **100 / 100**，且分片计数 **20+20+20+20+20** |
+| `scripts/_structure_check.py` ⑦ | **定义 100 / main() 调用 100** |
+| 全量日志 | `docs/selftest_full_after_t2_8.log`（2,564 行；`docs/*.log` 已 gitignore ⇒ 关键行已抄进本表） |
+
+### 9.6 ★ 我在这次拆分里**漏了 3 次**，全部由仪器而不是靠复读发现
+
+| # | 我漏了什么 | 谁抓到的 | 修法 |
+|---|---|---|---|
+| 1 | 模块级**状态变量**没搬过去（`_RUN_STATS`/`_SKIPS`/`_ORIG_FUNCS` 是 `AnnAssign`，我的"零丢失"对账第一版**只查 `Assign`** ⇒ 第一次只补回 `_INSTRUMENTED`） | `--order-check` 报 `NameError: _INSTRUMENTED` | 对账改成**含注解赋值**的完整绑定集 ⇒ 丢失归 0 |
+| 2 | 核对器 **⑦ 变成假失败**（它只 AST 解析聚合文件 ⇒ 「定义 0 个」而 main() 有 100） | 核对器自己 `rc=1` | ⑦ 改为**分片感知**（定义数从聚合文件 + 全部分片一起数） |
+| 3 | 聚合文件**没有 path 引导** ⇒ 全量套件**根本起不来** | 后台全量日志第一行 `ModuleNotFoundError: No module named 'rl'` | 顶部补 `_PARENT` + `sys.path.insert`（并写进注释说明"必须在任何 `from rl.` 之前"） |
+
+> **第 3 条与 Tier 1 的 T1-1b 是同一类失败模式**（`import` 排在 path 引导之前）的**第二次发生** ⇒ 我已把核对器 **⑨** 的覆盖面从 `scripts/` **扩到 `rl/` 与引擎顶层**（`__init__.py` 除外），扩展后 ⑨ 仍为 **0**。
