@@ -216,7 +216,45 @@ def layer_ev(log_a, log_b, n_base, k):
     return res
 
 
+def layer_realization(run_a, run_b, out_dir):
+    """§11.13.2 门禁行的**主指标**：优势兑现率（N=40 帧 = 20 s，θ=1.0）。
+
+    ⚠️ **仪器命名不一致（§11.13.10）**：§11.13.2 把门禁的指标写成「优势兑现率」、仪器写成
+    `analyze_online_trade.py`；但**兑现率只在 `offline_engagement_trade.py` 里实现**
+    （`realization_gate`，`REALIZE_N_FRAMES = 40` = 20 s）。⇒ 本层调**后者**取兑现率，
+    并另由 `layer_gate` 调前者取配对 Δρ；**两者都报**，不各取所需地拼一个口径（【R17】）。
+    """
+    res = {"status": "OK", "arms": {}}
+    for tag, run in (("A_et", run_a), ("B_ctrl", run_b)):
+        rep = os.path.abspath(os.path.join(run, "replays"))
+        if not os.path.isdir(rep) or not os.listdir(rep):
+            res["arms"][tag] = {"status": "MISSING", "note": f"无录像 {rep}"}
+            continue
+        text, rc = run_instrument(
+            [sys.executable, os.path.join(_HERE, "offline_engagement_trade.py"),
+             "--replays", rep, "--phi-mode", "global", "--tower-mode", "p4b"],
+            os.path.join(out_dir, f"realization_{tag}.txt"))
+        m_rate = _RE_REALIZE.search(text)
+        m_elig = _RE_ELIGIBLE.search(text)
+        arm = {"status": "OK" if m_rate else "PARSE_FAIL",
+               "raw": f"realization_{tag}.txt", "rc": rc,
+               "realize_rate_pct": float(m_rate.group(1)) if m_rate else None,
+               "spend_ok_pct": float(m_rate.group(2)) if m_rate else None,
+               "tower_dmg_pct": float(m_rate.group(3)) if m_rate else None,
+               "eligible_windows": int(m_elig.group(1)) if m_elig else None,
+               "eligible_per_game": float(m_elig.group(2)) if m_elig else None}
+        res["arms"][tag] = arm
+    if any(v.get("status") != "OK" for v in res["arms"].values()):
+        res["status"] = "PARTIAL"
+    a, b = res["arms"].get("A_et", {}), res["arms"].get("B_ctrl", {})
+    res["paired"] = _delta(a.get("realize_rate_pct"), b.get("realize_rate_pct"))
+    return res
+
+
 # ------------------------------------------------- 层 2/3：调用既有仪器 + 解析
+_RE_REALIZE = re.compile(
+    r"兑现率\s*=\s*([\d.]+)%（花费达标\s*([\d.]+)%\s*／\s*打出塔伤\s*([\d.]+)%）")
+_RE_ELIGIBLE = re.compile(r"合格窗口\s*(\d+)\s*个（([\d.]+)/局）")
 _RE_POOL_FULL = re.compile(r"\[POOLED\]\s*全帧 elixir0\s+n=(\d+).*?≥6=([\d.]+)%")
 _RE_PRE = re.compile(r"\[POOLED\]\s*pre \(=post\+费\)\s+n=(\d+).*?median=([\d.]+)")
 _RE_NEVER = re.compile(r"牌组里从未打出的卡:\s*\[(.*?)\]")
@@ -477,6 +515,25 @@ def render(report):
         A("")
 
     A("## 层 3 · 门禁（优势兑现率 / 配对 Δρ）\n")
+    rz = report.get("realization") or {}
+    A("### 层 3a · 优势兑现率（§11.13.2 门禁的**主指标**；N=40 帧 = 20 s，θ=1.0）\n")
+    A("> 仪器：`offline_engagement_trade.py`（兑现率**只**在这里实现；见 §11.13.10 的命名更正）\n")
+    if rz.get("status") not in ("OK", "PARTIAL") or not rz.get("arms"):
+        A("- ⚠️ MISSING：未能取到兑现率")
+    else:
+        A("| 臂 | 兑现率 % | 花费达标 % | 打出塔伤 % | 合格窗口 | 窗口/局 |")
+        A("|---|---|---|---|---|---|")
+        for t in ("A_et", "B_ctrl"):
+            x = rz["arms"].get(t, {})
+            A(f"| {t} | {x.get('realize_rate_pct')} | {x.get('spend_ok_pct')} | "
+              f"{x.get('tower_dmg_pct')} | {x.get('eligible_windows')} | "
+              f"{x.get('eligible_per_game')} |")
+        pp = rz.get("paired") or {}
+        A("")
+        A(f"- 配对 A − B：**{pp.get('A_minus_B')}** 个百分点"
+          "（**只报数**；n=1 seed/臂 ⇒ 不下结论，【R5】/【R16】）")
+        A("")
+    A("### 层 3b · 配对 Δρ（`analyze_online_trade.py`，在线口径）\n")
     g = report["gate"]
     for tag in ("A_et", "B_ctrl"):
         arm = g["arms"].get(tag, {})
@@ -535,6 +592,7 @@ def main():
         "ev": layer_ev(args.log_a, args.log_b, args.baseline_n, args.baseline_k),
         "behaviour": layer_behaviour(args.run_a, args.run_b, args.out_dir),
         "gate": layer_gate(args.run_a, args.run_b, args.out_dir),
+        "realization": layer_realization(args.run_a, args.run_b, args.out_dir),
         "item_health": layer_item_health(args.run_a, args.out_dir),
     }
     md = render(report)

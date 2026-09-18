@@ -822,6 +822,26 @@ measure-only 只让监视器在**训练侧也跑起来**（对 `A_et` 本来就�
 **连带简化**：既然必须重启，`B_ctrl` 就**直接以 `economy_etm` 起跑**（§11.13.7 的正解），
 **不再需要**「等串好的错误臂起来→杀掉→再换」的监视脚本 ⇒ **少一个会失败的环节**。
 
+### 11.13.10 第四处：门禁行的**仪器命名**不一致（**不涉及判据**；更正写于两臂跑完之前）
+
+**发现**：§11.13.2 的门禁行把**指标**写成「**优势兑现率**（`N=20 s`）」、**仪器**写成
+`scripts/analyze_online_trade.py`。但**兑现率只在 `scripts/offline_engagement_trade.py` 里实现**
+（`realization_gate`；`REALIZE_N_FRAMES = 40` 帧 = **20 s**，与该行写的 N 一致），
+而 `analyze_online_trade.py` **通篇没有兑现率**
+（`grep -niE "realiz|兑现" scripts/analyze_online_trade.py` ⇒ **0 命中**）—— 它算的是**配对 Δρ**。
+
+**影响**：若照字面只跑行内写的那个仪器，**预注册的门禁主指标会被整个漏掉**（不是算错，是**没算**）。
+
+**更正（判据不变，把两者都算并标注口径）**：
+* **层 3a = 优势兑现率**，仪器 `offline_engagement_trade.py --phi-mode global --tower-mode p4b`
+  ⇒ **离线重建口径**；
+* **层 3b = 配对 Δρ**，仪器 `analyze_online_trade.py` ⇒ **在线口径**。
+* ⚠️ **两条口径不同，不得互相顶替**（【R17】）：§11.9.3 已量出离线重建 `V` 有误差、
+  §11.10 已证明**离线口径会放大效应**（Δρ +0.145 → 在线 +0.008）
+  ⇒ 兑现率作为门禁读数时**必须标注它是离线口径**，并与层 3b **并列呈现**，由判读文档同时讨论。
+* 实现：`scripts/et_solo100k_readout.py` 的 `layer_realization`（层 3a）+ `layer_gate`（层 3b）。
+
+
 
 
 
