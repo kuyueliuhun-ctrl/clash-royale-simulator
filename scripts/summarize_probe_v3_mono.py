@@ -13,10 +13,14 @@ import os
 import re
 import sys
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+# T1-1b 补齐（2026-09-19）：原先这里是**手写**的 UTF-8 兜底块（只处理 stdout、且不处理 stderr
+# ⇒ traceback 在 GBK 下仍是乱码）。现收敛到 T1-1 的**单一实现**（两路 + errors='replace'）。
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                                 "src", "clasher_new"))
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
 
 ALPHAS = (1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6)
 RE_SUP = re.compile(r"X_fused\[:, :(\d+)\] == X_grid_ln_out \? (\w+)")

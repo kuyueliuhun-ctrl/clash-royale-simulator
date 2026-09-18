@@ -27,15 +27,15 @@ import os
 import sys
 from pathlib import Path
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-except Exception:
-    pass
-
 _HERE = Path(__file__).resolve().parent
 _ROOT = _HERE.parent
 sys.path.insert(0, str(_ROOT / "src" / "clasher_new"))
 sys.path.insert(0, str(_HERE))  # 为了 import _structure_check
+
+# T1-1b 补齐（2026-09-19）：本文件原先自带一份**手写** reconfigure 块（只处理 stdout
+# ⇒ 它自己就在 GBK 下崩：`UnicodeEncodeError: \u21d2`）。现收敛到被它测试的那个单一实现。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
 
 _FAILS: list = []
 

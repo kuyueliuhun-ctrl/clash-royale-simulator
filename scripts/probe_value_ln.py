@@ -29,11 +29,6 @@ import os
 import sys
 import time
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _SRC = os.path.join(os.path.dirname(_HERE), "src", "clasher_new")
 if _SRC not in sys.path:

@@ -20,10 +20,14 @@ import os
 import sys
 import time
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+# T1-1b 补齐（2026-09-19）：原先这里是**手写**的 UTF-8 兜底块（只处理 stdout、且不处理 stderr
+# ⇒ traceback 在 GBK 下仍是乱码）。现收敛到 T1-1 的**单一实现**（两路 + errors='replace'）。
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                                 "src", "clasher_new"))
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _SRC = os.path.join(os.path.dirname(_HERE), "src", "clasher_new")

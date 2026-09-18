@@ -377,6 +377,65 @@ def check_selftest(root: Path) -> dict:
     }
 
 
+# ---------------------------------------------------------------- ⑧ bare-reconfigure
+#: 检查 ⑧ 的排除项：这两个文件的名字里含 `sys.stdout.reconfigure(` 是**工具自身**的字符串
+#: （`io_bootstrap` 只调用 `stream.reconfigure`，不碰 `sys.stdout`；codemod/核对器里是模式串）。
+_BARE_SKIP = {"io_bootstrap.py", "_converge_utf8_bootstrap.py", "_structure_check.py"}
+
+
+def check_bare_reconfigure(root: Path) -> dict:
+    """**手写 `sys.stdout.reconfigure(...)` 块是否复活**（T1-1b 的防回归闸）。
+
+    为什么需要：T1-1 把 UTF-8 兜底收敛成**单一实现**（`rl/io_bootstrap.force_utf8_stdout`，
+    两路 + `errors="replace"`），但收敛是**逐个文件**做的 —— 手写块只要有人复制回去就会**悄悄**
+    重新长出来。手写块的已知缺陷是**只处理 stdout**（⇒ traceback 走 stderr 仍是 GBK 乱码，
+    实测过 `duel_search.py`）。判据：**0 个**。
+    """
+    hits = []
+    for f in iter_py(root, "src/clasher_new", recursive=True) + iter_py(root, "scripts", recursive=True):
+        if f.name in _BARE_SKIP:
+            continue
+        txt = read_text(f)
+        if "sys.stdout.reconfigure(" in txt:
+            ln = next(i for i, l in enumerate(txt.split("\n"), 1) if "sys.stdout.reconfigure(" in l)
+            hits.append({"file": rel(root, f), "lineno": ln})
+    return {"files": len(hits), "detail": hits, "ok": len(hits) == 0}
+
+
+# ---------------------------------------------------------------- ⑨ bootstrap 顺序
+def check_bootstrap_order(root: Path) -> dict:
+    """`from rl.io_bootstrap import ...` 是否排在**一条 `__file__` 依据的 path 引导之后**。
+
+    ⚠️ **只报告、不设门禁**（故不进 `hard`）：判据是"import 之前出现过 `__file__`"这一**启发式**，
+    对间接写法（如 `_ROOT = ...__file__...` 另起一行）是准的，但**不排除**更绕的写法 ⇒ 当门禁会假阳性。
+    真实事故（2026-09-19）：`_schema5_probe.py` 的 io_bootstrap import 被插在 `os.chdir` 与
+    `sys.path.insert` **之间** ⇒ 运行时 `ModuleNotFoundError: No module named 'rl.io_bootstrap'`。
+    `rl/` 包内模块**跳过**（它们以 `rl.x` 被导入 ⇒ `rl.io_bootstrap` 天然可导入）。
+    """
+    warns = []
+    for f in iter_py(root, "scripts", recursive=True):
+        txt = read_text(f)
+        tree = parse(f)
+        if tree is None:
+            continue
+        imp = None
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom) and node.module and \
+                    "rl.io_bootstrap" in node.module:
+                imp = node.lineno
+                break
+            if isinstance(node, ast.Import):
+                for al in node.names:
+                    if "rl.io_bootstrap" in al.name:
+                        imp = node.lineno
+        if imp is None:
+            continue
+        before = "\n".join(txt.split("\n")[:imp - 1])
+        if "__file__" not in before:
+            warns.append(rel(root, f))
+    return {"files": len(warns), "detail": sorted(warns)}
+
+
 CHECKS = {
     "areas": check_areas,
     "utf8": check_utf8,
@@ -385,6 +444,8 @@ CHECKS = {
     "abspaths": check_abspaths,
     "lazyimp": check_lazy_imports,
     "selftest": check_selftest,
+    "bare_reconf": check_bare_reconfigure,
+    "boot_order": check_bootstrap_order,
 }
 
 
@@ -436,6 +497,15 @@ def render(res: dict) -> str:
              f"（{100 * _a.get('lazy_frac', 0):.1f}%）")
     L.append(f"     排除 selftest.py：{_e.get('lazy')}/{_e.get('total')}"
              f"（{100 * _e.get('lazy_frac', 0):.1f}%）")
+    bo = res.get("boot_order", {})
+    L.append("== ⑨ io_bootstrap import 早于 path 引导（**只报告、不设门禁**）= {} 个".format(bo.get("files")))
+    for f in (bo.get("detail") or [])[:8]:
+        L.append("     ! " + f)
+    br = res.get("bare_reconf", {})
+    L.append("== ⑧ 手写 `sys.stdout.reconfigure` 块（应为 0，UTF-8 兜底须走单一实现）"
+             + ("  OK" if br.get("ok") else "  **FAIL** {} 个".format(br.get("files"))))
+    for h in (br.get("detail") or [])[:10]:
+        L.append("     {}:{}".format(h["file"], h["lineno"]))
     st = res.get("selftest", {})
     L.append(f"== ⑦ selftest：定义 {st.get('defined')} / main() 调用 {st.get('called_in_main')}"
              f"（loc={st.get('loc')}）{' OK' if st.get('ok') else ' **FAIL**'}"
@@ -486,6 +556,11 @@ def _selftest() -> int:
         # 硬编码绝对路径（验 ⑤）
         (root / "scripts/hard.py").write_text(
             "import sys\nsys.path.insert(0, r'E:/x/y/src')\n", encoding="utf-8")
+        # ⑧：合成树里放一个**手写 reconfigure 块** ⇒ 必须报 1；随后删掉必须归 0
+        #    （否则「0 个」可能只是**空检查** —— 模式根本没匹配过）
+        (root / "scripts/bare.py").write_text(
+            "import sys\n\ntry:\n    sys.stdout.reconfigure(encoding='utf-8')\n"
+            "except Exception:\n    pass\n", encoding="utf-8")
         # 死件复活（验 ④）
         (root / "src/clasher_new/pathfinding.py").write_text("x = 1\n", encoding="utf-8")
         # selftest：定义 2 个，main() 只调 1 个（验 ⑦ 报「未登记」）
@@ -521,6 +596,20 @@ def _selftest() -> int:
            and res_c["utf8"]["single_impl"] is True and res_c["utf8"]["weak"] == [])
         ck("③ 反向边 = 1 且能指出文件", res["layering"]["reverse_edges"] == 1
            and res["layering"]["reverse_files"] == ["src/clasher_new/bad.py"])
+        # ⑧：合成树里**恰好 2 个**含手写块 —— `bare.py`（本行新建）与 `c.py`（② 的弱化版样板）。
+        #    ⚠️ 我第一版断言写成 `files == 1` ⇒ 失败；**核对器是对的**（它确实扫到 2 个）。
+        #    教训：断言要按**实际合成树**算，不能按"我只新建了 1 个"想当然。
+        _files8 = [d["file"] for d in res["bare_reconf"]["detail"]]
+        ck("⑧ 抓到 2 个手写块且含 bare.py（判别力）",
+           res["bare_reconf"]["files"] == 2 and "scripts/bare.py" in _files8
+           and "scripts/c.py" in _files8)
+        (root / "scripts/bare.py").write_text("import sys\n", encoding="utf-8")
+        _r8 = run_all(root)
+        # ⚠️ 这里必须是 **0** 而不是 1：本自检**前面**的 ② 第三阶段已经把 `c.py` 覆写成了
+        #    「别名」形态（不再含手写块）⇒ 删掉 bare.py 后合成树里**一个都不剩**。
+        #    （我第一版写成 1 ⇒ 失败。**教训：自检会改写自己的合成树，后面的断言必须按改写后的树算。**）
+        ck("⑧ 删掉 bare.py 后归 0（反向验证：不是恒不匹配）",
+           _r8["bare_reconf"]["ok"] is True and _r8["bare_reconf"]["files"] == 0)
         ck("④ 死件复活 = 1（pathfinding.py）", res["deadfiles"]["revived"] == 1)
         ck("⑤ 抓到 1 处硬编码绝对路径", res["abspaths"]["hits"] == 1
            and "E:/x/y/src" in res["abspaths"]["detail"][0]["path"])
@@ -563,7 +652,8 @@ def main() -> int:
     # 退出码：三项硬门禁（反向边 / 死件复活 / selftest 登记）任一失败 ⇒ 1
     hard = [res.get("layering", {}).get("ok", False),
             res.get("deadfiles", {}).get("ok", False),
-            res.get("selftest", {}).get("ok", False)]
+            res.get("selftest", {}).get("ok", False),
+            res.get("bare_reconf", {}).get("ok", False)]
     return 0 if all(hard) else 1
 
 

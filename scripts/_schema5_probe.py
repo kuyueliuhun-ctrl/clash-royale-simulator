@@ -8,15 +8,15 @@ import sys
 
 TREE = sys.argv[1]
 os.chdir(TREE)
-
-# T1-1 追加（2026-09-19）：UTF-8 兜底。本文件含 **GBK 编不出**的字符 ⇒ 无兜底时
-# `print` 抛 UnicodeEncodeError（实测：test_m3_evo 因此产生 **10 个假失败**）。
-# 用 T1-1 的**单一实现**；只用在入口脚本上（`rl/` 库模块不加 —— 库不该改宿主 stdout）。
-from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
-force_utf8_stdout()
 sys.path.insert(0, TREE)
 # T1-2：本文件就在 `scripts/` 下，直接由 `__file__` 推导 ⇒ 不再硬编码 WSL/Windows 两套绝对路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# T1-1 追加（2026-09-19）：UTF-8 兜底 —— **必须放在 path 引导之后**，否则
+# `from rl.io_bootstrap import ...` 会因 `rl` 还不可导入而 ModuleNotFoundError
+# （我第一版把它插在 `os.chdir` 与 `sys.path.insert` 之间 ⇒ 真会崩）。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
 import battle                                       # noqa: E402
 from player import PlayerState                      # noqa: E402
 from rl.replay import battle_snapshot, LEAGUE_REPLAY_SCHEMA  # noqa: E402

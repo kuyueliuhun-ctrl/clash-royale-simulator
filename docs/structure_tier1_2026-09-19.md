@@ -200,3 +200,58 @@ cwd（`src/clasher_new`）下 **rc=0**、输出正常 usage。
 | 7.1 | **f-string 里嵌套引号 + 反斜杠转义** | Python 3.13 也 `SyntaxError: unexpected character after line continuation character` | 把 `join` 提成变量、改用 `.format()` |
 | 7.2 | **我的断言写错**（`f1.calls` 累积了两次调用却只比一次） | 打印 `两路都改 = False`，看起来像**代码**坏了 | 打印实际 `f1.calls` 才看出是**测试**写错。**教训**：`False` 先怀疑断言 |
 | 7.3 | 同一命令里 `cd` 过之后再用**相对路径**删文件 | `rm -f` 静默无操作 ⇒ 临时文件残留（Tier 0 §9 已记） | 删后**正向** `ls` 确认 |
+
+---
+
+## 8. T1-1b 收尾（2026-09-19 第二轮补完）
+
+### 8.1 结果
+
+| 指标 | 值 |
+|---|---|
+| 含 `force_utf8_stdout` 的脚本文件 | **77** |
+| **手写 `sys.stdout.reconfigure` 块残留**（新检查 ⑧） | **0** ✅ |
+| 本轮新收敛 | **29**（codemod v2）+ **2**（手工补漏：`probe_value_ln.py` / `selftest_io_bootstrap.py`） |
+
+**codemod v2 比 v1 强在哪**：v1 用正则只吃「`try:`（无尾注释）+ `except Exception: pass` + 块前已有 `sys.path.insert`」这一种形态，
+于是留下 **29 个**未收敛；v2 改用 **AST 定位外层语句**（`Try` / `If`），
+⇒ `try:  # GBK 控制台兜底`（带尾注释）与 `if hasattr(sys.stdout, "reconfigure"):` 两种形态都能吃，
+且对**缺 path 引导**的文件自动补一段自足引导。
+
+### 8.2 新增两条检查（⑧ 门禁 / ⑨ 只报告）
+
+| 检查 | 判据 | 为什么 |
+|---|---|---|
+| **⑧** 手写块残留 | **0**（进硬门禁） | 收敛是**逐文件**做的 ⇒ 手写块被复制回去会**悄悄**重长。手写块的已知缺陷是**只处理 stdout**（⇒ traceback 走 stderr 仍是 GBK 乱码，实测过 `duel_search.py`）。**判别力已断言**：合成树里放一个手写块必须报 2（`bare.py` + ② 的弱化版样板 `c.py`），删掉后必须归 0 |
+| **⑨** `io_bootstrap` import 早于 path 引导 | 只报告（**不设门禁**） | 判据是「import 之前出现过 `__file__`」这一**启发式**，对间接写法准、对更绕的写法不保证 ⇒ 当门禁会**假阳性**。`rl/` 包内模块跳过（以 `rl.x` 被导入 ⇒ 天然可导入） |
+
+### 8.3 ★ 收敛引入的**新失败模式**（本轮自查发现）
+
+**现象**：`scripts/selftest_engagement_trade_online.py` 从**仓库根**跑时报 `ModuleNotFoundError: No module named 'rl.io_bootstrap'`。
+**我一开始判它是回归，但查清后不是**：
+
+| 检查 | 结论 |
+|---|---|
+| 该文件 docstring | 明确写「**必须 cwd = `src/clasher_new`**」，且路径引导用的是 `os.getcwd()` |
+| 按文档口径（cwd=`src/clasher_new`）跑 | **3/3 PASS** |
+| ⇒ 判定 | **不是回归**：它在错误 cwd 下**本来就不能用**，只是**报错点提前**了（从"任务中期"提前到"import 期"） |
+
+**★ 但同一轮真的抓到一个真 bug**：`scripts/_schema5_probe.py` 的 `io_bootstrap` import 被插在 `os.chdir(TREE)` 与 `sys.path.insert(0, TREE)` **之间**
+⇒ 运行时 `ModuleNotFoundError`。已把它移到**最后一条 path 引导之后**，并**端到端跑通**（打印 `SCHEMA 5` / frame keys / entity arity / `is_product` 条目）。
+教训写进代码注释：**这条兜底的 import 必须排在 path 引导之后**。
+
+**全仓扫描结果**（判据：`io_bootstrap` import 之前是否出现过 `__file__`）：
+
+| 分类 | 个数 |
+|---|---|
+| 有 `__file__` 依据的 path 引导 | 39 |
+| 无（含 `os.getcwd()` 或完全没有） | 38 → 逐个人工归类后**真风险只有 3**：1 个真 bug（`_schema5_probe.py`，已修）、1 个非回归（`selftest_engagement_trade_online.py`）、1 个假阳性（codemod 工具 **docstring 里的模板字符串**） |
+
+### 8.4 ★ 我在写这两条检查的**自检**时，断言错了两次（留档）
+
+| # | 我写的断言 | 实际 | 教训 |
+|---|---|---|---|
+| 1 | ⑧ 应报 **1** 个手写块 | 实际 **2**（我只想着自己新建的 `bare.py`，忘了 ② 的弱化版样板 `c.py` 里也有 `sys.stdout.reconfigure(`） | 断言要按**合成树的实际内容**算，不是按"我新建了几个" |
+| 2 | 删掉 `bare.py` 后应归 **1**（只余 `c.py`） | 实际 **0** —— 因为自检**前面**的 ② 第三阶段已经把 `c.py` 覆写成了「别名」形态 | **自检会改写自己的合成树**，后面的断言必须按**改写后**的树算 |
+
+两次都是 **`ck` 报 FAIL 才发现的** —— 这正是"检查必须有判别力断言"的意义：没有这两条断言，⑧ 会以一个**恒真**的空检查混过去。
