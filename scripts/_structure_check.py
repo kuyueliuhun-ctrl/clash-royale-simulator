@@ -433,10 +433,13 @@ def check_bootstrap_order(root: Path) -> dict:
     warns = []
     # T2-8 教训：同类失败模式在 `rl/selftest.py` 上又发生了一次（`from rl.selftest_common import`
     # 排在 `sys.path.insert` **之前** ⇒ `python rl/selftest.py` 直接 ModuleNotFoundError）⇒ 覆盖面
-    # 从 `scripts/` 扩到 `rl/` 与引擎顶层（`__init__.py` 除外：它们本来就在包里）。
-    cands = iter_py(root, "scripts", recursive=True) \
-        + [x for x in iter_py(root, "src/clasher_new/rl", recursive=False) if x.name != "__init__.py"] \
-        + [x for x in iter_py(root, "src/clasher_new", recursive=False) if x.name != "__init__.py"]
+    # 从 `scripts/` 扩到 `rl/`。
+    # ⚠️ **刻意不含引擎顶层**：`python src/clasher_new/arena.py` 时 `sys.path[0]` **就是** `src/clasher_new`
+    # ⇒ 引擎顶层文件本来就不需要自带引导（同目录已在 sys.path 上），查它只会得到**假阳性**
+    # （我第一版正是这样拿到 10 个假阳性）。
+    cands = iter_py(root, "scripts", recursive=True) + [
+        x for x in iter_py(root, "src/clasher_new/rl", recursive=False)
+        if x.name != "__init__.py"]
     for f in cands:
         txt = read_text(f)
         tree = parse(f)
@@ -543,6 +546,66 @@ def check_scripts_readme(root: Path) -> dict:
             "diff": [x for x in lists_of(want) if x not in lists_of(got)][:2]}
 
 
+# ---------------------------------------------------------------- ⑪ 引导先于产品 import
+#: 产品模块（= 只有把 `src/clasher_new` 放进 `sys.path` 之后才可导入的那些）。
+_PRODUCT_TOPS = {"rl", "battle", "core", "player", "card_utils", "arena", "environment",
+                 "spell_module", "threat_calc", "evolutions", "pathfinding_heap",
+                 "new_visualization", "minimal_visualizer", "offline_engagement_trade",
+                 "s2_trade_probe", "pomdp_ceiling_probe", "judge_critic_inertia",
+                 "probe_value_ln", "card_mechanics", "card_aliases", "evo_2025_data",
+                 "elite17_data", "special_eval", "simulate_exchange", "timing",
+                 "observation", "belief", "follower", "ppo"}
+
+
+def check_bootstrap_first(root: Path) -> dict:
+    """**「`__file__` 起点的 path 引导必须先于产品 import」**（Tier 3 · T3-4 的实际价值所在）。
+
+    **判据（sound，刻意保守）**：只查**入口文件**（含 `if __name__ == "__main__"`）。
+    理由：**包内成员**（如 `rl/follower.py`）被 import 时 `rl` 已经在 `sys.path` 上 ⇒ 它**不需要**自带引导，
+    拿它当违规就是**假阳性**；而入口文件一旦被 `python <file>` 直接跑，`sys.path[0]` 是**脚本所在目录**
+    （不是 `src/clasher_new`）⇒ 它**必须**在 import 产品模块之前先把路径插好。
+
+    **这个 bug 类已经真咬过两次**（两次都靠日志/仪器才发现，不是靠复读）：
+    - `scripts/_schema5_probe.py`：引导被插在 `os.chdir(TREE)` 与 `sys.path.insert` **之间** ⇒ `ModuleNotFoundError`；
+    - `rl/selftest.py`（T2-8 拆分后）：聚合文件的 `from rl.selftest_common import ...` 排在引导**之前**
+      ⇒ **全量套件根本起不来**。
+    """
+    bad = []
+    # ⚠️ **刻意不含引擎顶层**（我第一版查了 ⇒ **10 个假阳性**）：`python src/clasher_new/arena.py`
+    # 时 `sys.path[0]` **就是** `src/clasher_new` ⇒ 引擎顶层文件本来就不需要自带引导。
+    # 而 `scripts/x.py` 的 `sys.path[0]` 是 `scripts/`、`rl/x.py` 的是 `rl/` ⇒ 这两类**才**必须先插路径。
+    cands = iter_py(root, "scripts", recursive=True) + [
+        x for x in iter_py(root, "src/clasher_new/rl", recursive=False)
+        if x.name != "__init__.py"]
+    for f in cands:
+        txt = read_text(f)
+        tree = parse(f)
+        if tree is None:
+            continue
+        is_entry = any(
+            isinstance(n, ast.If) and isinstance(n.test, ast.Compare)
+            and isinstance(n.test.left, ast.Name) and n.test.left.id == "__name__"
+            for n in tree.body)
+        if not is_entry:
+            continue
+        first_prod = None
+        for n in tree.body:
+            tops = set()
+            if isinstance(n, ast.Import):
+                tops = {a.name.split(".")[0] for a in n.names}
+            elif isinstance(n, ast.ImportFrom):
+                tops = {(n.module or "").split(".")[0]}
+            if tops & _PRODUCT_TOPS:
+                first_prod = n.lineno
+                break
+        if first_prod is None:
+            continue
+        before = "\n".join(txt.split("\n")[:first_prod - 1])
+        if "__file__" not in before:
+            bad.append({"file": rel(root, f), "first_product_import_lineno": first_prod})
+    return {"files": len(bad), "detail": bad, "ok": len(bad) == 0}
+
+
 CHECKS = {
     "areas": check_areas,
     "utf8": check_utf8,
@@ -554,6 +617,7 @@ CHECKS = {
     "bare_reconf": check_bare_reconfigure,
     "boot_order": check_bootstrap_order,
     "scripts_readme": check_scripts_readme,
+    "boot_first": check_bootstrap_first,
 }
 
 
@@ -605,6 +669,10 @@ def render(res: dict) -> str:
              f"（{100 * _a.get('lazy_frac', 0):.1f}%）")
     L.append(f"     排除 selftest.py：{_e.get('lazy')}/{_e.get('total')}"
              f"（{100 * _e.get('lazy_frac', 0):.1f}%）")
+    bf = res.get("boot_first", {})
+    L.append("== ⑪ 入口文件的 path 引导**先于**产品 import（应 0）"
+             + ("  OK" if bf.get("ok") else "  **FAIL** {} 个：{}".format(
+                 bf.get("files"), [d["file"] for d in (bf.get("detail") or [])][:5])))
     sr = res.get("scripts_readme", {})
     L.append("== ⑩ scripts/README.md 与脚本集一致 = {}（{} 个 *.py）".format(
         "OK" if sr.get("ok") else "**FAIL/DRIFT**", sr.get("n_scripts")))
@@ -736,6 +804,19 @@ def _selftest() -> int:
         ck("⑩ 新增脚本后**报漂移**（判别力）", _r10b["scripts_readme"]["ok"] is False)
         (root / "scripts" / "brand_new_tool.py").unlink()
         ck("⑩ 删掉后回 OK（反向验证）", run_all(root)["scripts_readme"]["ok"] is True)
+        # ⑪：入口文件**先 import 产品模块、后插路径** ⇒ 必须被抓（判别力）；正确顺序 ⇒ 必须 OK
+        (root / "scripts/bad_order.py").write_text(
+            "import sys\n\nimport battle\n\nsys.path.insert(0, __file__)\n\n"
+            "if __name__ == '__main__':\n    pass\n", encoding="utf-8")
+        _r11a = run_all(root)
+        ck("⑪ 抓到「先 import、后引导」的入口文件（判别力）",
+           _r11a["boot_first"]["ok"] is False
+           and _r11a["boot_first"]["detail"][0]["file"] == "scripts/bad_order.py")
+        (root / "scripts/bad_order.py").write_text(
+            "import sys\n\nsys.path.insert(0, __file__)\n\nimport battle\n\n"
+            "if __name__ == '__main__':\n    pass\n", encoding="utf-8")
+        ck("⑪ 顺序正确后归 OK（反向验证）", run_all(root)["boot_first"]["ok"] is True)
+        (root / "scripts/bad_order.py").unlink()
         ck("④ 死件复活 = 1（pathfinding.py）", res["deadfiles"]["revived"] == 1)
         ck("⑤ 抓到 1 处硬编码绝对路径", res["abspaths"]["hits"] == 1
            and "E:/x/y/src" in res["abspaths"]["detail"][0]["path"])
@@ -787,7 +868,8 @@ def main() -> int:
             res.get("deadfiles", {}).get("ok", False),
             res.get("selftest", {}).get("ok", False),
             res.get("bare_reconf", {}).get("ok", False),
-            res.get("scripts_readme", {}).get("ok", False)]
+            res.get("scripts_readme", {}).get("ok", False),
+            res.get("boot_first", {}).get("ok", False)]
     return 0 if all(hard) else 1
 
 
