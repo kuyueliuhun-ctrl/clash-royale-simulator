@@ -450,6 +450,22 @@ class FollowerPolicy(nn.Module):
             for step in range(K_MAX + 2):
                 mask = get_mask(bundle)
                 masks.append(mask)
+                # 【掩码不变式·1】partial bundle 里**已经用掉的槽位**必须已被掩码置非法。
+                # 这是「掩码 ↔ 整包校验」一致性的最小可检形式，且**零成本**（掩码本来就要取）。
+                # 先例（2026-09-18）：`env_wrapper.get_action_mask_for` 的 `used` 集合
+                # 0/1-based off-by-one，让「(s, s−1)」降序对里的低槽位仍被放行 ⇒
+                # 采样器照掩码行事 ⇒ 提交**重复槽位**的包 ⇒ `validate_bundle` **整包拒绝**
+                # ⇒ 白掉一帧 + 吃 `invalid_penalty` 罚（实测两臂录像 497 帧，最长连续 225 帧）。
+                # ⚠️ 注意：这类错误**只能**由本不变式（或整包校验）抓到，
+                # 下面「被掩掉的槽位不得被选中」那条抓不到它（掩码自己错了，采样器没违规）。
+                for _sa in bundle.sub_actions:
+                    if (_sa.kind == "deploy" and 1 <= _sa.slot <= K_MAX
+                            and bool(mask["slots"][_sa.slot - 1])):
+                        raise RuntimeError(
+                            f"[mask 不变式·1] partial 里的槽位 slot={_sa.slot} 在掩码里仍合法"
+                            f"（mask['slots']={np.asarray(mask['slots']).astype(int).tolist()}，"
+                            f"used_slots={np.asarray(mask.get('used_slots', [])).tolist()}）"
+                            "——掩码与整包校验不一致，按引擎级问题处理")
                 slot_mask = self._slot_mask_tensor(mask)
                 slot_logits = self.slot_head(h) + slot_bias
                 slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
@@ -459,6 +475,15 @@ class FollowerPolicy(nn.Module):
                     option = int(torch.argmax(slot_logits, dim=-1).item())
                 else:
                     option = int(slot_dist.sample().item())
+                # 【掩码不变式·2】被置 -1e9 的槽位**不可能**被选中（STOP 恒有有限 logit）⇒
+                # 一旦发生就是「采样器 ↔ 掩码」不一致（采样器违规）。它**补不上**·1 那一类
+                # （掩码自己错时采样器并不违规），两条都要有。
+                if option < K_MAX and not bool(mask["slots"][option]):
+                    raise RuntimeError(
+                        f"[mask 不变式] 采样器选中了被掩掉的槽位 slot={option + 1}"
+                        f"（mask['slots']={np.asarray(mask['slots']).astype(int).tolist()}，"
+                        f"已用={np.asarray(mask.get('used_slots', [])).tolist()}）"
+                        "——掩码与采样不一致，按引擎级问题处理")
                 logprob += float(slot_dist.log_prob(torch.tensor([option], device=self.device)).item())
 
                 if option == STOP_IDX:
@@ -540,9 +565,17 @@ class FollowerPolicy(nn.Module):
                 else:
                     for i in range(N):
                         masks_list[i].append(get_mask_list[i](partials[i]))
+                _cur_masks = [self._mask_or_fallback(masks_list[i], step) for i in range(N)]
+                # 【掩码不变式·1（批路径）】同单条 act()：partial 里已用掉的槽位必须已被置非法
+                for i in range(N):
+                    for _sa in partials[i].sub_actions:
+                        if (_sa.kind == "deploy" and 1 <= _sa.slot <= K_MAX
+                                and bool(_cur_masks[i]["slots"][_sa.slot - 1])):
+                            raise RuntimeError(
+                                f"[mask 不变式·1] act_parallel 行{i}：partial 里的槽位 "
+                                f"slot={_sa.slot} 在掩码里仍合法——掩码与整包校验不一致")
                 slot_masks = torch.stack(
-                    [self._slot_mask_tensor(self._mask_or_fallback(masks_list[i], step))
-                     for i in range(N)])
+                    [self._slot_mask_tensor(m) for m in _cur_masks])
                 slot_logits = self.slot_head(h) + torch.stack(
                     [bias_pairs[i][0] for i in range(N)])
                 slot_logits = slot_logits.masked_fill(slot_masks == 0, -1e9)
@@ -552,6 +585,13 @@ class FollowerPolicy(nn.Module):
                     options = torch.argmax(slot_logits, dim=-1)
                 else:
                     options = slot_dist.sample()
+                # 【掩码不变式】与单条 act() 同一口径：被掩掉的槽位不得被选中。
+                _gathered = slot_masks.gather(1, options.view(-1, 1)).view(-1)
+                if bool((_gathered == 0).any()):
+                    _bad = [int(i) for i in torch.nonzero(_gathered == 0).view(-1).tolist()]
+                    raise RuntimeError(
+                        f"[mask 不变式] act_parallel 选中了被掩掉的槽位（行 {_bad}）"
+                        "——掩码与采样不一致，按引擎级问题处理")
                 opts_list = options.tolist()               # 一次批量同步
                 lp_all = slot_dist.log_prob(options)       # (N,)
                 lp_list = lp_all.tolist()                  # 一次批量同步

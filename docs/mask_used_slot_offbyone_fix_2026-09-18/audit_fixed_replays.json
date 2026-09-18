@@ -1,0 +1,57 @@
+{
+ "FIXED": {
+  "dir": "docs\\_fix_verify_replays",
+  "agg": {
+   "n": 3413,
+   "A": 3167,
+   "B": 0,
+   "C": 246,
+   "A_ge6": 0,
+   "B_ge6": 0,
+   "C_ge6": 0,
+   "a_run_max": 22,
+   "a_run_peak": 3.999999999999967,
+   "b_run_max": 0,
+   "anomaly": 0,
+   "b_dup": 0,
+   "b_over": 0,
+   "b_unknown": 0,
+   "lvl": {
+    "3": 36,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "8": 0
+   },
+   "per_ge6_frames": 0
+  },
+  "regen_median_per_frame": 0.17857142857142794,
+  "per_point": [
+   {
+    "n": 3413,
+    "A": 3167,
+    "B": 0,
+    "C": 246,
+    "A_ge6": 0,
+    "B_ge6": 0,
+    "C_ge6": 0,
+    "b_dup": 0,
+    "b_over": 0,
+    "b_unknown": 0,
+    "anomaly": 0,
+    "a_run_max": 22,
+    "a_run_peak": 3.999999999999967,
+    "b_run_max": 0,
+    "lvl": {
+     "3": 36,
+     "4": 0,
+     "5": 0,
+     "6": 0,
+     "8": 0
+    }
+   }
+  ],
+  "b_run_top": [],
+  "a_run_top": []
+ }
+}

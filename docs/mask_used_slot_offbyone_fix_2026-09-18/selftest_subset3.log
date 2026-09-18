@@ -1,0 +1,108 @@
+E:\clash-royale-simulator-main\src\clasher_new\rl\selftest.py:1469: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:821.)
+  assert abs(float(lp_ev) - float(lp_b[0])) < 1e-4, f"evaluate_batch lp 不一致"
+    [ok] 掩码不变式：80 组 partial 逐位一致（含 (s,s-1) 降序对）；80 帧采样 bundle 全部通过 validate_bundle
+[PASS] 批量 act/evaluate 与单条路径逐位等价
+[solo] 单人自对弈 配置 'selftest_solo' -> C:\Users\枯月流魂\AppData\Local\Temp\tmpriak5sti\selftest_solo (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=2, value_norm=none, adv_norm=scale, diagnose_every=10, n_eval_games=2, eval_workers=16, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=1 minibatch=4 shuffle=False ⇒ 每 4 帧 1 次梯度步（旧行为：1 次）
+[solo] 对手池: 无历史 ckpt（本目录首轮训练，且无 --hist-seed-dir），退化为 frozen=0.250 / defend=0.500 / rand_anchor=0.250
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 2 步重扫本 run 目录）
+[solo] eval@0: 胜率 0.250±0.306 (0W/1L/1D, 2局) mean_reward=-10.674 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 启动耗时分解: torch+CUDA init=0.1s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=2.2s | eval@0 2局=14.3s (并行worker=16) | 合计(A→B)=16.5s
+[solo] 冻结副本已同步 @step 2
+[solo] 对手池刷新 @step 2: hist ckpts=1（本目录 1，新增 1） | 累计对手局 {}
+[solo step 4] policy=16.0048 value=84.6776 vraw=84.68 EVb=-267.948 entropy=3.2584 | deploy=50.0% bundle=0.50 ratio=1.000 clip=0.0% gs=1 adv=-9.184±0.574 gnorm=700.29 n=4
+[solo] ⚠️ GRU 活力不达标 @step 4: value/R std=0.033 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@4: 胜率 0.500±0.354 (0W/0L/2D, 2局) mean_reward=-9.010 EV=-267.9481（池化） EVb=-267.9481 h_std=7.79e-02 n_abs=0.437079 vstd/rstd=0.0325 累计局数=1
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.000±0.000 (0W/2L/0D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 冻结副本已同步 @step 4
+[solo] 对手池刷新 @step 4: hist ckpts=2（本目录 2，新增 1） | 累计对手局 {'hist': 1}
+[solo] 冻结副本已同步 @step 6
+[solo step 8] policy=9.7863 value=82.4441 vraw=82.44 EVb=-93.015 entropy=3.2501 | deploy=25.0% bundle=0.50 ratio=1.000 clip=0.0% gs=1 adv=-9.033±0.923 gnorm=384.04 n=4
+[solo] ⚠️ GRU 活力不达标 @step 8: value/R std=0.023 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@8: 胜率 0.500±0.354 (0W/0L/2D, 2局) mean_reward=-10.311 EV=-93.0146（池化） EVb=-93.0146 h_std=8.90e-02 n_abs=0.489499 vstd/rstd=0.0231 累计局数=2
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 冻结副本已同步 @step 8
+[solo] 对手池刷新 @step 8: hist ckpts=3（本目录 3，新增 1） | 累计对手局 {'hist': 2}
+[solo] 训练循环耗时 28.3s
+[done] solo 'selftest_solo' 完成，产物在 C:\Users\枯月流魂\AppData\Local\Temp\tmpriak5sti\selftest_solo （solo_state.json 供 dashboard --solo 读取）
+[PASS] solo 自对弈：固定卡组镜像 + 冻结副本 + solo_state.json/solo_main.pt 落盘、无联赛状态
+[solo] 单人自对弈 配置 'selftest_solo_resume' -> C:\Users\枯月流魂\AppData\Local\Temp\tmp57wucelz\selftest_solo_resume (device=cuda, seed=0, 固定卡组 8 卡镜像, 冻结副本同步间隔=4, value_norm=none, adv_norm=scale, diagnose_every=10, n_eval_games=2, eval_workers=16, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] PPO 更新预算: epochs=1 minibatch=4 shuffle=False ⇒ 每 4 帧 1 次梯度步（旧行为：1 次）
+[solo] 对手池: 无历史 ckpt（本目录首轮训练，且无 --hist-seed-dir），退化为 frozen=0.250 / defend=0.500 / rand_anchor=0.250
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 4 步重扫本 run 目录）
+[solo] eval@0: 胜率 0.250±0.306 (0W/1L/1D, 2局) mean_reward=-10.674 EV=None（池化） EVb=None h_std=n/a n_abs=None vstd/rstd=None 累计局数=0
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 启动耗时分解: torch+CUDA init=0.0s | cfg/dirs=0.0s | 环境+卡牌(BattleState/arena/卡池)=0.0s | 策略/信念/PPO=0.0s | eval@0 2局=12.9s (并行worker=16) | 合计(A→B)=12.9s
+[solo step 4] policy=16.0048 value=84.6776 vraw=84.68 EVb=-267.948 entropy=3.2584 | deploy=50.0% bundle=0.50 ratio=1.000 clip=0.0% gs=1 adv=-9.184±0.574 gnorm=700.29 n=4
+[solo] ⚠️ GRU 活力不达标 @step 4: value/R std=0.033 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@4: 胜率 0.500±0.354 (0W/0L/2D, 2局) mean_reward=-9.010 EV=-267.9481（池化） EVb=-267.9481 h_std=7.79e-02 n_abs=0.437079 vstd/rstd=0.0325 累计局数=1
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.000±0.000 (0W/2L/0D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 冻结副本已同步 @step 4
+[solo] 对手池刷新 @step 4: hist ckpts=2（本目录 2，新增 2） | 累计对手局 {'rand_anchor': 1}
+[solo step 8] policy=9.8512 value=82.3665 vraw=82.37 EVb=-93.004 entropy=3.2501 | deploy=25.0% bundle=0.50 ratio=1.000 clip=0.0% gs=1 adv=-9.029±0.917 gnorm=388.37 n=4
+[solo] ⚠️ GRU 活力不达标 @step 8: value/R std=0.026 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@8: 胜率 0.500±0.354 (0W/0L/2D, 2局) mean_reward=-10.311 EV=-93.0045（池化） EVb=-93.0045 h_std=8.82e-02 n_abs=0.491783 vstd/rstd=0.0256 累计局数=2
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 冻结副本已同步 @step 8
+[solo] 对手池刷新 @step 8: hist ckpts=3（本目录 3，新增 1） | 累计对手局 {'hist': 1, 'rand_anchor': 1}
+[solo] 训练循环耗时 27.4s
+[done] solo 'selftest_solo_resume' 完成，产物在 C:\Users\枯月流魂\AppData\Local\Temp\tmp57wucelz\selftest_solo_resume （solo_state.json 供 dashboard --solo 读取）
+[solo] 单人自对弈 配置 'selftest_solo_resume' -> C:\Users\枯月流魂\AppData\Local\Temp\tmp57wucelz\selftest_solo_resume (device=cuda, seed=1, 固定卡组 8 卡镜像, 冻结副本同步间隔=4, value_norm=none, adv_norm=scale, diagnose_every=10, n_eval_games=2, eval_workers=16, opp_mix={'frozen': 0.1, 'hist': 0.6, 'defend': 0.2, 'rand_anchor': 0.1})
+[solo] resume 从 step 8 续训（继续到 12）
+[solo] PPO 更新预算: epochs=1 minibatch=4 shuffle=False ⇒ 每 4 帧 1 次梯度步（旧行为：1 次）
+[solo] 回报尺度统计已恢复: mean=0.000 std=0.000 (n=0)
+[solo] 对手池: hist ckpts=3 mix frozen=0.1/hist=0.6/defend=0.2/rand_anchor=0.1
+[solo] PFSP 门禁（D1）: alpha=0.2 gate_hi=0.85 gate_penalty=0.2（hist 池每 4 步重扫本 run 目录）
+[solo step 12] policy=15.8798 value=81.5754 vraw=81.58 EVb=-218.317 entropy=3.4738 | deploy=50.0% bundle=0.50 ratio=1.000 clip=0.0% gs=1 adv=-9.014±0.568 gnorm=196.83 n=4
+[solo] ⚠️ GRU 活力不达标 @step 12: value/R std=0.097 ≤ 0.3（critic 输出波动远小于回报波动，价值头近似常数）
+[solo] eval@12: 胜率 0.500±0.354 (0W/0L/2D, 2局) mean_reward=-10.500 EV=-218.3167（池化） EVb=-218.3167 h_std=8.08e-02 n_abs=0.470277 vstd/rstd=0.0969 累计局数=1
+[solo]   vs baseline0: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_prev: 胜率 0.500±0.354 (0W/0L/2D)
+[solo]   vs baseline_rand: 胜率 0.500±0.354 (0W/0L/2D)
+[solo] 冻结副本已同步 @step 12
+[solo] 对手池刷新 @step 12: hist ckpts=4（本目录 4，新增 1） | 累计对手局 {'hist': 1}
+[solo] 训练循环耗时 13.5s
+[done] solo 'selftest_solo_resume' 完成，产物在 C:\Users\枯月流魂\AppData\Local\Temp\tmp57wucelz\selftest_solo_resume （solo_state.json 供 dashboard --solo 读取）
+[PASS] solo 断点续练：恢复 step/权重/优化器/历史曲线，续训不重复评估
+[eval-plan] run 模式评估并行：16 个 spawn worker（纯 CPU 推理，失败自动降级串行）
+[league] 配置 'selftest_mp' -> C:\Users\枯月流魂\AppData\Local\Temp\tmps0t7hhe0\selftest_mp (device=cuda, n_envs=2, parallel=mp)
+[league] 三分类卡组已接入: {'推进流': 60, '防守反击流': 120, '自闭流': 20} 平均补位={'推进流': 0.0, '防守反击流': 0.0, '自闭流': 0.0}
+[eval-plan] 评估关闭（steps_per_eval=0 且 big_eval_every=0）
+[train] 训练循环耗时 0.6s
+[eval@6] main vs push_flow: 0W 0L 1D（并行 1 局）
+[eval@6] main vs counter_flow: 0W 0L 1D（并行 1 局）
+[eval@6] main vs lockdown_flow: 0W 0L 1D（并行 1 局）
+[eval@6] main vs all_decks: 0W 0L 1D（并行 1 局）
+[eval@6] main vs random_deck: 0W 0L 1D（并行 1 局）
+[eval@6] all_decks: 轮内估计 1500±348（本轮 1 局，1σ 噪声地板）
+[eval@6] counter_flow: 轮内估计 1500±348（本轮 1 局，1σ 噪声地板）
+[eval@6] lockdown_flow: 轮内估计 1500±348（本轮 1 局，1σ 噪声地板）
+[eval@6] main: 轮内估计 1500±155（本轮 5 局，1σ 噪声地板）
+[eval@6] push_flow: 轮内估计 1500±348（本轮 1 局，1σ 噪声地板）
+[eval@6] random_deck: 轮内估计 1500±348（本轮 1 局，1σ 噪声地板）
+[eval@6] 完成：1 局/对 × 5 对，用时 4.0s（并行 worker=16）
+=== League Elo ===
+  main                 Elo=1500.0
+  push_flow            Elo=1500.0
+  counter_flow         Elo=1500.0
+  lockdown_flow        Elo=1500.0
+  all_decks            Elo=1500.0
+  random_deck          Elo=1500.0
+[done] config 'selftest_mp' 完成，产物在 C:\Users\枯月流魂\AppData\Local\Temp\tmps0t7hhe0\selftest_mp（含 Elo 历史，供网页 UI 读取）
+[PASS] 跨进程 worker（mp）：n_envs=2 训练主循环完成
+
+子集运行：5/5 全部通过（⚠️ 只代表被选测试，不等于全量绿）

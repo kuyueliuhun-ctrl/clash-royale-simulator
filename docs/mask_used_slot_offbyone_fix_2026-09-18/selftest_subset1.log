@@ -1,0 +1,10 @@
+    [ok] 掩码不变式：80 组 partial 逐位一致（含 (s,s-1) 降序对）；80 帧采样 bundle 全部通过 validate_bundle
+[PASS] P0-3/P0-4 掩码-校验不变式 + player_id 缓存隔离
+[PASS] ActionBundle 同刻多卡：正确打出决策时刻的两张卡
+[PASS] ActionBundle 原子校验：重复槽位 / 圣水不足整包拒绝
+[PASS] ActionBundle 覆盖英雄技能：出牌 + 开技能同一 tick
+[PASS] ActionBundle 原子校验：无就绪英雄时技能整包拒绝
+[PASS] P1-18 K_MAX 上限：低费卡局面不崩且 bundle 不超限
+[PASS] 8h 不裸下：无费差单卡高承诺单位 mask+validate 双拒；领先/对手无费/压境/多卡协同放行
+
+子集运行：6/6 全部通过（⚠️ 只代表被选测试，不等于全量绿）

@@ -487,6 +487,14 @@ class RLEnv(gym.Env):
         cells = self._mask_cells.copy()
 
         # 模拟已消耗的圣水/手牌（含技能耗蓝，P1-6）
+        # ⚠️ off-by-one 修复（2026-09-18）：`used` 里存的是 **0-based 槽位下标**（`sa.slot - 1`），
+        # 成员测试也必须 0-based。原写法 `sa.slot not in used` 拿 **1-based** 的 `sa.slot` 去测
+        # 0-based 集合：partial bundle 里一旦出现「(s, s−1)」这种**相邻降序对**，低槽位 `s−1`
+        # 会因 `s−1 ∈ used`（那是高槽位存进去的下标）被**整段跳过** ⇒ 既漏记 `used`
+        # （掩码放行**重复槽位** ⇒ `validate_bundle` **整包拒绝** ⇒ 白掉一帧 + 吃 `invalid_penalty`），
+        # 又漏扣该卡费用（圣水模拟与校验口径不一致）。
+        # 实测（修复前，`runs/et_solo100k/replays/`）：A_et **497 帧**（0.7%）提交非法包被拒，
+        # 最长**连续 225 帧**同一非法包卡死；取证 `docs/mask_used_slot_offbyone_fix_2026-09-18.md`。
         used = set()
         elixir = p.elixir
         has_ability = False
@@ -495,7 +503,7 @@ class RLEnv(gym.Env):
                 cost = ability_mana(self.battle, player_id)
                 elixir -= cost if cost is not None else 0.0
                 has_ability = True
-            elif sa.slot >= 1 and sa.slot <= K_MAX and sa.slot not in used:
+            elif sa.slot >= 1 and sa.slot <= K_MAX and (sa.slot - 1) not in used:
                 from card_utils import Card
                 card = p.cycle[sa.slot - 1]
                 cost = Card(card).elixir

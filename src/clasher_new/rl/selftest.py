@@ -5702,6 +5702,102 @@ def test_normalize_dir_zero_vector():
     print("    [ok] normalize_dir：零向量→None（不除零）；非零向量单位化正确")
 
 
+def test_mask_partial_bundle_invariants():
+    """掩码不变式（2026-09-18 回归）：**已用槽位不得再被判合法**。
+
+    病灶：`RLEnv.get_action_mask_for` 里 `used` 存的是 0-based 下标（`sa.slot - 1`），
+    而成员测试写成 `sa.slot not in used`（1-based）⇒ partial bundle 一旦出现「(s, s−1)」
+    这种**相邻降序对**，低槽位 `s−1` 会被整段跳过：既漏记 `used`（掩码放行**重复槽位**
+    ⇒ `validate_bundle` **整包拒绝** ⇒ 白掉一帧 + 吃 `invalid_penalty`），又漏扣该卡费用。
+    实测在 `et_solo100k` 两臂录像里造成 **497 帧非法包**（最长**连续 225 帧**卡死）——
+    取证 `docs/mask_used_slot_offbyone_fix_2026-09-18.md`。
+
+    本测试固定四条不变式（**跨局边界**，【R8】）：
+      ① 出现过的槽位 ⇒ `mask["slots"]` 必须为 False（枚举全部 1/2/3 元**有序**组合）；
+      ② `mask["used_slots"]` 与 partial 的槽位集合**逐位一致**（0-based）；
+      ③ 掩码里每个仍合法的槽位 ⇔ 卡费 ≤ 剩余圣水（与 `validate_bundle` 同口径、不重复扣费）；
+      ④ 采样器产出的**每个** bundle 都通过 `validate_bundle`，且每一步选中的槽位在
+         该步掩码里确实合法（跨 2 局 × sample/argmax 两分支）。
+    """
+    import itertools
+    from rl.action_bundle import ActionBundle, K_MAX
+    from rl.action_mask import validate_bundle
+    from rl.env_wrapper import RLEnv
+    from rl.train_solo import DEFAULT_SOLO_DECK
+
+    env = RLEnv(opponent=None, seed=3, card_level=11,
+                deck0=list(DEFAULT_SOLO_DECK), deck1=list(DEFAULT_SOLO_DECK))
+    n_partial = 0
+    for ep in range(2):                                  # R8：跨局边界
+        env.reset(seed=100 + ep)
+        p = env.battle.players[0]
+        for n in (1, 2, 3):
+            for combo in itertools.permutations(range(1, K_MAX + 1), n):
+                b = ActionBundle()
+                for s in combo:
+                    b.add(s, 8, 20)
+                m = env.get_action_mask(b)
+                bad = [s for s in combo if bool(m["slots"][s - 1])]
+                assert not bad, (f"局{ep} partial={combo}: 已用槽位仍被判合法 {bad}"
+                                 f"（这正是 off-by-one 复发的指纹）")
+                used = {s - 1 for s in combo}
+                assert set(np.asarray(m["used_slots"]).tolist()) == used, \
+                    f"局{ep} partial={combo}: used_slots={m['used_slots']} != {sorted(used)}"
+                expect = max(0.0, p.elixir - sum(Card(p.cycle[s - 1]).elixir for s in combo))
+                for i in range(K_MAX):
+                    if i in used:
+                        continue
+                    cost = Card(p.cycle[i]).elixir
+                    assert bool(m["slots"][i]) == (cost <= expect + 1e-9), (
+                        f"局{ep} partial={combo}: 槽{i + 1} 合法性 {bool(m['slots'][i])} "
+                        f"与费用口径不符（费 {cost} / 剩余 {expect:.2f}）")
+                n_partial += 1
+
+    from rl.belief import BeliefInference
+    from rl.belief_planner import BeliefPlanner
+    from rl.follower import FollowerPolicy
+    from rl.plan_space import PLAN_DIM
+    bd = len(BeliefInference(opp_deck=list(DEFAULT_SOLO_DECK), n_particles=32,
+                             seed=0).encode(None, None))
+    pol = FollowerPolicy(hidden=32, plan_dim=PLAN_DIM, belief_dim=bd).to_device("cpu")
+    pol.eval()
+    bp = BeliefPlanner()
+    frames = 0
+    cell_gap = 0
+    for ep in range(2):
+        obs, _ = env.reset(seed=900 + ep)
+        belief = BeliefInference(opp_deck=env.deck1, n_particles=32, seed=900 + ep)
+        hidden = None
+        for k in range(40):
+            plan = bp.plan(env.battle, belief.state(), obs)
+            tok = belief.encode(obs, None)
+            bundle, _lp, _v, hidden, masks = pol.act(
+                obs, tok, plan.to_vector(), env.get_action_mask,
+                hidden=hidden, deterministic=(k % 2 == 1))
+            for j, sa in enumerate(bundle.sub_actions):
+                if sa.kind == "deploy" and j < len(masks):
+                    assert bool(masks[j]["slots"][sa.slot - 1]), (
+                        f"局{ep} 帧{k} decoder步{j}: 选中的槽位 {sa.slot} 在该步掩码里非法")
+            ok, reason, _res = validate_bundle(env.battle, 0, bundle)
+            if not ok:
+                if "位置非法" in str(reason):
+                    cell_gap += 1                      # 另一类缺口，见打印（本测试不掩盖）
+                else:
+                    raise AssertionError(
+                        f"局{ep} 帧{k}: 采样产出非法包（{reason}）"
+                        f"bundle={[(s.kind, s.slot, s.x, s.y) for s in bundle.sub_actions]}")
+            obs, _r, term, trunc, info = env.step(bundle)
+            belief.update(obs, info.get("opp_played"))
+            frames += 1
+            if term or trunc:
+                break
+    assert frames >= 20, f"采样帧数太少（{frames}），不变式覆盖不足"
+    print(f"    [ok] 掩码不变式：{n_partial} 组 partial 逐位一致（含 (s,s-1) 降序对）；"
+          f"{frames} 帧采样 bundle 全部通过 validate_bundle"
+          + (f"；⚠️ 另有 {cell_gap} 帧因『部署位置非法』被拒（掩码-格子行缺口，另案）"
+             if cell_gap else ""))
+
+
 def main():
     # 与 run_league.main 同一兜底：日志含中文/emoji，Windows cp936 管道会崩
     from rl.run_league import _force_utf8_stdout
@@ -5805,6 +5901,7 @@ def main():
     test_stall_settlement_margin()
     test_adv_inert_probe_and_const_baseline()
     test_precise_threat()
+    test_mask_partial_bundle_invariants()
     print("\nALL SELFTESTS PASSED")
 
 
