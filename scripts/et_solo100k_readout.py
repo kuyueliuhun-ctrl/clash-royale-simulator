@@ -157,7 +157,20 @@ def layer_behaviour(run_a, run_b, out_dir):
         res["arms"][tag] = arm
     if any(v.get("status") != "OK" for v in res["arms"].values()):
         res["status"] = "PARTIAL"
+    # 配对 A − B（§11.13.2 的对照 = `B_ctrl` 同批；【R17】两侧同口径同一实现）
+    a, b = res["arms"].get("A_et", {}), res["arms"].get("B_ctrl", {})
+    res["paired"] = {
+        "elixir_ge6_pct": _delta(a.get("elixir_ge6_pct"), b.get("elixir_ge6_pct")),
+        "pre_deploy_median": _delta(a.get("pre_deploy_median"), b.get("pre_deploy_median")),
+        "xbow_play_rate": _delta(a.get("xbow_play_rate"), b.get("xbow_play_rate")),
+    }
     return res
+
+
+def _delta(x, y):
+    if x is None or y is None:
+        return {"A": x, "B": y, "A_minus_B": None}
+    return {"A": x, "B": y, "A_minus_B": x - y}
 
 
 def layer_gate(run_a, run_b, out_dir):
@@ -190,6 +203,19 @@ def layer_gate(run_a, run_b, out_dir):
         }
     if any(v.get("status") != "OK" for v in res["arms"].values()):
         res["status"] = "PARTIAL"
+    # 按**批次名**配对（两臂评估节奏相同 ⇒ 批次名可比对），供失败分支 2 用
+    by = {t: {x["batch"]: x for x in res["arms"].get(t, {}).get("batches", [])}
+          for t in ("A_et", "B_ctrl")}
+    paired = []
+    for name in sorted(set(by["A_et"]) & set(by["B_ctrl"])):
+        xa, xb = by["A_et"][name], by["B_ctrl"][name]
+        row = {"batch": name}
+        for key in ("d_rho_tower", "rho_none_tower", "rho_p4b_tower"):
+            row[key + "_A"] = xa[key]
+            row[key + "_B"] = xb[key]
+            row[key + "_A_minus_B"] = xa[key] - xb[key]
+        paired.append(row)
+    res["paired"] = paired
     return res
 
 
@@ -299,6 +325,19 @@ def render(report):
         vb = b["arms"].get("B_ctrl", {}).get(key)
         A(f"| {name} | {va} | {vb} |")
     A("")
+    p = b.get("paired") or {}
+    if any(v.get("A_minus_B") is not None for v in p.values()):
+        A("**配对差 `A_et − B_ctrl`**（失败分支 1 的输入；n=1 seed/臂 ⇒ **不下显著结论**，【R5】/【R16】）\n")
+        A("| 指标 | A_et | B_ctrl | A − B |")
+        A("|---|---|---|---|")
+        for key, name in (("elixir_ge6_pct", "全帧圣水≥6 占比 (%)"),
+                          ("pre_deploy_median", "部署前圣水中位"),
+                          ("xbow_play_rate", "Xbow 出手率")):
+            v = p.get(key)
+            if not v:
+                continue
+            A(f"| {name} | {v['A']} | {v['B']} | {v['A_minus_B']} |")
+        A("")
 
     A("## 层 3 · 门禁（优势兑现率 / 配对 Δρ）\n")
     g = report["gate"]
@@ -314,6 +353,15 @@ def render(report):
                   f"{x['rho_none_tower']:+.3f} | {x['rho_p4b_tower']:+.3f} | {x['d_rho_tower']:+.3f} |")
         A(f"")
         A(f"- ρ(τ, φ) = **{arm.get('rho_tau_phi')}**（不冗余的判据）")
+        A("")
+    gp = g.get("paired") or []
+    if gp:
+        A("**按批次配对：`Δρ(p4b − none, 塔血)`**（失败分支 2 的输入；**只报数、不下结论**）\n")
+        A("| 批次 | A_et Δρ | B_ctrl Δρ | A − B |")
+        A("|---|---|---|---|")
+        for x in gp:
+            A(f"| {x['batch']} | {x['d_rho_tower_A']:+.3f} | {x['d_rho_tower_B']:+.3f} | "
+              f"{x['d_rho_tower_A_minus_B']:+.3f} |")
         A("")
 
     A("## 层 4 · 项自身体检（`et` 明细）\n")
