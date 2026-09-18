@@ -118,6 +118,104 @@ def layer_mechanism(log_a, log_b, n_base, k):
     return out
 
 
+# ------------------------------------------------- 层 1b：EV（§11.13.2 机制层的另两项）
+# §11.13.2 把「批内 EV（**更新前池化**）」与「`EVb` 形状」也算在机制层里。
+# `EVb` 在 `[solo step N]` 行上（**每个 update 都打印**，不随 diagnose_every 稀疏化）；
+# 「池化 EV」在 `eval@N` 行上（eval@0 为 None，第一个真实评估点起才有值）。
+_RE_STEP = re.compile(
+    r"^\[solo step (?P<step>\d+)\].*?EVb=(?P<evb>[-+0-9.eE]+)"
+    r"(?:\s+EVin=(?P<evin>[-+0-9.eE]+))?")
+_RE_EVAL = re.compile(
+    r"eval@(?P<step>\d+):\s*胜率\s*(?P<wr>[\d.]+)±(?P<ci>[\d.]+)\s*"
+    r"\((?P<w>\d+)W/(?P<l>\d+)L/(?P<d>\d+)D,\s*(?P<n>\d+)局\)\s*"
+    r"mean_reward=(?P<mr>[-+0-9.eE]+)\s+EV=(?P<ev>\S+)")
+
+
+def parse_step_ev(path):
+    """返回 [(step, evb, evin_or_None), ...]；`EVb` 是**批内、更新前**口径（§11.13.2）。"""
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for ln in f:
+            m = _RE_STEP.match(ln)
+            if m:
+                evin = m.group("evin")
+                out.append((int(m.group("step")), float(m.group("evb")),
+                            (float(evin) if evin is not None else None)))
+    return out
+
+
+def parse_eval_ev(path):
+    """返回 [(step, winrate, n_games, mean_reward, pooled_ev_or_None), ...]。"""
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for ln in f:
+            m = _RE_EVAL.search(ln)
+            if not m:
+                continue
+            ev = m.group("ev")
+            for junk in ("（池化）", "(池化)"):
+                ev = ev.replace(junk, "")
+            out.append((int(m.group("step")), float(m.group("wr")), int(m.group("n")),
+                        float(m.group("mr")), (None if ev.strip() == "None" else float(ev))))
+    return out
+
+
+def _within_series(vals, n_base, k):
+    """给一条标量序列套 §11.13.2/§11.13.4 注 的 within-run 口径（中位 ± k×原始 MAD）。"""
+    vals = [v for v in vals if v is not None]
+    if not vals:
+        return {"status": "MISSING"}
+    nb = min(int(n_base), len(vals))
+    base, later = vals[:nb], vals[nb:]
+    med = jci._median(base)
+    m = jci.mad(base, med)
+    lo, hi = med - k * (m or 0.0), med + k * (m or 0.0)
+    inside = sum(1 for x in later if lo <= x <= hi) if later else None
+    return {"status": "OK", "n_base": nb, "n_later": len(later),
+            "base_median": med, "base_mad": m, "lo": lo, "hi": hi,
+            "degenerate": (m == 0.0), "later_median": (jci._median(later) if later else None),
+            "later_inside": inside}
+
+
+def layer_ev(log_a, log_b, n_base, k):
+    res = {"status": "OK", "arms": {}, "compare": {}, "indistinguishable_metrics": []}
+    for tag, path in (("A_et", log_a), ("B_ctrl", log_b)):
+        evb_rows = parse_step_ev(path)
+        res["arms"][tag] = {
+            "n_evb_points": len(evb_rows),
+            "evb": _within_series([r[1] for r in evb_rows], n_base, k),
+            "evin_base_median": jci._median([r[2] for r in evb_rows[:n_base] if r[2] is not None]),
+            "pooled_ev_series": [(s, ev) for s, _wr, _n, _mr, ev in parse_eval_ev(path)],
+        }
+    a, b = res["arms"]["A_et"], res["arms"]["B_ctrl"]
+    for key, name in (("evb", "EVb"),):
+        sa, sb = a[key], b[key]
+        if sa.get("status") != "OK" or sb.get("status") != "OK":
+            res["compare"][name] = {"status": "MISSING"}
+            continue
+        la, lb = sa["later_median"], sb["later_median"]
+        if la is None or lb is None:
+            res["compare"][name] = {"status": "MISSING"}
+            continue
+        diff = abs(la - lb)
+        spread = max(sa["base_mad"] or 0.0, sb["base_mad"] or 0.0)
+        ind = diff < spread
+        res["compare"][name] = {
+            "name": name, "later_median_A": la, "later_median_B": lb,
+            "diff": diff, "spread_max_mad": spread,
+            "degenerate": bool(sa["degenerate"] or sb["degenerate"]),
+            "indistinguishable": ind}
+        if ind:
+            res["indistinguishable_metrics"].append(name)
+    if a["n_evb_points"] == 0 or b["n_evb_points"] == 0:
+        res["status"] = "PARTIAL"
+    return res
+
+
 # ------------------------------------------------- 层 2/3：调用既有仪器 + 解析
 _RE_POOL_FULL = re.compile(r"\[POOLED\]\s*全帧 elixir0\s+n=(\d+).*?≥6=([\d.]+)%")
 _RE_PRE = re.compile(r"\[POOLED\]\s*pre \(=post\+费\)\s+n=(\d+).*?median=([\d.]+)")
@@ -311,6 +409,45 @@ def render(report):
     A(f"- 全部指标都不可分辨 ⇒ **{ '是' if m['all_indistinguishable'] else '否' }**"
       "（对应 §11.13.4 失败分支 3）")
 
+    # —— 层 1b：EV（§11.13.2 机制层的另两项）——
+    e = report.get("ev") or {}
+    A("\n### 层 1b · EV（§11.13.2 机制层的另两项：批内 EV / `EVb` 形状）\n")
+    if e.get("status") not in ("OK", "PARTIAL") or not e.get("arms"):
+        A("- ⚠️ MISSING：日志里没有可解析的 `[solo step N] … EVb=` 行")
+    else:
+        A(f"- 诊断点（`[solo step]` 行）数：`A_et` = **{e['arms']['A_et']['n_evb_points']}**、"
+          f"`B_ctrl` = **{e['arms']['B_ctrl']['n_evb_points']}**"
+          f"（**每个 update 都打印**，不随 `diagnose_every` 稀疏化）\n")
+        A("| 指标 | A_et 基线中位 | A_et MAD | A_et 后续中位 | A_et 带内 | B_ctrl 基线中位 | B_ctrl MAD | B_ctrl 后续中位 | B_ctrl 带内 |")
+        A("|---|---|---|---|---|---|---|---|---|")
+        for key, name in (("evb", "EVb（批内·更新前）"),):
+            sa, sb = e["arms"]["A_et"][key], e["arms"]["B_ctrl"][key]
+            ia = "n/a" if sa.get("later_inside") is None else f"{sa['later_inside']}/{sa['n_later']}"
+            ib = "n/a" if sb.get("later_inside") is None else f"{sb['later_inside']}/{sb['n_later']}"
+            if sa.get("degenerate"):
+                ia += " ⚠退化"
+            if sb.get("degenerate"):
+                ib += " ⚠退化"
+            A(f"| {name} | {_fmt(sa['base_median'])} | {_fmt(sa['base_mad'])} | "
+              f"{_fmt(sa['later_median'])} | {ia} | {_fmt(sb['base_median'])} | "
+              f"{_fmt(sb['base_mad'])} | {_fmt(sb['later_median'])} | {ib} |")
+        A("")
+        c = (e.get("compare") or {}).get("EVb") or {}
+        if c.get("status") == "MISSING":
+            A("- 跨臂 EVb 判定：**MISSING**（某一臂没有后续窗口）")
+        else:
+            A(f"- 跨臂 EVb：差 \\|Δ\\| **{_fmt(c['diff'])}** vs 散布 max(MAD) "
+              f"**{_fmt(c['spread_max_mad'])}** ⇒ "
+              f"{'**不可分辨**' if c['indistinguishable'] else '可分辨'}")
+        A("")
+        A("**池化 EV（评估点，描述性）**\n")
+        A("| 评估点 | A_et 池化 EV | B_ctrl 池化 EV |")
+        A("|---|---|---|")
+        pa = {s: ev for s, ev in e["arms"]["A_et"]["pooled_ev_series"]}
+        pb = {s: ev for s, ev in e["arms"]["B_ctrl"]["pooled_ev_series"]}
+        for s in sorted(set(pa) | set(pb)):
+            A(f"| {s} | {pa.get(s)} | {pb.get(s)} |")
+
     A("\n## 层 2 · 行为（可复算）\n")
     b = report["behaviour"]
     A("| 指标 | A_et | B_ctrl |")
@@ -395,6 +532,7 @@ def main():
     print(f"[readout] out_dir 解析为 {os.path.abspath(args.out_dir)}")
     report = {
         "mechanism": layer_mechanism(args.log_a, args.log_b, args.baseline_n, args.baseline_k),
+        "ev": layer_ev(args.log_a, args.log_b, args.baseline_n, args.baseline_k),
         "behaviour": layer_behaviour(args.run_a, args.run_b, args.out_dir),
         "gate": layer_gate(args.run_a, args.run_b, args.out_dir),
         "item_health": layer_item_health(args.run_a, args.out_dir),
