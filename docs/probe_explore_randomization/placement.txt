@@ -1,0 +1,4 @@
+=== C. 落点集中度（只读录像）===
+  [A_et] 9512 次部署 / 280 局 | 用到 84/576 格 | 经验熵 4.49 bits (≈22 个有效格；整网格上限 9.17) | top1 0.123 top10 0.733
+  [B_ctrl] 8528 次部署 / 280 局 | 用到 90/576 格 | 经验熵 4.24 bits (≈19 个有效格；整网格上限 9.17) | top1 0.150 top10 0.784
+[written] ../../docs/probe_explore_randomization/placement.json

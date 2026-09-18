@@ -1,0 +1,163 @@
+{
+  "mode": "analytic",
+  "args": {
+    "mode": "analytic",
+    "replays": [
+      "A_et=runs/et_solo100k/replays",
+      "B_ctrl=runs/et_ctrl100k/replays"
+    ],
+    "ckpt": null,
+    "arms": "greedy,sample,uniform,mix0.5",
+    "games": 8,
+    "seed": 0,
+    "max_frames": 400,
+    "json": "../../docs/probe_explore_randomization/analytic.json"
+  },
+  "analytic": {
+    "regen_per_frame": 0.1786,
+    "target_cost": 6.0,
+    "deck_costs": {
+      "Xbow": 6.0,
+      "Tesla": 4.0,
+      "Skeletons": 1.0,
+      "IceWizard": 3.0,
+      "Archer": 3.0,
+      "Knight": 3.0,
+      "Log": 2.0,
+      "Fireball": 4.0
+    },
+    "cheapest_in_any_hand_upper_bound": 3.0,
+    "worst_hand": [
+      "Xbow",
+      "Tesla",
+      "IceWizard",
+      "Archer"
+    ],
+    "n_games": 560,
+    "n_frames": 155866,
+    "per_dir": {
+      "A_et": {
+        "n_frames": 75891,
+        "frames_ge3": 6168,
+        "frames_ge4": 1043,
+        "frames_ge6": 390,
+        "elixir_median": 1.535714285714269,
+        "elixir_p90": 2.9285714285714155,
+        "n_attempts": 7556,
+        "attempts_per_100k": 9956.38481506371,
+        "k_median": 17.0,
+        "start_elixir_median": 0.3571428571428119,
+        "n_spend_frames": 7321,
+        "ev_per_100k": {
+          "p_pass=0.5000": 5.853294083733167,
+          "p_pass=0.3333": 0.5062098334015235,
+          "p_pass=0.1667": 0.0079078844942794,
+          "p_pass=0.0700": 4.340662265702083e-05
+        },
+        "by_k_bucket": {
+          "k=1-4": {
+            "n_attempts": 0,
+            "attempts_per_100k": 0.0,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.0,
+              "p_pass=0.3333": 0.0,
+              "p_pass=0.1667": 0.0,
+              "p_pass=0.0700": 0.0
+            }
+          },
+          "k=5-9": {
+            "n_attempts": 280,
+            "attempts_per_100k": 368.9502048991317,
+            "ev_per_100k": {
+              "p_pass=0.5000": 5.7648469515489325,
+              "p_pass=0.3333": 0.5061045334693162,
+              "p_pass=0.1667": 0.007907883335458065,
+              "p_pass=0.0700": 4.3406622656177965e-05
+            }
+          },
+          "k=10-16": {
+            "n_attempts": 1522,
+            "attempts_per_100k": 2005.5078994874227,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.030601622001456035,
+              "p_pass=0.3333": 4.658909791264754e-05,
+              "p_pass=0.1667": 7.108932176612478e-10,
+              "p_pass=0.0700": 6.664890478045196e-16
+            }
+          },
+          "k=17": {
+            "n_attempts": 5754,
+            "attempts_per_100k": 7581.926710677156,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.057845510182778594,
+              "p_pass=0.3333": 5.8710834294650446e-05,
+              "p_pass=0.1667": 4.4792811809273107e-10,
+              "p_pass=0.0700": 1.7637875077181633e-16
+            }
+          }
+        }
+      },
+      "B_ctrl": {
+        "n_frames": 79975,
+        "frames_ge3": 6357,
+        "frames_ge4": 710,
+        "frames_ge6": 38,
+        "elixir_median": 1.5357142857142838,
+        "elixir_p90": 2.928571428571368,
+        "n_attempts": 8238,
+        "attempts_per_100k": 10300.718974679587,
+        "k_median": 17.0,
+        "start_elixir_median": 0.42261904761872415,
+        "n_spend_frames": 8011,
+        "ev_per_100k": {
+          "p_pass=0.5000": 5.5646833757863785,
+          "p_pass=0.3333": 0.4803973691809591,
+          "p_pass=0.1667": 0.007504074687177166,
+          "p_pass=0.0700": 4.119002287169086e-05
+        },
+        "by_k_bucket": {
+          "k=1-4": {
+            "n_attempts": 0,
+            "attempts_per_100k": 0.0,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.0,
+              "p_pass=0.3333": 0.0,
+              "p_pass=0.1667": 0.0,
+              "p_pass=0.0700": 0.0
+            }
+          },
+          "k=5-9": {
+            "n_attempts": 280,
+            "attempts_per_100k": 350.109409190372,
+            "ev_per_100k": {
+              "p_pass=0.5000": 5.470459518599562,
+              "p_pass=0.3333": 0.4802598205629244,
+              "p_pass=0.1667": 0.007504059696295693,
+              "p_pass=0.0700": 4.1190021881838095e-05
+            }
+          },
+          "k=10-16": {
+            "n_attempts": 1669,
+            "attempts_per_100k": 2086.9021569240385,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.03422853088855893,
+              "p_pass=0.3333": 7.665580803748682e-05,
+              "p_pass=0.1667": 1.4526306202188322e-08,
+              "p_pass=0.0700": 9.896698227273385e-13
+            }
+          },
+          "k=17": {
+            "n_attempts": 6289,
+            "attempts_per_100k": 7863.707408565177,
+            "ev_per_100k": {
+              "p_pass=0.5000": 0.05999532629825727,
+              "p_pass=0.3333": 6.089280999719018e-05,
+              "p_pass=0.1667": 4.645752715850081e-10,
+              "p_pass=0.0700": 1.8293382962995274e-16
+            }
+          }
+        }
+      }
+    }
+  }
+}
