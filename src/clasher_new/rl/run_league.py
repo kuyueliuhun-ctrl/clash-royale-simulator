@@ -65,7 +65,7 @@ from rl.decks import load_classified_decks, decks_by_archetype, classify_stats
 from rl.config import TrainConfig, reward_to_env, eval_schedule
 from rl.overtime import (NORMAL_TIME_S, OVERTIME_END_S, overtime_open,
                          timeout_winner as _overtime_timeout_winner)
-from rl.replay import battle_snapshot, save_league_replays
+from rl.replay import battle_snapshot, save_league_replays, tower_geometry
 from rl.io_bootstrap import force_utf8_stdout
 
 
@@ -128,6 +128,14 @@ class LeagueGameRecorder:
         self.meta["decks"] = [list(deck0), list(deck1)]
 
     def record(self, env, bundle, reward, info, cards=None):
+        # 首帧：把**引擎的塔几何**记进本局 meta（前端据此按真实足迹画塔 —— 公主塔 3×3 /
+        # 国王塔 4×4）。**只记一次**：逐帧记实测让录像体积 +24%~28%
+        # （1800 帧 1.67→2.14 MB、run100k 单文件 21.9→27.1 MB）而几何是每局常量。
+        # 读方：`dashboard_html.py` 前端优先 `meta.tower_geom`，老录像回落常量。
+        if not self.frames and "tower_geom" not in self.meta:
+            _tg = tower_geometry(getattr(env, "battle", None))
+            if _tg:
+                self.meta["tower_geom"] = _tg
         # schema 5（2026-09-18，S2）：把**在线残值真值**一并写进帧 —— 环境中立、只读记录
         _v = getattr(env, "_active_v", None)
         _vs = getattr(env, "_v_share", None)

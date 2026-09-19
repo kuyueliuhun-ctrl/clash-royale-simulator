@@ -26,6 +26,10 @@ _OUR_SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 if _OUR_SRC not in sys.path:
     sys.path.append(_OUR_SRC)   # append（不是 insert）：不得抢上游引擎 `import battle` 的优先级
 from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+#: 塔几何归一化（2026-09-19）：**上游是圆形口径**（`arena.towers` 是 3 元组 `(pos, r, player)`，
+#: 公主塔 r=1.0 / 国王塔 r=1.4）⇒ 由同一个实现归一成 `[cx,cy,hw,hh,player]`，dashboard 才能按
+#: **上游自己的**几何画塔，而不是拿本仓的 3×3/4×4 冒充。只读上游的 `arena.towers`。
+from rl.replay import tower_geometry  # noqa: E402
 force_utf8_stdout()
 #: 本脚本在**我方**仓库里、却要在**上游**的 cwd 下跑 ⇒ Python 的 sys.path[0] 是脚本目录，
 #: 不是 cwd ⇒ 必须显式把 cwd 放进来，否则 `import battle` 找不到（实测踩过）。
@@ -139,7 +143,9 @@ def main(argv=None):
             "name": name, "world": [wx, wy], "deploy_ok": ok, "spawned": spawned,
             "winner": w, "end_time_s": round(float(bs.time), 2),
             "meta": {"pair": ["skarmy@%s" % name, "silent"], "side0": "skarmy@%s" % name,
-                     "max_steps": args.max_frames, "decks": [list(DECK0), list(DECK1)]},
+                     "max_steps": args.max_frames, "decks": [list(DECK0), list(DECK1)],
+                     # 上游引擎的塔几何（归一化后）：公主塔 2×2 / 国王塔 2.8×2.8
+                     "tower_geom": tower_geometry(bs)},
             "frames": frames,
         })
 

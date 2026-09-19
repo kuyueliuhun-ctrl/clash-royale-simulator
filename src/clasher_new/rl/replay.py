@@ -96,6 +96,51 @@ LEAGUE_REPLAY_SCHEMA = 5
 #: **向后兼容**：新字段追加在**末尾**，所有按下标读 0..9 的消费者（`dashboard.py` 前端、
 #: `scripts/forensics_card_usage.py`、`rl/train_solo.py::behavioral_metrics`）**不受影响**；
 #: 读方须以 `schema >= 4` 判定字段是否存在。
+#:
+#: **schema 5.x（2026-09-19）· 可选键 `meta["tower_geom"]`**：本局引擎的塔几何
+#: `[[cx, cy, hw, hh, player], ...]`（来源 = `tower_geometry(battle)`）。**不升 schema**：
+#: 它是**局级可选键**（与帧级可选键 `et`/`cards` 同级做法），老录像没有它，读方必须容忍
+#: （dashboard 前端回落常量）。动机与体积实测见 `tower_geometry` 的 docstring。
+
+
+def tower_geometry(battle):
+    """引擎的**塔几何**（前端按真实足迹画塔用）：`[[cx, cy, hw, hh, player], ...]`。
+
+    为什么要有这个（2026-09-19，用户：「我们引擎已经正常实现塔了，但 dashboard 回放的塔
+    还是 1 格，把它恢复到正常尺寸」）：dashboard 的塔尺寸原先**写死在前端 JS 里**
+    （`half = 0.5 格` ⇒ 公主塔画成 1 格见方），而引擎 2026-09-09 起塔是**矩形**
+    （公主塔 3×3 / 国王塔 4×4，`arena.TileGrid.towers`）⇒ 两套几何，且前端那份
+    **不会随引擎更新而更新**（这正是本次的根因）。
+    现在由引擎侧把几何写进录像的 `meta["tower_geom"]`（**不是**逐帧：实测逐帧会让
+    录像体积 +24%~28%，见 `docs/dashboard_tower_geom_2026-09-19.md` §2），前端优先用它；
+    老录像（无该键）回落到与 `arena.TileGrid.towers` 同值的 JS 常量，由
+    `scripts/check_dashboard_js.py` 的对账测试守着（改了引擎塔尺寸而不同步即 FAIL）。
+
+    **只读**：只读 `battle.arena.towers`，不改任何状态。两种表形状都认：
+      - **4 元组** `(pos, hw, hh, player)` —— 本仓（矩形口径，hw/hh 是半宽/半高）；
+      - **3 元组** `(pos, r, player)` —— 上游（圆形口径，`hw = hh = r`）。实测上游
+        王塔 `r=1.4` = `card_utils` 的 `collisionRadius` 1400/1000、公主塔 `1.0` =
+        1000/1000 ⇒ 与本仓录进录像的实体 `radius` 同值，可交叉对账。
+
+    形状不认识 / 拿不到 ⇒ 返回 `None`（前端回落常量，绝不抛）。
+    """
+    towers = getattr(getattr(battle, "arena", None), "towers", None)
+    if not towers:
+        return None
+    out = []
+    try:
+        for t in towers:
+            pos, pid, rest = t[0], t[-1], t[1:-1]
+            if len(rest) == 2:
+                hw, hh = float(rest[0]), float(rest[1])
+            elif len(rest) == 1:
+                hw = hh = float(rest[0])
+            else:
+                return None
+            out.append([float(pos.x), float(pos.y), hw, hh, int(pid)])
+    except Exception:
+        return None
+    return out or None
 
 
 def battle_snapshot(battle, bundle, reward, info, v=None, shares=None):
@@ -166,7 +211,11 @@ def battle_snapshot(battle, bundle, reward, info, v=None, shares=None):
 
 
 def save_league_replays(games, path):
-    """保存联赛录像集合：games = [{meta, winner, frames}, ...]。"""
+    """保存联赛录像集合：games = [{meta, winner, frames}, ...]。
+
+    可选局级键 `meta["tower_geom"]`（引擎塔几何）由**生产方**写入（`LeagueGameRecorder`
+    首帧写一次、上游探针写一次），本函数**不改** `games` 一个字符，只负责落盘。
+    """
     import pickle
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "wb") as f:

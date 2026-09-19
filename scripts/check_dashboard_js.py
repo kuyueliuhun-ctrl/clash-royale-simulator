@@ -11,6 +11,14 @@
      并遍历 `SOLO_METRICS` 的**每一个指标**调 `drawSoloMetricChart()`；
   3. 分支覆盖：旧录像（无 `meta.decks`）走"按卡组"空表分支。
 
+**2026-09-19 新增第 4 层 · 塔几何**（用户：「引擎已经正常实现塔了，但 dashboard 回放的塔
+还是 1 格」）：前端画的塔必须与引擎 `arena.TileGrid.towers` 同尺寸（公主塔 3×3 / 国王塔 4×4）。
+  - Python 侧**三方对账**：前端写死的 `TOWER_GEOM` / `towerPos` / 竞技场 18×32
+    ↔ 引擎 `arena.TileGrid` ↔ `replay.tower_geometry()`；
+  - node 侧**真绘制路径**：`computeTowerMax()` → `drawInterpOn()`，记录 `strokeRect` 的
+    **实参像素**，覆盖 老录像回落 / 本仓几何 / 上游 3 元组几何 / 陈旧几何 / 残缺项 / 塔心不漂。
+  只跑这层：`--tower-only`（不需要 run 目录）。
+
 用法：
     # 用真实 run 的落盘数据（推荐）
     cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe \
@@ -226,6 +234,99 @@ process.exit(fail2 ? 1 : 0);
 """
 
 
+#: 塔几何（2026-09-19，用户：「引擎已经正常实现塔了，但 dashboard 回放的塔还是 1 格」）：
+#: 前端画的塔**必须**与引擎 `arena.TileGrid.towers` 同尺寸（公主塔 3×3 / 国王塔 4×4）。
+#: 度量方式 = 走**真绘制路径** `drawInterpOn`，记录 `strokeRect` 的**实参像素**（不是读常量）
+#: ⇒ 常量改对了但绘制仍用旧变量这类错误也会被抓到。
+#: 三条覆盖：① 老录像无 `meta.tower_geom` ⇒ 回落常量；② 本仓 4 元组几何；③ 上游 3 元组几何
+#: （公主塔 r=1.0 / 王塔 r=1.4 ⇒ 2 格 / 2.8 格，**按上游自己的尺寸画**，不冒充本仓几何）。
+_TOWER_TAIL = r"""
+const outT = []; let failT = 0;
+function tT(name, fn){ try { fn(); outT.push("PASS " + name); } catch(e){
+  failT++; outT.push("FAIL " + name + " :: " + (e && e.message)); } }
+
+const RECTS = [];
+ctxStub.strokeRect = function(x, y, w, h){ RECTS.push([x, y, w, h]); };
+const CANVAS_W = 450, CANVAS_H = 800;          // 与页面里 <canvas id="arena"> 同尺寸
+const SCALE = Math.min(CANVAS_W / 18, CANVAS_H / 32);   // = 25 px/格
+function pxOf(half){ return Math.round(half * 2 * SCALE); }
+
+function mkTowerGame(towerGeom){
+  const g = { file:"t.pkl", index:0, winner:0, meta:{}, frames:[
+    { t:0, bundle:[], reward:0, opp_played:[], towers0:[4824,3052,3052],
+      towers1:[4824,3052,3052], elixir0:5, elixir1:5, crown0:0, crown1:0, entities:[] }] };
+  if (towerGeom) g.meta.tower_geom = towerGeom;
+  return g;
+}
+/* 走真路径画一帧，返回 6 个塔的 strokeRect 实参（按半宽排序便于比对） */
+function drawnRects(game){
+  curGame = game; computeTowerMax();
+  const cv = document.getElementById("arena");
+  cv.width = CANVAS_W; cv.height = CANVAS_H;
+  RECTS.length = 0;
+  drawInterpOn(cv, game.frames[0], game.frames[0], 1);
+  return RECTS.map(r => ({x:r[0], y:r[1], w:r[2], h:r[3]})).sort((a,b) => a.w - b.w || a.y - b.y);
+}
+function sideCounts(rects){
+  const c = {}; rects.forEach(r => { const k = Math.round(r.w) + "x" + Math.round(r.h); c[k] = (c[k]||0)+1; });
+  return c;
+}
+const OUR_GEOM = [[3.5,6.5,1.5,1.5,0],[14.5,6.5,1.5,1.5,0],[9,3,2,2,0],
+                  [3.5,25.5,1.5,1.5,1],[14.5,25.5,1.5,1.5,1],[9,29,2,2,1]];
+const UP_GEOM  = [[3.5,6.5,1,1,0],[14.5,6.5,1,1,0],[9,3,1.4,1.4,0],
+                  [3.5,25.5,1,1,1],[14.5,25.5,1,1,1],[9,29,1.4,1.4,1]];
+
+tT("① 老录像（无 meta.tower_geom）⇒ 回落引擎几何：公主塔 3 格 / 王塔 4 格", function(){
+  const c = sideCounts(drawnRects(mkTowerGame(null)));
+  const p = pxOf(1.5), k = pxOf(2.0);
+  if (c[p+"x"+p] !== 4) throw new Error("公主塔应有 4 座 " + p + "px，实测 " + JSON.stringify(c));
+  if (c[k+"x"+k] !== 2) throw new Error("王塔应有 2 座 " + k + "px，实测 " + JSON.stringify(c));
+});
+tT("② meta.tower_geom（本仓 4 元组）⇒ 逐塔按引擎几何", function(){
+  const c = sideCounts(drawnRects(mkTowerGame(OUR_GEOM)));
+  const p = pxOf(1.5), k = pxOf(2.0);
+  if (c[p+"x"+p] !== 4 || c[k+"x"+k] !== 2) throw new Error(JSON.stringify(c));
+});
+tT("③ meta.tower_geom（上游 3 元组 r=1.0/1.4）⇒ 按上游尺寸 2 格 / 2.8 格", function(){
+  const c = sideCounts(drawnRects(mkTowerGame(UP_GEOM)));
+  const p = pxOf(1.0), k = pxOf(1.4);
+  if (c[p+"x"+p] !== 4) throw new Error("上游公主塔应有 4 座 " + p + "px，实测 " + JSON.stringify(c));
+  if (c[k+"x"+k] !== 2) throw new Error("上游王塔应有 2 座 " + k + "px，实测 " + JSON.stringify(c));
+});
+tT("④ 几何按**位置**命中（顺序打乱无影响）", function(){
+  const shuffled = OUR_GEOM.slice().reverse();
+  const c = sideCounts(drawnRects(mkTowerGame(shuffled)));
+  const p = pxOf(1.5), k = pxOf(2.0);
+  if (c[p+"x"+p] !== 4 || c[k+"x"+k] !== 2) throw new Error(JSON.stringify(c));
+});
+tT("⑤ 几何与本局塔位不匹配（陈旧/异图 meta）⇒ 该塔回落常量，不崩", function(){
+  const stale = [[3.5,11.5,1.5,1.5,0],[14.5,11.5,1.5,1.5,0],[9,8,2,2,0],
+                 [3.5,20.5,1.5,1.5,1],[14.5,20.5,1.5,1.5,1],[9,23,2,2,1]];
+  const c = sideCounts(drawnRects(mkTowerGame(stale)));
+  const p = pxOf(1.5), k = pxOf(2.0);
+  if (c[p+"x"+p] !== 4 || c[k+"x"+k] !== 2) throw new Error("应全部回落常量: " + JSON.stringify(c));
+});
+tT("⑥ 残缺几何项（长度 < 4）被忽略而不是画错", function(){
+  const mixed = [[3.5,6.5,1.5],[14.5,6.5,1.5,1.5,0],[9,3,2,2,0],
+                 [3.5,25.5,1.5,1.5,1],[14.5,25.5,1.5,1.5,1],[9,29,2,2,1]];
+  const c = sideCounts(drawnRects(mkTowerGame(mixed)));
+  const p = pxOf(1.5), k = pxOf(2.0);
+  if (c[p+"x"+p] !== 4 || c[k+"x"+k] !== 2) throw new Error(JSON.stringify(c));
+});
+tT("⑦ 塔心不动（放大后仍以引擎塔位为中心）", function(){
+  const rects = drawnRects(mkTowerGame(null));
+  const king = rects.filter(r => Math.round(r.w) === pxOf(2.0));
+  const ox = (CANVAS_W - 18 * SCALE) / 2, oy = (CANVAS_H - 32 * SCALE) / 2;
+  const want = [[9, 3], [9, 29]].map(p => (ox + p[0] * SCALE) + "," + (oy + p[1] * SCALE)).sort();
+  const got = king.map(r => (r.x + r.w / 2) + "," + (r.y + r.h / 2)).sort();
+  if (JSON.stringify(got) !== JSON.stringify(want)) throw new Error("塔心漂移: " + got + " != " + want);
+});
+console.log(outT.join("\n"));
+console.log("FAILURES=" + failT);
+process.exit(failT ? 1 : 0);
+"""
+
+
 def extract_js():
     """抽出内嵌页面的 `<script>` 块内容。
 
@@ -260,6 +361,98 @@ def extract_js():
     raise SystemExit("[FAIL] dashboard_html.py / dashboard.py / rl.dashboard._HTML 里都找不到 <script> 块")
 
 
+def _extract_js_consts(js):
+    """从 JS 文本里取前端**写死**的三组引擎几何常量（取不到 ⇒ 抛，绝不静默跳过）。
+
+    返回 `(TOWER_GEOM, (arena_w, arena_h), [塔中心...])`。
+    """
+    m = re.search(r"const TOWER_GEOM = \{(.*?)\n\};", js, re.S)
+    if not m:
+        raise AssertionError("JS 里找不到 `const TOWER_GEOM = {...};`（前端塔几何常量）")
+    body = m.group(1)
+    geom = {}
+    for kind in ("princess", "king"):
+        mm = re.search(kind + r"\s*:\s*\{\s*hw:\s*([0-9.]+)\s*,\s*hh:\s*([0-9.]+)\s*\}", body)
+        if not mm:
+            raise AssertionError("TOWER_GEOM 里找不到 %s 的 hw/hh" % kind)
+        geom[kind] = (float(mm.group(1)), float(mm.group(2)))
+    m2 = re.search(r"Math\.min\(W\s*/\s*([0-9.]+)\s*,\s*H\s*/\s*([0-9.]+)\)", js)
+    if not m2:
+        raise AssertionError("JS 里找不到竞技场尺寸 `Math.min(W / <宽>, H / <高>)`")
+    m3 = re.findall(r"\b(p[01][klr]):\{x:([0-9.]+),y:([0-9.]+)\}", js)
+    if len(m3) != 6:
+        raise AssertionError("JS 里 towerPos 默认位应 6 条，实得 %d 条" % len(m3))
+    return (geom, (int(float(m2.group(1))), int(float(m2.group(2)))),
+            sorted((float(x), float(y)) for _k, x, y in m3))
+
+
+def _tower_geom_checks(js):
+    """**三方对账**：前端写死的塔几何 / 塔位 / 场尺寸 ↔ 引擎 `arena.TileGrid` ↔ `tower_geometry()`。
+
+    动机 = 本次 bug 的根因：同一份几何前后端各写一份，而前端那份**不随引擎更新**
+    （引擎 2026-09-09 把塔从圆形改成 3×3/4×4 矩形，前端一直画 1 格见方）。
+    本函数把那条边做成**可执行的**：引擎塔尺寸/塔位一变而前端没同步 ⇒ FAIL。
+    """
+    from arena import TileGrid as TG
+    from rl.replay import tower_geometry
+
+    fails = []
+
+    def chk(name, ok, detail=""):
+        print(("[dashboard-js] PASS " if ok else "[dashboard-js] FAIL ") + name
+              + ("" if ok else " :: %s" % (detail,)))
+        if not ok:
+            fails.append(name)
+
+    princess, king, centers = set(), set(), []
+    for pos, hw, hh, _pid in TG.towers:
+        is_king = (pos.x, pos.y) in ((TG.BLUE_KING_TOWER.x, TG.BLUE_KING_TOWER.y),
+                                     (TG.RED_KING_TOWER.x, TG.RED_KING_TOWER.y))
+        (king if is_king else princess).add((hw, hh))
+        centers.append((pos.x, pos.y))
+    chk("引擎塔几何 = 公主塔 3×3 / 国王塔 4×4",
+        princess == {(1.5, 1.5)} and king == {(2.0, 2.0)},
+        "princess=%s king=%s" % (sorted(princess), sorted(king)))
+
+    try:
+        js_geom, js_arena, js_centers = _extract_js_consts(js)
+    except AssertionError as e:
+        chk("前端几何常量可提取", False, e)
+        return 1
+    chk("前端 TOWER_GEOM == 引擎 arena.TileGrid.towers",
+        js_geom == {"princess": (1.5, 1.5), "king": (2.0, 2.0)},
+        "js=%s 引擎 princess=%s king=%s" % (js_geom, sorted(princess), sorted(king)))
+    chk("前端竞技场尺寸 == 引擎 TileGrid.width/height",
+        js_arena == (TG.width, TG.height), "js=%s 引擎=%s" % (js_arena, (TG.width, TG.height)))
+    chk("前端塔位缺省 == 引擎塔中心", js_centers == sorted(centers),
+        "js=%s 引擎=%s" % (js_centers, sorted(centers)))
+
+    class _Arena:
+        def __init__(self, towers):
+            self.towers = towers
+
+    class _Battle:
+        def __init__(self, towers):
+            self.arena = _Arena(towers)
+
+    fb = _Battle(None)
+    fb.arena = TG()                     # 真 TileGrid ⇒ 对账的是**真几何**，不是手抄常量
+    got = tower_geometry(fb)
+    chk("tower_geometry(真 TileGrid) = 6 座且半宽同引擎",
+        got is not None and len(got) == 6
+        and {(round(g[2], 3), round(g[3], 3)) for g in got} == {(1.5, 1.5), (2.0, 2.0)},
+        got)
+
+    from core import Position
+    up = tower_geometry(_Battle([(Position(3.5, 25.5), 1.0, 1), (Position(9.0, 29.0), 1.4, 1)]))
+    chk("tower_geometry 认上游 3 元组（圆形 r ⇒ hw=hh=r）",
+        up == [[3.5, 25.5, 1.0, 1.0, 1], [9.0, 29.0, 1.4, 1.4, 1]], up)
+    chk("tower_geometry 形状不认识/空 ⇒ None（不抛）",
+        tower_geometry(_Battle([(Position(0.0, 0.0), 1, 2, 3, 4)])) is None
+        and tower_geometry(_Battle([])) is None and tower_geometry(None) is None, "")
+    return 1 if fails else 0
+
+
 def _node_runner():
     """返回 (runner_argv, 说明)。Windows python 的 PATH 里常没有 node ⇒ 回退 wsl.exe node。"""
     exe = shutil.which("node")
@@ -292,6 +485,8 @@ def main() -> int:
                     help="run 模式训练目录（含 league_state.json，可给 runs/<name>）："
                          "额外跑联赛/长跑面板渲染冒烟（进度条 + 两级评估点 + 对手胜率曲线）")
     ap.add_argument("--syntax-only", action="store_true")
+    ap.add_argument("--tower-only", action="store_true",
+                    help="只跑塔几何检查（三方对账 + 真绘制路径实宽）；不需要 run 目录/payload")
     ap.add_argument("--keep", action="store_true", help="保留证据 JSON（排查用）")
     a = ap.parse_args()
 
@@ -308,6 +503,21 @@ def main() -> int:
         if not ok:
             print((r.stdout or "")[-800:]); print((r.stderr or "")[-800:])
         return 0 if ok else 1
+
+    # —— 塔几何（2026-09-19，见 `_TOWER_TAIL` / `_tower_geom_checks` 的动机注释）——
+    #    不依赖任何 run 目录：Python 侧做引擎↔前端常量三方对账，node 侧量真绘制路径的像素。
+    rc_tower = _tower_geom_checks(js)
+    print("[dashboard-js] 塔几何绘制回归（node + DOM 桩 + 记录 strokeRect 实参）…")
+    rt = _run_node(runner, _STUB + js + _TOWER_TAIL)
+    outt = (rt.stdout or "").strip()
+    print(outt if outt else "(塔几何无 stdout)")
+    if rt.returncode != 0:
+        rc_tower = 1
+        if (rt.stderr or "").strip():
+            print("--- stderr (tower) ---")
+            print((rt.stderr or "")[-1500:])
+    if a.tower_only:
+        return rc_tower
 
     from rl import dashboard as D  # 真实后端 payload
 
@@ -368,6 +578,8 @@ def main() -> int:
         print((r.stderr or "")[-1500:])
 
     rc = 0 if r.returncode == 0 else 1
+    if rc_tower:
+        rc = 1
 
     # —— 联赛/长跑面板（run 模式）——
     if a.league_run:

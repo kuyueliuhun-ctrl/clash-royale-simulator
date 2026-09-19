@@ -1217,6 +1217,21 @@ let towerPos = {
   p0k:{x:9,y:3}, p0l:{x:3.5,y:6.5}, p0r:{x:14.5,y:6.5},
   p1k:{x:9,y:29}, p1l:{x:3.5,y:25.5}, p1r:{x:14.5,y:25.5},
 };
+/* 塔几何：半宽/半高，单位 = 格（唯一来源 = 引擎 `arena.TileGrid.towers`：
+   公主塔 3×3（half 1.5/1.5）、国王塔 4×4（half 2.0/2.0））。
+   —— 2026-09-19 用户：「引擎已经正常实现塔了，但 dashboard 回放的塔还是 1 格」：
+   此前这里写死 `half = 0.5 格`（公主塔 1 格见方、王塔 1.24 格），与引擎两套几何。
+   优先级：录像 `meta.tower_geom`（引擎侧写入）> 帧字段 `tower_geom` > 本常量（老录像）。
+   ⚠️ 本常量与 `arena.py` 有**对账测试**：`scripts/check_dashboard_js.py`（改了引擎塔
+   尺寸而不同步这里 ⇒ 该测试 FAIL）。 */
+const TOWER_GEOM = {
+  princess: {hw: 1.5, hh: 1.5},
+  king:     {hw: 2.0, hh: 2.0},
+};
+let towerGeom = null;   // "x,y"(1 位小数) -> {hw,hh}；由 computeTowerMax() 从录像几何填充
+
+/* 塔位/塔几何的查表键：与录像里 `round(x,1)` 同精度 ⇒ 位置对得上即可命中 */
+function geomKey(x, y){ return Number(x).toFixed(1) + "," + Number(y).toFixed(1); }
 
 function fmtSize(n){
   if (n >= 1048576) return (n/1048576).toFixed(1) + " MB";
@@ -1368,6 +1383,16 @@ function computeTowerMax(){
   Object.keys(towerPos).forEach(k => {
     if (pos[k] !== null) towerPos[k] = pos[k];
   });
+  // 塔几何的来源顺序：录像 `meta.tower_geom`（引擎侧写，推荐）→ 帧字段 `tower_geom`
+  // → 都没有（老录像，schema 5.x 之前）⇒ 保持 null，绘制时回落 TOWER_GEOM（= 本引擎几何）。
+  towerGeom = null;
+  const tg = (curGame.meta && curGame.meta.tower_geom) || f0.tower_geom || null;
+  if (tg && tg.length){
+    towerGeom = {};
+    tg.forEach(g => {
+      if (g && g.length >= 4) towerGeom[geomKey(g[0], g[1])] = {hw:Number(g[2]), hh:Number(g[3])};
+    });
+  }
 }
 
 function frameAt(i){
@@ -1606,28 +1631,31 @@ function drawInterpOn(canvas, from, to, p){
       : (tw.player === 0 ? (tw.x < 9 ? towerMax.l0 : towerMax.r0)
                           : (tw.x < 9 ? towerMax.l1 : towerMax.r1));
     const frac = mx > 0 ? Math.max(0, Math.min(1, tw.hp / mx)) : 0;
-    // 塔 = 方形（2026-09-10 用户口径：圆形换方形、不显示血量数字）；
+    // 塔 = 方形/矩形（2026-09-10 用户口径：圆形换方形、不显示血量数字）；
     // 方形内按血量比例填充颜色（高血绿/中黄/低血红），塔破画灰×
-    const s = (tw.king ? 0.62 : 0.50) * scale;
+    // **尺寸 = 引擎的塔几何**（2026-09-19 修：此前写死 half=0.5 格 ⇒ 公主塔画成 1 格见方，
+    // 而引擎 2026-09-09 起是 3×3/4×4 矩形）。几何优先取录像里引擎写的那份。
+    const g = (towerGeom && towerGeom[geomKey(tw.x, tw.y)]) || TOWER_GEOM[tw.king ? "king" : "princess"];
     const col = tw.player === 0 ? "#3b82f6" : "#ef4444";
-    const bx = X(tw.x) - s, by = Y(tw.y) - s, bs = s * 2;
+    const bx = X(tw.x) - g.hw * scale, by = Y(tw.y) - g.hh * scale;
+    const bw = g.hw * 2 * scale, bh = g.hh * 2 * scale;
     ctx.fillStyle = "rgba(15,23,42,0.55)";
-    ctx.fillRect(bx, by, bs, bs);
+    ctx.fillRect(bx, by, bw, bh);
     if (frac > 0){
       ctx.fillStyle = frac > 0.5 ? "#22c55e" : (frac > 0.25 ? "#eab308" : "#ef4444");
       // 血条：方形内底部按比例填充（宽度 = 血量比例）
-      ctx.fillRect(bx + 2, by + bs - 5, (bs - 4) * frac, 3);
+      ctx.fillRect(bx + 2, by + bh - 5, (bw - 4) * frac, 3);
     } else {
       ctx.strokeStyle = "#475569";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(bx, by); ctx.lineTo(bx + bs, by + bs);
-      ctx.moveTo(bx + bs, by); ctx.lineTo(bx, by + bs);
+      ctx.moveTo(bx, by); ctx.lineTo(bx + bw, by + bh);
+      ctx.moveTo(bx + bw, by); ctx.lineTo(bx, by + bh);
       ctx.stroke();
     }
     ctx.strokeStyle = col;
     ctx.lineWidth = 2;
-    ctx.strokeRect(bx, by, bs, bs);
+    ctx.strokeRect(bx, by, bw, bh);
   });
 
   // 实体（pygame 风格：部队实心圆+名字+血条 / Building 中央 HP / Projectile 空心 / 效果淡出）

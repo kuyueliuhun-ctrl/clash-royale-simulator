@@ -468,7 +468,38 @@ def test_dashboard_replays():
                   "/api/replays", "/api/replay"):
         assert token in html, f"页面缺少 {token}"
 
-    print("[PASS] 仪表盘回放：列表扫描 + 对局加载 + 单局帧 + 非法名防护 + demo + 页面元素")
+    # 塔几何（2026-09-19；用户：「引擎已经正常实现塔了，但 dashboard 回放的塔还是 1 格」）：
+    # 前端按**引擎的真实足迹**画塔 ⇒ 引擎侧必须提供几何；老录像没有该键时前端回落常量
+    # （前端常量的三方对账在 `scripts/check_dashboard_js.py --tower-only`）。
+    from rl.replay import tower_geometry
+    from arena import TileGrid as _TG
+    from core import Position as _Pos
+
+    class _B:                       # 只给 tower_geometry 要的那一个属性
+        def __init__(self, towers):
+            self.arena = type("_A", (), {"towers": towers})()
+
+    assert tower_geometry(_B([(_Pos(3.5, 25.5), 1.5, 1.5, 1),
+                              (_Pos(9.0, 29.0), 2.0, 2.0, 1)])) == \
+        [[3.5, 25.5, 1.5, 1.5, 1], [9.0, 29.0, 2.0, 2.0, 1]]          # 本仓 4 元组（矩形）
+    assert tower_geometry(_B([(_Pos(3.5, 25.5), 1.0, 1)])) == \
+        [[3.5, 25.5, 1.0, 1.0, 1]]                                     # 上游 3 元组（圆形）
+    assert tower_geometry(_B([(_Pos(0.0, 0.0), 1, 2, 3, 4)])) is None   # 形状不认识
+    assert tower_geometry(_B([])) is None and tower_geometry(None) is None
+    real = tower_geometry(_B(_TG.towers))                              # 真引擎几何
+    assert real is not None and len(real) == 6, real
+    assert [(r[2], r[3]) for r in real].count((1.5, 1.5)) == 4, real   # 公主塔 3×3
+    assert [(r[2], r[3]) for r in real].count((2.0, 2.0)) == 2, real   # 国王塔 4×4
+    assert [tuple(r[:2]) for r in real] == [(t[0].x, t[0].y) for t in _TG.towers], real
+    # 局级可选键：dashboard 的加载器必须把 meta.tower_geom 原样交给前端（不升 schema）
+    p2 = os.path.join(d, "league_3000.pkl")
+    save_league_replays([{"meta": {"pair": ["a", "b"], "tower_geom": real}, "winner": 0,
+                          "frames": [frame(0.5, towers0, towers1, [])]}], p2)
+    got = dash.load_replay_payload(d, "league_3000.pkl", 0)
+    assert got["ok"] and got["meta"]["tower_geom"] == real, got.get("meta")
+
+    print("[PASS] 仪表盘回放：列表扫描 + 对局加载 + 单局帧 + 非法名防护 + demo + 页面元素"
+          " + 塔几何（4/3 元组 + 真引擎 + meta 透传）")
 
 
 def test_deck_pool_factory():
