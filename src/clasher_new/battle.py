@@ -6,6 +6,7 @@ from card_mechanics import *
 from card_utils import Card, TimedExplosiveData, spells, buildings, projectiles, character_to_card, projectile_from_row
 from card_utils import _rarity_level_index, _value_at_level, level_scale, card_data
 from evolutions import evolution_state, derive_evolved_stats, OFFICIAL_OVERRIDES, collect_evo_mechanics
+import formation
 import math
 from itertools import combinations
 
@@ -2607,8 +2608,18 @@ class IceGolemiteSnowZone(EvoEffectZone):
             self.is_alive = False
 
 
-def get_spawn_position(card_info, position, player, offset_angle=True):
+def get_spawn_position(card_info, position, player, offset_angle=True, shape=None):
+    """出生点。`shape` 显式给出形状名；否则按 `(卡名, 出兵数)` 查 `formation.SHAPE_BY_CARD`；
+    查不到 ⇒ **逐字走原均匀圆环**（其余卡零改动，口径见 `formation` 模块 docstring）。"""
     spawn_number, spawn_delay, r = card_info.spawn_number, card_info.spawn_delay, card_info.spawn_radius
+    if shape is None:
+        shape = formation.shape_for_card((getattr(card_info, 'data', None) or {}).get('name'),
+                                         spawn_number)
+    if shape is not None:
+        _pts = formation.shape_positions(shape, position, player,
+                                         getattr(card_info, 'collision_radius', None))
+        if _pts:
+            return _pts
     if spawn_number == 1: return [Position(position.x, position.y)]
     positions = []
     angle_offset = {2: 0, 3: math.pi/2, 4: math.pi/4, 6: 0}
@@ -2962,11 +2973,17 @@ class BattleState:
             self.next_entity_id += 1
 
     def spawn_arrival_troops(self, card_name, count, position, player, host=None):
-        """M1 落地出兵（哥布林飞桶类）：弹道到达后在落点部署 count 个单位"""
+        """M1 落地出兵（哥布林飞桶类）：弹道到达后在落点部署 count 个单位
+
+        阵型（2026-09-19）：`formation.ARRIVAL_SHAPES` 登记的 `(卡名, 出兵数)` 会按
+        **是否命中存活塔**在两种形状间二选一（飞桶：塔上 / 空地）；未登记 ⇒ 原圆环。
+        """
         info = Card(card_name)
         info.spawn_number = count
         info.spawn_delay = 0
-        for p in get_spawn_position(info, position, player):
+        _shape = formation.arrival_shape((getattr(info, 'data', None) or {}).get('name'),
+                                         count, position, self)
+        for p in get_spawn_position(info, position, player, shape=_shape):
             self.delayed_spawn((self.next_entity_id, p, player, card_name, self), 0.0,
                                is_product=True, spawner=host)
 
