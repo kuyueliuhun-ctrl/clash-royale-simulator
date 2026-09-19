@@ -21,7 +21,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from rl.action_bundle import ActionBundle, SubAction, K_MAX
+from rl.action_bundle import ActionBundle, SubAction, K_MAX, INTENT_CANCEL
 from rl.observation import GRID_H, GRID_W, GRID_C, ENTITY_NAMES
 from rl.plan_space import PLAN_DIM, FOCUS_REGIONS
 from rl.belief import belief_token_dim
