@@ -446,13 +446,22 @@ class RLEnv(gym.Env):
             self._intent_fired_slot = 0
             return ev
         if 1 <= intent <= K_MAX:
-            self._intent_slot = int(intent)
-            self._intent_age = 0
-            self._intent_fired_slot = 0
-            st["set"] += 1
-            ev["intent_set"] = 1
-            return ev
-        # intent == 0 且无子动作 = 保持 / 纯 STOP：意图原样保留
+            if int(intent) != self._intent_slot:
+                # 换目标 = 新意图：年龄从 0 起
+                self._intent_slot = int(intent)
+                self._intent_age = 0
+                self._intent_fired_slot = 0
+                st["set"] += 1
+                ev["intent_set"] = 1
+                return ev
+            # ★ **同一目标的再次表态**：意图没变 ⇒ **不得重置年龄**（2026-09-19 修）。
+            # 原实现无条件 `age=0`，而掩码在承诺期**同时放行 SAVE** ⇒ 策略每重述一次
+            # 年龄就归零 ⇒ `age` 变成"距上次重述的帧数"，**永不增长** ⇒ 「同一张卡被
+            # pending 覆盖 ≥34 帧」这条 J1 语义**机械上不可能成立**，且观测里那个
+            # 「已等帧数」也不是文档说的意思。修法：同目标重述**落到与 STOP 相同的
+            # 保持/攒够结算**（下面共用尾段），只多记一个 `intent_reassert` 事件。
+            ev["intent_reassert"] = 1
+        # intent == 0（纯 STOP）**或**同目标重述 = 保持：意图原样保留，共用下面尾段
         if not self._intent_slot:
             return ev
         i = int(self._intent_slot)

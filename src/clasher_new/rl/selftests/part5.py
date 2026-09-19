@@ -1797,6 +1797,15 @@ def test_intent_save_mechanism():
     assert mh["intent_cancel"], "承诺期必须可 CANCEL（用户要的『中途改变想法』）"
     _, _, _, _, info = env.step(ActionBundle.noop())          # ★ 保持：不重抽意图
     assert info["intent"]["age"] == 1 and info["intent"]["stats"]["held"] == 1
+    # ★ 回归（2026-09-19 修）：**同一目标的再次表态不得重置年龄**。原实现无条件
+    # `age=0`，而承诺期掩码**同时放行 SAVE** ⇒ 策略每重述一次年龄就归零 ⇒
+    # 「同一张卡被 pending 覆盖 >=34 帧」这条 J1 语义**机械上不可能成立**。
+    _set_before = info["intent"]["stats"]["set"]
+    _, _, _, _, info = env.step(ActionBundle.intent_save(i + 1))
+    assert info["intent"]["age"] == 2, f"同目标重述必须续龄，实测 age={info['intent']['age']}"
+    assert info["intent"]["stats"]["set"] == _set_before, "同目标重述不算新 set"
+    assert info["intent"]["event"].get("intent_reassert") == 1
+    assert info["intent"]["stats"]["held"] == 2
     env.battle.players[0].elixir = 10.0
     mr = env.get_action_mask_for(0)
     assert not mr["intent_hold"] and mr["slots"][i], "攒够后必须恢复正常可出牌"
@@ -1806,7 +1815,8 @@ def test_intent_save_mechanism():
     _y, _x = np.unravel_index(int(np.argmax(cells)), cells.shape)
     _, _, _, _, info = env.step(ActionBundle.from_single(i + 1, int(_x), int(_y)))
     assert info["intent"]["stats"]["fired"] == 1
-    assert info["intent"]["stats"]["fired_held"] == [1], "fired 必须记录当时已保持帧数（J1 数据）"
+    assert info["intent"]["stats"]["fired_held"] == [2], \
+        "fired 必须记录当时已保持帧数（J1 数据；含同目标重述那一帧）"
     # J1 原文限定的前提：事件必须带**目标卡与费用**（否则 3 费卡被抱 34 帧会误算 PASS）
     _ev = info["intent"]["event"]
     assert _ev.get("intent_fired_card") and _ev.get("intent_fired_cost") is not None
