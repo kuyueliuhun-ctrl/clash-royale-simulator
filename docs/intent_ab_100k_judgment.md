@@ -19,6 +19,7 @@
 | 两臂共同 | `--fresh`、100k 步、`steps-per-eval 8000`、`big-eval-every 100000`、`n-eval-games 20/40`、`eval-workers 8`、`seed 0`、`device cuda`、`value-norm running`、`adv-norm scale`、`hist-seed-dir ×2`、`ppo-epochs 4 / minibatch 32 / shuffle` |
 | 偏离（已留证） | `eval-workers 8`（非文档的 12）：【R1】开跑前实测可用提交 **10.51 GB < 12 GB 门** ⇒ 按 `check_commit.py` 自身建议降档；**两臂同档** ⇒ 单变量不受影响 |
 | 跑中修正（**只影响 B**） | `_intent_age` 同目标重述不再归零（启动记录 §9.1）：A 臂走不到该代码路径 ⇒ A 逐位不变 |
+| **产物级单变量证明** | A `solo_main_0.pt`：`intent_options=False` / `slot_head=(6,128)`；B：`intent_options=True` / `slot_head=(11,128)` / `sub_emb=(128,13)` / `enc_fc=(128,2737)`（= 2560+40+**9**+64+64 ⇒ 观测标量 3→9）。**入参层与产物层两处成立**（启动记录 §11） |
 
 ## 2. J1（**主判据**，二值计数，不受 n=1 胜率噪声影响）
 
