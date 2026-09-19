@@ -38,6 +38,22 @@ ABILITY_IDX = K_MAX
 STOP_IDX = K_MAX + 1
 NUM_SLOT_OPTIONS = K_MAX + 2
 
+#: —— 攒费意图动作（intent-save；2026-09-19 用户拍板扩参）——
+#: 预注册 `docs/intent_save_prereg_2026-09-19.md`。**尾部追加**（0..STOP_IDX 的索引与
+#: 语义逐位不变 ⇒ 与仓内「尾部追加 + 尾零兼容」同一纪律）：
+#:   INTENT_SAVE_BASE + i (i=0..K_MAX-1) = SAVE(i+1)：为槽 i+1 攒费
+#:   CANCEL_IDX                          = 显式撤销 pending
+#: 仅在 `FollowerPolicy(intent_options=True)` 下进入动作空间；默认关时
+#: `num_slot_options == NUM_SLOT_OPTIONS` ⇒ 架构与旧 ckpt 逐位一致。
+INTENT_SAVE_BASE = NUM_SLOT_OPTIONS                    # = 6
+CANCEL_IDX = INTENT_SAVE_BASE + K_MAX                  # = 10
+INTENT_OPTION_COUNT = K_MAX + 1                        # = 5（SAVE×4 + CANCEL）
+NUM_SLOT_OPTIONS_INTENT = NUM_SLOT_OPTIONS + INTENT_OPTION_COUNT   # = 11
+
+#: 意图观测维度：pending 目标 one-hot（none + 4 槽）+ 已等帧数 → 6。
+#: 「我在为谁等、等了多久」必须可见，否则等待帧依然匿名、信用分配无从下手。
+INTENT_OBS_DIM = K_MAX + 2                             # = 6
+
 #: —— 7h plan 结构软偏置（软生效：只加 logit bias，不硬禁，防 BP 判断错误锁死探索）——
 PLAN_CARD_BIAS = 0.8      # plan.suggested_card 槽位 logit 加成
 PLAN_HOLD_BIAS = 2.5      # plan.hold_mask 命中槽位 logit 扣减（攒费/藏 ace 用）
@@ -61,11 +77,14 @@ def save_checkpoint(policy, path):
         "hidden_dim": int(policy.hidden_dim),
         "value_bypass": bool(getattr(policy, "value_bypass", False)),
         "value_independent": bool(getattr(policy, "value_independent", False)),
+        # 攒费意图（intent-save）：改 `slot_head`/`sub_emb`/`enc_fc` 形状 ⇒ 必须记元数据，
+        # 否则"旧 ckpt 加载进 intent 架构"会静默丢 `enc_fc`（见 load_checkpoint 告警）。
+        "intent_options": bool(getattr(policy, "intent_options", False)),
     }, path)
 
 
 def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
-                    value_bypass=None, value_independent=None):
+                    value_bypass=None, value_independent=None, intent_options=None):
     """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。
 
     value_bypass（2026-09-12，实验 B′）/ value_independent（E′）：元数据携带架构标志；
@@ -102,8 +121,10 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
         print_safe(f"[follower] ⚠️ {path} value_independent 元数据={vi_meta} 与请求 "
                    f"{bool(value_independent)} 不一致：价值编码器结构不同，续训须 --fresh")
     vi = bool(value_independent) if value_independent is not None else vi_meta
+    # intent_options：显式传入优先；否则回落到 ckpt 元数据（旧 ckpt 无该键 => False）
+    _io = bool(md.get("intent_options", False)) if intent_options is None else bool(intent_options)
     policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd,
-                            value_bypass=vb, value_independent=vi)
+                            value_bypass=vb, value_independent=vi, intent_options=_io)
     target = policy.state_dict()
     for k, v in sd_src.items():
         if k not in target:
@@ -148,13 +169,34 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
         print_safe(f"[follower] ⚠️ {path} 缺 {'/'.join(_missing_ln)}.*（旧架构）："
                    "LayerNorm 为默认新初始化，该 ckpt 不可续训（要求 --fresh），"
                    "只能当对照基线/对手池")
+    # 攒费意图（intent-save）护栏：新 option 改 `slot_head`(6→11) / `sub_emb`(8→13) /
+    # `enc_fc`(输入 +6) 形状。**`enc_fc` 没有"尾部追加"兼容分支**（标量在 fused 中段，
+    # 不是尾部）⇒ 一旦架构不一致，`enc_fc` 会被**整体重置**为随机初始化（静默！），
+    # 该 ckpt 行为与训练时完全不同 ⇒ 必须显式告警（同 enc_ln/grid_ln 纪律）。
+    _ck_intent = bool(md.get("intent_options", False))
+    _want_intent = bool(getattr(policy, "intent_options", False))
+    if _ck_intent != _want_intent:
+        from rl.diagnostics import print_safe   # 惰性 import，避免模块级依赖
+        print_safe(f"[follower] ⚠️ {path} 的 intent_options={_ck_intent}，"
+                   f"而目标网络 intent_options={_want_intent}：slot_head/sub_emb/enc_fc "
+                   "形状不一致 ⇒ enc_fc 被整体重置（**静默**）⇒ 该 ckpt 不可续训，"
+                   "要求 --fresh；只能当对照基线/对手池")
     return policy
 
 
 class FollowerPolicy(nn.Module):
     def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY,
-                 stop_logit_bias=-1.0, value_bypass=False, value_independent=False):
+                 stop_logit_bias=-1.0, value_bypass=False, value_independent=False,
+                 intent_options=False):
         """stop_logit_bias：新初始化时给 STOP logit 的偏置（负数=初始更愿意出牌）。
+
+        intent_options（2026-09-19，用户拍板扩参；预注册
+        `docs/intent_save_prereg_2026-09-19.md`）：True 时在 slot 头**尾部追加**
+        `SAVE(1..4)` + `CANCEL` 共 5 个 option（`INTENT_SAVE_BASE..CANCEL_IDX`），
+        并在观测标量尾部追加 `INTENT_OBS_DIM=6` 维（pending 目标 one-hot + 已等帧数）。
+        **架构变更**：`slot_head` 出维 6→11、`sub_emb` 入维 8→13、`enc_fc` 入维 +6
+        ⇒ 与旧 ckpt **不兼容**（须 `--fresh`）。默认 False ⇒ `num_slot_options ==
+        NUM_SLOT_OPTIONS` 且 `scalar_dim == 3` ⇒ **与旧架构逐位一致、旧 ckpt 可加载**。
 
         value_bypass（2026-09-12，实验 B′ 落地）：True 时 value 头直连 post-LN enc
         （`value_head(enc)`），**跳过 GRU**（策略头 slot/cell 仍走 GRU 隐状态）。
@@ -204,6 +246,12 @@ class FollowerPolicy(nn.Module):
 
         hand_dim = 5 * 8
         scalar_dim = 3  # elixir + time + next_card（归一化）
+        # 攒费意图（intent-save）：仅打开时追加 INTENT_OBS_DIM 维（默认关 = 3，旧架构不变）
+        self.intent_options = bool(intent_options)
+        self.num_slot_options = (NUM_SLOT_OPTIONS_INTENT if self.intent_options
+                                 else NUM_SLOT_OPTIONS)
+        self.scalar_dim = scalar_dim + (INTENT_OBS_DIM if self.intent_options else 0)
+        scalar_dim = self.scalar_dim
         self.plan_mlp = nn.Sequential(nn.Linear(plan_dim, 64), nn.ReLU())
         self.belief_mlp = nn.Sequential(nn.Linear(belief_dim, 64), nn.ReLU())
         enc_dim = cnn_out + hand_dim + scalar_dim + 64 + 64
@@ -234,7 +282,7 @@ class FollowerPolicy(nn.Module):
         self.grid_ln = nn.LayerNorm(cnn_out)
         self.gru_cell = nn.GRUCell(hidden, hidden)
 
-        self.slot_head = nn.Linear(hidden, NUM_SLOT_OPTIONS)     # 出牌槽位 + ABILITY + STOP
+        self.slot_head = nn.Linear(hidden, self.num_slot_options)     # 出牌槽位 + ABILITY + STOP
         self.cell_head = nn.Linear(hidden, GRID_H * GRID_W)
         self.value_head = nn.Linear(hidden, 1)
         # E'（2026-09-12）：独立价值编码器 + 非线性头（详见 __init__ docstring 的三条依据）。
@@ -247,7 +295,7 @@ class FollowerPolicy(nn.Module):
             _vm = max(32, hidden // 2)
             self.value_head_mlp = nn.Sequential(
                 nn.Linear(hidden, _vm), nn.ReLU(), nn.Linear(_vm, 1))
-        self.sub_emb = nn.Linear(NUM_SLOT_OPTIONS + 2, hidden)   # option onehot + (x/18, y/32)
+        self.sub_emb = nn.Linear(self.num_slot_options + 2, hidden)   # option onehot + (x/18, y/32)
 
         # 纯 RL 冷启动：初始压低 STOP logit（新随机初始化生效；load_checkpoint 会覆盖）
         if stop_logit_bias:
@@ -285,7 +333,11 @@ class FollowerPolicy(nn.Module):
         grid_feat = self.grid_ln(grid_feat)                         # v3 P0-A 备选：分量归一化
 
         hand_feat = self.entity_emb(hand).reshape(1, -1)            # (1,40)
-        scalar = torch.cat([elixir, time, next_card], dim=1)        # (1,3)
+        _scalar_parts = [elixir, time, next_card]
+        if self.intent_options:
+            # 攒费意图观测（尾部追加；默认关时不进 enc_fc ⇒ 旧架构/旧 ckpt 不变）
+            _scalar_parts.append(self._intent_obs_vec(obs))
+        scalar = torch.cat(_scalar_parts, dim=1)                    # (1,self.scalar_dim)
 
         plan_v = torch.as_tensor(plan_token, dtype=torch.float32).unsqueeze(0).to(self.device)
         belief_v = torch.as_tensor(belief_token, dtype=torch.float32).unsqueeze(0).to(self.device)
@@ -314,19 +366,31 @@ class FollowerPolicy(nn.Module):
         return self.value_head(h)
 
     def _slot_mask_tensor(self, mask):
-        """把 mask 转成 (NUM_SLOT_OPTIONS,) 的合法选项掩码。
+        """把 mask 转成 (self.num_slot_options,) 的合法选项掩码。
 
         - 已用槽位由 env 在 mask["slots"]/mask["cells"] 中体现（P1-6）；
-        - bundle 已达 K_MAX（at_cap）时只放行 STOP（P1-18）。
+        - bundle 已达 K_MAX（at_cap）时只放行 STOP（P1-18）；
+        - 攒费意图（intent-save）：`mask["intent_slots"]` / `mask["intent_cancel"]`
+          **缺省即全非法** ⇒ 默认关（或旧 mask dict）时这 5 个 option 概率恒 0
+          ⇒ 与旧行为**逐位相同**（关键：不能沿用 `torch.ones` 的默认"合法"）。
         """
-        sm = torch.ones(NUM_SLOT_OPTIONS, device=self.device)
+        sm = torch.zeros(self.num_slot_options, device=self.device)
         sm[:K_MAX] = torch.as_tensor(mask["slots"], dtype=torch.float32, device=self.device)
         sm[ABILITY_IDX] = 1.0 if mask.get("ability_legal") else 0.0
         sm[STOP_IDX] = 1.0
+        if self.intent_options:
+            _is = mask.get("intent_slots")
+            if _is is not None:
+                sm[INTENT_SAVE_BASE:INTENT_SAVE_BASE + K_MAX] = torch.as_tensor(
+                    _is, dtype=torch.float32, device=self.device)
+            if mask.get("intent_cancel"):
+                sm[CANCEL_IDX] = 1.0
         if mask.get("at_cap"):
             sm[:K_MAX] = 0.0
             sm[ABILITY_IDX] = 0.0
             sm[STOP_IDX] = 1.0
+            if self.intent_options:
+                sm[INTENT_SAVE_BASE:] = 0.0
         return sm
 
     def _plan_biases(self, plan_token):
@@ -336,7 +400,7 @@ class FollowerPolicy(nn.Module):
         focus_region 中心附近落点 +bias。rollout 与 PPO 重放共用本函数，保证
         采样与 logprob 同分布（不改 env action_mask，不污染 BC/mask 契约）。
         """
-        slot_bias = torch.zeros(NUM_SLOT_OPTIONS, device=self.device)
+        slot_bias = torch.zeros(self.num_slot_options, device=self.device)
         cell_bias = torch.zeros((GRID_H, GRID_W), device=self.device)
         if not getattr(self, "plan_biases_enabled", True):
             # 7h2：player1（FollowerOpponent）不消费 player0 视角 plan 的软偏置
@@ -385,11 +449,47 @@ class FollowerPolicy(nn.Module):
                 "ability_legal": False}
 
     def _sub_vec(self, option_idx, x=0.0, y=0.0):
-        sub = torch.zeros(1, NUM_SLOT_OPTIONS + 2, device=self.device)
+        sub = torch.zeros(1, self.num_slot_options + 2, device=self.device)
         sub[0, option_idx] = 1.0
-        sub[0, NUM_SLOT_OPTIONS] = x / GRID_W
-        sub[0, NUM_SLOT_OPTIONS + 1] = y / GRID_H
+        sub[0, self.num_slot_options] = x / GRID_W
+        sub[0, self.num_slot_options + 1] = y / GRID_H
         return sub
+
+    def _intent_obs_vec(self, obs):
+        """攒费意图观测（INTENT_OBS_DIM=6 维）：pending 目标 one-hot(none+4 槽) + 已等帧数。
+
+        - `obs["intent_slot"]`：当前 pending 的目标槽（1..K_MAX），0 = 无意图；
+        - `obs["intent_age"]`：该意图已保持的决策帧数（本帧尚未计）。
+        **默认关时返回全零**（且 `scalar_dim` 不含该块 ⇒ 不参与 `enc_fc`）。
+        """
+        v = torch.zeros(1, INTENT_OBS_DIM, device=self.device)
+        if not self.intent_options:
+            return v
+        try:
+            slot = int(np.asarray(obs.get("intent_slot", 0)).reshape(-1)[0])
+        except (TypeError, ValueError, IndexError):
+            slot = 0
+        try:
+            age = float(np.asarray(obs.get("intent_age", 0.0)).reshape(-1)[0])
+        except (TypeError, ValueError, IndexError):
+            age = 0.0
+        v[0, slot - 1 if 1 <= slot <= K_MAX else K_MAX] = 1.0   # index K_MAX = "无意图"档
+        v[0, K_MAX + 1] = min(max(age, 0.0), 64.0) / 64.0
+        return v
+
+    @staticmethod
+    def terminal_option(bundle):
+        """bundle 的**终止 option**：普通 STOP，或意图动作 SAVE(i)/CANCEL。
+
+        rollout（`act` / `act_parallel`）与 PPO 重放（`evaluate` / 批量重放）**必须
+        用同一个函数**，否则终止步的 logprob 会与采样分布不一致。
+        """
+        it = int(getattr(bundle, "intent", 0) or 0)
+        if it == 0:
+            return STOP_IDX
+        if it <= K_MAX:
+            return INTENT_SAVE_BASE + it - 1
+        return CANCEL_IDX
 
     def _sub_update(self, h, option_idx, x=0.0, y=0.0):
         return self.gru_cell(self.sub_emb(self._sub_vec(option_idx, x, y)), h)
@@ -415,7 +515,11 @@ class FollowerPolicy(nn.Module):
         grid_feat = self.grid_ln(grid_feat)                         # v3 P0-A 备选：分量归一化
 
         hand_feat = self.entity_emb(hand).reshape(N, -1)            # (N,40)
-        scalar = torch.cat([elixir, time_, next_card], dim=1)       # (N,3)
+        _scalar_parts = [elixir, time_, next_card]
+        if self.intent_options:
+            _scalar_parts.append(torch.cat([self._intent_obs_vec(o) for o in obs_list],
+                                           dim=0))                  # (N,INTENT_OBS_DIM)
+        scalar = torch.cat(_scalar_parts, dim=1)                    # (N,self.scalar_dim)
 
         plan_v = torch.stack([torch.as_tensor(p, dtype=torch.float32) for p in plan_list]).to(self.device)
         belief_v = torch.stack([torch.as_tensor(b, dtype=torch.float32) for b in belief_list]).to(self.device)
@@ -487,6 +591,13 @@ class FollowerPolicy(nn.Module):
                 logprob += float(slot_dist.log_prob(torch.tensor([option], device=self.device)).item())
 
                 if option == STOP_IDX:
+                    break
+                if option >= INTENT_SAVE_BASE:
+                    # 攒费意图动作（intent-save）：只设意图、**不落子**，且与 STOP 同形地
+                    # **终止本 bundle**（不推 `_sub_update`，与 evaluate 的终止步一致）。
+                    # 默认关时 `num_slot_options == INTENT_SAVE_BASE` ⇒ 本分支不可达。
+                    bundle.intent = (INTENT_CANCEL if option == CANCEL_IDX
+                                     else option - INTENT_SAVE_BASE + 1)
                     break
                 if option == ABILITY_IDX:
                     bundle.add_ability()
@@ -597,7 +708,16 @@ class FollowerPolicy(nn.Module):
                 lp_list = lp_all.tolist()                  # 一次批量同步
                 for i in range(N):
                     logprobs[i] += lp_list[i]
-                active = [i for i in range(N) if opts_list[i] != STOP_IDX]
+                active = []
+                for i in range(N):
+                    _o = opts_list[i]
+                    if _o >= INTENT_SAVE_BASE:
+                        # 攒费意图动作：只设意图、不落子、**结束本 bundle**
+                        # （默认关时 `num_slot_options == INTENT_SAVE_BASE` ⇒ 不可达）
+                        bundles[i].intent = (INTENT_CANCEL if _o == CANCEL_IDX
+                                             else _o - INTENT_SAVE_BASE + 1)
+                    elif _o != STOP_IDX:
+                        active.append(i)
                 if not active:
                     break
                 # 出牌（deploy）子集：批量 cell head + 批量采样
@@ -635,14 +755,14 @@ class FollowerPolicy(nn.Module):
                         bundles[i].add_ability()
                         partials[i].add_ability()
                 # 批量 GRU：一个 GRUCell 调用更新所有 active 行
-                sub_in = torch.zeros(len(active), NUM_SLOT_OPTIONS + 2, device=self.device)
+                sub_in = torch.zeros(len(active), self.num_slot_options + 2, device=self.device)
                 for m, i in enumerate(active):
                     opt = opts_list[i]
                     sub_in[m, opt] = 1.0
                     if opt < K_MAX:
                         x, y = dep_xy[i]
-                        sub_in[m, NUM_SLOT_OPTIONS] = x / GRID_W
-                        sub_in[m, NUM_SLOT_OPTIONS + 1] = y / GRID_H
+                        sub_in[m, self.num_slot_options] = x / GRID_W
+                        sub_in[m, self.num_slot_options + 1] = y / GRID_H
                 h[active] = self.gru_cell(self.sub_emb(sub_in), h[active])
             return (bundles, logprobs, values,
                     [h[i:i + 1].detach() for i in range(N)], masks_list)
@@ -691,7 +811,8 @@ class FollowerPolicy(nn.Module):
                     sa = bundle_list[i].sub_actions[j]
                     opts.append(ABILITY_IDX if sa.kind == "ability" else sa.slot - 1)
                 else:
-                    opts.append(STOP_IDX)
+                    # 终止步：普通 STOP，或攒费意图 SAVE(i)/CANCEL（与 rollout 同源）
+                    opts.append(self.terminal_option(bundle_list[i]))
             lp_contrib = slot_dist.log_prob(
                 torch.tensor(opts, device=self.device))     # 一次批量 op
             for k, i in enumerate(idx):
@@ -726,14 +847,14 @@ class FollowerPolicy(nn.Module):
             # GRU 更新（批量：一个 GRUCell 处理所有仍活跃的 transition）
             grp = [i for i in idx if lengths[i] > j]
             if grp:
-                sub_in = torch.zeros(len(grp), NUM_SLOT_OPTIONS + 2, device=self.device)
+                sub_in = torch.zeros(len(grp), self.num_slot_options + 2, device=self.device)
                 for m, i in enumerate(grp):
                     sa = bundle_list[i].sub_actions[j]
                     opt = ABILITY_IDX if sa.kind == "ability" else sa.slot - 1
                     sub_in[m, opt] = 1.0
                     if sa.kind == "deploy":
-                        sub_in[m, NUM_SLOT_OPTIONS] = sa.x / GRID_W
-                        sub_in[m, NUM_SLOT_OPTIONS + 1] = sa.y / GRID_H
+                        sub_in[m, self.num_slot_options] = sa.x / GRID_W
+                        sub_in[m, self.num_slot_options + 1] = sa.y / GRID_H
                 hg = torch.cat([h_rows[i] for i in grp], dim=0)
                 h_new = self.gru_cell(self.sub_emb(sub_in), hg)
                 for m, i in enumerate(grp):
@@ -802,5 +923,7 @@ class FollowerPolicy(nn.Module):
         slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
         slot_dist = torch.distributions.Categorical(logits=F.log_softmax(slot_logits, dim=-1))
         entropy = entropy + slot_dist.entropy()
-        logprob = logprob + slot_dist.log_prob(torch.tensor([STOP_IDX], device=self.device))
+        # 终止 option：普通 STOP，或攒费意图 SAVE(i)/CANCEL（与 `act()` 同源）
+        _term = self.terminal_option(bundle)
+        logprob = logprob + slot_dist.log_prob(torch.tensor([_term], device=self.device))
         return logprob, value, h, entropy

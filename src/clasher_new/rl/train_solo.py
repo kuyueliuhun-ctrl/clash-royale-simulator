@@ -97,7 +97,8 @@ def _make_rand_anchor(cfg, belief_dim, device=None):
     pol = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                          belief_dim=belief_dim,
                          value_bypass=bool(getattr(cfg, "value_bypass", False)),
-                         value_independent=bool(getattr(cfg, "value_independent", False)))
+                         value_independent=bool(getattr(cfg, "value_independent", False)),
+                         intent_options=cfg.intent_save)
     torch.set_rng_state(_rng_save)
     if device is not None:
         pol.to_device(device)
@@ -157,7 +158,7 @@ _PFSP_GATE_PENALTY = 0.2
 def solo_env(cfg, seed, deck0=None, deck1=None):
     """双方固定卡组的镜像 RLEnv（deck_set=list:/default 时同副镜像）。"""
     return RLEnv(opponent=None, seed=seed, reward_weights=reward_to_env(cfg),
-                 card_level=cfg.card_level,
+                 card_level=cfg.card_level, intent_save=bool(cfg.intent_save),
                  deck0=deck0 or DEFAULT_SOLO_DECK, deck1=deck1 or DEFAULT_SOLO_DECK)
 
 
@@ -833,17 +834,20 @@ def _eval_worker_main(worker_id, main_sd, opp_sd, games, env_kwargs,
         env = RLEnv(opponent=None, seed=worker_id + 777,
                     reward_weights=dict(env_kwargs.get("reward_weights") or {}),
                     card_level=env_kwargs.get("card_level"),
+                    intent_save=bool(env_kwargs.get("intent_save", False)),
                     deck0=list(env_kwargs["deck0"]), deck1=list(env_kwargs["deck1"]))
         belief_dim = len(BeliefInference(opp_deck=env.deck1, n_particles=n_particles,
                                          seed=0).encode(None, None))
         main = FollowerPolicy(hidden=env_kwargs["hidden_dim"], plan_dim=PLAN_DIM,
                               belief_dim=belief_dim,
                               value_bypass=bool(env_kwargs.get("value_bypass", False)),
-                              value_independent=bool(env_kwargs.get("value_independent", False)))
+                              value_independent=bool(env_kwargs.get("value_independent", False)),
+                              intent_options=bool(env_kwargs.get("intent_save", False)))
         opp = FollowerPolicy(hidden=env_kwargs["hidden_dim"], plan_dim=PLAN_DIM,
                              belief_dim=belief_dim,
                              value_bypass=bool(env_kwargs.get("value_bypass", False)),
-                             value_independent=bool(env_kwargs.get("value_independent", False)))
+                             value_independent=bool(env_kwargs.get("value_independent", False)),
+                             intent_options=bool(env_kwargs.get("intent_save", False)))
         main.load_state_dict(main_sd)
         opp.load_state_dict(opp_sd)
         main.to_device("cpu")
@@ -971,7 +975,8 @@ def eval_solo_parallel(env, main, opp, n_games, max_steps, seed, cfg,
                   "hidden_dim": int(cfg.hidden_dim), "n_total": n_games,
                   "eval_step": step, "frozen_step": frozen_step,
                   "value_bypass": bool(getattr(cfg, "value_bypass", False)),
-                  "value_independent": bool(getattr(cfg, "value_independent", False))}
+                  "value_independent": bool(getattr(cfg, "value_independent", False)),
+                  "intent_save": bool(cfg.intent_save)}
     procs = []
     # worker 是纯 CPU 推理：启动前屏蔽 CUDA 省掉子进程的 CUDA 初始化。父进程不受
     # 影响（torch 已初始化），环境变量在全部 worker 结束后才恢复。
@@ -1093,17 +1098,20 @@ def run_solo(cfg, resume=False, record_replays=True):
         main = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
                                plan_dim=PLAN_DIM, belief_dim=belief_dim,
                                value_bypass=cfg.value_bypass,
-                               value_independent=cfg.value_independent)
+                               value_independent=cfg.value_independent,
+                               intent_options=cfg.intent_save)
     else:
         main = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                               belief_dim=belief_dim, value_bypass=cfg.value_bypass,
-                              value_independent=cfg.value_independent)
+                              value_independent=cfg.value_independent,
+                              intent_options=cfg.intent_save)
     main.to_device(device)
     if rs and rs.get("solo_ckpt") and os.path.exists(rs["solo_ckpt"]):
         # resume：断点权重为准（覆盖 main_init）
         main = load_checkpoint(rs["solo_ckpt"], hidden_dim=cfg.hidden_dim,
                                value_bypass=cfg.value_bypass,
-                               value_independent=cfg.value_independent)
+                               value_independent=cfg.value_independent,
+                               intent_options=cfg.intent_save)
         main.to_device(device)
         print(f"[solo] resume 从 step {start_step} 续训（继续到 {cfg.total_steps}）", flush=True)
     # B'/E'（2026-09-12）：value 架构一致性检查（load_checkpoint 只按元数据/显式值
@@ -1113,6 +1121,12 @@ def run_solo(cfg, resume=False, record_replays=True):
             _print_safe(f"[solo] ⚠️ main.{_flag}={bool(getattr(main, _flag, False))} "
                         f"与 cfg.{_flag}={bool(getattr(cfg, _flag, False))} 不一致："
                         f"value 通路语义错位，必须 --fresh 重训")
+    if bool(getattr(main, "intent_options", False)) != bool(cfg.intent_save):
+        _print_safe(f"[solo] ⚠️ main.intent_options="
+                    f"{bool(getattr(main, 'intent_options', False))} 与 "
+                    f"cfg.intent_save={bool(cfg.intent_save)} 不一致："
+                    "slot_head/sub_emb/enc_fc 形状错位（enc_fc 会被整体重置）"
+                    "⇒ 必须 --fresh 重训")
     # v3 P0-C 启动前检查：静态可判定的饱和病因（enc_ln 缺失 / 被 Identity 替换）。
     # 真实 GRU 活力需要 rollout 帧，只能在评估点测（check_vitality + vitality_warns 落盘）。
     for _w in _diag.check_policy_architecture(main):
@@ -1134,7 +1148,8 @@ def run_solo(cfg, resume=False, record_replays=True):
                 f"续训请重传同样的 --ppo-* 参数（不同预算混跑 = 两个实验拼在一起）")
     opp = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM, belief_dim=belief_dim,
                          value_bypass=cfg.value_bypass,
-                         value_independent=cfg.value_independent)
+                         value_independent=cfg.value_independent,
+                         intent_options=cfg.intent_save)
     opp.to_device(device)
     _sync_frozen_copy(main, opp)   # 开局副本 = main（resume 后即断点权重）
     frozen_step = start_step       # 冻结副本当前所在训练步（录像 meta.steps 用）
@@ -1187,11 +1202,13 @@ def run_solo(cfg, resume=False, record_replays=True):
     # 对照结果写 solo_state.json 的 controls 数组，dashboard/分析按对手分别画线。
     baseline0 = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                                belief_dim=belief_dim, value_bypass=cfg.value_bypass,
-                               value_independent=cfg.value_independent)
+                               value_independent=cfg.value_independent,
+                               intent_options=cfg.intent_save)
     baseline0.to_device(device)
     baseline_prev = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                                    belief_dim=belief_dim, value_bypass=cfg.value_bypass,
-                                   value_independent=cfg.value_independent)
+                                   value_independent=cfg.value_independent,
+                                   intent_options=cfg.intent_save)
     baseline_prev.to_device(device)
     # E1（2026-09-12）：固定随机锚点（绝对强度参照）。权重只由 RAND_ANCHOR_SEED 决定，
     # 与 E2 训练侧锚点（_OpponentPool.rand_anchor_side）同源逐位一致；helper 内部

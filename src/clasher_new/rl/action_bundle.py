@@ -27,6 +27,20 @@ from card_utils import Card
 #: 单个决策步最多同时打出的卡数（规划建议 K_max = 4）
 K_MAX = 4
 
+#: —— 攒费意图动作（intent-save，2026-09-19 用户拍板扩参）——
+#: 预注册：`docs/intent_save_prereg_2026-09-19.md`。语义：当某张手牌**圣水不够**时，
+#: 策略不再被迫二选一（干等 / 换低费牌），而是可以**指明为它攒费**；该意图**跨帧保持**
+#: （保持本身不需要逐帧重抽），策略**随时可以用别的动作打断**。
+#:
+#: `ActionBundle.intent` 编码：
+#:   0        = 无（默认；也是"保持"在 env 侧的表示）
+#:   1..K_MAX = SAVE(slot i)：为槽 i 攒费（设置/替换 pending）
+#:   K_MAX+1  = CANCEL：显式撤销 pending
+#: 默认关（`FollowerPolicy(intent_options=False)`）时本字段恒 0，
+#: 动作空间与掩码对旧行为**逐位相同**（【R2】/【R13】）。
+INTENT_NONE = 0
+INTENT_CANCEL = K_MAX + 1
+
 
 def sub_position(player_id: int, x: int, y: int) -> Position:
     """玩家本地网格坐标 (x, y) → 世界坐标（唯一换算入口）。
@@ -75,10 +89,17 @@ class SubAction:
 @dataclass
 class ActionBundle:
     sub_actions: List[SubAction] = field(default_factory=list)
+    #: 攒费意图动作（见模块头的 `INTENT_NONE` / `INTENT_CANCEL`）。0 = 无。
+    intent: int = INTENT_NONE
 
     def __post_init__(self):
         if len(self.sub_actions) > K_MAX:
             raise ValueError(f"ActionBundle 子动作数超过 K_MAX={K_MAX}")
+        if not (INTENT_NONE <= self.intent <= INTENT_CANCEL):
+            raise ValueError(f"ActionBundle.intent 越界：{self.intent}")
+        if self.intent != INTENT_NONE and self.sub_actions:
+            # 语义互斥：意图动作只设意图、不落子（env 侧据此不推进"已花费"记账）。
+            raise ValueError("ActionBundle 不能同时携带 intent 与 sub_actions")
 
     def add(self, slot: int, x: int, y: int) -> "ActionBundle":
         self.sub_actions.append(SubAction(kind="deploy", slot=slot, x=x, y=y))
@@ -105,6 +126,16 @@ class ActionBundle:
     @classmethod
     def noop(cls) -> "ActionBundle":
         return cls(sub_actions=[])
+
+    @classmethod
+    def intent_save(cls, slot: int) -> "ActionBundle":
+        """为槽 `slot`（1..K_MAX）攒费（设置/替换 pending）。"""
+        return cls(sub_actions=[], intent=int(slot))
+
+    @classmethod
+    def intent_cancel(cls) -> "ActionBundle":
+        """显式撤销 pending。"""
+        return cls(sub_actions=[], intent=INTENT_CANCEL)
 
     def contains_card(self, player, card_name: str) -> bool:
         return any(sa.card_name(player) == card_name for sa in self.sub_actions)

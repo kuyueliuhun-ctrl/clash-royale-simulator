@@ -1731,3 +1731,94 @@ def test_mask_partial_bundle_invariants():
           f"{frames} 帧采样 bundle 全部通过 validate_bundle"
           + (f"；⚠️ 另有 {cell_gap} 帧因『部署位置非法』被拒（掩码-格子行缺口，另案）"
              if cell_gap else ""))
+
+
+def test_intent_save_mechanism():
+    """攒费意图动作（intent-save，2026-09-19 用户拍板扩参）：状态机 + 默认关逐位不变 + 跨局。
+
+    预注册 `docs/intent_save_prereg_2026-09-19.md`。覆盖：
+      ① **默认关**：观测 dict 无意图键、`step` 不触碰意图状态、`info` 无 `"intent"`；
+      ② **单变量**：**无 pending** 时开/关两臂的 `slots`/`cells`/`ability_legal`/`at_cap`/
+         `used_slots` **逐位相同** ⇒ 打开开关只在"有意图"时才改变掩码；
+      ③ **架构**：关 = 6 option / scalar 3；开 = 11 option（**尾部追加**）/ scalar 9，
+         参数增量 == slot_head 行 + sub_emb 列 + enc_fc 列（逐项复算，非手抄）；
+      ④ **状态机**：SAVE ⇒ 承诺期（slots 全 False、ability False、CANCEL 可用）；
+         纯 STOP **保持不需要重抽**（age 递增）；攒够 ⇒ ready + slots 恢复；真打出 ⇒ fired
+         且记录**当时已保持帧数**（判据 J1 的数据源）；CANCEL ⇒ 清空；
+      ⑤ **【R8】跨局**：`reset()` 清当前 pending，但**累计计数保留**（run 级取证量）。
+    """
+    from rl.env_wrapper import RLEnv
+    from rl.action_bundle import ActionBundle, K_MAX
+    from rl.action_mask import _card_cost
+    from rl.follower import FollowerPolicy
+
+    e0 = RLEnv(opponent=None, seed=1, intent_save=False); e0.reset()
+    e1 = RLEnv(opponent=None, seed=1, intent_save=True); e1.reset()
+    # ① 默认关
+    o0, o1 = e0.observe(0), e1.observe(0)
+    assert "intent_slot" not in o0 and "intent_age" not in o0, "默认关不得改观测 dict"
+    assert "intent_slot" in o1 and "intent_age" in o1
+    # ② 单变量（无 pending：这里 e1 也还没下意图；★ 两臂必须在同一状态下比掩码）
+    e0.battle.players[0].elixir = 1.0
+    e1.battle.players[0].elixir = 1.0
+    m0, m1 = e0.get_action_mask_for(0), e1.get_action_mask_for(0)
+    for k in ("slots", "cells", "ability_legal", "at_cap", "used_slots"):
+        assert np.array_equal(np.asarray(m0[k]), np.asarray(m1[k])),             f"无 pending 时掩码 key {k} 必须逐位相同（单变量）"
+    assert set(m1) - set(m0) == {"intent_slots", "intent_cancel", "intent_hold"}
+    # ①默认关的 step 检查放在②之后：两侧必须在**同一状态**下比掩码
+    e0.battle.players[0].elixir = 1.0
+    _, _, _, _, info0 = e0.step(ActionBundle.noop())
+    assert "intent" not in info0, "默认关不得出现 intent 取证字段"
+    assert e0.intent_stats["set"] == 0 and e0._intent_slot == 0
+    # ③ 架构 + 参数增量（逐项复算）
+    h = 128
+    p_off = FollowerPolicy(hidden=h, plan_dim=58, belief_dim=563, intent_options=False)
+    p_on = FollowerPolicy(hidden=h, plan_dim=58, belief_dim=563, intent_options=True)
+    n_off = sum(x.numel() for x in p_off.parameters())
+    n_on = sum(x.numel() for x in p_on.parameters())
+    assert p_off.num_slot_options == 6 and p_on.num_slot_options == 11
+    assert p_off.scalar_dim == 3 and p_on.scalar_dim == 9
+    assert tuple(p_on.slot_head.weight.shape) == (11, h)
+    assert tuple(p_on.sub_emb.weight.shape) == (h, 13)
+    _expect = (5 * h + 5) + (5 * h) + (6 * h)      # slot_head 行 + sub_emb 列 + enc_fc 列
+    assert n_on - n_off == _expect, f"参数增量 {n_on - n_off} != 复算 {_expect}"
+    # ④ 状态机
+    p = e1.battle.players[0]
+    _un = [i for i in range(K_MAX) if (_card_cost(p, p.cycle[i]) or 0) > p.elixir]
+    assert _un, "圣水 1.0 时应至少有一张买不起的牌"
+    i = _un[0]
+    assert m1["intent_slots"][i] and not m1["slots"][i], "买不起的槽应可下攒费意图"
+    env = e1
+    _, _, _, _, info = env.step(ActionBundle.intent_save(i + 1))
+    assert info["intent"]["slot"] == i + 1 and info["intent"]["stats"]["set"] == 1
+    mh = env.get_action_mask_for(0)
+    assert mh["intent_hold"] and not mh["slots"].any() and not mh["ability_legal"], \
+        "承诺期必须压制一切花费（否则 k 帧合取 p^k 采样不到）"
+    assert mh["intent_cancel"], "承诺期必须可 CANCEL（用户要的『中途改变想法』）"
+    _, _, _, _, info = env.step(ActionBundle.noop())          # ★ 保持：不重抽意图
+    assert info["intent"]["age"] == 1 and info["intent"]["stats"]["held"] == 1
+    env.battle.players[0].elixir = 10.0
+    mr = env.get_action_mask_for(0)
+    assert not mr["intent_hold"] and mr["slots"][i], "攒够后必须恢复正常可出牌"
+    _, _, _, _, info = env.step(ActionBundle.noop())
+    assert info["intent"]["stats"]["ready"] == 1 and info["intent"]["slot"] == i + 1
+    cells = env.get_action_mask_for(0)["cells"][i]
+    _y, _x = np.unravel_index(int(np.argmax(cells)), cells.shape)
+    _, _, _, _, info = env.step(ActionBundle.from_single(i + 1, int(_x), int(_y)))
+    assert info["intent"]["stats"]["fired"] == 1
+    assert info["intent"]["stats"]["fired_held"] == [1], "fired 必须记录当时已保持帧数（J1 数据）"
+    # ⑤ 跨局（【R8】）：pending 清空、累计保留
+    _set_before = env.intent_stats["set"]
+    env.reset()
+    assert env._intent_slot == 0 and env._intent_age == 0
+    assert env.intent_stats["set"] == _set_before, "累计计数必须跨局保留（run 级取证量）"
+    # CANCEL 路径
+    ps = env.battle.players[0]; ps.elixir = 1.0
+    _j = [k for k in range(K_MAX) if (_card_cost(ps, ps.cycle[k]) or 0) > ps.elixir][0]
+    env.step(ActionBundle.intent_save(_j + 1))
+    assert env._intent_slot == _j + 1
+    env.step(ActionBundle.intent_cancel())
+    assert env._intent_slot == 0 and env.intent_stats["cancelled"] == 1
+    print(f"    [ok] intent-save：默认关逐位不变；无 pending 时掩码逐位相同；"
+          f"开=11 option/scalar 9（参数 +{_expect}，逐项复算）；"
+          f"SAVE→承诺期压制花费→保持不重抽→ready→fired(held=1)→CANCEL；跨局 pending 清空/计数保留")

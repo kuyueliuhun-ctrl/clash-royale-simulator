@@ -305,6 +305,11 @@ class TrainConfig:
     # + bypass（只换接线）无效 ⇒ 给价值通路自己的容量与梯度。
     # ⚠️ 架构变更：须 `--fresh`（ckpt 元数据带该标志，不一致时告警）。
     value_independent: bool = False
+    # 攒费意图动作（intent-save，2026-09-19 用户拍板扩参）：开启后策略可对一张
+    # **买不起**的手牌下"为它攒费"意图（slot 头尾部追加 SAVE×4 + CANCEL，观测 +6）。
+    # **默认关** = 旧架构/旧行为逐位不变（关时不改 slot_head/sub_emb/enc_fc 形状）。
+    # 预注册 docs/intent_save_prereg_2026-09-19.md（判据 J1 跑前写死）。
+    intent_save: bool = False
 
     # ---- 路径（全部落在 out_dir/<name>/ 下）----
     def folder(self):

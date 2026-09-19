@@ -129,11 +129,13 @@ def build_flow_models(cfg, device, belief_dim):
         if mid == "main" and cfg.main_init:
             pol = load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
                                   value_bypass=cfg.value_bypass,
-                                  value_independent=cfg.value_independent)
+                                  value_independent=cfg.value_independent,
+                                  intent_options=bool(cfg.intent_save))
         else:
             pol = FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                                  belief_dim=belief_dim, value_bypass=cfg.value_bypass,
-                                 value_independent=cfg.value_independent)
+                                 value_independent=cfg.value_independent,
+                                 intent_options=bool(cfg.intent_save))
         pol.to_device(device)
         models[mid] = pol
         trainers[mid] = PPOTrainer(pol, lr=cfg.lr, gamma=cfg.gamma,

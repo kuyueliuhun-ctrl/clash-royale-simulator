@@ -447,7 +447,8 @@ def _policy_spec(pol):
             "hidden": int(pol.hidden_dim), "plan_dim": int(pol.plan_dim),
             "belief_dim": int(pol.belief_dim),
             "value_bypass": bool(getattr(pol, "value_bypass", False)),
-            "value_independent": bool(getattr(pol, "value_independent", False))}
+            "value_independent": bool(getattr(pol, "value_independent", False)),
+            "intent_options": bool(getattr(pol, "intent_options", False))}
 
 
 def _spec_to_policy(spec):
@@ -460,7 +461,8 @@ def _spec_to_policy(spec):
     pol = FollowerPolicy(hidden=spec["hidden"], plan_dim=spec["plan_dim"],
                          belief_dim=spec["belief_dim"],
                          value_bypass=spec["value_bypass"],
-                         value_independent=spec["value_independent"])
+                         value_independent=spec["value_independent"],
+                         intent_options=bool(spec.get("intent_options", False)))
     pol.load_state_dict(spec["state"])
     pol.eval()
     for p in pol.parameters():
@@ -724,7 +726,7 @@ def build_five_agents(league, main, seed, decks_path=None):
 
 def _make_env(cfg, seed):
     return RLEnv(opponent=None, seed=seed, reward_weights=reward_to_env(cfg),
-                 card_level=cfg.card_level)
+                 card_level=cfg.card_level, intent_save=bool(cfg.intent_save))
 
 
 def _report_trainer_wiring(cfg, ppo):
@@ -977,11 +979,13 @@ def _build_league(cfg, device, resume):
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=cfg.seed)
     main = (load_checkpoint(cfg.main_init, hidden_dim=cfg.hidden_dim,
                             value_bypass=cfg.value_bypass,
-                            value_independent=cfg.value_independent) if cfg.main_init
+                            value_independent=cfg.value_independent,
+                            intent_options=bool(cfg.intent_save)) if cfg.main_init
             else FollowerPolicy(hidden=cfg.hidden_dim, plan_dim=PLAN_DIM,
                                 belief_dim=len(belief.encode(None, None)),
                                 value_bypass=cfg.value_bypass,
-                                value_independent=cfg.value_independent))
+                                value_independent=cfg.value_independent,
+                                intent_options=bool(cfg.intent_save)))
     main.to_device(device)
     league = League(seed=cfg.seed)
     start_step, ppo, main = _restore(league, cfg, main, device, resume)
@@ -1581,6 +1585,10 @@ def main():
                          "零塔损即判平截断）。默认关的理由见 TrainConfig.train_stall_stop 注释")
     ap.add_argument("--no-train-stall-stop", action="store_true",
                     help="solo：关闭训练环僵局早停（**自 2026-09-17 起这是默认值**，本开关保留兼容）")
+    ap.add_argument("--intent-save", action="store_true",
+                    help="solo：开启攒费意图动作（intent-save，扩参）。开启后 slot 头尾部追加"
+                         "SAVE(1..4)+CANCEL，观测 +6；架构变更 ⇒ 必须 --fresh。\n"
+                         "预注册 docs/intent_save_prereg_2026-09-19.md（判据 J1 跑前写死）")
     ap.add_argument("--adv-inert-probe", action="store_true",
                     help="critic 惰性检验【纯测量】：每个诊断更新额外算一份 V≡常数 的优势，"
                          "报告 corr/resid_frac/grad_cos（不改训练行为）。"
@@ -1658,6 +1666,8 @@ def main():
         overrides["train_stall_stop"] = True
     if args.no_big_eval_at_start:
         overrides["eval_big_at_start"] = False
+    if args.intent_save:
+        overrides["intent_save"] = True
     if args.adv_inert_probe:
         overrides["adv_inert_probe"] = True
     if args.critic_baseline is not None:

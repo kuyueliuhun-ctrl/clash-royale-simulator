@@ -162,6 +162,7 @@ def main():
     test_adv_inert_probe_and_const_baseline()
     test_precise_threat()
     test_mask_partial_bundle_invariants()
+    test_intent_save_mechanism()
     # T1-3/T1-5：以上 100 行**逐字未改**（顺序即契约）；这里只汇总计数/耗时/跳过清单。
     _report_tests()
     print("\nALL SELFTESTS PASSED")

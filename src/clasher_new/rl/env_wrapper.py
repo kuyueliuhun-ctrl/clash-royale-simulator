@@ -26,9 +26,9 @@ import numpy as np
 import battle
 import player
 from card_utils import Card
-from rl.action_bundle import ActionBundle, SubAction, K_MAX, sub_position
+from rl.action_bundle import ActionBundle, SubAction, K_MAX, sub_position, INTENT_CANCEL
 from rl.action_mask import (validate_bundle, slot_mask, legal_cells, ability_legal,
-                            ability_mana, solo_commit_blocked)
+                            ability_mana, solo_commit_blocked, _card_cost)
 from rl.observation import observe, hidden_labels, GRID_H, GRID_W, GRID_C, ENTITY_NAMES
 from rl.engagement import EngagementTradeMonitor   # S2：局面圣水交换（**默认关**）
 
@@ -91,6 +91,7 @@ class RLEnv(gym.Env):
         seed: int = 0,
         reward_weights: Optional[dict] = None,
         card_level: Optional[int] = None,
+        intent_save: bool = False,
     ):
         super().__init__()
         if speed <= 0:
@@ -112,6 +113,18 @@ class RLEnv(gym.Env):
         self.record_hidden = record_hidden
         self.seed = seed
         self.card_level = card_level  # None=引擎默认（lv11）；11-16 全等级支持
+        # —— 攒费意图动作（intent-save；2026-09-19 用户拍板扩参）——
+        # 预注册 docs/intent_save_prereg_2026-09-19.md。**默认关**：关时本类不读写任何
+        # 意图状态、掩码与观测与旧行为**逐位相同**（【R2】）。
+        # 开启后：策略可以对一张**买不起**的手牌下"为它攒费"的意图；意图**跨帧保持**
+        # （保持不需要逐帧重抽），策略可随时用 SAVE(其它槽)/CANCEL/任意出牌打断。
+        self.intent_save = bool(intent_save)
+        self._intent_slot = 0        # 当前 pending 目标槽（1..K_MAX）；0 = 无
+        self._intent_age = 0         # 已保持的决策帧数
+        self._intent_fired_slot = 0  # 刚"攒够"的目标槽（等策略这一帧把它打出去）
+        self.intent_stats = {"set": 0, "held": 0, "ready": 0, "fired": 0,
+                             "cancelled": 0, "dropped": 0, "fired_held_max": 0,
+                             "fired_held": []}
 
         self.observation_space = gym.spaces.Dict({
             "grid": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(GRID_H, GRID_W, GRID_C), dtype=np.float32),
@@ -120,6 +133,12 @@ class RLEnv(gym.Env):
             "next_card": gym.spaces.Box(low=0, high=_NUM_IDS, shape=(1,), dtype=np.int32),
             "time": gym.spaces.Box(low=0.0, high=400.0, shape=(1,), dtype=np.float32),
         })
+        if self.intent_save:
+            # 攒费意图观测（**只在开启时登记**；关时 dict 与原样逐位一致）
+            self.observation_space.spaces["intent_slot"] = gym.spaces.Box(
+                low=0, high=K_MAX, shape=(1,), dtype=np.int32)
+            self.observation_space.spaces["intent_age"] = gym.spaces.Box(
+                low=0.0, high=1e6, shape=(1,), dtype=np.float32)
         self.action_space = ActionBundleSpace()
 
         self.battle: Optional[battle.BattleState] = None
@@ -187,6 +206,11 @@ class RLEnv(gym.Env):
                                            tick_seconds=self.dt)
                     if (self._et_w or self._et_measure_only) else None)
         self._et_scores = []
+        # 攒费意图：局边界必须完全清空当前 pending（【R8】跨局残留 = 9j 事故类）；
+        # `intent_stats` **跨局保留**（它是 run 级取证量，清掉就无法判 J1）。
+        self._intent_slot = 0
+        self._intent_age = 0
+        self._intent_fired_slot = 0
         if self.visualize:
             from new_visualization import Visualizer
             self._visualizer = Visualizer(self.battle)
@@ -216,7 +240,13 @@ class RLEnv(gym.Env):
                 "n": int(len(det))}
 
     def observe(self, player_id: int = 0) -> dict:
-        return observe(self.battle, player_id)
+        d = observe(self.battle, player_id)
+        if self.intent_save and player_id == 0:
+            # 攒费意图观测（**只在 agent 侧 p0 注入**；p1 由对手策略驱动，无意图状态）。
+            # 默认关时不注入 ⇒ 观测 dict 与旧行为逐位一致。
+            d["intent_slot"] = np.array([self._intent_slot], dtype=np.int32)
+            d["intent_age"] = np.array([float(self._intent_age)], dtype=np.float32)
+        return d
 
     def get_hidden_state(self) -> dict:
         return hidden_labels(self.battle, 0)
@@ -309,19 +339,134 @@ class RLEnv(gym.Env):
                 if slots[i] and solo_commit_blocked(self.battle, player_id, p.cycle[i], elixir):
                     slots[i] = False
                     cells[i] = False
-        return {
+        _ability = bool(ability_legal(self.battle, player_id,
+                                      elixir_override=elixir, already_used=has_ability))
+        out = {
             "slots": slots,
             "cells": cells,
-            "ability_legal": bool(ability_legal(self.battle, player_id,
-                                                elixir_override=elixir, already_used=has_ability)),
+            "ability_legal": _ability,
             "used_slots": np.array(sorted(used), dtype=np.int32),
             "at_cap": len(partial_bundle.sub_actions) >= K_MAX,
-            "any_legal": bool(slots.any()) or bool(ability_legal(self.battle, player_id,
-                                                                 elixir_override=elixir,
-                                                                 already_used=has_ability)),
+            "any_legal": bool(slots.any()) or _ability,
         }
+        # —— 攒费意图（intent-save，默认关）：只在 bundle 首卡决策、且只在 agent 侧 p0 ——
+        if self.intent_save and player_id == 0 and len(partial_bundle.sub_actions) == 0:
+            _is = [False] * K_MAX
+            for i in range(K_MAX):
+                if i in used:
+                    continue
+                _c = _card_cost(p, p.cycle[i])
+                # 只有**买不起**才够格下攒费意图：买得起就该直接打（这条把"意图"与"出牌"
+                # 的语义分干净，也让 SAVE 永远不会成为"赖着不出牌"的后门）。
+                if _c is not None and p.king_tower_hp > 0 and elixir < _c:
+                    _is[i] = True
+            _cancel = self._intent_slot != 0
+            _hold = self._intent_holding(p, elixir)
+            if _hold:
+                # 【承诺期】已为某张牌攒费且仍买不起 ⇒ 本帧压制一切花费（含技能与落点），
+                # 合法集只剩 {保持=STOP, CANCEL, 改攒其它槽}。★ 这就是"选择这项 =
+                # 等下一个或多个决策帧"的机械实现：**保持不需要逐帧重抽**，
+                # 否则 k 帧合取 p^k 会把轨迹压到采样不到（预注册 §1/§5 R-1）。
+                slots = np.zeros(K_MAX, dtype=bool)
+                cells = np.zeros((K_MAX, GRID_H, GRID_W), dtype=bool)
+                _ability = False
+                out["slots"], out["cells"], out["ability_legal"] = slots, cells, False
+                out["any_legal"] = True         # 保持/取消恒合法
+            out["intent_slots"] = _is
+            out["intent_cancel"] = _cancel
+            out["intent_hold"] = _hold
+        return out
 
     # ---- 对手 ----
+
+    def _intent_holding(self, p, elixir) -> bool:
+        """pending 目标**仍买不起** ⇒ True（=「承诺期」，本帧压制一切花费）。
+
+        目标无效（离手 / 王塔亡 / 费用不可算）返回 False —— 清理由 `_apply_intent` 负责，
+        本函数**必须无副作用**（它在掩码热路径里被调用）。
+        """
+        if not self.intent_save or not self._intent_slot:
+            return False
+        i = int(self._intent_slot)
+        if not (1 <= i <= K_MAX) or p.king_tower_hp <= 0 or i - 1 >= len(p.cycle):
+            return False
+        c = _card_cost(p, p.cycle[i - 1])
+        if c is None:
+            return False
+        return float(elixir) < float(c)
+
+    def _apply_intent(self, intent: int, p0, bundle: ActionBundle) -> dict:
+        """攒费意图状态机（**只在 `intent_save=True` 时被调用**）。
+
+        语义（预注册 `docs/intent_save_prereg_2026-09-19.md` §2）：
+        - `intent == 0` 且本帧**没出牌**（纯 STOP）⇒ 意图**原样保留**
+          —— ★ 这是全部机制价值所在：**保持不需要逐帧重抽**。
+        - `intent == 0` 且本帧出了牌 ⇒ 意图终止（花掉的钱与"为某张牌攒"不相容）。
+        - `1..K_MAX` ⇒ 设置/替换 pending 目标（`set`）。
+        - `INTENT_CANCEL` ⇒ 显式撤销（`cancelled`）—— 用户要的"中途改变想法"。
+        - 目标攒够 ⇒ 标记 `ready`，等策略把这张牌打出去（`fired` 记录**当时已保持帧数**）。
+        - 目标失效 ⇒ 静默清（`dropped`，**不得**产生任何非法动作）。
+        """
+        st = self.intent_stats
+        ev: dict = {}
+        if bundle.sub_actions:
+            if self._intent_fired_slot:
+                _deploy_slots = [sa.slot for sa in bundle.sub_actions if sa.kind == "deploy"]
+                if self._intent_fired_slot in _deploy_slots:
+                    st["fired"] += 1
+                    st["fired_held"] = (st["fired_held"] + [int(self._intent_age)])[-256:]
+                    st["fired_held_max"] = max(st["fired_held_max"], int(self._intent_age))
+                    ev["intent_fired"] = 1
+                    ev["intent_fired_held"] = int(self._intent_age)
+                else:
+                    st["dropped"] += 1
+                    ev["intent_dropped"] = 1
+                self._intent_fired_slot = 0
+            elif self._intent_slot:
+                st["dropped"] += 1
+                ev["intent_dropped"] = 1
+            self._intent_slot = 0
+            self._intent_age = 0
+            self._intent_fired_slot = 0
+            return ev
+        if intent == INTENT_CANCEL:
+            if self._intent_slot:
+                st["cancelled"] += 1
+                ev["intent_cancelled"] = 1
+            self._intent_slot = 0
+            self._intent_age = 0
+            self._intent_fired_slot = 0
+            return ev
+        if 1 <= intent <= K_MAX:
+            self._intent_slot = int(intent)
+            self._intent_age = 0
+            self._intent_fired_slot = 0
+            st["set"] += 1
+            ev["intent_set"] = 1
+            return ev
+        # intent == 0 且无子动作 = 保持 / 纯 STOP：意图原样保留
+        if not self._intent_slot:
+            return ev
+        i = int(self._intent_slot)
+        _valid = (1 <= i <= K_MAX and p0.king_tower_hp > 0 and i - 1 < len(p0.cycle)
+                  and _card_cost(p0, p0.cycle[i - 1]) is not None)
+        if not _valid:
+            self._intent_slot = 0
+            self._intent_age = 0
+            self._intent_fired_slot = 0
+            st["dropped"] += 1
+            ev["intent_dropped"] = 1
+            return ev
+        if self._intent_holding(p0, p0.elixir):
+            self._intent_age += 1
+            st["held"] += 1
+            ev["intent_held"] = 1
+        elif not self._intent_fired_slot:
+            # 已攒够：标记 ready，等策略把这张牌打出去（下一帧起它就是普通可出牌）
+            self._intent_fired_slot = i
+            st["ready"] += 1
+            ev["intent_ready"] = 1
+        return ev
 
     def _run_opponent(self) -> list:
         """执行对手动作，返回结构化 played 列表 [{card, x, y}, ...]（P1-5）。"""
@@ -436,6 +581,12 @@ class RLEnv(gym.Env):
             raise TypeError(f"step 需要 ActionBundle，收到 {type(action_bundle)}")
 
         p0, p1 = self.battle.players
+        # —— 攒费意图状态机（**默认关时整段跳过 ⇒ 与旧行为逐位相同**）——
+        # 位置在"提交之前、决策时刻的圣水"：与掩码 `get_action_mask_for` 同一时刻取值，
+        # 保证「掩码说买不起 ⇒ 记为保持」与「掩码说买得起 ⇒ 记为 ready」永不打架。
+        _intent_evt = (self._apply_intent(int(getattr(action_bundle, "intent", 0) or 0),
+                                          p0, action_bundle)
+                       if self.intent_save else {})
         blue_hps_old = p0.king_tower_hp + p0.left_tower_hp + p0.right_tower_hp
         red_hps_old = p1.king_tower_hp + p1.left_tower_hp + p1.right_tower_hp
         blue_towers_old = self._tower_snapshot(p0)
@@ -573,6 +724,16 @@ class RLEnv(gym.Env):
             "winner": self.battle.winner,
             "field_v": [float(self._active_v[0]), float(self._active_v[1])],
         }
+        if self.intent_save:
+            # 攒费意图取证字段（**只读不参与奖励**）：本帧事件 + 状态 + 累计计数。
+            # 判据 J1（预注册 §4）用的"意图保持 ≥34 帧后真打出"从 `fired_held` 读。
+            info["intent"] = {
+                "slot": int(self._intent_slot),
+                "age": int(self._intent_age),
+                "hold": bool(self._intent_holding(p0, p0.elixir)),
+                "event": dict(_intent_evt),
+                "stats": dict(self.intent_stats, fired_held=list(self.intent_stats["fired_held"])),
+            }
         if self._et is not None:
             # 取证字段（不影响任何行为）：本决策帧结算掉的局面明细 + 累计
             info["engagement_trade"] = float(et_score)

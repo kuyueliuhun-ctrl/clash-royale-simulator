@@ -137,3 +137,72 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe ../.
 ```
 
 判据读数落地文件：`docs/readout_intent_save.md`（**尚未生成**——跑之前不得有）。
+
+---
+
+## 8. 实施记录 + 对 §2 的一处**口径修订**（2026-09-19，用户拍板「做一次扩参」后落地）
+
+> 状态：**代码已落地、默认关、全量 selftest 已跑**。**训练未启动**（100k×2 对比由用户另行发令）。
+> ⚠️ 本节**推翻 §2.1 的一句**：原文写「掩码零改动 ⇒ 不触碰【R13】」。**那句话是错的**，理由见 §8.2。
+
+### 8.1 落地清单（改了哪些文件）
+
+| 文件 | 改动 |
+|---|---|
+| `rl/action_bundle.py` | `ActionBundle.intent` 字段（`INTENT_NONE=0` / `1..K_MAX`=SAVE(slot) / `INTENT_CANCEL=K_MAX+1`）+ 互斥校验（intent 与 sub_actions 不能并存）+ `intent_save()` / `intent_cancel()` |
+| `rl/follower.py` | `intent_options=False` 形参；`num_slot_options` 6→11、`scalar_dim` 3→9（**两者都只在开启时变**）；`slot_head` / `sub_emb` / `enc_fc` 随之加宽；`INTENT_SAVE_BASE/CANCEL_IDX`；`_slot_mask_tensor` **改成 zeros 起步**（关键：不能沿用 `torch.ones` 的默认"合法"，否则意图 option 在默认关时也是合法的）；`_intent_obs_vec`；`terminal_option(bundle)`（rollout 与 PPO 重放**同一函数**）；`act` / `act_parallel` / `evaluate` / `evaluate_batch` 四处终止步全部改用 `terminal_option`；`save_checkpoint` 落 `intent_options` 元数据；`load_checkpoint` 增**架构不一致告警**（见 §8.4） |
+| `rl/env_wrapper.py` | `intent_save=False` 形参；`_intent_slot/_intent_age/_intent_fired_slot` + `intent_stats`；`_intent_holding()`（**无副作用**，掩码热路径）；`_apply_intent()`（状态机）；`get_action_mask_for` 增 `intent_slots/intent_cancel/intent_hold` 三键 + **承诺期压制花费**；`observe()` 注入 `intent_slot/intent_age`；`reset()` 清 pending（**累计计数保留**）；`info["intent"]`（本帧事件 + 状态 + 累计） |
+| `rl/config.py` | `TrainConfig.intent_save: bool = False` |
+| `rl/run_league.py` | `--intent-save` + `overrides["intent_save"]=True`（**`train_solo.py` 没有 argparse**，唯一 CLI 在这里）；`_make_env` 传参；`_policy_spec` 携带 `intent_options`；两处 `FollowerPolicy` / `load_checkpoint` 传参 |
+| `rl/train_solo.py` | 3 个 env 构造点（`solo_env` / 并行 worker / `env_kwargs`）+ 9 处 policy 构造点传参；新增 `main.intent_options` vs `cfg.intent_save` 一致性兜底告警 |
+| `rl/flow_league.py` | 2 处构造点传参 |
+| `rl/selftests/part5.py` + `rl/selftest.py` | 新增 `test_intent_save_mechanism`（含【R8】跨局）并登记进 `main()`（否则 `--order-check` FAIL） |
+
+### 8.2 ★ 对 §2.1 的修订：**掩码必须改**，否则机制不成立
+
+§2.1 原写「`mask` 的 `slots`/`cells`/`ability_legal` 一行不改 ⇒ 不触碰【R13】」。实施时发现这与本预注册**自己的第一约束 R-1 矛盾**：
+
+- 若"保持"期间花费仍然合法，则每帧都要在「保持」与「打一张买得起的牌」之间抽一次。
+  实测口径：**有牌可出时 `P(STOP)=0.058~0.09`**（[`pass_prob_2026-09-18.md`](pass_prob_2026-09-18.md)）⇒
+  34 帧合取 ≈ **1e-14** ⇒ 「≥34 帧意图后真打出」这条轨迹**依然采样不到**（= §1 的 0 样本问题原样保留）。
+  「保持不需要逐帧重抽」只是**实现上不必重抽**；只要"别的牌仍可出"，**竞争项**就还在。
+- ⇒ 唯一能打破 `p^k` 的做法 = **承诺期内把花费整块掩掉**，合法集只剩
+  `{保持(=STOP), CANCEL, 改攒其它槽}`。此时 34 帧保持的路径变成
+  **1 次 `SAVE` + 33 次「保持 vs 取消」二选一**，而**取消没有任何即时收益** ⇒
+  `P(保持)` 可以学高（初始就 ≈0.5，且没有反向梯度）⇒ 轨迹**可达**。
+
+**代价（必须写清，不调和）**：承诺期内**不能防守**（`ability`/出牌都被掩）⇒ 策略只能先花一帧 `CANCEL` 再出牌。
+**这个代价由奖励定价**（挨打 `tower_dmg_self=0.0012` 是即时且重的信号）⇒ 预期策略会学成「低压时才攒」。
+★ **这正是 `plan_space.setup_wait` 当年想做的事，区别在于"什么时候该解禁"是学会的，不是写死的**
+（手写版本 898 帧 0 触发，见 §1）。
+
+**【R13】因此重新适用**，已按纪律处置：
+- `rl/action_mask.py`（`legal_cells` / `validate_bundle`）**一行未改**（`git diff --name-only` 无该文件）⇒ 128 张位图的比对对象本身未动；
+- `scripts/_mask_diff_snapshot.py --selftest` ⇒ **5/5 断言 PASS**（含两条必 FAIL 的负对照）；
+- 更有针对性的一条已进 selftest：**无 pending 时，开/关两臂的 `slots`/`cells`/`ability_legal`/`at_cap`/`used_slots` 逐位相同**
+  ⇒ 「打开开关只在**有意图**时才改变掩码」是被断言的不变量，不是口头承诺。
+
+### 8.3 实测读数（实施当天）
+
+| 项 | 值 | 口径 |
+|---|---|---|
+| 参数增量 | **+2,053**（h=128） | `= slot_head(5×128+5) + sub_emb(5×128) + enc_fc(6×128)`，**selftest 逐项复算**（§7 预估的 `+1,028` **漏了 `enc_fc` 加宽**，此处更正） |
+| 占比 | **+0.32%** | `634,735 → 636,788` |
+| option 数 | 6 → **11** | `0..5` 逐位不变，`6..9`=SAVE(1..4)，`10`=CANCEL |
+| 观测标量 | 3 → **9** | 尾部追加 `pending one-hot(5) + 已等帧数(1)` |
+| 状态机 | SAVE→承诺期(花费全掩/CANCEL 可用)→保持不重抽(age++)→攒够 ready→真打出 fired(**记录当时已保持帧数**)→CANCEL | `test_intent_save_mechanism` 全绿 |
+
+### 8.4 ⚠️ 旧 ckpt 的**静默陷阱**（本仓新增，实施时发现）
+
+`enc_fc` 的输入维被 `fused` **中段**的 `scalar` 加宽（不是尾部）⇒ 仓内既有的
+「尾部追加 + 尾零兼容」**无法套用**；`load_checkpoint` 的形状不匹配分支会**整体重置 `enc_fc`**
+（静默）。已加显式告警（`intent_options` 元数据不一致 ⇒ 打印"要求 `--fresh`"）。
+⇒ **A/B 两臂都必须 `--fresh`**（A 臂用默认关 = 旧架构，本来也不受影响）。
+
+### 8.5 用户发令后要跑的对比训练（预注册口径，**尚未启动**）
+
+- **两臂各 100k 步**，唯一变量 = `--intent-save`：A = 关（旧架构）、B = 开。**两臂都 `--fresh`**、同 seed、同协议（`env.md §2.2`）。
+- **n = 1/臂** ⇒ 【R5】：**只判 J1（二值计数可达性）**，胜率/门禁只作描述。
+- ⚠️ **跑前必须补的仪器**：`scripts/audit_intent_save.py`（读 `env.intent_stats["fired_held"]` 与录像，
+  数「≥34 帧意图后真打出」的轨迹条数）—— **本预注册状态 = 判据已写死、仪器未落地**。
+  它与 J1 的基线（`scripts/pass_streak_audit.py`：**0 条**、A 段上限 22 帧）必须**同时**产出，否则 J1 不可判。
