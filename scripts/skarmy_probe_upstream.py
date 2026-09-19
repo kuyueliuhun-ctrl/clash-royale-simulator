@@ -21,7 +21,12 @@ import json
 import os
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+_OUR_SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "src", "clasher_new")
+if _OUR_SRC not in sys.path:
+    sys.path.append(_OUR_SRC)   # append（不是 insert）：不得抢上游引擎 `import battle` 的优先级
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
+force_utf8_stdout()
 #: 本脚本在**我方**仓库里、却要在**上游**的 cwd 下跑 ⇒ Python 的 sys.path[0] 是脚本目录，
 #: 不是 cwd ⇒ 必须显式把 cwd 放进来，否则 `import battle` 找不到（实测踩过）。
 sys.path.insert(0, os.getcwd())

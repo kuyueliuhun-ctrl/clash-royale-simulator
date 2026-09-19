@@ -33,7 +33,8 @@ ORIG_CWD = os.getcwd()
 sys.path.insert(0, SRC)
 os.chdir(SRC)
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # GBK 陷阱：本文件含中文
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+force_utf8_stdout()
 
 #: 世界坐标（= 校验 / 打印用）；bundle 走「玩家本地坐标」，由 `sub_position` 换算。
 PLACEMENTS = [
@@ -57,6 +58,8 @@ def main(argv=None):
                     help="每个决策步推进的引擎帧数（6 = 0.1 s；只改采样密度，不改引擎动力学）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--only", default=None, help="只跑某个投放点（逗号分隔）")
+    ap.add_argument("--no-lane-offset", action="store_true",
+                    help="消融实验：强制 Troop._lane_offset = 0（单变量；默认关 = 旧行为逐字不变）")
     args = ap.parse_args(argv)
 
     from rl.env_wrapper import RLEnv
@@ -65,6 +68,19 @@ def main(argv=None):
     from rl.run_league import LeagueGameRecorder, _bundle_cards, timeout_winner
     from rl.replay import save_league_replays
     from rl.overtime import overtime_open
+
+    if args.no_lane_offset:
+        # 消融：外部猴补丁，**不改引擎源码**。只把「队形车道偏移」置零，其余逐字不变。
+        # 判据与失败分支见 docs/skarmy_two_engine_observations_2026-09-19.md §5（跑前写死）。
+        import battle as _battle
+        _orig_troop_init = _battle.Troop.__init__
+
+        def _troop_init_no_lane(self, *a, **kw):
+            _orig_troop_init(self, *a, **kw)
+            self._lane_offset = 0.0
+
+        _battle.Troop.__init__ = _troop_init_no_lane
+        print("[skarmy] 消融已生效：Troop._lane_offset 强制 0（只改这一项）", flush=True)
 
     out = args.out
     rep_dir = os.path.join(out, "replays")

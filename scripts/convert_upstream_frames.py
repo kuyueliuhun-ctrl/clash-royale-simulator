@@ -18,7 +18,8 @@ ROOT = os.path.dirname(HERE)
 SRC = os.path.join(ROOT, "src", "clasher_new")
 sys.path.insert(0, SRC)
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+force_utf8_stdout()
 
 
 def main(argv=None):

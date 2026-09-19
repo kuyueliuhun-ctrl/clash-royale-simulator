@@ -18,7 +18,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SRC = os.path.join(ROOT, "src", "clasher_new")
 sys.path.insert(0, SRC)
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402  (T1-1: UTF-8 兜底单一来源)
+force_utf8_stdout()
 
 #: 桥心 x：左桥 3.5、右桥 14.5（王塔后那一局两桥都会走，故列「距最近桥心」与「距中轴」两个量）
 BRIDGE_X = {"bridge_left": 3.5, "bridge_right": 14.5}
