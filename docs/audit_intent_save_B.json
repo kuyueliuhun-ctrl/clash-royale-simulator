@@ -1,0 +1,400 @@
+{
+  "instrument": "scripts/audit_intent_save.py",
+  "what": "J1（攒费意图 intent-save）二值可达性计数仪器：描述性仪器，不是判据本身",
+  "generated_at": "2026-09-20T04:08:23",
+  "args": {
+    "ckpt": "runs/intent_on_100k/solo_main.pt",
+    "random_init": false,
+    "games": 20,
+    "max_frames": 400,
+    "seed": 0,
+    "deterministic": false,
+    "allow_arch_mismatch": false
+  },
+  "arch": {
+    "path": "runs/intent_on_100k/solo_main.pt",
+    "declared_intent_options": true,
+    "slot_head_rows": 11,
+    "observed_11_option": true,
+    "match_11_option": true,
+    "hidden_dim": 128,
+    "plan_dim_meta": 58,
+    "belief_dim_meta": 563,
+    "allow_arch_mismatch": false
+  },
+  "plan_dim": 58,
+  "belief_dim": 563,
+  "hidden_dim": 128,
+  "env": {
+    "intent_save": true,
+    "opponent": "random(None)"
+  },
+  "j1_threshold": 34,
+  "j1_threshold_derivation": "Xbow 6 费 ÷ 0.3571 圣水/s ≈ 17 s ÷ 0.5 s/帧 ≈ 34 帧（解析换算，非观测标定 【R16】）",
+  "games": [
+    {
+      "frames": 351,
+      "counts": {
+        "set": 189,
+        "held": 118,
+        "ready": 2,
+        "fired": 0,
+        "cancelled": 15,
+        "dropped": 18
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 0
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 194,
+        "held": 161,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 10,
+        "dropped": 27
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 1
+    },
+    {
+      "frames": 252,
+      "counts": {
+        "set": 124,
+        "held": 107,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 7,
+        "dropped": 10
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 2
+    },
+    {
+      "frames": 159,
+      "counts": {
+        "set": 87,
+        "held": 54,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 8,
+        "dropped": 7
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 3
+    },
+    {
+      "frames": 323,
+      "counts": {
+        "set": 141,
+        "held": 138,
+        "ready": 3,
+        "fired": 0,
+        "cancelled": 18,
+        "dropped": 16
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 4
+    },
+    {
+      "frames": 299,
+      "counts": {
+        "set": 137,
+        "held": 129,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 10,
+        "dropped": 14
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 5
+    },
+    {
+      "frames": 235,
+      "counts": {
+        "set": 90,
+        "held": 123,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 7,
+        "dropped": 11
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 6
+    },
+    {
+      "frames": 263,
+      "counts": {
+        "set": 122,
+        "held": 114,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 9,
+        "dropped": 12
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 7
+    },
+    {
+      "frames": 196,
+      "counts": {
+        "set": 67,
+        "held": 109,
+        "ready": 2,
+        "fired": 0,
+        "cancelled": 7,
+        "dropped": 6
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 8
+    },
+    {
+      "frames": 237,
+      "counts": {
+        "set": 95,
+        "held": 115,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 12,
+        "dropped": 8
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 9
+    },
+    {
+      "frames": 354,
+      "counts": {
+        "set": 170,
+        "held": 131,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 22,
+        "dropped": 17
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 10
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 169,
+        "held": 135,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 27,
+        "dropped": 21
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 11
+    },
+    {
+      "frames": 395,
+      "counts": {
+        "set": 168,
+        "held": 184,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 9,
+        "dropped": 26
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 12
+    },
+    {
+      "frames": 304,
+      "counts": {
+        "set": 184,
+        "held": 78,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 20,
+        "dropped": 13
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 13
+    },
+    {
+      "frames": 227,
+      "counts": {
+        "set": 103,
+        "held": 96,
+        "ready": 1,
+        "fired": 1,
+        "cancelled": 11,
+        "dropped": 10
+      },
+      "fired_held": [
+        6
+      ],
+      "fired_events": [
+        {
+          "held": 6,
+          "cost": 5.0,
+          "card": "Giant",
+          "dmg_tower": null,
+          "kills_units": null,
+          "watch_frames": 40
+        }
+      ],
+      "game": 14
+    },
+    {
+      "frames": 182,
+      "counts": {
+        "set": 75,
+        "held": 91,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 6,
+        "dropped": 8
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 15
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 169,
+        "held": 145,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 20,
+        "dropped": 20
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 16
+    },
+    {
+      "frames": 195,
+      "counts": {
+        "set": 97,
+        "held": 77,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 9,
+        "dropped": 7
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 17
+    },
+    {
+      "frames": 271,
+      "counts": {
+        "set": 120,
+        "held": 119,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 15,
+        "dropped": 11
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 18
+    },
+    {
+      "frames": 345,
+      "counts": {
+        "set": 173,
+        "held": 123,
+        "ready": 3,
+        "fired": 1,
+        "cancelled": 19,
+        "dropped": 12
+      },
+      "fired_held": [
+        0
+      ],
+      "fired_events": [
+        {
+          "held": 0,
+          "cost": 4.0,
+          "card": "MiniPekka",
+          "dmg_tower": 206.0,
+          "kills_units": 3,
+          "watch_frames": 40
+        }
+      ],
+      "game": 19
+    }
+  ],
+  "total_counts": {
+    "set": 2674,
+    "held": 2347,
+    "ready": 17,
+    "fired": 2,
+    "cancelled": 261,
+    "dropped": 274
+  },
+  "fired_held": [
+    6,
+    0
+  ],
+  "fired_held_rolling_cap": 256,
+  "fired_held_rolling_truncated": 0,
+  "fired_held_hist": {
+    "0-5": 1,
+    "6-11": 1,
+    "12-23": 0,
+    "24-33": 0,
+    ">=34": 0
+  },
+  "f2_watch_frames": 40,
+  "f2_antecedent": true,
+  "f2_triggered": false,
+  "fired_events": [
+    {
+      "held": 6,
+      "cost": 5.0,
+      "card": "Giant",
+      "dmg_tower": null,
+      "kills_units": null,
+      "watch_frames": 40
+    },
+    {
+      "held": 0,
+      "cost": 4.0,
+      "card": "MiniPekka",
+      "dmg_tower": 206.0,
+      "kills_units": 3,
+      "watch_frames": 40
+    }
+  ],
+  "fired_held_event_log": [
+    6,
+    0
+  ],
+  "j1_count": 0,
+  "j1_count_event_log": 0,
+  "j1_count_authoritative": 0,
+  "j1_pass": false,
+  "baseline": {
+    "arm_a": "intent_save=False：按构造恒 0（不产生 intent_stats）",
+    "note": "现状基线 = scripts/pass_streak_audit.py 的 0 条、主动不出牌最长段 22 帧（引自预注册 docs/intent_save_prereg_2026-09-19.md §4/§7；本脚本不重算）",
+    "source": "docs/intent_save_prereg_2026-09-19.md §4/§7（pass_streak_audit.py 复算口径）",
+    "recomputed_here": false
+  },
+  "discipline": [
+    "描述性仪器，不是判据本身；阈值 34 解析换算而来，非观测标定（【R16】）",
+    "n=1/臂 ⇒ 只判二值可达性（【R5】）；不得把胜率当判据（本仪器不产胜率）",
+    "只跑评估，不训练；不 import 训练入口、不写 ckpt",
+    "现状基线列引自预注册，本仪器不重算"
+  ]
+}

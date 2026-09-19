@@ -1,0 +1,52 @@
+==============================================================================
+J1 判读仪器：攒费意图（intent-save）可达性计数 —— 描述性仪器，不是判据本身
+==============================================================================
+ckpt         : runs/intent_on_100k/solo_main.pt
+架构         : declared intent_options=True / slot_head 出维=11 ⇒ 11-option（B 臂口径，匹配）
+PLAN_DIM     : 58   belief_dim: 563   hidden_dim: 128
+评估协议     : games=20  max_frames=400  seed=0  deterministic=False（False=采样）
+env          : intent_save=True（B 臂口径；opponent=None=随机对手，只跑评估不训练）
+J1 阈值      : >=34 保持帧（= 6 费 ÷ 0.3571 圣水/s ÷ 0.5 s/帧 ≈ 33.6；解析换算，非观测标定 【R16】）
+
+局   0: frames= 351  set=189 held= 118 ready=  2 fired=  0 cancelled= 15 dropped= 18  fired_held=[]
+局   1: frames= 400  set=194 held= 161 ready=  1 fired=  0 cancelled= 10 dropped= 27  fired_held=[]
+局   2: frames= 252  set=124 held= 107 ready=  0 fired=  0 cancelled=  7 dropped= 10  fired_held=[]
+局   3: frames= 159  set= 87 held=  54 ready=  1 fired=  0 cancelled=  8 dropped=  7  fired_held=[]
+局   4: frames= 323  set=141 held= 138 ready=  3 fired=  0 cancelled= 18 dropped= 16  fired_held=[]
+局   5: frames= 299  set=137 held= 129 ready=  1 fired=  0 cancelled= 10 dropped= 14  fired_held=[]
+局   6: frames= 235  set= 90 held= 123 ready=  0 fired=  0 cancelled=  7 dropped= 11  fired_held=[]
+局   7: frames= 263  set=122 held= 114 ready=  0 fired=  0 cancelled=  9 dropped= 12  fired_held=[]
+局   8: frames= 196  set= 67 held= 109 ready=  2 fired=  0 cancelled=  7 dropped=  6  fired_held=[]
+局   9: frames= 237  set= 95 held= 115 ready=  0 fired=  0 cancelled= 12 dropped=  8  fired_held=[]
+局  10: frames= 354  set=170 held= 131 ready=  1 fired=  0 cancelled= 22 dropped= 17  fired_held=[]
+局  11: frames= 361  set=169 held= 135 ready=  1 fired=  0 cancelled= 27 dropped= 21  fired_held=[]
+局  12: frames= 395  set=168 held= 184 ready=  0 fired=  0 cancelled=  9 dropped= 26  fired_held=[]
+局  13: frames= 304  set=184 held=  78 ready=  1 fired=  0 cancelled= 20 dropped= 13  fired_held=[]
+局  14: frames= 227  set=103 held=  96 ready=  1 fired=  1 cancelled= 11 dropped= 10  fired_held=[6]
+局  15: frames= 182  set= 75 held=  91 ready=  0 fired=  0 cancelled=  6 dropped=  8  fired_held=[]
+局  16: frames= 361  set=169 held= 145 ready=  0 fired=  0 cancelled= 20 dropped= 20  fired_held=[]
+局  17: frames= 195  set= 97 held=  77 ready=  0 fired=  0 cancelled=  9 dropped=  7  fired_held=[]
+局  18: frames= 271  set=120 held= 119 ready=  0 fired=  0 cancelled= 15 dropped= 11  fired_held=[]
+局  19: frames= 345  set=173 held= 123 ready=  3 fired=  1 cancelled= 19 dropped= 12  fired_held=[0]
+
+------------------------------------------------------------------------------
+合计（env.intent_stats 跨局累计）
+  set=2674  held=2347  ready=17  fired=2  cancelled=261  dropped=274
+  fired_held_max=6
+  fired_held 全列表（n=2）: [6, 0]
+  直方图: 0-5=1  6-11=1  12-23=0  24-33=0  >=34=0
+  （滚动窗口 256：fired=2，列表 2 条，无截断）
+  交叉核对（逐帧事件独立归因，未截断）: fired_held=[6, 0] ⇒ count(>=34)=0（与列表口径一致）
+
+J1 = count(逐帧事件: held>=34 且 目标卡费用>=6) = 0   [未截断全史 + J1 原文口径]
+   达标事件明细 (card, cost, held) = []
+   [参考] 仅 held>=34（不过滤费用）= 0 条 （与原文口径相同）
+   [参考] env 列表口径 = 0（滚动 256 条 ⇒ 长跑会被滚掉，**不作判定依据**）
+F2 前件（fired>0）= True（fired=2，其中已结算观察窗 1 条）
+F2 明细 (card, cost, held, dmg_tower, kills_units) = [('MiniPekka', 4.0, 0, 206.0, 3)]
+F2 触发？= False  ⇒ 前件不成立或兑现确有塔伤/解场 ⇒ F2 未触发
+J1 基线列: A 臂（意图关 intent_save=False）按构造恒 0 —— 不开意图则不产生 intent_stats['fired_held']，本仪器对 A 臂的实测 = None（未跑 A 臂）
+           现状基线 = scripts/pass_streak_audit.py 的 0 条、主动不出牌最长段 22 帧（引自预注册 docs/intent_save_prereg_2026-09-19.md §4/§7；本脚本不重算）
+J1 FAIL（判据：>=1 即 PASS；判定值 = 0（逐帧事件 + 费用过滤）；n=1/臂 ⇒ 只判二值可达性 【R5】，不看胜率）
+------------------------------------------------------------------------------
+JSON 留证: ../../docs/audit_intent_save_B.json

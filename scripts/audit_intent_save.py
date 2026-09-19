@@ -95,6 +95,8 @@ from rl.plan_space import PLAN_DIM  # noqa: E402
 J1_THRESHOLD = 34
 #: J1 原文限定的目标卡费用下限（「同一张 >=6 费卡」；Xbow = 6）
 J1_MIN_COST = 6.0
+#: F2 的观察窗（决策帧）：兑现后看这么多帧内目标卡有没有造成塔伤/解场（40 帧 = 20 s）
+F2_WATCH_FRAMES = 40
 #: 直方图分桶（预注册 §4/§8.5 要求的口径）
 HIST_BUCKETS = ((0, 5, "0-5"), (6, 11, "6-11"), (12, 23, "12-23"),
                 (24, 33, "24-33"), (34, 10 ** 9, ">=34"))
@@ -147,6 +149,21 @@ def _snapshot(stats):
     return {k: int(stats.get(k, 0)) for k in SCALAR_KEYS}
 
 
+def _tower_hp_sum(env, pid):
+    p = env.battle.players[pid]
+    return float(p.king_tower_hp + p.left_tower_hp + p.right_tower_hp)
+
+
+def _enemy_unit_ids(env, pid):
+    import battle as _B
+    out = set()
+    for eid, e in env.battle.entities.items():
+        if getattr(e, "player", None) == pid and isinstance(e, (_B.Troop, _B.Building)):
+            if getattr(e, "is_alive", False):
+                out.add(eid)
+    return out
+
+
 def _hist(counts):
     out = {}
     for lo, hi, label in HIST_BUCKETS:
@@ -162,7 +179,8 @@ def _run_game(env, pol, bp, belief, args):
     hidden = None
     done = False
     steps = 0
-    fired_events = []      # 本局每次「意图真被兑现」时已保持的帧数
+    fired_events = []      # 本局每次「意图真被兑现」时已保持的帧数 + F2 观察窗
+    watch = None           # F2：当前未结算的观察窗
     while not done and steps < args.max_frames:
         plan = bp.plan(env.battle, belief.state(), obs)
         tok = belief.encode(obs, None)
@@ -176,9 +194,23 @@ def _run_game(env, pol, bp, belief, args):
         if ev.get("intent_fired"):
             # 判据 J1 原文 = 「同一张 **>=6 费**卡被 pending 覆盖 >=34 帧后真的打出」
             # => 必须带上目标卡与费用才能按原文过滤（否则一张 3 费卡被抱 34 帧会被误算 PASS）。
-            fired_events.append({"held": int(ev.get("intent_fired_held", 0)),
-                                 "cost": ev.get("intent_fired_cost"),
-                                 "card": ev.get("intent_fired_card")})
+            rec = {"held": int(ev.get("intent_fired_held", 0)),
+                   "cost": ev.get("intent_fired_cost"),
+                   "card": ev.get("intent_fired_card"),
+                   # F2：兑现后 F2_WATCH_FRAMES 帧内 对手塔血下降 / 敌方部队死亡数
+                   "dmg_tower": None, "kills_units": None, "watch_frames": F2_WATCH_FRAMES}
+            fired_events.append(rec)
+            watch = {"left": F2_WATCH_FRAMES, "tower0": _tower_hp_sum(env, 1),
+                     "ids": _enemy_unit_ids(env, 1), "rec": rec}
+        if watch is not None:
+            watch["left"] -= 1
+            if watch["left"] <= 0:
+                rec = watch["rec"]
+                rec["dmg_tower"] = round(watch["tower0"] - _tower_hp_sum(env, 1), 3)
+                rec["kills_units"] = sum(1 for i in watch["ids"]
+                                         if i not in env.battle.entities
+                                         or not env.battle.entities[i].is_alive)
+                watch = None
         done = bool(term or trunc)
         steps += 1
     after = _snapshot(env.intent_stats)
@@ -274,6 +306,12 @@ def _run(args):
     j1_count = int(sum(1 for x in env_list if x >= J1_THRESHOLD))
     j1_count_events = len(ev_j1)
     _ev_j1_txt = str([(e.get("card"), e.get("cost"), e["held"]) for e in ev_j1])
+    # ---- F2（预注册 §5）：fired>0 但目标卡从未造成塔伤/解场 => 奖励侧 => 转 O7 ----
+    _fired_done = [e for e in ev_events if e.get("dmg_tower") is not None]
+    _fired_hit = [e for e in _fired_done
+                  if (e.get("dmg_tower") or 0.0) > 0.0 or (e.get("kills_units") or 0) > 0]
+    _f2_ante = len(ev_events) > 0
+    _f2_trig = bool(_f2_ante and len(_fired_done) > 0 and len(_fired_hit) == 0)
     # J1 的语义是「run 内是否出现过 >=1 条 >=34 帧意图后真打出」= **存在性**。
     # `env.intent_stats["fired_held"]` 滚动只留最后 256 条 ⇒ 长跑里早期那条会被滚掉，
     # 单看列表会**假 FAIL**。故判定取两者之并（逐帧事件 = 本次运行的未截断全史）。
@@ -304,6 +342,13 @@ def _run(args):
     print(f"   [参考] 仅 held>={J1_THRESHOLD}（不过滤费用）= {len(_all_ge)} 条 {_same}")
     print(f"   [参考] env 列表口径 = {j1_count}"
           f"（滚动 256 条 ⇒ 长跑会被滚掉，**不作判定依据**）")
+    print(f"F2 前件（fired>0）= {_f2_ante}（fired={len(ev_events)}，其中已结算观察窗 {len(_fired_done)} 条）")
+    print(f"F2 明细 (card, cost, held, dmg_tower, kills_units) = "
+          f"{[(e.get('card'), e.get('cost'), e['held'], e.get('dmg_tower'), e.get('kills_units')) for e in _fired_done]}")
+    print(f"F2 触发？= {_f2_trig}"
+          + ("  ⇒ fired>0 但**全部**已结算的兑现**零塔伤、零解场** ⇒ 奖励侧 ⇒ 转 O7"
+             if _f2_trig else
+             "  ⇒ 前件不成立或兑现确有塔伤/解场 ⇒ F2 未触发"))
     print(f"J1 基线列: A 臂（意图关 intent_save=False）按构造恒 0 —— 不开意图则不产生 "
           f"intent_stats['fired_held']，本仪器对 A 臂的实测 = None（未跑 A 臂）")
     print(f"           {BASELINE_NOTE}")
@@ -332,6 +377,10 @@ def _run(args):
         "fired_held_rolling_cap": 256,
         "fired_held_rolling_truncated": rolling_truncated,
         "fired_held_hist": hist,
+        "f2_watch_frames": F2_WATCH_FRAMES,
+        "f2_antecedent": _f2_ante,
+        "f2_triggered": _f2_trig,
+        "fired_events": [dict(e) for e in ev_events],
         "fired_held_event_log": event_list,
         "j1_count": j1_count,
         "j1_count_event_log": j1_count_events,
