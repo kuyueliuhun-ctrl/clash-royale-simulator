@@ -1807,6 +1807,10 @@ def test_intent_save_mechanism():
     _, _, _, _, info = env.step(ActionBundle.from_single(i + 1, int(_x), int(_y)))
     assert info["intent"]["stats"]["fired"] == 1
     assert info["intent"]["stats"]["fired_held"] == [1], "fired 必须记录当时已保持帧数（J1 数据）"
+    # J1 原文限定的前提：事件必须带**目标卡与费用**（否则 3 费卡被抱 34 帧会误算 PASS）
+    _ev = info["intent"]["event"]
+    assert _ev.get("intent_fired_card") and _ev.get("intent_fired_cost") is not None
+    assert _ev["intent_fired_cost"] == _card_cost(env.battle.players[0], _ev["intent_fired_card"])
     # ⑤ 跨局（【R8】）：pending 清空、累计保留
     _set_before = env.intent_stats["set"]
     env.reset()

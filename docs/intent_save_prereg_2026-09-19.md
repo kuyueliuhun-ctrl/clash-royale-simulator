@@ -206,3 +206,22 @@ cd src/clasher_new && PYTHONIOENCODING=utf-8 ../../.venv/Scripts/python.exe ../.
 - ⚠️ **跑前必须补的仪器**：`scripts/audit_intent_save.py`（读 `env.intent_stats["fired_held"]` 与录像，
   数「≥34 帧意图后真打出」的轨迹条数）—— **本预注册状态 = 判据已写死、仪器未落地**。
   它与 J1 的基线（`scripts/pass_streak_audit.py`：**0 条**、A 段上限 22 帧）必须**同时**产出，否则 J1 不可判。
+
+### 8.6 判读仪器已落地（2026-09-19）—— J1 的**两处口径澄清**（跑前写死，【R9】）
+
+`scripts/audit_intent_save.py` 已入库并跑通（`--random-init` / 旧 ckpt + `--allow-arch-mismatch` 两种冒烟各一次，
+`_structure_check.py` 门 ⑤⑧⑩ 全 OK）。它跑**评估局**（不训练）并读 `env.intent_stats` + `info["intent"]["event"]`。
+落地时发现 §4 的判据文字有两处**会产生假读数**，现按 J1 的**语义**收紧（都写在这里，跑前定死）：
+
+1. **★ 判定必须用"逐帧事件"，不能用 `env.intent_stats["fired_held"]`**：
+   后者是**滚动 256 条**的窗口 ⇒ 100k 长跑里早期那条 ≥34 会被**滚掉** ⇒ 单看列表**假 FAIL**。
+   ⇒ 仪器自己逐帧累计 `info["intent"]["event"]["intent_fired_held"]`（**本次运行未截断**）作判定依据；
+   列表口径只作参考打印。（这是 §2.4 记账设计的一处**已知不足**：滚动窗口是为控制内存，代价是长跑不可审计。）
+2. **★ 必须按 J1 原文过滤"目标卡费用 ≥ 6"**：原句是「同一张 **≥6 费**卡被 `pending` 覆盖 ≥34 帧后真的打出」。
+   若不滤费用，一张 3 费卡被抱 34 帧（在圣水长期 <3 时**很容易**）会被算成 PASS——**那是另一件事**。
+   ⇒ `env_wrapper._apply_intent` 的兑现事件现已带 `intent_fired_card` / `intent_fired_cost`（**只读、不进奖励**），
+   仪器按 `J1_MIN_COST = 6.0` 过滤，并把「不过滤费用」的条数一并打印作透明对照。
+
+**结论口径**：`J1 = count{ 逐帧事件 : held ≥ 34 且 目标卡费用 ≥ 6 }`，**≥1 即 PASS**；基线列 = `pass_streak_audit.py`
+的 **0 条**（主动不出牌最长段 22 帧）。⚠️ 仓内**尚无 11-option ckpt**（B 臂训练未启动）⇒ 仪器**现在跑不出真实 J1**，
+只能 `--allow-arch-mismatch` 冒烟（`enc_fc` 被重置，读数**不得**当结论）。

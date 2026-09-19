@@ -418,6 +418,14 @@ class RLEnv(gym.Env):
                     st["fired_held_max"] = max(st["fired_held_max"], int(self._intent_age))
                     ev["intent_fired"] = 1
                     ev["intent_fired_held"] = int(self._intent_age)
+                    # 目标卡与费用：**判据 J1 的原文是「同一张 ≥6 费卡」** ⇒ 判读仪器必须
+                    # 能按费用过滤（否则一张 3 费卡被抱 34 帧会算成 PASS —— 见预注册 §8.5）。
+                    _i = int(self._intent_fired_slot)
+                    if 1 <= _i <= len(p0.cycle):
+                        _c = p0.cycle[_i - 1]
+                        ev["intent_fired_card"] = str(_c)
+                        _cost = _card_cost(p0, _c)
+                        ev["intent_fired_cost"] = float(_cost) if _cost is not None else None
                 else:
                     st["dropped"] += 1
                     ev["intent_dropped"] = 1
