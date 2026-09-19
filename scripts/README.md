@@ -35,11 +35,11 @@
 
 `test_m1.py`, `test_m2.py`, `test_m3_evo.py`, `test_m4_evo7.py`, `test_m5_data.py`, `test_m6_elite.py`
 
-### ② 一次性取证 / 归档工具（`_` 前缀）（25 个）
+### ② 一次性取证 / 归档工具（`_` 前缀）（27 个）
 
 按仓内既有约定：`_` = 不进正式仪器表；多为**一次性**取证/迁移工具，**保留作证据**。
 
-`_agents_split.py`, `_converge_utf8_bootstrap.py`, `_forensics_cycling.py`, `_il_replay_extract.py`, `_il_replay_format_scan.py`, `_mask_ab_prefix.py`, `_mask_diff_snapshot.py`, `_mask_vs_engine_reconcile.py`, `_patch_battle_root_cast.py`, `_probe_eval_frame_ab.py`, `_probe_value_collapse.py`, `_probe_value_path.py`, `_schema5_probe.py`, `_skarmy_spawn_probe.py`, `_structure_check.py`, `_survey_audit.py`, `_survey_brief.py`, `_survey_groups.py`, `_survey_inventory.py`, `_survey_md_to_docx.py`, `_survey_merge.py`, `_survey_merge_docs.py`, `_survey_reverse_check.py`, `_survey_verify.py`, `_verify_fix_replays.py`
+`_agents_split.py`, `_astar_cost_compare.py`, `_converge_utf8_bootstrap.py`, `_forensics_cycling.py`, `_il_replay_extract.py`, `_il_replay_format_scan.py`, `_mask_ab_prefix.py`, `_mask_diff_snapshot.py`, `_mask_vs_engine_reconcile.py`, `_patch_battle_root_cast.py`, `_path_shape_probe.py`, `_probe_eval_frame_ab.py`, `_probe_value_collapse.py`, `_probe_value_path.py`, `_schema5_probe.py`, `_skarmy_spawn_probe.py`, `_structure_check.py`, `_survey_audit.py`, `_survey_brief.py`, `_survey_groups.py`, `_survey_inventory.py`, `_survey_md_to_docx.py`, `_survey_merge.py`, `_survey_merge_docs.py`, `_survey_reverse_check.py`, `_survey_verify.py`, `_verify_fix_replays.py`
 
 ### ③ 探针 / 诊断（可复用仪器）（60 个）
 
@@ -53,4 +53,4 @@
 
 `assassin_left_bridge_test.py`, `assassin_vs_megaknight.py`, `assassin_vs_sparky.py`, `cdp_forward.py`, `convert_upstream_frames.py`, `et_solo100k_readout.py`, `extend_level16.py`, `question_bank_poc.py`, `replay_feasibility_probe.py`, `skarmy_probe.py`, `skarmy_probe_compare.py`, `skarmy_probe_upstream.py`, `skarmy_traj_analyze.py`
 
-**合计 104 个 `*.py`**（另有 `scripts/rl/*.py` **11 个**：`start_rl.bat` 依赖其位置的入口包装脚本，**不参与**本分类）。
+**合计 106 个 `*.py`**（另有 `scripts/rl/*.py` **11 个**：`start_rl.bat` 依赖其位置的入口包装脚本，**不参与**本分类）。
