@@ -20,9 +20,26 @@
   **22 帧** 引自预注册 §4 §7（复算命令同文档），本仪器只**原样打印这一列**供并列判读；
   要重新复算请跑那条命令，不要以本脚本的输出顶替。
 
+## ★ 卡组（2026-09-20 修：**原版跑错卡组 ⇒ J1 是空判据**）
+
+**必须用训练卡组** `rl.train_solo.DEFAULT_SOLO_DECK`（Xbow 2.9）。原版这里构造
+`RLEnv(opponent=None, seed=..., intent_save=True)` **不传 deck** ⇒ 落到
+`env_wrapper.DEFAULT_DECK_1`（原版 8 卡：最高 **5** 费、**没有 Xbow**）。后果有两层，
+都不是"读数偏低"，而是**判据失效**：
+
+1. **空判据**：J1 原文要求「同一张 ≥6 费卡」，而原版卡组**没有 ≥6 费的卡** ⇒ 费用过滤
+   **按构造恒为 0** ⇒ 无论机制多好都只会打印 FAIL（`--random-init` 也一样）。
+2. **OOD**：策略是在 Xbow 卡组上训练的，原版卡组它从未见过 ⇒ 那些
+   `set/held/ready/fired` 数字描述的不是训练分布下的行为。
+
+现在 `--deck solo`（缺省）用训练卡组并把卡组逐张打印；若该卡组**没有 ≥ J1_MIN_COST
+的卡**，本仪器**拒绝给 J1 判决**（退 2），除非显式 `--allow-inapplicable`（只用于
+复现旧读数）。归因（攒的到底是哪张牌）走 `scripts/probe_intent_target.py`。
+
 ## 口径（照抄 `rl/evaluate.py` 的评估循环）
 
-`RLEnv(opponent=None, seed=..., intent_save=True)` + `BeliefInference(opp_deck=env.deck1,
+`RLEnv(opponent=None, seed=..., intent_save=True, deck0=deck, deck1=deck)` +
+`BeliefInference(opp_deck=env.deck1,
 n_particles=128, seed=...)` + `BeliefPlanner()`；策略按 **B 臂口径**（`intent_options=True`）
 载入，逐帧：
 
@@ -65,7 +82,7 @@ n_particles=128, seed=...)` + `BeliefPlanner()`；策略按 **B 臂口径**（`i
 
 ## README 一行用法（供 `scripts/README.md` 索引）
 
-`scripts/audit_intent_save.py --ckpt <ckpt.pt> [--games 8] [--max-frames 400] [--seed 0] [--deterministic] [--allow-arch-mismatch] [--json [路径]]`
+`scripts/audit_intent_save.py --ckpt <ckpt.pt> [--games 8] [--max-frames 400] [--seed 0] [--deterministic] [--deck solo|vanilla] [--allow-arch-mismatch] [--allow-inapplicable] [--json [路径]]`
 """
 from __future__ import annotations
 
@@ -90,6 +107,8 @@ from rl.belief import BeliefInference  # noqa: E402
 from rl.belief_planner import BeliefPlanner  # noqa: E402
 from rl.follower import FollowerPolicy, load_checkpoint  # noqa: E402
 from rl.plan_space import PLAN_DIM  # noqa: E402
+from card_utils import Card  # noqa: E402
+from rl.train_solo import DEFAULT_SOLO_DECK, resolve_deck_set  # noqa: E402
 
 #: J1 阈值（预注册 §4）：6 费 ÷ 0.3571 圣水/s ÷ 0.5 s/帧 ≈ 33.6 ⇒ 34。**解析换算，非观测标定。**
 J1_THRESHOLD = 34
@@ -104,6 +123,18 @@ HIST_BUCKETS = ((0, 5, "0-5"), (6, 11, "6-11"), (12, 23, "12-23"),
 SCALAR_KEYS = ("set", "held", "ready", "fired", "cancelled", "dropped")
 #: B 臂口径 ckpt 的 slot_head 出维（`intent_options=True`）
 INTENT_SLOT_OPTIONS = 11
+#: 卡组模式（2026-09-20）：solo = 训练卡组（缺省）；vanilla = DEFAULT_DECK_1（复现旧读数）
+DECK_MODES = ("solo", "vanilla")
+
+
+def _resolve_deck(mode: str):
+    """`--deck` → 卡组列表。`solo` 走 `rl.train_solo.resolve_deck_set("default")`。"""
+    if mode == "vanilla":
+        from rl.env_wrapper import DEFAULT_DECK_1
+        return list(DEFAULT_DECK_1)
+    return list(resolve_deck_set("default")[0])
+
+
 #: JSON 缺省落点：repo 根的 docs/（相对 `__file__` 解析 ⇒ 两种运行位置都能落对）
 DEFAULT_JSON = os.path.join(_ROOT, "docs", "audit_intent_save.json")
 #: 现状基线列（**引自预注册 §4/§7，本脚本不重算**）
@@ -250,11 +281,31 @@ def _run(args):
     if hidden_dim is None and arch is not None:
         hidden_dim = arch.get("hidden_dim")
 
-    # ---- 环境 / 信念 / 规划器（口径照抄 rl/evaluate.py）----
-    env = RLEnv(opponent=None, seed=args.seed, intent_save=True)
+    # ---- 卡组门（2026-09-20 修）：J1 的「≥6 费卡」过滤必须在**本卡组**上可满足 ----
+    deck = _resolve_deck(args.deck)
+    costs = {c: Card(c).elixir for c in deck}
+    ge6 = [c for c in deck if costs[c] >= J1_MIN_COST]
+    training_deck = list(resolve_deck_set("default")[0])
+    if not ge6 and not args.allow_inapplicable:
+        print(f"[错误] 卡组不适用 J1：--deck {args.deck} = {deck}")
+        print(f"       费用 = " + ", ".join(f"{c}:{costs[c]}" for c in deck))
+        print(f"       其中 >= {J1_MIN_COST:g} 费的卡 = 【无】 ⇒ J1 的『>=6 费卡』过滤"
+              f"**按构造恒为 0**（空判据）：")
+        print("       这时打印的 FAIL 不是行为结论，而是判据在这个卡组上不可满足。")
+        print(f"       训练卡组（应用它）= {training_deck}")
+        print("       用法提示：缺省就是 --deck solo（训练卡组，含 Xbow=6 费）。")
+        print("                 确要复现这条空判据请显式加 --allow-inapplicable。")
+        return 2
+
+    # ---- 环境 / 信念 / 规划器（口径照抄 rl/evaluate.py；卡组 = 训练卡组）----
+    env = RLEnv(opponent=None, seed=args.seed, intent_save=True,
+                deck0=list(deck), deck1=list(deck))
     belief = BeliefInference(opp_deck=env.deck1, n_particles=128, seed=args.seed)
     bp = BeliefPlanner()
     belief_dim = int(np.asarray(belief.encode(None, None)).shape[0])
+    deck_info = {"mode": args.deck, "cards": deck, "costs": costs,
+                 "training_deck": training_deck, "matches_training": bool(deck == training_deck),
+                 "has_ge_6": ge6, "j1_filter_satisfiable": bool(ge6)}
 
     if args.ckpt:
         pol = load_checkpoint(args.ckpt, hidden_dim=hidden_dim, plan_dim=PLAN_DIM,
@@ -278,6 +329,11 @@ def _run(args):
     print(f"评估协议     : games={args.games}  max_frames={args.max_frames}  seed={args.seed}  "
           f"deterministic={args.deterministic}（False=采样）")
     print(f"env          : intent_save=True（B 臂口径；opponent=None=随机对手，只跑评估不训练）")
+    print(f"卡组         : --deck {args.deck} = {deck}")
+    print(f"             费用 = " + ", ".join(f"{c}:{costs[c]}" for c in deck)
+          + f"   >= {J1_MIN_COST:g} 费的卡 = {ge6 or '【无】'}")
+    print(f"             训练卡组对账 = {'一致' if deck_info['matches_training'] else '★ 不一致 ★'}"
+          f"（{training_deck}）")
     print(f"J1 阈值      : >={J1_THRESHOLD} 保持帧"
           f"（= 6 费 ÷ 0.3571 圣水/s ÷ 0.5 s/帧 ≈ 33.6；解析换算，非观测标定 【R16】）")
     print()
@@ -363,10 +419,12 @@ def _run(args):
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "args": {"ckpt": args.ckpt, "random_init": bool(args.random_init),
                  "games": args.games, "max_frames": args.max_frames, "seed": args.seed,
-                 "deterministic": args.deterministic,
-                 "allow_arch_mismatch": bool(args.allow_arch_mismatch)},
+                 "deterministic": args.deterministic, "deck": args.deck,
+                 "allow_arch_mismatch": bool(args.allow_arch_mismatch),
+                 "allow_inapplicable": bool(args.allow_inapplicable)},
         "arch": arch,
         "plan_dim": PLAN_DIM, "belief_dim": belief_dim, "hidden_dim": hidden_dim,
+        "deck": deck_info,
         "env": {"intent_save": bool(env.intent_save), "opponent": "random(None)"},
         "j1_threshold": J1_THRESHOLD,
         "j1_threshold_derivation": "Xbow 6 费 ÷ 0.3571 圣水/s ≈ 17 s ÷ 0.5 s/帧 ≈ 34 帧"
@@ -422,6 +480,12 @@ def main(argv=None):
                     help="不载 ckpt，用随机初始化的 11-option 策略冒烟（--ckpt 缺省时必需）")
     ap.add_argument("--allow-arch-mismatch", action="store_true",
                     help="ckpt 非 11-option 架构时放行（只用于冒烟：enc_fc 会被整体重置为随机）")
+    ap.add_argument("--deck", choices=DECK_MODES, default="solo",
+                    help="solo=训练卡组 Xbow 2.9（缺省，含 Xbow=6 费）；"
+                         "vanilla=DEFAULT_DECK_1（原版 8 卡，最高 5 费 ⇒ J1 空判据）")
+    ap.add_argument("--allow-inapplicable", action="store_true",
+                    help="卡组里没有 >=6 费卡（J1 过滤恒 0）时仍放行 —— 只为复现旧读数，"
+                         "此模式下的 FAIL **不是**行为结论")
     ap.add_argument("--games", type=int, default=8, help="评估局数（默认 8）")
     ap.add_argument("--max-frames", type=int, default=400, help="每局最大决策帧数（默认 400）")
     ap.add_argument("--seed", type=int, default=0, help="随机种子（默认 0）")

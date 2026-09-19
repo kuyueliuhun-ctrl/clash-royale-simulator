@@ -1,0 +1,74 @@
+========================================================================================
+攒费意图（intent-save）目标归因仪器 —— 攒的是哪一张牌 / 等了多少帧 / 还差多少费
+========================================================================================
+回费率常量源 : player.regenerate_elixir(base_regen_time=2.8)
+每决策帧回费 : 0.17857 圣水/帧（= 1/2.8 × 0.5s）
+攒够帧数换算 : 1费→6帧  2费→12帧  3费→17帧  4费→23帧  6费→34帧
+自检(判据阈值): 6 费 → 34 帧（= 预注册 J1 的 34，一致）
+
+本仪器卡组   : --deck solo = ['Xbow', 'Tesla', 'Skeletons', 'IceWizard', 'Archer', 'Knight', 'Log', 'Fireball']
+             费用 = Xbow:6, Tesla:4, Skeletons:1, IceWizard:3, Archer:3, Knight:3, Log:2, Fireball:4
+训练卡组     : rl.train_solo.resolve_deck_set('default')[0] = ['Xbow', 'Tesla', 'Skeletons', 'IceWizard', 'Archer', 'Knight', 'Log', 'Fireball']
+卡组对账     : 一致（本仪器卡组 == 训练卡组）（--deck solo 才是训练口径）
+J1 可满足性  : 本卡组里 >= 6 费的卡 = ['Xbow']
+
+ckpt         : src/clasher_new/runs/intent_on_100k/solo_main.pt
+PLAN_DIM=58  belief_dim=563  hidden_dim=ckpt 元数据
+评估协议     : games=20  max_frames=400  seed=0  deterministic=False（False=采样）
+
+局   0: frames= 322 pending= 280 held= 149 无pending=  42 意图段=130
+局   1: frames= 361 pending= 305 held= 168 无pending=  56 意图段=136
+局   2: frames= 361 pending= 307 held= 153 无pending=  54 意图段=151
+局   3: frames= 361 pending= 314 held= 182 无pending=  47 意图段=132
+局   4: frames= 400 pending= 344 held= 187 无pending=  56 意图段=157
+局   5: frames= 284 pending= 247 held= 127 无pending=  37 意图段=120
+局   6: frames= 361 pending= 307 held= 160 无pending=  54 意图段=145
+局   7: frames= 361 pending= 312 held= 168 无pending=  49 意图段=144
+局   8: frames= 358 pending= 299 held= 139 无pending=  59 意图段=159
+局   9: frames= 361 pending= 308 held= 146 无pending=  53 意图段=162
+局  10: frames= 361 pending= 311 held= 165 无pending=  50 意图段=146
+局  11: frames= 361 pending= 303 held= 147 无pending=  58 意图段=156
+局  12: frames= 361 pending= 308 held= 157 无pending=  53 意图段=151
+局  13: frames= 400 pending= 340 held= 161 无pending=  60 意图段=179
+局  14: frames= 361 pending= 303 held= 165 无pending=  58 意图段=138
+局  15: frames= 323 pending= 272 held= 132 无pending=  51 意图段=139
+局  16: frames= 361 pending= 307 held= 167 无pending=  54 意图段=140
+局  17: frames= 361 pending= 305 held= 140 无pending=  56 意图段=164
+局  18: frames= 400 pending= 338 held= 172 无pending=  62 意图段=166
+局  19: frames= 384 pending= 328 held= 166 无pending=  56 意图段=162
+
+----------------------------------------------------------------------------------------
+总帧数 7203  pending 帧 6138（85.2%）  其中 **held 帧（env 口径）** 3151（43.7% 全帧 / 51.3% pending 帧）
+   [口径] held 用 **env 口径**（= `intent_stats['held']`，**不含每段的 set 帧**）；含 set 帧的原始计数 = 5671（差 = 意图段数 2977）
+
+① 逐帧归因（pending 帧按目标卡拆开；held = 该帧仍买不起**且不是该段的 set 帧**=承诺期）
+   卡              费用    阈值帧  pending帧   held帧   占held     意图段   held均   held最大     达阈段
+   Xbow            6     34      2973    1925   61.1%    1047    1.84       19       0
+   Tesla           4     23      1223     550   17.5%     672    0.82        8       0
+   Fireball        4     23       893     358   11.4%     532    0.67        7       0
+   Archer          3     17       429     145    4.6%     282    0.51       12       0
+   IceWizard       3     17       267      65    2.1%     200    0.33        4       0
+   Knight          3     17       222      62    2.0%     159    0.39        7       0
+   Log             2     12       115      41    1.3%      74    0.55        5       0
+   Skeletons       1      6        16       5    0.2%      11    0.45        2       0
+
+② 意图下的那一刻：缺口 gap = 费用 − 圣水（越接近 0 = 越像「快买得起了」而非「攒大件」）
+   gap 分桶: <=0.5=361  0.5-1=392  1-2=731  2-3=668  3-4=386  >=4=285
+③ 「为最便宜的买不起的卡等待」= 1336/2977（44.9%）   对照「为最贵的买不起的卡等待」= 1157/2977
+③★ **有真实选择**（买不起的槽 >=2 且费用不全相同）= 2653/2977（89.1%）：选**最便宜** = 1023（38.6%） / 选**最贵** = 939（35.4%） / 中间 = 691  ⇒ **基本打平**
+
+⑤ 与 env 计数器对账：held env=3151 / 本仪器=3151 ⇒ 一致    set env=2977 / 意图段=2977    fired env=0 / 逐段=0
+
+④ held 最长的 10 段 (局, 帧#, 卡, 费用, 阈值, held, 结局):
+   game= ? t=  59 Xbow       cost=6.0  thr= 34  held= 19  dropped
+   game= ? t= 155 Xbow       cost=6.0  thr= 34  held= 18  dropped
+   game= ? t= 217 Xbow       cost=6.0  thr= 34  held= 18  dropped
+   game= ? t= 212 Xbow       cost=6.0  thr= 34  held= 17  dropped
+   game= ? t= 167 Xbow       cost=6.0  thr= 34  held= 17  dropped
+   game= ? t= 101 Xbow       cost=6.0  thr= 34  held= 16  dropped
+   game= ? t= 157 Xbow       cost=6.0  thr= 34  held= 16  dropped
+   game= ? t= 141 Xbow       cost=6.0  thr= 34  held= 15  dropped
+   game= ? t= 113 Xbow       cost=6.0  thr= 34  held= 15  dropped
+   game= ? t= 192 Xbow       cost=6.0  thr= 34  held= 15  dropped
+----------------------------------------------------------------------------------------
+JSON 留证: docs/probe_intent_target_solo_100k.json

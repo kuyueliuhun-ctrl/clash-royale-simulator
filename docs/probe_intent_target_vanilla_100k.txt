@@ -1,0 +1,74 @@
+========================================================================================
+攒费意图（intent-save）目标归因仪器 —— 攒的是哪一张牌 / 等了多少帧 / 还差多少费
+========================================================================================
+回费率常量源 : player.regenerate_elixir(base_regen_time=2.8)
+每决策帧回费 : 0.17857 圣水/帧（= 1/2.8 × 0.5s）
+攒够帧数换算 : 3费→17帧  4费→23帧  5费→28帧
+自检(判据阈值): 6 费 → 34 帧（= 预注册 J1 的 34，一致）
+
+本仪器卡组   : --deck vanilla = ['Minions', 'Archer', 'MiniPekka', 'Musketeer', 'Giant', 'Fireball', 'Arrows', 'Knight']
+             费用 = Minions:3, Archer:3, MiniPekka:4, Musketeer:4, Giant:5, Fireball:4, Arrows:3, Knight:3
+训练卡组     : rl.train_solo.resolve_deck_set('default')[0] = ['Xbow', 'Tesla', 'Skeletons', 'IceWizard', 'Archer', 'Knight', 'Log', 'Fireball']
+卡组对账     : ★ 不一致 ★（--deck solo 才是训练口径）
+J1 可满足性  : 本卡组里 >= 6 费的卡 = 【无】  ⇒ ★ J1 的『>=6 费卡』过滤在本卡组上**按构造恒为 0**（空判据）
+
+ckpt         : src/clasher_new/runs/intent_on_100k/solo_main.pt
+PLAN_DIM=58  belief_dim=563  hidden_dim=ckpt 元数据
+评估协议     : games=20  max_frames=400  seed=0  deterministic=False（False=采样）
+
+局   0: frames= 325 pending= 291 held= 131 无pending=  34 意图段=160
+局   1: frames= 181 pending= 160 held=  63 无pending=  21 意图段= 97
+局   2: frames= 173 pending= 160 held=  69 无pending=  13 意图段= 89
+局   3: frames= 361 pending= 316 held= 147 无pending=  45 意图段=168
+局   4: frames= 182 pending= 162 held=  88 无pending=  20 意图段= 73
+局   5: frames= 284 pending= 248 held= 104 无pending=  36 意图段=144
+局   6: frames= 205 pending= 180 held=  85 无pending=  25 意图段= 95
+局   7: frames= 196 pending= 179 held=  87 无pending=  17 意图段= 92
+局   8: frames= 173 pending= 154 held=  64 无pending=  19 意图段= 88
+局   9: frames= 182 pending= 162 held=  71 无pending=  20 意图段= 91
+局  10: frames= 318 pending= 282 held= 112 无pending=  36 意图段=170
+局  11: frames= 218 pending= 194 held= 104 无pending=  24 意图段= 90
+局  12: frames= 328 pending= 288 held= 105 无pending=  40 意图段=183
+局  13: frames= 213 pending= 194 held=  80 无pending=  19 意图段=114
+局  14: frames= 280 pending= 251 held= 113 无pending=  29 意图段=137
+局  15: frames= 227 pending= 207 held=  98 无pending=  20 意图段=109
+局  16: frames= 182 pending= 169 held=  85 无pending=  13 意图段= 84
+局  17: frames= 340 pending= 291 held= 131 无pending=  49 意图段=160
+局  18: frames= 315 pending= 278 held= 126 无pending=  37 意图段=152
+局  19: frames= 348 pending= 305 held= 134 无pending=  43 意图段=170
+
+----------------------------------------------------------------------------------------
+总帧数 5031  pending 帧 4471（88.9%）  其中 **held 帧（env 口径）** 1997（39.7% 全帧 / 44.7% pending 帧）
+   [口径] held 用 **env 口径**（= `intent_stats['held']`，**不含每段的 set 帧**）；含 set 帧的原始计数 = 4113（差 = 意图段数 2466）
+
+① 逐帧归因（pending 帧按目标卡拆开；held = 该帧仍买不起**且不是该段的 set 帧**=承诺期）
+   卡              费用    阈值帧  pending帧   held帧   占held     意图段   held均   held最大     达阈段
+   Giant           5     28      1378     769   38.5%     606    1.27       12       0
+   Fireball        4     23       895     386   19.3%     507    0.76       10       0
+   MiniPekka       4     23       889     372   18.6%     516    0.72        8       0
+   Musketeer       4     23       538     236   11.8%     301    0.78        7       0
+   Knight          3     17       275      74    3.7%     201    0.37        4       0
+   Minions         3     17       239      81    4.1%     157    0.52        5       0
+   Arrows          3     17       146      47    2.4%      99    0.47        4       0
+   Archer          3     17       111      32    1.6%      79    0.41        4       0
+
+② 意图下的那一刻：缺口 gap = 费用 − 圣水（越接近 0 = 越像「快买得起了」而非「攒大件」）
+   gap 分桶: <=0.5=356  0.5-1=440  1-2=827  2-3=512  3-4=201  >=4=34
+③ 「为最便宜的买不起的卡等待」= 1208/2466（49.0%）   对照「为最贵的买不起的卡等待」= 912/2466
+③★ **有真实选择**（买不起的槽 >=2 且费用不全相同）= 2190/2466（88.8%）：选**最便宜** = 944（43.1%） / 选**最贵** = 718（32.8%） / 中间 = 528  ⇒ 偏便宜
+
+⑤ 与 env 计数器对账：held env=1997 / 本仪器=1997 ⇒ 一致    set env=2466 / 意图段=2466    fired env=1 / 逐段=1
+
+④ held 最长的 10 段 (局, 帧#, 卡, 费用, 阈值, held, 结局):
+   game= ? t= 144 Giant      cost=5.0  thr= 28  held= 12  dropped
+   game= ? t= 140 Giant      cost=5.0  thr= 28  held= 11  dropped
+   game= ? t= 101 Giant      cost=5.0  thr= 28  held= 10  dropped
+   game= ? t= 124 Giant      cost=5.0  thr= 28  held= 10  cancelled
+   game= ? t= 163 Giant      cost=5.0  thr= 28  held= 10  dropped
+   game= ? t=  46 Fireball   cost=4.0  thr= 23  held= 10  dropped
+   game= ? t=  30 Giant      cost=5.0  thr= 28  held=  9  dropped
+   game= ? t= 198 Giant      cost=5.0  thr= 28  held=  9  cancelled
+   game= ? t= 153 Giant      cost=5.0  thr= 28  held=  9  dropped
+   game= ? t= 123 Giant      cost=5.0  thr= 28  held=  8  cancelled
+----------------------------------------------------------------------------------------
+JSON 留证: docs/probe_intent_target_vanilla_100k.json

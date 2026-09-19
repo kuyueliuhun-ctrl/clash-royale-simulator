@@ -1,0 +1,55 @@
+==============================================================================
+J1 判读仪器：攒费意图（intent-save）可达性计数 —— 描述性仪器，不是判据本身
+==============================================================================
+ckpt         : src/clasher_new/runs/intent_on_100k/solo_main.pt
+架构         : declared intent_options=True / slot_head 出维=11 ⇒ 11-option（B 臂口径，匹配）
+PLAN_DIM     : 58   belief_dim: 563   hidden_dim: 128
+评估协议     : games=20  max_frames=400  seed=0  deterministic=False（False=采样）
+env          : intent_save=True（B 臂口径；opponent=None=随机对手，只跑评估不训练）
+卡组         : --deck solo = ['Xbow', 'Tesla', 'Skeletons', 'IceWizard', 'Archer', 'Knight', 'Log', 'Fireball']
+             费用 = Xbow:6, Tesla:4, Skeletons:1, IceWizard:3, Archer:3, Knight:3, Log:2, Fireball:4   >= 6 费的卡 = ['Xbow']
+             训练卡组对账 = 一致（['Xbow', 'Tesla', 'Skeletons', 'IceWizard', 'Archer', 'Knight', 'Log', 'Fireball']）
+J1 阈值      : >=34 保持帧（= 6 费 ÷ 0.3571 圣水/s ÷ 0.5 s/帧 ≈ 33.6；解析换算，非观测标定 【R16】）
+
+局   0: frames= 362  set=163 held= 145 ready=  1 fired=  0 cancelled= 20 dropped= 17  fired_held=[]
+局   1: frames= 340  set=149 held= 146 ready=  0 fired=  0 cancelled= 18 dropped= 16  fired_held=[]
+局   2: frames= 400  set=164 held= 175 ready=  1 fired=  0 cancelled= 24 dropped= 19  fired_held=[]
+局   3: frames= 386  set=184 held= 131 ready=  1 fired=  0 cancelled= 36 dropped= 11  fired_held=[]
+局   4: frames= 400  set=157 held= 175 ready=  0 fired=  0 cancelled= 28 dropped= 17  fired_held=[]
+局   5: frames= 361  set=124 held= 170 ready=  0 fired=  0 cancelled= 37 dropped=  9  fired_held=[]
+局   6: frames= 174  set= 68 held=  85 ready=  0 fired=  0 cancelled= 10 dropped=  4  fired_held=[]
+局   7: frames= 131  set= 67 held=  47 ready=  0 fired=  0 cancelled=  8 dropped=  4  fired_held=[]
+局   8: frames= 400  set=158 held= 180 ready=  1 fired=  0 cancelled= 26 dropped= 19  fired_held=[]
+局   9: frames= 400  set=173 held= 168 ready=  1 fired=  0 cancelled= 22 dropped= 22  fired_held=[]
+局  10: frames= 361  set=153 held= 152 ready=  0 fired=  0 cancelled= 20 dropped= 19  fired_held=[]
+局  11: frames= 361  set=158 held= 146 ready=  1 fired=  0 cancelled= 24 dropped= 11  fired_held=[]
+局  12: frames= 361  set=155 held= 152 ready=  0 fired=  0 cancelled= 22 dropped= 16  fired_held=[]
+局  13: frames= 361  set=141 held= 165 ready=  0 fired=  0 cancelled= 25 dropped= 13  fired_held=[]
+局  14: frames= 374  set=149 held= 167 ready=  0 fired=  0 cancelled= 24 dropped= 15  fired_held=[]
+局  15: frames= 400  set=136 held= 203 ready=  1 fired=  0 cancelled= 25 dropped= 13  fired_held=[]
+局  16: frames= 308  set=124 held= 135 ready=  1 fired=  0 cancelled= 19 dropped= 13  fired_held=[]
+局  17: frames= 227  set=101 held=  92 ready=  0 fired=  0 cancelled= 19 dropped=  5  fired_held=[]
+局  18: frames= 374  set=161 held= 159 ready=  0 fired=  0 cancelled= 18 dropped= 18  fired_held=[]
+局  19: frames= 361  set=168 held= 139 ready=  3 fired=  0 cancelled= 19 dropped= 19  fired_held=[]
+
+------------------------------------------------------------------------------
+合计（env.intent_stats 跨局累计）
+  set=2853  held=2932  ready=11  fired=0  cancelled=444  dropped=280
+  fired_held_max=0
+  fired_held 全列表（n=0）: []
+  直方图: 0-5=0  6-11=0  12-23=0  24-33=0  >=34=0
+  （滚动窗口 256：fired=0，列表 0 条，无截断）
+  交叉核对（逐帧事件独立归因，未截断）: fired_held=[] ⇒ count(>=34)=0（与列表口径一致）
+
+J1 = count(逐帧事件: held>=34 且 目标卡费用>=6) = 0   [未截断全史 + J1 原文口径]
+   达标事件明细 (card, cost, held) = []
+   [参考] 仅 held>=34（不过滤费用）= 0 条 （与原文口径相同）
+   [参考] env 列表口径 = 0（滚动 256 条 ⇒ 长跑会被滚掉，**不作判定依据**）
+F2 前件（fired>0）= False（fired=0，其中已结算观察窗 0 条）
+F2 明细 (card, cost, held, dmg_tower, kills_units) = []
+F2 触发？= False  ⇒ 前件不成立或兑现确有塔伤/解场 ⇒ F2 未触发
+J1 基线列: A 臂（意图关 intent_save=False）按构造恒 0 —— 不开意图则不产生 intent_stats['fired_held']，本仪器对 A 臂的实测 = None（未跑 A 臂）
+           现状基线 = scripts/pass_streak_audit.py 的 0 条、主动不出牌最长段 22 帧（引自预注册 docs/intent_save_prereg_2026-09-19.md §4/§7；本脚本不重算）
+J1 FAIL（判据：>=1 即 PASS；判定值 = 0（逐帧事件 + 费用过滤）；n=1/臂 ⇒ 只判二值可达性 【R5】，不看胜率）
+------------------------------------------------------------------------------
+JSON 留证: docs/audit_intent_save_B_solodeck.json

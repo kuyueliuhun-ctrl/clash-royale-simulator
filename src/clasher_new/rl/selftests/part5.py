@@ -1843,3 +1843,59 @@ def test_intent_save_mechanism():
     print(f"    [ok] intent-save：默认关逐位不变；无 pending 时掩码逐位相同；"
           f"开=11 option/scalar 9（参数 +{_expect}，逐项复算）；"
           f"SAVE→承诺期压制花费→保持不重抽→ready→fired(held=1)→CANCEL；跨局 pending 清空/计数保留")
+def test_intent_audit_deck_invariant():
+    """【R8】J1 判据的**卡组不变量**（2026-09-20，判读仪器缺陷的回归测试）。
+
+    事故（一手证据 `docs/intent_target_attribution_2026-09-20.md`）：J1 判读仪器
+    `scripts/audit_intent_save.py` 构造 `RLEnv(opponent=None, ...)` **不传 deck** ⇒ 落到
+    `env_wrapper.DEFAULT_DECK_1`（原版 8 卡，最高 **5** 费、**没有 Xbow**），而训练用的是
+    `rl.train_solo.DEFAULT_SOLO_DECK`（Xbow 2.9，**Xbow = 6 费**）。后果不是"读数偏低"，
+    而是**判据失效**：J1 的「同一张 >=6 费卡」过滤在那个卡组上**按构造恒为 0**（空判据），
+    34 帧阈值对应的牌也不在场上，且策略是在 Xbow 卡组上训练的（原版卡组 = OOD）。
+
+    本测试钉死两条不变量 + 一条负对照：
+      ① 仪器缺省卡组 == 训练卡组（`rl.train_solo.resolve_deck_set("default")`）；
+      ② 该卡组里**存在**费用 >= `J1_MIN_COST` 的卡，且它的攒费帧数上界 >= `J1_THRESHOLD`
+         ⇒ **判据的阈值在评估卡组上可达**（这是被违反的那条不变量）；
+      ③ 负对照：`vanilla`（`DEFAULT_DECK_1`）**不满足** ② ⇒ 本测试**有判别力**（不是恒真）；
+      ④ 端到端：`main([--random-init --deck vanilla ...])` **退 2 拒绝**判 J1（新门禁）。
+    """
+    import importlib.util
+    import inspect as _inspect
+    import math as _math
+    from card_utils import Card
+    from player import PlayerState
+    from rl.train_solo import DEFAULT_SOLO_DECK, resolve_deck_set
+
+    _here = os.path.dirname(os.path.abspath(__file__))          # rl/selftests
+    _root = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(_here))))                               # repo 根
+    _script = os.path.join(_root, "scripts", "audit_intent_save.py")
+    assert os.path.isfile(_script), f"判读仪器不在位：{_script}"
+    _spec = importlib.util.spec_from_file_location("_audit_intent_save_probe", _script)
+    _mod = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+
+    _base = float(_inspect.signature(PlayerState.regenerate_elixir)
+                  .parameters["base_regen_time"].default)
+    _per_frame = (1.0 / _base) * 0.5        # 决策帧 = 0.5 s
+    j1_min, j1_thr = float(_mod.J1_MIN_COST), int(_mod.J1_THRESHOLD)
+    solo = list(_mod._resolve_deck("solo"))
+    vanilla = list(_mod._resolve_deck("vanilla"))
+    # ① 仪器缺省 = 训练卡组
+    assert solo == list(resolve_deck_set("default")[0]) == list(DEFAULT_SOLO_DECK),         f"判读仪器的缺省卡组必须是训练卡组；solo={solo}"
+    # ② 判据阈值在评估卡组上可达
+    ge = [c for c in solo if Card(c).elixir >= j1_min]
+    assert ge, f"训练卡组里没有 >= {j1_min:g} 费卡 ⇒ J1 是空判据（曾真的这样跑过）"
+    _need = {c: int(_math.ceil(Card(c).elixir / _per_frame)) for c in ge}
+    assert max(_need.values()) >= j1_thr,         f"J1 阈值 {j1_thr} 帧在卡组上不可达：{_need}（阈值高于最贵卡的攒费帧数）"
+    assert j1_thr == int(_math.ceil(6.0 / _per_frame)),         f"J1 阈值必须 = 6 费 ÷ 每帧回费 向上取整（{_per_frame:.5f}）={_math.ceil(6/_per_frame)}"
+    # ③ 负对照：vanilla 卡组确实不适用（⇒ 上面那条检查不是恒真）
+    vge = [c for c in vanilla if Card(c).elixir >= j1_min]
+    assert not vge, f"负对照失效：vanilla 卡组不该含 >= {j1_min:g} 费卡（{vge}）"
+    # ④ 端到端：门禁拒绝在不适用卡组上判 J1（不跑 rollout，只走卡组门）
+    _rc = _mod.main(["--random-init", "--deck", "vanilla", "--games", "1",
+                     "--max-frames", "2", "--no-json"])
+    assert _rc == 2, f"卡组不适用 J1 时仪器必须退 2 拒绝，实测 rc={_rc}"
+    print(f"    [ok] J1 卡组不变量：仪器缺省卡组==训练卡组（含 {ge}，需 {max(_need.values())} 帧"
+          f">= 阈值 {j1_thr}）；负对照 vanilla={vanilla} 无 >=6 费卡且门禁退 2")

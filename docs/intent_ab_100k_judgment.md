@@ -135,3 +135,79 @@ n=1/臂 ⇒ 不能宣称"intent-save 一定会退化"，但**本 run 方向明�
 - [x] `AGENTS.md` B 区 intent-save 行改为"已跑完 + 判读（J1 FAIL + 绝对强度退化）"
 - [x] `docs/README.md` 登记本判读文档 + 读数
 - [x] `python scripts/_agents_split.py --check` 与 `_structure_check.py` **PASS**
+
+## 9. ★★ 勘误（2026-09-20 追加；**不改上面任何原文**，只登记更正与重判）
+
+> 触发 = 用户的复核问题「你所谓的攒费帧，是不是依旧在为一张最便宜的卡等待？」
+> 追查该问题时查出：**本判读的 J1 读数跑在了一个策略从未训练过的卡组上** ⇒ §2 / §2.1 / §5 / §5.1
+> 的读数与由它推出的结论**作废重判**。完整证据、修法与新的目标归因 ⇒
+> [`intent_target_attribution_2026-09-20.md`](intent_target_attribution_2026-09-20.md)。
+
+### 9.1 事实：判读仪器的卡组 ≠ 训练卡组（三层独立证据）
+
+| 层 | 证据 |
+|---|---|
+| **源码** | `scripts/audit_intent_save.py` 的 `_run()` 原先构造 `RLEnv(opponent=None, seed=..., intent_save=True)`——**不传 `deck0`/`deck1`** ⇒ 按 `rl/env_wrapper.py` 的缺省落到 `DEFAULT_DECK` / `DEFAULT_DECK_1` |
+| **常量** | 训练用 `rl/train_solo.DEFAULT_SOLO_DECK`（`resolve_deck_set("default")`）＝ Xbow 2.9：`Xbow:6, Tesla:4, Skeletons:1, IceWizard:3, Archer:3, Knight:3, Log:2, Fireball:4`；审计用的 `DEFAULT_DECK_1` ＝ `Minions:3, Archer:3, MiniPekka:4, Musketeer:4, Giant:5, Fireball:4, Arrows:3, Knight:3` ⇒ **两套卡组逐张不同，且后者最高只有 5 费、没有 `cost ≥ 6` 的卡** |
+| **产物** | 本 run 的 14 份录像（`runs/intent_on_100k/replays/`）里出现的卡只有 Xbow/Tesla/Skeletons/IceWizard/Archer/Knight/Log/Fireball，原版 8 卡里的 Giant/MiniPekka/Musketeer/Minions **出现 0 次**；而本判读的 `fired_events` 报出的却是 **`Giant`(5 费) 与 `MiniPekka`(4 费)** ⇒ 两层卡组确实不同 |
+
+⇒ 两个后果，**都不是"读数偏低"，而是判据本身失效**：
+
+- **A. 空判据**：J1 的「同一张 **≥6 费**卡」过滤在 `DEFAULT_DECK_1` 上**按构造恒为 0** ⇒ 无论机制多好，
+  §2 都只会打印 FAIL；连"34 帧阈值"所对应的那张牌（Xbow）都**不在场上**。
+- **B. OOD**：被测策略（B 臂）是在 Xbow 卡组上训练的，`DEFAULT_DECK_1` 它**从未见过** ⇒
+  `set/held/ready/fired` 描述的不是训练分布下的行为。
+
+### 9.2 重测（仪器修好卡组后：同一 ckpt、同一协议、`--deck solo`、两 seed）
+
+`./.venv/Scripts/python.exe scripts/audit_intent_save.py --ckpt src/clasher_new/runs/intent_on_100k/solo_main.pt --deck solo --games 20 --max-frames 400 [--seed 1]`
+（读数留证：`docs/audit_intent_save_B_solodeck.txt` / `.json`、`docs/audit_intent_save_B_solodeck_seed1.txt` / `.json`）
+
+| 项 | seed 0 | seed 1 | （已作废的旧读数，原版卡组） |
+|---|---|---|---|
+| 帧数 | 6,842 | 6,825 | ≈6,300 |
+| `set` | 2,853 | 2,902 | 2,615 / 2,674 |
+| `held` | **2,932（42.9% 的帧）** | **2,878（42.2%）** | 2,118 / 2,347（≈37%） |
+| `ready` | 11 | 6 | 18 / 17 |
+| **`fired`** | **0** | **0** | **2** |
+| `cancelled` / `dropped` | 444 / 280 | 448 / 272 | 298/272、261/274 |
+| `fired_held` | 空 | 空 | `[2,4]`、`[6,0]` |
+| **J1** | **0 ⇒ FAIL** | **0 ⇒ FAIL** | 0（空判据，无效） |
+| 卡组对账 | `matches_training=True`，`has_ge_6=['Xbow']` | 同 | —（跑的是 `DEFAULT_DECK_1`） |
+
+⇒ **J1 = FAIL 的结论不变，但这次是"有效的 FAIL"**（判据在评估卡组上可满足：存在 Xbow=6 费）。
+**变化的不是结论而是形状**：旧读数说"机制被大量使用、`ready=17→fired=2`（部分转化）"，
+正确读数说 **`fired = 0`（零转化）**——20 局 × 2 seed 里，**被攒的那张牌一次都没有被真的打出去**。
+
+### 9.3 被推翻 / 撤回的具体条目
+
+1. **§5.1「三条预注册分支一个都没覆盖实际情形 ⇒ 预注册有设计缺口」——撤回。**
+   在正确卡组上 `set > 0` 而 **`fired = 0`** ⇒ 预注册 **F1 的前件成立、F1 触发**，其处置在跑前就写死了
+   （**「打断过强 ⇒ 下一刀 = M2 时长 option，不是调奖励」**）⇒ **分支表没有缺口**；
+   之前的"缺口"是**空判据卡组**上的 `fired=2` 造出来的假象。§5 表里 F1 的"未触发"与 §5.1 整节按此更正。
+2. **§2.1-1 的「held ≈ 37% 的帧」数字作废**（它在错卡组上）；正确卡组上的同类量 = **42.2%–42.9%**（§9.2）。
+3. **F2「兑现确有塔伤/解场 ⇒ 削弱『奖励侧是瓶颈』」——撤回该证据。**
+   那 1 条兑现是错卡组上的 `MiniPekka`(4 费) ⇒ 与本 run 的目标卡族无关。
+   ⇒ 「奖励侧是不是瓶颈」**回到未定**（并非被推翻为"是"，而是**证据被撤**）。
+   已作废的 `fired_held ∈ {2,4,6}` 同理。
+4. **§2 的"基线列"与阈值复现不受影响**（它们是**臂 A** 的 56,677 帧复算，臂 A 不开 intent、不涉及审计卡组）。
+5. **§3（J2）、§4（绝对强度）不受影响**：二者读的是训练侧 `gates.json` 与评估回放，走的是**训练卡组**。
+   故本 run 最重要的负面读数（同锚点 A 0.500 vs B 0.100，Δ≈5σ + 三次 `<0.35`）**依然成立**。
+
+### 9.4 仍然成立的两条机制性观察（在正确卡组上更强）
+
+- **`ready > 0` 但 `fired = 0`**：17/17（11+6）次"攒够"**全部没有转化**（旧读数说 15/17 没转化）；
+  归因仪器把这条读得更细：457 段"攒够"里 **448 段的 `ready` 只维持了 1 帧**就结束了。
+  ⇒ §2.1-3 指出的**代码级设计缺口**（`ready` 一出现 `pending` 即被清、花费立刻恢复合法 ⇒
+  目标卡在"攒够那一帧"不再被特权化）**仍然是我实现里的真实缺口**，且在新读数下**更严重**。
+- **长保持从未完成**：两次运行 `fired_held` 直方图 `≥34: 0`；目标归因显示**目标主要是 Xbow**
+  （**不是**"最便宜的卡"：正确卡组上 `held` 帧的 **61.1%** 落在最贵的 Xbow(6 费)、最便宜的 Skeletons(1 费) **0.2%**，见新文档 §3）⇒ 失败点是**保持时长/承诺不稳**，不是"攒错了牌"。
+
+### 9.5 同步更正
+
+- 仪器：`scripts/audit_intent_save.py` 新增 `--deck {solo,vanilla}`（缺省 **solo = 训练卡组**）、
+  打印卡组与"≥6 费卡"清单；卡组**不可满足 J1** 时**拒绝给判决并退 2**（`--allow-inapplicable` 才放行）。
+- 回归测试：`rl/selftests/part5.py::test_intent_audit_deck_invariant`（① 仪器缺省卡组 == 训练卡组；
+  ② 判据阈值在评估卡组上**可达**；③ 负对照 `vanilla` 不满足 ② ⇒ 有判别力；④ 端到端：门禁退 2）。
+- 归因仪器：`scripts/probe_intent_target.py`（新增）。
+- 台账：`docs/agents/ledger.md` **O11 / O7** 追加本节；`AGENTS.md` B 区该行与 `docs/README.md` 同步。

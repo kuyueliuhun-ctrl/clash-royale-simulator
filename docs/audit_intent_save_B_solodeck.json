@@ -1,0 +1,395 @@
+{
+  "instrument": "scripts/audit_intent_save.py",
+  "what": "J1（攒费意图 intent-save）二值可达性计数仪器：描述性仪器，不是判据本身",
+  "generated_at": "2026-09-20T06:49:25",
+  "args": {
+    "ckpt": "src/clasher_new/runs/intent_on_100k/solo_main.pt",
+    "random_init": false,
+    "games": 20,
+    "max_frames": 400,
+    "seed": 0,
+    "deterministic": false,
+    "deck": "solo",
+    "allow_arch_mismatch": false,
+    "allow_inapplicable": false
+  },
+  "arch": {
+    "path": "src/clasher_new/runs/intent_on_100k/solo_main.pt",
+    "declared_intent_options": true,
+    "slot_head_rows": 11,
+    "observed_11_option": true,
+    "match_11_option": true,
+    "hidden_dim": 128,
+    "plan_dim_meta": 58,
+    "belief_dim_meta": 563,
+    "allow_arch_mismatch": false
+  },
+  "plan_dim": 58,
+  "belief_dim": 563,
+  "hidden_dim": 128,
+  "deck": {
+    "mode": "solo",
+    "cards": [
+      "Xbow",
+      "Tesla",
+      "Skeletons",
+      "IceWizard",
+      "Archer",
+      "Knight",
+      "Log",
+      "Fireball"
+    ],
+    "costs": {
+      "Xbow": 6,
+      "Tesla": 4,
+      "Skeletons": 1,
+      "IceWizard": 3,
+      "Archer": 3,
+      "Knight": 3,
+      "Log": 2,
+      "Fireball": 4
+    },
+    "training_deck": [
+      "Xbow",
+      "Tesla",
+      "Skeletons",
+      "IceWizard",
+      "Archer",
+      "Knight",
+      "Log",
+      "Fireball"
+    ],
+    "matches_training": true,
+    "has_ge_6": [
+      "Xbow"
+    ],
+    "j1_filter_satisfiable": true
+  },
+  "env": {
+    "intent_save": true,
+    "opponent": "random(None)"
+  },
+  "j1_threshold": 34,
+  "j1_threshold_derivation": "Xbow 6 费 ÷ 0.3571 圣水/s ≈ 17 s ÷ 0.5 s/帧 ≈ 34 帧（解析换算，非观测标定 【R16】）",
+  "games": [
+    {
+      "frames": 362,
+      "counts": {
+        "set": 163,
+        "held": 145,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 20,
+        "dropped": 17
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 0
+    },
+    {
+      "frames": 340,
+      "counts": {
+        "set": 149,
+        "held": 146,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 18,
+        "dropped": 16
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 1
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 164,
+        "held": 175,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 24,
+        "dropped": 19
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 2
+    },
+    {
+      "frames": 386,
+      "counts": {
+        "set": 184,
+        "held": 131,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 36,
+        "dropped": 11
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 3
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 157,
+        "held": 175,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 28,
+        "dropped": 17
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 4
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 124,
+        "held": 170,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 37,
+        "dropped": 9
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 5
+    },
+    {
+      "frames": 174,
+      "counts": {
+        "set": 68,
+        "held": 85,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 10,
+        "dropped": 4
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 6
+    },
+    {
+      "frames": 131,
+      "counts": {
+        "set": 67,
+        "held": 47,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 8,
+        "dropped": 4
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 7
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 158,
+        "held": 180,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 26,
+        "dropped": 19
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 8
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 173,
+        "held": 168,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 22,
+        "dropped": 22
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 9
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 153,
+        "held": 152,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 20,
+        "dropped": 19
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 10
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 158,
+        "held": 146,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 24,
+        "dropped": 11
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 11
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 155,
+        "held": 152,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 22,
+        "dropped": 16
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 12
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 141,
+        "held": 165,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 25,
+        "dropped": 13
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 13
+    },
+    {
+      "frames": 374,
+      "counts": {
+        "set": 149,
+        "held": 167,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 24,
+        "dropped": 15
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 14
+    },
+    {
+      "frames": 400,
+      "counts": {
+        "set": 136,
+        "held": 203,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 25,
+        "dropped": 13
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 15
+    },
+    {
+      "frames": 308,
+      "counts": {
+        "set": 124,
+        "held": 135,
+        "ready": 1,
+        "fired": 0,
+        "cancelled": 19,
+        "dropped": 13
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 16
+    },
+    {
+      "frames": 227,
+      "counts": {
+        "set": 101,
+        "held": 92,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 19,
+        "dropped": 5
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 17
+    },
+    {
+      "frames": 374,
+      "counts": {
+        "set": 161,
+        "held": 159,
+        "ready": 0,
+        "fired": 0,
+        "cancelled": 18,
+        "dropped": 18
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 18
+    },
+    {
+      "frames": 361,
+      "counts": {
+        "set": 168,
+        "held": 139,
+        "ready": 3,
+        "fired": 0,
+        "cancelled": 19,
+        "dropped": 19
+      },
+      "fired_held": [],
+      "fired_events": [],
+      "game": 19
+    }
+  ],
+  "total_counts": {
+    "set": 2853,
+    "held": 2932,
+    "ready": 11,
+    "fired": 0,
+    "cancelled": 444,
+    "dropped": 280
+  },
+  "fired_held": [],
+  "fired_held_rolling_cap": 256,
+  "fired_held_rolling_truncated": 0,
+  "fired_held_hist": {
+    "0-5": 0,
+    "6-11": 0,
+    "12-23": 0,
+    "24-33": 0,
+    ">=34": 0
+  },
+  "f2_watch_frames": 40,
+  "f2_antecedent": false,
+  "f2_triggered": false,
+  "fired_events": [],
+  "fired_held_event_log": [],
+  "j1_count": 0,
+  "j1_count_event_log": 0,
+  "j1_count_authoritative": 0,
+  "j1_pass": false,
+  "baseline": {
+    "arm_a": "intent_save=False：按构造恒 0（不产生 intent_stats）",
+    "note": "现状基线 = scripts/pass_streak_audit.py 的 0 条、主动不出牌最长段 22 帧（引自预注册 docs/intent_save_prereg_2026-09-19.md §4/§7；本脚本不重算）",
+    "source": "docs/intent_save_prereg_2026-09-19.md §4/§7（pass_streak_audit.py 复算口径）",
+    "recomputed_here": false
+  },
+  "discipline": [
+    "描述性仪器，不是判据本身；阈值 34 解析换算而来，非观测标定（【R16】）",
+    "n=1/臂 ⇒ 只判二值可达性（【R5】）；不得把胜率当判据（本仪器不产胜率）",
+    "只跑评估，不训练；不 import 训练入口、不写 ckpt",
+    "现状基线列引自预注册，本仪器不重算"
+  ]
+}
