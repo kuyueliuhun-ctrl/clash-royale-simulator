@@ -1819,6 +1819,13 @@ def test_intent_save_mechanism():
     assert env._intent_slot == _j + 1
     env.step(ActionBundle.intent_cancel())
     assert env._intent_slot == 0 and env.intent_stats["cancelled"] == 1
+    # 回归（2026-09-19，端到端冒烟抓到的真事故）：`act()` 的分支里引用了 `INTENT_CANCEL`，
+    # 而子集测试是**直达** `ActionBundle.intent_cancel()` 的 ⇒ 绕过 act() 那条分支，
+    # 曾出现「selftest 全绿但一采样到 CANCEL 就 NameError」。（【R8】每个修复配回归测试）
+    from rl import follower as _f
+    assert hasattr(_f, "INTENT_CANCEL"), "act() 会引用 follower.INTENT_CANCEL（曾 NameError）"
+    assert _f.FollowerPolicy.terminal_option(ActionBundle.intent_cancel()) == _f.CANCEL_IDX
+    assert _f.FollowerPolicy.terminal_option(ActionBundle.intent_save(2)) == _f.INTENT_SAVE_BASE + 1
     print(f"    [ok] intent-save：默认关逐位不变；无 pending 时掩码逐位相同；"
           f"开=11 option/scalar 9（参数 +{_expect}，逐项复算）；"
           f"SAVE→承诺期压制花费→保持不重抽→ready→fired(held=1)→CANCEL；跨局 pending 清空/计数保留")
