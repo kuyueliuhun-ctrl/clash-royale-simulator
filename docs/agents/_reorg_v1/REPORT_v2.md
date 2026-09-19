@@ -94,3 +94,11 @@ python docs/agents/_reorg_v1/build_v2.py     # 幂等；行号+字节+边界三�
 - v1 草稿留存：`docs/agents/_reorg_v1/AGENTS.reorg-draft.v1.md`（46,137 B）。
 - v1 的分册 `docs/agents/index_notes.md` **已删除** —— 它的 B 区 §1–§10 与新分册是同一批正文，留两份必然漂移；新分册是它的超集。
 - 回滚 = 删除 `AGENTS.reorg-draft.md`、`docs/agents/agents_long_entries.md`、`docs/agents/_reorg_v1/`；`AGENTS.md` 从未被改动。
+
+---
+
+## 附：2026-09-19 追加（**只增不改**，上文一个字未动）
+
+用户拍板「**把压缩写进规范并压缩**」⇒ 头部「文件形态纪律」**新增 ⑥**（超长行必须「下沉 + 压缩」、一个事实都不许丢），并把 ② 的两条闸门做成**可执行**：`scripts/_agents_split.py --check` 的 `[6]`（单行 ≤ **800 B**、总量 ≤ **40 KB**）与 `[7]`（每个 `分册 §N` 指针必须在 `agents_long_entries.md` 有对应 `## N.` 节 ⇒ 「压缩了却没下沉」即 FAIL）。
+
+⚠️ **为什么必须补**：上文 §「⑥ 单行最大 795 B ≤ 闸门 800 B ✅」那份**当时**读数是对的，但**没有任何东西守着它** ⇒ 2026-09-19 实测已漂到单行 **1062 B**（阵型机制行）而 `--check` **仍 PASS**。现该行已按纪律 ⑥ 压缩为 **603 B**、全文**逐字**下沉到 `agents_long_entries.md` **§17**（含闸门负对照证据：撑行到 954 B / 撑总量到 42,493 B / 把 `## 17.` 改名 `## 99.` ⇒ 三次都 rc=1）。

@@ -15,7 +15,15 @@
 用法：
     python scripts/_agents_split.py --dry-run     # 打印计划，不写
     python scripts/_agents_split.py --write       # 写分册与新 AGENTS.md
-    python scripts/_agents_split.py --check       # 只校验（不丢内容 + 链接可解析 + 尺寸）
+    python scripts/_agents_split.py --check       # 只校验（不丢内容 + 链接可解析 + 尺寸 + 形态闸门）
+
+**2026-09-19 追加闸门 `[6]`（用户拍板「把压缩写进规范并压缩」）**：`AGENTS.md` 头部「文件形态纪律」
+② 的两条闸门（总量 **≤ 40 KB**、单行 **≤ 800 B**）此前**只写在纪律里、没有东西检查**
+⇒ 实测已漂到单行 **1062 B** 仍全绿。现把两条都做成**可执行**：超标 ⇒ `--check` **FAIL**。
+超标后的处理**不是删字**，而是纪律 ⑥ 的「**下沉 + 压缩**」：把该行**逐字**搬进
+`docs/agents/agents_long_entries.md`（新起一节，标注出处行号 + 压缩前字节数），
+行内只留「结论 + 关键读数 + 指针（`全文 → 分册 §N`）」。已执行示例 = 该文件 §17
+（阵型机制行 1062 B → 603 B）。
 """
 from __future__ import annotations
 
@@ -37,6 +45,12 @@ force_utf8_stdout()
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTS = os.path.join(ROOT, "AGENTS.md")
 OUTDIR = os.path.join(ROOT, "docs", "agents")
+
+#: 文件形态纪律（`AGENTS.md` 头部）② 的两条闸门 —— 2026-09-19 起**可执行**（见闸门 `[6]`）。
+#: 动机：避开**注入截断**（实测上限 65,244 B，一旦截断末尾对会话不可见）与 `read` 工具的
+#: **单行 2000 字符**截断；超标处理 = 纪律 ⑥「下沉 + 压缩」（**不许删字**）。
+TOTAL_LIMIT = 40 * 1024     # 40 KB
+LINE_LIMIT = 800            # 单行 800 B
 
 # ---------------------------------------------------------------- 目标分册定义
 # 每册 = (文件名, 标题, 原 §编号列表, 一句话说明)
@@ -270,6 +284,36 @@ def do_check(orig_text=None):
     print(f"[5] 分册覆盖的原节号：{sorted(allsec)}（应为 1..9）")
     if allsec != set(range(1, 10)):
         print("    ✗ 节号不全"); ok = False
+
+    # 6) 文件形态闸门（头部纪律 ②；2026-09-19 用户拍板「把压缩写进规范并压缩」）
+    raw = open(AGENTS, "rb").read()
+    rl = raw.split(b"\n")
+    over = [(i + 1, len(l)) for i, l in enumerate(rl) if len(l) > LINE_LIMIT]
+    print(f"[6] 文件形态闸门：总量 {len(raw)} B / 上限 {TOTAL_LIMIT} B；"
+          f"最长行 {max(len(l) for l in rl)} B / 上限 {LINE_LIMIT} B；超长行 {len(over)}")
+    if len(raw) > TOTAL_LIMIT:
+        print(f"    ✗ 总量超 {TOTAL_LIMIT} B（超出 {len(raw) - TOTAL_LIMIT} B）"); ok = False
+    for ln, n in over:
+        print(f"    ✗ 第 {ln} 行 = {n} B（超出 {n - LINE_LIMIT} B）: "
+              f"{rl[ln - 1][:70].decode('utf-8', 'replace')}")
+    if over:
+        print("    → 处理 = 头部纪律 ⑥「下沉 + 压缩」：该行**逐字**搬进"
+              " docs/agents/agents_long_entries.md 新起一节，行内只留结论 + 读数 + `全文 → 分册 §N`"
+              "（**不许删字**）"); ok = False
+
+    # 7) 压缩指针可解析（纪律 ⑥ 的另一半：**压缩 ≠ 删字**，事实必须真的在分册里）
+    md2 = open(AGENTS, encoding="utf-8").read()
+    ptr = sorted({int(x) for x in re.findall(r"分册 \*{0,2}§(\d+)", md2)})
+    lp = os.path.join(OUTDIR, "agents_long_entries.md")
+    secs_lp = ({int(x) for x in re.findall(r"^## (\d+)\.", open(lp, encoding="utf-8").read(), re.M)}
+               if os.path.isfile(lp) else set())
+    miss = [n for n in ptr if n not in secs_lp]
+    print(f"[7] 「全文 → 分册 §N」指针 {len(ptr)} 个（§{ptr}）；长条目文件有 {len(secs_lp)} 节 §{sorted(secs_lp)}；缺 {len(miss)}")
+    for n in miss:
+        print(f"    ✗ 指针 §{n} 在 agents_long_entries.md 里没有对应 `## {n}.` 节"
+              f"（= 压缩了却没下沉 ⇒ 事实已丢）")
+    if miss:
+        ok = False
 
     print("\n" + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
