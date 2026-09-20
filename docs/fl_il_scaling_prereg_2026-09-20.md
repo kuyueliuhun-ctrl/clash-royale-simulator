@@ -129,8 +129,9 @@ FAIL ⇒ §6 F5′。
 ### J-M6（不变量：跨进程确定性 + 把「更多轮」做成**曲线**）
 * **曲线**：M2（30 ep / 1e-3）逐 epoch 落快照（`--save-every 1`；只序列化参数、**不消耗任何 RNG** ⇒ 不影响轨迹），
   留出读数在 `{1,2,3,5,10,20,30}` 上取点 ⇒ 「更多轮」是**曲线**，不是单个终点。
-* **跨进程确定性闸门**：各格同 seed ⇒ 同初值、同 permutation 序列 ⇒
-  **M2@3 快照必须与 M0 的 ckpt 逐张量 `torch.equal`**、**M2@10 必须与 M1 逐张量相同**（逐张量报告）。
+* **跨进程确定性闸门**（仪器 `scripts/il_ckpt_equal.py`，PASS 条件 = 逐张量 `torch.equal`）：
+  各格同 seed ⇒ 同初值、同 permutation 序列 ⇒ **M2@3 快照必须与 M0 的 ckpt 逐张量相同**、
+  **M2@10 必须与 M1 相同**（逐张量报告；「几乎相同但不 equal」同样报 FAIL）。
   不成立 ⇒ 存在未控随机源 ⇒ 各格之间**不得**做单变量比较，全部判据降级为**描述性**。
 
 ---
@@ -161,7 +162,8 @@ FAIL ⇒ §6 F5′。
 * **执行期实测修正（跑前记录）**：单 epoch 实测 **≈7.5 min/格**（11.5 ms × 38,838），比上一条预估慢 ~1.4× ⇒
   实际墙钟 M0 ≈23 min、M1/M3/M4 ≈75/150 min、M2 ≈3.8 h。因此 **M2 以 `--save-every 1` 重启**（见 J-M6）：
   其 epoch 快照同时给出曲线与「跨进程确定性」验证，被砍的代价因而降到最低。
-* 产物：`runs/_fl_il_bc/sweep/bc_fl_e{E}_lr{L}.pt` + `sweep_manifest.json`（逐 epoch `mean_logprob` + 秒数）；
-  读数 `docs/fl_il_2026-09-20/sweep/{m0..m4}.json`；日志 `docs/fl_il_2026-09-20/sweep/run.log`。
+* 产物：`runs/_fl_il_bc/sweep/bc_fl_e{E}_lr{L}.pt`（+ `_ep{k}.pt` 快照）+ `sweep_manifest.json`（逐 epoch `mean_logprob` + 秒数）；
+  读数 `docs/fl_il_2026-09-20/sweep/curve_*.json` + `nll_decomp_*.json`；日志 `docs/fl_il_2026-09-20/sweep/*.log`。
+  汇总表用 `python3 scripts/il_curve_report.py --rows "tag:epochs:lr,..."`（**禁手抄**，【R4】）。
 * 判读回写 `docs/fl_il_2026-09-20.md` §13（只增不改 §1–§12）；台账 `docs/agents/ledger.md`（C15 补充 / O12 更新）；
   `AGENTS.md` B 区该行 + `scripts/README.md` 登记 `il_bc_sweep.py`。
