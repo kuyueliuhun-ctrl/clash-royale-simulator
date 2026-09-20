@@ -1,0 +1,7 @@
+[runner] ckpt=../../runs/_fl_il_bc/sweep/bc_fl_e10_lr0.001.pt device=cuda 局数=10 每块=5 decks=solo opponent=self hidden=none deterministic=True
+  [块 1] 5/10 局、715 帧 | 胜 5 负 0 平 0 = 100.0% | 局均帧 143.0 | 空 bundle 91.5% | 买得起帧 61/715、其中选择不出 0.0% | 33s
+  [块 2] 10/10 局、1423 帧 | 胜 10 负 0 平 0 = 100.0% | 局均帧 142.3 | 空 bundle 91.4% | 买得起帧 122/1423、其中选择不出 0.0% | 67s
+[runner] 完成 10 局 / 1423 帧 / 66.5s | 胜率 100.0%±0.0 | 空 bundle 91.4% | 每帧出牌 0.09
+[runner] p0 出牌 122 次 / 买得起 122 帧（被迫不出 1301 帧）｜买得起却选择不出 0 = 0.0%
+[runner] p0 出牌 top: [('Skeletons', 27), ('Knight', 24), ('Log', 24), ('IceWizard', 24), ('Archer', 21), ('Fireball', 1)]
+[runner] 落盘：../../runs/il_readout_10ep/replays/league_*.pkl、../../runs/il_readout_10ep/solo_state.json、../../runs/il_readout_10ep\stats.json
