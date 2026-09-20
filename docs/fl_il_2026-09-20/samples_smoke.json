@@ -1,0 +1,404 @@
+{
+ "source": {
+  "jsonl": "replays_part000000.jsonl",
+  "games_converted": 3,
+  "games_selected": 3,
+  "workers": 1,
+  "elapsed_s": 9.6,
+  "card_level": 11,
+  "coord": "raw"
+ },
+ "split": {
+  "holdout_by": "md5(tag) % 5 == 0",
+  "holdout_games": 1,
+  "train_games": 2
+ },
+ "aggregate": {
+  "frames": 952,
+  "team_single": 42,
+  "team_multi": 0,
+  "opp_plays": 71,
+  "hand_forced": 3,
+  "elixir_forced": 0,
+  "mask_reject": 0,
+  "bundle_not_ok": 0,
+  "labels": 42,
+  "errors": 0,
+  "no_coord": 0
+ },
+ "J1_2_labels": {
+  "labels": 42,
+  "gate": ">= 20000",
+  "verdict": "FAIL"
+ },
+ "J2_1_reconstruction": {
+  "hand_force_rate": 0.07142857142857142,
+  "elixir_force_rate": 0.0,
+  "mask_reject_rate": 0.0,
+  "bundle_not_ok_rate": 0.0,
+  "gate_bundle_not_ok": "<= 0.05",
+  "verdict": "PASS"
+ },
+ "per_game": [
+  {
+   "tag": "84a066ec0b0a4bef801ae287e4d45960",
+   "dur": 164.05,
+   "holdout": false,
+   "frames": 298,
+   "team_single": 13,
+   "team_multi": 0,
+   "opp_plays": 16,
+   "hand_forced": 0,
+   "elixir_forced": 0,
+   "mask_reject": 0,
+   "bundle_not_ok": 0,
+   "labels": 13,
+   "errors": 0,
+   "end_time": 148.53,
+   "game_over": true,
+   "no_coord": 0,
+   "detail": [
+    [
+     12.5,
+     "AxeMan",
+     5,
+     9.464,
+     false
+    ],
+    [
+     25.5,
+     "AngryBarbarians",
+     6,
+     9.107,
+     false
+    ],
+    [
+     42.5,
+     "SkeletonWarriors",
+     3,
+     9.179,
+     false
+    ],
+    [
+     51.5,
+     "BossBandit",
+     6,
+     9.393,
+     false
+    ],
+    [
+     57.0,
+     "MinionHorde",
+     5,
+     5.357,
+     false
+    ],
+    [
+     68.5,
+     "Freeze",
+     4,
+     4.464,
+     false
+    ],
+    [
+     75.5,
+     "Zap",
+     2,
+     2.964,
+     false
+    ],
+    [
+     103.0,
+     "HogRider",
+     4,
+     10.0,
+     false
+    ],
+    [
+     112.5,
+     "AxeMan",
+     5,
+     9.393,
+     false
+    ],
+    [
+     122.5,
+     "BossBandit",
+     6,
+     8.851,
+     false
+    ],
+    [
+     128.0,
+     "MinionHorde",
+     5,
+     6.78,
+     false
+    ],
+    [
+     139.0,
+     "AngryBarbarians",
+     6,
+     9.637,
+     false
+    ],
+    [
+     143.0,
+     "HogRider",
+     4,
+     6.494,
+     false
+    ]
+   ],
+   "out": "bc_fl_0000.pkl",
+   "out_n": 13
+  },
+  {
+   "tag": "21daddc4311842699aa782d4059d4454",
+   "dur": 272.55,
+   "holdout": true,
+   "frames": 293,
+   "team_single": 12,
+   "team_multi": 0,
+   "opp_plays": 24,
+   "hand_forced": 1,
+   "elixir_forced": 0,
+   "mask_reject": 0,
+   "bundle_not_ok": 0,
+   "labels": 12,
+   "errors": 0,
+   "end_time": 146.42,
+   "game_over": true,
+   "no_coord": 0,
+   "detail": [
+    [
+     16.5,
+     "AngryBarbarians",
+     6,
+     10.0,
+     true
+    ],
+    [
+     32.5,
+     "BossBandit",
+     6,
+     9.714,
+     false
+    ],
+    [
+     45.0,
+     "AxeMan",
+     5,
+     8.179,
+     false
+    ],
+    [
+     56.0,
+     "HogRider",
+     4,
+     7.107,
+     false
+    ],
+    [
+     73.5,
+     "SkeletonWarriors",
+     3,
+     9.357,
+     false
+    ],
+    [
+     90.0,
+     "MinionHorde",
+     5,
+     10.0,
+     false
+    ],
+    [
+     100.5,
+     "AngryBarbarians",
+     6,
+     8.75,
+     false
+    ],
+    [
+     111.0,
+     "BossBandit",
+     6,
+     6.5,
+     false
+    ],
+    [
+     124.0,
+     "HogRider",
+     4,
+     6.565,
+     false
+    ],
+    [
+     127.0,
+     "Zap",
+     2,
+     4.708,
+     false
+    ],
+    [
+     137.5,
+     "Freeze",
+     4,
+     10.0,
+     false
+    ],
+    [
+     138.0,
+     "SkeletonWarriors",
+     3,
+     6.357,
+     false
+    ]
+   ],
+   "out": "bc_fl_0001.pkl",
+   "out_n": 12
+  },
+  {
+   "tag": "09589b9d2315437ebb84872f9b993137",
+   "dur": 227.55,
+   "holdout": false,
+   "frames": 361,
+   "team_single": 17,
+   "team_multi": 0,
+   "opp_plays": 31,
+   "hand_forced": 2,
+   "elixir_forced": 0,
+   "mask_reject": 0,
+   "bundle_not_ok": 0,
+   "labels": 17,
+   "errors": 0,
+   "end_time": 180.0,
+   "game_over": true,
+   "no_coord": 0,
+   "detail": [
+    [
+     18.5,
+     "Zap",
+     2,
+     10.0,
+     true
+    ],
+    [
+     24.5,
+     "SkeletonWarriors",
+     3,
+     10.0,
+     true
+    ],
+    [
+     32.0,
+     "HogRider",
+     4,
+     9.679,
+     false
+    ],
+    [
+     44.0,
+     "AngryBarbarians",
+     6,
+     9.964,
+     false
+    ],
+    [
+     59.5,
+     "AxeMan",
+     5,
+     9.5,
+     false
+    ],
+    [
+     68.0,
+     "BossBandit",
+     6,
+     7.536,
+     false
+    ],
+    [
+     98.0,
+     "MinionHorde",
+     5,
+     10.0,
+     false
+    ],
+    [
+     114.0,
+     "SkeletonWarriors",
+     3,
+     10.0,
+     false
+    ],
+    [
+     120.0,
+     "HogRider",
+     4,
+     9.143,
+     false
+    ],
+    [
+     124.5,
+     "Zap",
+     2,
+     8.351,
+     false
+    ],
+    [
+     129.5,
+     "BossBandit",
+     6,
+     9.923,
+     false
+    ],
+    [
+     137.5,
+     "AxeMan",
+     5,
+     9.637,
+     false
+    ],
+    [
+     144.5,
+     "MinionHorde",
+     5,
+     9.637,
+     false
+    ],
+    [
+     147.5,
+     "HogRider",
+     4,
+     6.78,
+     false
+    ],
+    [
+     153.5,
+     "Freeze",
+     4,
+     7.065,
+     false
+    ],
+    [
+     162.0,
+     "BossBandit",
+     6,
+     9.137,
+     false
+    ],
+    [
+     170.5,
+     "AxeMan",
+     5,
+     9.208,
+     false
+    ]
+   ],
+   "out": "bc_fl_0002.pkl",
+   "out_n": 17
+  }
+ ]
+}

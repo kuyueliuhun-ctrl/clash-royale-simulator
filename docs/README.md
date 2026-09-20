@@ -23,6 +23,7 @@
 | **AGENTS 分册索引**（2026-09-18 拆分 + **2026-09-19 v2 三层形态**：`AGENTS.md` = **A 红线全量 / B 索引一行式 / C 状态速览**，**节号不变**） | `agents/redlines.md`（R1–R19 全文）、`agents/env.md`（§2）、`agents/metrics.md`（§3）、`agents/ledger.md`（§4–6）、`agents/plans_runs_docs.md`（§7–9）、`agents/structure.md`、`agents/reward_surveys.md`、**`agents/agents_long_entries.md`**（v2 起从 `AGENTS.md` B/C 两区下沉的**逐字长条目全文**：B 区 10 行 + C 区 6 条 = 52,159 B 正文）；校验 `scripts/_agents_split.py --check`（v2 上线后 **PASS**） |
 | 历史决策全文（过程细节与推理链） | `_archive/agents_archive_2026-09.md` |
 | 自检/回归 | `src/clasher_new/rl/selftest.py`、`scripts/test_m1..m6*.py`、`scripts/batch_smoke.py` |
+| **★ 用 FL（FirstLight）的数据做模仿学习（IL）** | 判读 [`fl_il_2026-09-20.md`](fl_il_2026-09-20.md)（管线三件套 / J1 卡牌经济对账 **99.72%** / **47,715** 条人类标签 / 留出 **8,877** 配对读数 / 限制与下一刀）+ 预注册 [`fl_il_prereg_2026-09-20.md`](fl_il_prereg_2026-09-20.md)；仪器 `../scripts/_fl_il_extract.py` / `../scripts/fl_il_to_bc.py` / `../scripts/il_eval_holdout.py`；台账 **C15 / O12** |
 
 ## 1. Curated 文档（策划/规格/报告，已定稿可引用）
 

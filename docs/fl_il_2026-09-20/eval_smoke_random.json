@@ -1,0 +1,37 @@
+{
+ "ckpt": "<random-init>",
+ "holdout_samples": 12,
+ "train_samples": 30,
+ "J3": {
+  "top1_option": 0.4166666666666667,
+  "cell_exact": 0.0,
+  "cell_exact_given_option": 0.0,
+  "nll_mean": 8.111210902531942,
+  "logprob_lt_minus_1e8": 0,
+  "gate_top1_ge_0.40": "PASS"
+ },
+ "baselines": {
+  "uniform_option6": 0.16666666666666666,
+  "uniform_option4": 0.25,
+  "majority_card_top1_option": 0.08333333333333333,
+  "majority_card_declared": [
+   "AxeMan",
+   "BossBandit",
+   "HogRider",
+   "MinionHorde",
+   "AngryBarbarians"
+  ]
+ },
+ "label_distribution_top_slots": {
+  "0": 3,
+  "1": 5,
+  "2": 2,
+  "3": 2
+ },
+ "pred_option_histogram": {
+  "0": 3,
+  "1": 5,
+  "2": 3,
+  "3": 1
+ }
+}
