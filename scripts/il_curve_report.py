@@ -76,6 +76,31 @@ def main():
               f"{j['top1_option']:.4f} | {j['cell_exact_given_option']:.4f} | "
               + " | ".join(f"{ps[str(i)]:.4f}" for i in range(4))
               + f" | {cv['macro_recall_option']:.4f} |")
+    # ---- 卡牌使用率口径（用户 2026-09-20 提议；`usage_<tag>.json`）----
+    print("\n### 卡牌使用率口径（源数据 vs 训练后；同一批留出帧）")
+    print("| 格 | epochs | lr | TVD(h,p) | U 偏好复现 | ρ_cond | ρ_resid [95%CI] | 位置受控命中率↑ | 参考 TVD(h,槽4) | 参考 ρ_cond(槽4) |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    any_usage = False
+    for tag, e, lr, lp, cv, dc in rows:
+        us = load(os.path.join(args.dir, f"usage_{tag}.json"))
+        if not us:
+            continue
+        any_usage = True
+        ci = us.get("spearman_resid_ci95") or [None, None]
+        u = us.get("pref_capture_policy")
+        rr = us.get("spearman_resid")
+        cg = us.get("choice_gate") or {}
+        oa = cg.get("out_of_pos4_acc")
+        print(f"| {tag} | {e} | {lr} | {us['tvd_human_policy']:.4f} | "
+              f"{'—' if u is None else f'{u:.4f}'} | {us['spearman_cond']:.4f} | "
+              f"{'—' if rr is None else f'{rr:.4f}'} "
+              f"[{'—' if ci[0] is None else f'{ci[0]:.3f}'}, {'—' if ci[1] is None else f'{ci[1]:.3f}'}] | "
+              f"{'—' if oa is None else f'{oa:.4f}'} | "
+              f"{us['tvd_human_slot4']:.4f} | {us.get('spearman_cond_slot4', float('nan')):.4f} |")
+    if any_usage:
+        print("\n（`槽4` = 恒选第 4 槽的 trivial 策略；`U` = 1 − mad(cond_h,cond_p)/mad(cond_h,0.25)；"
+          "`位置受控命中率` = 只在人类打了非第 4 槽的 5,340 帧上的 top-1 命中率，机会线 0.25、恒选槽4 恒为 0）\n")
+
     if rows:
         cv0 = rows[-1][4] or rows[0][4]
         if cv0 and "baselines" in cv0:

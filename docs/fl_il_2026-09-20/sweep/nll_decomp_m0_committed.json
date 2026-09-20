@@ -1,0 +1,17 @@
+{
+ "ckpt": "bc_fl.pt",
+ "holdout_samples": 8877,
+ "nll_total": -5.596222589020527,
+ "nll_slot": -1.2025398561383467,
+ "nll_cell": -4.393682733199961,
+ "nll_stop": 0.0,
+ "refs": {
+  "uniform6_slot": 1.791759469228055,
+  "prior_only_floor_entropy_slot": 1.321929420212473,
+  "majority_slot_index": 3,
+  "majority_slot_share": 0.39844542075025347,
+  "uniform_legal_cell": 5.6278571027296325
+ },
+ "replica_max_abs_diff": 9.5367431640625e-07,
+ "note": "nll_total = nll_slot + nll_cell + nll_stop（每帧恰 1 子动作）；复刻 evaluate 自带 1e-5 闸门"
+}

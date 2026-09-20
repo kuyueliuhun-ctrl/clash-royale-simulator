@@ -51,7 +51,7 @@
 
 未落入上面三类者：领域脚本、引擎侧辅助、以及**待归类**项。
 
-`assassin_left_bridge_test.py`, `assassin_vs_megaknight.py`, `assassin_vs_sparky.py`, `audit_intent_save.py`, `cdp_forward.py`, `convert_upstream_frames.py`, `et_solo100k_readout.py`, `extend_level16.py`, `fl_il_to_bc.py`, `il_bc_bench.py`, `il_bc_sweep.py`, `il_ckpt_equal.py`, `il_curve_report.py`, `il_eval_holdout.py`, `il_nll_decompose.py`, `il_paired_compare.py`, `il_readout_games.py`, `question_bank_poc.py`, `replay_feasibility_probe.py`, `skarmy_probe.py`, `skarmy_probe_compare.py`, `skarmy_probe_upstream.py`, `skarmy_traj_analyze.py`
+`assassin_left_bridge_test.py`, `assassin_vs_megaknight.py`, `assassin_vs_sparky.py`, `audit_intent_save.py`, `cdp_forward.py`, `convert_upstream_frames.py`, `et_solo100k_readout.py`, `extend_level16.py`, `fl_il_to_bc.py`, `il_bc_bench.py`, `il_bc_sweep.py`, `il_card_usage.py`, `il_ckpt_equal.py`, `il_curve_report.py`, `il_eval_holdout.py`, `il_nll_decompose.py`, `il_paired_compare.py`, `il_readout_games.py`, `question_bank_poc.py`, `replay_feasibility_probe.py`, `skarmy_probe.py`, `skarmy_probe_compare.py`, `skarmy_probe_upstream.py`, `skarmy_traj_analyze.py`
 
 **合计 117 个 `*.py`**（★ 磁盘上另有 **1 个并发会话新增的未跟踪脚本** `count_vectors_ckpt.py` 未登记 ⇒ 检查 ⑩ 会报 **114 / DRIFT**，差异**不含**本文件登记的 113 个）（另有 `scripts/rl/*.py` **11 个**：`start_rl.bat` 依赖其位置的入口包装脚本，**不参与**本分类）。
 
