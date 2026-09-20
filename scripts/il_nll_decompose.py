@@ -147,9 +147,12 @@ def main(argv=None):
         "nll_stop": lp_t / n,          # 终止项
         "refs": {
             "uniform6_slot": math.log(6),
-            "constant_majority_slot": -math.log(maj_cnt / n),
+            #: ★「只依赖先验」的**下界** = 槽标签经验熵（任何不看特征的预测器能达到的最好 NLL）。
+            #: ⚠️ 不要用 `-ln(最高频槽占比)` 当 NLL：恒选槽是**确定性**预测器，在被选错的帧上 NLL = +∞
+            #: （初稿踩过这个错，已在预注册 J-M5 里勘误）。
+            "prior_only_floor_entropy_slot": ent,
             "majority_slot_index": maj_slot,
-            "label_entropy_slot": ent,
+            "majority_slot_share": maj_cnt / n,      # 准确率口径用（不是 nats）
             "uniform_legal_cell": unif_legal / n,
         },
         "replica_max_abs_diff": worst,
@@ -159,8 +162,8 @@ def main(argv=None):
     print(f"  total={res['nll_total']:.4f}  slot(选牌)={res['nll_slot']:.4f}  "
           f"cell(落点)={res['nll_cell']:.4f}  stop={res['nll_stop']:.4f}")
     print(f"  参考: uniform6={res['refs']['uniform6_slot']:.4f}  "
-          f"恒选槽{maj_slot + 1}={res['refs']['constant_majority_slot']:.4f}  "
-          f"标签熵={ent:.4f}  均匀合法格={res['refs']['uniform_legal_cell']:.4f}")
+          f"先验下界H(槽)={ent:.4f}  最高频槽={maj_slot + 1}({res['refs']['majority_slot_share']:.4f})  "
+          f"均匀合法格={res['refs']['uniform_legal_cell']:.4f}")
     if args.out:
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
         with open(args.out, "w", encoding="utf-8", newline="\n") as f:
