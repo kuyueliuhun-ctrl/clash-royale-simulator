@@ -69,8 +69,12 @@ def parse_configs(s):
     return out
 
 
-def train_one(samples, epochs, lr, seed, out_path):
-    """复刻 human_play.py::train_bc_from_human 的训练循环（见模块 docstring 的复刻纪律）。"""
+def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0):
+    """复刻 human_play.py::train_bc_from_human 的训练循环（见模块 docstring 的复刻纪律）。
+
+    `save_every=N>0` 时每 N 个 epoch 额外落一份快照 `<out_path 去后缀>_ep{k}.pt`：
+    **不消耗任何 RNG**（只序列化参数）⇒ 不影响训练轨迹，却把「更多轮」做成**曲线**而不是单个终点。
+    """
     torch.manual_seed(seed)
     np.random.seed(seed)                     # 与训练循环同序：在构造 policy 之前
     belief_dim = len(samples[0][1])
@@ -79,6 +83,7 @@ def train_one(samples, epochs, lr, seed, out_path):
     opt = torch.optim.Adam(policy.parameters(), lr=lr)
     n = len(samples)
     curve = []
+    snaps = []
     for ep in range(epochs):
         t0 = time.time()
         perm = np.random.permutation(n)
@@ -96,10 +101,15 @@ def train_one(samples, epochs, lr, seed, out_path):
         curve.append({"epoch": ep + 1, "mean_logprob": mean_lp, "sec": dt})
         print(f"[sweep] ep={epochs} lr={_lr_tag(lr)}  "
               f"epoch {ep + 1}/{epochs} mean_logprob={mean_lp:.3f}  {dt:.1f}s", flush=True)
+        if save_every > 0 and (ep + 1) % save_every == 0:
+            sp = f"{os.path.splitext(out_path)[0]}_ep{ep + 1}.pt"
+            save_checkpoint(policy, sp)
+            snaps.append({"epoch": ep + 1, "ckpt": os.path.basename(sp)})
+            print(f"[sweep] snapshot {sp}", flush=True)
     save_checkpoint(policy, out_path)
     print(f"[sweep] saved {out_path}", flush=True)
     return {"epochs": epochs, "lr": lr, "seed": seed, "samples": n,
-            "ckpt": os.path.basename(out_path), "curve": curve,
+            "ckpt": os.path.basename(out_path), "curve": curve, "snapshots": snaps,
             "total_sec": sum(c["sec"] for c in curve)}
 
 
@@ -112,6 +122,8 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--threads", type=int, default=0, help="torch 线程数（0 = 不动，默认单线程口径）")
     ap.add_argument("--manifest", default=None)
+    ap.add_argument("--save-every", type=int, default=0,
+                    help="每 N 个 epoch 额外落一份快照（不消耗 RNG，不影响训练轨迹）")
     args = ap.parse_args(argv)
 
     args.data_dir = _abs(args.data_dir)
@@ -138,7 +150,8 @@ def main(argv=None):
     for epochs, lr in cfgs:
         out_path = os.path.join(args.out_dir, f"bc_fl_e{epochs}_lr{_lr_tag(lr)}.pt")
         print(f"[sweep] === epochs={epochs} lr={_lr_tag(lr)} → {out_path} ===", flush=True)
-        runs.append(train_one(samples, epochs, lr, args.seed, out_path))
+        runs.append(train_one(samples, epochs, lr, args.seed, out_path,
+                              save_every=args.save_every))
 
     manifest = {"data_dir": args.data_dir, "seed": args.seed, "runs": runs,
                 "note": "训练循环逐行复刻 rl/human_play.py::train_bc_from_human；"
