@@ -1,0 +1,81 @@
+{
+ "ckpt_a": "bc_fl_e10_lr0.001.pt",
+ "ckpt_b": "bc_fl_e10_lr0.01.pt",
+ "holdout_samples": 8877,
+ "A": {
+  "n": 8877,
+  "top1_option": 0.4521797904697533,
+  "cell_exact": 0.06702714881153543,
+  "cell_exact_given_option": 0.1482311908320877,
+  "nll_mean": 5.449392615364153,
+  "per_slot_recall": {
+   "0": 0.2791388270230141,
+   "1": 0.3250414593698176,
+   "2": 0.42948717948717946,
+   "3": 0.5971162001696353
+  },
+  "macro_recall_option": 0.4076959165124116,
+  "logprob_lt_minus_1e8": 0
+ },
+ "B": {
+  "n": 8877,
+  "top1_option": 0.38436408696631746,
+  "cell_exact": 0.010251210994705419,
+  "cell_exact_given_option": 0.026670574443141852,
+  "nll_mean": 6.500020206102154,
+  "per_slot_recall": {
+   "0": 0.025241276911655532,
+   "1": 0.3781094527363184,
+   "2": 0.3557692307692308,
+   "3": 0.5419847328244275
+  },
+  "macro_recall_option": 0.32527617331040803,
+  "logprob_lt_minus_1e8": 0
+ },
+ "nll_paired": {
+  "mean_diff_B_minus_A": 1.0506275907380012,
+  "median_diff_B_minus_A": 1.0788226127624512,
+  "B_better": 2112,
+  "A_better": 6765,
+  "ties": 0,
+  "sign_test_p": 0.0
+ },
+ "top1_mcnemar": {
+  "A_wrong_B_right": 700,
+  "A_right_B_wrong": 1302,
+  "B_right_A_right": 2712,
+  "both_wrong": 4163,
+  "exact_p": 9.61635528136477e-42
+ },
+ "per_slot_paired": {
+  "0": {
+   "n": 1347,
+   "A_hit": 376,
+   "B_hit": 34,
+   "B_only": 0,
+   "A_only": 342
+  },
+  "1": {
+   "n": 1809,
+   "A_hit": 588,
+   "B_hit": 684,
+   "B_only": 192,
+   "A_only": 96
+  },
+  "2": {
+   "n": 2184,
+   "A_hit": 938,
+   "B_hit": 777,
+   "B_only": 92,
+   "A_only": 253
+  },
+  "3": {
+   "n": 3537,
+   "A_hit": 2112,
+   "B_hit": 1917,
+   "B_only": 416,
+   "A_only": 611
+  }
+ },
+ "note": "口径与 il_eval_holdout.py 相同（hidden=None；NLL 走 evaluate；top-1 走 act(deterministic)）"
+}

@@ -1,0 +1,62 @@
+{
+ "option_confusion_label_x_pred": {
+  "0->0": 34,
+  "0->1": 326,
+  "0->2": 270,
+  "0->3": 717,
+  "1->0": 1,
+  "1->1": 684,
+  "1->2": 379,
+  "1->3": 745,
+  "2->1": 565,
+  "2->2": 777,
+  "2->3": 842,
+  "3->1": 856,
+  "3->2": 764,
+  "3->3": 1917
+ },
+ "macro_recall_option": 0.32527617331040803,
+ "per_slot_recall": {
+  "0": 0.025241276911655532,
+  "1": 0.3781094527363184,
+  "2": 0.3557692307692308,
+  "3": 0.5419847328244275
+ },
+ "ckpt": "bc_fl_e10_lr0.01.pt",
+ "holdout_samples": 8877,
+ "train_samples": 38838,
+ "J3": {
+  "top1_option": 0.38436408696631746,
+  "cell_exact": 0.0227554353948406,
+  "cell_exact_given_option": 0.026670574443141852,
+  "nll_mean": 6.500020206102154,
+  "logprob_lt_minus_1e8": 0,
+  "gate_top1_ge_0.40": "WEAK"
+ },
+ "baselines": {
+  "uniform_option6": 0.16666666666666666,
+  "uniform_option4": 0.25,
+  "majority_card_top1_option": 0.06319702602230483,
+  "majority_slot_top1_option": 0.39844542075025347,
+  "majority_slot_from_train": 3,
+  "majority_card_declared": [
+   "Skeletons",
+   "BarbLog",
+   "ElectroSpirit",
+   "Berserker",
+   "Princess"
+  ]
+ },
+ "label_distribution_top_slots": {
+  "0": 1347,
+  "1": 1809,
+  "2": 2184,
+  "3": 3537
+ },
+ "pred_option_histogram": {
+  "0": 35,
+  "1": 2431,
+  "2": 2190,
+  "3": 4221
+ }
+}
