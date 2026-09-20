@@ -108,7 +108,10 @@ def make_get_mask(masks):
 
 def evaluate(ckpt, holdout, train, limit, random_init=False):
     if random_init:
-        #: 未训练对照：维度从**第一条样本**反推（与 `train_bc_from_human:214-215` 同口径）
+        #: 未训练对照：维度从**第一条样本**反推（与 `train_bc_from_human:214-215` 同口径）。
+        #: ⚠️ **必须播种**：`FollowerPolicy` 的初始化走 torch 全局 RNG，不播种的话每次运行
+        #: 抽到不同权重 ⇒ 对照读数不可复现（实测两次 `top1` 0.3287 vs 0.3261、`nll` 8.72 vs 8.80）。
+        torch.manual_seed(0)
         from rl.follower import FollowerPolicy
         policy = FollowerPolicy(hidden=128, plan_dim=len(holdout[0][2]),
                                 belief_dim=len(holdout[0][1]))
@@ -186,7 +189,7 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
         "option_confusion_label_x_pred": {f"{a}->{b}": v for (a, b), v in sorted(conf.items())},
         "macro_recall_option": macro,
         "per_slot_recall": recalls,
-        "ckpt": ("<random-init>" if random_init else os.path.basename(ckpt)),
+        "ckpt": ("<random-init|torch.manual_seed(0)>" if random_init else os.path.basename(ckpt)),
         "holdout_samples": n,
         "train_samples": len(train),
         "J3": {
