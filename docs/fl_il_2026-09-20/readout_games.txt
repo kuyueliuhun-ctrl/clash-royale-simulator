@@ -1,0 +1,36 @@
++ P=../../.venv/Scripts/python.exe
++ S=../../scripts/il_readout_games.py
++ PYTHONIOENCODING=utf-8
++ ../../.venv/Scripts/python.exe ../../scripts/il_readout_games.py --ckpt ../../runs/_fl_il_bc/bc_fl.pt --decks solo --games 10 --block 5 --out ../../runs/il_readout_solo --hidden none --seed 0
+[runner] ckpt=../../runs/_fl_il_bc/bc_fl.pt device=cuda 局数=10 每块=5 decks=solo opponent=self hidden=none deterministic=True
+  [块 1] 5/10 局、719 帧 | 胜 5 负 0 平 0 = 100.0% | 局均帧 143.8 | 空 bundle 91.7% | 买得起帧 60/719、其中选择不出 0.0% | 25s
+  [块 2] 10/10 局、1520 帧 | 胜 10 负 0 平 0 = 100.0% | 局均帧 152.0 | 空 bundle 91.6% | 买得起帧 127/1520、其中选择不出 0.0% | 53s
+[runner] 完成 10 局 / 1520 帧 / 53.3s | 胜率 100.0%±0.0 | 空 bundle 91.6% | 每帧出牌 0.08
+[runner] p0 出牌 127 次 / 买得起 127 帧（被迫不出 1393 帧）｜买得起却选择不出 0 = 0.0%
+[runner] p0 出牌 top: [('Skeletons', 27), ('IceWizard', 26), ('Log', 25), ('Archer', 23), ('Knight', 22), ('Tesla', 2)]
+[runner] 落盘：../../runs/il_readout_solo/replays/league_*.pkl、../../runs/il_readout_solo/solo_state.json、../../runs/il_readout_solo\stats.json
++ echo ARM_SOLO_RC=0
+ARM_SOLO_RC=0
++ PYTHONIOENCODING=utf-8
++ ../../.venv/Scripts/python.exe ../../scripts/il_readout_games.py --ckpt ../../runs/_fl_il_bc/bc_fl.pt --decks fl --fl-jsonl 'E:\fl_il_data\replays_part000000.jsonl' --games 10 --block 5 --out ../../runs/il_readout_fl --hidden none --seed 0
+[runner] FL 卡组对：2765 套（过滤口径同 fl_il_to_bc）
+[runner] ckpt=../../runs/_fl_il_bc/bc_fl.pt device=cuda 局数=10 每块=5 decks=fl opponent=self hidden=none deterministic=True
+  [块 1] 5/10 局、1169 帧 | 胜 5 负 0 平 0 = 100.0% | 局均帧 233.8 | 空 bundle 94.3% | 买得起帧 67/1169、其中选择不出 0.0% | 36s
+  [块 2] 10/10 局、2988 帧 | 胜 10 负 0 平 0 = 100.0% | 局均帧 298.8 | 空 bundle 90.5% | 买得起帧 285/2988、其中选择不出 0.0% | 101s
+[runner] 完成 10 局 / 2988 帧 / 101.4s | 胜率 100.0%±0.0 | 空 bundle 90.5% | 每帧出牌 0.09
+[runner] p0 出牌 278 次 / 买得起 285 帧（被迫不出 2703 帧）｜买得起却选择不出 0 = 0.0%
+[runner] p0 出牌 top: [('ElectroSpirit', 40), ('Skeletons', 39), ('Log', 39), ('Firecracker', 31), ('Earthquake', 28), ('HogRider', 18)]
+[runner] 落盘：../../runs/il_readout_fl/replays/league_*.pkl、../../runs/il_readout_fl/solo_state.json、../../runs/il_readout_fl\stats.json
++ echo ARM_FL_RC=0
+ARM_FL_RC=0
++ PYTHONIOENCODING=utf-8
++ ../../.venv/Scripts/python.exe ../../scripts/il_readout_games.py --ckpt ../../runs/_fl_il_bc/bc_fl.pt --decks solo --games 10 --block 5 --out ../../runs/il_readout_carry --hidden carry --seed 0
+[runner] ckpt=../../runs/_fl_il_bc/bc_fl.pt device=cuda 局数=10 每块=5 decks=solo opponent=self hidden=carry deterministic=True
+  [块 1] 5/10 局、3000 帧 | 胜 1 负 3 平 1 = 20.0% | 局均帧 600.0 | 空 bundle 99.8% | 买得起帧 3000/3000、其中选择不出 99.8% | 89s
+  [块 2] 10/10 局、5761 帧 | 胜 3 负 6 平 1 = 30.0% | 局均帧 576.1 | 空 bundle 99.7% | 买得起帧 5745/5761、其中选择不出 99.7% | 177s
+[runner] 完成 10 局 / 5761 帧 / 177.2s | 胜率 30.0%±14.5 | 空 bundle 99.7% | 每帧出牌 0.00
+[runner] p0 出牌 17 次 / 买得起 5745 帧（被迫不出 16 帧）｜买得起却选择不出 5728 = 99.7%
+[runner] p0 出牌 top: [('Skeletons', 6), ('Tesla', 2), ('Archer', 2), ('Knight', 2), ('IceWizard', 2), ('Xbow', 2)]
+[runner] 落盘：../../runs/il_readout_carry/replays/league_*.pkl、../../runs/il_readout_carry/solo_state.json、../../runs/il_readout_carry\stats.json
++ echo ARM_CARRY_RC=0
+ARM_CARRY_RC=0
