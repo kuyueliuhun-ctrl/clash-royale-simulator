@@ -150,6 +150,37 @@ def _spell_requires_placement_target(card_name: str, card_info: "Card" = None) -
     return _spell_deals_damage(card_name, card_info) and card_name not in _ROLLING_SPELLS
 
 
+#: ★ 2026-09-22（用户指令：「空砸这个问题，首先是放开一些低费卡牌的限制」）：
+#: 低费法术的**空砸豁免**上限（费用 ≤ 该值 → 8h 空砸闸门不适用）。单一来源常量（R7）。
+#: 口径依据（实测本仓 27 张 `type=="spell"`，按费用分组）：
+#:   cost 1: GlobalLightning / Heal / Mirror / WarmSpell
+#:   cost 2: BarbLog / GoblinCurse / Log / Rage / Snowball / Zap   ← 本阈值覆盖这批
+#:   cost 3: Arrows / Clone / DarkMagic / Earthquake / GlobalClone / GoblinBarrel /
+#:           RoyalDelivery / Tornado / Vines
+#:   cost 4: Fireball / Freeze / Poison      cost 5: GoblinPartyRocket / Graveyard
+#:   cost 6: Lightning / MergeMaiden / Rocket
+#: 用户同批更正口径：**Poison 是 4 费，不便宜**（上一轮我把它算进「便宜伤害法术」是错的）。
+#: ⇒ 阈值取 2 而非 3：恰好等于「过牌法术」集合（Zap/Snowball/Log/BarbLog + 非伤害的
+#:   GoblinCurse/Rage），而 3 费里混着 Earthquake/Tornado 这类**不是过牌卡**的解场法术。
+#:
+#: ⚠️ **只豁免 8h 空砸闸门，不豁免 9h 砸塔 EV 闸门**。理由：`_spell_tower_ev_illegal` 自带
+#: 「落点没罩到任何存活塔 → 提前 return False（=不非法）」⇒ 空地上的 Zap 变合法，而
+#: **只罩敌方王塔的 Zap/Snowball 仍被 F1 判非法**（用户上一轮要求的修复不回退）。
+SPELL_WHIFF_FREE_MAX_COST = 2.0
+
+
+def _spell_whiff_gate_applies(card_name: str, card_info: "Card" = None) -> bool:
+    """8h **空砸**闸门是否适用于该卡（= 伤害型 ∧ 非滚动 ∧ 费用 > `SPELL_WHIFF_FREE_MAX_COST`）。
+
+    与 `_spell_requires_placement_target` 的区别：后者是「落点几何闸门总开关」（9h EV 闸门
+    仍用它），本函数只在**空砸**闸门的两处调用点替换它。费用 ≤ 0（无数据）→ 不适用（放行）。
+    """
+    if not _spell_requires_placement_target(card_name, card_info):
+        return False
+    info = card_info if card_info is not None else Card(card_name)
+    return float(getattr(info, "elixir", 0.0) or 0.0) > SPELL_WHIFF_FREE_MAX_COST
+
+
 #: 引擎里"不是可被打的目标"的实体类型（法术/弹道/区域效果的**载体**）：
 #: `projectile`（Log/BarbLog 滚动弹、箭矢）、`area_effect`（Poison/Heal 等）、`bomb`。
 #: 与 `rl/observation.py::_TYPE_ALIAS` 同一集合、同一理由（它们不是部队/建筑，溅射打不到）。
@@ -506,7 +537,10 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position,
             return False
         if _spell_requires_placement_target(card_name, card_info):
             radius = _spell_radius_m(card_name, card_info)
-            if radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
+            # ★ 2026-09-22 W1：空砸闸门加**低费豁免**（`SPELL_WHIFF_FREE_MAX_COST`）。
+            # EV 闸门**不加豁免**——见该常量注释（F1「只罩王塔」保护不回退）。
+            if (radius > 0.0 and _spell_whiff_gate_applies(card_name, card_info)
+                    and not _spell_has_enemy_target(battle, player_id, pos, radius)):
                 return False
             # 9h 前段纯砸塔 EV 闸门：无部队/建筑可溅、账面亏费 → 非法
             if radius > 0.0 and _spell_tower_ev_illegal(battle, player_id, card_name, pos,
@@ -567,12 +601,14 @@ def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
         deals_dmg = _spell_requires_placement_target(eff, eff_info)
         radius = _spell_radius_m(eff, eff_info) if deals_dmg else 0.0
         ev_gate = radius > 0.0 and deals_dmg
+        #: ★ 2026-09-22 W1：空砸闸门的低费豁免（与 `_position_legal` 同源，见常量注释）
+        whiff_gate = radius > 0.0 and _spell_whiff_gate_applies(eff, eff_info)
         for y in range(GRID_H):
             for x in range(GRID_W):
                 pos = sub_position(player_id, x, y)
                 if _hits_dead_enemy_tower(battle, player_id, pos):
                     cells[y, x] = False
-                elif radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
+                elif whiff_gate and not _spell_has_enemy_target(battle, player_id, pos, radius):
                     cells[y, x] = False
                 elif ev_gate and _spell_tower_ev_illegal(battle, player_id, eff, pos,
                                                          eff_info):

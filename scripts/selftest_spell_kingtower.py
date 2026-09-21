@@ -46,7 +46,7 @@ KING_COL = 1.4
 R_FB = _spell_radius_m("Fireball", Card("Fireball"))
 
 FAILS = []
-N_ASSERT = [23]
+N_ASSERT = [32]   # 23（C20/C21 批）+ 9（2026-09-22 W1 低费空砸豁免）
 
 
 def check(name, cond, detail=""):
@@ -202,8 +202,11 @@ def main():
           _spell_deals_damage("Log") and _spell_deals_damage("BarbLog")
           and not _spell_requires_placement_target("Log")
           and not _spell_requires_placement_target("BarbLog"))
-    zap_n = int(legal_cells(bs7, 0, "Zap").sum())
-    check("⑦ Zap 在「只有塔」的场上被闸门收起（修前 576 全合法）", zap_n == 0, f"legal={zap_n}")
+    #: ⚠️ 2026-09-22 W1 起：**Zap/Snowball（2 费）已被低费豁免**，不能再拿它们验"闸门收起"
+    #: ⇒ 改用 **Fireball（4 费）**验「空砸闸门确实还在起作用」；Zap 的新契约见 ⑧。
+    fb_n = int(legal_cells(bs7, 0, "Fireball").sum())
+    check("⑦ Fireball 在「只有塔」的场上被空砸闸门收起（修前 576 全合法）",
+          fb_n == 0, f"legal={fb_n}")
     #: ⚠️ 别把单位放在**王塔矩形内**（王塔 4×4、中心 (9,29) ⇒ x∈[7,11], y∈[27,31]）——
     #: `deploy_card` 会静默失败（第一版就踩了：Zap 仍 0 合法，看着像闸门坏了）
     bs7b = make(units=[("Knight", (8.5, 22.0))])
@@ -224,6 +227,45 @@ def main():
     check("⑥ 源码里存在效果载体排除（_is_effect_body）", "_is_effect_body" in src)
     check("⑥ 提前 return 已改为 (hits_princess or hits_king)",
           "if not (hits_princess or hits_king):" in src)
+
+    # ⑧ 【2026-09-22 W1】低费法术**空砸豁免**（用户：「空砸这个问题，首先是放开一些低费卡牌的限制」）
+    #    口径：费用 ≤ `SPELL_WHIFF_FREE_MAX_COST`(=2) 的伤害型法术不再受 **8h 空砸**闸门约束；
+    #    **9h 砸塔 EV 闸门不豁免** ⇒ 空地 Zap 合法，而「只罩敌方王塔」的 Zap/Snowball 仍非法
+    #    （用户上一轮要求的 F1 修复**不回退**）。用户同批更正：**Poison 是 4 费，不便宜**。
+    from rl.action_mask import (SPELL_WHIFF_FREE_MAX_COST,  # noqa: E402
+                                _spell_whiff_gate_applies)
+    check("⑧ 阈值 = 2（= 过牌法术集合；Poison 4 费 / Arrows 3 费都不在内）",
+          float(SPELL_WHIFF_FREE_MAX_COST) == 2.0, f"={SPELL_WHIFF_FREE_MAX_COST}")
+    _tbl = {"Log": False, "BarbLog": False, "Rage": False, "GoblinCurse": False,
+            "Zap": False, "Snowball": False,
+            "Arrows": True, "Earthquake": True, "Tornado": True, "Vines": True,
+            "Fireball": True, "Poison": True, "Rocket": True}
+    _bad = sorted(c for c, want in _tbl.items() if _spell_whiff_gate_applies(c) != want)
+    check("⑧ 空砸闸门真值表（≤2 费不适用 / ≥3 费适用）", not _bad, f"不符={_bad}")
+    _bs8 = make()
+    _zap = int(legal_cells(_bs8, 0, "Zap").sum())
+    _snow = int(legal_cells(_bs8, 0, "Snowball").sum())
+    check("⑧ 空场：Zap 现在**有**合法落点（修前 0 ⇒ 过牌/空放被解锁）", _zap > 0, f"legal={_zap}")
+    check("⑧ 空场：Snowball 现在**有**合法落点（修前 0）", _snow > 0, f"legal={_snow}")
+    #: 负对照（R13 逐位口径的轻量版）：≥3 费伤害法术**一个都不许**被放松
+    _exp = {c: int(legal_cells(_bs8, 0, c).sum())
+            for c in ("Arrows", "Tornado", "Fireball", "Poison", "Rocket")}
+    check("⑧ 负对照：≥3 费伤害法术空场仍**全 0** 合法落点（未放松贵牌）",
+          all(v == 0 for v in _exp.values()), f"{_exp}")
+    #: F1 不回归：低费豁免只碰"空砸"，不碰"只罩王塔"
+    for _c in ("Zap", "Snowball"):
+        _r = _spell_radius_m(_c, Card(_c))
+        _ko = king_only_cells(_bs8, 0, _c, _r)
+        _lg = [c for c in _ko if c[2]]
+        check(f"⑧ F1 不回归：{_c}「只罩敌方王塔」格仍**全部非法**",
+              len(_ko) > 0 and len(_lg) == 0, f"n={len(_ko)} 仍合法={_lg[:3]}")
+    #: 白盒：**两处**调用点都要换（提交路径 `_position_legal` 与掩码路径 `legal_cells`
+    #: 分叉过一次的教训）⇒ 定义 1 次 + 调用 ≥2 次
+    _n_call = src.count("_spell_whiff_gate_applies(")
+    check("⑧ 白盒：_spell_whiff_gate_applies 出现 ≥3 次（定义 1 + 两处调用）",
+          _n_call >= 3, f"count={_n_call}")
+    check("⑧ 白盒：9h EV 闸门**未**被加上费用豁免（F1 保护留在原处）",
+          "SPELL_WHIFF_FREE_MAX_COST" not in src.split("def _spell_tower_ev_illegal")[1].split("def ")[0])
 
     print(f"\n=== selftest_spell_kingtower: {len(FAILS)} failed / {N_ASSERT[0]} assertions ===")
     if FAILS:
