@@ -291,6 +291,28 @@ def run_reconcile(args):
     return 0
 
 
+def _has_play_option(mask):
+    """我方掩码里**是否至少放行 1 个可出牌槽**（= 这一帧「有得选」）。
+
+    口径与 `FollowerPolicy._slot_mask_tensor`（`rl/follower.py:377-380`）对齐：槽位合法性取自
+    `mask["slots"]`；但我方**额外**要求该槽至少有一个合法落点（`mask["cells"][i]` 非全 0），
+    否则「选得中槽、选不中格」，不是真正可选。两个口径分别计数（`stop_slot_legal_any` /
+    `stop_save_cand`），主口径取**更严**的那个。
+
+    ⚠️ 返回 `(slot_legal_any, cell_legal_any)`。
+    """
+    slots = mask.get("slots")
+    cells = mask.get("cells")
+    slot_any = bool(np.any(np.asarray(slots, dtype=bool))) if slots is not None else False
+    cell_any = False
+    if slots is not None and cells is not None:
+        for i, ok in enumerate(slots):
+            if bool(ok) and bool(np.any(np.asarray(cells[i], dtype=bool))):
+                cell_any = True
+                break
+    return slot_any, cell_any
+
+
 def _force_hand(ps, card, hand_slot=None):
     """把手牌强制成含 `card`（人类手牌顺序不可观测 ⇒ 这是**假设**，不是重建）。
 
@@ -313,7 +335,8 @@ def _force_elixir(ps, cost):
     return before, float(ps.elixir)
 
 
-def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False):
+def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False,
+                 stop_mode="none", stop_stride=1, with_frames=False):
     """一局 → IL 样本（写分片 pkl）+ 逐局读数。**必须模块级**（Windows multiprocessing 是 spawn）。"""
     cfg = TrainConfig.resolve("standard")
     deck0 = list(rep["_decks"]["team"])
@@ -334,7 +357,10 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
     st = {"tag": rep["tag"], "dur": rep["dur"], "holdout": bool(is_hold), "frames": 0,
           "team_single": 0, "team_multi": 0, "opp_plays": 0, "hand_forced": 0,
           "elixir_forced": 0, "mask_reject": 0, "bundle_not_ok": 0, "labels": 0,
-          "errors": 0, "end_time": 0.0, "game_over": False}
+          "errors": 0, "end_time": 0.0, "game_over": False,
+          #: ★ 2026-09-21 新增：**非出牌决策帧普查**（stop_mode != none 时有效）
+          "team_off": 0, "stop_slot_legal_any": 0, "stop_save_cand": 0, "stop_forced": 0,
+          "stop_labels": 0, "stop_elixir": [], "team_unmapped": 0}
 
     sched = collections.defaultdict(lambda: {"t": [], "o": []})
     max_frame = int(TIME_CAP / FRAME_DT)
@@ -353,11 +379,16 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
     st["no_coord"] = no_coord
 
     samples = []
+    frames_meta = []
     for k in range(max_frame + 1):
         if env.battle.game_over:
             break
         bucket = sched.get(k)
         injected, label_bundle = [], None
+        #: ★ 2026-09-21：「本帧人类有没有出牌」= 是否有 team play_card 事件（**与标签是否可用无关**）。
+        #: 只有这一位为 False 的帧才是「人选择不出牌」⇒ 才是 STOP/攒费帧的候选。
+        ev_t = (bucket["t"] if bucket else [])
+        has_team_play = bool(ev_t)
         if bucket:
             for e in bucket["o"]:                      # 对手侧：只注入，不产标签
                 card = map_key(e[2] or "")[0]
@@ -376,7 +407,9 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
             if len(ev_t) == 1:
                 e = ev_t[0]
                 card = map_key(e[2] or "")[0]
-                if card is not None:
+                if card is None:
+                    st["team_unmapped"] += 1
+                else:
                     st["team_single"] += 1
                     swapped, si = _force_hand(p0, card)
                     if swapped is not None:
@@ -421,15 +454,44 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
                     env.battle.deploy_card(0, card, Position(float(e[4]) / 1000.0,
                                                              float(e[5]) / 1000.0))
 
+        #: ★ 2026-09-21：STOP / 攒费帧候选判定（**只在人本帧没出牌时**）。
+        #: `stop_mode="save"` 只留「掩码放行 ≥1 出牌槽」的帧（有得选而不选 = 真正的攒费决策）；
+        #: `stop_mode="all"` 留全部非出牌帧。掩码禁掉一切的帧本来无选择 ⇒ 其 STOP 项梯度 ≈ 0。
+        stop_keep = False
+        if label_bundle is None and not has_team_play and stop_mode != "none":
+            slot_any, cell_any = _has_play_option(env.get_action_mask())
+            st["team_off"] += 1
+            if slot_any:
+                st["stop_slot_legal_any"] += 1
+            if cell_any:
+                st["stop_save_cand"] += 1
+            else:
+                st["stop_forced"] += 1
+            stop_keep = (cell_any if stop_mode == "save" else True)
+            if stop_keep:
+                stop_keep = (stop_stride <= 1) or (k % stop_stride == 0)
+
+        emit_bundle, emit_kind = None, None
         if label_bundle is not None:
+            emit_bundle, emit_kind = label_bundle, "play"
+        elif stop_keep:
+            emit_bundle, emit_kind = ActionBundle(), "save"
+
+        if emit_bundle is not None:
             #: 与 `rl/human_play.py:142-151` **逐句同序**：obs → belief → plan → masks → step
             obs = env.observe(0)
             tok = belief.encode(obs, None)
             plan_vec = bp.plan(env.battle, belief.state(), obs).to_vector()
-            masks = policy.masks_for(obs, tok, plan_vec, label_bundle, env.get_action_mask)
-            samples.append((obs, tok, plan_vec, label_bundle, masks))
-            st["labels"] += 1
-            step_bundle = label_bundle
+            masks = policy.masks_for(obs, tok, plan_vec, emit_bundle, env.get_action_mask)
+            samples.append((obs, tok, plan_vec, emit_bundle, masks))
+            frames_meta.append([k, emit_kind])
+            if emit_kind == "play":
+                st["labels"] += 1
+            else:
+                st["stop_labels"] += 1
+                if len(st["stop_elixir"]) < 64:      # 普查留证：save 帧的圣水（重建值）
+                    st["stop_elixir"].append(round(float(p0.elixir), 2))
+            step_bundle = emit_bundle
         else:
             step_bundle = ActionBundle.noop()
 
@@ -449,13 +511,20 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
             pickle.dump(samples, f)
         st["out"] = os.path.basename(path)
         st["out_n"] = len(samples)
+        if with_frames:
+            #: 帧序旁挂（**不改 pkl 的 5 元组格式**）⇒ 为 L6 时序 BC 预留；`[帧号, "play"/"save"]`
+            fp = os.path.join(out_dir, "frames_fl_%04d.json" % idx)
+            with open(fp, "w", encoding="utf-8", newline="\n") as f:
+                json.dump(frames_meta, f)
     return st
 
 
 def _worker(task):
-    idx, rep, is_hold, out_dir, level, coord, detail = task
+    (idx, rep, is_hold, out_dir, level, coord, detail,
+     stop_mode, stop_stride, with_frames) = task
     try:
-        return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail), 1
+        return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail,
+                            stop_mode, stop_stride, with_frames), 1
     except Exception as e:  # noqa: BLE001
         import traceback
         return {"tag": rep.get("tag"), "errors": 1,
@@ -516,7 +585,8 @@ def run_samples(args):
     print(f"[samples] 留出（tag 哈希 %5==0）= {sum(holdout)} / {len(recs)}")
 
     tasks = [(i, r, holdout[i], out_train if not holdout[i] else out_hold,
-              args.level, args.coord, bool(args.detail))
+              args.level, args.coord, bool(args.detail),
+              args.stop_mode, args.stop_stride, bool(args.with_frames))
              for i, r in enumerate(recs)]
     stats, t0 = [], time.time()
     if args.workers and args.workers > 1:
@@ -538,17 +608,42 @@ def run_samples(args):
     agg = collections.Counter()
     for s in stats:
         for key in ("frames", "team_single", "team_multi", "opp_plays", "hand_forced",
-                    "elixir_forced", "mask_reject", "bundle_not_ok", "labels", "errors", "no_coord"):
+                    "elixir_forced", "mask_reject", "bundle_not_ok", "labels", "errors",
+                    "no_coord", "team_off", "stop_slot_legal_any", "stop_save_cand",
+                    "stop_forced", "stop_labels", "team_unmapped"):
             agg[key] += s.get(key, 0)
     n_lab = agg["labels"]
+    elix = sorted(v for s in stats for v in s.get("stop_elixir", []))
+    pct = (lambda q: (elix[min(len(elix) - 1, int(q * len(elix)))] if elix else None))
+    j6 = {
+        "stop_mode": args.stop_mode, "stop_stride": args.stop_stride,
+        "team_frames_total": agg["frames"],
+        "team_off_frames": agg["team_off"],
+        "stop_slot_legal_any": agg["stop_slot_legal_any"],
+        "stop_save_cand": agg["stop_save_cand"],
+        "stop_forced": agg["stop_forced"],
+        "stop_labels_written": agg["stop_labels"],
+        "play_labels_written": n_lab,
+        "team_unmapped_events": agg["team_unmapped"],
+        "save_frame_share_of_off": (agg["stop_save_cand"] / agg["team_off"]
+                                    if agg["team_off"] else None),
+        "stop_elixir_quantiles": {"p10": pct(0.10), "p25": pct(0.25), "p50": pct(0.50),
+                                  "p75": pct(0.75), "p90": pct(0.90), "n": len(elix)},
+        "note": ("J6.1 普查（描述性，无门禁）。`team_off` = 人类本帧没出牌的决策帧（旧口径**被丢弃**）；"
+                 "`stop_save_cand` = 其中我方掩码放行 ≥1 个**有合法落点**的出牌槽 ⇒ 真正的攒费决策；"
+                 "`stop_forced` = 掩码禁掉一切 ⇒ 无选择（STOP 项梯度 ≈ 0）。"
+                 "⚠️ 判定依赖我方重建圣水（elixir_forced 率见 J2.1）"),
+    }
     res = {
         "source": {"jsonl": os.path.basename(args.jsonl), "games_converted": len(stats),
                    "games_selected": len(recs), "workers": args.workers,
                    "elapsed_s": round(time.time() - t0, 1),
-                   "card_level": args.level, "coord": args.coord},
+                   "card_level": args.level, "coord": args.coord,
+                   "stop_mode": args.stop_mode, "stop_stride": args.stop_stride},
         "split": {"holdout_by": "md5(tag) % 5 == 0", "holdout_games": sum(holdout),
                   "train_games": len(recs) - sum(holdout)},
         "aggregate": dict(agg),
+        "J6_1_stop_frames": j6,
         "J1_2_labels": {"labels": n_lab, "gate": ">= 20000",
                         "verdict": "PASS" if n_lab >= 20000 else "FAIL"},
         "J2_1_reconstruction": {
@@ -574,6 +669,12 @@ def run_samples(args):
           f"bundle_not_ok={res['J2_1_reconstruction']['bundle_not_ok_rate']} "
           f"({res['J2_1_reconstruction']['verdict']}) errors={agg['errors']}")
     print(f"  train dir = {out_train} / holdout dir = {out_hold}")
+    if args.stop_mode != "none":
+        print(f"  [J6.1] stop_mode={args.stop_mode} stride={args.stop_stride} | "
+              f"team_off={agg['team_off']} "
+              f"slot_legal={agg['stop_slot_legal_any']} save_cand={agg['stop_save_cand']} "
+              f"forced={agg['stop_forced']} | 落盘 play={n_lab} + save={agg['stop_labels']} "
+              f"| save/off={j6['save_frame_share_of_off']:.4f}")
     return 0
 
 
@@ -603,6 +704,15 @@ def main(argv=None):
     ap.add_argument("--detail", action="store_true", help="samples 模式：逐标签留证（体积大，只用于小样本）")
     ap.add_argument("--coord", choices=("raw", "flip_y"), default="raw")
     ap.add_argument("--level", type=int, default=11)
+    ap.add_argument("--stop-mode", choices=("none", "save", "all"), default="none",
+                    help="非出牌决策帧（STOP/攒费帧）采集口径：none=旧行为（只采人类出牌帧）；"
+                         "save=只采「掩码放行 ≥1 个有合法落点的出牌槽」的帧（真正的攒费决策，本次主用）；"
+                         "all=采全部非出牌帧。见 docs/fl_il_stopframe_prereg_2026-09-21.md")
+    ap.add_argument("--stop-stride", type=int, default=1,
+                    help="save/all 帧按全局帧号 k %% stride == 0 等距抽稀（确定性、无 RNG）；"
+                         "候选数一律如实计数，抽稀只影响落盘量")
+    ap.add_argument("--with-frames", action="store_true",
+                    help="额外落 frames_fl_%04d.json（[帧号, play/save]）⇒ 为时序 BC 预留帧序")
     args = ap.parse_args(argv)
     for name in ("jsonl", "out", "out_dir"):
         v = getattr(args, name, None)

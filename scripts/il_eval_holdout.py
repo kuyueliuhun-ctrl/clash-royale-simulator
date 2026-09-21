@@ -6,7 +6,11 @@
 本脚本补这一段：
 
 * `top1_option`  —— 策略**确定性 argmax** 选的第一步 option 是否等于人类标签的 option
-  （6 类空间：4 个出牌槽 + ABILITY + STOP；本实验的样本全是出牌帧）。
+  （6 类空间：4 个出牌槽 + ABILITY + STOP；**本块只统计出牌帧**）。
+* ★ 2026-09-21 新增：**STOP（攒费）帧单列**——`bundle.sub_actions` 为空的样本（`--stop-mode save`
+  的新目录才有）**不并入** `nll_mean`/`J3` 各读数（保证与旧读数逐位可比），只在 `stop_frames` 块报
+  「人类 STOP 率 vs 模型 argmax STOP 率」（= J6.3③ 校准判据）与 stop-only NLL。
+  旧目录（全是出牌帧）⇒ 该块恒 0，**所有旧读数逐位不变**。
 * `cell_exact`   —— 落点 576 格里 flat index 是否完全一致（含 `option` 一致与全体两个口径）。
 * `nll`          —— 留出集 `-logprob` 均值（`policy.evaluate(..., hidden=None)`，与 BC 训练同口径）。
 * **基线（脚本复算，禁手抄）**：uniform-6 = 1/6、uniform-4 = 1/4、
@@ -125,7 +129,8 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
     #: **trivial 基线的真正上限**：常数预测训练集最高频的**槽位**。
     #: （实测：随机初始化策略在 12 条 smoke 留出上就拿到 41.7%，恰好等于该集内的 majority-slot
     #:  ⇒ 只报 uniform(1/6) 会把「有偏但没学到东西」误判成 J3 PASS【R16】）
-    slot_dist = collections.Counter(int(s[3].sub_actions[0].slot) - 1 for s in train) or \
+    slot_dist = collections.Counter(
+        int(s[3].sub_actions[0].slot) - 1 for s in train if s[3].sub_actions) or \
         collections.Counter({0: 1})
     maj_slot = slot_dist.most_common(1)[0][0]
     maj_slot_hit = 0
@@ -135,9 +140,21 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
     n_opt = n_cell = n_opt_and_cell = 0
     n_opt_cond_cell = 0
     lps, health = [], 0
+    #: ★ 2026-09-21：STOP（攒费）帧单列——**不并入 `lps`**，保证 `nll_mean` 与旧读数的
+    #: 「出牌帧 NLL」口径**逐位可比**（J6.3②）。新口径见 `stop_frames` 块。
+    lps_stop, n_stop, n_stop_model_stop = [], 0, 0
     opt_hist = collections.Counter()
     maj_hit = maj_den = 0
     for obs, tok, plan, bundle, masks in holdout:
+        if not bundle.sub_actions:
+            with torch.no_grad():
+                lp, _val, _hh, _ent = policy.evaluate(obs, tok, plan, bundle, masks, hidden=None)
+            lps_stop.append(float(lp))
+            pred, _lp_act, _v, _h, _mk = policy.act(obs, tok, plan, make_get_mask(masks),
+                                                    hidden=None, deterministic=True)
+            n_stop += 1
+            n_stop_model_stop += int(not pred.sub_actions)
+            continue
         lab = bundle.sub_actions[0]
         lab_opt, lab_x, lab_y = int(lab.slot) - 1, int(lab.x), int(lab.y)
 
@@ -201,6 +218,19 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
             "gate_top1_ge_0.40": "PASS" if n and n_opt / n >= 0.40 else
                                  ("WEAK" if n and n_opt / n >= 0.25 else "FAIL"),
         },
+        "stop_frames": {
+            "n_stop": n_stop, "n_play": n,
+            #: 人类 STOP 率 vs 模型 argmax STOP 率，**在同一批帧上** ⇒ J6.3③ 校准判据 = |差|
+            "human_stop_rate": (n_stop / (n + n_stop)) if (n + n_stop) else None,
+            "model_stop_rate_argmax": (n_stop_model_stop / (n + n_stop)) if (n + n_stop) else None,
+            "stop_calibration_abs_gap": (abs(n_stop_model_stop - n_stop) / (n + n_stop))
+                                        if (n + n_stop) else None,
+            "nll_mean_stop_only": (-sum(lps_stop) / len(lps_stop)) if lps_stop else None,
+            "nll_mean_all_frames": (-(sum(lps) + sum(lps_stop)) / (len(lps) + len(lps_stop)))
+                                   if (lps or lps_stop) else None,
+            "note": ("新口径（`--stop-mode save`）才有 STOP 帧；旧目录 n_stop=0 ⇒ 该块恒 0，"
+                     "`nll_mean`/`J3` 各读数与旧口径逐位相同"),
+        },
         "baselines": {
             "uniform_option6": 1.0 / 6.0,
             "uniform_option4": 0.25,
@@ -211,7 +241,8 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
         },
         "label_distribution_top_slots": dict(
             sorted(collections.Counter(
-                int(s[3].sub_actions[0].slot) - 1 for s in holdout).items())),
+                int(s[3].sub_actions[0].slot) - 1
+                for s in holdout if s[3].sub_actions).items())),
         "pred_option_histogram": dict(sorted(opt_hist.items())),
     }
 
@@ -253,6 +284,12 @@ def main(argv=None):
           f"per_slot_recall={res['per_slot_recall']}")
     print(f"  verdict J3 = {j['gate_top1_ge_0.40']}  "
           f"health(logprob<-1e8)={j['logprob_lt_minus_1e8']}")
+    sf = res["stop_frames"]
+    if sf["n_stop"]:
+        print(f"  [STOP 帧] n_stop={sf['n_stop']} n_play={sf['n_play']} | "
+              f"人类 STOP={sf['human_stop_rate']:.4f} 模型 argmax STOP={sf['model_stop_rate_argmax']:.4f} "
+              f"| 校准差={sf['stop_calibration_abs_gap']:.4f} (J6.3③ 门禁 ≤0.05)")
+        print(f"  [STOP NLL] stop_only={sf['nll_mean_stop_only']} all_frames={sf['nll_mean_all_frames']}")
     if args.out:
         print(f"[eval] wrote {args.out}")
     return 0
