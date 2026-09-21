@@ -1,0 +1,125 @@
+{
+  "ckpt": "runs/_fl_il_bc_save/sweep_mixR10/bc_fl_e3_lr0.001.pt",
+  "decks": "solo",
+  "opponent": "self",
+  "hidden": "none",
+  "opp_hidden": "none",
+  "games": 10,
+  "frames": 3135,
+  "wins": 4,
+  "losses": 6,
+  "draws": 0,
+  "winrate": 0.4,
+  "winrate_se": 0.15491933384829668,
+  "mean_reward_per_frame": -0.041093920732632676,
+  "frames_per_game": 313.5,
+  "empty_bundle_rate": 0.9020733652312599,
+  "plays_per_frame": 0.09792663476874003,
+  "playable_frame_rate": 0.12599681020733652,
+  "playable_frames": 395,
+  "forced_stop_frames": 2740,
+  "stop_when_playable": 88,
+  "stop_when_playable_rate": 0.22278481012658227,
+  "p0_plays": 307,
+  "p0_top_cards": [
+    [
+      "Skeletons",
+      65
+    ],
+    [
+      "Log",
+      61
+    ],
+    [
+      "IceWizard",
+      59
+    ],
+    [
+      "Knight",
+      58
+    ],
+    [
+      "Archer",
+      58
+    ],
+    [
+      "Tesla",
+      3
+    ],
+    [
+      "Fireball",
+      3
+    ]
+  ],
+  "p1_top_cards": [
+    [
+      "Skeletons",
+      63
+    ],
+    [
+      "Archer",
+      62
+    ],
+    [
+      "Knight",
+      61
+    ],
+    [
+      "Log",
+      60
+    ],
+    [
+      "IceWizard",
+      59
+    ],
+    [
+      "Fireball",
+      2
+    ],
+    [
+      "Xbow",
+      1
+    ]
+  ],
+  "seconds": 136.1,
+  "history": [
+    {
+      "step": 1476,
+      "wins": 2,
+      "losses": 3,
+      "draws": 0,
+      "games": 5,
+      "cum_wins": 2,
+      "cum_losses": 3,
+      "cum_draws": 0,
+      "cum_games": 5,
+      "winrate": 0.4,
+      "winrate_se": 0.21908902300206645,
+      "mean_reward": -0.03719452223853243,
+      "block_mean_reward": -0.03719452223853243,
+      "empty_bundle_rate": 0.9037940379403794,
+      "plays_per_frame": 0.09620596205962059,
+      "playable_frame_rate": 0.13685636856368563,
+      "stop_when_playable_rate": 0.297029702970297
+    },
+    {
+      "step": 3135,
+      "wins": 2,
+      "losses": 3,
+      "draws": 0,
+      "games": 5,
+      "cum_wins": 4,
+      "cum_losses": 6,
+      "cum_draws": 0,
+      "cum_games": 10,
+      "winrate": 0.4,
+      "winrate_se": 0.15491933384829668,
+      "mean_reward": -0.041093920732632676,
+      "block_mean_reward": -0.04456318666228452,
+      "empty_bundle_rate": 0.9020733652312599,
+      "plays_per_frame": 0.09792663476874003,
+      "playable_frame_rate": 0.12599681020733652,
+      "stop_when_playable_rate": 0.22278481012658227
+    }
+  ]
+}

@@ -99,8 +99,8 @@ def pop_mask(rows):
 
 
 def build_features(rows, keep):
-    """→ (F_obs, F_oracle_extra)，均为 (N, d) float32。"""
-    obs_parts, orc_parts = [], []
+    """→ (F_obs, F_oracle_extra, F_grid)，均为 (N, d) float32；`F_grid` 可能为 None。"""
+    obs_parts, orc_parts, grid_parts = [], [], []
     for d, m in zip(rows, keep):
         ev_c, ev_x, ev_y, ev_dt = d["ev_c"][m], d["ev_x"][m], d["ev_y"][m], d["ev_dt"][m]
         ev_cost = np.vectorize(cost_of, otypes=[np.float32])(ev_c)
@@ -122,7 +122,10 @@ def build_features(rows, keep):
         ]).astype(np.float32)
         obs_parts.append(obs)
         orc_parts.append(extra)
-    return np.vstack(obs_parts), np.vstack(orc_parts)
+        if "grid_c" in d:
+            grid_parts.append(np.asarray(d["grid_c"][m], dtype=np.float32))
+    grids = np.vstack(grid_parts) if grid_parts else None
+    return np.vstack(obs_parts), np.vstack(orc_parts), grids
 
 
 def auc(y, s):
@@ -146,10 +149,19 @@ def auc(y, s):
     return float((ranks[y == 1].sum() - n1 * (n1 + 1) / 2.0) / (n1 * n0))
 
 
-def standardize(Xtr, Xte):
+def standardize(Xtr, Xte, min_std=0.0):
+    """按**训练折**做标准化；`min_std>0` 时**丢掉近常量列**。
+
+    ⚠️ 为什么需要这个开关：粗网格（4×4 均值池化）里大量「该区块无实体」的通道是**近常量**，
+    标准差 ~1e-4 时会被标准化**放大 10^4 倍** ⇒ 噪声淹没信号（实测 MLP 反而掉 AUC）。
+    默认 `min_std=0` ⇒ **不丢列**，已有读数（Stage 0 主表）逐位不变。
+    """
     mu, sd = Xtr.mean(0), Xtr.std(0)
-    sd = np.where(sd < 1e-6, 1.0, sd)
-    return (Xtr - mu) / sd, (Xte - mu) / sd
+    keep = sd >= max(min_std, 1e-6)
+    if keep.sum() == 0:
+        keep = np.ones_like(sd, dtype=bool)
+    mu, sd = mu[keep], sd[keep]
+    return (Xtr[:, keep] - mu) / sd, (Xte[:, keep] - mu) / sd
 
 
 def fit_torch(Xtr, ytr, kind, seed=0):
@@ -180,7 +192,7 @@ def fit_torch(Xtr, ytr, kind, seed=0):
     return score
 
 
-def oof_scores(X, y, game, kind, seed=0):
+def oof_scores(X, y, game, kind, seed=0, min_std=0.0):
     """按局分组 5 折 → 折外打分（OOF）。标准化在训练折上拟合（防泄漏）。"""
     gids = np.unique(game)
     rng = np.random.RandomState(seed)
@@ -193,7 +205,7 @@ def oof_scores(X, y, game, kind, seed=0):
         tr = ~te
         if te.sum() == 0 or tr.sum() == 0:
             continue
-        Xtr, Xte = standardize(X[tr], X[te])
+        Xtr, Xte = standardize(X[tr], X[te], min_std=min_std)
         sc = fit_torch(Xtr, y[tr], kind, seed=seed + k)
         oof[te] = sc(Xte)
     return oof
@@ -257,6 +269,8 @@ def main(argv=None):
     ap.add_argument("--frames-dir", required=True)
     ap.add_argument("--out", default=None)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--min-std", type=float, default=0.0,
+                    help="标准化时丢掉训练折 std < 该值的近常量列（0 = 不丢；粗网格探针建议 1e-3）")
     ap.add_argument("--readout-replay", default=None,
                     help="对局 runner 的 run 目录（或 league_*.pkl）⇒ 附上**模型侧**分箱出牌率曲线（J7.4 对照）")
     args = ap.parse_args(argv)
@@ -271,7 +285,7 @@ def main(argv=None):
     y = np.concatenate([d["act"][m] for d, m in zip(rows, keep)]).astype(np.int64)
     n_rows = int(len(y))
     base = float(y.mean())
-    obs, extra = build_features(rows, keep)
+    obs, extra, grid = build_features(rows, keep)
     rng = np.random.RandomState(args.seed)
     extra_shuf = extra[rng.permutation(len(extra))]
 
@@ -282,11 +296,14 @@ def main(argv=None):
         "F_oracle": np.hstack([obs, extra]),
         "F_oracle_shuffled": np.hstack([obs, extra_shuf]),
     }
+    if grid is not None:
+        #: ★ Stage 0 尾项：粗网格（4×4 均值 → 8×5×15 = 600 维）⇒ 回答「act 能否从**棋盘**读出来」
+        sets["F_obs+grid"] = np.hstack([obs, grid])
     res = {
         "frames_dir": os.path.basename(args.frames_dir), "games": len(files),
         "frame_rows_total": int(sum(len(d["frame"]) for d in rows)),
         "population_rows": n_rows, "base_rate_act": base,
-        "n_fold": N_FOLD, "n_boot": N_BOOT,
+        "n_fold": N_FOLD, "n_boot": N_BOOT, "min_std": args.min_std,
         "population_rule": "掩码放行 ≥1 个有合法落点的出牌槽 ∪ 人类出牌帧（预注册 §1.2）",
         "auc": {},
     }
@@ -298,7 +315,7 @@ def main(argv=None):
             res["auc"][name] = {"raw_single_feature": auc(y, X)}
             continue
         for kind in ("linear", "mlp"):
-            sc = oof_scores(X, y, game, kind, seed=args.seed)
+            sc = oof_scores(X, y, game, kind, seed=args.seed, min_std=args.min_std)
             res["auc"][name][kind] = auc(y, sc)
             store.setdefault(name, {})[kind] = sc
 
@@ -316,6 +333,19 @@ def main(argv=None):
     res["J7_1_delta_auc"] = {"per_family": delta, "mean_dAUC": float(da),
                              "gate": ">=0.05 ⇒ H-B ; <0.03 ⇒ H-A ; [0.03,0.07) ⇒ 扩样",
                              "verdict": verdict}
+
+    if grid is not None:
+        dg = {}
+        for kind in ("linear", "mlp"):
+            a = store["F_obs+grid"][kind]
+            b = store["F_obs"][kind]
+            lo, hi = boot_ci(y, a, b, game, seed=args.seed)
+            dg[kind] = {"dAUC": float(auc(y, a) - auc(y, b)), "ci95": [lo, hi]}
+        res["J7_1b_delta_auc_grid"] = {
+            "grid_dim": int(grid.shape[1]), "per_family": dg,
+            "mean_dAUC": float(np.mean([dg["linear"]["dAUC"], dg["mlp"]["dAUC"]])),
+            "note": "粗网格（4×4 均值池化）增量 ⇒ 0.68 是「下界」还是「天花板」的判据",
+        }
 
     # J7.4 分箱：人类出牌率 vs 我圣水（整数箱），只在「有得选」的帧上
     bins = {}
@@ -342,6 +372,12 @@ def main(argv=None):
         d = delta[kind]
         print(f"  ΔAUC(oracle−obs) {kind:6s} = {d['dAUC']:+.4f}  CI95={d['ci95']}")
     print(f"  J7.1 平均 ΔAUC = {da:+.4f} ⇒ {verdict}")
+    if "J7_1b_delta_auc_grid" in res:
+        g = res["J7_1b_delta_auc_grid"]
+        print(f"  J7.1b 加粗网格（{g['grid_dim']} 维）ΔAUC：线性 {g['per_family']['linear']['dAUC']:+.4f} "
+              f"MLP {g['per_family']['mlp']['dAUC']:+.4f} ⇒ 平均 {g['mean_dAUC']:+.4f}")
+        print(f"    F_obs+grid AUC：线性 {res['auc']['F_obs+grid']['linear']:.4f} "
+              f"MLP {res['auc']['F_obs+grid']['mlp']:.4f}")
     if res.get("J7_4_model_act_rate_by_elixir"):
         m = res["J7_4_model_act_rate_by_elixir"]
         top = {k: v for k, v in list(m["by_bin"].items())[-3:]}

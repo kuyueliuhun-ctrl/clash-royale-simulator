@@ -358,7 +358,8 @@ def _force_elixir(ps, cost):
 
 
 def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False,
-                 stop_mode="none", stop_stride=1, with_frames=False, dump_dir=None):
+                 stop_mode="none", stop_stride=1, with_frames=False, dump_dir=None,
+                 dump_grid=False):
     """一局 → IL 样本（写分片 pkl）+ 逐局读数。**必须模块级**（Windows multiprocessing 是 spawn）。"""
     cfg = TrainConfig.resolve("standard")
     deck0 = list(rep["_decks"]["team"])
@@ -497,6 +498,15 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
 
         if dump is not None:
             m0 = env.get_action_mask()
+            #: ★ Stage 0 尾项：**粗网格**（4×4 平均池化 → 8×5×15 = 600 维）
+            #: 用于回答「act 能不能从**棋盘**读出来」（`il_act_upper_bound.py --grid-coarse`）
+            _g = np.asarray(env.observe(0)["grid"], dtype=np.float32)
+            if dump_grid:
+                _ph, _pw = (-_g.shape[0]) % 4, (-_g.shape[1]) % 4
+                if _ph or _pw:
+                    _g = np.pad(_g, ((0, _ph), (0, _pw), (0, 0)))
+                _gh, _gw = _g.shape[0] // 4, _g.shape[1] // 4
+                grid_c = _g.reshape(_gh, 4, _gw, 4, _g.shape[2]).mean(axis=(1, 3)).reshape(-1)
             slot_any, cell_any = _has_play_option(m0)
             bst = belief.state()
             ev = list(belief.event_history)[-3:]
@@ -524,6 +534,7 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
                 ev_x=np.asarray(ev_x, dtype=np.float32),
                 ev_y=np.asarray(ev_y, dtype=np.float32),
                 ev_dt=np.asarray(ev_dt, dtype=np.float32),
+                **({"grid_c": grid_c.astype(np.float32)} if dump_grid else {}),
             ))
 
         emit_bundle, emit_kind = None, None
@@ -595,10 +606,10 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
 
 def _worker(task):
     (idx, rep, is_hold, out_dir, level, coord, detail,
-     stop_mode, stop_stride, with_frames, dump_dir) = task
+     stop_mode, stop_stride, with_frames, dump_dir, dump_grid) = task
     try:
         return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail,
-                            stop_mode, stop_stride, with_frames, dump_dir), 1
+                            stop_mode, stop_stride, with_frames, dump_dir, dump_grid), 1
     except Exception as e:  # noqa: BLE001
         import traceback
         return {"tag": rep.get("tag"), "errors": 1,
@@ -661,7 +672,7 @@ def run_samples(args):
     tasks = [(i, r, holdout[i], out_train if not holdout[i] else out_hold,
               args.level, args.coord, bool(args.detail),
               args.stop_mode, args.stop_stride, bool(args.with_frames),
-              args.dump_frames)
+              args.dump_frames, bool(args.dump_grid))
              for i, r in enumerate(recs)]
     stats, t0 = [], time.time()
     if args.workers and args.workers > 1:
@@ -789,6 +800,8 @@ def main(argv=None):
                          "候选数一律如实计数，抽稀只影响落盘量")
     ap.add_argument("--with-frames", action="store_true",
                     help="额外落 frames_fl_%04d.json（[帧号, play/save]）⇒ 为时序 BC 预留帧序")
+    ap.add_argument("--dump-grid", action="store_true",
+                    help="随 --dump-frames 一起落**粗网格**（4×4 平均池化 → 600 维）")
     ap.add_argument("--dump-frames", default=None,
                     help="逐**决策帧**导出 F_obs + F_oracle 特征到该目录（每局一个 npz）"
                          "⇒ Stage 0 上界诊断（docs/fl_il_il2_prereg_2026-09-22.md）")

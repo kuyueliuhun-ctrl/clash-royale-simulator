@@ -1,0 +1,72 @@
+{
+  "ckpt": "runs/_fl_il_bc_save/sweep/bc_fl_e3_lr0.001.pt",
+  "decks": "solo",
+  "opponent": "self",
+  "hidden": "none",
+  "opp_hidden": "none",
+  "games": 10,
+  "frames": 6000,
+  "wins": 0,
+  "losses": 0,
+  "draws": 10,
+  "winrate": 0.0,
+  "winrate_se": 1e-05,
+  "mean_reward_per_frame": -6.0750000000000006e-05,
+  "frames_per_game": 600.0,
+  "empty_bundle_rate": 0.9995,
+  "plays_per_frame": 0.0005,
+  "playable_frame_rate": 1.0,
+  "playable_frames": 6000,
+  "forced_stop_frames": 0,
+  "stop_when_playable": 5997,
+  "stop_when_playable_rate": 0.9995,
+  "p0_plays": 3,
+  "p0_top_cards": [
+    [
+      "Skeletons",
+      3
+    ]
+  ],
+  "p1_top_cards": [],
+  "seconds": 189.7,
+  "history": [
+    {
+      "step": 3000,
+      "wins": 0,
+      "losses": 0,
+      "draws": 5,
+      "games": 5,
+      "cum_wins": 0,
+      "cum_losses": 0,
+      "cum_draws": 5,
+      "cum_games": 5,
+      "winrate": 0.0,
+      "winrate_se": 1.4142135623730951e-05,
+      "mean_reward": -8.1e-05,
+      "block_mean_reward": -8.1e-05,
+      "empty_bundle_rate": 0.9993333333333333,
+      "plays_per_frame": 0.0006666666666666666,
+      "playable_frame_rate": 1.0,
+      "stop_when_playable_rate": 0.9993333333333333
+    },
+    {
+      "step": 6000,
+      "wins": 0,
+      "losses": 0,
+      "draws": 5,
+      "games": 5,
+      "cum_wins": 0,
+      "cum_losses": 0,
+      "cum_draws": 10,
+      "cum_games": 10,
+      "winrate": 0.0,
+      "winrate_se": 1e-05,
+      "mean_reward": -6.0750000000000006e-05,
+      "block_mean_reward": -4.05e-05,
+      "empty_bundle_rate": 0.9995,
+      "plays_per_frame": 0.0005,
+      "playable_frame_rate": 1.0,
+      "stop_when_playable_rate": 0.9995
+    }
+  ]
+}

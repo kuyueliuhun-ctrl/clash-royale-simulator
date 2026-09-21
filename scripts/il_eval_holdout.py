@@ -61,6 +61,45 @@ def _abs(p):
     return os.path.normpath(os.path.join(ORIG_CWD, p))
 
 
+def auc(y, s):
+    """秩和（Mann-Whitney）AUC。"""
+    y = np.asarray(y)
+    n1 = int(y.sum())
+    n0 = len(y) - n1
+    if n1 == 0 or n0 == 0:
+        return None
+    order = np.argsort(np.asarray(s, dtype=np.float64), kind="mergesort")
+    sr = np.asarray(s, dtype=np.float64)[order]
+    ranks = np.empty(len(s), dtype=np.float64)
+    i = 0
+    while i < len(sr):
+        j = i
+        while j + 1 < len(sr) and sr[j + 1] == sr[i]:
+            j += 1
+        ranks[order[i:j + 1]] = 0.5 * (i + j) + 1.0
+        i = j + 1
+    return float((ranks[y == 1].sum() - n1 * (n1 + 1) / 2.0) / (n1 * n0))
+
+
+def first_option_probs(policy, obs, tok, plan, masks):
+    """**复刻** `FollowerPolicy.act()` 的第一步 6 类分布（`hidden=None` 口径）。
+
+    与 `il_nll_decompose.py` 同款做法：**不改 `follower.py`**，只用它的公开件重算
+    `_encode_parts → gru_cell(zeros) → slot_head + plan_bias → 掩码`。
+    ⇒ `p[STOP]` 就是「模型此刻不出牌的概率」；J8.1 的 act-AUC 用 `1 − p[STOP]` 当分数。
+    """
+    from rl.follower import STOP_IDX
+    with torch.no_grad():
+        _fused, enc = policy._encode_parts(obs, tok, plan)
+        h = policy.gru_cell(enc, torch.zeros(1, policy.hidden_dim, device=policy.device))
+        slot_bias, _cb = policy._plan_biases(plan)
+        logits = policy.slot_head(h) + slot_bias
+        sm = policy._slot_mask_tensor(masks[0])
+        logits = logits.masked_fill(sm == 0, -1e9)
+        p = torch.softmax(logits, dim=-1)
+    return p[0, STOP_IDX]
+
+
 def load_dir(d, limit=0):
     """与 `human_play.load_bc_samples` 同口径：平铺 `bc_*.pkl`，内容 = list[5 元组]。"""
     out = []
@@ -143,15 +182,26 @@ def evaluate(ckpt, holdout, train, limit, random_init=False, save_weight=1.0):
     #: ★ 2026-09-21：STOP（攒费）帧单列——**不并入 `lps`**，保证 `nll_mean` 与旧读数的
     #: 「出牌帧 NLL」口径**逐位可比**（J6.3②）。新口径见 `stop_frames` 块。
     lps_stop, n_stop, n_stop_model_stop = [], 0, 0
+    #: ★ J8.1：**模型侧 act 判别度**分数 = `1 − p(STOP)`（首步 6 类分布，`hidden=None`）
+    act_scores, act_labels = [], []
+    gate_worst = 0.0
+    gate_n = 0
     #: 分开计数：模型在 **save 帧** / **play 帧** 上分别有多少次输出 STOP
     #: ⇒ 用 `--save-weight` 反加权可还原**自然边际**（save 帧被 `--stop-stride` 抽稀过）
     m_stop_on_save = m_stop_on_play = 0
     opt_hist = collections.Counter()
     maj_hit = maj_den = 0
     for obs, tok, plan, bundle, masks in holdout:
+        p_stop = first_option_probs(policy, obs, tok, plan, masks)
+        act_scores.append(1.0 - float(p_stop))
+        act_labels.append(0 if not bundle.sub_actions else 1)
         if not bundle.sub_actions:
             with torch.no_grad():
                 lp, _val, _hh, _ent = policy.evaluate(obs, tok, plan, bundle, masks, hidden=None)
+            #: **一致性闸门**：STOP 样本上 `evaluate` 的 lp 必须 == log p(STOP)（复刻漂了 ⇒ 读数不可用）
+            if gate_n < 200:
+                gate_worst = max(gate_worst, abs(float(lp) - float(torch.log(p_stop + 1e-30))))
+                gate_n += 1
             lps_stop.append(float(lp))
             pred, _lp_act, _v, _h, _mk = policy.act(obs, tok, plan, make_get_mask(masks),
                                                     hidden=None, deterministic=True)
@@ -222,6 +272,15 @@ def evaluate(ckpt, holdout, train, limit, random_init=False, save_weight=1.0):
             "logprob_lt_minus_1e8": health,
             "gate_top1_ge_0.40": "PASS" if n and n_opt / n >= 0.40 else
                                  ("WEAK" if n and n_opt / n >= 0.25 else "FAIL"),
+        },
+        "act_decision": {
+            "n": len(act_labels),
+            "auc_model_act": auc(act_labels, act_scores),
+            "base_rate_act": (float(np.mean(act_labels)) if act_labels else None),
+            "replica_gate_max_abs_delta": gate_worst, "replica_gate_n": gate_n,
+            "replica_gate": "<=1e-5",
+            "note": ("J8.1：分数 = 1 − p(STOP)（首步 6 类分布）；标签 = 该帧人类是否出牌。"
+                     "对照 = Stage 0 的 act 上界（F_obs AUC 0.6756/0.6848）与「只用我圣水」0.5926"),
         },
         "stop_frames": {
             "n_stop": n_stop, "n_play": n,
@@ -305,6 +364,9 @@ def main(argv=None):
           f"per_slot_recall={res['per_slot_recall']}")
     print(f"  verdict J3 = {j['gate_top1_ge_0.40']}  "
           f"health(logprob<-1e8)={j['logprob_lt_minus_1e8']}")
+    ad = res["act_decision"]
+    print(f"  [act-AUC J8.1] AUC={ad['auc_model_act']} 基率={ad['base_rate_act']} "
+          f"（复刻闸门 max|Δ|={ad['replica_gate_max_abs_delta']:.2e}, n={ad['replica_gate_n']}, 阈值 1e-5）")
     sf = res["stop_frames"]
     if sf["n_stop"]:
         print(f"  [STOP 帧] n_stop={sf['n_stop']} n_play={sf['n_play']} | "
