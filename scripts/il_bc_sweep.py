@@ -69,7 +69,8 @@ def parse_configs(s):
     return out
 
 
-def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0):
+def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0,
+              mix_ratio=None):
     """复刻 human_play.py::train_bc_from_human 的训练循环（见模块 docstring 的复刻纪律）。
 
     `save_every=N>0` 时每 N 个 epoch 额外落一份快照 `<out_path 去后缀>_ep{k}.pt`：
@@ -77,16 +78,32 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
     """
     torch.manual_seed(seed)
     np.random.seed(seed)                     # 与训练循环同序：在构造 policy 之前
+    #: ★ 2026-09-21 **混比（mix-ratio）**：`mix_ratio >= 0` 时每个 epoch 只抽
+    #: `round(mix_ratio × n_play)` 条 STOP/save 帧（与全部 play 帧拼成一个 epoch）。
+    #: ⚠️ **不做逐样本 loss 加权**：本训练循环是 Adam + batch=1 ⇒ 更新 ≈ `lr·sign(g)`（尺度无关），
+    #: 乘一个标量权重**不改变任何更新**（实测级结论，见 `docs/fl_il_il2_prereg_2026-09-22.md` §0）
+    #: ⇒ 唯一有效的杠杆是「每类样本**出现的频率**」。默认 `-1` = 关 ⇒ 旧行为**逐位不变**。
+    _play_idx = np.array([i for i, s in enumerate(samples) if s[3].sub_actions], dtype=np.int64)
+    _stop_idx = np.array([i for i, s in enumerate(samples) if not s[3].sub_actions], dtype=np.int64)
     belief_dim = len(samples[0][1])
     plan_dim = len(samples[0][2])
     policy = FollowerPolicy(hidden=128, plan_dim=plan_dim, belief_dim=belief_dim)
     opt = torch.optim.Adam(policy.parameters(), lr=lr)
     n = len(samples)
+    #: 每个 epoch 的索引池（混比只改这个池；`--mix-ratio` 关 = 全部样本）
+    if mix_ratio is not None and mix_ratio >= 0 and len(_play_idx) and len(_stop_idx):
+        k_stop = int(round(float(mix_ratio) * len(_play_idx)))
+        k_stop = max(0, min(k_stop, len(_stop_idx)))
+        pool = np.concatenate([_play_idx, _stop_idx[:k_stop]]) if k_stop else _play_idx.copy()
+        pool = np.sort(pool)
+    else:
+        pool = np.arange(n, dtype=np.int64)
+    n_ep = len(pool)
     curve = []
     snaps = []
     for ep in range(epochs):
         t0 = time.time()
-        perm = np.random.permutation(n)
+        perm = pool[np.random.permutation(n_ep)]
         tot = 0.0
         for i in perm:
             obs, tok, plan, bundle, masks = samples[i]
@@ -96,7 +113,7 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
             loss.backward()
             opt.step()
             tot += float(lp.item())
-        mean_lp = tot / n
+        mean_lp = tot / max(1, n_ep)
         dt = time.time() - t0
         curve.append({"epoch": ep + 1, "mean_logprob": mean_lp, "sec": dt})
         print(f"[sweep] ep={epochs} lr={_lr_tag(lr)}  "
@@ -109,6 +126,9 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
     save_checkpoint(policy, out_path)
     print(f"[sweep] saved {out_path}", flush=True)
     return {"epochs": epochs, "lr": lr, "seed": seed, "samples": n,
+            "mix_ratio": (None if mix_ratio is None else float(mix_ratio)),
+            "epoch_pool": int(n_ep),
+            "n_play": int(len(_play_idx)), "n_stop": int(len(_stop_idx)),
             "ckpt": os.path.basename(out_path), "curve": curve, "snapshots": snaps,
             "total_sec": sum(c["sec"] for c in curve)}
 
@@ -122,6 +142,9 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--threads", type=int, default=0, help="torch 线程数（0 = 不动，默认单线程口径）")
     ap.add_argument("--manifest", default=None)
+    ap.add_argument("--mix-ratio", type=float, default=None,
+                    help="每个 epoch 抽 round(R × n_play) 条 STOP/save 帧（R = play:save 的 save 侧倍数）；"
+                         "缺省 = 关 = 旧行为逐位不变。见 docs/fl_il_il2_prereg_2026-09-22.md §0/§5")
     ap.add_argument("--save-every", type=int, default=0,
                     help="每 N 个 epoch 额外落一份快照（不消耗 RNG，不影响训练轨迹）")
     args = ap.parse_args(argv)
@@ -151,11 +174,12 @@ def main(argv=None):
         out_path = os.path.join(args.out_dir, f"bc_fl_e{epochs}_lr{_lr_tag(lr)}.pt")
         print(f"[sweep] === epochs={epochs} lr={_lr_tag(lr)} → {out_path} ===", flush=True)
         runs.append(train_one(samples, epochs, lr, args.seed, out_path,
-                              save_every=args.save_every))
+                              save_every=args.save_every,
+                              mix_ratio=args.mix_ratio))
 
     manifest = {"data_dir": args.data_dir, "seed": args.seed, "runs": runs,
                 "note": "训练循环逐行复刻 rl/human_play.py::train_bc_from_human；"
-                        "每格同 seed ⇒ 同初值 + 同 permutation，唯一变量 = epochs/lr"}
+                        "每格同 seed ⇒ 同初值 + 同 permutation，唯一变量 = epochs/lr（或 mix_ratio）"}
     mpath = args.manifest or os.path.join(args.out_dir, "sweep_manifest.json")
     with open(mpath, "w", encoding="utf-8", newline="\n") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=1)

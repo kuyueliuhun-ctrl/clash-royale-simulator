@@ -44,6 +44,7 @@ from rl.action_mask import _card_cost  # noqa: E402
 from rl.belief import BeliefInference, belief_token_dim  # noqa: E402
 from rl.belief_planner import BeliefPlanner  # noqa: E402
 from rl.plan_space import PLAN_DIM  # noqa: E402
+from rl.observation import ENTITY_NAMES  # noqa: E402
 from rl.follower import FollowerPolicy  # noqa: E402
 from rl.config import TrainConfig, reward_to_env  # noqa: E402
 from core import Position  # noqa: E402
@@ -291,6 +292,27 @@ def run_reconcile(args):
     return 0
 
 
+def _frames_to_next_elixir(elixir, t):
+    """「距下 1 点圣水还有几帧」——**确定可算**（`battle.py:2881` 的三段回费）。
+
+    回费周期：`t < 120` → 2.8 s/点；`120 ≤ t < 240` → 1.4 s/点（双倍）；`t ≥ 240` → `2.8/3` s/点。
+    每决策帧 `FRAME_DT = 0.5 s` ⇒ 回费 **0.1786 / 0.3571 / 0.5357 点/帧**。
+    圣水已封顶（≥10）⇒ 返回 **-1**（不再回费）。
+    """
+    if elixir >= 10.0 - 1e-9:
+        return -1
+    base = 2.8 if t < 120 else (1.4 if t < 240 else 2.8 / 3.0)
+    per_frame = FRAME_DT / base
+    frac = float(elixir) % 1.0
+    rem = 1.0 if frac <= 1e-9 else (1.0 - frac)
+    return int(np.ceil(rem / per_frame - 1e-9))
+
+
+def _card_idx(name):
+    """卡名 → `ENTITY_NAMES` 下标（`-1` = 未登记）。"""
+    return ENTITY_NAMES.index(name) if name in ENTITY_NAMES else -1
+
+
 def _has_play_option(mask):
     """我方掩码里**是否至少放行 1 个可出牌槽**（= 这一帧「有得选」）。
 
@@ -336,7 +358,7 @@ def _force_elixir(ps, cost):
 
 
 def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False,
-                 stop_mode="none", stop_stride=1, with_frames=False):
+                 stop_mode="none", stop_stride=1, with_frames=False, dump_dir=None):
     """一局 → IL 样本（写分片 pkl）+ 逐局读数。**必须模块级**（Windows multiprocessing 是 spawn）。"""
     cfg = TrainConfig.resolve("standard")
     deck0 = list(rep["_decks"]["team"])
@@ -380,6 +402,8 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
 
     samples = []
     frames_meta = []
+    #: ★ 2026-09-21 Stage 0：逐决策帧特征导出（F_obs + F_oracle）⇒ 上界诊断的数据源
+    dump = [] if dump_dir else None
     for k in range(max_frame + 1):
         if env.battle.game_over:
             break
@@ -471,6 +495,37 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
             if stop_keep:
                 stop_keep = (stop_stride <= 1) or (k % stop_stride == 0)
 
+        if dump is not None:
+            m0 = env.get_action_mask()
+            slot_any, cell_any = _has_play_option(m0)
+            bst = belief.state()
+            ev = list(belief.event_history)[-3:]
+            ev_c = [_card_idx(c) for c, _x, _y, _dt in ev]
+            ev_x = [float(x if x is not None else -1) for _c, x, _y, _dt in ev]
+            ev_y = [float(y if y is not None else -1) for _c, _x, y, _dt in ev]
+            ev_dt = [float(dt) for _c, _x, _y, dt in ev]
+            while len(ev_c) < 3:                       # 左填充到 3 条（早期帧不足）
+                ev_c.insert(0, -1); ev_x.insert(0, -1.0); ev_y.insert(0, -1.0); ev_dt.insert(0, -1.0)
+            dump.append(dict(
+                frame=k, act=int(has_team_play), label_ok=int(label_bundle is not None),
+                opp_play_count=int(st["opp_plays"]),
+                opt_slot=int(slot_any), opt_cell=int(cell_any),
+                my_elixir=float(p0.elixir), time=float(env.battle.time),
+                next_card=float(_card_idx(p0.cycle[4])),
+                next_card_cost=float(_card_cost(p0, p0.cycle[4]) or -1.0),
+                f2n_my=float(_frames_to_next_elixir(p0.elixir, env.battle.time)),
+                b_hand=np.asarray(bst.hand_probs, dtype=np.float32),
+                b_next=np.asarray(bst.next_probs, dtype=np.float32),
+                b_elixir=float(bst.elixir_mean), b_unc=float(bst.uncertainty),
+                opp_elixir=float(p1.elixir), f2n_opp=float(_frames_to_next_elixir(p1.elixir, env.battle.time)),
+                opp_hand=np.asarray([_card_idx(c) for c in p1.cycle[:4]], dtype=np.int32),
+                opp_cycle=np.asarray([_card_idx(c) for c in p1.cycle], dtype=np.int32),
+                ev_c=np.asarray(ev_c, dtype=np.int32),
+                ev_x=np.asarray(ev_x, dtype=np.float32),
+                ev_y=np.asarray(ev_y, dtype=np.float32),
+                ev_dt=np.asarray(ev_dt, dtype=np.float32),
+            ))
+
         emit_bundle, emit_kind = None, None
         if label_bundle is not None:
             emit_bundle, emit_kind = label_bundle, "play"
@@ -516,15 +571,34 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
             fp = os.path.join(out_dir, "frames_fl_%04d.json" % idx)
             with open(fp, "w", encoding="utf-8", newline="\n") as f:
                 json.dump(frames_meta, f)
+    if dump_dir and dump:
+        #: ★ Stage 0 逐决策帧特征（F_obs + F_oracle）⇒ `il_act_upper_bound.py` /
+        #: `il_opp_prediction.py` 的输入；**每局一个 npz**（按局分组留出，【R9】）
+        keys = list(dump[0].keys())
+        arr = {}
+        for key in keys:
+            col = [row[key] for row in dump]
+            arr[key] = (np.asarray(col, dtype=np.int32) if key in
+                        ("frame", "act", "label_ok", "opt_slot", "opt_cell", "opp_play_count")
+                        else np.stack(col) if isinstance(col[0], np.ndarray)
+                        else np.asarray(col, dtype=np.float32))
+        arr["tag"] = np.array(rep["tag"])
+        arr["holdout"] = np.int32(bool(is_hold))
+        #: 对手牌组**顺序**（`belief.next_probs` 的下标语义 = `env.deck1` 的位置）
+        #: ⇒ 没有它就无法把信念的 argmax 映射回卡名（「预判下一手」的必需字段）
+        arr["opp_deck"] = np.asarray([_card_idx(c) for c in env.deck1], dtype=np.int32)
+        os.makedirs(dump_dir, exist_ok=True)
+        np.savez_compressed(os.path.join(dump_dir, "feat_%04d.npz" % idx), **arr)
+        st["dump_n"] = len(dump)
     return st
 
 
 def _worker(task):
     (idx, rep, is_hold, out_dir, level, coord, detail,
-     stop_mode, stop_stride, with_frames) = task
+     stop_mode, stop_stride, with_frames, dump_dir) = task
     try:
         return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail,
-                            stop_mode, stop_stride, with_frames), 1
+                            stop_mode, stop_stride, with_frames, dump_dir), 1
     except Exception as e:  # noqa: BLE001
         import traceback
         return {"tag": rep.get("tag"), "errors": 1,
@@ -586,7 +660,8 @@ def run_samples(args):
 
     tasks = [(i, r, holdout[i], out_train if not holdout[i] else out_hold,
               args.level, args.coord, bool(args.detail),
-              args.stop_mode, args.stop_stride, bool(args.with_frames))
+              args.stop_mode, args.stop_stride, bool(args.with_frames),
+              args.dump_frames)
              for i, r in enumerate(recs)]
     stats, t0 = [], time.time()
     if args.workers and args.workers > 1:
@@ -639,7 +714,8 @@ def run_samples(args):
                    "games_selected": len(recs), "workers": args.workers,
                    "elapsed_s": round(time.time() - t0, 1),
                    "card_level": args.level, "coord": args.coord,
-                   "stop_mode": args.stop_mode, "stop_stride": args.stop_stride},
+                   "stop_mode": args.stop_mode, "stop_stride": args.stop_stride,
+                   "dump_frames": (os.path.basename(args.dump_frames) if args.dump_frames else None)},
         "split": {"holdout_by": "md5(tag) % 5 == 0", "holdout_games": sum(holdout),
                   "train_games": len(recs) - sum(holdout)},
         "aggregate": dict(agg),
@@ -713,8 +789,11 @@ def main(argv=None):
                          "候选数一律如实计数，抽稀只影响落盘量")
     ap.add_argument("--with-frames", action="store_true",
                     help="额外落 frames_fl_%04d.json（[帧号, play/save]）⇒ 为时序 BC 预留帧序")
+    ap.add_argument("--dump-frames", default=None,
+                    help="逐**决策帧**导出 F_obs + F_oracle 特征到该目录（每局一个 npz）"
+                         "⇒ Stage 0 上界诊断（docs/fl_il_il2_prereg_2026-09-22.md）")
     args = ap.parse_args(argv)
-    for name in ("jsonl", "out", "out_dir"):
+    for name in ("jsonl", "out", "out_dir", "dump_frames"):
         v = getattr(args, name, None)
         if v and not os.path.isabs(v):
             setattr(args, name, _abs(v))
