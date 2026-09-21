@@ -94,6 +94,18 @@ def _spell_deals_damage(card_name: str, card_info: "Card" = None) -> bool:
             or float(data.get("damage") or 0.0) > 0.0)
 
 
+#: 引擎里"不是可被打的目标"的实体类型（法术/弹道/区域效果的**载体**）：
+#: `projectile`（Log/BarbLog 滚动弹、箭矢）、`area_effect`（Poison/Heal 等）、`bomb`。
+#: 与 `rl/observation.py::_TYPE_ALIAS` 同一集合、同一理由（它们不是部队/建筑，溅射打不到）。
+_EFFECT_BODY_TYPES = frozenset({"projectile", "area_effect", "bomb"})
+
+
+def _is_effect_body(e) -> bool:
+    """该实体是不是**效果载体**（不是可被法术命中的部队/建筑/塔）。"""
+    t = getattr(getattr(e, "data", None), "type", "") or ""
+    return t in _EFFECT_BODY_TYPES
+
+
 def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float) -> bool:
     """溅射半径内是否有存活敌方目标（塔/建筑/部队）。命中口径与引擎溅射一致：
     距离 ≤ 半径 + 目标碰撞半径。"""
@@ -102,6 +114,12 @@ def _spell_has_enemy_target(battle, player_id: int, pos: Position, radius: float
         if not getattr(e, "is_alive", True):
             continue
         if getattr(e, "player", None) != opp:
+            continue
+        if _is_effect_body(e):
+            #: ★ 2026-09-22：**效果载体不算"敌方目标"**。先例：IL 策略在 t=1.0 把 Fireball 丢到
+            #: 敌方王塔格，唯一"理由"是场上有一枚 **对方 Log 的滚动弹**（`LogProjectileRolling`，
+            #: player=1、id>6）⇒ 旧谓词判"溅射内有敌方目标"⇒ 放行。滚动弹无血、打不掉，
+            #: 是**假目标**。修掉后"只罩塔"的落点才会真正落到 EV 闸门上去判。
             continue
         col = getattr(getattr(e, "data", None), "collision_radius", 0.0) or 0.0
         if pos.distance_to(e.position) <= radius + col + 1e-9:
@@ -149,6 +167,8 @@ def _spell_covers_non_tower(battle, player_id: int, pos: Position, radius: float
             continue
         if e.id in tower_ids:
             continue
+        if _is_effect_body(e):
+            continue          # ★ 2026-09-22：效果载体不是"有正事可干"的目标（同上）
         col = getattr(getattr(e, "data", None), "collision_radius", 0.0) or 0.0
         if pos.distance_to(e.position) <= radius + col + 1e-9:
             return True
@@ -162,7 +182,16 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     条件（全部满足才拒）：
     1. 双倍期前（battle.time < 120，双倍期奖励口径本身把砸塔调成近正 EV）；
     2. 伤害型法术、有半径（无半径/无标定数据 → 放行，不误伤）；
-    3. 落点罩得到对手存活公主塔（王塔血量随公主塔联动，只以公主塔判定落点）；
+    3. 落点罩得到对手存活**塔**（公主塔或王塔）；
+       ★ 2026-09-22 修复：原实现只判公主塔，理由写作「王塔在公主塔后面，砸到公主塔必含
+       王塔误差」。该理由对**正面贴公主塔**的落点成立，但对**两座公主塔之间的中路口**
+       （本地 x≈9、y≈25~29）不成立：那里到公主塔 5.0~6.5（> 半径+1.4）却到王塔 ≤ 3.9
+       ⇒ 「只罩王塔」的落点走到本函数的**提前 return**，连条件 4/5 都不跑 ⇒ 合法。
+       实测（IL 策略自对弈，`runs/il_readout_mixR00/025/10`）：该通道被当成「开局第一手
+       火球砸敌方王塔」的合法路线（7 次、每次恰好 206 血、7/7 在 t ≤ 2.5 s）。
+       现在王塔纳入判定；王塔的估值沿用奖励侧同源闸门（`tower_value_mult(king=True)`：
+       两座公主塔存活时单位血价值 ×0.05 ≈ 0）⇒ 前段满血王塔的中路空砸被判非法，
+       而**残血王塔**（任一公主塔被破后恢复全价）仍会自动合法。
     4. 落点半径内**无**对手非塔目标（部队/建筑）——有即放行；
     5. `对塔伤折费 < edw×费用`：标定对塔伤 / 500 < edw×卡费（前段经济账）。
        **塔血差异化定价（2026-09-10）**：对塔伤按罩到的存活公主塔的残血加权
@@ -192,7 +221,19 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
         col = getattr(tw.data, "collision_radius", 0.0) or 0.0
         if pos.distance_to(tw.position) <= radius + col + 1e-9:
             hits_princess = True
-    if not hits_princess:
+    #: ★ 2026-09-22：王塔一并判定（见 docstring 条件 3）。塔实体按名字找，不写死 id。
+    king_ent = None
+    for e in battle.entities.values():
+        if (getattr(e, "player", None) == opp and e.is_alive
+                and (getattr(e, "name", "") or "") == "KingTower"):
+            king_ent = e
+            break
+    hits_king = False
+    if king_ent is not None:
+        col_k = getattr(getattr(king_ent, "data", None), "collision_radius", 0.0) or 0.0
+        if pos.distance_to(king_ent.position) <= radius + col_k + 1e-9:
+            hits_king = True
+    if not (hits_princess or hits_king):
         return False
     if _spell_covers_non_tower(battle, player_id, pos, radius):
         return False
@@ -203,18 +244,28 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
     # 存活公主塔也计入"存活数"（王塔贬值闸门只关心公主塔是否都活着，与落点无关）
     from rl.env_wrapper import tower_value_mult  # 惰性 import，避免循环依赖
     best_mult = 1.0
-    for tid in ((1, 2) if opp == 1 else (3, 4)):
-        tw = battle.entities.get(tid)
-        if tw is None or not tw.is_alive:
-            continue
-        col = getattr(tw.data, "collision_radius", 0.0) or 0.0
-        if pos.distance_to(tw.position) > radius + col + 1e-9:
-            continue
-        hp = float(tw.hp)
-        ratio = hp / 3052.0 if hp > 0.0 else 0.0
-        mult = tower_value_mult(ratio, king=False,
-                                princesses_alive=opp_alive_princess)
-        best_mult = max(best_mult, mult)   # 最残塔 = mult 最大
+    if hits_princess:
+        for tid in ((1, 2) if opp == 1 else (3, 4)):
+            tw = battle.entities.get(tid)
+            if tw is None or not tw.is_alive:
+                continue
+            col = getattr(tw.data, "collision_radius", 0.0) or 0.0
+            if pos.distance_to(tw.position) > radius + col + 1e-9:
+                continue
+            hp = float(tw.hp)
+            ratio = hp / 3052.0 if hp > 0.0 else 0.0
+            mult = tower_value_mult(ratio, king=False,
+                                    princesses_alive=opp_alive_princess)
+            best_mult = max(best_mult, mult)   # 最残塔 = mult 最大
+    elif king_ent is not None:
+        #: 只罩王塔：按**王塔自身**残血 + 公主塔存活数取倍数（与奖励/MCTS/planner 同源）。
+        #: 两座公主塔都活着 ⇒ ×0.05 ≈ 0 ⇒ 前段中路满血王塔空砸必判非法；
+        #: 任一公主塔被破 ⇒ 恢复全价（残血斩杀落点在该血线上自动合法）。
+        hp = float(king_ent.hp)
+        max_hp = float(getattr(getattr(king_ent, "data", None), "hp", 0.0) or 0.0) or 4824.0
+        ratio = hp / max_hp if hp > 0.0 else 0.0
+        best_mult = tower_value_mult(ratio, king=True,
+                                     princesses_alive=opp_alive_princess)
     dmg_eff = dmg * best_mult
     return dmg_eff / TOWER_HP_PER_ELIXIR_EARLY < SPELL_EV_EDW * cost - 1e-9
 

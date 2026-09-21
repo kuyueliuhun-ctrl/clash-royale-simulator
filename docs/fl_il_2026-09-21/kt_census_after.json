@@ -1,0 +1,87 @@
+[
+ {
+  "dir": "runs/il_readout_fix_R00",
+  "replay": "league_3618.pkl",
+  "games": 10,
+  "frames": 3618,
+  "p0_spell_casts": 2,
+  "king_206_events": 0,
+  "king_hits": 0,
+  "king_only": 0,
+  "unit_splash": 0,
+  "unattributed_206": [],
+  "events": []
+ },
+ {
+  "dir": "runs/il_readout_fix_R025",
+  "replay": "league_3109.pkl",
+  "games": 10,
+  "frames": 3109,
+  "p0_spell_casts": 4,
+  "king_206_events": 2,
+  "king_hits": 2,
+  "king_only": 1,
+  "unit_splash": 1,
+  "unattributed_206": [],
+  "events": [
+   {
+    "game": 2,
+    "frame": 6,
+    "t": 3.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.5,
+     28.0
+    ],
+    "impact_est": [
+     9.6,
+     33.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 1.12,
+    "d_king_impact": 4.04,
+    "hits_king": true,
+    "enemy_units_in_splash": [
+     [
+      "Knight",
+      3.14
+     ]
+    ],
+    "class": "unit"
+   },
+   {
+    "game": 9,
+    "frame": 6,
+    "t": 3.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.5,
+     28.0
+    ],
+    "impact_est": [
+     9.6,
+     33.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 1.12,
+    "d_king_impact": 4.04,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   }
+  ]
+ },
+ {
+  "dir": "runs/il_readout_fix_R10",
+  "replay": "league_3125.pkl",
+  "games": 10,
+  "frames": 3125,
+  "p0_spell_casts": 1,
+  "king_206_events": 0,
+  "king_hits": 0,
+  "king_only": 0,
+  "unit_splash": 0,
+  "unattributed_206": [],
+  "events": []
+ }
+]

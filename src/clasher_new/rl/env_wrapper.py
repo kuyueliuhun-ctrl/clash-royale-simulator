@@ -339,6 +339,15 @@ class RLEnv(gym.Env):
                 if slots[i] and solo_commit_blocked(self.battle, player_id, p.cycle[i], elixir):
                     slots[i] = False
                     cells[i] = False
+        #: ★ 2026-09-22 不变式：**「合法槽」必须至少有一个合法落点**。
+        #: 先例：伤害型法术在「场上只有敌方塔、落点被判为纯砸塔」时 `legal_cells` 会全 False
+        #: （9h EV 闸门 + 2026-09-22 王塔修复之后成为常态）⇒ 若仍把该槽标为合法，
+        #: `act()`/`evaluate()` 会把 576 格全填 -1e9，`argmax` 落到**格 0（角落）** ⇒
+        #: 提交必被 `validate_bundle` **整包拒收**（白掉一帧 + `invalid_penalty`）。
+        #: 这条把「无任何合法落点」等价于「本帧买不起」：槽位不可选，合法集只剩 STOP。
+        for i in range(K_MAX):
+            if slots[i] and not cells[i].any():
+                slots[i] = False
         _ability = bool(ability_legal(self.battle, player_id,
                                       elixir_override=elixir, already_used=has_ability))
         out = {

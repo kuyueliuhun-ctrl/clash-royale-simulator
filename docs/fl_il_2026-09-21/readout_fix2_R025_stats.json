@@ -1,5 +1,5 @@
 {
-  "ckpt": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc_save\\sweep_mixR025\\bc_fl_e3_lr0.001.pt",
+  "ckpt": "runs/_fl_il_bc_save/sweep_mixR025/bc_fl_e3_lr0.001.pt",
   "decks": "solo",
   "opponent": "self",
   "hidden": "none",
@@ -81,7 +81,7 @@
       1
     ]
   ],
-  "seconds": 183.4,
+  "seconds": 149.8,
   "history": [
     {
       "step": 1713,

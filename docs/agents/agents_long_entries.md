@@ -665,3 +665,23 @@
 ```
 | **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20） | `mixR00/025/10` 三臂共 **7 次** Fireball 命中敌方王塔（**每次 206 血**），**7/7 在开局**（5 次即第一个动作），其余 9 臂 0/90。根因：`rl/action_mask.py` 的 **`_spell_tower_ev_illegal`: `if not hits_princess: return False`** —— 闸门只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行；实测合法格 **44 = 只罩王塔 40 + 公主塔 4**，被选 (9,25) 纯砸王塔。**不是缺输入**（`king_cell_legal=true`、`cell_head` top-1 偏好塔格）。人类侧 0.62% 有但罕见，**t≤5 s 法术 0/10,565**。修法 `hits_princess→hits_any_tower`｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/il_probe_kingtower_cast.py`；**C20** |
 ```
+
+### 26.3 二次修订（修复落地后，980 字节；旧行 799 字节逐字保留）
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20） | `mixR00/025/10` 三臂共 **7 次** Fireball 命中敌方王塔（**每次 206 血**），**7/7 在开局**（5 次即第一个动作），其余 9 臂 0/90。根因：`rl/action_mask.py` 的 **`_spell_tower_ev_illegal`: `if not hits_princess: return False`** —— 闸门只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行；实测合法格 **44 = 只罩王塔 40 + 公主塔 4**，被选 (9,25) 纯砸王塔。**不是缺输入**（`king_cell_legal=true`、`cell_head` top-1 偏好塔格）。人类侧 0.62% 有但罕见，**t≤5 s 法术 0/10,565**。修法 `hits_princess→hits_any_tower`｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/il_probe_kingtower_cast.py`；**C20** |
+```
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前共 **7 次** Fireball 命中敌方王塔（**每次 206 血**、7/7 在开局），其余 9 臂 0/90。根因：`_spell_tower_ev_illegal` 的 **`if not hits_princess: return False`**（闸门只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行）。**不是缺输入**（`king_cell_legal=true`、`cell_head` top-1 偏好塔格）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体（Log 滚动弹）不算敌方目标 ＋ F3 空落点槽禁；位图 **960 格全落唯一允许类别、0 越界**（⚠️ F2 过不了位图语料 ⇒ 靠回归测试 **16 断言 PASS**）、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1，剩 1 次是打藏在王塔后的 Knight）。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/{il_probe_kingtower_cast,il_kingtower_cast_census,selftest_spell_kingtower}.py`；**C20** |
+```
+
+### 26.4 采用版（800 字节；前一版 980 字节因超 800 B 未采用）
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前共 **7 次** Fireball 命中敌方王塔（**每次 206 血**、7/7 在开局），其余 9 臂 0/90。根因：`_spell_tower_ev_illegal` 的 **`if not hits_princess: return False`**（闸门只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行）。**不是缺输入**（`king_cell_legal=true`、`cell_head` top-1 偏好塔格）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体（Log 滚动弹）不算敌方目标 ＋ F3 空落点槽禁；位图 **960 格全落唯一允许类别、0 越界**（⚠️ F2 过不了位图语料 ⇒ 靠回归测试 **16 断言 PASS**）、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1，剩 1 次是打藏在王塔后的 Knight）。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/{il_probe_kingtower_cast,il_kingtower_cast_census,selftest_spell_kingtower}.py`；**C20** |
+```
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前 **7 次** Fireball 命中敌方王塔（每次 206 血、7/7 在开局），其余 9 臂 0/90。根因：`_spell_tower_ev_illegal` 的 **`if not hits_princess: return False`** —— 只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行。**不是缺输入**（`king_cell_legal=true`）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体不算目标 ＋ F3 空落点槽禁；位图 **960 格全落唯一允许类别、0 越界**、回归 **16 断言 PASS**、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1 = 打藏在王塔后的 Knight）。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/il_kingtower_cast_census.py`；**C20** |
+```

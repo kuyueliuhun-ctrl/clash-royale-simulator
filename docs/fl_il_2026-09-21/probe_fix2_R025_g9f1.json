@@ -1,0 +1,367 @@
+{
+ "ckpt": "runs/_fl_il_bc_save/sweep_mixR025/bc_fl_e3_lr0.001.pt",
+ "game": 9,
+ "frames": [
+  1
+ ],
+ "probe": [
+  {
+   "tag": "p0",
+   "game": 9,
+   "p0_step": 1,
+   "t": 0.5,
+   "my_elixir": 4.179,
+   "opp_elixir": 3.179,
+   "hand": [
+    "Xbow",
+    "IceWizard",
+    "Tesla",
+    "Fireball",
+    "Log"
+   ],
+   "next_card": "Log",
+   "towers": [
+    {
+     "id": 3,
+     "name": "King_PrincessTowers",
+     "player": 0,
+     "x": 3.5,
+     "y": 6.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 6,
+     "name": "KingTower",
+     "player": 0,
+     "x": 9.0,
+     "y": 3.0,
+     "hp": 4824.0,
+     "alive": true
+    },
+    {
+     "id": 4,
+     "name": "King_PrincessTowers",
+     "player": 0,
+     "x": 14.5,
+     "y": 6.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 1,
+     "name": "King_PrincessTowers",
+     "player": 1,
+     "x": 3.5,
+     "y": 25.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 5,
+     "name": "KingTower",
+     "player": 1,
+     "x": 9.0,
+     "y": 29.0,
+     "hp": 4824.0,
+     "alive": true
+    },
+    {
+     "id": 2,
+     "name": "King_PrincessTowers",
+     "player": 1,
+     "x": 14.5,
+     "y": 25.5,
+     "hp": 3052.0,
+     "alive": true
+    }
+   ],
+   "enemy_units": [
+    {
+     "name": "LogProjectileRolling",
+     "x": 8.5,
+     "y": 29.83,
+     "hp": 0.0
+    }
+   ],
+   "plan": {
+    "focus_region": "enemy_left",
+    "region_center": [
+     4,
+     12
+    ],
+    "suggested_slot": 2,
+    "hold_mask": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "plan_dim": 58
+   },
+   "plan_bias": {
+    "slot_bias": [
+     0.0,
+     0.8,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "cell_bias_argmax_cell": [
+     4,
+     10
+    ],
+    "cell_bias_pos_flat": 13
+   },
+   "slot": {
+    "argmax_option": 1,
+    "is_stop": false,
+    "mask_slots": [
+     false,
+     true,
+     true,
+     false
+    ],
+    "probs": [
+     0.0,
+     0.5951,
+     0.3899,
+     0.0,
+     0.0,
+     0.015
+    ],
+    "raw_logits": [
+     -0.152,
+     0.509,
+     0.086,
+     0.842,
+     -7.455,
+     -3.171
+    ]
+   },
+   "cell": {
+    "slot_option": 1,
+    "n_legal_cells": 224,
+    "argmax_with_bias": {
+     "cell": [
+      4,
+      14
+     ],
+     "flat": 256,
+     "legal": true,
+     "logit_with_bias": 1.7092,
+     "logit_raw": 0.9092,
+     "world": [
+      4.5,
+      14.5
+     ],
+     "cell_bias": 0.8,
+     "dist_to_enemy_king": 15.18
+    },
+    "argmax_raw_no_bias": {
+     "cell": [
+      3,
+      14
+     ],
+     "flat": 255,
+     "legal": true,
+     "logit_with_bias": 1.5461,
+     "logit_raw": 1.5461,
+     "world": [
+      3.5,
+      14.5
+     ],
+     "cell_bias": 0.0,
+     "dist_to_enemy_king": 15.51
+    },
+    "top8_raw_logits": [
+     {
+      "cell": [
+       3,
+       14
+      ],
+      "flat": 255,
+      "legal": true,
+      "logit_with_bias": 1.5461,
+      "logit_raw": 1.5461,
+      "world": [
+       3.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 15.51
+     },
+     {
+      "cell": [
+       4,
+       14
+      ],
+      "flat": 256,
+      "legal": true,
+      "logit_with_bias": 1.7092,
+      "logit_raw": 0.9092,
+      "world": [
+       4.5,
+       14.5
+      ],
+      "cell_bias": 0.8,
+      "dist_to_enemy_king": 15.18
+     },
+     {
+      "cell": [
+       3,
+       4
+      ],
+      "flat": 75,
+      "legal": true,
+      "logit_with_bias": 0.5296,
+      "logit_raw": 0.5296,
+      "world": [
+       3.5,
+       4.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 25.11
+     },
+     {
+      "cell": [
+       8,
+       14
+      ],
+      "flat": 260,
+      "legal": true,
+      "logit_with_bias": 0.4904,
+      "logit_raw": 0.4904,
+      "world": [
+       8.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 14.51
+     },
+     {
+      "cell": [
+       3,
+       9
+      ],
+      "flat": 165,
+      "legal": true,
+      "logit_with_bias": 0.4875,
+      "logit_raw": 0.4875,
+      "world": [
+       3.5,
+       9.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 20.26
+     },
+     {
+      "cell": [
+       14,
+       14
+      ],
+      "flat": 266,
+      "legal": true,
+      "logit_with_bias": 0.477,
+      "logit_raw": 0.477,
+      "world": [
+       14.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 15.51
+     },
+     {
+      "cell": [
+       3,
+       8
+      ],
+      "flat": 147,
+      "legal": true,
+      "logit_with_bias": 0.4406,
+      "logit_raw": 0.4406,
+      "world": [
+       3.5,
+       8.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 21.22
+     },
+     {
+      "cell": [
+       9,
+       14
+      ],
+      "flat": 261,
+      "legal": true,
+      "logit_with_bias": 0.4044,
+      "logit_raw": 0.4044,
+      "world": [
+       9.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 14.51
+     }
+    ],
+    "legal_flat_minmax": [
+     6,
+     269
+    ],
+    "enemy_king_world": [
+     9.0,
+     29.0
+    ],
+    "gate": {
+     "card": "IceWizard",
+     "radius": 3.0,
+     "chosen_cell_detail": {
+      "cell": [
+       4,
+       14
+      ],
+      "world": [
+       4.5,
+       14.5
+      ],
+      "d_king": 15.18,
+      "d_princess_min": 11.05,
+      "splash_princess": false,
+      "splash_king": false,
+      "splash_unit": false,
+      "has_enemy_target": false,
+      "ev_gate_illegal": false,
+      "legal": true
+     },
+     "princess_cell_detail": {
+      "cell": [
+       3,
+       14
+      ],
+      "world": [
+       3.5,
+       14.5
+      ],
+      "d_king": 15.51,
+      "d_princess_min": 11.0,
+      "splash_princess": false,
+      "splash_king": false,
+      "splash_unit": false,
+      "has_enemy_target": false,
+      "ev_gate_illegal": false,
+      "legal": true
+     },
+     "legal_set_categories": {
+      "princess": 0,
+      "king_only": 0,
+      "unit": 0,
+      "none": 224
+     }
+    },
+    "king_cell_legal": false,
+    "king_cell_flat": 531
+   }
+  }
+ ]
+}

@@ -1,0 +1,189 @@
+[
+ {
+  "dir": "runs/il_readout_mixR00",
+  "replay": "league_3685.pkl",
+  "games": 10,
+  "frames": 3685,
+  "p0_spell_casts": 4,
+  "king_206_events": 2,
+  "king_hits": 2,
+  "king_only": 2,
+  "unit_splash": 0,
+  "unattributed_206": [],
+  "events": [
+   {
+    "game": 2,
+    "frame": 4,
+    "t": 2.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.4,
+     23.0
+    ],
+    "impact_est": [
+     9.5,
+     28.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 6.01,
+    "d_king_impact": 1.12,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   },
+   {
+    "game": 7,
+    "frame": 4,
+    "t": 2.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.4,
+     23.0
+    ],
+    "impact_est": [
+     9.5,
+     28.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 6.01,
+    "d_king_impact": 1.12,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   }
+  ]
+ },
+ {
+  "dir": "runs/il_readout_mixR025",
+  "replay": "league_3253.pkl",
+  "games": 10,
+  "frames": 3253,
+  "p0_spell_casts": 5,
+  "king_206_events": 3,
+  "king_hits": 3,
+  "king_only": 2,
+  "unit_splash": 1,
+  "unattributed_206": [],
+  "events": [
+   {
+    "game": 2,
+    "frame": 6,
+    "t": 3.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.5,
+     28.0
+    ],
+    "impact_est": [
+     9.6,
+     33.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 1.12,
+    "d_king_impact": 4.04,
+    "hits_king": true,
+    "enemy_units_in_splash": [
+     [
+      "Knight",
+      3.14
+     ]
+    ],
+    "class": "unit"
+   },
+   {
+    "game": 7,
+    "frame": 5,
+    "t": 3.0,
+    "spell": "Fireball",
+    "proj_last": [
+     9.5,
+     28.0
+    ],
+    "impact_est": [
+     9.6,
+     33.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 1.12,
+    "d_king_impact": 4.04,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   },
+   {
+    "game": 9,
+    "frame": 5,
+    "t": 3.0,
+    "spell": "Fireball",
+    "proj_last": [
+     11.0,
+     22.9
+    ],
+    "impact_est": [
+     11.5,
+     27.9
+    ],
+    "extrapolated": true,
+    "d_king_last": 6.42,
+    "d_king_impact": 2.73,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   }
+  ]
+ },
+ {
+  "dir": "runs/il_readout_mixR10",
+  "replay": "league_3135.pkl",
+  "games": 10,
+  "frames": 3135,
+  "p0_spell_casts": 3,
+  "king_206_events": 2,
+  "king_hits": 2,
+  "king_only": 2,
+  "unit_splash": 0,
+  "unattributed_206": [],
+  "events": [
+   {
+    "game": 6,
+    "frame": 8,
+    "t": 4.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.4,
+     23.0
+    ],
+    "impact_est": [
+     9.5,
+     28.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 6.01,
+    "d_king_impact": 1.12,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   },
+   {
+    "game": 7,
+    "frame": 6,
+    "t": 3.5,
+    "spell": "Fireball",
+    "proj_last": [
+     9.4,
+     23.0
+    ],
+    "impact_est": [
+     9.5,
+     28.0
+    ],
+    "extrapolated": true,
+    "d_king_last": 6.01,
+    "d_king_impact": 1.12,
+    "hits_king": true,
+    "enemy_units_in_splash": [],
+    "class": "king_only"
+   }
+  ]
+ }
+]

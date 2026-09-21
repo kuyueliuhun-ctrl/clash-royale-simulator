@@ -1,5 +1,7 @@
 # 「法术砸敌方国王塔」取证：**不是缺输入，是掩码 EV 闸门漏了「只罩王塔」这一类**（2026-09-22）
 
+> **状态：已修复（2026-09-22，见 §6；F1 = 王塔纳入 EV 闸门，F2 = 效果载体不算目标）**。
+>
 > 触发：用户看 8702（臂 R=0.25）第一局的 dashboard，发现「火球砸国王塔，人类对局不会这么打」，
 > 问是不是网络少输入了什么。结论：**观测里塔是在的**（而且落点头部对塔格有强先验），
 > 真正的开口在**动作合法性**：`_spell_tower_ev_illegal` 只对「罩到敌方**公主塔**」的落点做判定。
@@ -90,7 +92,9 @@ docstring 的依据是「王塔在公主塔后面，砸到公主塔必含王塔�
 | 口径 | Fireball 砸王塔 | 全部法术 |
 |---|---|---|
 | 落点距王塔中心 ≤ `_spell_radius_m`（掩码口径） | **4 / 361 = 1.11%** | 66 / 10,565 = **0.62%** |
-| 引擎真伤口径 `≤ radius + 1.4`（只有 Fireball/Arrows 能扣王塔血） | **11 / 361 = 3.05%** | — |
+| 引擎真伤口径 `≤ radius + 1.4` | **11 / 361 = 3.05%** | — |
+
+> ⚠️ **更正（2026-09-22，我自己复核后改口）**：本节初版写的「本仓引擎只有 Fireball/Arrows 能扣王塔血」**是错的**（来自一个子智能体的引擎扫描，我误采信）。我直接复算（`deploy_card` 到敌方王塔格 + `step` 8 s，读王塔 hp 差）：**Zap 57.6 / Snowball 58 / Poison 343.7 / Lightning 686.4 / Log 290 / Earthquake 171 / Vines 76.5 / Rage 53.7 / Freeze 34.5 / Tornado 0.6，全都扣王塔血**；Fireball 206 / Arrows 75 / Rocket 371 亦然。成因（子智能体另一路取证）：`battle.py` 只对王塔乘 `projectile_data.crown_tower_percent`，而 `card_utils.py` 在字段缺失时**回落 1.0**（真值只有 Fireball 0.3 / Arrows 0.2049 / Snowball 0.3 / Rocket 0.25），滚动弹分支根本不走这个乘子 ⇒ **本仓大部分法术对王塔打的是「满伤」**。这条只影响上表「引擎口径」那一行的解释，**§1–§3 的掩码/机制结论与 §6 的修复都不依赖它**（修复判据用的是掩码自己的 `_spell_tower_damage` 与几何）。
 | **原始回放 native 坐标**独立复核（绕过 `int()` 量化） | **18 / 727 = 2.48%**（≤3.9） | — |
 | `Log` / `BarbLog` | **0 / 1590、0 / 1909** | — |
 | **`t ≤ 5 s` 的法术** | **0 / 361** | **0 / 10,565** |
@@ -123,3 +127,69 @@ docstring 的依据是「王塔在公主塔后面，砸到公主塔必含王塔�
   ② 10ep 臂那次 t=37 s 的 Log 单次伤害归因未定（并发部队伤害污染）；
   ③ 模型"想砸塔"的内部意图无法从录像判定，本文件只给**机械成因**；
   ④ R00/R025/R10 三臂为何独有该偏置（相空间/训练池差异）未定。
+
+## §6 修复实施（2026-09-22，**已落代码**）与门禁
+
+### 6.1 改动（两处，各自单一目的）
+
+| # | 文件:位置 | 改法 | 证据 |
+|---|---|---|---|
+| **F1** | `src/clasher_new/rl/action_mask.py::_spell_tower_ev_illegal` | `hits_princess` → `hits_princess or hits_king`；王塔按名字查找（不写死 id）；只罩王塔时用 `tower_value_mult(ratio, king=True, princesses_alive=…)` 取倍数 | §2/§3 的机制取证 |
+| **F2** | `src/clasher_new/rl/action_mask.py::_spell_has_enemy_target` / `_spell_covers_non_tower` | 新增 `_is_effect_body()`（`data.type ∈ {projectile, area_effect, bomb}`）并**跳过效果载体** | `mixR025` 局9：旧谓词把**对方 Log 的滚动弹**当成"敌方目标"⇒ 王塔空砸合法 |
+| **F3（不变式）** | `src/clasher_new/rl/env_wrapper.py::get_action_mask_for` | 新增「合法槽必须至少有一个合法落点」；否则禁该槽 | 否则 F1/F2 之后 `act()` 会把 576 格全填 −1e9、argmax 落到格 0（角落）⇒ 整包被 `validate_bundle` 拒收 |
+
+### 6.2 门禁结果（【R13】位图对账 + 【R8】回归测试）
+
+* 快照：`docs/mask_snapshots/kingtower_before.npz`（改前）、`..._after.npz`（F1 后）、`..._after2.npz`（F1+F2 后）；
+  各 **128 张**位图、`__meta_errors__ = 0`。`--selftest` **5/5 PASS**（判别力有负对照）。
+* `--compare before after`：**24/128 张不同，逐格分类后 960 格全部落在唯一允许类别**（「罩到王塔 ∧ 罩不到公主塔 ∧
+  无任何非塔目标」），**方向全为 True→False（只收紧）**、**0 条越界**；差异只出现在 **Fireball / Arrows**
+  两张卡（掩码里唯一被 9h 闸门覆盖的两张）。`before → after2` 同样 960 格、0 越界。
+* `--compare after after2`（F2 单独看）：**128/128 逐位全等** —— ⚠️ 这说明 **R13 的 128 状态语料里没有「效果载体」**
+  （Log 滚动弹这类的覆盖率为 0）⇒ **该语料对 F2 是盲的**；F2 的门禁只能靠回归测试 + 真实录像，这是一条
+  **已记录的语料覆盖缺口**（见 §7）。
+* 回归测试：`scripts/selftest_spell_kingtower.py` **16 条断言全 PASS**，含
+  ①空场「只罩王塔」格全部非法（修前全部合法）；②部队在半径内仍合法（不误伤"打躲在王塔后的部队"）；
+  ③敌方公主塔格仍非法（原闸门不变）；④t≥120 放行不变；⑤开局 Fireball 槽被禁且 `any_legal` 仍真；
+  ⑤c **真实 `LogProjectileRolling` 在场 ⇒ 王塔格非法**（前提断言确认真有 projectile 实体，防"假绿"）；
+  ⑥源码白盒（`hits_king` / `_is_effect_body` / 提前 return 已改）。
+
+### 6.3 行为结果（同 seed、同约定、10 局/臂；普查器 `scripts/il_kingtower_cast_census.py`）
+
+事件口径 = 敌方王塔血量**恰好 −206**（Fireball lv11 对王塔精确伤害）+ 前 4 帧内有 p0 的 `FireballSpell` 在飞；
+落点用「最后可见位置」与「外推点」两者到王塔距离的**较小值**判命中（只取任一都会漏）。
+
+| 臂 | 改前 命中 | 改后（F1+F2） | 出牌/局（改前→改后） | 帧/局 | Fireball 出牌数 |
+|---|---|---|---|---|---|
+| `mixR00` | **2**（均 king_only） | **0** | 38.2 → 37.1 | 368.5 → 359.4 | 4 → 1 |
+| `mixR025` | **3**（2 king_only + 1 unit） | **1**（该 1 次为 **unit**：对方 Knight 藏在王塔后，Fireball 是冲它去的） | 32.3 → 32.8 | 325.3 → 330.1 | 5 → 2 |
+| `mixR10` | **2**（均 king_only） | **0** | 30.7 → 30.5 | 313.5 → 312.5 | 3 → 1 |
+
+* **纯砸王塔（`king_only`）3 臂合计 6 → 0** ✅；仅剩的 1 次是「**打躲在王塔后的部队**」——
+  这是 9h 闸门**特意**放行的类别（条件 4：有非塔目标即放行），要再收紧属于**另一条判据**（"打这个单位值不值"），
+  不在本次修复范围内（见 §7）。
+* **无塌陷**：三臂出牌/局仍在 30.5–37.1（人类带 [18,28.5] 之上，与改前同侧），`Xbow` 仍 **0**（C14 不变）。
+* 逐帧旁证（探针）：`mixR00` 局2 **第一次决策**由「Fireball→王塔格」变为「Fireball 槽被禁 ⇒ 出 IceWizard 到自家后场」；
+  `mixR025` 局9（那次唯一"理由"是对方 Log 滚动弹）同样变为「Fireball 槽被禁 ⇒ 出 IceWizard」。
+
+## §7 本轮**新建**的开放项（都没动代码；各有判据前置）
+
+1. **F3：`_spell_deals_damage` 的覆盖只有 4 张卡**（Fireball/Rocket/Arrows/Snowball）⇒ 8h 空砸闸门与 9h 砸塔 EV 闸门
+   对 **Zap/Log/BarbLog/Poison/Lightning/Earthquake/Tornado/Vines/Freeze 全部不生效**（掩码里另有 `spell_module._deals_damage`
+   是第二套口径，两者不一致）。而我实测这些卡**确实扣王塔血**（Zap 57.6 … Lightning 686.4）。
+   ⇒ 「谁该受闸门约束」当前**取决于掩码的漏读**，而不是卡的实际伤害。**要不要统一**须单独预注册
+   （注意：用户提的「小法术过牌」正发生在这些**不受约束**的卡上 ⇒ 一刀切收紧会**误伤人类真实行为**）。
+2. **F4：`_spell_tower_damage` 对 Log / Lightning 读 0**（实测 290 / 686.4）⇒ 即便闸门覆盖到，也会走
+   `if dmg <= 0: return False`（"无标定 ⇒ 放行"）**后门**。先修仪器再谈收紧。
+3. **Log / BarbLog 的半径口径**：`_spell_radius_m('Log') = 1.95` 只是**半宽**，伤害区是从落点沿 +y **10.1 / 4.5 格**的走廊
+   （`battle.py` 滚动弹分支）⇒ 用「落点距塔中心 ≤ 半径」判它们是否会打到塔，**几何上是错的**（本次修复未依赖该口径）。
+4. **觉醒/进化（用户提的"过觉醒轮次"）**：引擎**有**（`evolutions.py` 42 张周期表 + `battle.py` 触发），
+   但 **`rl/` 全目录对 `evo_slots/evo_plays/hero_slots/evolution_state` 的引用数 = 0** ⇒ **本仓 RL 对局里觉醒永不发生**；
+   且 `rl/observation.py::observe()` **只有 `grid/hand/elixir/next_card/time` 五个键，没有任何觉醒字段**；
+   回放牌组键虽带 `-ev1/-hero`，事件流**不标注哪一次是觉醒**（`form_at_play` 全 "unknown"）。
+   ⇒ 若将来接上觉醒，**观测确实会缺输入**（"这张是不是觉醒形态"/"本手是否觉醒"），这是本轮唯一被证实的
+   "网络少输入"候选，但**它现在不构成任何已观测行为的成因**（当前对局里觉醒不可能触发）。
+5. **R13 语料缺口**：128 张位图里没有任何「效果载体」状态 ⇒ F2 这类改动**过不了位图门禁的判别力**。
+   建议（未做）给 `_mask_diff_snapshot.py` 的 `build_states()` 加一个「敌方 Log 滚动弹在场」的状态。
+6. `_mask_diff_snapshot.py::build_states()` 的 **⑥ `late_low_tower` 是死代码**：那句 `s = make(); ...princess hp=150`
+   构造的 `s` 被丢弃，实际 append 的是 `make(time=125.0)`（公主塔满血）⇒ 该状态**测不到"低血公主塔"口径**。
