@@ -1,0 +1,91 @@
+{
+ "option_confusion_label_x_pred": {
+  "0->-1": 665,
+  "0->0": 104,
+  "0->1": 111,
+  "0->2": 171,
+  "0->3": 283,
+  "1->-1": 971,
+  "1->0": 76,
+  "1->1": 197,
+  "1->2": 217,
+  "1->3": 341,
+  "2->-1": 1094,
+  "2->0": 83,
+  "2->1": 189,
+  "2->2": 420,
+  "2->3": 378,
+  "3->-1": 1671,
+  "3->0": 95,
+  "3->1": 224,
+  "3->2": 441,
+  "3->3": 1076
+ },
+ "macro_recall_option": 0.17204599080874394,
+ "per_slot_recall": {
+  "0": 0.07796101949025487,
+  "1": 0.10932297447280799,
+  "2": 0.19408502772643252,
+  "3": 0.30681494154548045
+ },
+ "ckpt": "bc_fl_e3_lr0.001.pt",
+ "holdout_samples": 8807,
+ "train_samples": 0,
+ "J3": {
+  "top1_option": 0.2040422391279664,
+  "cell_exact": 0.05450210060179403,
+  "cell_exact_given_option": 0.1441291040623261,
+  "nll_mean": 6.046947486729929,
+  "logprob_lt_minus_1e8": 0,
+  "gate_top1_ge_0.40": "FAIL"
+ },
+ "act_decision": {
+  "n": 39652,
+  "auc_model_act": 0.6517542550730776,
+  "base_rate_act": 0.22210733380409564,
+  "replica_gate_max_abs_delta": 1.341104507446289e-07,
+  "replica_gate_n": 200,
+  "replica_gate": "<=1e-5",
+  "note": "J8.1：分数 = 1 − p(STOP)（首步 6 类分布）；标签 = 该帧人类是否出牌。对照 = Stage 0 的 act 上界（F_obs AUC 0.6756/0.6848）与「只用我圣水」0.5926"
+ },
+ "stop_frames": {
+  "n_stop": 30845,
+  "n_play": 8807,
+  "human_stop_rate": 0.7778926661959044,
+  "model_stop_rate_argmax": 0.5211590840310704,
+  "stop_calibration_abs_gap": 0.25673358216483405,
+  "save_weight": 1.0,
+  "weighted": {
+   "denom": 39652.0,
+   "human_stop_rate": 0.7778926661959044,
+   "model_stop_rate_argmax": 0.6321497024109755,
+   "note": "save 帧是被 `--stop-stride S` 等距抽稀过的 ⇒ 未加权口径会**低估人类 STOP 率**（本数据集自然边际 = 47,659 play : 638,278 save）。`--save-weight S` 反加权后两个率都还原到自然边际"
+  },
+  "model_stop_on_save": 20665,
+  "model_stop_on_play": 4401,
+  "nll_mean_stop_only": 1.0868868818702413,
+  "nll_mean_all_frames": 2.1885527183223563,
+  "note": "新口径（`--stop-mode save`）才有 STOP 帧；旧目录 n_stop=0 ⇒ 该块恒 0，`nll_mean`/`J3` 各读数与旧口径逐位相同"
+ },
+ "baselines": {
+  "uniform_option6": 0.16666666666666666,
+  "uniform_option4": 0.25,
+  "majority_card_top1_option": null,
+  "majority_slot_top1_option": 0.15147042125581922,
+  "majority_slot_from_train": 0,
+  "majority_card_declared": []
+ },
+ "label_distribution_top_slots": {
+  "0": 1334,
+  "1": 1802,
+  "2": 2164,
+  "3": 3507
+ },
+ "pred_option_histogram": {
+  "-1": 4401,
+  "0": 358,
+  "1": 721,
+  "2": 1249,
+  "3": 2078
+ }
+}

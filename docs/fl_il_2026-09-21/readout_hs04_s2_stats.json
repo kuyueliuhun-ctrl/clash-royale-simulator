@@ -1,0 +1,140 @@
+{
+  "ckpt": "runs/_fl_il_bc_hs/sweep_mixHS04/s2/bc_fl_e3_lr0.001.pt",
+  "decks": "solo",
+  "opponent": "self",
+  "hidden": "none",
+  "opp_hidden": "none",
+  "games": 10,
+  "frames": 3193,
+  "wins": 6,
+  "losses": 4,
+  "draws": 0,
+  "winrate": 0.6,
+  "winrate_se": 0.15491933384829668,
+  "mean_reward_per_frame": 0.0018267614694209547,
+  "frames_per_game": 319.3,
+  "empty_bundle_rate": 0.9016598809896649,
+  "plays_per_frame": 0.09834011901033511,
+  "playable_frame_rate": 0.10585656122768557,
+  "playable_frames": 338,
+  "forced_stop_frames": 2855,
+  "stop_when_playable": 24,
+  "stop_when_playable_rate": 0.07100591715976332,
+  "gate_ckpt": null,
+  "gate_threshold": null,
+  "gate_eval_frames": 0,
+  "gate_stop_frames": 0,
+  "gate_stop_rate": null,
+  "p0_plays": 314,
+  "p0_top_cards": [
+    [
+      "Skeletons",
+      66
+    ],
+    [
+      "Archer",
+      62
+    ],
+    [
+      "IceWizard",
+      61
+    ],
+    [
+      "Log",
+      61
+    ],
+    [
+      "Knight",
+      59
+    ],
+    [
+      "Tesla",
+      4
+    ],
+    [
+      "Fireball",
+      1
+    ]
+  ],
+  "p1_top_cards": [
+    [
+      "Skeletons",
+      64
+    ],
+    [
+      "Archer",
+      63
+    ],
+    [
+      "Log",
+      62
+    ],
+    [
+      "IceWizard",
+      61
+    ],
+    [
+      "Knight",
+      61
+    ],
+    [
+      "Fireball",
+      1
+    ],
+    [
+      "Tesla",
+      1
+    ]
+  ],
+  "info_window": {
+    "t_info": 30.0,
+    "frames_in_window": 610,
+    "known_opp_median_in_window": 4.0,
+    "known_opp_mean_in_window": 3.4327868852459016,
+    "known_opp_max_in_window": 5,
+    "plays_in_window_per_game": 5.6,
+    "distinct_cards_in_window_per_game": 5.0,
+    "first_play_t_median": 0.0
+  },
+  "seconds": 137.7,
+  "history": [
+    {
+      "step": 1651,
+      "wins": 2,
+      "losses": 3,
+      "draws": 0,
+      "games": 5,
+      "cum_wins": 2,
+      "cum_losses": 3,
+      "cum_draws": 0,
+      "cum_games": 5,
+      "winrate": 0.4,
+      "winrate_se": 0.21908902300206645,
+      "mean_reward": -0.063096317957918,
+      "block_mean_reward": -0.063096317957918,
+      "empty_bundle_rate": 0.9012719563900666,
+      "plays_per_frame": 0.09872804360993337,
+      "playable_frame_rate": 0.10902483343428225,
+      "stop_when_playable_rate": 0.09444444444444444
+    },
+    {
+      "step": 3193,
+      "wins": 4,
+      "losses": 1,
+      "draws": 0,
+      "games": 5,
+      "cum_wins": 6,
+      "cum_losses": 4,
+      "cum_draws": 0,
+      "cum_games": 10,
+      "winrate": 0.6,
+      "winrate_se": 0.15491933384829668,
+      "mean_reward": 0.0018267614694209547,
+      "block_mean_reward": 0.07133908581088444,
+      "empty_bundle_rate": 0.9016598809896649,
+      "plays_per_frame": 0.09834011901033511,
+      "playable_frame_rate": 0.10585656122768557,
+      "stop_when_playable_rate": 0.07100591715976332
+    }
+  ]
+}

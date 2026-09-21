@@ -1,0 +1,85 @@
+=== [02:17:02] HS17 seed=0 zero=17 → runs/_fl_il_bc_hs/sweep_mixHS17/s0 ===
+=== [02:17:02] HS04 seed=0 zero=4 → runs/_fl_il_bc_hs/sweep_mixHS04/s0 ===
+=== [02:17:02] HS00 seed=0 zero=0 → runs/_fl_il_bc_hs/sweep_mixHS00/s0 ===
+[sweep] 168286 样本，加载 18.1s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s0\bc_fl_e3_lr0.001.pt ===
+[sweep] 168286 样本，加载 19.1s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s0\bc_fl_e3_lr0.001.pt ===
+[sweep] 168286 样本，加载 20.4s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s0\bc_fl_e3_lr0.001.pt ===
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.571  702.3s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.558  705.1s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.568  710.5s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.396  798.8s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.368  803.0s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.428  829.1s
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.296  818.9s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s0\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s0\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.296  2320.0s
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.283  817.3s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s0\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s0\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.283  2325.4s
+=== [02:56:32] HS17 seed=1 zero=17 → runs/_fl_il_bc_hs/sweep_mixHS17/s1 ===
+=== [02:56:35] HS04 seed=1 zero=4 → runs/_fl_il_bc_hs/sweep_mixHS04/s1 ===
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.324  817.5s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s0\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s0\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.324  2357.2s
+[sweep] 168286 样本，加载 16.4s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s1\bc_fl_e3_lr0.001.pt ===
+[sweep] 168286 样本，加载 16.3s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s1\bc_fl_e3_lr0.001.pt ===
+=== [02:57:12] HS00 seed=1 zero=0 → runs/_fl_il_bc_hs/sweep_mixHS00/s1 ===
+[sweep] 168286 样本，加载 26.9s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s1\bc_fl_e3_lr0.001.pt ===
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.567  701.0s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.549  700.3s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.552  710.5s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.370  758.6s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.385  781.5s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.376  804.3s
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.295  806.3s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s1\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s1\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.295  2288.8s
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.301  828.4s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s1\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s1\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.301  2287.4s
+=== [03:35:26] HS04 seed=2 zero=4 → runs/_fl_il_bc_hs/sweep_mixHS04/s2 ===
+=== [03:35:26] HS17 seed=2 zero=17 → runs/_fl_il_bc_hs/sweep_mixHS17/s2 ===
+[sweep] 168286 样本，加载 16.1s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s2\bc_fl_e3_lr0.001.pt ===
+[sweep] 168286 样本，加载 17.8s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s2\bc_fl_e3_lr0.001.pt ===
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.299  826.7s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s1\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s1\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.299  2341.5s
+=== [03:37:15] HS00 seed=2 zero=0 → runs/_fl_il_bc_hs/sweep_mixHS00/s2 ===
+[sweep] 168286 样本，加载 20.7s；threads=4
+[sweep] === epochs=3 lr=0.001 → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s2\bc_fl_e3_lr0.001.pt ===
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.569  678.4s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.579  712.3s
+[sweep] ep=3 lr=0.001  epoch 1/3 mean_logprob=-3.529  717.3s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.440  759.7s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.450  828.5s
+[sweep] ep=3 lr=0.001  epoch 2/3 mean_logprob=-3.354  825.8s
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.342  821.1s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s2\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS17\s2\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.342  2259.2s
+=== [04:13:48] lane HS17 完成 ===
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.407  860.8s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s2\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS04\s2\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.407  2401.6s
+=== [04:16:13] lane HS04 完成 ===
+[sweep] ep=3 lr=0.001  epoch 3/3 mean_logprob=-3.285  836.5s
+[sweep] saved E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s2\bc_fl_e3_lr0.001.pt
+[sweep] manifest → E:\clash-royale-simulator-main\runs\_fl_il_bc_hs\sweep_mixHS00\s2\sweep_manifest.json
+[sweep] e=  3 lr=0.001  last mean_logprob=-3.285  2379.6s
+=== [04:17:39] lane HS00 完成 ===
+=== [04:17:39] 全部 9 跑完成 ===

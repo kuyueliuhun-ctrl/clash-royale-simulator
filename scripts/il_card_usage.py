@@ -131,17 +131,25 @@ def main(argv=None):
         for c in hand:
             if c:
                 hu_uniform[c] += 1.0 / 4
-        lab = bundle.sub_actions[0]
-        lab_slot0 = int(lab.slot) - 1
-        if getattr(lab, "kind", "deploy") == "ability":
-            hum[ABILITY_BUCKET] += 1
+        lab = bundle.sub_actions[0] if bundle.sub_actions else None
+        if lab is None:
+            #: ★ 2026-09-22（W2/W3 批）：**save 口径语料**（`fl_il_to_bc.py --stop-mode save`）里
+            #: 存在**人类本帧选择不出牌**的帧（`sub_actions` 为空）⇒ 记为「未出牌」桶。
+            #: ⚠️ 原实现直接取 `bundle.sub_actions[0]` ⇒ 在该语料上 `IndexError`（本批实测踩到）。
+            #: 语义：`hum[STOP_BUCKET]` 现在是**人类不出牌率**，与 `pol[STOP_BUCKET]` 同轴可比。
+            hum[STOP_BUCKET] += 1
+            lab_slot0 = None
         else:
-            hc = card_of(obs, int(lab.slot))
-            hum[hc or "?"] += 1
-            if hc:
-                hum_given[hc] += 1
-                if occ[hc] == 1:
-                    h1_hum[hc] += 1
+            lab_slot0 = int(lab.slot) - 1
+            if getattr(lab, "kind", "deploy") == "ability":
+                hum[ABILITY_BUCKET] += 1
+            else:
+                hc = card_of(obs, int(lab.slot))
+                hum[hc or "?"] += 1
+                if hc:
+                    hum_given[hc] += 1
+                    if occ[hc] == 1:
+                        h1_hum[hc] += 1
         if hand[3]:                      # 恒选第 4 槽
             sl4[hand[3]] += 1
             if occ[hand[3]] == 1:
@@ -149,21 +157,25 @@ def main(argv=None):
 
         pred, _lp, _v, _h, _mk = policy.act(obs, tok, plan, ie.make_get_mask(masks),
                                             hidden=None, deterministic=True)
+        #: ⚠️ `g`（「学会了选牌」的 slot 命中）只在**人类真的出了牌**的帧上记账 ——
+        #: 人类不出牌的帧没有可比对的槽位（【R10】宁可少算，不许把无定义比较混进命中率）。
         if not pred.sub_actions:
             pol[STOP_BUCKET] += 1
-            g["all_n"] += 1
-            g["out_n" if lab_slot0 != 3 else "in_n"] += 1
+            if lab_slot0 is not None:
+                g["all_n"] += 1
+                g["out_n" if lab_slot0 != 3 else "in_n"] += 1
         else:
             sa = pred.sub_actions[0]
-            hit = (getattr(sa, "kind", "deploy") != "ability") and (int(sa.slot) - 1 == lab_slot0)
-            g["all_n"] += 1
-            g["all_hit"] += int(hit)
-            if lab_slot0 != 3:
-                g["out_n"] += 1
-                g["out_hit"] += int(hit)
-            else:
-                g["in_n"] += 1
-                g["in_hit"] += int(hit)
+            if lab_slot0 is not None:
+                hit = (getattr(sa, "kind", "deploy") != "ability") and (int(sa.slot) - 1 == lab_slot0)
+                g["all_n"] += 1
+                g["all_hit"] += int(hit)
+                if lab_slot0 != 3:
+                    g["out_n"] += 1
+                    g["out_hit"] += int(hit)
+                else:
+                    g["in_n"] += 1
+                    g["in_hit"] += int(hit)
             if getattr(sa, "kind", "deploy") == "ability":
                 pol[ABILITY_BUCKET] += 1
             else:

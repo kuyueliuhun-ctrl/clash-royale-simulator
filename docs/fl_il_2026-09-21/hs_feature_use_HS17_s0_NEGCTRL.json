@@ -1,0 +1,16 @@
+{
+ "ckpt": "runs/_fl_il_bc_hs/sweep_mixHS17/s0/bc_fl_e3_lr0.001.pt",
+ "n_frames": 4000,
+ "n_play": 934,
+ "n_stop": 3066,
+ "n_perm": 4,
+ "nll_base": 1.875522189624669,
+ "nll_zero": 1.875522189624669,
+ "nll_perm": 1.875522189624669,
+ "d_nll_zero": 0.0,
+ "d_nll_perm": 0.0,
+ "d_nll_perm_play": 0.0,
+ "d_nll_perm_stop": 0.0,
+ "perm_lp_std_across_shuffles": 0.0,
+ "note": "描述性（非门禁）。ΔNLL(perm) ≈ 0 ⇒ 模型没用这 17 列；ΔNLL(perm) 明显大于 perm 抖动尺度 ⇒ 在用。"
+}

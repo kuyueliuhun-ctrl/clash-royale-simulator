@@ -30,7 +30,7 @@
 
 | 会话 | 在做的事 | 状态 | 正在 / 将要修改的文件 | 模式 | 起始 | 最近更新 |
 |---|---|---|---|---|---|---|
-| **A** | **W1 低费空砸豁免（已推 8f93de4）+ C23 解耦组合臂（已跑完判读）**；W2/W3 预注册已落 | 🔄 进行中 | `rl/action_mask.py`、`scripts/selftest_spell_kingtower.py`、`scripts/_mask_diff_snapshot_spells.py`（新）、`scripts/il_readout_games.py`、`docs/il_whiff_handscore_prereg_2026-09-22.md`（新）、`docs/fl_il_il2_prereg_2026-09-22.md`（§6）、`docs/agents/{ledger,agents_long_entries}.md`、`docs/fl_il_2026-09-21/gate_compose_*.json`（新） | 独占（上述文件） | 2026-09-22 | 2026-09-22 |
+| **A** | **W1 低费空砸豁免（`8f93de4`）→ C23/C24/C25 拆头（**路线已关闭**）→ **C26 W2/W3 手牌打分+前期信息分（已跑完 9 跑并判读，见 ledger C26）**；分支 `il-whiff-handscore-w1` / `il-handscore-w2` 均已推 | 🔄 进行中 | `rl/{action_mask,hand_score(新),plan_space,follower}.py`、`scripts/{selftest_spell_kingtower,selftest_hand_score(新),_mask_diff_snapshot_spells(新),probe_plan_extras_prefix(新),il_hs_report(新),il_hs_feature_use(新),il_bc_sweep,fl_il_to_bc,il_readout_games,il_eval_holdout,il_card_usage,_run_hs_arms.sh(新),_run_hs_readouts.sh(新)}.py|sh`、`docs/{il_whiff_handscore_prereg_2026-09-22,fl_il_il2_prereg_2026-09-22}.md`、`docs/agents/{ledger,agents_long_entries}.md`、`docs/fl_il_2026-09-21/hs_*.json`（新） | 独占（上述文件） | 2026-09-22 | 2026-09-22 |
 | **B** | 建**多会话协作台账**（本文件）+ 在 `AGENTS.md`、`docs/README.md` 各加一行索引 | 🔄 进行中 | `docs/agents/session_ledger.md`（新建）、`AGENTS.md`（+1 行）、`docs/README.md`（+1 行） | 独占 | 2026-09-21 22:25 | 2026-09-21 22:25 |
 | **C** | （待 C 会话自己填写） | ⏳ 待登记 | — | — | — | — |
 
@@ -48,6 +48,11 @@
 | `src/clasher_new/rl/action_mask.py` | A | 独占 | W1 低费空砸豁免（`SPELL_WHIFF_FREE_MAX_COST`） | 2026-09-22 |
 | `scripts/selftest_spell_kingtower.py` | A | 独占 | W1 回归断言（23 → 32） | 2026-09-22 |
 | `scripts/_mask_diff_snapshot_spells.py` | A | 独占 | 新建：全法术位图 A/B 门禁 | 2026-09-22 |
+| `src/clasher_new/rl/hand_score.py` | A | 独占 | 新建：W2/W3 的 17 维纯函数特征（plan 尾部追加） | 2026-09-22 |
+| `src/clasher_new/rl/plan_space.py` | A | 独占 | 新增 `PLAN_BASE_DIM`/`PLAN_HOLD_OFFSET`（不变量修复） | 2026-09-22 |
+| `src/clasher_new/rl/follower.py` | A | 独占 | `_plan_biases` 用 `PLAN_HOLD_OFFSET` + `plan_extras_zero` 消融开关 | 2026-09-22 |
+| `scripts/il_card_usage.py` | A | 独占 | 修 save 语料 `IndexError`（人类不出牌 ⇒ 「未出牌」桶）；**旧语料 R2 逐位复现** | 2026-09-22 |
+| `runs/_fl_il_bc_hs/` | A | 独占 | W2/W3 语料（2200 局 / plan_dim=75）+ 9 个臂 ckpt | 2026-09-22 |
 
 > **热点文件**（多会话常碰，谁动谁登记）：`AGENTS.md`、`docs/README.md`、`docs/agents/*.md`、
 > `src/clasher_new/rl/action_mask.py`、`src/clasher_new/battle.py`、`src/clasher_new/rl/ppo.py`、

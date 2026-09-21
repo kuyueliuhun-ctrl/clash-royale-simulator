@@ -31,8 +31,34 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
+
+def _utf8_stdout():
+    """Windows 控制台默认 GBK ⇒ 打印 `⚠️` 会 `UnicodeEncodeError` 并**整步失败**（【R1】GBK 陷阱）。
+
+    本脚本刻意**不依赖** `src/`（要能在 `/usr/bin/python3` 下裸跑做纯解析），
+    故不复用 `rl.io_bootstrap.force_utf8_stdout`，这里内联同样的动作。
+    """
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001  老解释器/非文本流：忽略（不因日志编码而失败）
+        pass
+
+
+_utf8_stdout()
+
 ARMS = [("HS17", 17), ("HS04", 4), ("HS00", 0)]
 BAND_PLAYS = [18.0, 28.5]
+
+
+def _tag(arm):
+    """`"HS17"` → `"17"`（文件名用；`sweep_mixHS17` 用全名）。
+
+    ⚠️ 这里踩过一次**静默失败**：文件名格式串里已有字面 `hs` 前缀，若再传 `arm.lower()`
+    （= `"hs17"`）会拼成 `holdout_hshs17_s0.json` ⇒ `_load_opt` 返回 `None` ⇒
+    整张表全是 `—`、判据全判 FAIL。**故：文件名一律用 `_tag()`，并配 §main 的缺失数据守卫。**
+    """
+    return arm[2:].lower()
 
 
 def _abs(p):
@@ -53,11 +79,19 @@ def _load_opt(p):
 
 
 def readout_stats(out_dir):
-    """读 runner 的统计 json（目录 ⇒ 找 `*_stats.json`；与 `il_mix_report.py` 同口径）。"""
+    """读 runner 的统计 json。
+
+    ⚠️ **顺序很重要**：run 目录里同时躺着 `solo_state.json`（dashboard 的状态文件，
+    **没有** `p0_plays`），若先扫目录会读到它 ⇒ `plays_per_game` 静默变 `None`
+    （`il_mix_report.py` 的 docstring 记过同一个坑）。故先试 `*_stats.json`，并显式排除
+    `solo_state.json`；两者都没有才回落到 `*.json`。
+    """
     if not out_dir or not os.path.isdir(out_dir):
         return None
-    cand = glob.glob(os.path.join(out_dir, "*_stats.json")) or \
-        glob.glob(os.path.join(out_dir, "*.json"))
+    cand = glob.glob(os.path.join(out_dir, "*_stats.json"))
+    if not cand:
+        cand = [p for p in glob.glob(os.path.join(out_dir, "*.json"))
+                if os.path.basename(p) != "solo_state.json"]
     return _load(cand[0]) if cand else None
 
 
@@ -68,11 +102,13 @@ def collect(root, docs, seeds):
             ckdir = os.path.join(root, "sweep_mix%s" % arm, "s%d" % k)
             ck = os.path.join(ckdir, "bc_fl_e3_lr0.001.pt")
             man = _load_opt(os.path.join(ckdir, "sweep_manifest.json"))
-            ho = _load_opt(os.path.join(docs, "holdout_hs%s_s%d.json" % (arm.lower(), k)))
-            ro = readout_stats(os.path.join(ROOT, "runs", "il_readout_hs%s_s%d" % (arm.lower(), k)))
-            ro = ro or _load_opt(os.path.join(docs, "readout_hs%s_s%d_stats.json"
-                                              % (arm.lower(), k)))
-            us = _load_opt(os.path.join(docs, "usage_hs%s_s%d.json" % (arm.lower(), k)))
+            ho = _load_opt(os.path.join(docs, "holdout_hs%s_s%d.json" % (_tag(arm), k)))
+            #: 先读 `--json` 落在 docs 的那份（**唯一**含 `p0_plays`/`info_window` 的产物），
+            #: 再回落到 run 目录（那里混着 dashboard 的 `solo_state.json`，见 readout_stats 注释）
+            ro = _load_opt(os.path.join(docs, "readout_hs%s_s%d_stats.json" % (_tag(arm), k)))
+            ro = ro or readout_stats(os.path.join(ROOT, "runs",
+                                                  "il_readout_hs%s_s%d" % (_tag(arm), k)))
+            us = _load_opt(os.path.join(docs, "usage_hs%s_s%d.json" % (_tag(arm), k)))
             r0 = (man or {}).get("runs", [{}])[0] if man else {}
             row = {
                 "arm": arm, "zero": z, "seed": k,
@@ -98,8 +134,12 @@ def collect(root, docs, seeds):
                 .get("plays_in_window_per_game"),
                 "first_play_t_median": ((ro or {}).get("info_window") or {})
                 .get("first_play_t_median"),
-                "usage_tvd": (us or {}).get("tvd"),
-                "usage_top": (us or {}).get("top") if us else None,
+                "usage_tvd": ((us or {}).get("tvd_human_policy")),
+                "usage_pref_capture": ((us or {}).get("pref_capture_policy")),
+                "usage_stop_rate": ((us or {}).get("policy_stop_rate")),
+                #: 逐卡偏好 `cond_X(c) = P(X 打 c | c 在该帧手牌中)`（用户指定的「使用率对比」口径）
+                "usage_cond_policy": ({d["card"]: d["cond_policy"] for d in (us or {}).get("per_card", [])}
+                                      if us else None),
             }
             rows.append(row)
     return rows
@@ -176,6 +216,18 @@ def main(argv=None):
 
     rows = collect(root, docs, seeds)
 
+    # ——— 缺失数据守卫（防止「读不到 ⇒ 全是 None ⇒ 判据一律 FAIL」这种静默假负）———
+    _need = ("act_auc", "play_nll", "plays_per_game")
+    missing = {f: [f"{r['arm']}s{r['seed']}" for r in rows if r.get(f) is None] for f in _need}
+    n_miss = sum(len(v) for v in missing.values())
+    data_ok = (n_miss == 0)
+    if not data_ok:
+        print("⚠️⚠️ 读数缺失（判据不可判，不是 FAIL）—— 先修管线再看判决：")
+        for f, v in missing.items():
+            if v:
+                print(f"   {f}: {len(v)} 行缺 → {v[:6]}{' …' if len(v) > 6 else ''}")
+        print(f"   (root={root}, docs={docs}) 检查文件名口径：holdout_hs{{17,04,00}}_s{{0,1,2}}.json")
+
     hdr = ["臂", "zero", "seed", "pool", "logp@3", "actAUC", "top1", "NLL", "cell",
            "macro", "出牌/局", "帧/局", "胜率", "买得起不出", "窗口已知卡", "TVD"]
     print("| " + " | ".join(hdr) + " |")
@@ -194,6 +246,7 @@ def main(argv=None):
     # ——— 配对判据 ———
     out = {"prereg": "docs/il_whiff_handscore_prereg_2026-09-22.md §6",
            "band_plays_per_game": BAND_PLAYS, "rows": rows, "judgements": {},
+           "data_complete": bool(data_ok), "missing": {k: v for k, v in missing.items() if v},
            "ablation_columns": check_ablation_columns(root, seeds)}
 
     d_nll, m_nll = _delta(rows, "HS04", "HS17", "play_nll")
@@ -244,7 +297,10 @@ def main(argv=None):
             json.dump(out, f, ensure_ascii=False, indent=1)
         print(f"\n[hs_report] → {args.out}")
     for k, v in out["judgements"].items():
-        print(f"[hs_report] {k}: {v.get('verdict', '（描述性，无判决）')}")
+        vv = v.get("verdict", "（描述性，无判决）")
+        if not data_ok and vv.startswith("FAIL"):
+            vv = "不可判（读数缺失）"
+        print(f"[hs_report] {k}: {vv}")
     ab = out["ablation_columns"]
     print(f"[hs_report] 消融列自检: "
           f"{'PASS' if ab.get('ok') else ab.get('skipped', 'FAIL——三臂可能逐位相同！')}")

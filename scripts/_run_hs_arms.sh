@@ -13,6 +13,15 @@
 set -u
 cd "$(dirname "$0")/.." || exit 1
 
+# ⚠️ **必须**（2026-09-22 实测事故）：三条泳道并发时**全部**在第一处 `opt.step()` 崩：
+#     torch.AcceleratorError: CUDA error: out of memory
+#       ← `torch.optim.Optimizer.step` 的 `_accelerator_graph_capture_health_check()`
+#         会调 `torch.accelerator.current_stream()`，**即使模型在 CPU 也会去建 CUDA 上下文**
+#       ← 3 个进程 × 各建一个 CUDA 上下文 ⇒ 小显存卡直接 OOM（本机 875 MiB 已占用）
+# 本训练**本来就是 CPU**（`FollowerPolicy.device == "cpu"`，`il_bc_sweep` 从不 `to_device`）
+# ⇒ 屏蔽 CUDA 不改变任何数值，只是不碰驱动。缺这一行的症状 = 泳道**静默没人跑**。
+export CUDA_VISIBLE_DEVICES=""
+
 DATA=runs/_fl_il_bc_hs/train
 ROOT=runs/_fl_il_bc_hs
 
