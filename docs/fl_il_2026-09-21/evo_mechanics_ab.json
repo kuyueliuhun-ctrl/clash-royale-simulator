@@ -1,0 +1,350 @@
+{
+ "prereg": "docs/il_evo_prereg_2026-09-22.md §10（判据跑前写死）",
+ "n_evolved_spells_data": 34,
+ "changed_cards": [
+  {
+   "card": "Witch_EV1",
+   "n_keys_before": 2,
+   "n_keys_after": 2,
+   "diffs": {
+    "spawnPauseTime": {
+     "before": "'interval_of_spawns'",
+     "after": "7000"
+    }
+   }
+  },
+  {
+   "card": "GoblinCage_EV1_TEMPNAME",
+   "n_keys_before": 6,
+   "n_keys_after": 6,
+   "diffs": {
+    "deathSpawnCount": {
+     "before": "'spawn_count'",
+     "after": "1"
+    }
+   }
+  }
+ ],
+ "changed_pairs": [
+  [
+   "GoblinCage_EV1_TEMPNAME",
+   "deathSpawnCount"
+  ],
+  [
+   "Witch_EV1",
+   "spawnPauseTime"
+  ]
+ ],
+ "expected_pairs_as_preregistered": [
+  [
+   "GoblinDrill_EV1",
+   "deathSpawnCount"
+  ],
+  [
+   "Witch_EV1",
+   "spawnPauseTime"
+  ]
+ ],
+ "unchanged_cards": 32,
+ "A1_change_set_exactly_as_expected": {
+  "verdict": "FAIL",
+  "got": [
+   [
+    "GoblinCage_EV1_TEMPNAME",
+    "deathSpawnCount"
+   ],
+   [
+    "Witch_EV1",
+    "spawnPauseTime"
+   ]
+  ],
+  "note": "【跑后修正】预注册 §10 判据①把第二张卡写成 `GoblinDrill_EV1`，**实际是 `GoblinCage_EV1_TEMPNAME`**（`GoblinDrill_EV1` 的字符串值是合法名字 `spawnCharacterOnHide='Goblin'`）⇒ 本条按**字面**判 FAIL，登记为预注册缺口（§11）。"
+ },
+ "A1p_change_set_corrected": {
+  "verdict": "PASS",
+  "detail": {
+   "GoblinCage_EV1_TEMPNAME.deathSpawnCount": {
+    "after": 1,
+    "truth": 1,
+    "equal": true
+   },
+   "Witch_EV1.spawnPauseTime": {
+    "after": 7000,
+    "truth": 7000,
+    "equal": true
+   }
+  },
+  "meaning": "跑后修正口径：变化集合 = 恰好这 2 个 (卡,键)，且修复后的值 == 同一张卡 evo 树里的真值"
+ },
+ "A2_other_32_bitwise_equal": {
+  "verdict": "PASS",
+  "unchanged": 32,
+  "meaning": "逐键 `==`（非近似）：其余 32 张有内容的键集合相同且逐值相等"
+ },
+ "A3_no_str_left": {
+  "verdict": "FAIL",
+  "str_values": [
+   {
+    "card": "Pekka_EV1",
+    "key": "onKilledDoneAction",
+    "value": "PekkaEV1_Heal"
+   },
+   {
+    "card": "Valkyrie_EV1",
+    "key": "nextAction.spawnData",
+    "value": "Valkyrie_NotPushed_BUF"
+   },
+   {
+    "card": "Wallbreaker_EV1",
+    "key": "nextAction.spawnData",
+    "value": "WallbreakerBarrelExplosion_EV1"
+   },
+   {
+    "card": "GoblinDrill_EV1",
+    "key": "spawnCharacterOnHide",
+    "value": "Goblin"
+   }
+  ],
+  "note": "【跑后修正】预注册把「任何字符串」都算残留，但 4 个残留全是**合法的名字/动作引用**（`onKilledDoneAction`/`nextAction.spawnData`×2/`spawnCharacterOnHide`）⇒ 本条按字面判 FAIL，登记为预注册缺口（§11）。"
+ },
+ "A3p_no_str_in_numeric_keys_corrected": {
+  "verdict": "PASS",
+  "residual_legit_name_fields": [
+   {
+    "card": "Pekka_EV1",
+    "key": "onKilledDoneAction",
+    "value": "PekkaEV1_Heal",
+    "truth_in_tree": "'PekkaEV1_Heal'"
+   },
+   {
+    "card": "Valkyrie_EV1",
+    "key": "nextAction.spawnData",
+    "value": "Valkyrie_NotPushed_BUF",
+    "truth_in_tree": "'Valkyrie_NotPushed_BUF'"
+   },
+   {
+    "card": "Wallbreaker_EV1",
+    "key": "nextAction.spawnData",
+    "value": "WallbreakerBarrelExplosion_EV1",
+    "truth_in_tree": "'WallbreakerBarrelExplosion_EV1'"
+   },
+   {
+    "card": "GoblinDrill_EV1",
+    "key": "spawnCharacterOnHide",
+    "value": "Goblin",
+    "truth_in_tree": "'Goblin'"
+   }
+  ],
+  "residual_illegitimate": [],
+  "meaning": "跑后修正口径：残留字符串必须能在同一张卡 evo 树里找到同键的**字符串**真值（名字型），否则就是遮蔽残留"
+ },
+ "per_card": [
+  {
+   "card": "Knight_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Archer_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Pekka_EV1",
+   "keys_before": 3,
+   "keys_after": 3,
+   "diffs": 0
+  },
+  {
+   "card": "Witch_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 1
+  },
+  {
+   "card": "Barbarian_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Skeleton_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Valkyrie_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 0
+  },
+  {
+   "card": "Bomber_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Musketeer_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 0
+  },
+  {
+   "card": "Wizard_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "RoyalGiant_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "IceSpirits_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "RageBarbarian_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "BattleRam_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "InfernoDragon_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "BlowdartGoblin_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Hunter_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "AxeMan_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Recruit_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Bat_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 0
+  },
+  {
+   "card": "MegaKnight_EV1",
+   "keys_before": 7,
+   "keys_after": 7,
+   "diffs": 0
+  },
+  {
+   "card": "SkeletonBalloon_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Wallbreaker_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "GoblinGiant_EV1",
+   "keys_before": 4,
+   "keys_after": 4,
+   "diffs": 0
+  },
+  {
+   "card": "Electro_dragon_ev1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Firecracker_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Cannon_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Mortar_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  },
+  {
+   "card": "Tesla_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 0
+  },
+  {
+   "card": "GoblinCage_EV1_TEMPNAME",
+   "keys_before": 6,
+   "keys_after": 6,
+   "diffs": 1
+  },
+  {
+   "card": "GoblinDrill_EV1",
+   "keys_before": 7,
+   "keys_after": 7,
+   "diffs": 0
+  },
+  {
+   "card": "GoblinBarrel_EV1",
+   "keys_before": 1,
+   "keys_after": 1,
+   "diffs": 0
+  },
+  {
+   "card": "Zap_EV1",
+   "keys_before": 2,
+   "keys_after": 2,
+   "diffs": 0
+  },
+  {
+   "card": "Snowball_EV1",
+   "keys_before": 0,
+   "keys_after": 0,
+   "diffs": 0
+  }
+ ],
+ "verdict_preregistered_literal": "FAIL",
+ "verdict_corrected": "PASS",
+ "verdict": "PASS"
+}

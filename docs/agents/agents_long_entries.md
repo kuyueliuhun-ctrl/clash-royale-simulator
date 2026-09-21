@@ -972,7 +972,9 @@ Firecracker 42 / SkeletonArmy 40）；E3 **跨进程噪声地板**（**非判据
 | 卡 | 被遮蔽字段 | 泄漏值 | 真值 | 崩点 |
 |---|---|---|---|---|
 | `Witch_EV1` | `spawnPauseTime` | `'interval_of_spawns'` | `7000` | `card_mechanics.py:87` `TypeError: str / float` |
-| `GoblinDrill_EV1` | `deathSpawnCount` | `'spawn_count'` | `4` | `battle.py:1383` `ValueError: int('spawn_count')` |
+| ~~`GoblinDrill_EV1`~~ → **`GoblinCage_EV1_TEMPNAME`** | `deathSpawnCount` | `'spawn_count'` | **`1`** | `battle.py:1383` `ValueError: int('spawn_count')` |
+
+> ★ **勘误（2026-09-22 同批，见 §32.5）**：本表初版把第二张卡写成 `GoblinDrill_EV1`，**是错的** —— 真正被遮蔽的是 **`GoblinCage_EV1_TEMPNAME`**（真值 `1`）；`GoblinDrill_EV1` 的 `spawnCharacterOnHide='Goblin'` 是**合法的名字字段**。
 
 影响面（全量枚举 34 张 evo）：mechanics dict 含字符串值的 **6 张**，其中只有上述 **2 张**是**数值字段**被污染
 （其余 4 张的字符串是合法名字：`onKilledDoneAction='PekkaEV1_Heal'`、`nextAction.spawnData=...`、
@@ -1000,7 +1002,7 @@ S1 的副产物就是**把一条从未跑过的路径跑起来了**，并**立�
 | **O-E4** | `arena.can_deploy_at(..., is_spell=True)` 是**死路**：`arena.py:181` 调 `TileGrid._is_rolling_projectile_spell()`，**该方法不存在** ⇒ 必 `AttributeError`（生产代码无一处用 `is_spell=True`） | 潜伏；本轮**不修** |
 | **O-E5** | `probe_evo_pair.py` 的 `--out` 在 `chdir(SRC)` 后用 `abspath` 解析 ⇒ 产物**静默写到** `src/clasher_new/docs/…`（`docs/` 下什么都没有）；**已修**并冒烟复验 | 本仓**第三次**同类路径坑（同 `il_hs_feature_use.py`） |
 
-### 31.7 下一刀（预注册 §10，**尚未执行**）：修 O-E2 后重跑 S1
+### 31.7 下一刀（预注册 §10）——★ **2026-09-22 同批已执行，结果见 §32**（本节保留当时的原始计划）
 
 **做法**：`collect_evo_mechanics()` 扫描时**跳过 `statsTags` 子树**（一行 `if k == 'statsTags': continue`），
 **不**动触发/数值逻辑、**不**动 `battle.py`/`action_mask.py`。
@@ -1010,3 +1012,91 @@ S1 的副产物就是**把一条从未跑过的路径跑起来了**，并**立�
 ③ S1 200 局重跑 ⇒ `errors = 0` 且 labels 漂移 ≤ 5%（预计 −1.6%~−2%）；
 ④ 失败分支：出现**其它**卡的变化 ⇒ 还有第二个遮蔽源，**停手**逐条列差异；仍 `errors > 0` ⇒ 还有第三条崩溃路径，
 同样停手登记（**不许**为「让 errors=0」吞异常）。
+
+---
+
+## 32. C28 O-E2 已修（`collect_evo_mechanics` 跳过 `statsTags`）⇒ 觉醒 S1 的 ②③ 兑现（2026-09-22）
+
+### 32.0 `AGENTS.md` 行**压缩前逐字**（**1445 B**，超 800 B 闸门 ⇒ 未采用；采用版 **797 B**）
+
+```
+| **★ O-E2 已修：`collect_evo_mechanics` 跳过 `statsTags` ⇒ S1 的 ②③ 兑现**（C28） | 一行 `if k=='statsTags': continue`（**不动**触发/数值/掩码）。★ **A/B 逐键复算**（34 张 evo，修复前逻辑同文件逐字复制）：**其余 32 张逐键逐值相等**；变化**恰 2 处** `Witch_EV1.spawnPauseTime 'interval_of_spawns'→7000`、`GoblinCage_EV1_TEMPNAME.deathSpawnCount 'spawn_count'→1`（新值 == 同卡 evo 树真值）。★ **200 局重跑**：`errors` **9→0**、② labels **−6.42%→−1.30%（PASS）**、③ 触发 **445→482**、声明局 **191→200/200**；**逐卡首现 `Witch:5` / `GoblinCage:5`**（正是修前必崩的两张卡）。★ 回归 **28/28**（新增 T8 跨 tick：Witch 出 3 次 + 8 tick 不崩，且钉住出兵 tick 的 `next_spawn_remaining==7.0`；T9 钉住 `wrap == spawn_number×finish`）。★ ① **仍 FAIL 0.9239** ⇒ 单一原因是 `elite-barbarians-ev1`（→`AngryBarbarians`）**本仓无觉醒快照**（**数据**缺口不是映射缺口）⇒ 需**另行预注册 + 外部数值来源**（O-E1），**S2/S3 仍未启动**；`--evo-slots` 仍默认关。★ 两处**跑后修正**已登记：预注册把卡名写成 `GoblinDrill_EV1`（实为 `GoblinCage_EV1_TEMPNAME`）、A3「不得有任何字符串」过严（4 个残留是合法名字字段）。｜ [§11](docs/il_evo_prereg_2026-09-22.md)；**C28** ｜ 全文 → 分册 **§32** |
+```
+
+**压缩说明**：逐字剪掉「修复前逻辑同文件逐字复制」的方法说明与 T9 细节（保留结论与全部关键读数）⇒ 事实在 §32.1–§32.5 里**换位置**，未删除。
+
+### 32.1 做法（单变量最小改动）
+
+`evolutions.py::collect_evo_mechanics()` 的 `_walk` 加一行 `if k == 'statsTags': continue`。
+**不动**触发/数值逻辑；**不动** `battle.py` / `action_mask.py` / `player.py`。
+函数 docstring 已按 **R18** 同步改写（写清两张卡、泄漏值、真值、崩点与「该路径从未被执行过」）。
+
+### 32.2 判据①：数据层 A/B（同进程、同数据、真单变量）
+
+仪器 `scripts/probe_evo_mechanics_ab.py`：**修复前逻辑在本文件内逐字复制**（不 import、不靠 git 回滚）
+⇒ 全 **34** 张 `evolvedSpellsData` 逐键对比 ⇒ `docs/fl_il_2026-09-21/evo_mechanics_ab.json`。
+
+| 判据 | 结果 |
+|---|---|
+| **A1**（预注册字面）变化集合 == {`GoblinDrill_EV1.deathSpawnCount`, `Witch_EV1.spawnPauseTime`} | ❌ FAIL |
+| **A1'**（跑后修正）变化集合 = 恰好这 2 个 `(卡,键)` 且新值 == 该卡 evo 树真值 | ✅ PASS |
+| **A2** 其余 **32 张**逐键逐值相等（`==`） | ✅ PASS（`unchanged=32`） |
+| **A3**（预注册字面）新输出**无任何**字符串 | ❌ FAIL（4 个） |
+| **A3'**（跑后修正）**数值语义**字段无字符串 | ✅ PASS（合法名字型 4 / 非法 **0**） |
+
+实际变化逐字：
+
+```
+Witch_EV1               : spawnPauseTime  'interval_of_spawns' → 7000  (真值 7000 ✓)
+GoblinCage_EV1_TEMPNAME : deathSpawnCount 'spawn_count'        → 1     (真值 1    ✓)
+```
+
+### 32.3 判据②：回归（`selftest_evo_slots.py` **28/28 PASS**）
+
+* **T8（O-E2 的跨 tick 回归，【R8】）**：Witch（cycle=1）出 3 次 ⇒ 场上存在**觉醒** Witch、
+  `evo['spawnPauseTime'] == 7000`；**推进 8 tick（4 s）不抛异常**（旧实现**必崩**）；
+  并**逐 tick 记录**钉住「真值被使用」：出兵那一 tick 的 `next_spawn_remaining` 轨迹 =
+  `[1.0, 1.0, 0.5, 0.0, **7.0**, 6.5, 6.0, 5.5]` ⇒ **最大值必须恰为 7.0**（`7000/1000`）。
+  ⚠️ 第一版断言写成「跑完 8 tick 后读值 == 7.0」——**错**（该值每 tick 递减，末尾是 5.5）⇒ 改为取最大值。
+* **T9（量纲构造性演示）**：Skeletons（cycle=2、`spawn_number=3`）出 3 次 ⇒ `finish == 1`、
+  `wrap == 3 == spawn_number × finish` ⇒ 把 C27 里那条「两口径量纲不同」写成可执行断言。
+* 原 **T1–T7 全未变**（映射拒收 / 引擎真跑 `finish==2` / 节律 / 负对照 / Hero 互斥 / 法术只进 `finish`）。
+
+### 32.4 判据③：端到端 200 局重跑
+
+| 判据 | 修前 | **修后** |
+|---|---|---|
+| ① 覆盖率 ≥ 0.95 | 0.9204 | **0.9239**（692/749）❌ 仍 FAIL |
+| ② labels 漂移 ≤ 5% ∧ `errors = 0` | labels −6.42%、errors **9** | labels **−1.30%**（4465→4407）、errors **0** ✅ PASS |
+| ③ 触发次数 > 0 | 445 | **482**（我方 267 / 对手 215）、`wrap` **1311** ✅ PASS |
+
+* **决定性证据**：修后逐卡触发表**首次**出现 **`Witch: 5`** 与 **`GoblinCage: 5`** —— 正是修前**必崩**的两张卡
+  ⇒ 修复把「崩掉 4.5% 的局」变成「正常触发 10 次」。
+* **声明觉醒位 200/200 局**（修前 191/200，差的 9 局全是崩溃）。
+* **同进程配对探针（同 14 局 tag）**：P3 **CRASHES 1/14 → CLEAN 0/14**（同一条崩溃的独立复现）；
+  P1（8 局构造对照）逐值相等不变、P2 14/14 声明 / 21 触发。
+* E1（schema 不变量）PASS、E2 `wrap/finish = 2.72`、E3 跨进程噪声地板 **−0.067%**（均与修前同量级）。
+
+### 32.5 三处**跑后修正**（登记为预注册缺口；**不改** §10 判据文本）
+
+3. **§10 判据①把卡名写错**：写的是 `GoblinDrill_EV1`，实际被 `statsTags` 遮蔽的是
+   **`GoblinCage_EV1_TEMPNAME`**（`GoblinDrill_EV1` 的字符串值 `spawnCharacterOnHide='Goblin'` 是**合法名字字段**）
+   ⇒ 变化集合的**实质**与预注册完全一致（恰 2 张卡 × 各 1 个数值键），只有**卡名**错 ⇒ 字面 FAIL / 实质 PASS，
+   **两行都保留**在读数 JSON 里；并在预注册 §8.2 的表上加了**勘误标记**（原行保留、划掉 + 括注正确卡名）。
+4. **§10 判据③的 A3 过严**：写「新输出不得有任何字符串」，但 4 个残留全是**合法的名字/动作引用**
+   （`onKilledDoneAction='PekkaEV1_Heal'`、`nextAction.spawnData` ×2、`spawnCharacterOnHide='Goblin'`）
+   —— 它们在**原数据里本来就是字符串** ⇒ 改为数据驱动的 A3'（残留字符串须能在同卡 evo 树里找到**同键的字符串**真值）
+   ⇒ 字面 FAIL / 修正 PASS，两行都保留（= **O-E5 的同型教训**：判据要按**数据的事实**写，不要按直觉写）。
+5. **仪器侧（O-E5）**：`probe_evo_pair.py` 的 `--out` 曾用 `abspath` 解析，而脚本已 `chdir(SRC)`
+   ⇒ 产物**静默写到** `src/clasher_new/docs/…`（`docs/` 下什么都没有）⇒ **已修**（用本脚本自己的 `ORIG_CWD`）并冒烟复验。
+
+### 32.6 S1 **总判更新**与下一步
+
+**S1 = ① FAIL / ② PASS / ③ PASS**。②③ 已兑现；**① 的失败原因单一且明确**：
+`elite-barbarians-ev1`（→ `AngryBarbarians`）**本仓没有觉醒数值快照** ⇒ **57 / 749** 个回放觉醒槽不可声明
+（覆盖率 0.9239）。这**不是**「映射表缺一条」⇒ 判据④的第一条失败分支（补映射表）**不适用**。
+
+⇒ **处置**：① `--evo-slots` **仍保持缺省关**（`src/` 只多了一处 `statsTags` 跳过；对**不声明觉醒位**的旧路径
+零影响，E1 已在产物层面验证）；② **仍不启动 S2/S3**（① 未达标）；③ **O-E1 留作下一刀**：
+补游戏数据（`evo_2025_data.py` 已有「自建 7 张」先例 + 一张**外部来源表**），**须另行预注册、判据跑前写死、
+并给出来源 URL 与取数时间**（【R10】不猜数值）。

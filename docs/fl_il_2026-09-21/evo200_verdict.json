@@ -10,11 +10,11 @@
  },
  "gate1_coverage": {
   "coverage_definition": "**能声明率** = 可声明槽 / (可声明槽 + 未映射槽)，可声明 = 后缀可映射 ∧ `name ∈ EVOLUTION_CYCLES` ∧ `Card(name).evo_raw` 为真。⚠️ 预注册 §2 S1 判据①的字面口径是「**能映射**」（§5 实测 100%）——两者**不是同一个量**，差集恰好是下面 `unmapped_detail` 里那张卡。",
-  "ev_slots_total": 716,
-  "ev_slots_declared": 659,
+  "ev_slots_total": 749,
+  "ev_slots_declared": 692,
   "ev_slots_unmapped": 57,
   "ev_slots_truncated_at_2": 0,
-  "coverage": 0.9203910614525139,
+  "coverage": 0.9238985313751669,
   "threshold": ">= 0.95",
   "unmapped_keys": {
    "elite-barbarians-ev1": 57
@@ -32,39 +32,39 @@
  "gate2_invariance": {
   "counted": {
    "frames": {
-    "off": 66311,
-    "on": 60874,
-    "abs": -5437,
-    "rel": -0.08199242961197992,
-    "rel_pct": -8.1992
+    "off": 66390,
+    "on": 64480,
+    "abs": -1910,
+    "rel": -0.02876939298087061,
+    "rel_pct": -2.8769
    },
    "team_single": {
-    "off": 4676,
-    "on": 4380,
-    "abs": -296,
-    "rel": -0.06330196749358426,
-    "rel_pct": -6.3302
+    "off": 4678,
+    "on": 4610,
+    "abs": -68,
+    "rel": -0.01453612654980761,
+    "rel_pct": -1.4536
    },
    "team_multi": {
-    "off": 32,
-    "on": 28,
-    "abs": -4,
-    "rel": -0.125,
-    "rel_pct": -12.5
+    "off": 33,
+    "on": 30,
+    "abs": -3,
+    "rel": -0.09090909090909091,
+    "rel_pct": -9.0909
    },
    "labels": {
-    "off": 4469,
-    "on": 4182,
-    "abs": -287,
-    "rel": -0.06422018348623854,
-    "rel_pct": -6.422
+    "off": 4465,
+    "on": 4407,
+    "abs": -58,
+    "rel": -0.012989921612541993,
+    "rel_pct": -1.299
    },
    "mask_reject": {
-    "off": 207,
-    "on": 198,
-    "abs": -9,
-    "rel": -0.043478260869565216,
-    "rel_pct": -4.3478
+    "off": 213,
+    "on": 203,
+    "abs": -10,
+    "rel": -0.046948356807511735,
+    "rel_pct": -4.6948
    },
    "bundle_not_ok": {
     "off": 0,
@@ -75,132 +75,132 @@
    },
    "errors": {
     "off": 0,
-    "on": 9,
-    "abs": 9,
+    "on": 0,
+    "abs": 0,
     "rel": null,
     "rel_pct": null
    },
    "team_off": {
-    "off": 61603,
-    "on": 56466,
-    "abs": -5137,
-    "rel": -0.08338879600019479,
-    "rel_pct": -8.3389
+    "off": 61679,
+    "on": 59840,
+    "abs": -1839,
+    "rel": -0.029815658489923638,
+    "rel_pct": -2.9816
    },
    "stop_save_cand": {
-    "off": 57606,
-    "on": 52732,
-    "abs": -4874,
-    "rel": -0.08460924209283756,
-    "rel_pct": -8.4609
+    "off": 57661,
+    "on": 55813,
+    "abs": -1848,
+    "rel": -0.03204939213679957,
+    "rel_pct": -3.2049
    },
    "stop_labels": {
-    "off": 14528,
-    "on": 13301,
-    "abs": -1227,
-    "rel": -0.08445759911894272,
-    "rel_pct": -8.4458
+    "off": 14540,
+    "on": 14068,
+    "abs": -472,
+    "rel": -0.032462173314993126,
+    "rel_pct": -3.2462
    },
    "opp_plays": {
-    "off": 4292,
-    "on": 4032,
-    "abs": -260,
-    "rel": -0.06057781919850885,
-    "rel_pct": -6.0578
+    "off": 4308,
+    "on": 4231,
+    "abs": -77,
+    "rel": -0.01787372330547818,
+    "rel_pct": -1.7874
    },
    "hand_forced": {
-    "off": 358,
-    "on": 338,
-    "abs": -20,
-    "rel": -0.055865921787709494,
-    "rel_pct": -5.5866
+    "off": 359,
+    "on": 352,
+    "abs": -7,
+    "rel": -0.019498607242339833,
+    "rel_pct": -1.9499
    }
   },
-  "labels_rel_diff": -0.06422018348623854,
+  "labels_rel_diff": -0.012989921612541993,
   "threshold": "|rel(labels)| <= 0.05 且 errors == 0",
   "errors": {
    "off": 0,
-   "on": 9
+   "on": 0
   },
-  "verdict": "FAIL"
+  "verdict": "PASS"
  },
  "gate3_liveness": {
-  "games_with_declaration": 191,
+  "games_with_declaration": 200,
   "games_total": 200,
-  "declaration_rate": 0.955,
+  "declaration_rate": 1.0,
   "triggers_finish": {
-   "team": 248,
-   "opp": 197
+   "team": 267,
+   "opp": 215
   },
-  "triggers_finish_total": 445,
+  "triggers_finish_total": 482,
   "triggers_wrap": {
-   "team": 754,
-   "opp": 485
+   "team": 796,
+   "opp": 515
   },
-  "triggers_wrap_total": 1239,
+  "triggers_wrap_total": 1311,
   "triggers_by_card": {
-   "Cannon": 62,
+   "Cannon": 63,
+   "Firecracker": 44,
    "Princess": 44,
-   "Firecracker": 42,
-   "SkeletonArmy": 40,
+   "SkeletonArmy": 42,
    "MinionHorde": 33,
    "GoblinBarrel": 31,
-   "Mortar": 20,
-   "Tesla": 17,
-   "SkeletonBalloon": 17,
-   "Skeletons": 17,
+   "Mortar": 24,
+   "SkeletonBalloon": 19,
+   "Tesla": 18,
+   "Skeletons": 18,
+   "Snowball": 11,
+   "BabyDragon": 11,
    "InfernoDragon": 10,
+   "Ghost": 10,
    "Zap": 9,
-   "Snowball": 9,
+   "Barbarians": 9,
    "Knight": 9,
-   "BabyDragon": 8,
-   "Barbarians": 8,
    "FirespiritHut": 7,
    "Wallbreakers": 7,
+   "Wizard": 6,
    "BattleRam": 6,
-   "Ghost": 6,
-   "Wizard": 5,
+   "Witch": 5,
    "Bats": 5,
    "Musketeer": 5,
-   "RoyalHogs": 4,
-   "MegaKnight": 3,
+   "GoblinCage": 5,
+   "RoyalHogs": 5,
+   "MegaKnight": 4,
    "RoyalRecruits": 3,
-   "Archer": 3,
-   "BlowdartGoblin": 3,
-   "ElectroDragon": 3,
-   "RageBarbarian": 2
+   "RageBarbarian": 3,
+   "Archer": 3
   },
   "triggers_wrap_by_card": {
-   "SkeletonArmy": 600,
+   "SkeletonArmy": 630,
    "MinionHorde": 193,
-   "Cannon": 62,
-   "Skeletons": 51,
+   "Cannon": 63,
+   "Skeletons": 54,
+   "Barbarians": 45,
+   "Firecracker": 44,
    "Princess": 44,
-   "Firecracker": 42,
-   "Barbarians": 40,
    "Bats": 25,
-   "Mortar": 20,
+   "Mortar": 24,
+   "RoyalHogs": 20,
+   "SkeletonBalloon": 19,
+   "Tesla": 18,
    "RoyalRecruits": 18,
-   "Tesla": 17,
-   "SkeletonBalloon": 17,
-   "RoyalHogs": 16,
    "Wallbreakers": 14,
+   "BabyDragon": 11,
    "InfernoDragon": 10,
+   "Ghost": 10,
    "Knight": 9,
-   "BabyDragon": 8,
    "FirespiritHut": 7,
+   "Wizard": 6,
    "BattleRam": 6,
-   "Ghost": 6,
    "Archer": 6,
-   "Wizard": 5,
+   "Witch": 5,
    "Musketeer": 5,
-   "MegaKnight": 3,
+   "GoblinCage": 5,
+   "MegaKnight": 4,
+   "RageBarbarian": 3,
    "BlowdartGoblin": 3,
    "ElectroDragon": 3,
-   "RageBarbarian": 2,
-   "IceSpirits": 2,
-   "AxeMan": 2,
-   "Bomber": 1
+   "IceSpirits": 2
   },
   "threshold": "triggers_finish_total > 0",
   "verdict": "PASS",
@@ -226,9 +226,9 @@
   "verdict": "PASS"
  },
  "extra_two_gauges": {
-  "finish_total": 445,
-  "wrap_total": 1239,
-  "wrap_per_finish": 2.784269662921348,
+  "finish_total": 482,
+  "wrap_total": 1311,
+  "wrap_per_finish": 2.719917012448133,
   "read": "单兵卡应 ≈1、n 兵卡应 ≈n、法术觉醒只进 finish ⇒ 期望 wrap/finish 落在 [0, 1]（多兵卡存在时也可 >1，**不设判据**）"
  },
  "extra_archive_crossproc": {
@@ -236,16 +236,16 @@
   "archive_games_matched": 200,
   "archive_games_total": 2200,
   "archive_labels": 4468,
-  "off_labels": 4469,
-  "rel_diff_labels": 0.00022381378692927484,
+  "off_labels": 4465,
+  "rel_diff_labels": -0.0006714413607878246,
   "archive_mask_reject": 205,
-  "off_mask_reject": 207,
+  "off_mask_reject": 213,
   "note": "**非判据**：跨进程漂移（C17）⇒ 只用于标定本批 5% 阈值的噪声地板。"
  },
  "S1_verdict": "FAIL",
  "S1_verdicts": {
   "①覆盖率": "FAIL",
-  "②不变量": "FAIL",
+  "②不变量": "PASS",
   "③生效性": "PASS"
  }
 }

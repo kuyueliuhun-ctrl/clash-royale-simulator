@@ -56,7 +56,7 @@ def check(name, ok, extra=""):
 
 
 #: 固定卡组（8 张，全部本仓在册）：Knight(cycle=2, 单兵) / Zap(cycle=2, 法术) 是主角
-DECK = ["Knight", "Zap", "Archers", "Giant", "Musketeer", "Skeletons", "Cannon", "Fireball"]
+DECK = ["Knight", "Zap", "Witch", "Skeletons", "Musketeer", "Giant", "Cannon", "Fireball"]
 
 
 def _battle():
@@ -199,6 +199,58 @@ if sp is not None:
     check("T6.1 Zap 出 3 次全部被接受", n_ok == 3, n_ok)
     check("T6.2 `finish` == 1（第 3 次觉醒）", c["finish"]["team"] == 1, c["finish"]["team"])
     check("T6.3 `wrap` == 0（法术不走出生队列）", c["wrap"]["team"] == 0, c["wrap"]["team"])
+
+# ————————————————————————— T8 引擎觉醒路径崩溃回归（O-E2） —————————————————————————
+#: ★ **本批新增（预注册 §10 判据②）**：`Witch_EV1` 的 `statsTags.spawnPauseTime` 标签串曾遮蔽真值
+#: `7000` ⇒ `card_mechanics.py:87` 在**第一次出兵**时 `TypeError: str / float`（实测崩掉 4.5% 的局）。
+#: 本测试**跨 tick 边界**跑真正的引擎循环（【R8】：不许只做数据层断言），并**钉住**修复后的真值：
+#: 出兵后 `next_spawn_remaining` 必须等于 `7000 / 1000.0 = 7.0`（而不是崩、也不是 1.0 之类的默认）。
+print("[T8] Witch 觉醒（`spawnPauseTime` 遮蔽崩溃的**跨 tick 回归**，O-E2）")
+bs = _battle()
+pos = _deploy_pos(bs)
+c = _counts(bs, declare=("Witch",))
+n_ok = _play(bs, "Witch", pos, 3)          # Witch cycle=1 ⇒ 第 2 次即觉醒
+check("T8.1 Witch 出 3 次全部被接受", n_ok == 3, n_ok)
+evo_witch = [e for e in bs.entities.values()
+             if getattr(e, "card_name", None) == "Witch" and getattr(e, "evo", None)]
+check("T8.2 场上存在**觉醒** Witch（`evo` 非空）", len(evo_witch) >= 1, len(evo_witch))
+if evo_witch:
+    check("T8.3 `evo['spawnPauseTime']` == 真数值 7000（不是标签串）",
+          evo_witch[0].evo.get("spawnPauseTime") == 7000,
+          repr(evo_witch[0].evo.get("spawnPauseTime")))
+#: ⚠️ **推进要一 tick 一 tick 地推**并记录 holder 的值：`Witch.on_tick` 在**首次出兵那一 tick**
+#: 把 `next_spawn_remaining` 设成 `spawnPauseTime/1000`，之后每 tick 递减 ⇒ 只能在「设值那一 tick」
+#: 读到 7.0（跑完整段再读会读到 4.5 之类的衰减值，第一版就是那样写成假断言的）。
+_t8_err, _t8_vals = None, []
+_holder = getattr(evo_witch[0], "entity_holder", None) if evo_witch else None
+try:
+    for _ in range(8):                     # 4 s ⇒ 跨过 `next_spawn_remaining = 1.0` 的首次出兵
+        bs.step(0.5)
+        if _holder is not None:
+            _t8_vals.append(getattr(_holder, "next_spawn_remaining", None))
+except Exception as e:  # noqa: BLE001
+    _t8_err = f"{type(e).__name__}: {e}"
+check("T8.4 推进 8 tick（4 s）**不抛异常**（旧实现在此崩）", _t8_err is None, _t8_err)
+if _holder is not None and _t8_vals:
+    _mx = max(v for v in _t8_vals if v is not None)
+    check("T8.5 出兵那一 tick 的 `next_spawn_remaining` == 7000 ms / 1000 = 7.0"
+          "（钉住「真数值被使用」，不是字符串、也不是默认 1.0）",
+          abs(float(_mx) - 7.0) < 1e-9, (_mx, _t8_vals))
+else:
+    print("  NO-SAMPLE  T8.5 未找到觉醒 Witch 的机制 holder（引擎绑定方式变了？）")
+
+# ————————————————————————— 单兵卡「多兵卡」量纲自检 —————————————————————————
+print("[T9] 多兵卡：`wrap ≈ n × finish`（两口径量纲不同的构造性演示）")
+bs = _battle()
+pos = _deploy_pos(bs)
+c = _counts(bs, declare=("Skeletons",))     # Skeletons cycle=2，spawn_number > 1
+n_ok = _play(bs, "Skeletons", pos, 3)
+_spawn_n = int(Card("Skeletons").spawn_number or 1)
+check("T9.1 Skeletons 出 3 次被接受", n_ok == 3, n_ok)
+check("T9.2 `finish == 1`（第 3 次觉醒）", c["finish"]["team"] == 1, c["finish"]["team"])
+check(f"T9.3 `wrap == spawn_number × finish`（n={_spawn_n}）",
+      c["wrap"]["team"] == _spawn_n * c["finish"]["team"],
+      (c["wrap"]["team"], _spawn_n))
 
 # ————————————————————————— 汇总 —————————————————————————
 print("")

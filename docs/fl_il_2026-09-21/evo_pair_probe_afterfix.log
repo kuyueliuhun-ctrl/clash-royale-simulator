@@ -1,0 +1,21 @@
+[pair] 选中 14 局（来自 200 局探针的 tag 序列，前 14 个）
+  [1/14] 84a066ec0b0a4bef801ae287e4d45960 decl=True trig=1 labels 13→13 field_diffs=2
+  [2/14] 21daddc4311842699aa782d4059d4454 decl=True trig=2 labels 12→12 field_diffs=0
+  [3/14] 09589b9d2315437ebb84872f9b993137 decl=True trig=3 labels 16→16 field_diffs=0
+  [4/14] 4949e8527a4c4b799ceb0e76a70e0f05 decl=True trig=3 labels 18→21 field_diffs=6
+  [5/14] cd3e00e123744faba5ec325d28cf7093 decl=True trig=2 labels 16→16 field_diffs=2
+  [6/14] 1758832e25624fb1881ef8b1344922d6 decl=True trig=0 labels 13→13 field_diffs=0
+  [7/14] 3729f02338364edc996ff5b9905913e1 decl=True trig=0 labels 14→14 field_diffs=0
+  [8/14] b2144dd6c7174f14be7fe418ae789ffb decl=True trig=1 labels 14→14 field_diffs=2
+  [9/14] 58af3386785e40e08e144ddcbb073477 decl=True trig=1 labels 18→18 field_diffs=1
+  [10/14] 29d4c97b94e9413787563c79a698caf3 decl=True trig=0 labels 12→12 field_diffs=0
+  [11/14] ac99a8d965e042c1834550ae5772c151 decl=True trig=0 labels 8→8 field_diffs=0
+  [12/14] e4984e2458664014863d4ad3f0919b1d decl=True trig=3 labels 28→21 field_diffs=8
+  [13/14] efa78643d0474f81a2d7dfa1da271549 decl=True trig=2 labels 38→22 field_diffs=7
+  [14/14] caec8b11c4d84f0bb07b66ff2701a187 decl=True trig=3 labels 25→29 field_diffs=6
+======================================================================
+P1 未声明局逐值相等 = PASS （**构造对照** 8 局中 0 局有差异、构造失败 0）
+   自然局：14 局可比，其中 0 局未声明（多数局都会声明 ⇒ 自然样本覆盖不足）
+P2 声明局触发 > 0  = PASS (14 局声明，触发合计 21)
+P3 崩溃            = CLEAN (0/14 局)
+配对总判 = PASS

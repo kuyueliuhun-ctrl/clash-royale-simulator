@@ -10,21 +10,21 @@
   "control_games": 8,
   "control_games_with_field_diff": 0,
   "control_construction_failures": 0,
-  "games_compared": 13,
+  "games_compared": 14,
   "games_without_declaration_natural": 0,
   "verdict": "PASS",
   "meaning": "**构造对照**（清空牌组变体 ⇒ 一局都不声明）上 off/on **全部公共字段逐值相等**；⚠️ 真实回放的局 95%+ 都会声明 ⇒ 自然样本对 P1 几乎无覆盖，**必须**构造对照（否则就是空洞 PASS）"
  },
  "P2_liveness_positive": {
-  "games_with_declaration": 13,
-  "triggers_total": 18,
+  "games_with_declaration": 14,
+  "triggers_total": 21,
   "verdict": "PASS",
   "meaning": "真实回放上声明了觉醒位，且**至少一局**触发 > 0"
  },
  "P3_crashes": {
-  "games_crashed": 1,
+  "games_crashed": 0,
   "games_total": 14,
-  "verdict": "CRASHES",
+  "verdict": "CLEAN",
   "meaning": "`--evo-slots` 让引擎的觉醒路径**第一次**被跑起来；崩溃 = 该路径的**真 bug**，**不是**本探针的 bug（同进程、不涉及多进程）"
  },
  "per_game": [
@@ -387,10 +387,58 @@
   {
    "i": 11,
    "tag": "e4984e2458664014863d4ad3f0919b1d",
-   "crashed": true,
-   "error": {
-    "on": "TypeError: unsupported operand type(s) for /: 'str' and 'float'"
-   }
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": [
+     "Witch",
+     "MegaKnight"
+    ]
+   },
+   "triggers": {
+    "team": 2,
+    "opp": 1
+   },
+   "n_field_diffs": 8,
+   "field_diffs": {
+    "end_time": {
+     "off": 180.0,
+     "on": 149.1
+    },
+    "frames": {
+     "off": 361,
+     "on": 299
+    },
+    "hand_forced": {
+     "off": 4,
+     "on": 1
+    },
+    "labels": {
+     "off": 28,
+     "on": 21
+    },
+    "mask_reject": {
+     "off": 1,
+     "on": 0
+    },
+    "opp_plays": {
+     "off": 22,
+     "on": 16
+    },
+    "out_n": {
+     "off": 28,
+     "on": 21
+    },
+    "team_single": {
+     "off": 29,
+     "on": 21
+    }
+   },
+   "labels_off": 28,
+   "labels_on": 21
   },
   {
    "i": 12,

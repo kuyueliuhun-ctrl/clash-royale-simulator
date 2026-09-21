@@ -71,11 +71,30 @@ def collect_evo_mechanics(evo_raw):
     """M5 觉醒补全：递归收集 evolvedSpellsData 中所有机制字段。
     机制参数常内嵌于动作组内部（如 GoblinDrill 的 hideHpThresholds 位于
     onStartingActionData.subActionsData[0]、GoblinCage 的 captureRadius 同理），
-    浅层合并拿不到 → 全树扫描，同名键首见优先。"""
+    浅层合并拿不到 → 全树扫描，同名键首见优先。
+
+    ⚠️ **必须跳过 `statsTags`（2026-09-22 修；觉醒 S1 / 开放项 O-E2）**：
+    `evolvedSpellsData.statsTags` 是一张 **「字段名 → 标签串」的元数据表**（例
+    `{"spawnPauseTime": "interval_of_spawns", "deathSpawnCount": "spawn_count"}`），
+    **不是机制参数**。它在 JSON 键序里**排在真数值之前**（`statsTags` 第 4 位 vs
+    `baseData` 第 30 位），而本函数是「同名键首见优先」⇒ 标签串**遮蔽真数值**，
+    消费方于是拿到字符串：
+      * `Witch_EV1`：`spawnPauseTime='interval_of_spawns'`（真值 7000）⇒ `card_mechanics.py:87`
+        `TypeError: unsupported operand type(s) for /: 'str' and 'float'`；
+      * `GoblinDrill_EV1`：`deathSpawnCount='spawn_count'`（真值 4）⇒ `battle.py:1383`
+        `ValueError: invalid literal for int() with base 10: 'spawn_count'`。
+    这条路径**在本仓从未被执行过**（`rl/` 从不声明觉醒位，见 C21）⇒ 觉醒 S1 一开就崩 4.5% 的局。
+    全量枚举 34 张 `evolvedSpellsData`：mechanics 含字符串值的共 **6** 张，其中**只有这 2 张是
+    数值字段**被污染（其余 4 张的字符串是合法名字，如 `onKilledDoneAction='PekkaEV1_Heal'`）
+    ⇒ 本跳过**恰好**修掉这 2 处，**其余 32 张逐键逐值不变**
+    （可复算仪器：`scripts/probe_evo_mechanics_ab.py`）。
+    """
     out = {}
     def _walk(o):
         if isinstance(o, dict):
             for k, v in o.items():
+                if k == 'statsTags':          # 元数据表（字段名 → 标签串），不是机制参数
+                    continue
                 if k in M5_EVO_PASSTHROUGH and k not in out:
                     out[k] = v
                 _walk(v)
