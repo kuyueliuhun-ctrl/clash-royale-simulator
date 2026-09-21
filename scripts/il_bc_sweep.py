@@ -70,7 +70,7 @@ def parse_configs(s):
 
 
 def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0,
-              mix_ratio=None):
+              mix_ratio=None, decoupled_act=False):
     """复刻 human_play.py::train_bc_from_human 的训练循环（见模块 docstring 的复刻纪律）。
 
     `save_every=N>0` 时每 N 个 epoch 额外落一份快照 `<out_path 去后缀>_ep{k}.pt`：
@@ -87,7 +87,8 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
     _stop_idx = np.array([i for i, s in enumerate(samples) if not s[3].sub_actions], dtype=np.int64)
     belief_dim = len(samples[0][1])
     plan_dim = len(samples[0][2])
-    policy = FollowerPolicy(hidden=128, plan_dim=plan_dim, belief_dim=belief_dim)
+    policy = FollowerPolicy(hidden=128, plan_dim=plan_dim, belief_dim=belief_dim,
+                            decoupled_act=bool(decoupled_act))
     opt = torch.optim.Adam(policy.parameters(), lr=lr)
     n = len(samples)
     #: 每个 epoch 的索引池（混比只改这个池；`--mix-ratio` 关 = 全部样本）
@@ -147,6 +148,11 @@ def main(argv=None):
                          "缺省 = 关 = 旧行为逐位不变。见 docs/fl_il_il2_prereg_2026-09-22.md §0/§5")
     ap.add_argument("--save-every", type=int, default=0,
                     help="每 N 个 epoch 额外落一份快照（不消耗 RNG，不影响训练轨迹）")
+    #: ★ 独立 act 头（预注册 `docs/fl_il_il2_prereg_2026-09-22.md` §7）：把「出不出牌」从
+    #: 6 类共享头拆成 `act_head`(2) + `slot_head`(5)，**联合训练**（离线拼接已被 C23 证否）。
+    #: 缺省 = 关 = 旧行为**逐位不变**。架构变更 ⇒ 该臂必须是 `--fresh`（本来就是新建网络）。
+    ap.add_argument("--decoupled-act", action="store_true",
+                    help="启用独立 act 头（§7）；需配 --out-dir 形如 sweep_mixR<tag>")
     args = ap.parse_args(argv)
 
     args.data_dir = _abs(args.data_dir)
@@ -175,9 +181,11 @@ def main(argv=None):
         print(f"[sweep] === epochs={epochs} lr={_lr_tag(lr)} → {out_path} ===", flush=True)
         runs.append(train_one(samples, epochs, lr, args.seed, out_path,
                               save_every=args.save_every,
-                              mix_ratio=args.mix_ratio))
+                              mix_ratio=args.mix_ratio,
+                              decoupled_act=args.decoupled_act))
 
     manifest = {"data_dir": args.data_dir, "seed": args.seed, "runs": runs,
+                "decoupled_act": bool(args.decoupled_act),
                 "note": "训练循环逐行复刻 rl/human_play.py::train_bc_from_human；"
                         "每格同 seed ⇒ 同初值 + 同 permutation，唯一变量 = epochs/lr（或 mix_ratio）"}
     mpath = args.manifest or os.path.join(args.out_dir, "sweep_manifest.json")

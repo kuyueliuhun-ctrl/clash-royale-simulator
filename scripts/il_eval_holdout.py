@@ -81,23 +81,44 @@ def auc(y, s):
     return float((ranks[y == 1].sum() - n1 * (n1 + 1) / 2.0) / (n1 * n0))
 
 
-def first_option_probs(policy, obs, tok, plan, masks):
-    """**复刻** `FollowerPolicy.act()` 的第一步 6 类分布（`hidden=None` 口径）。
+def first_option_dist6(policy, obs, tok, plan, masks):
+    """**复刻** `FollowerPolicy.act()` 第一步的 **6 类分布**（`hidden=None` 口径）。
 
-    与 `il_nll_decompose.py` 同款做法：**不改 `follower.py`**，只用它的公开件重算
-    `_encode_parts → gru_cell(zeros) → slot_head + plan_bias → 掩码`。
-    ⇒ `p[STOP]` 就是「模型此刻不出牌的概率」；J8.1 的 act-AUC 用 `1 − p[STOP]` 当分数。
+    ★ 2026-09-22 独立 act 头（预注册 §7）：拆头策略**没有** 6 类头 ⇒ 用 **嵌入口径**
+        `p₆'(i) = p₂(ACT)·p₅(i)`（i ≤ K_MAX，含 ABILITY）、`p₆'(STOP) = p₂(STOP)`
+    返回 6 维向量。**共享头策略下与旧实现逐值相同**（同一 softmax、同一掩码）。
+    嵌入口径与解耦损失的等价性证明见预注册 §7.3；可执行版 = `scripts/selftest_decoupled_act.py` **P3**
+    （实测 `max|Δ| ≈ 6e-07`）。**这是拆头臂能与 J8.1/J8.2 比数的唯一合法口径**（§7.3 写明）。
     """
-    from rl.follower import STOP_IDX
+    from rl.follower import ACT_PLAY_IDX, ACT_STOP_IDX, K_MAX, STOP_IDX
     with torch.no_grad():
         _fused, enc = policy._encode_parts(obs, tok, plan)
         h = policy.gru_cell(enc, torch.zeros(1, policy.hidden_dim, device=policy.device))
         slot_bias, _cb = policy._plan_biases(plan)
+        if getattr(policy, "decoupled_act", False):
+            act_mask, slot_mask = policy._act_slot_masks(masks[0])
+            al = policy.act_head(h).masked_fill(act_mask == 0, -1e9)
+            p2 = torch.softmax(al, dim=-1)[0]
+            sl = (policy.slot_head(h) + slot_bias).masked_fill(slot_mask == 0, -1e9)
+            p5 = torch.softmax(sl, dim=-1)[0]
+            p6 = torch.zeros(K_MAX + 2, device=policy.device)
+            p6[:K_MAX + 1] = p2[ACT_PLAY_IDX] * p5
+            p6[STOP_IDX] = p2[ACT_STOP_IDX]
+            return p6
         logits = policy.slot_head(h) + slot_bias
         sm = policy._slot_mask_tensor(masks[0])
         logits = logits.masked_fill(sm == 0, -1e9)
-        p = torch.softmax(logits, dim=-1)
-    return p[0, STOP_IDX]
+        return torch.softmax(logits, dim=-1)[0]
+
+
+def first_option_probs(policy, obs, tok, plan, masks):
+    """（兼容旧调用）首步 `p(STOP)` —— 共享头/拆头**统一用嵌入口径**的 `p₆'(STOP)`。
+
+    与 `il_nll_decompose.py` 同款做法：**不改 `follower.py`**，只用它的公开件重算。
+    共享头下 `p₆'(STOP) == p₆(STOP)` ⇒ 旧读数**逐位不变**（可回归验证）。
+    """
+    from rl.follower import STOP_IDX
+    return first_option_dist6(policy, obs, tok, plan, masks)[STOP_IDX]
 
 
 def load_dir(d, limit=0):
@@ -191,8 +212,11 @@ def evaluate(ckpt, holdout, train, limit, random_init=False, save_weight=1.0):
     m_stop_on_save = m_stop_on_play = 0
     opt_hist = collections.Counter()
     maj_hit = maj_den = 0
+    from rl.follower import STOP_IDX as _STOP_IDX
+    _decoupled = bool(getattr(policy, "decoupled_act", False))
     for obs, tok, plan, bundle, masks in holdout:
-        p_stop = first_option_probs(policy, obs, tok, plan, masks)
+        _p6 = first_option_dist6(policy, obs, tok, plan, masks)
+        p_stop = _p6[_STOP_IDX]
         act_scores.append(1.0 - float(p_stop))
         act_labels.append(0 if not bundle.sub_actions else 1)
         if not bundle.sub_actions:
@@ -228,6 +252,15 @@ def evaluate(ckpt, holdout, train, limit, random_init=False, save_weight=1.0):
             p_opt, px, py = int(p.slot) - 1, int(p.x), int(p.y)
         else:
             p_opt, px, py = -1, -1, -1
+        if _decoupled:
+            #: ★ 预注册 §7.3：拆头臂的 option 必须取**嵌入口径** `argmax p₆'`（否则与 J8.2 不可比）。
+            #: ⚠️ 它与 `act` 的两级 argmax **不等价**：两级 =「先比 p₂(ACT) vs p₂(STOP)，再 argmax p₅」；
+            #: 嵌入 =「比 p₂(STOP) vs p₂(ACT)·max p₅」⇒ 后者**更早**判 STOP。
+            #: 落点仍沿用 `act` 路径（cell 指标对拆头臂只作参考，不进 §7.4 判据）。
+            _a6 = int(torch.argmax(_p6).item())
+            p_opt = -1 if _a6 == _STOP_IDX else _a6
+            if p_opt < 0:
+                px = py = -1
         ok_opt = (p_opt == lab_opt)
         ok_cell = ok_opt and (px == lab_x and py == lab_y)
         n_opt += int(ok_opt)

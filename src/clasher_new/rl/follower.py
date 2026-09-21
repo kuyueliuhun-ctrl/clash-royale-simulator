@@ -38,6 +38,27 @@ ABILITY_IDX = K_MAX
 STOP_IDX = K_MAX + 1
 NUM_SLOT_OPTIONS = K_MAX + 2
 
+#: —— 独立 act 头（2026-09-22，C23 下游；预注册 `docs/fl_il_il2_prereg_2026-09-22.md` §7）——
+#: 把「出不出牌」从 6 类共享头里拆出来：`act_head`(2 类) **先决**、`slot_head`(`K_MAX+1`=5 类) **后决**。
+#: 动机（C23 实测）：零成本组合臂把 `playable_rate` 从 0.1037 抬到 0.8900（**8.6×**）⇒ 动作头面对
+#: **训练时从未见过**的输入分布 ⇒ 「门 + 动作头」的离线拼接**原理上无法隔离**「act/play 共用一个
+#: 6 类头」这**一个**变量 ⇒ 必须**联合训练**（这才是本改动的存在理由）。
+#: 默认关（`decoupled_act=False`）⇒ 架构与旧 ckpt 逐位一致、旧路径**一行未改**。
+ACT_STOP_IDX = 0          #: act 头：不出牌（= 旧 STOP_IDX 的语义）
+ACT_PLAY_IDX = 1          #: act 头：出牌 / 放技能
+NUM_ACT_OPTIONS = 2
+
+#: ★ **GRU 的 `sub_emb` one-hot 空间**（与「头出维」**解耦**）：拆头后 `slot_head` 出维 6→5，
+#: 但 `sub_emb` 仍须是 `K_MAX+2=6`（历史编号空间：槽 0..3 + ABILITY 4 + STOP 5）——
+#: 否则 `sub_emb`(128,8)→(128,7) 会与 `enc_fc`(128,2731→2730) 一起走
+#: `load_checkpoint:152` 的**静默重置**分支（不报错、权重随机）。
+#: 付出这个常量，形状破坏面就收缩到只剩 `slot_head.*` + 新增 `act_head.*`。
+SUB_SPACE_DIM = NUM_SLOT_OPTIONS
+
+#: 拆头后 `slot_head` 的出维：4 槽 + ABILITY（**无 STOP**）。
+#: ⚠️ `ABILITY_IDX = K_MAX = 4` **数值不变** ⇒ 该处索引语义零迁移。
+NUM_SLOT_OPTIONS_DECOUPLED = K_MAX + 1
+
 #: —— 攒费意图动作（intent-save；2026-09-19 用户拍板扩参）——
 #: 预注册 `docs/intent_save_prereg_2026-09-19.md`。**尾部追加**（0..STOP_IDX 的索引与
 #: 语义逐位不变 ⇒ 与仓内「尾部追加 + 尾零兼容」同一纪律）：
@@ -80,11 +101,14 @@ def save_checkpoint(policy, path):
         # 攒费意图（intent-save）：改 `slot_head`/`sub_emb`/`enc_fc` 形状 ⇒ 必须记元数据，
         # 否则"旧 ckpt 加载进 intent 架构"会静默丢 `enc_fc`（见 load_checkpoint 告警）。
         "intent_options": bool(getattr(policy, "intent_options", False)),
+        # ★ 独立 act 头（预注册 §7）：同纪律 —— 改 `slot_head` 出维并新增 `act_head`
+        "decoupled_act": bool(getattr(policy, "decoupled_act", False)),
     }, path)
 
 
 def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
-                    value_bypass=None, value_independent=None, intent_options=None):
+                    value_bypass=None, value_independent=None, intent_options=None,
+                    decoupled_act=None):
     """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。
 
     value_bypass（2026-09-12，实验 B′）/ value_independent（E′）：元数据携带架构标志；
@@ -123,8 +147,11 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
     vi = bool(value_independent) if value_independent is not None else vi_meta
     # intent_options：显式传入优先；否则回落到 ckpt 元数据（旧 ckpt 无该键 => False）
     _io = bool(md.get("intent_options", False)) if intent_options is None else bool(intent_options)
+    #: ★ 独立 act 头（预注册 §7）：同 intent_options 纪律 —— 元数据携带 + 显式不一致告警
+    _da = bool(md.get("decoupled_act", False)) if decoupled_act is None else bool(decoupled_act)
     policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd,
-                            value_bypass=vb, value_independent=vi, intent_options=_io)
+                            value_bypass=vb, value_independent=vi, intent_options=_io,
+                            decoupled_act=_da)
     target = policy.state_dict()
     for k, v in sd_src.items():
         if k not in target:
@@ -181,13 +208,24 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
                    f"而目标网络 intent_options={_want_intent}：slot_head/sub_emb/enc_fc "
                    "形状不一致 ⇒ enc_fc 被整体重置（**静默**）⇒ 该 ckpt 不可续训，"
                    "要求 --fresh；只能当对照基线/对手池")
+    # ★ 独立 act 头（预注册 §7）：`slot_head` 出维 6↔5 且 `act_head` 存在与否 ⇒ 走
+    # `load_checkpoint` 的形状不匹配分支（`:152`）⇒ **双双静默随机**。这条告警是唯一防线。
+    _ck_dec = bool(md.get("decoupled_act", False))
+    _want_dec = bool(getattr(policy, "decoupled_act", False))
+    if _ck_dec != _want_dec:
+        from rl.diagnostics import print_safe   # 惰性 import，避免模块级依赖
+        print_safe(f"[follower] ⚠️ {path} 的 decoupled_act={_ck_dec}，"
+                   f"而目标网络 decoupled_act={_want_dec}：slot_head 出维 6↔5 且 act_head "
+                   "缺失/多余 ⇒ 形状不匹配 ⇒ **两者双双保持随机初始化（静默！）**"
+                   "（load_checkpoint 的形状不匹配分支不报错）⇒ 该 ckpt 不可续训，"
+                   "要求 --fresh；只能当对照基线/对手池")
     return policy
 
 
 class FollowerPolicy(nn.Module):
     def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY,
                  stop_logit_bias=-1.0, value_bypass=False, value_independent=False,
-                 intent_options=False):
+                 intent_options=False, decoupled_act=False):
         """stop_logit_bias：新初始化时给 STOP logit 的偏置（负数=初始更愿意出牌）。
 
         intent_options（2026-09-19，用户拍板扩参；预注册
@@ -197,6 +235,16 @@ class FollowerPolicy(nn.Module):
         **架构变更**：`slot_head` 出维 6→11、`sub_emb` 入维 8→13、`enc_fc` 入维 +6
         ⇒ 与旧 ckpt **不兼容**（须 `--fresh`）。默认 False ⇒ `num_slot_options ==
         NUM_SLOT_OPTIONS` 且 `scalar_dim == 3` ⇒ **与旧架构逐位一致、旧 ckpt 可加载**。
+
+        decoupled_act（2026-09-22，C23 下游；预注册 `docs/fl_il_il2_prereg_2026-09-22.md` §7）：
+        True 时把「出不出牌」从 6 类共享头里**拆出来** —— `act_head`(2 类: STOP/ACT) 先决，
+        `slot_head` 出维降为 `K_MAX+1`=5（4 槽 + ABILITY，**无 STOP**）。
+        理由：C23 实测「门 + 独立动作头」的**离线拼接**会把 `playable_rate` 抬 8.6×（状态分布
+        巨变）⇒ 动作头面对训练时从未见过的输入分布 ⇒ **无法隔离**「共用一个 6 类头」这一个变量。
+        ⇒ 只有**联合训练**有效，故本开关是给 BC 训练用的（`act_parallel`/`evaluate_batch`
+        这两个 PPO 批量路径**尚未实现**，开启时会显式 `NotImplementedError`，不静默错）。
+        **架构变更** ⇒ 须 `--fresh`；旧 ckpt 加载时 `load_checkpoint` 会告警（两处静默风险）。
+        默认 False ⇒ `num_slot_options == NUM_SLOT_OPTIONS` 且 `act_head` 不存在 ⇒ **旧路径零改动**。
 
         value_bypass（2026-09-12，实验 B′ 落地）：True 时 value 头直连 post-LN enc
         （`value_head(enc)`），**跳过 GRU**（策略头 slot/cell 仍走 GRU 隐状态）。
@@ -248,8 +296,18 @@ class FollowerPolicy(nn.Module):
         scalar_dim = 3  # elixir + time + next_card（归一化）
         # 攒费意图（intent-save）：仅打开时追加 INTENT_OBS_DIM 维（默认关 = 3，旧架构不变）
         self.intent_options = bool(intent_options)
+        self.decoupled_act = bool(decoupled_act)
+        if self.decoupled_act and self.intent_options:
+            # 预注册 §7.9：两者都动「option 空间尾部」，联合未定义 ⇒ 本批互斥（显式报错）。
+            raise ValueError("decoupled_act 与 intent_options 本批互斥（预注册 §7.9）："
+                             "SAVE/CANCEL 挂在 6 类空间尾部，与拆头后的 2+5 空间未定义")
+        #: GRU 的 one-hot 空间（**与头出维解耦**，见 `SUB_SPACE_DIM` 注释）：
+        #: 拆头后仍取 6（或 intent 时的 11）⇒ `sub_emb`/`_sub_vec` 形状不变 ⇒ 旧 ckpt 可加载。
+        self.sub_space_dim = (NUM_SLOT_OPTIONS_INTENT if self.intent_options
+                              else SUB_SPACE_DIM)
         self.num_slot_options = (NUM_SLOT_OPTIONS_INTENT if self.intent_options
-                                 else NUM_SLOT_OPTIONS)
+                                 else (NUM_SLOT_OPTIONS_DECOUPLED if self.decoupled_act
+                                       else NUM_SLOT_OPTIONS))
         self.scalar_dim = scalar_dim + (INTENT_OBS_DIM if self.intent_options else 0)
         scalar_dim = self.scalar_dim
         self.plan_mlp = nn.Sequential(nn.Linear(plan_dim, 64), nn.ReLU())
@@ -282,7 +340,10 @@ class FollowerPolicy(nn.Module):
         self.grid_ln = nn.LayerNorm(cnn_out)
         self.gru_cell = nn.GRUCell(hidden, hidden)
 
-        self.slot_head = nn.Linear(hidden, self.num_slot_options)     # 出牌槽位 + ABILITY + STOP
+        self.slot_head = nn.Linear(hidden, self.num_slot_options)     # 出牌槽位 + ABILITY (+ STOP)
+        #: ★ 独立 act 头（仅 decoupled_act=True 时存在）：0=STOP / 1=ACT
+        if self.decoupled_act:
+            self.act_head = nn.Linear(hidden, NUM_ACT_OPTIONS)
         self.cell_head = nn.Linear(hidden, GRID_H * GRID_W)
         self.value_head = nn.Linear(hidden, 1)
         # E'（2026-09-12）：独立价值编码器 + 非线性头（详见 __init__ docstring 的三条依据）。
@@ -295,12 +356,15 @@ class FollowerPolicy(nn.Module):
             _vm = max(32, hidden // 2)
             self.value_head_mlp = nn.Sequential(
                 nn.Linear(hidden, _vm), nn.ReLU(), nn.Linear(_vm, 1))
-        self.sub_emb = nn.Linear(self.num_slot_options + 2, hidden)   # option onehot + (x/18, y/32)
+        self.sub_emb = nn.Linear(self.sub_space_dim + 2, hidden)      # option onehot + (x/18, y/32)
 
         # 纯 RL 冷启动：初始压低 STOP logit（新随机初始化生效；load_checkpoint 会覆盖）
         if stop_logit_bias:
             with torch.no_grad():
-                self.slot_head.bias[STOP_IDX] += stop_logit_bias
+                if self.decoupled_act:
+                    self.act_head.bias[ACT_STOP_IDX] += stop_logit_bias
+                else:
+                    self.slot_head.bias[STOP_IDX] += stop_logit_bias
 
         self.device = "cpu"
         #: 7h2：plan 软偏置总开关。默认开（player0 侧主流程）。
@@ -393,6 +457,23 @@ class FollowerPolicy(nn.Module):
                 sm[INTENT_SAVE_BASE:] = 0.0
         return sm
 
+    def _act_slot_masks(self, mask):
+        """★ 拆头版掩码：返回 `(act_mask(2,), slot_mask(num_slot_options,))`（预注册 §7.2）。
+
+        - `slot_mask`：`0..K_MAX-1` 槽 + `ABILITY_IDX`；`at_cap` ⇒ 全 0（**无 STOP 档**）。
+        - `act_mask`：`STOP` **恒合法**；`ACT` 合法 ⟺ 任一槽合法 ∨ `ability_legal`。
+          ⇒ 「无牌可出」时 ACT 被掩掉 ⇒ 不会出现全 `-1e9` 的 NaN（证伪了一次真实风险）。
+        """
+        slot = torch.zeros(self.num_slot_options, device=self.device)
+        slot[:K_MAX] = torch.as_tensor(mask["slots"], dtype=torch.float32, device=self.device)
+        slot[ABILITY_IDX] = 1.0 if mask.get("ability_legal") else 0.0
+        if mask.get("at_cap"):
+            slot = torch.zeros(self.num_slot_options, device=self.device)
+        act = torch.zeros(NUM_ACT_OPTIONS, device=self.device)
+        act[ACT_STOP_IDX] = 1.0
+        act[ACT_PLAY_IDX] = 1.0 if float(slot.sum()) > 0.0 else 0.0
+        return act, slot
+
     def _plan_biases(self, plan_token):
         """从 plan 向量解析软偏置：(slot_bias(NUM_SLOT_OPTIONS,), cell_bias(H,W))。
 
@@ -449,10 +530,12 @@ class FollowerPolicy(nn.Module):
                 "ability_legal": False}
 
     def _sub_vec(self, option_idx, x=0.0, y=0.0):
-        sub = torch.zeros(1, self.num_slot_options + 2, device=self.device)
+        #: ⚠️ 用 `sub_space_dim`（**不是** `num_slot_options`）：拆头后头出维变了，
+        #: 但 GRU 的 one-hot 编号空间必须保持 6 ⇒ `sub_emb` 形状不变、旧 ckpt 可加载。
+        sub = torch.zeros(1, self.sub_space_dim + 2, device=self.device)
         sub[0, option_idx] = 1.0
-        sub[0, self.num_slot_options] = x / GRID_W
-        sub[0, self.num_slot_options + 1] = y / GRID_H
+        sub[0, self.sub_space_dim] = x / GRID_W
+        sub[0, self.sub_space_dim + 1] = y / GRID_H
         return sub
 
     def _intent_obs_vec(self, obs):
@@ -540,6 +623,10 @@ class FollowerPolicy(nn.Module):
         - masks 为 rollout 过程中每个 decoder 步使用的动作掩码序列，供 PPO 重放；
         - 全程 no_grad、返回的 hidden 已 detach（P1-24），不跨决策步构建计算图。
         """
+        if self.decoupled_act:
+            # ★ 预注册 §7：拆头版走**独立实现**（旧路径一行未改 ⇒ R2 逐位不变更易证）
+            return self._act_decoupled(obs, belief_token, plan_token, get_mask, hidden,
+                                       deterministic)
         with torch.no_grad():
             fused, enc = self._encode_parts(obs, belief_token, plan_token)
             if hidden is None:
@@ -619,6 +706,95 @@ class FollowerPolicy(nn.Module):
                 h = self._sub_update(h, option, x, y)
         return bundle, logprob, value, h.detach(), masks
 
+    def _require_shared_head(self, where):
+        """★ 预注册 §7：PPO 批量路径（`act_parallel` / `evaluate_batch`）**本批未改写**。
+
+        宁可**显式报错**，也不许静默用共享头口径算 logprob —— 那会让 PPO 的 `ratio ≠ 1`
+        （本仓已有先例：多步帧 `lp_roll` vs `lp_batch` 差 1.2e-07 就已经让 ratio 不精确为 1）。
+        """
+        if getattr(self, "decoupled_act", False):
+            raise NotImplementedError(
+                f"{where} 尚未实现 decoupled_act 路径（预注册 §7）：本批只覆盖 BC 训练+留出读数+"
+                "部署（`evaluate` / `act`）。PPO 需要这三者与批量路径**同源**，未改写前"
+                "不许用它算 logprob。")
+
+    def _act_decoupled(self, obs, belief_token, plan_token, get_mask, hidden, deterministic):
+        """★ 独立 act 头版在线动作生成（预注册 §7；**与 `act()` 分离实现** ⇒ 旧路径零改动）。
+
+        两级决策：`act_head` 先判「出不出」，再由 `slot_head` 判「出哪张 / 放技能」。
+        返回契约与 `act()` 逐字相同：`(bundle, logprob, value, hidden, masks)`。
+        """
+        with torch.no_grad():
+            fused, enc = self._encode_parts(obs, belief_token, plan_token)
+            if hidden is None:
+                hidden = torch.zeros(1, self.hidden_dim, device=self.device)
+            h = self.gru_cell(enc, hidden.detach())
+            value = float(self._value_from(enc, h, fused).item())
+
+            bundle = ActionBundle()
+            logprob = 0.0
+            masks = []
+            slot_bias, cell_bias = self._plan_biases(plan_token)
+            for step in range(K_MAX + 2):
+                mask = get_mask(bundle)
+                masks.append(mask)
+                # 【掩码不变式·1】与 `act()` 同款（partial 里已用槽位必须已被掩码置非法）
+                for _sa in bundle.sub_actions:
+                    if (_sa.kind == "deploy" and 1 <= _sa.slot <= K_MAX
+                            and bool(mask["slots"][_sa.slot - 1])):
+                        raise RuntimeError(
+                            f"[mask 不变式·1] partial 里的槽位 slot={_sa.slot} 在掩码里仍合法"
+                            "——掩码与整包校验不一致，按引擎级问题处理")
+                act_mask, slot_mask = self._act_slot_masks(mask)
+                # —— 第一级：act（出不出）——
+                act_logits = self.act_head(h).masked_fill(act_mask == 0, -1e9)
+                act_dist = torch.distributions.Categorical(
+                    logits=F.log_softmax(act_logits, dim=-1))
+                if deterministic:
+                    a = int(torch.argmax(act_logits, dim=-1).item())
+                else:
+                    a = int(act_dist.sample().item())
+                logprob += float(act_dist.log_prob(
+                    torch.tensor([a], device=self.device)).item())
+                if a == ACT_STOP_IDX:
+                    break
+                # —— 第二级：slot（出哪张 / 放技能）——
+                slot_logits = self.slot_head(h) + slot_bias
+                slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
+                slot_dist = torch.distributions.Categorical(
+                    logits=F.log_softmax(slot_logits, dim=-1))
+                if deterministic:
+                    option = int(torch.argmax(slot_logits, dim=-1).item())
+                else:
+                    option = int(slot_dist.sample().item())
+                # 【掩码不变式·2】被置 -1e9 的槽位不可能被选中
+                if option < K_MAX and not bool(mask["slots"][option]):
+                    raise RuntimeError(
+                        f"[mask 不变式] 采样器选中了被掩掉的槽位 slot={option + 1}"
+                        "——掩码与采样不一致，按引擎级问题处理")
+                logprob += float(slot_dist.log_prob(
+                    torch.tensor([option], device=self.device)).item())
+                if option == ABILITY_IDX:
+                    bundle.add_ability()
+                    h = self._sub_update(h, ABILITY_IDX)
+                    continue
+                cells = torch.as_tensor(mask["cells"][option], dtype=torch.float32,
+                                        device=self.device)
+                cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W) + cell_bias
+                cell_logits = cell_logits.masked_fill(cells == 0, -1e9)
+                flat = cell_logits.reshape(1, -1)
+                cell_dist = torch.distributions.Categorical(logits=F.log_softmax(flat, dim=-1))
+                if deterministic:
+                    cell = int(torch.argmax(flat, dim=-1).item())
+                else:
+                    cell = int(cell_dist.sample().item())
+                logprob += float(cell_dist.log_prob(
+                    torch.tensor([cell], device=self.device)).item())
+                x, y = int(cell % GRID_W), int(cell // GRID_W)
+                bundle.add(option + 1, x, y)
+                h = self._sub_update(h, option, x, y)
+        return bundle, logprob, value, h.detach(), masks
+
     def masks_for(self, obs, belief_token, plan_token, bundle, get_mask):
         """为给定 bundle 重建 rollout 时的掩码序列（BC/离线监督用，不采样）。
 
@@ -649,6 +825,7 @@ class FollowerPolicy(nn.Module):
         **一次性并发发出**再统一回收（避免 worker 逐个串行计算 legal_cells 拖垮并行度）。
         签名：get_masks_batch(list_of_partials) -> list_of_masks（顺序对应）。
         """
+        self._require_shared_head("act_parallel")
         N = len(obs_list)
         with torch.no_grad():
             fused, enc = self._encode_batch_parts(obs_list, belief_list, plan_list)   # (N,hidden)
@@ -775,6 +952,7 @@ class FollowerPolicy(nn.Module):
         计算完全相等（数值/梯度方向一致），只是把 CNN 编码与每个 decoder 步批量化。
         返回 (logprobs (B,), values (B,1), entropies (B,))。
         """
+        self._require_shared_head("evaluate_batch")
         B = len(obs_list)
         fused, enc = self._encode_batch_parts(obs_list, belief_list, plan_list)   # (B,hidden)
         h_rows = []
@@ -871,12 +1049,84 @@ class FollowerPolicy(nn.Module):
             h = self.gru_cell(enc, hidden.detach())
             return float(self._value_from(enc, h, fused).item())
 
+    def _evaluate_decoupled(self, obs, belief_token, plan_token, bundle, masks, hidden=None):
+        """★ 独立 act 头版可微重放（预注册 §7；**与 `evaluate()` 分离实现** ⇒ 旧路径零改动）。
+
+        损失形态（预注册 §7.2 写死）：
+          - **stop 帧**（空 bundle）：`lp = log p₂(STOP)`（1 次抽样）
+          - **play 帧**：`lp = log p₂(ACT) + log p₅(槽|ACT) + log p(cell|槽) + log p₂(终止步 STOP)`
+
+        ⚠️ **与共享头口径不可直接比 NLL**：`p₂(STOP)` 是 `p₆(STOP)` 的**边缘** ⇒ stop 帧新 NLL
+        **恒 ≤ 旧**（构造性），play 帧多一项 `-log p₂(ACT) ≥ 0` ⇒ **恒更差**。
+        可比口径 = **嵌入 6 类分布** `p₆'(i)=p₂(ACT)·p₅(i)`、`p₆'(STOP)=p₂(STOP)`
+        （此时 play 帧 `lp` 与解耦和**逐值相等**，证明见预注册 §7.3）⇒ 报告须用该口径算 NLL/top1。
+        """
+        fused, enc = self._encode_parts(obs, belief_token, plan_token)
+        if hidden is None:
+            hidden = torch.zeros(1, self.hidden_dim, device=self.device)
+        h = self.gru_cell(enc, hidden.detach())
+        value = self._value_from(enc, h, fused)
+
+        logprob = 0.0
+        entropy = 0.0
+        slot_bias, cell_bias = self._plan_biases(plan_token)
+        for i, sa in enumerate(bundle.sub_actions):
+            mask = masks[i]
+            act_mask, slot_mask = self._act_slot_masks(mask)
+            # —— 第一级：act（出不出）——本帧人类出牌 ⇒ 标签恒为 ACT
+            act_logits = self.act_head(h).masked_fill(act_mask == 0, -1e9)
+            act_dist = torch.distributions.Categorical(logits=F.log_softmax(act_logits, dim=-1))
+            logprob = logprob + act_dist.log_prob(
+                torch.tensor([ACT_PLAY_IDX], device=self.device))
+            entropy = entropy + act_dist.entropy()
+            # —— 第二级：slot（出哪张 / 放技能）——
+            slot_logits = self.slot_head(h) + slot_bias
+            slot_logits = slot_logits.masked_fill(slot_mask == 0, -1e9)
+            slot_dist = torch.distributions.Categorical(logits=F.log_softmax(slot_logits, dim=-1))
+            entropy = entropy + slot_dist.entropy()
+
+            if sa.kind == "ability":
+                logprob = logprob + slot_dist.log_prob(
+                    torch.tensor([ABILITY_IDX], device=self.device))
+                h = self._sub_update(h, ABILITY_IDX)
+                continue
+
+            option = sa.slot - 1
+            logprob = logprob + slot_dist.log_prob(
+                torch.tensor([option], device=self.device))
+            cells = torch.as_tensor(mask["cells"][option], dtype=torch.float32, device=self.device)
+            cell_logits = self.cell_head(h).view(1, GRID_H, GRID_W) + cell_bias
+            cell_logits = cell_logits.masked_fill(cells == 0, -1e9)
+            flat = cell_logits.reshape(1, -1)
+            cell_dist = torch.distributions.Categorical(logits=F.log_softmax(flat, dim=-1))
+            entropy = entropy + cell_dist.entropy()
+            cell_idx = sa.y * GRID_W + sa.x
+            logprob = logprob + cell_dist.log_prob(
+                torch.tensor([cell_idx], device=self.device))
+            h = self._sub_update(h, option, sa.x, sa.y)
+
+        # —— 终止步：act 头选 STOP（对应共享头口径里的「终止 STOP 抽样」）——
+        mask = masks[len(bundle.sub_actions)] if len(masks) > len(bundle.sub_actions) else {
+            "slots": np.ones(K_MAX, dtype=bool), "cells": np.ones((K_MAX, GRID_H, GRID_W), dtype=bool),
+            "ability_legal": False,
+        }
+        act_mask, _slot_mask = self._act_slot_masks(mask)
+        act_logits = self.act_head(h).masked_fill(act_mask == 0, -1e9)
+        act_dist = torch.distributions.Categorical(logits=F.log_softmax(act_logits, dim=-1))
+        entropy = entropy + act_dist.entropy()
+        logprob = logprob + act_dist.log_prob(
+            torch.tensor([ACT_STOP_IDX], device=self.device))
+        return logprob, value, h, entropy
+
     def evaluate(self, obs, belief_token, plan_token, bundle, masks, hidden=None):
         """可微重放给定 bundle（使用 rollout 时记录的掩码/隐状态）。
 
         返回 (logprob, value, hidden, entropy)：
         - entropy 为所有 decoder 步分布熵之和（真实熵，非 -lp，P0-2）。
         """
+        if self.decoupled_act:
+            # ★ 预注册 §7：拆头版走**独立实现**（旧路径一行未改）
+            return self._evaluate_decoupled(obs, belief_token, plan_token, bundle, masks, hidden)
         fused, enc = self._encode_parts(obs, belief_token, plan_token)
         if hidden is None:
             hidden = torch.zeros(1, self.hidden_dim, device=self.device)

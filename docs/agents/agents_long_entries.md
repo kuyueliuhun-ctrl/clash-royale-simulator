@@ -717,3 +717,17 @@ C21 新行（735 字节）：
 正文全文 → [`docs/fl_il_il2_prereg_2026-09-22.md`](../../../docs/fl_il_il2_prereg_2026-09-22.md) §6、台账
 [`ledger.md`](ledger.md) **C23**。一手读数 = `runs/il_readout_gateR337actR00/stats.json`（`runs/` 被 gitignore
 ⇒ 已另存一份入库：`docs/fl_il_2026-09-21/gate_compose_R337gate_R00act_stats.json`）。
+
+## 28. C24 独立 act 头（2026-09-22；AGENTS 行逐字 + 判读全文）
+
+`AGENTS.md` **行内版逐字**（**压前 922 B → 压后 795 B**；本节保留压前全文，"压缩"只体现在行内指针化）：
+
+```
+| **★ 独立 act 头：离线双指标双向改善、闭环未破坏；P4① FAIL 归因 = 配对池选错**（C24） | 拆头后 stop/play 两侧 NLL **都不可与共享头直接比**（构造性）⇒ 必须用**嵌入 6 类口径** `p₆'=p₂(ACT)·p₅`（play 帧 `lp` 与解耦**逐值相等**，可执行断言 `max|Δ|=6e-07`）。实现：`act_head(2)` + `slot_head(5)`，新增 **`SUB_SPACE_DIM`** 使 `sub_emb`/`enc_fc` **不变**；旧路径走分离实现 ⇒ **F0 `29/29 逐位相同`**；回归 **15/15**。同池同 seed（R00 池）：**Δact-AUC +0.0224 / ΔNLL −0.0170**、帧/局 331.6；**出牌/局 33.90 ⇒ P4① FAIL**，但 `stop_when_playable` **两臂均 0.0000**、`playable_rate` **0.1022 vs 0.1037** ⇒ **池里无 save 帧、该检验无效**（**实施错误**，非「诊断不成立」）。｜ [§7](docs/fl_il_il2_prereg_2026-09-22.md)；**C24** ｜ 全文 → 分册 **§28** |
+```
+
+**一手证据**（本节不重复读数，见三处）：
+- 判据与全部口径 → [`docs/fl_il_il2_prereg_2026-09-22.md`](../../../docs/fl_il_il2_prereg_2026-09-22.md) **§7**（7.0–7.12）；
+- 台账全文 → [`ledger.md`](ledger.md) **C24**；
+- 读数 → `docs/fl_il_2026-09-21/holdout_mixR00da.json`、`readout_mixR00da_stats.json`；
+  回归 → `scripts/selftest_decoupled_act.py`（**15/15**，含 P3 嵌入口径等价断言）。

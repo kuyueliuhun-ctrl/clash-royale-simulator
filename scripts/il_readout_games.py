@@ -100,7 +100,11 @@ def build_policy(ckpt, device, torch, label):
                          plan_dim=int(meta["plan_dim"]), belief_dim=int(meta["belief_dim"]),
                          value_bypass=bool(meta.get("value_bypass", False)),
                          value_independent=bool(meta.get("value_independent", False)),
-                         intent_options=bool(meta.get("intent_options", False)))
+                         intent_options=bool(meta.get("intent_options", False)),
+                         #: ★ 2026-09-22 独立 act 头（预注册 §7）：**必须读**，
+                         #: 否则给 5 维 `slot_head` 的 ckpt 建 6 维头 ⇒ 形状不匹配 ⇒
+                         #: `load_state_dict(strict=False)` **静默随机**（实测过的坑，见 §7.7）
+                         decoupled_act=bool(meta.get("decoupled_act", False)))
     miss, unexp = pol.load_state_dict(sd, strict=False)
     if miss or unexp:
         print(f"[warn] {label} 载入 missing={len(miss)} unexpected={len(unexp)}", flush=True)

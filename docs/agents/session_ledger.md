@@ -67,6 +67,9 @@
 | 2026-09-22 | A | `docs/fl_il_il2_prereg_2026-09-22.md` | 增 **§6**（组合臂口径封口：6.1 恒等式证伪 / 6.2 封口 6 条 / 6.3 K1–K6 / 6.4 分支 / 6.5 不变量 / 6.7 结果 / 6.8 第三分支失效登记） | 判据**跑前写死**（R3）；结果：**K1 FAIL**（34.70 > 28.5）⇒ 按 6.4 关闭组合臂路线 |
 | 2026-09-22 | A | `docs/agents/ledger.md` | 增 **C23** 条目；头 `C1–C22` → `C1–C23` | 与 `AGENTS.md` C23 行同步（R18） |
 | 2026-09-22 | A | ⚠️ **工作区意外（照实登记）** | 跑组合臂时 `--out` 传了 `/mnt/e/...` 给 **Windows python** ⇒ 产物落到**仓外**的 `E:\mnt\e\...` 废路径；我在清理该废树时**发现里面另有别的会话早先留下的重复件** `docs/grid_collision_loss_2026-09-20/stats_replay.json`。**已核实仓内正本完好**（26,039 B、Sep 20 07:42）⇒ **未丢数据**。教训：**Windows python 不认 `/mnt/...`**，runner 类脚本一律用**相对路径** | 全程未 `git add -A` / 未 `git checkout .`；废树已删；组合臂产物已用相对路径重跑落回 `runs/il_readout_gateR337actR00/`（`runs/` 被 gitignore ⇒ 读数另存 `docs/fl_il_2026-09-21/gate_compose_R337gate_R00act_stats.json` 入库） |
+| 2026-09-22 | A | `src/clasher_new/rl/follower.py`、`scripts/il_bc_sweep.py` | **C24 独立 act 头**（预注册 §7）：`act_head(2)` + `slot_head` 出维 6→5；新增 `SUB_SPACE_DIM` 隔离形状破坏面；旧路径走**分离实现**；PPO 批量路径在拆头下显式 `NotImplementedError`；ckpt 元数据加 `decoupled_act` + 不一致告警。**新增** `scripts/selftest_decoupled_act.py` | 回归 **15/15 PASS**（含 P3 嵌入口径 `max\|Δ\|=6e-07`）；**F0 位图门 `29/29 逐位相同`** |
+| 2026-09-22 | A | `scripts/il_eval_holdout.py`、`scripts/il_readout_games.py` | §7.8 判定的**必改评估路径**：`first_option_probs` → `first_option_dist6(...)[STOP]`（嵌入口径）；拆头臂 top1 取嵌入 argmax；`build_policy` 补读 `decoupled_act`（**不加会静默随机**） | 同 ckpt 读数**逐位不变**（`top1 0.40419060493409936` / `nll 5.596222589020527`）⇒ 共享头路径零影响 |
+| 2026-09-22 | A | ⚠️ **自伤事故（照实登记）** | 在 `il_eval_holdout.py` 上做了一次声称「只删尾换行」的编辑，**实际把两行粘成一行** ⇒ `SyntaxError`。**被紧随的回归跑立刻抓到**（两个长跑用 `il_bc_sweep.py`，未受影响），已修复 + 三文件语法检查通过 | 教训：**`edit` 的 old/new 末尾换行必须逐字对齐**，改完**立刻跑语法检查** |
 
 ---
 
