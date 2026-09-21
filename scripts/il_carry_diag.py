@@ -107,13 +107,20 @@ def main(argv=None):
         print(f"  carry 下 ‖h‖：中位 {np.median(hn):.3f}  最小 {hn.min():.3f}  最大 {hn.max():.3f}")
 
     # ---- 独立复算：arm C 录像里 p0 出牌次数与最后一次出牌帧号 ----
-    reps = sorted(glob.glob(os.path.join(args.arm_c, "*.pkl")))
+    #: ⚠️ runner 按 `--block` 逐块落盘，且**后一块的文件是累计的** ⇒ 直接遍历所有文件会**重复计数**。
+    #: 只取「局数最多」的那一个文件（并列时取最大者），并在输出里标明用的是哪个。
+    _all = sorted(glob.glob(os.path.join(args.arm_c, "*.pkl")))
+    reps = []
+    if _all:
+        def _ng(p):
+            with open(p, "rb") as f:
+                return len(pickle.load(f).get("games", []))
+        reps = [max(_all, key=lambda p: (_ng(p), os.path.getsize(p)))]
     if reps:
-        import pickle
         with open(reps[0], "rb") as f:
             r0 = pickle.load(f)
-        print(f"\n[diag] arm C 录像 {len(reps)} 个文件；第一个的类型={type(r0).__name__}"
-              + (f" 键={list(r0)[:8]}" if isinstance(r0, dict) else f" 长度={len(r0)}"))
+        print(f"[diag] arm C 录像（只取累计最全的 1 个文件，避免重复计数）："
+              f"{os.path.basename(reps[0])}（{len(r0.get('games', []))} 局）")
         total_play, total_frames, last_play, games_n = 0, 0, [], 0
         for p in reps:
             with open(p, "rb") as f:

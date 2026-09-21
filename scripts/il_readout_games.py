@@ -122,7 +122,12 @@ def main():
                     help="--decks fl 时的回放 JSONL（Windows 路径，如 E:\\fl_il_data\\replays_part000000.jsonl）")
     ap.add_argument("--opponent", choices=("self", "main"), default="self")
     ap.add_argument("--main-ckpt", default=None, help="--opponent main 时我方 ckpt")
-    ap.add_argument("--hidden", choices=("carry", "none"), default="carry")
+    ap.add_argument("--hidden", choices=("carry", "none"), default="carry",
+                    help="p0 的隐状态口径；none = 逐帧（= BC 训练口径），carry = 生产约定")
+    ap.add_argument("--opp-hidden", choices=("same", "carry", "none"), default="same",
+                    help="p1（FollowerOpponent）的隐状态口径；same = 跟随 --hidden。默认 same："
+                         "FollowerOpponent 内部恒 carry，而逐帧 BC 的 ckpt 在 carry 下会塌成 STOP"
+                         "（判读 §16）⇒ 此前 p1 每局只出 1-2 张、胜率虚高（口径不对称 bug）")
     ap.add_argument("--sample", action="store_true", help="随机采样而非 argmax（默认 argmax）")
     ap.add_argument("--json", default=None)
     a = ap.parse_args()
@@ -133,6 +138,16 @@ def main():
     from rl.belief_planner import BeliefPlanner
     from rl import train_solo as ts
     from rl.train_follower import FollowerOpponent
+
+    class _FrameWiseOpponent(FollowerOpponent):
+        """**逐帧口径**的对手包装：`FollowerOpponent` 内部恒把 `self.hidden` 带下去（生产约定），
+        而逐帧 BC 的 ckpt 在该口径下会塌成 STOP（判读 §16）⇒ 每次决策前清空隐状态。
+        ⚠️ 必须在**子类**里覆盖 `__call__`：实例上挂 `__call__` 无效（特殊方法按**类型**查找）。
+        """
+
+        def __call__(self, obs):
+            self.hidden = None
+            return super().__call__(obs)
     from rl.run_league import LeagueGameRecorder, _bundle_cards, timeout_winner
     from rl.replay import save_league_replays
     from rl.overtime import overtime_open
@@ -159,8 +174,10 @@ def main():
             raise SystemExit("FL JSONL 里没有可用的人类卡组对")
         print(f"[runner] FL 卡组对：{len(deck_pairs)} 套（过滤口径同 fl_il_to_bc）", flush=True)
 
+    #: p1 的有效口径：`same` 跟随 p0（默认）——修掉「p0 逐帧 / p1 恒 carry」的口径不对称
+    opp_hidden = a.hidden if a.opp_hidden == "same" else a.opp_hidden
     print(f"[runner] ckpt={a.ckpt} device={dev} 局数={a.games} 每块={a.block} "
-          f"decks={a.decks} opponent={a.opponent} hidden={a.hidden} "
+          f"decks={a.decks} opponent={a.opponent} hidden={a.hidden} opp_hidden={opp_hidden} "
           f"deterministic={not a.sample}", flush=True)
 
     games, hist = [], []
@@ -181,10 +198,12 @@ def main():
             d0 = d1 = list(ts.DEFAULT_SOLO_DECK)
             tag = None
         env = RLEnv(opponent=None, seed=a.seed + 31 * g, card_level=11, deck0=d0, deck1=d1)
-        env.opponent = FollowerOpponent(
+        _cls = FollowerOpponent if opp_hidden == "carry" else _FrameWiseOpponent
+        env.opponent = _cls(
             opp_pol, env,
             belief=BeliefInference(opp_deck=list(env.deck0), n_particles=128, seed=a.seed + g),
             deterministic=True)
+
         obs, _ = env.reset(seed=a.seed + 2000 + g)
         belief0 = BeliefInference(opp_deck=list(env.deck1), n_particles=128, seed=a.seed + g)
         belief0.reset(env.deck1)
@@ -291,6 +310,7 @@ def main():
     n = cw + cl + cd
     summary = {
         "ckpt": a.ckpt, "decks": a.decks, "opponent": a.opponent, "hidden": a.hidden,
+        "opp_hidden": opp_hidden,
         "games": n, "frames": frames_total, "wins": cw, "losses": cl, "draws": cd,
         "winrate": cw / max(1, n),
         "winrate_se": float(np.sqrt(max(1e-9, (cw / max(1, n)) * (1 - cw / max(1, n)))
