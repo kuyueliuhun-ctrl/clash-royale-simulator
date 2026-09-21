@@ -46,7 +46,7 @@ KING_COL = 1.4
 R_FB = _spell_radius_m("Fireball", Card("Fireball"))
 
 FAILS = []
-N_ASSERT = [16]
+N_ASSERT = [23]
 
 
 def check(name, cond, detail=""):
@@ -187,6 +187,34 @@ def main():
     bs6.deploy_card(1, "Log", Position(8.5, 29.0))
     bs6.step(0.05)
     check("⑤c 真实部队 + 效果载体同在 ⇒ 合法", king_cell_legal(bs6, 0, "Fireball"))
+
+    # ⑦ 【2026-09-22 用户指令】`_spell_deals_damage` 与引擎同源 + 滚动类豁免
+    #    背景：旧谓词只读 data["projectileData"]["damage"]|data["damage"]，
+    #    漏判 Zap/Poison/Earthquake/Tornado/Vines/Freeze/RoyalDelivery/Log/BarbLog
+    #    ⇒ 8h 空砸 + 9h 砸塔 EV 闸门对它们**根本没开**。
+    from rl.action_mask import _spell_deals_damage, _spell_requires_placement_target
+    bs7 = make()
+    check("⑦ 谓词修复：Zap/Poison/Vines/Tornado/Earthquake 现在算伤害法术",
+          all(_spell_deals_damage(c) for c in ("Zap", "Poison", "Vines", "Tornado", "Earthquake")))
+    check("⑦ Heal/Rage/Clone/Mirror **不**算敌方伤害（友方语义，防误伤）",
+          not any(_spell_deals_damage(c) for c in ("Heal", "Rage", "Clone", "Mirror")))
+    check("⑦ 滚动类（Log/BarbLog）算伤害但**不适用落点几何闸门**",
+          _spell_deals_damage("Log") and _spell_deals_damage("BarbLog")
+          and not _spell_requires_placement_target("Log")
+          and not _spell_requires_placement_target("BarbLog"))
+    zap_n = int(legal_cells(bs7, 0, "Zap").sum())
+    check("⑦ Zap 在「只有塔」的场上被闸门收起（修前 576 全合法）", zap_n == 0, f"legal={zap_n}")
+    #: ⚠️ 别把单位放在**王塔矩形内**（王塔 4×4、中心 (9,29) ⇒ x∈[7,11], y∈[27,31]）——
+    #: `deploy_card` 会静默失败（第一版就踩了：Zap 仍 0 合法，看着像闸门坏了）
+    bs7b = make(units=[("Knight", (8.5, 22.0))])
+    check("⑦ Zap 对着部队仍然合法（不误伤主用途）", int(legal_cells(bs7b, 0, "Zap").sum()) > 0,
+          f"legal={int(legal_cells(bs7b, 0, 'Zap').sum())}")
+    #: Log 的落点是"部署点"（伤害在滚动走廊）⇒ 自己半场空放**必须仍然合法**
+    #: （人类 99.4% 的 Log 就落在己方半场；这条防的是"修谓词把过牌一起修死"）
+    log_own = int(legal_cells(bs7, 0, "Log")[:16, :].sum())
+    check("⑦ Log 己方半场空放仍合法（过牌行为不被误伤）", log_own > 0, f"own-half legal={log_own}")
+    heal_n = int(legal_cells(bs7, 0, "Heal").sum())
+    check("⑦ Heal（友方法术）仍可放（不被当伤害法术禁掉）", heal_n > 0, f"legal={heal_n}")
 
     # ⑥ 白盒：修复把「王塔」纳入判定这件事本身（防止有人回退成只判公主塔）
     calls = {"n": 0}

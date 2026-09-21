@@ -193,3 +193,53 @@ docstring 的依据是「王塔在公主塔后面，砸到公主塔必含王塔�
    建议（未做）给 `_mask_diff_snapshot.py` 的 `build_states()` 加一个「敌方 Log 滚动弹在场」的状态。
 6. `_mask_diff_snapshot.py::build_states()` 的 **⑥ `late_low_tower` 是死代码**：那句 `s = make(); ...princess hp=150`
    构造的 `s` 被丢弃，实际 append 的是 `make(time=125.0)`（公主塔满血）⇒ 该状态**测不到"低血公主塔"口径**。
+
+## §8 第二批修复（2026-09-22，用户第二条指令）：`_spell_deals_damage` 与引擎同源 + 滚动类豁免
+
+### 8.1 用户口径（原话要点）
+
+> 「关于 `_spell_deals_damage`，确实应该修。关于 Log/BarbLog，这两张卡较特殊：这两张卡的落点和普通部队相同，
+> 但 **Log 会滚到敌方塔下打出伤害**，而 **BarbLog 在滚动结束后会释放出一只野蛮人**，而这只野蛮人可以摸到塔并打出伤害。」
+
+### 8.2 改法
+
+| 项 | 内容 |
+|---|---|
+| **F4** | `_spell_deals_damage` 改为**四路取或**（与引擎同源）：`Card.projectile_data.damage` / `data.damage` / `spells[card]["damage"]` / `spells[card]["buff_data"]["damage_per_second"]`；并加 `_num()` 处理「按等级列表」型字段 |
+| **F5** | 显式排除**友方语义**：`_NON_ENEMY_DAMAGE_SPELLS = {Heal, Rage, Clone, GlobalClone, Mirror}`（Heal 的 `pd.damage = 110` 是**治疗量**，若算伤害会把回血法术禁掉） |
+| **F6** | 新增 `_ROLLING_SPELLS = {Log, BarbLog}` 与谓词 `_spell_requires_placement_target()`（= 伤害型 ∧ 非滚动）；8h 空砸 + 9h 砸塔 EV 闸门**只对"伤害在落点结算"的法术生效** ⇒ Log/BarbLog 的落点几何闸门**关闭**（用户口径） |
+
+### 8.3 引擎事实（我实测，与用户口径的差异照实记）
+
+| 项 | 读数 | 说明 |
+|---|---|---|
+| `Log` 部署 | **敌方半场也允许**（`deploy_card` 返回 True，`legal_cells` = **576/576**） | 我们引擎把 Log 当**普通法术**（任意落点）；用户描述的「落点和普通部队相同」**在本仓不成立** ⇒ 记为**引擎/游戏差异待拍板**（真实 CR 里 Log 的落点规则以用户口径为准） |
+| `BarbLog` 部署 | **两侧都 False**（引擎拒收） | 已知问题（台账 O9 / F2「BarbLog 在 `FOUR_DECK_SET` ⇒ solo 实时暴露」）；本次未动，跑转换时仍会打 `P1-20: validate 通过但引擎拒绝 BarbLog` 警告 |
+| `Log` 塔伤 | **290**（`_spell_tower_damage('Log')` 读 **0**） | 掩码的塔伤缓存对 Log 漏读 ⇒ 「无标定 ⇒ 放行」后门仍在（F4 只修谓词，未修缓存） |
+| `Lightning` 塔伤 | **686.4**（四个字段都读不到 ⇒ 谓词仍 False） | 谓词修复**仍未覆盖** Lightning ⇒ 记为残余缺口 |
+
+### 8.4 门禁与影响（可复算）
+
+* **法术全卡位图 sweep**（新仪器口径：24 张法术 × 8 状态 × 双方 = **384 张**，`docs/mask_snapshots/spell_{before,after}.npz`）：
+  **96/384 张变化，方向全部为"只收紧"（放松 = 0）**；涉及 **Zap / Poison / Earthquake / Tornado / Vines / RoyalDelivery**
+  —— 在「场上只有塔」的状态里，它们的合法格从 **576（全图）→ 0**（8h 空砸 + 9h EV 闸门终于生效）。
+* ⚠️ **R13 的 128 张语料对这处改动是盲的**：其手牌只有 `Arrows`/`Fireball` 两张法术 ⇒ `before→after` **逐位全等**。
+  这是**语料的覆盖缺口**（第二次记录），所以才补了上面那份全卡 sweep。
+* **回归测试**：`scripts/selftest_spell_kingtower.py` 扩到 **23 断言全 PASS**（新增：谓词覆盖 Zap/Poison/Vines/Tornado/Earthquake；
+  Heal/Rage/Clone/Mirror 不算伤害；滚动类豁免；Zap 在只有塔的场上被收起、对着部队仍合法；
+  **Log 己方半场空放仍合法** = 过牌行为不被误伤；Heal 仍可放）。
+* **数据管线影响**（同 200 局、同 worker 数，新掩码 vs 旧掩码）：
+
+  | 指标 | 旧 | 新 | Δ |
+  |---|---|---|---|
+  | `frames` | 66,458 | 66,064 | −394（跨进程漂移量级） |
+  | `team_single` | 4,680 | 4,659 | −21 |
+  | **`mask_reject`** | 183 | **219** | **+36** |
+  | **`labels`** | 4,497 | **4,440** | **−57（−1.27%）** |
+  | `errors` | 0 | 0 | 0 |
+
+  ⇒ 收紧的代价是 **1.27% 的人类标签**（主要是"只罩塔/打空"的 Zap/Poison 之类），**不构成数据事故**；
+  但**旧的 IL 数据集不重跑**（重跑会换掉 1.27% 标签，属另一次语义变更）。
+* **部署行为零变化**：三臂 10 局 **逐值相同**（出牌 371 / 328 / 305；帧/局 359.4 / 330.1 / 312.5；胜率 0.70 / 0.50 / 0.20）
+  —— 因为默认卡组里受影响的法术只有 `Log`，而 Log 被滚动类豁免。这是**单变量**的最好证据：改的是谓词，不是策略。
+

@@ -86,12 +86,68 @@ def _spell_radius_m(card_name: str, card_info: "Card" = None) -> float:
     return (float(raw) if raw else 0.0) / 1000.0
 
 
+#: ★ 2026-09-22（用户指令：「_spell_deals_damage 确实应该修」）：本函数原来只读
+#: `data["projectileData"]["damage"]|data["damage"]`，而引擎里大量法术的伤害写在别处
+#: （`card_utils.Card.projectile_data`、`card_utils.spells` 行、`buff_data.damage_per_second`），
+#: 实测漏判：**Zap（row 75）、Poison（DOT 57）、Earthquake（DOT 39）、Tornado（DOT 106）、
+#: Vines（pd 153）、Freeze（row 72）、RoyalDelivery（row 列表）、Log/BarbLog（滚动/释放单位）**。
+#: ⇒ 那 8h 空砸闸门与 9h 砸塔 EV 闸门对它们**根本没开**（不是"放行"，是"没判"）。
+#: 现在改为与引擎同源：`ProjectileData.damage` / `data.damage` / `spells[card].damage` /
+#: `spells[card].buff_data.damage_per_second` 四路取或。
+#:
+#: ⚠️ 两处**必须显式排除**（否则会误伤，实测）：
+#: ① `_NON_ENEMY_DAMAGE_SPELLS`：Heal / Rage / Clone / Mirror 的 `damage` 字段是**友方/增益**
+#:    语义（Heal 的 pd.damage=110 是治疗量）⇒ 若算作"伤害"，回血法术会被空砸闸门禁掉；
+#: ② `_ROLLING_SPELLS`：**Log / BarbLog 的伤害不在落点结算**（Log 沿 +y 滚 10.1 格走廊、
+#:    BarbLog 滚 4.5 格后释放野蛮人由它打伤害）⇒ 用户 2026-09-22 明确：「这两张卡的落点
+#:    和普通部队相同，log 会滚到敌方塔下打出伤害，barblog 滚动结束后释放野蛮人摸塔」。
+#:    落点几何（"溅射内必须有敌人"）对它们**不成立**，所以闸门用谓词
+#:    `_spell_requires_placement_target()`（= 伤害型 ∧ 非滚动）而不是 `_spell_deals_damage`。
+_NON_ENEMY_DAMAGE_SPELLS = frozenset({"Heal", "Rage", "Clone", "GlobalClone", "Mirror"})
+_ROLLING_SPELLS = frozenset({"Log", "BarbLog"})
+
+
+def _num(x) -> float:
+    """把引擎字段转成 float（`spells` 行里 damage 可能是标量或按等级列表）。"""
+    if isinstance(x, (list, tuple)):
+        vals = [v for v in (_num(v) for v in x) if v is not None]
+        return max(vals) if vals else 0.0
+    try:
+        return float(x or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _spell_deals_damage(card_name: str, card_info: "Card" = None) -> bool:
-    """是否输出伤害的法术。伤害型法术受空砸闸门约束；增益/位移/召唤类法术放行。"""
-    data = getattr(card_info if card_info is not None else Card(card_name), "data", None) or {}
-    pd = data.get("projectileData") or {}
-    return (float(pd.get("damage") or 0.0) > 0.0
-            or float(data.get("damage") or 0.0) > 0.0)
+    """是否输出**敌方**伤害的法术（引擎同源口径，见上方长注释）。"""
+    if card_name in _NON_ENEMY_DAMAGE_SPELLS:
+        return False
+    info = card_info if card_info is not None else Card(card_name)
+    pd = getattr(info, "projectile_data", None)
+    if pd is not None and _num(getattr(pd, "damage", 0)) > 0.0:
+        return True
+    data = getattr(info, "data", None) or {}
+    if _num(data.get("damage")) > 0.0:
+        return True
+    if card_name in _ROLLING_SPELLS:
+        #: 滚动/释放单位类：伤害在飞行/落地后结算（引擎实测 Log 290、BarbLog 由野蛮人打）
+        return True
+    from card_utils import spells
+    row = spells.get(card_name) or {}
+    if _num(row.get("damage")) > 0.0:
+        return True
+    if _num((row.get("buff_data") or {}).get("damage_per_second")) > 0.0:
+        return True
+    return False
+
+
+def _spell_requires_placement_target(card_name: str, card_info: "Card" = None) -> bool:
+    """落点几何闸门（8h 空砸 + 9h 砸塔 EV）是否适用于该卡。
+
+    只有「伤害在**落点**结算」的法术才适用；滚动类（Log/BarbLog）不适用 —— 它们的落点是
+    部署点、伤害在滚动走廊/释放单位上（用户 2026-09-22 口径）。
+    """
+    return _spell_deals_damage(card_name, card_info) and card_name not in _ROLLING_SPELLS
 
 
 #: 引擎里"不是可被打的目标"的实体类型（法术/弹道/区域效果的**载体**）：
@@ -199,6 +255,9 @@ def _spell_tower_ev_illegal(battle, player_id: int, card_name: str, pos: Positio
        （与 belief_planner 的 tower_value 同源；满血塔行为不变）。
     """
     if battle.time >= 120.0:
+        return False
+    if card_name in _ROLLING_SPELLS:
+        #: ★ 滚动类不按落点判 EV（伤害在走廊/释放单位上；落点常在自己半场）
         return False
     if not _spell_deals_damage(card_name, card_info):
         return False
@@ -445,7 +504,7 @@ def _position_legal(battle, player_id: int, card_name: str, pos: Position,
     if card_info.type == "spell":
         if _hits_dead_enemy_tower(battle, player_id, pos):
             return False
-        if _spell_deals_damage(card_name, card_info):
+        if _spell_requires_placement_target(card_name, card_info):
             radius = _spell_radius_m(card_name, card_info)
             if radius > 0.0 and not _spell_has_enemy_target(battle, player_id, pos, radius):
                 return False
@@ -505,7 +564,7 @@ def legal_cells(battle, player_id: int, card_name: str) -> np.ndarray:
     eff_info = Card(eff)
     is_spell = eff_info.type == "spell"
     if is_spell:
-        deals_dmg = _spell_deals_damage(eff, eff_info)
+        deals_dmg = _spell_requires_placement_target(eff, eff_info)
         radius = _spell_radius_m(eff, eff_info) if deals_dmg else 0.0
         ev_gate = radius > 0.0 and deals_dmg
         for y in range(GRID_H):

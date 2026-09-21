@@ -685,3 +685,22 @@
 ```
 | **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前 **7 次** Fireball 命中敌方王塔（每次 206 血、7/7 在开局），其余 9 臂 0/90。根因：`_spell_tower_ev_illegal` 的 **`if not hits_princess: return False`** —— 只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行。**不是缺输入**（`king_cell_legal=true`）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体不算目标 ＋ F3 空落点槽禁；位图 **960 格全落唯一允许类别、0 越界**、回归 **16 断言 PASS**、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1 = 打藏在王塔后的 Knight）。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/il_kingtower_cast_census.py`；**C20** |
 ```
+### 26.5 三次修订（F4 谓词同源 + 觉醒行新增，2026-09-22）
+
+C20 行旧版（800 字节）逐字：
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前 **7 次** Fireball 命中敌方王塔（每次 206 血、7/7 在开局），其余 9 臂 0/90。根因：`_spell_tower_ev_illegal` 的 **`if not hits_princess: return False`** —— 只判「罩到公主塔」的落点，中路**只罩王塔** ⇒ 放行。**不是缺输入**（`king_cell_legal=true`）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体不算目标 ＋ F3 空落点槽禁；位图 **960 格全落唯一允许类别、0 越界**、回归 **16 断言 PASS**、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1 = 打藏在王塔后的 Knight）。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)、`scripts/il_kingtower_cast_census.py`；**C20** |
+```
+
+C20 新版（769 字节）：
+
+```
+| **★ 火球砸国王塔 = 掩码闸门漏「只罩王塔」**（C20，**已修**） | `mixR00/025/10` 改前 **7 次** Fireball 命中敌方王塔（每次 206 血、7/7 在开局），其余 9 臂 0/90。根因：`if not hits_princess: return False`（中路**只罩王塔** ⇒ 放行）。**不是缺输入**（`king_cell_legal=true`）。**已修**：F1 王塔纳入 EV 判 ＋ F2 效果载体不算目标 ＋ F3 空落点槽禁 ＋ F4 法术谓词同源（友方/滚动类豁免）；位图 **960 格全落唯一允许类别、0 越界**、回归 **23 断言**、**纯砸王塔 6→0**（R00 2→0 / R10 2→0 / R025 3→1）；F4 **部署行为逐值不变**、人类标签 **−1.27%**。｜ [判读](docs/il_spell_kingtower_gap_2026-09-22.md)；**C20/C21** |
+```
+
+C21 新行（735 字节）：
+
+```
+| **★ 觉醒/进化：引擎有、RL 从未声明（预注册已落）**（C21） | `evolutions.py` **42 张周期表** + `battle.py` 触发 + `player.set_evolution_slots` 都在，但 **`rl/` 对 `evo_slots/evo_plays/hero_slots/evolution_state` 引用数 = 0 ⇒ 本仓对局里觉醒永不触发**；`observe()` 五键**无觉醒字段**；人类回放 `-ev1` **11,293 槽 100% 可映射**（S1① PASS）、`-hero` **4,550 槽覆盖 0%**（另一套机制）；`fl_il_to_bc.py` 解析了 variant 却**从未声明觉醒位** ⇒ 重建按基础卡跑（保真缺口）。预注册 [il_evo_prereg](docs/il_evo_prereg_2026-09-22.md)（S1 保真 → S2 观测（**R6 `--fresh`**）→ S3 RL 声明 → S4 验收/回滚）；**C21** |
+```
