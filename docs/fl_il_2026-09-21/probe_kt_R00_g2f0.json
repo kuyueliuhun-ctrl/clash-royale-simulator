@@ -1,0 +1,360 @@
+{
+ "ckpt": "runs/_fl_il_bc_save/sweep_mixR00/bc_fl_e3_lr0.001.pt",
+ "game": 2,
+ "frames": [
+  0
+ ],
+ "probe": [
+  {
+   "tag": "p0",
+   "game": 2,
+   "p0_step": 0,
+   "t": 0.0,
+   "my_elixir": 5.0,
+   "opp_elixir": 5.0,
+   "hand": [
+    "IceWizard",
+    "Knight",
+    "Tesla",
+    "Fireball",
+    "Log"
+   ],
+   "next_card": "Log",
+   "towers": [
+    {
+     "id": 3,
+     "name": "King_PrincessTowers",
+     "player": 0,
+     "x": 3.5,
+     "y": 6.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 6,
+     "name": "KingTower",
+     "player": 0,
+     "x": 9.0,
+     "y": 3.0,
+     "hp": 4824.0,
+     "alive": true
+    },
+    {
+     "id": 4,
+     "name": "King_PrincessTowers",
+     "player": 0,
+     "x": 14.5,
+     "y": 6.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 1,
+     "name": "King_PrincessTowers",
+     "player": 1,
+     "x": 3.5,
+     "y": 25.5,
+     "hp": 3052.0,
+     "alive": true
+    },
+    {
+     "id": 5,
+     "name": "KingTower",
+     "player": 1,
+     "x": 9.0,
+     "y": 29.0,
+     "hp": 4824.0,
+     "alive": true
+    },
+    {
+     "id": 2,
+     "name": "King_PrincessTowers",
+     "player": 1,
+     "x": 14.5,
+     "y": 25.5,
+     "hp": 3052.0,
+     "alive": true
+    }
+   ],
+   "enemy_units": [],
+   "plan": {
+    "focus_region": "own_center",
+    "region_center": [
+     9,
+     20
+    ],
+    "suggested_slot": 1,
+    "hold_mask": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "plan_dim": 58
+   },
+   "plan_bias": {
+    "slot_bias": [
+     0.8,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "cell_bias_argmax_cell": [
+     9,
+     18
+    ],
+    "cell_bias_pos_flat": 13
+   },
+   "slot": {
+    "argmax_option": 3,
+    "is_stop": false,
+    "mask_slots": [
+     true,
+     true,
+     true,
+     true
+    ],
+    "probs": [
+     0.2562,
+     0.1218,
+     0.197,
+     0.4249,
+     0.0,
+     0.0
+    ],
+    "raw_logits": [
+     0.068,
+     -0.676,
+     -0.195,
+     0.574,
+     -13.184,
+     -21.349
+    ]
+   },
+   "cell": {
+    "slot_option": 3,
+    "n_legal_cells": 44,
+    "argmax_with_bias": {
+     "cell": [
+      9,
+      25
+     ],
+     "flat": 459,
+     "legal": true,
+     "logit_with_bias": -3.8567,
+     "logit_raw": -3.8567,
+     "world": [
+      9.5,
+      25.5
+     ],
+     "cell_bias": 0.0,
+     "dist_to_enemy_king": 3.54
+    },
+    "argmax_raw_no_bias": {
+     "cell": [
+      9,
+      25
+     ],
+     "flat": 459,
+     "legal": true,
+     "logit_with_bias": -3.8567,
+     "logit_raw": -3.8567,
+     "world": [
+      9.5,
+      25.5
+     ],
+     "cell_bias": 0.0,
+     "dist_to_enemy_king": 3.54
+    },
+    "top8_raw_logits": [
+     {
+      "cell": [
+       9,
+       0
+      ],
+      "flat": 9,
+      "legal": false,
+      "logit_with_bias": 1.4896,
+      "logit_raw": 1.4896,
+      "world": [
+       9.5,
+       0.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 28.5
+     },
+     {
+      "cell": [
+       8,
+       0
+      ],
+      "flat": 8,
+      "legal": false,
+      "logit_with_bias": 0.7924,
+      "logit_raw": 0.7924,
+      "world": [
+       8.5,
+       0.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 28.5
+     },
+     {
+      "cell": [
+       17,
+       1
+      ],
+      "flat": 35,
+      "legal": false,
+      "logit_with_bias": -0.0353,
+      "logit_raw": -0.0353,
+      "world": [
+       17.5,
+       1.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 28.78
+     },
+     {
+      "cell": [
+       14,
+       14
+      ],
+      "flat": 266,
+      "legal": false,
+      "logit_with_bias": -0.0961,
+      "logit_raw": -0.0961,
+      "world": [
+       14.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 15.51
+     },
+     {
+      "cell": [
+       9,
+       9
+      ],
+      "flat": 171,
+      "legal": false,
+      "logit_with_bias": -0.249,
+      "logit_raw": -0.249,
+      "world": [
+       9.5,
+       9.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 19.51
+     },
+     {
+      "cell": [
+       15,
+       14
+      ],
+      "flat": 267,
+      "legal": false,
+      "logit_with_bias": -0.3275,
+      "logit_raw": -0.3275,
+      "world": [
+       15.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 15.89
+     },
+     {
+      "cell": [
+       3,
+       14
+      ],
+      "flat": 255,
+      "legal": false,
+      "logit_with_bias": -0.3938,
+      "logit_raw": -0.3938,
+      "world": [
+       3.5,
+       14.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 15.51
+     },
+     {
+      "cell": [
+       14,
+       25
+      ],
+      "flat": 464,
+      "legal": false,
+      "logit_with_bias": -0.528,
+      "logit_raw": -0.528,
+      "world": [
+       14.5,
+       25.5
+      ],
+      "cell_bias": 0.0,
+      "dist_to_enemy_king": 6.52
+     }
+    ],
+    "legal_flat_minmax": [
+     457,
+     569
+    ],
+    "enemy_king_world": [
+     9.0,
+     29.0
+    ],
+    "gate": {
+     "card": "Fireball",
+     "radius": 2.5,
+     "chosen_cell_detail": {
+      "cell": [
+       9,
+       25
+      ],
+      "world": [
+       9.5,
+       25.5
+      ],
+      "d_king": 3.54,
+      "d_princess_min": 5.0,
+      "splash_princess": false,
+      "splash_king": true,
+      "splash_unit": false,
+      "has_enemy_target": true,
+      "ev_gate_illegal": false,
+      "legal": true
+     },
+     "princess_cell_detail": {
+      "cell": [
+       9,
+       0
+      ],
+      "world": [
+       9.5,
+       0.5
+      ],
+      "d_king": 28.5,
+      "d_princess_min": 25.5,
+      "splash_princess": false,
+      "splash_king": false,
+      "splash_unit": false,
+      "has_enemy_target": false,
+      "ev_gate_illegal": false,
+      "legal": false
+     },
+     "legal_set_categories": {
+      "princess": 4,
+      "king_only": 40,
+      "unit": 0,
+      "none": 0
+     }
+    },
+    "king_cell_legal": true,
+    "king_cell_flat": 531
+   }
+  }
+ ]
+}

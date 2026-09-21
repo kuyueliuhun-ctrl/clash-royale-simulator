@@ -1,0 +1,102 @@
+{
+  "ckpt": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc_save\\sweep_mixR00\\bc_fl_e3_lr0.001.pt",
+  "decks": "solo",
+  "opponent": "self",
+  "hidden": "none",
+  "opp_hidden": "none",
+  "games": 3,
+  "frames": 1090,
+  "wins": 1,
+  "losses": 2,
+  "draws": 0,
+  "winrate": 0.3333333333333333,
+  "winrate_se": 0.2721655269759087,
+  "mean_reward_per_frame": -0.03160554122060109,
+  "frames_per_game": 363.3333333333333,
+  "empty_bundle_rate": 0.8963302752293578,
+  "plays_per_frame": 0.10366972477064221,
+  "playable_frame_rate": 0.10366972477064221,
+  "playable_frames": 113,
+  "forced_stop_frames": 977,
+  "stop_when_playable": 0,
+  "stop_when_playable_rate": 0.0,
+  "p0_plays": 113,
+  "p0_top_cards": [
+    [
+      "Skeletons",
+      23
+    ],
+    [
+      "Log",
+      23
+    ],
+    [
+      "Archer",
+      22
+    ],
+    [
+      "IceWizard",
+      22
+    ],
+    [
+      "Knight",
+      21
+    ],
+    [
+      "Tesla",
+      1
+    ],
+    [
+      "Fireball",
+      1
+    ]
+  ],
+  "p1_top_cards": [
+    [
+      "Skeletons",
+      23
+    ],
+    [
+      "Log",
+      23
+    ],
+    [
+      "Knight",
+      22
+    ],
+    [
+      "IceWizard",
+      22
+    ],
+    [
+      "Archer",
+      21
+    ],
+    [
+      "Fireball",
+      2
+    ]
+  ],
+  "seconds": 46.9,
+  "history": [
+    {
+      "step": 1090,
+      "wins": 1,
+      "losses": 2,
+      "draws": 0,
+      "games": 3,
+      "cum_wins": 1,
+      "cum_losses": 2,
+      "cum_draws": 0,
+      "cum_games": 3,
+      "winrate": 0.3333333333333333,
+      "winrate_se": 0.2721655269759087,
+      "mean_reward": -0.03160554122060109,
+      "block_mean_reward": -0.03160554122060109,
+      "empty_bundle_rate": 0.8963302752293578,
+      "plays_per_frame": 0.10366972477064221,
+      "playable_frame_rate": 0.10366972477064221,
+      "stop_when_playable_rate": 0.0
+    }
+  ]
+}
