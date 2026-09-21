@@ -1,0 +1,68 @@
+=== [05:47:31] S1 基线：--evo-slots 关（旧路径） → docs/fl_il_2026-09-21/evo200_off.json ===
+[samples] 可转局数 = 200（过滤后）
+[samples] 留出（tag 哈希 %5==0）= 42 / 200
+  [25/200] 25s  (1.01 s/局)  labels_kept=509
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,5 —— 掩码缺口
+  warnings.warn(
+  [50/200] 45s  (0.90 s/局)  labels_kept=1022
+  [75/200] 66s  (0.87 s/局)  labels_kept=1564
+  [100/200] 88s  (0.88 s/局)  labels_kept=2149
+  [125/200] 107s  (0.85 s/局)  labels_kept=2693
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,4 —— 掩码缺口
+  warnings.warn(
+  [150/200] 130s  (0.87 s/局)  labels_kept=3231
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,4 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,20 —— 掩码缺口
+  warnings.warn(
+  [175/200] 151s  (0.86 s/局)  labels_kept=3879
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,4 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,5 —— 掩码缺口
+  warnings.warn(
+  [200/200] 168s  (0.84 s/局)  labels_kept=4469
+[samples] frames=66311 team_single=4676 labels=4469 (FAIL)
+  hand_force=0.07656116338751069 elixir_force=0.022241231822070145 mask_reject=0.04426860564585115 bundle_not_ok=0.0 (PASS) errors=0
+  train dir = E:\clash-royale-simulator-main\runs\_fl_il_bc_evo\off\train / holdout dir = E:\clash-royale-simulator-main\runs\_fl_il_bc_evo\off\holdout
+  [W2/W3] plan_extras=ON | 落盘 plan_dim=[75]（应为 [75] = 58+17）
+  [J6.1] stop_mode=save stride=4 | team_off=61603 slot_legal=57606 save_cand=57606 forced=3997 | 落盘 play=4469 + save=14528 | save/off=0.9351
+=== [05:50:22] S1 处置：--evo-slots 开（声明觉醒位） → docs/fl_il_2026-09-21/evo200_on.json ===
+[samples] 可转局数 = 200（过滤后）
+[samples] 留出（tag 哈希 %5==0）= 42 / 200
+  [25/200] 23s  (0.92 s/局)  labels_kept=483
+  [50/200] 45s  (0.90 s/局)  labels_kept=984
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@3,5 —— 掩码缺口
+  warnings.warn(
+  [75/200] 63s  (0.84 s/局)  labels_kept=1452
+  [100/200] 87s  (0.87 s/局)  labels_kept=2011
+  [125/200] 104s  (0.83 s/局)  labels_kept=2506
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@7,4 —— 掩码缺口
+  warnings.warn(
+  [150/200] 123s  (0.82 s/局)  labels_kept=2960
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,6 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@9,4 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@8,20 —— 掩码缺口
+  warnings.warn(
+  [175/200] 144s  (0.82 s/局)  labels_kept=3594
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@10,4 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@14,5 —— 掩码缺口
+  warnings.warn(
+E:\clash-royale-simulator-main\src\clasher_new\rl\env_wrapper.py:653: RuntimeWarning: P1-20: validate 通过但引擎拒绝 BarbLog@2,6 —— 掩码缺口
+  warnings.warn(
+  [200/200] 162s  (0.81 s/局)  labels_kept=4182
+[samples] frames=60874 team_single=4380 labels=4182 (FAIL)
+  hand_force=0.0771689497716895 elixir_force=0.021232876712328767 mask_reject=0.045205479452054796 bundle_not_ok=0.0 (PASS) errors=9
+  train dir = E:\clash-royale-simulator-main\runs\_fl_il_bc_evo\on\train / holdout dir = E:\clash-royale-simulator-main\runs\_fl_il_bc_evo\on\holdout
+  [W2/W3] plan_extras=ON | 落盘 plan_dim=[75]（应为 [75] = 58+17）
+  [S1 觉醒] 声明觉醒位的局数=191/200 | 槽位 声明=659 未映射=57 截断=0 | 覆盖率=0.9203910614525139 (FAIL，闸门 >=0.95)
+  [S1 觉醒] **触发次数**(finish/主口径) 我方=248 对手=197 | (wrap/交叉核对) 我方=754 对手=485 | 逐卡={'Cannon': 62, 'Princess': 44, 'Firecracker': 42, 'SkeletonArmy': 40, 'MinionHorde': 33, 'GoblinBarrel': 31, 'Mortar': 20, 'Tesla': 17, 'SkeletonBalloon': 17, 'Skeletons': 17, 'InfernoDragon': 10, 'Zap': 9, 'Snowball': 9, 'Knight': 9, 'BabyDragon': 8, 'Barbarians': 8, 'FirespiritHut': 7, 'Wallbreakers': 7, 'BattleRam': 6, 'Ghost': 6, 'Wizard': 5, 'Bats': 5, 'Musketeer': 5, 'RoyalHogs': 4, 'MegaKnight': 3, 'RoyalRecruits': 3, 'Archer': 3, 'BlowdartGoblin': 3, 'ElectroDragon': 3, 'RageBarbarian': 2}
+  [J6.1] stop_mode=save stride=4 | team_off=56466 slot_legal=52732 save_cand=52732 forced=3734 | 落盘 play=4182 + save=13301 | save/off=0.9339
+  [errors] 9/200 局转换失败；首个样例 tag=e4984e2458664014863d4ad3f0919b1d
+    err = TypeError: unsupported operand type(s) for /: 'str' and 'float'
+    tb  =  |     self.entity_holder.on_tick(dt) |     ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^ |   File "E:\clash-royale-simulator-main\src\clasher_new\card_mechanics.py", line 87, in on_tick |     self.next_spawn_remaining = (_evo.get('spawnPauseTime') or 7000) / 1000.0 |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~ | TypeError: unsupported operand type(s) for /: 'str' and 'float' | 
+=== [05:53:07] 探针完成 ===

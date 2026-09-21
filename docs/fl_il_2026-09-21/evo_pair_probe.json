@@ -1,0 +1,496 @@
+{
+ "prereg": "docs/il_evo_prereg_2026-09-22.md §2 S1（判据②的**同进程**强形式）",
+ "inputs": {
+  "jsonl": "replays_part000000.jsonl",
+  "games": 14,
+  "stop_mode": "none",
+  "level": 11
+ },
+ "P1_no_declaration_bitwise": {
+  "control_games": 8,
+  "control_games_with_field_diff": 0,
+  "control_construction_failures": 0,
+  "games_compared": 13,
+  "games_without_declaration_natural": 0,
+  "verdict": "PASS",
+  "meaning": "**构造对照**（清空牌组变体 ⇒ 一局都不声明）上 off/on **全部公共字段逐值相等**；⚠️ 真实回放的局 95%+ 都会声明 ⇒ 自然样本对 P1 几乎无覆盖，**必须**构造对照（否则就是空洞 PASS）"
+ },
+ "P2_liveness_positive": {
+  "games_with_declaration": 13,
+  "triggers_total": 18,
+  "verdict": "PASS",
+  "meaning": "真实回放上声明了觉醒位，且**至少一局**触发 > 0"
+ },
+ "P3_crashes": {
+  "games_crashed": 1,
+  "games_total": 14,
+  "verdict": "CRASHES",
+  "meaning": "`--evo-slots` 让引擎的觉醒路径**第一次**被跑起来；崩溃 = 该路径的**真 bug**，**不是**本探针的 bug（同进程、不涉及多进程）"
+ },
+ "per_game": [
+  {
+   "i": 0,
+   "tag": "84a066ec0b0a4bef801ae287e4d45960",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "Firecracker",
+     "MinionHorde"
+    ]
+   },
+   "triggers": {
+    "team": 1,
+    "opp": 0
+   },
+   "n_field_diffs": 2,
+   "field_diffs": {
+    "end_time": {
+     "off": 148.53,
+     "on": 148.07
+    },
+    "frames": {
+     "off": 298,
+     "on": 297
+    }
+   },
+   "labels_off": 13,
+   "labels_on": 13,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 13,
+    "labels_ctrl": 13
+   }
+  },
+  {
+   "i": 1,
+   "tag": "21daddc4311842699aa782d4059d4454",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "Firecracker",
+     "Cannon"
+    ]
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 2
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 12,
+   "labels_on": 12,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 12,
+    "labels_ctrl": 12
+   }
+  },
+  {
+   "i": 2,
+   "tag": "09589b9d2315437ebb84872f9b993137",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "Princess",
+     "Tesla"
+    ]
+   },
+   "triggers": {
+    "team": 1,
+    "opp": 2
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 16,
+   "labels_on": 16,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 16,
+    "labels_ctrl": 16
+   }
+  },
+  {
+   "i": 3,
+   "tag": "4949e8527a4c4b799ceb0e76a70e0f05",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "FirespiritHut"
+    ]
+   },
+   "triggers": {
+    "team": 2,
+    "opp": 1
+   },
+   "n_field_diffs": 6,
+   "field_diffs": {
+    "end_time": {
+     "off": 166.68,
+     "on": 184.7
+    },
+    "frames": {
+     "off": 334,
+     "on": 370
+    },
+    "labels": {
+     "off": 18,
+     "on": 21
+    },
+    "opp_plays": {
+     "off": 26,
+     "on": 31
+    },
+    "out_n": {
+     "off": 18,
+     "on": 21
+    },
+    "team_single": {
+     "off": 18,
+     "on": 21
+    }
+   },
+   "labels_off": 18,
+   "labels_on": 21,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 18,
+    "labels_ctrl": 18
+   }
+  },
+  {
+   "i": 4,
+   "tag": "cd3e00e123744faba5ec325d28cf7093",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "SkeletonBalloon",
+     "SkeletonArmy"
+    ]
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 2
+   },
+   "n_field_diffs": 2,
+   "field_diffs": {
+    "end_time": {
+     "off": 163.43,
+     "on": 164.95
+    },
+    "frames": {
+     "off": 327,
+     "on": 330
+    }
+   },
+   "labels_off": 16,
+   "labels_on": 16,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 16,
+    "labels_ctrl": 16
+   }
+  },
+  {
+   "i": 5,
+   "tag": "1758832e25624fb1881ef8b1344922d6",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": []
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 0
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 13,
+   "labels_on": 13,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 13,
+    "labels_ctrl": 13
+   }
+  },
+  {
+   "i": 6,
+   "tag": "3729f02338364edc996ff5b9905913e1",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "MinionHorde"
+    ],
+    "opponent": [
+     "SkeletonArmy",
+     "InfernoDragon"
+    ]
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 0
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 14,
+   "labels_on": 14,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 14,
+    "labels_ctrl": 14
+   }
+  },
+  {
+   "i": 7,
+   "tag": "b2144dd6c7174f14be7fe418ae789ffb",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": [
+     "Princess",
+     "Firecracker"
+    ]
+   },
+   "triggers": {
+    "team": 1,
+    "opp": 0
+   },
+   "n_field_diffs": 2,
+   "field_diffs": {
+    "end_time": {
+     "off": 210.6,
+     "on": 101.65
+    },
+    "frames": {
+     "off": 422,
+     "on": 204
+    }
+   },
+   "labels_off": 14,
+   "labels_on": 14,
+   "p1_control": {
+    "declared": false,
+    "n_field_diffs": 0,
+    "field_diffs": {},
+    "labels_off": 14,
+    "labels_ctrl": 14
+   }
+  },
+  {
+   "i": 8,
+   "tag": "58af3386785e40e08e144ddcbb073477",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": [
+     "RageBarbarian",
+     "Wizard"
+    ]
+   },
+   "triggers": {
+    "team": 1,
+    "opp": 0
+   },
+   "n_field_diffs": 1,
+   "field_diffs": {
+    "end_time": {
+     "off": 122.53,
+     "on": 122.55
+    }
+   },
+   "labels_off": 18,
+   "labels_on": 18
+  },
+  {
+   "i": 9,
+   "tag": "29d4c97b94e9413787563c79a698caf3",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": [
+     "MegaKnight",
+     "AxeMan"
+    ]
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 0
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 12,
+   "labels_on": 12
+  },
+  {
+   "i": 10,
+   "tag": "ac99a8d965e042c1834550ae5772c151",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Princess",
+     "Cannon"
+    ],
+    "opponent": [
+     "BattleRam",
+     "MinionHorde"
+    ]
+   },
+   "triggers": {
+    "team": 0,
+    "opp": 0
+   },
+   "n_field_diffs": 0,
+   "field_diffs": {},
+   "labels_off": 8,
+   "labels_on": 8
+  },
+  {
+   "i": 11,
+   "tag": "e4984e2458664014863d4ad3f0919b1d",
+   "crashed": true,
+   "error": {
+    "on": "TypeError: unsupported operand type(s) for /: 'str' and 'float'"
+   }
+  },
+  {
+   "i": 12,
+   "tag": "efa78643d0474f81a2d7dfa1da271549",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Princess",
+     "Cannon"
+    ],
+    "opponent": [
+     "Cannon"
+    ]
+   },
+   "triggers": {
+    "team": 1,
+    "opp": 1
+   },
+   "n_field_diffs": 7,
+   "field_diffs": {
+    "end_time": {
+     "off": 246.48,
+     "on": 180.0
+    },
+    "frames": {
+     "off": 493,
+     "on": 361
+    },
+    "labels": {
+     "off": 38,
+     "on": 22
+    },
+    "mask_reject": {
+     "off": 7,
+     "on": 6
+    },
+    "opp_plays": {
+     "off": 47,
+     "on": 30
+    },
+    "out_n": {
+     "off": 38,
+     "on": 22
+    },
+    "team_single": {
+     "off": 45,
+     "on": 28
+    }
+   },
+   "labels_off": 38,
+   "labels_on": 22
+  },
+  {
+   "i": 13,
+   "tag": "caec8b11c4d84f0bb07b66ff2701a187",
+   "declared": true,
+   "declared_slots": {
+    "team": [
+     "Firecracker",
+     "Cannon"
+    ],
+    "opponent": [
+     "SkeletonArmy",
+     "Musketeer"
+    ]
+   },
+   "triggers": {
+    "team": 2,
+    "opp": 1
+   },
+   "n_field_diffs": 6,
+   "field_diffs": {
+    "end_time": {
+     "off": 142.38,
+     "on": 155.45
+    },
+    "frames": {
+     "off": 285,
+     "on": 311
+    },
+    "labels": {
+     "off": 25,
+     "on": 29
+    },
+    "opp_plays": {
+     "off": 17,
+     "on": 20
+    },
+    "out_n": {
+     "off": 25,
+     "on": 29
+    },
+    "team_single": {
+     "off": 25,
+     "on": 29
+    }
+   },
+   "labels_off": 25,
+   "labels_on": 29
+  }
+ ],
+ "pair_verdict": "PASS"
+}

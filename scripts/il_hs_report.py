@@ -30,22 +30,19 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+SRC = os.path.join(ROOT, "src", "clasher_new")
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
+#: ⚠️ **自我更正（2026-09-22，C27 批）**：本文件初版**内联**了一份 `_utf8_stdout()`，理由是
+#: 「刻意不依赖 `src/`，要能在 `/usr/bin/python3` 下裸跑做纯解析」。**该理由不成立**：
+#: `rl/__init__.py` 是**纯 stdlib**（只有 `os`/`sys` 的 path 引导），实测
+#: `from rl.io_bootstrap import force_utf8_stdout` 在 `/usr/bin/python3`（**无 torch**）下 import 通过。
+#: 内联副本的价值为零，却让 `scripts/_structure_check.py` 的检查 ⑧（「手写 reconfigure 块应为 0」）
+#: 变红 ⇒ 改为走**单一实现**（`src/clasher_new/rl/io_bootstrap.py:44`）。
+from rl.io_bootstrap import force_utf8_stdout  # noqa: E402
 
-def _utf8_stdout():
-    """Windows 控制台默认 GBK ⇒ 打印 `⚠️` 会 `UnicodeEncodeError` 并**整步失败**（【R1】GBK 陷阱）。
-
-    本脚本刻意**不依赖** `src/`（要能在 `/usr/bin/python3` 下裸跑做纯解析），
-    故不复用 `rl.io_bootstrap.force_utf8_stdout`，这里内联同样的动作。
-    """
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:  # noqa: BLE001  老解释器/非文本流：忽略（不因日志编码而失败）
-        pass
-
-
-_utf8_stdout()
+force_utf8_stdout()
 
 ARMS = [("HS17", 17), ("HS04", 4), ("HS00", 0)]
 BAND_PLAYS = [18.0, 28.5]

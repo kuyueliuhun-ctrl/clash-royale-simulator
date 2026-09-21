@@ -37,6 +37,7 @@ force_utf8_stdout()
 
 from card_aliases import resolve_card  # noqa: E402
 from card_utils import Card  # noqa: E402
+from evolutions import EVOLUTION_CYCLES, evolution_state  # noqa: E402
 
 from rl.env_wrapper import RLEnv  # noqa: E402
 from rl.action_bundle import ActionBundle  # noqa: E402
@@ -100,6 +101,86 @@ def deck_of(rep, side):
             if v:
                 vs.append({"key": key, "resolved": got, "variant": v})
     return names, vs, bad
+
+
+#: ★ 觉醒 S1（预注册 `docs/il_evo_prereg_2026-09-22.md` §2）：回放牌组后缀 → 本仓觉醒位。
+#: **只接 `-ev*`**；`-hero` 是**另一套机制**（`set_hero_slots` / Hero 数值表），
+#: 本仓 Hero 表对这批卡覆盖 **0%**（预注册 §5：4,550 槽全落空）⇒ 显式**不接线、单列**，
+#: 不许把 Hero 当觉醒混进读数（否则「觉醒生效」的结论会被 Hero 槽污染）。
+def evo_slot_cards(vs):
+    """`deck_of` 的 variants → `(可声明的觉醒卡, 未映射清单)`。
+
+    可声明 = 变体是 `ev*` **且**本仓**两处**数据都在：`EVOLUTION_CYCLES`（周期表）
+    与 `Card(name).evo_raw`（觉醒数值快照）——`battle.py:3068-3070` 的触发判定同时要这两个，
+    缺任何一个 ⇒ 声明了也**永不触发**（死代码）⇒ 计入「未映射」，**不静默声明**（预注册 §2 S1 做法）。
+    """
+    cards, unmapped = [], []
+    for v in vs:
+        var = v.get("variant") or ""
+        if not var.startswith("ev"):
+            continue
+        name = v["resolved"]
+        try:
+            has_raw = bool(Card(name).evo_raw)
+        except Exception:  # noqa: BLE001
+            has_raw = False
+        if name in EVOLUTION_CYCLES and has_raw:
+            cards.append(name)
+        else:
+            unmapped.append({"key": v["key"], "resolved": name, "variant": var,
+                             "in_cycles": name in EVOLUTION_CYCLES, "has_evo_raw": has_raw})
+    return cards, unmapped
+
+
+def install_evo_counters(battle, st):
+    """给重建战局装**两个独立**的觉醒触发计数器（【R13】位图对账的同一种思路：两路读数互相校验）。
+
+    * `finish`（**主口径**，覆盖部队/建筑/**法术**全部类型）：包 `BattleState._finish_deploy`。
+      它在**每次成功出牌**收尾时被调（`battle.py:2934` 在这里自增 `evo_plays`，出口只有一处），
+      而自增在**函数体内** ⇒ 在**调用前**按 `battle.py:3068-3070` 的同一组输入读一次，
+      与引擎自己的 `evolved` 判定**同值**。
+    * `wrap`（**交叉核对**，只覆盖部队/建筑）：包 `BattleState._wrap`，数
+      `len(entity_data)==6 and entity_data[5]`——那是引擎从出生队列里带过来的**觉醒标记位**
+      （`battle.py:2758-2761` 读它、`:3215` 写它）⇒ **不重算谓词，直接读引擎的位**。
+      法术觉醒（觉醒 Zap 领域 `battle.py:3137` / GoblinBarrel 诱饵 `:3181`）不走 `_wrap`
+      ⇒ 预期 `finish >= wrap`，差值应能被「法术觉醒」解释；对不上就**照实报**（【R10】）。
+
+    两个计数器都**只读**，不改行为（`battle.py` 一行未改；`rl/` 零改动）。
+    """
+    counts = {"finish": {"team": 0, "opp": 0}, "wrap": {"team": 0, "opp": 0},
+              "finish_by_card": {}, "wrap_by_card": {}}
+    orig_finish = battle._finish_deploy
+    orig_wrap = battle._wrap
+
+    def _finish(player_id, card_name, *a, **kw):
+        p = battle.players[player_id]
+        try:
+            hit = bool(Card(card_name).evo_raw and card_name in p.evo_slots
+                       and card_name not in p.hero_slots
+                       and evolution_state(p.evo_plays.get(card_name, 0), card_name))
+        except Exception:  # noqa: BLE001
+            hit = False
+        if hit:
+            side = "team" if int(player_id) == 0 else "opp"
+            counts["finish"][side] += 1
+            counts["finish_by_card"][card_name] = counts["finish_by_card"].get(card_name, 0) + 1
+        return orig_finish(player_id, card_name, *a, **kw)
+
+    def _wrap(entity_data):
+        try:
+            if len(entity_data) == 6 and entity_data[5]:
+                side = "team" if int(entity_data[2]) == 0 else "opp"
+                counts["wrap"][side] += 1
+                nm = str(entity_data[3])
+                counts["wrap_by_card"][nm] = counts["wrap_by_card"].get(nm, 0) + 1
+        except Exception:  # noqa: BLE001
+            pass
+        return orig_wrap(entity_data)
+
+    battle._finish_deploy = _finish
+    battle._wrap = _wrap
+    st["_evo_counts"] = counts
+    return counts
 
 
 def frames_of(rep, side):
@@ -360,7 +441,7 @@ def _force_elixir(ps, cost):
 
 def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False,
                  stop_mode="none", stop_stride=1, with_frames=False, dump_dir=None,
-                 dump_grid=False, plan_extras=False):
+                 dump_grid=False, plan_extras=False, evo_slots=False):
     """一局 → IL 样本（写分片 pkl）+ 逐局读数。**必须模块级**（Windows multiprocessing 是 spawn）。"""
     cfg = TrainConfig.resolve("standard")
     deck0 = list(rep["_decks"]["team"])
@@ -385,6 +466,27 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
           #: ★ 2026-09-21 新增：**非出牌决策帧普查**（stop_mode != none 时有效）
           "team_off": 0, "stop_slot_legal_any": 0, "stop_save_cand": 0, "stop_forced": 0,
           "stop_labels": 0, "stop_elixir": [], "team_unmapped": 0}
+
+    #: ★ 觉醒 S1（预注册 §2）：从回放牌组后缀声明觉醒位（`--evo-slots` 才开）。
+    #: **必须在 `env.reset()` 之后**（`reset()` 会重建 `PlayerState`，之前的声明会被丢掉）、
+    #: 且在**第一帧 `deploy_card` 之前**（声明要在任何一次出牌前生效）。
+    #: 关掉时 `st` 里一个字段都不多、`env.battle` 一行不碰 ⇒ **旧路径逐位不变**（【R2】）。
+    if evo_slots:
+        _decl, _unmapped, _trunc = {}, {}, {}
+        for _pid, _side in ((0, "team"), (1, "opponent")):
+            _cards, _un = evo_slot_cards((rep.get("_evo") or {}).get(_side, []))
+            _decl[_side] = _cards
+            _unmapped[_side] = _un
+            #: `set_evolution_slots` 内部 `[:2]` 截断（`player.py:17-19`，官方上限 2 槽）
+            #: ⇒ 多出来的计入 `truncated`（**不静默**：截断会低估觉醒触发率）。
+            _trunc[_side] = max(0, len(_cards) - 2)
+            if _cards:
+                env.battle.players[_pid].set_evolution_slots(_cards)
+        st["evo_declared"] = _decl
+        st["evo_unmapped"] = _unmapped
+        st["evo_declared_any"] = bool(_decl["team"] or _decl["opponent"])
+        st["evo_truncated"] = _trunc
+        install_evo_counters(env.battle, st)
 
     sched = collections.defaultdict(lambda: {"t": [], "o": []})
     max_frame = int(TIME_CAP / FRAME_DT)
@@ -622,16 +724,24 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
         os.makedirs(dump_dir, exist_ok=True)
         np.savez_compressed(os.path.join(dump_dir, "feat_%04d.npz" % idx), **arr)
         st["dump_n"] = len(dump)
+    if "_evo_counts" in st:
+        #: 展平成可 JSON 序列化的顶层字段（`_evo_counts` 内部是嵌套 dict，留着也行，但显式更清楚）
+        _c = st.pop("_evo_counts")
+        st["evo_trig_finish"] = _c["finish"]
+        st["evo_trig_wrap"] = _c["wrap"]
+        st["evo_trig_finish_by_card"] = _c["finish_by_card"]
+        st["evo_trig_wrap_by_card"] = _c["wrap_by_card"]
     return st
 
 
 def _worker(task):
     (idx, rep, is_hold, out_dir, level, coord, detail,
-     stop_mode, stop_stride, with_frames, dump_dir, dump_grid, plan_extras) = task
+     stop_mode, stop_stride, with_frames, dump_dir, dump_grid, plan_extras,
+     evo_slots) = task
     try:
         return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail,
                             stop_mode, stop_stride, with_frames, dump_dir, dump_grid,
-                            plan_extras), 1
+                            plan_extras, evo_slots), 1
     except Exception as e:  # noqa: BLE001
         import traceback
         return {"tag": rep.get("tag"), "errors": 1,
@@ -662,19 +772,23 @@ def run_samples(args):
                 continue
             if not isinstance(r["dur"], (int, float)) or r["dur"] > TIME_CAP:
                 continue
-            names = {}
+            names, vs_all = {}, {}
             bad = False
             for side in ("team", "opponent"):
-                nm, _vs, bd = deck_of(r, side)
+                nm, vs, bd = deck_of(r, side)
                 if bd or len(nm) != 8:
                     bad = True
                     break
                 names[side] = nm
+                vs_all[side] = vs
             if bad:
                 continue
             if sum(1 for e in r["ev"] if e[0] == 0 and e[1] == 0) < 4:
                 continue
             r["_decks"] = names
+            #: ★ 觉醒 S1：**牌组变体后缀**（`-ev1/-hero/...`）必须一起带下去 ——
+            #: 旧版只带 `names`（已剥后缀）⇒ 重建战局里觉醒位从来没被声明过（预注册 §1#8）。
+            r["_evo"] = vs_all
             recs.append(r)
     if args.games:
         recs = recs[: args.games]
@@ -694,7 +808,8 @@ def run_samples(args):
     tasks = [(i, r, holdout[i], out_train if not holdout[i] else out_hold,
               args.level, args.coord, bool(args.detail),
               args.stop_mode, args.stop_stride, bool(args.with_frames),
-              args.dump_frames, bool(args.dump_grid), bool(args.plan_extras))
+              args.dump_frames, bool(args.dump_grid), bool(args.plan_extras),
+              bool(args.evo_slots))
              for i, r in enumerate(recs)]
     stats, t0 = [], time.time()
     if args.workers and args.workers > 1:
@@ -749,6 +864,7 @@ def run_samples(args):
                    "card_level": args.level, "coord": args.coord,
                    "stop_mode": args.stop_mode, "stop_stride": args.stop_stride,
                    "plan_extras": bool(args.plan_extras),
+                   "evo_slots": bool(args.evo_slots),
                    "dump_frames": (os.path.basename(args.dump_frames) if args.dump_frames else None)},
         "split": {"holdout_by": "md5(tag) % 5 == 0", "holdout_games": sum(holdout),
                   "train_games": len(recs) - sum(holdout)},
@@ -767,6 +883,61 @@ def run_samples(args):
         },
         "per_game": stats,
     }
+    #: ★ 觉醒 S1 读数块（预注册 `docs/il_evo_prereg_2026-09-22.md` §2 S1 判据①/③）。
+    #: 只在 `--evo-slots` 时出现（关掉 = 旧 JSON schema 逐字段不变，【R2】）。
+    if args.evo_slots:
+        _fin = {"team": 0, "opp": 0}
+        _wrp = {"team": 0, "opp": 0}
+        _trig_by_card = collections.Counter()
+        _wrap_by_card = collections.Counter()
+        _unmapped_keys = collections.Counter()
+        _decl_slots = {"team": 0, "opponent": 0}
+        _trunc = 0
+        _games_declared = 0
+        for s in stats:
+            if s.get("evo_declared_any"):
+                _games_declared += 1
+            for _side in ("team", "opponent"):
+                _decl_slots[_side] += len((s.get("evo_declared") or {}).get(_side) or [])
+                _trunc += ((s.get("evo_truncated") or {}).get(_side) or 0)
+                for _u in ((s.get("evo_unmapped") or {}).get(_side) or []):
+                    _unmapped_keys[_u["key"]] += 1
+            for _k in ("team", "opp"):
+                _fin[_k] += (s.get("evo_trig_finish") or {}).get(_k, 0)
+                _wrp[_k] += (s.get("evo_trig_wrap") or {}).get(_k, 0)
+            _trig_by_card.update(s.get("evo_trig_finish_by_card") or {})
+            _wrap_by_card.update(s.get("evo_trig_wrap_by_card") or {})
+        _n_declared = sum(_decl_slots.values())
+        _n_unmapped = sum(_unmapped_keys.values())
+        _n_ev = _n_declared + _n_unmapped
+        _cov = (_n_declared / _n_ev) if _n_ev else None
+        res["S1_evo"] = {
+            "flag": "--evo-slots",
+            "games_converted": len(stats),
+            "games_with_declaration": _games_declared,
+            "declaration_rate": (_games_declared / len(stats)) if stats else None,
+            "ev_slots_total": _n_ev,
+            "ev_slots_declared": _n_declared,
+            "ev_slots_unmapped": _n_unmapped,
+            "ev_slots_truncated_at_2": _trunc,
+            "coverage": _cov,
+            "coverage_gate": ">= 0.95",
+            "coverage_verdict": ("PASS" if (_cov is not None and _cov >= 0.95) else "FAIL"),
+            "unmapped_keys": dict(_unmapped_keys.most_common(20)),
+            "declared_by_side": _decl_slots,
+            "triggers_finish": _fin,
+            "triggers_finish_total": _fin["team"] + _fin["opp"],
+            "triggers_wrap": _wrp,
+            "triggers_by_card": dict(_trig_by_card.most_common(30)),
+            "triggers_wrap_by_card": dict(_wrap_by_card.most_common(30)),
+            "cross_check_note": ("`finish` = 主口径（包 `_finish_deploy`，覆盖部队/建筑/法术），"
+                                 "口径 = **觉醒出牌次数**；`wrap` = 交叉核对（读引擎出生队列的觉醒标记位，"
+                                 "只覆盖部队/建筑），口径 = **觉醒实体个数** ⇒ 两者**量纲不同**："
+                                 "单兵卡应 `wrap == finish`，n 兵卡应 `wrap == n × finish`，"
+                                 "法术觉醒只进 `finish`（不走 `_wrap`）。"
+                                 "对不上或两边全 0 都**照实报**，不调和（【R10】/【R17】）。"),
+            "prereg": "docs/il_evo_prereg_2026-09-22.md §2 S1",
+        }
     if args.out:
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
         with open(args.out, "w", encoding="utf-8", newline="\n") as f:
@@ -784,12 +955,33 @@ def run_samples(args):
         print(f"  [W2/W3] plan_extras=ON | 落盘 plan_dim={_pds}（应为 [75] = 58+17）")
         if _pds != [75]:
             print(f"  [W2/W3] ⚠️ plan_dim 与预期 75 不一致：{_pds} —— 检查 `rl/hand_score.py` 口径")
+    if args.evo_slots:
+        _s1 = res["S1_evo"]
+        print(f"  [S1 觉醒] 声明觉醒位的局数={_s1['games_with_declaration']}/{_s1['games_converted']} "
+              f"| 槽位 声明={_s1['ev_slots_declared']} 未映射={_s1['ev_slots_unmapped']} "
+              f"截断={_s1['ev_slots_truncated_at_2']} "
+              f"| 覆盖率={_s1['coverage']} ({_s1['coverage_verdict']}，闸门 >=0.95)")
+        print(f"  [S1 觉醒] **触发次数**(finish/主口径) 我方={_fin['team']} 对手={_fin['opp']} "
+              f"| (wrap/交叉核对) 我方={_wrp['team']} 对手={_wrp['opp']} "
+              f"| 逐卡={_s1['triggers_by_card']}")
+        if _fin["team"] + _fin["opp"] == 0:
+            print("  [S1 觉醒] ⚠️ 触发次数 = 0 —— 预注册 §2 S1 判据③ FAIL（照实报，【R10】）")
     if args.stop_mode != "none":
+        #: ⚠️ 实测踩过：`save_frame_share_of_off` 在「全部局都报错」（`team_off == 0`）时是 **None**，
+        #: 直接 `:.4f` 会抛 `TypeError` ⇒ **把真正的失败（errors=N）盖掉**（本批就是这样被盖了一轮）。
+        _so = j6["save_frame_share_of_off"]
         print(f"  [J6.1] stop_mode={args.stop_mode} stride={args.stop_stride} | "
               f"team_off={agg['team_off']} "
               f"slot_legal={agg['stop_slot_legal_any']} save_cand={agg['stop_save_cand']} "
               f"forced={agg['stop_forced']} | 落盘 play={n_lab} + save={agg['stop_labels']} "
-              f"| save/off={j6['save_frame_share_of_off']:.4f}")
+              f"| save/off={('n/a' if _so is None else format(_so, '.4f'))}")
+    if agg["errors"]:
+        #: 同理：**worker 里的异常一律要能看见**（`_worker` 会把它吞进 `st['err']/['tb']`）。
+        _e = next((s for s in stats if s.get("errors") and s.get("err")), None)
+        print(f"  [errors] {agg['errors']}/{len(stats)} 局转换失败；首个样例 tag={_e.get('tag') if _e else None}")
+        if _e:
+            print(f"    err = {_e['err']}")
+            print("    tb  = " + (_e.get("tb") or "").replace("\n", " | ")[-400:])
     return 0
 
 
@@ -837,6 +1029,11 @@ def main(argv=None):
                     help="★ W2/W3：plan 尾部追加 17 维（手牌打分 13 + 前期卡组信息分 4）"
                          "⇒ plan 向量 58→75（`rl/hand_score.py`）。缺省关 = 旧路径**逐位不变**。"
                          "见 docs/il_whiff_handscore_prereg_2026-09-22.md §2.3/§3.1")
+    ap.add_argument("--evo-slots", action="store_true",
+                    help="★ 觉醒 S1（数据保真）：从回放牌组后缀 `-ev*` 解析并在重建战局里"
+                         "`set_evolution_slots`（**必须元数据齐备**才声明：周期表 + `evo_raw`）。"
+                         "`-hero` 是另一套机制，本开关**不接线**。缺省关 = 旧路径**逐位不变**。"
+                         "见 docs/il_evo_prereg_2026-09-22.md §2 S1")
     args = ap.parse_args(argv)
     for name in ("jsonl", "out", "out_dir", "dump_frames"):
         v = getattr(args, name, None)
