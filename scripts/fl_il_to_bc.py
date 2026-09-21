@@ -44,6 +44,7 @@ from rl.action_mask import _card_cost  # noqa: E402
 from rl.belief import BeliefInference, belief_token_dim  # noqa: E402
 from rl.belief_planner import BeliefPlanner  # noqa: E402
 from rl.plan_space import PLAN_DIM  # noqa: E402
+from rl.hand_score import plan_extras as plan_extras_vec  # noqa: E402
 from rl.observation import ENTITY_NAMES  # noqa: E402
 from rl.follower import FollowerPolicy  # noqa: E402
 from rl.config import TrainConfig, reward_to_env  # noqa: E402
@@ -359,7 +360,7 @@ def _force_elixir(ps, cost):
 
 def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False,
                  stop_mode="none", stop_stride=1, with_frames=False, dump_dir=None,
-                 dump_grid=False):
+                 dump_grid=False, plan_extras=False):
     """一局 → IL 样本（写分片 pkl）+ 逐局读数。**必须模块级**（Windows multiprocessing 是 spawn）。"""
     cfg = TrainConfig.resolve("standard")
     deck0 = list(rep["_decks"]["team"])
@@ -403,6 +404,9 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
 
     samples = []
     frames_meta = []
+    #: ★ W2/W3（`--plan-extras`）：本局**对手已打出过的不同卡数**的原料（确定性可读，【R12】）。
+    #: 一局一个集合（跨帧累积、**不重置**）；未开启时恒 None ⇒ 旧路径零改动。
+    _known_opp = set() if plan_extras else None
     #: ★ 2026-09-21 Stage 0：逐决策帧特征导出（F_obs + F_oracle）⇒ 上界诊断的数据源
     dump = [] if dump_dir else None
     for k in range(max_frame + 1):
@@ -426,6 +430,8 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
                 env.battle.deploy_card(1, card,
                                        Position(float(e[4]) / 1000.0, float(e[5]) / 1000.0))
                 injected.append(card)
+                if _known_opp is not None:
+                    _known_opp.add(card)
                 st["opp_plays"] += 1
 
             ev_t = bucket["t"]
@@ -547,7 +553,22 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
             #: 与 `rl/human_play.py:142-151` **逐句同序**：obs → belief → plan → masks → step
             obs = env.observe(0)
             tok = belief.encode(obs, None)
-            plan_vec = bp.plan(env.battle, belief.state(), obs).to_vector()
+            if plan_extras:
+                #: ★ W2/W3（预注册 `docs/il_whiff_handscore_prereg_2026-09-22.md` §2.3/§3.1）：
+                #: **plan 尾部追加** 17 维（手牌打分 13 + 前期卡组信息分 4）。追加而不是改布局
+                #: ⇒ `plan_mlp.0.weight` 的「前列拷贝 + 尾零」兼容分支仍然有效（旧 ckpt 可加载）。
+                #: 原料与 `bp.plan(...)` **同一帧同一 `BeliefState`**（`_bst` 只取一次，两次取也同值）。
+                _bst = belief.state()
+                plan_vec = bp.plan(env.battle, _bst, obs).to_vector()
+                _extras = plan_extras_vec(
+                    own_cards=list(p0.cycle[:4]), own_elixir=float(p0.elixir),
+                    opp_cards=list(env.deck1), opp_hand_probs=_bst.hand_probs,
+                    opp_elixir_est=float(_bst.elixir_mean),
+                    time_s=float(env.battle.time), known_opp=len(_known_opp))
+                plan_vec = np.concatenate([plan_vec, _extras]).astype(np.float32)
+                st["plan_dim"] = int(plan_vec.shape[0])
+            else:
+                plan_vec = bp.plan(env.battle, belief.state(), obs).to_vector()
             masks = policy.masks_for(obs, tok, plan_vec, emit_bundle, env.get_action_mask)
             samples.append((obs, tok, plan_vec, emit_bundle, masks))
             frames_meta.append([k, emit_kind])
@@ -606,10 +627,11 @@ def _convert_one(idx, rep, is_hold, out_dir, level=11, coord="raw", detail=False
 
 def _worker(task):
     (idx, rep, is_hold, out_dir, level, coord, detail,
-     stop_mode, stop_stride, with_frames, dump_dir, dump_grid) = task
+     stop_mode, stop_stride, with_frames, dump_dir, dump_grid, plan_extras) = task
     try:
         return _convert_one(idx, rep, is_hold, out_dir, level, coord, detail,
-                            stop_mode, stop_stride, with_frames, dump_dir, dump_grid), 1
+                            stop_mode, stop_stride, with_frames, dump_dir, dump_grid,
+                            plan_extras), 1
     except Exception as e:  # noqa: BLE001
         import traceback
         return {"tag": rep.get("tag"), "errors": 1,
@@ -672,7 +694,7 @@ def run_samples(args):
     tasks = [(i, r, holdout[i], out_train if not holdout[i] else out_hold,
               args.level, args.coord, bool(args.detail),
               args.stop_mode, args.stop_stride, bool(args.with_frames),
-              args.dump_frames, bool(args.dump_grid))
+              args.dump_frames, bool(args.dump_grid), bool(args.plan_extras))
              for i, r in enumerate(recs)]
     stats, t0 = [], time.time()
     if args.workers and args.workers > 1:
@@ -726,6 +748,7 @@ def run_samples(args):
                    "elapsed_s": round(time.time() - t0, 1),
                    "card_level": args.level, "coord": args.coord,
                    "stop_mode": args.stop_mode, "stop_stride": args.stop_stride,
+                   "plan_extras": bool(args.plan_extras),
                    "dump_frames": (os.path.basename(args.dump_frames) if args.dump_frames else None)},
         "split": {"holdout_by": "md5(tag) % 5 == 0", "holdout_games": sum(holdout),
                   "train_games": len(recs) - sum(holdout)},
@@ -756,6 +779,11 @@ def run_samples(args):
           f"bundle_not_ok={res['J2_1_reconstruction']['bundle_not_ok_rate']} "
           f"({res['J2_1_reconstruction']['verdict']}) errors={agg['errors']}")
     print(f"  train dir = {out_train} / holdout dir = {out_hold}")
+    if args.plan_extras:
+        _pds = sorted({s.get("plan_dim") for s in stats if s.get("plan_dim")})
+        print(f"  [W2/W3] plan_extras=ON | 落盘 plan_dim={_pds}（应为 [75] = 58+17）")
+        if _pds != [75]:
+            print(f"  [W2/W3] ⚠️ plan_dim 与预期 75 不一致：{_pds} —— 检查 `rl/hand_score.py` 口径")
     if args.stop_mode != "none":
         print(f"  [J6.1] stop_mode={args.stop_mode} stride={args.stop_stride} | "
               f"team_off={agg['team_off']} "
@@ -805,6 +833,10 @@ def main(argv=None):
     ap.add_argument("--dump-frames", default=None,
                     help="逐**决策帧**导出 F_obs + F_oracle 特征到该目录（每局一个 npz）"
                          "⇒ Stage 0 上界诊断（docs/fl_il_il2_prereg_2026-09-22.md）")
+    ap.add_argument("--plan-extras", action="store_true",
+                    help="★ W2/W3：plan 尾部追加 17 维（手牌打分 13 + 前期卡组信息分 4）"
+                         "⇒ plan 向量 58→75（`rl/hand_score.py`）。缺省关 = 旧路径**逐位不变**。"
+                         "见 docs/il_whiff_handscore_prereg_2026-09-22.md §2.3/§3.1")
     args = ap.parse_args(argv)
     for name in ("jsonl", "out", "out_dir", "dump_frames"):
         v = getattr(args, name, None)

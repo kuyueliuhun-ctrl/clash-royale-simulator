@@ -23,7 +23,7 @@ import torch.nn.functional as F
 
 from rl.action_bundle import ActionBundle, SubAction, K_MAX, INTENT_CANCEL
 from rl.observation import GRID_H, GRID_W, GRID_C, ENTITY_NAMES
-from rl.plan_space import PLAN_DIM, FOCUS_REGIONS
+from rl.plan_space import PLAN_DIM, PLAN_HOLD_OFFSET, FOCUS_REGIONS
 from rl.belief import belief_token_dim
 
 NUM_ENTITY = len(ENTITY_NAMES)
@@ -103,12 +103,14 @@ def save_checkpoint(policy, path):
         "intent_options": bool(getattr(policy, "intent_options", False)),
         # ★ 独立 act 头（预注册 §7）：同纪律 —— 改 `slot_head` 出维并新增 `act_head`
         "decoupled_act": bool(getattr(policy, "decoupled_act", False)),
+        # ★ W2/W3 plan 尾部全零消融（预注册 §2.3）：**不改形状**但改语义 ⇒ 必须记元数据
+        "plan_extras_zero": int(getattr(policy, "plan_extras_zero", 0)),
     }, path)
 
 
 def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
                     value_bypass=None, value_independent=None, intent_options=None,
-                    decoupled_act=None):
+                    decoupled_act=None, plan_extras_zero=None):
     """加载 checkpoint；优先读取元数据，旧格式（裸 state_dict）回退到显式/常量维度。
 
     value_bypass（2026-09-12，实验 B′）/ value_independent（E′）：元数据携带架构标志；
@@ -149,9 +151,12 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
     _io = bool(md.get("intent_options", False)) if intent_options is None else bool(intent_options)
     #: ★ 独立 act 头（预注册 §7）：同 intent_options 纪律 —— 元数据携带 + 显式不一致告警
     _da = bool(md.get("decoupled_act", False)) if decoupled_act is None else bool(decoupled_act)
+    #: ★ W2/W3 plan 尾列全零消融：显式传入优先；否则回落元数据（旧 ckpt 无该键 => 0）
+    _pez = int(md.get("plan_extras_zero", 0)) if plan_extras_zero is None \
+        else int(plan_extras_zero)
     policy = FollowerPolicy(hidden=hd, plan_dim=pd, belief_dim=bd,
                             value_bypass=vb, value_independent=vi, intent_options=_io,
-                            decoupled_act=_da)
+                            decoupled_act=_da, plan_extras_zero=_pez)
     target = policy.state_dict()
     for k, v in sd_src.items():
         if k not in target:
@@ -219,13 +224,24 @@ def load_checkpoint(path, hidden_dim=None, plan_dim=None, belief_dim=None,
                    "缺失/多余 ⇒ 形状不匹配 ⇒ **两者双双保持随机初始化（静默！）**"
                    "（load_checkpoint 的形状不匹配分支不报错）⇒ 该 ckpt 不可续训，"
                    "要求 --fresh；只能当对照基线/对手池")
+    # ★ W2/W3 plan 尾列全零消融（预注册 §2.3）：**不改形状** ⇒ 形状分支不会报错，
+    # 但语义相反（一个用尾列、一个把尾列抹掉）⇒ 只有这条告警能发现口径错配。
+    _ck_pez = int(md.get("plan_extras_zero", 0))
+    _want_pez = int(getattr(policy, "plan_extras_zero", 0))
+    if _ck_pez != _want_pez:
+        from rl.diagnostics import print_safe   # 惰性 import，避免模块级依赖
+        print_safe(f"[follower] ⚠️ {path} 的 plan_extras_zero={_ck_pez}，"
+                   f"而目标网络 plan_extras_zero={_want_pez}：plan 尾部列"
+                   f"{'被抹零' if _want_pez else '被使用'} vs ckpt 训练的"
+                   f"{'被抹零' if _ck_pez else '被使用'} ⇒ **形状相同、语义不同**（静默！）"
+                   "⇒ 该 ckpt 不可续训/不可当同臂读数，要求 --fresh 或口径对齐")
     return policy
 
 
 class FollowerPolicy(nn.Module):
     def __init__(self, hidden=256, plan_dim=None, belief_dim=None, num_entity=NUM_ENTITY,
                  stop_logit_bias=-1.0, value_bypass=False, value_independent=False,
-                 intent_options=False, decoupled_act=False):
+                 intent_options=False, decoupled_act=False, plan_extras_zero=0):
         """stop_logit_bias：新初始化时给 STOP logit 的偏置（负数=初始更愿意出牌）。
 
         intent_options（2026-09-19，用户拍板扩参；预注册
@@ -245,6 +261,13 @@ class FollowerPolicy(nn.Module):
         这两个 PPO 批量路径**尚未实现**，开启时会显式 `NotImplementedError`，不静默错）。
         **架构变更** ⇒ 须 `--fresh`；旧 ckpt 加载时 `load_checkpoint` 会告警（两处静默风险）。
         默认 False ⇒ `num_slot_options == NUM_SLOT_OPTIONS` 且 `act_head` 不存在 ⇒ **旧路径零改动**。
+
+        plan_extras_zero（2026-09-22，W2/W3；预注册 `docs/il_whiff_handscore_prereg_2026-09-22.md` §2.3）：
+        plan 尾部追加的**手牌打分/信息分**列数 K（见 `rl/hand_score.py`，K=17）。>0 时前向里把这
+        **最后 K 列置零** ⇒ 该臂是「**架构与参数量完全相同、但那 17 列不携带信息**」的严格对照组。
+        这样两条臂同形状 ⇒ `torch.manual_seed(seed)` 下的**参数初始化逐值相同**（【R3】单变量），
+        把「加了信息」与「加了容量/换了初值」彻底分开。**不改任何形状** ⇒
+        默认 0 时旧路径逐位不变；非 0 时 `load_checkpoint` 会告警口径错配。
 
         value_bypass（2026-09-12，实验 B′ 落地）：True 时 value 头直连 post-LN enc
         （`value_head(enc)`），**跳过 GRU**（策略头 slot/cell 仍走 GRU 隐状态）。
@@ -276,6 +299,17 @@ class FollowerPolicy(nn.Module):
         self.hidden_dim = hidden
         self.plan_dim = plan_dim
         self.belief_dim = belief_dim
+        #: ★ plan 尾部**追加特征的全零消融**（W2/W3；预注册 §2.3/§4）：
+        #: `plan_extras_zero = K > 0` 时，前向里把 plan 的**最后 K 维**（= `rl/hand_score.py`
+        #: 追加的手牌/信息分）**置零**，其它维逐位不动。
+        #: 这是本实验的**对照组**：两条臂**架构形状、参数量、RNG 抽样顺序完全一致**
+        #: （同为 `plan_dim = 58+17`），唯一差别 = 那 17 列**有没有携带信息**
+        #: ⇒ 把「加了信息」与「加了容量」严格分开（R3 单变量）。
+        #: ⚠️ **不改形状** ⇒ 与旧 ckpt 的形状兼容，但语义不同（尾列被抹）⇒
+        #: `load_checkpoint` 按 `value_bypass` 同纪律告警。默认 0 = **旧路径逐位不变**。
+        self.plan_extras_zero = int(plan_extras_zero)
+        if self.plan_extras_zero < 0 or self.plan_extras_zero > int(plan_dim):
+            raise ValueError(f"plan_extras_zero={self.plan_extras_zero} 越界（plan_dim={plan_dim}）")
         self.value_bypass = bool(value_bypass)
         self.value_independent = bool(value_independent)
 
@@ -377,6 +411,18 @@ class FollowerPolicy(nn.Module):
         self.to(device)
         return self
 
+    def _zero_plan_extras(self, plan_v):
+        """plan 尾部全零消融（W2/W3 对照组）。
+
+        `plan_extras_zero <= 0` ⇒ **原样返回同一对象**（旧路径零改动，【R2】）；
+        否则克隆后把最后 K 列置零（前 `plan_dim − K` 列逐位不变）。
+        """
+        if self.plan_extras_zero <= 0:
+            return plan_v
+        out = plan_v.clone()
+        out[:, self.plan_dim - self.plan_extras_zero:] = 0.0
+        return out
+
     def _encode_parts(self, obs, belief_token, plan_token):
         """返回 `(fused, enc)`：fused 是融合特征（E′ 独立价值编码器的输入），
         enc 是共享编码器输出（策略 GRU / value 的既有输入）。"""
@@ -405,7 +451,7 @@ class FollowerPolicy(nn.Module):
 
         plan_v = torch.as_tensor(plan_token, dtype=torch.float32).unsqueeze(0).to(self.device)
         belief_v = torch.as_tensor(belief_token, dtype=torch.float32).unsqueeze(0).to(self.device)
-        plan_f = self.plan_mlp(plan_v)
+        plan_f = self.plan_mlp(self._zero_plan_extras(plan_v))
         belief_f = self.belief_mlp(belief_v)
 
         fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)
@@ -502,9 +548,12 @@ class FollowerPolicy(nn.Module):
         sug = int(round(float(v[16]) * 4.0)) if v[16] > 0.0 else None
         if sug is not None and 1 <= sug <= K_MAX:
             slot_bias[sug - 1] += PLAN_CARD_BIAS
-        if v.shape[0] >= PLAN_DIM:
+        if v.shape[0] >= PLAN_HOLD_OFFSET + 4:
             for i in range(min(4, K_MAX)):
-                if v[PLAN_DIM - 4 + i] > 0.5:
+                # 尾部追加不变式（预注册 `docs/il_whiff_handscore_prereg_2026-09-22.md` §2.3 必修坑）：
+                # hold 恒在**基础布局**的最后 4 维（绝对下标 `PLAN_HOLD_OFFSET`），
+                # **不得**写 `PLAN_DIM - 4`（任何尾追加都会静默指到新特征）。
+                if v[PLAN_HOLD_OFFSET + i] > 0.5:
                     slot_bias[i] -= PLAN_HOLD_BIAS
         # —— 落点软偏置（focus_region 中心附近）——
         rseg = v[8:16]
@@ -606,7 +655,7 @@ class FollowerPolicy(nn.Module):
 
         plan_v = torch.stack([torch.as_tensor(p, dtype=torch.float32) for p in plan_list]).to(self.device)
         belief_v = torch.stack([torch.as_tensor(b, dtype=torch.float32) for b in belief_list]).to(self.device)
-        plan_f = self.plan_mlp(plan_v)
+        plan_f = self.plan_mlp(self._zero_plan_extras(plan_v))
         belief_f = self.belief_mlp(belief_v)
 
         fused = torch.cat([grid_feat, hand_feat, scalar, plan_f, belief_f], dim=1)

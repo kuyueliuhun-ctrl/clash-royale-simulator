@@ -9,7 +9,7 @@ v1 扩展（Phase 2 结构先行）：**全部尾部追加，旧 21 维布局逐
 - 新意图**不占用**旧 intent 位：旧意图帧 → 旧组 one-hot + 新组全 0；
   新意图帧 → 旧组全 0（=无旧意图）+ 尾部新意图组（索引 21-33）one-hot；
 - 其后追加 v1 新字段：target_kind(5) / placement_hint(7) / opp_spell_threat(6) /
-  elixir_budget(1) / hold_mask(4)。PLAN_DIM = 57。
+  elixir_budget(1) / hold_mask(4)。PLAN_BASE_DIM = PLAN_DIM = **58**（旧注 57 为陈旧值，已按实测更正）。
 旧 checkpoint（plan_dim=21）经 ``rl.follower.load_checkpoint`` 前 21 列拷贝、尾部补零加载。
 
 设计文档：docs/rl_plan_design_v1.md（全量意图 17 / pull 距离制胜 / anti_spell / save_ace hold_mask）。
@@ -183,6 +183,18 @@ class PlanToken:
         return cls()
 
 
-#: 计划向量唯一维度常量（P0-5）：21 旧维 + v1 追加 = 57
-PLAN_DIM = int(len(PlanToken().to_vector()))
+#: 计划向量**基础布局**唯一维度常量（P0-5）：21 旧维 + v1 追加。
+#: 实测 = 8+8+5 (21) + 13 (新意图) + 5 (target) + 8 (hint) + 6 (threat) + 1 (budget) + 4 (hold) = **58**。
+#: （本文件 docstring 第 12 行长期写 57，是**陈旧值**，2026-09-22 按实测更正 —— 【R18】）
+PLAN_BASE_DIM = int(len(PlanToken().to_vector()))
+
+#: `hold_mask` 4 位的**起始下标**（绝对，冻结）。
+#: ⚠️ 为什么不写 `PLAN_DIM - 4`：任何**尾部追加**（如 W2/W3 的 17 维手牌/信息分）都会让
+#: `PLAN_DIM - 4` 静默指到新特征而不是 hold ⇒ `_plan_biases` 读错槽位。
+#: 本常量在尾部追加下**不变**（hold 永远是基础布局的最后 4 维）。
+PLAN_HOLD_OFFSET = PLAN_BASE_DIM - 4
+
+#: 计划向量的**网络入维**默认值 = 基础布局（尾部追加由 `rl/hand_score.py` 在样本生产时负责，
+#: 追加后网络的 `plan_dim` 由样本/ckpt 元数据显式给出，不改本常量）。
+PLAN_DIM = PLAN_BASE_DIM
 _OLD_PLAN_DIM = 21

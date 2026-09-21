@@ -70,7 +70,7 @@ def parse_configs(s):
 
 
 def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0,
-              mix_ratio=None, decoupled_act=False):
+              mix_ratio=None, decoupled_act=False, plan_extras_zero=0):
     """复刻 human_play.py::train_bc_from_human 的训练循环（见模块 docstring 的复刻纪律）。
 
     `save_every=N>0` 时每 N 个 epoch 额外落一份快照 `<out_path 去后缀>_ep{k}.pt`：
@@ -88,7 +88,8 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
     belief_dim = len(samples[0][1])
     plan_dim = len(samples[0][2])
     policy = FollowerPolicy(hidden=128, plan_dim=plan_dim, belief_dim=belief_dim,
-                            decoupled_act=bool(decoupled_act))
+                            decoupled_act=bool(decoupled_act),
+                            plan_extras_zero=int(plan_extras_zero))
     opt = torch.optim.Adam(policy.parameters(), lr=lr)
     n = len(samples)
     #: 每个 epoch 的索引池（混比只改这个池；`--mix-ratio` 关 = 全部样本）
@@ -130,6 +131,7 @@ def train_one(samples, epochs, lr, seed, out_path, tag_prefix=None, save_every=0
             "mix_ratio": (None if mix_ratio is None else float(mix_ratio)),
             "epoch_pool": int(n_ep),
             "n_play": int(len(_play_idx)), "n_stop": int(len(_stop_idx)),
+            "plan_dim": int(plan_dim), "plan_extras_zero": int(plan_extras_zero),
             "ckpt": os.path.basename(out_path), "curve": curve, "snapshots": snaps,
             "total_sec": sum(c["sec"] for c in curve)}
 
@@ -153,6 +155,14 @@ def main(argv=None):
     #: 缺省 = 关 = 旧行为**逐位不变**。架构变更 ⇒ 该臂必须是 `--fresh`（本来就是新建网络）。
     ap.add_argument("--decoupled-act", action="store_true",
                     help="启用独立 act 头（§7）；需配 --out-dir 形如 sweep_mixR<tag>")
+    #: ★ W2/W3（预注册 `docs/il_whiff_handscore_prereg_2026-09-22.md` §2.3）：plan 尾列的
+    #: **全零消融**位。corpus 由 `fl_il_to_bc.py --plan-extras` 产出（58+17=75 维），
+    #: 本开关决定**最后 N 列是否被抹零** ⇒ 三条臂**同形状、同初值**（同 seed ⇒ 逐值相同的初始化），
+    #: 唯一变量 = 那 N 列有没有携带信息（把「加信息」与「加容量/换初值」分开）。
+    #: `0` = 全用（默认，旧 58 维语料下与旧行为**逐位不变**）；`17` = 尾列全抹（对照组）；
+    #: `4` = 抹掉 W3 的信息分、保留 W2 的手牌分（W3 的对照组）。
+    ap.add_argument("--plan-extras-zero", type=int, default=0,
+                    help="plan 尾部抹零列数：0=全用（默认）/17=对照组（无新信息）/4=抹 W3 保留 W2")
     args = ap.parse_args(argv)
 
     args.data_dir = _abs(args.data_dir)
@@ -182,10 +192,13 @@ def main(argv=None):
         runs.append(train_one(samples, epochs, lr, args.seed, out_path,
                               save_every=args.save_every,
                               mix_ratio=args.mix_ratio,
-                              decoupled_act=args.decoupled_act))
+                              decoupled_act=args.decoupled_act,
+                              plan_extras_zero=args.plan_extras_zero))
 
     manifest = {"data_dir": args.data_dir, "seed": args.seed, "runs": runs,
                 "decoupled_act": bool(args.decoupled_act),
+                "plan_extras_zero": int(args.plan_extras_zero),
+                "threads": int(torch.get_num_threads()),
                 "note": "训练循环逐行复刻 rl/human_play.py::train_bc_from_human；"
                         "每格同 seed ⇒ 同初值 + 同 permutation，唯一变量 = epochs/lr（或 mix_ratio）"}
     mpath = args.manifest or os.path.join(args.out_dir, "sweep_manifest.json")

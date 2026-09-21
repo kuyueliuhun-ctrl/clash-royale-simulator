@@ -91,6 +91,46 @@ def load_fl_deck_pairs(jsonl, limit=4000):
     return pairs
 
 
+def build_plan_vec(bp, env, belief, obs, known_opp, plan_dim):
+    """按 ckpt 的 `plan_dim` 产 plan 向量（W2/W3 的**推理侧唯一实现**，与 `fl_il_to_bc.py` 同口径）。
+
+    `plan_dim == PLAN_BASE_DIM(58)` ⇒ 旧口径（逐位同旧行为）；
+    `plan_dim == 58 + PLAN_EXTRA_DIM(17)` ⇒ 尾部追加手牌打分/信息分；
+    其它值 ⇒ **显式报错**（不静默产短向量：那会让 `plan_mlp` 直接 shape 崩或读错列）。
+    """
+    from rl.plan_space import PLAN_BASE_DIM
+    from rl.hand_score import PLAN_EXTRA_DIM, plan_extras
+    pv = bp.plan(env.battle, belief.state(), obs).to_vector()
+    pd = int(plan_dim)
+    if pd == int(pv.shape[0]):
+        return pv
+    if pd != int(PLAN_BASE_DIM) + int(PLAN_EXTRA_DIM) or int(pv.shape[0]) != int(PLAN_BASE_DIM):
+        raise ValueError(f"plan_dim={pd} 与基础布局 {PLAN_BASE_DIM}+{PLAN_EXTRA_DIM} 不符"
+                         f"（bp 产出 {pv.shape[0]}）⇒ 口径不明，拒绝静默继续")
+    _st = belief.state()
+    ext = plan_extras(own_cards=list(env.battle.players[0].cycle[:4]),
+                      own_elixir=float(env.battle.players[0].elixir),
+                      opp_cards=list(env.deck1), opp_hand_probs=_st.hand_probs,
+                      opp_elixir_est=float(_st.elixir_mean),
+                      time_s=float(env.battle.time), known_opp=int(known_opp))
+    return np.concatenate([pv, ext]).astype(np.float32)
+
+
+def _opp_play_name(nm):
+    """`opp_played` 的元素实测是 dict ⇒ 统一取卡名（读成 str 的旧路径也兼容）。"""
+    if isinstance(nm, dict):
+        nm = nm.get("card") or nm.get("card_name") or nm.get("name")
+    return nm if isinstance(nm, str) else None
+
+
+#: ★ W3 前期窗口（秒）——与 `rl/hand_score.py::T_INFO` **同一约定**（改一处必须同步）
+INFO_T_WINDOW = 30.0
+
+
+def _median(xs):
+    return float(np.median(xs)) if len(xs) else None
+
+
 def build_policy(ckpt, device, torch, label):
     from rl.follower import FollowerPolicy
     d = torch.load(ckpt, map_location="cpu")
@@ -104,7 +144,10 @@ def build_policy(ckpt, device, torch, label):
                          #: ★ 2026-09-22 独立 act 头（预注册 §7）：**必须读**，
                          #: 否则给 5 维 `slot_head` 的 ckpt 建 6 维头 ⇒ 形状不匹配 ⇒
                          #: `load_state_dict(strict=False)` **静默随机**（实测过的坑，见 §7.7）
-                         decoupled_act=bool(meta.get("decoupled_act", False)))
+                         decoupled_act=bool(meta.get("decoupled_act", False)),
+                         #: ★ 2026-09-22 W2/W3：**必须读**（同 §7.7 纪律）。它不改形状，
+                         #: 但决定 plan 尾列**是否被抹零** ⇒ 读漏 = 形状匹配、语义相反（静默）。
+                         plan_extras_zero=int(meta.get("plan_extras_zero", 0)))
     miss, unexp = pol.load_state_dict(sd, strict=False)
     if miss or unexp:
         print(f"[warn] {label} 载入 missing={len(miss)} unexpected={len(unexp)}", flush=True)
@@ -196,7 +239,8 @@ def main():
         opp_pol, _ = build_policy(a.main_ckpt, dev, torch, "我方主策略")
     else:
         opp_pol, _ = build_policy(a.ckpt, dev, torch, "对手(同 ckpt 冻结副本)")
-    gate_pol = (build_policy(a.gate_ckpt, dev, torch, "act 门")[0] if a.gate_ckpt else None)
+    gate_pol, gate_meta = (build_policy(a.gate_ckpt, dev, torch, "act 门")
+                           if a.gate_ckpt else (None, {}))
     if gate_pol is not None:
         print(f"[runner] ★ 解耦组合臂（预注册 §6）：门 ckpt={a.gate_ckpt} τ={a.gate_threshold}"
               f"（门只看 STOP logit、hidden=None 逐帧；动作走 --ckpt={a.ckpt}）", flush=True)
@@ -227,6 +271,9 @@ def main():
     playable = forced_stop = stop_when_playable = 0
     gate_eval = gate_stop = 0     #: ★ §6：门被求值帧数 / 门判 STOP 帧数
     opp_card_hist = collections.Counter()
+    #: ★ W3 前期窗口（≤ INFO_T_WINDOW s）聚合（J-W3.2 方向判据的读数）
+    win_frames, win_known, win_plays, win_distinct = 0, [], 0.0, 0.0
+    win_first_t = []
 
     for g in range(a.games):
         if deck_pairs is not None:
@@ -250,15 +297,21 @@ def main():
         done = False
         steps = 0
         hidden = None
+        _known_opp = set()          #: ★ W2/W3：本局对手已打出过的**不同**卡数（信息分原料）
+        _win_play_n, _win_cards, _first_t = 0, set(), None   #: ★ W3 前期窗口（≤30 s）统计
         while not done and (steps < a.max_steps or overtime_open(env.battle)):
             tok = belief0.encode(obs, None)
-            plan = bp.plan(env.battle, belief0.state(), obs).to_vector()
+            plan = build_plan_vec(bp, env, belief0, obs, len(_known_opp), meta["plan_dim"])
             h_in = hidden if a.hidden == "carry" else None
             _gate_stop = False
             if gate_pol is not None:
                 #: ★ §6 C6-4：门用 `hidden=None` 逐帧口径（与四臂留出读数同口径）
                 #: ⚠️ `_gate_p_stop` 返回 **0-dim tensor**（与 `first_option_probs` 同），不用再 `[0]`
-                _p_stop = float(_gate_p_stop(gate_pol, obs, tok, plan,
+                #: ★ W2/W3：门的 `plan_dim` 可能与主策略不同（如门是 58 维旧臂）⇒ 各建各的向量
+                _gplan = (plan if int(gate_meta.get("plan_dim", 0)) == int(meta["plan_dim"])
+                          else build_plan_vec(bp, env, belief0, obs, len(_known_opp),
+                                              gate_meta["plan_dim"]))
+                _p_stop = float(_gate_p_stop(gate_pol, obs, tok, _gplan,
                                              [env.get_action_mask()]))
                 gate_eval += 1
                 if _p_stop > a.gate_threshold:
@@ -278,6 +331,16 @@ def main():
             playable += int(_can)
             forced_stop += int(not _can)
             cards = _bundle_cards(bundle, obs)
+            #: ★ W3 前期窗口（J-W3.2 仪器）：**决策帧当时**的 t 与对手已知卡数
+            _t_now = float(env.battle.time)
+            if _t_now <= INFO_T_WINDOW:
+                win_frames += 1
+                win_known.append(len(_known_opp))
+                if cards:
+                    _win_play_n += len(cards)
+                    _win_cards.update(cards)
+                    if _first_t is None:
+                        _first_t = _t_now
             if _can and bundle.size == 0:
                 stop_when_playable += 1
             obs, reward, term, trunc, info = env.step(bundle)
@@ -287,10 +350,10 @@ def main():
                 card_hist[nm] += 1
             for nm in (info.get("opp_played") or []):
                 #: 实测 `opp_played` 的元素是 **dict**（不是卡名字符串）⇒ 取名字段再计数
-                if isinstance(nm, dict):
-                    nm = nm.get("card") or nm.get("card_name") or nm.get("name")
+                nm = _opp_play_name(nm)
                 if isinstance(nm, str):
                     opp_card_hist[nm] += 1
+                    _known_opp.add(nm)      #: ★ W2/W3 信息分：不同卡数（集合自动去重）
             belief0.update(obs, info.get("opp_played"))
             frames_total += 1
             brew += float(reward)
@@ -305,6 +368,10 @@ def main():
         if w is None and not env.battle.game_over:
             w = timeout_winner(env.battle)
         games.append(rec.done(w))
+        win_plays += float(_win_play_n)
+        win_distinct += float(len(_win_cards))
+        if _first_t is not None:
+            win_first_t.append(float(_first_t))
         cw += int(w == 0)
         cl += int(w == 1)
         cd += int(w is None)
@@ -384,6 +451,19 @@ def main():
         "p0_plays": plays_total,
         "p0_top_cards": card_hist.most_common(20),
         "p1_top_cards": opp_card_hist.most_common(20),
+        #: ★ W3（预注册 `docs/il_whiff_handscore_prereg_2026-09-22.md` §3.3 J-W3.2）：
+        #: 前期窗口 T=30 s 内的**对手已知卡数**与出牌节奏 —— 「试探」的**方向判据**仪器。
+        #: 只做描述性读数（R15：不设绝对阈值，判定用**臂间配对方向**）。
+        "info_window": {
+            "t_info": INFO_T_WINDOW,
+            "frames_in_window": win_frames,
+            "known_opp_median_in_window": _median(win_known),
+            "known_opp_mean_in_window": (float(np.mean(win_known)) if win_known else None),
+            "known_opp_max_in_window": (int(max(win_known)) if win_known else None),
+            "plays_in_window_per_game": win_plays / max(1, n),
+            "distinct_cards_in_window_per_game": win_distinct / max(1, n),
+            "first_play_t_median": _median(win_first_t),
+        },
         "seconds": round(time.time() - t0, 1),
         "history": hist,
     }
