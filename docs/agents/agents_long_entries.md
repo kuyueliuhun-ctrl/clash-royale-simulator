@@ -704,3 +704,16 @@ C21 新行（735 字节）：
 ```
 | **★ 觉醒/进化：引擎有、RL 从未声明（预注册已落）**（C21） | `evolutions.py` **42 张周期表** + `battle.py` 触发 + `player.set_evolution_slots` 都在，但 **`rl/` 对 `evo_slots/evo_plays/hero_slots/evolution_state` 引用数 = 0 ⇒ 本仓对局里觉醒永不触发**；`observe()` 五键**无觉醒字段**；人类回放 `-ev1` **11,293 槽 100% 可映射**（S1① PASS）、`-hero` **4,550 槽覆盖 0%**（另一套机制）；`fl_il_to_bc.py` 解析了 variant 却**从未声明觉醒位** ⇒ 重建按基础卡跑（保真缺口）。预注册 [il_evo_prereg](docs/il_evo_prereg_2026-09-22.md)（S1 保真 → S2 观测（**R6 `--fresh`**）→ S3 RL 声明 → S4 验收/回滚）；**C21** |
 ```
+
+## 27. C23 解耦组合臂：恒等式被证伪 ⇒ 不是有效的解耦检验（2026-09-22；压缩前 **952 B**，逐字下沉）
+
+`AGENTS.md` **原版逐字**（压缩前字节数 = **952 B**；因超 800 B 单行闸门被压缩，**此处不丢字**）：
+
+```
+| **★ 解耦组合臂：恒等式被证伪 ⇒ 组合臂不是有效的解耦检验**（C23） | 先证伪 mix §7「留出侧恒等式」：τ 判决把 act-AUC 从 **0.7354** 压到 **≤0.6713 < J8.1 的 0.6948**，根因 = **R00 全 39,761 帧 `argmax==STOP` 0 次**（⇒ 门每次否决必丢一帧人类出牌帧）、τ=0.6610 下 play top1 仅 **0.1749**；连续分数口径 = **同义反复**。实现：runner 增 `--gate-ckpt/--gate-threshold`，`src/` 零改动，**F0 恒等回归 PASS**（13 项逐值全等）。结果：**plays/game 34.70**（⇒ **K1 FAIL**）、frames 397.4（K4 PASS，余量 2.6）、圣水中位 4.36（K3 PASS）。★ **`playable_rate` 0.1037→0.8900** ⇒ 状态分布巨变、三轴全朝人类动但**都没到** ⇒ 属 **off-policy 不匹配** ⇒ **原理上无法隔离「头耦合」**。**下一步：Stage 2 联合训练独立 act 头**。｜ [§6](docs/fl_il_il2_prereg_2026-09-22.md)；**C23** |
+```
+
+压缩后（`AGENTS.md` 现版，**≤800 B**）：行内只留「结论 + 关键读数 + 指针」，**被压缩掉的措辞已在上方逐字保留**，
+正文全文 → [`docs/fl_il_il2_prereg_2026-09-22.md`](../../../docs/fl_il_il2_prereg_2026-09-22.md) §6、台账
+[`ledger.md`](ledger.md) **C23**。一手读数 = `runs/il_readout_gateR337actR00/stats.json`（`runs/` 被 gitignore
+⇒ 已另存一份入库：`docs/fl_il_2026-09-21/gate_compose_R337gate_R00act_stats.json`）。

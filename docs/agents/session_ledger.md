@@ -30,7 +30,7 @@
 
 | 会话 | 在做的事 | 状态 | 正在 / 将要修改的文件 | 模式 | 起始 | 最近更新 |
 |---|---|---|---|---|---|---|
-| **A** | **低费法术空砸豁免（W1）+ 手牌打分/卡组信息分预注册（W2/W3）**（用户 2026-09-22 指令） | 🔄 进行中 | `rl/action_mask.py`、`scripts/selftest_spell_kingtower.py`、`scripts/_mask_diff_snapshot_spells.py`（新）、`docs/il_whiff_handscore_prereg_2026-09-22.md`（新）、`docs/mask_snapshots/spell_w1.npz`（新） | 独占（上述文件） | 2026-09-22 | 2026-09-22 |
+| **A** | **W1 低费空砸豁免（已推 8f93de4）+ C23 解耦组合臂（已跑完判读）**；W2/W3 预注册已落 | 🔄 进行中 | `rl/action_mask.py`、`scripts/selftest_spell_kingtower.py`、`scripts/_mask_diff_snapshot_spells.py`（新）、`scripts/il_readout_games.py`、`docs/il_whiff_handscore_prereg_2026-09-22.md`（新）、`docs/fl_il_il2_prereg_2026-09-22.md`（§6）、`docs/agents/{ledger,agents_long_entries}.md`、`docs/fl_il_2026-09-21/gate_compose_*.json`（新） | 独占（上述文件） | 2026-09-22 | 2026-09-22 |
 | **B** | 建**多会话协作台账**（本文件）+ 在 `AGENTS.md`、`docs/README.md` 各加一行索引 | 🔄 进行中 | `docs/agents/session_ledger.md`（新建）、`AGENTS.md`（+1 行）、`docs/README.md`（+1 行） | 独占 | 2026-09-21 22:25 | 2026-09-21 22:25 |
 | **C** | （待 C 会话自己填写） | ⏳ 待登记 | — | — | — | — |
 
@@ -62,6 +62,11 @@
 | 2026-09-21 22:25 | B | — | （空表，等待填写） | — |
 | 2026-09-22 | A | `src/clasher_new/rl/action_mask.py`、`scripts/selftest_spell_kingtower.py` | W1：低费法术（cost≤2）**空砸豁免**（只豁免 8h 空砸闸门，9h 砸塔 EV 闸门不动 ⇒ F1 不回退）；回归 23→32 断言 | 32/32 PASS；全法术 A/B 432 张：32 张变化、**收紧 0**、越界 0；标准 128 张**逐位全等** |
 | 2026-09-22 | A | `AGENTS.md` | 按 §5「两会话都改 ⇒ 串行」：**写前已重读**，仅追加 1 行决策索引（C22 行） | 本条即通知；`scripts/_agents_split.py --check` 待跑 |
+| 2026-09-22 | A | `AGENTS.md`、`docs/agents/agents_long_entries.md` | 追加 **C23 行**（解耦组合臂）；首版 952 B **超 800 B 闸门** ⇒ 按头部纪律 ⑥ **逐字下沉**到 `agents_long_entries.md` **§27**，行内压缩到 793 B | `--check` **PASS**（34,245 B / 40,960；最长行 793 B；分册 27 节、缺 0） |
+| 2026-09-22 | A | `scripts/il_readout_games.py` | 增 `--gate-ckpt` / `--gate-threshold`（§6 解耦组合臂）；**新增路径默认关闭**⇒ 不给 flag 时行为不变 | **F0 恒等回归 PASS**（τ=1.0 vs 无门，3 局 13 项统计逐值全等、`gate_stop_frames=0`、`p0_top_cards` 一致） |
+| 2026-09-22 | A | `docs/fl_il_il2_prereg_2026-09-22.md` | 增 **§6**（组合臂口径封口：6.1 恒等式证伪 / 6.2 封口 6 条 / 6.3 K1–K6 / 6.4 分支 / 6.5 不变量 / 6.7 结果 / 6.8 第三分支失效登记） | 判据**跑前写死**（R3）；结果：**K1 FAIL**（34.70 > 28.5）⇒ 按 6.4 关闭组合臂路线 |
+| 2026-09-22 | A | `docs/agents/ledger.md` | 增 **C23** 条目；头 `C1–C22` → `C1–C23` | 与 `AGENTS.md` C23 行同步（R18） |
+| 2026-09-22 | A | ⚠️ **工作区意外（照实登记）** | 跑组合臂时 `--out` 传了 `/mnt/e/...` 给 **Windows python** ⇒ 产物落到**仓外**的 `E:\mnt\e\...` 废路径；我在清理该废树时**发现里面另有别的会话早先留下的重复件** `docs/grid_collision_loss_2026-09-20/stats_replay.json`。**已核实仓内正本完好**（26,039 B、Sep 20 07:42）⇒ **未丢数据**。教训：**Windows python 不认 `/mnt/...`**，runner 类脚本一律用**相对路径** | 全程未 `git add -A` / 未 `git checkout .`；废树已删；组合臂产物已用相对路径重跑落回 `runs/il_readout_gateR337actR00/`（`runs/` 被 gitignore ⇒ 读数另存 `docs/fl_il_2026-09-21/gate_compose_R337gate_R00act_stats.json` 入库） |
 
 ---
 

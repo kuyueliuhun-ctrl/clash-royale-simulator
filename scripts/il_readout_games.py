@@ -109,6 +109,27 @@ def build_policy(ckpt, device, torch, label):
     return pol, meta
 
 
+def _gate_p_stop(policy, obs, tok, plan, masks):
+    """复刻 `FollowerPolicy.act()` 第一步 6 类分布里的 `p(STOP)`（`hidden=None` 口径）。
+
+    ⚠️ **必须与 `scripts/il_eval_holdout.py::first_option_probs` 保持同步**（同一复刻，两处实现）：
+    那里是**留出侧**读数（预注册 §6 C6-4 指定口径），这里是**部署侧**门。**改一处必须改另一处。**
+    做法 = `_encode_parts → gru_cell(zeros) → slot_head + plan_bias → 掩码 → softmax[STOP]`，
+    **不改 `follower.py`**（与 `il_nll_decompose.py` 同款）。
+    """
+    import torch
+    from rl.follower import STOP_IDX
+    with torch.no_grad():
+        _fused, enc = policy._encode_parts(obs, tok, plan)
+        h = policy.gru_cell(enc, torch.zeros(1, policy.hidden_dim, device=policy.device))
+        slot_bias, _cb = policy._plan_biases(plan)
+        logits = policy.slot_head(h) + slot_bias
+        sm = policy._slot_mask_tensor(masks[0])
+        logits = logits.masked_fill(sm == 0, -1e9)
+        p = torch.softmax(logits, dim=-1)
+    return p[0, STOP_IDX]
+
+
 def main():
     ap = argparse.ArgumentParser(description="IL 策略对局观测 runner（落 schema 5 录像供 dashboard）")
     ap.add_argument("--ckpt", required=True, help="IL（BC）ckpt")
@@ -129,6 +150,13 @@ def main():
                          "FollowerOpponent 内部恒 carry，而逐帧 BC 的 ckpt 在 carry 下会塌成 STOP"
                          "（判读 §16）⇒ 此前 p1 每局只出 1-2 张、胜率虚高（口径不对称 bug）")
     ap.add_argument("--sample", action="store_true", help="随机采样而非 argmax（默认 argmax）")
+    #: ★ 2026-09-22 预注册 §6「解耦组合臂」：门（只看 STOP logit）用另一个 ckpt，动作走 --ckpt。
+    #: τ 默认 **0.6610** = §6 C6-5 写死的「留出侧基率匹配」档（留出基率 0.2242）。
+    #: ⚠️ §6 纪律：**不许在部署侧扫 τ 拟合**。
+    ap.add_argument("--gate-ckpt", default=None,
+                    help="解耦组合臂的 act 门 ckpt（只读它的 p(STOP)）；不给 = 单 ckpt 原行为")
+    ap.add_argument("--gate-threshold", type=float, default=0.6610,
+                    help="门的 STOP 阈值 τ（默认 0.6610，预注册 §6 C6-5 写死档）")
     ap.add_argument("--json", default=None)
     a = ap.parse_args()
 
@@ -138,6 +166,7 @@ def main():
     from rl.belief_planner import BeliefPlanner
     from rl import train_solo as ts
     from rl.train_follower import FollowerOpponent
+    from rl.action_bundle import ActionBundle
 
     class _FrameWiseOpponent(FollowerOpponent):
         """**逐帧口径**的对手包装：`FollowerOpponent` 内部恒把 `self.hidden` 带下去（生产约定），
@@ -163,6 +192,10 @@ def main():
         opp_pol, _ = build_policy(a.main_ckpt, dev, torch, "我方主策略")
     else:
         opp_pol, _ = build_policy(a.ckpt, dev, torch, "对手(同 ckpt 冻结副本)")
+    gate_pol = (build_policy(a.gate_ckpt, dev, torch, "act 门")[0] if a.gate_ckpt else None)
+    if gate_pol is not None:
+        print(f"[runner] ★ 解耦组合臂（预注册 §6）：门 ckpt={a.gate_ckpt} τ={a.gate_threshold}"
+              f"（门只看 STOP logit、hidden=None 逐帧；动作走 --ckpt={a.ckpt}）", flush=True)
     bp = BeliefPlanner()
 
     deck_pairs = None
@@ -188,6 +221,7 @@ def main():
     brew = 0.0
     card_hist = collections.Counter()
     playable = forced_stop = stop_when_playable = 0
+    gate_eval = gate_stop = 0     #: ★ §6：门被求值帧数 / 门判 STOP 帧数
     opp_card_hist = collections.Counter()
 
     for g in range(a.games):
@@ -216,8 +250,21 @@ def main():
             tok = belief0.encode(obs, None)
             plan = bp.plan(env.battle, belief0.state(), obs).to_vector()
             h_in = hidden if a.hidden == "carry" else None
-            bundle, _lp, _v, h_out, _mk = pol.act(obs, tok, plan, env.get_action_mask,
-                                                  hidden=h_in, deterministic=not a.sample)
+            _gate_stop = False
+            if gate_pol is not None:
+                #: ★ §6 C6-4：门用 `hidden=None` 逐帧口径（与四臂留出读数同口径）
+                #: ⚠️ `_gate_p_stop` 返回 **0-dim tensor**（与 `first_option_probs` 同），不用再 `[0]`
+                _p_stop = float(_gate_p_stop(gate_pol, obs, tok, plan,
+                                             [env.get_action_mask()]))
+                gate_eval += 1
+                if _p_stop > a.gate_threshold:
+                    _gate_stop = True
+                    gate_stop += 1
+            if _gate_stop:
+                bundle, h_out = ActionBundle(), hidden
+            else:
+                bundle, _lp, _v, h_out, _mk = pol.act(obs, tok, plan, env.get_action_mask,
+                                                      hidden=h_in, deterministic=not a.sample)
             hidden = h_out if a.hidden == "carry" else None
             #: ★ 行为画像的关键分层（与 `scripts/probe_pass_prob.py` 同一口径）：
             #: 「本帧买得起吗」用**掩码**判（`slots` 任一为真 或 `ability_legal`），
@@ -324,6 +371,12 @@ def main():
         "forced_stop_frames": forced_stop,
         "stop_when_playable": stop_when_playable,
         "stop_when_playable_rate": stop_when_playable / max(1, playable),
+        #: ★ §6 解耦组合臂（不给 --gate-ckpt 时全为 None/0，原行为不变）
+        "gate_ckpt": a.gate_ckpt,
+        "gate_threshold": (a.gate_threshold if gate_pol is not None else None),
+        "gate_eval_frames": gate_eval,
+        "gate_stop_frames": gate_stop,
+        "gate_stop_rate": (gate_stop / gate_eval) if gate_eval else None,
         "p0_plays": plays_total,
         "p0_top_cards": card_hist.most_common(20),
         "p1_top_cards": opp_card_hist.most_common(20),
