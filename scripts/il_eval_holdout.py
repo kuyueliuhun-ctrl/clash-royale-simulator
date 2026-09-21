@@ -110,7 +110,7 @@ def make_get_mask(masks):
     return get_mask
 
 
-def evaluate(ckpt, holdout, train, limit, random_init=False):
+def evaluate(ckpt, holdout, train, limit, random_init=False, save_weight=1.0):
     if random_init:
         #: 未训练对照：维度从**第一条样本**反推（与 `train_bc_from_human:214-215` 同口径）。
         #: ⚠️ **必须播种**：`FollowerPolicy` 的初始化走 torch 全局 RNG，不播种的话每次运行
@@ -143,6 +143,9 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
     #: ★ 2026-09-21：STOP（攒费）帧单列——**不并入 `lps`**，保证 `nll_mean` 与旧读数的
     #: 「出牌帧 NLL」口径**逐位可比**（J6.3②）。新口径见 `stop_frames` 块。
     lps_stop, n_stop, n_stop_model_stop = [], 0, 0
+    #: 分开计数：模型在 **save 帧** / **play 帧** 上分别有多少次输出 STOP
+    #: ⇒ 用 `--save-weight` 反加权可还原**自然边际**（save 帧被 `--stop-stride` 抽稀过）
+    m_stop_on_save = m_stop_on_play = 0
     opt_hist = collections.Counter()
     maj_hit = maj_den = 0
     for obs, tok, plan, bundle, masks in holdout:
@@ -154,6 +157,7 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
                                                     hidden=None, deterministic=True)
             n_stop += 1
             n_stop_model_stop += int(not pred.sub_actions)
+            m_stop_on_save += int(not pred.sub_actions)
             continue
         lab = bundle.sub_actions[0]
         lab_opt, lab_x, lab_y = int(lab.slot) - 1, int(lab.x), int(lab.y)
@@ -183,6 +187,7 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
             n_opt_cond_cell += int(px == lab_x and py == lab_y)
         opt_hist[p_opt] += 1
         counts["n"] += 1
+        m_stop_on_play += int(p_opt < 0)
         maj_slot_hit += int(lab_opt == maj_slot)
         conf[(lab_opt, p_opt)] += 1
         #: majority-card 基线：把训练集最高频卡映射到本帧手牌（不在手牌 ⇒ miss）
@@ -225,6 +230,20 @@ def evaluate(ckpt, holdout, train, limit, random_init=False):
             "model_stop_rate_argmax": (n_stop_model_stop / (n + n_stop)) if (n + n_stop) else None,
             "stop_calibration_abs_gap": (abs(n_stop_model_stop - n_stop) / (n + n_stop))
                                         if (n + n_stop) else None,
+            #: ★ 自然边际口径（把 `--stop-stride` 抽稀掉的 save 帧按权重补回）
+            "save_weight": float(save_weight),
+            "weighted": {
+                "denom": float(n + save_weight * n_stop),
+                "human_stop_rate": (save_weight * n_stop / (n + save_weight * n_stop))
+                                   if (n + save_weight * n_stop) else None,
+                "model_stop_rate_argmax": ((save_weight * m_stop_on_save + m_stop_on_play)
+                                           / (n + save_weight * n_stop))
+                                          if (n + save_weight * n_stop) else None,
+                "note": ("save 帧是被 `--stop-stride S` 等距抽稀过的 ⇒ 未加权口径会**低估人类 STOP 率**"
+                         "（本数据集自然边际 = 47,659 play : 638,278 save）。"
+                         "`--save-weight S` 反加权后两个率都还原到自然边际"),
+            },
+            "model_stop_on_save": m_stop_on_save, "model_stop_on_play": m_stop_on_play,
             "nll_mean_stop_only": (-sum(lps_stop) / len(lps_stop)) if lps_stop else None,
             "nll_mean_all_frames": (-(sum(lps) + sum(lps_stop)) / (len(lps) + len(lps_stop)))
                                    if (lps or lps_stop) else None,
@@ -254,6 +273,8 @@ def main(argv=None):
     ap.add_argument("--data-dir", required=True, help="留出集目录（平铺 bc_*.pkl）")
     ap.add_argument("--train-dir", default=None, help="训练集目录（只用于 majority 基线）")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--save-weight", type=float, default=1.0,
+                    help="save 帧的抽样反权重（数据用 --stop-stride S 抽稀时传 S）⇒ 自然边际校准")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     if not args.ckpt and not args.random_init:
@@ -268,7 +289,7 @@ def main(argv=None):
     if not holdout:
         print(f"[eval] {args.data_dir} 下没有 bc_*.pkl")
         return 2
-    res = evaluate(args.ckpt, holdout, train, args.limit, args.random_init)
+    res = evaluate(args.ckpt, holdout, train, args.limit, args.random_init, args.save_weight)
     if args.out:
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
         with open(args.out, "w", encoding="utf-8", newline="\n") as f:
@@ -290,6 +311,10 @@ def main(argv=None):
               f"人类 STOP={sf['human_stop_rate']:.4f} 模型 argmax STOP={sf['model_stop_rate_argmax']:.4f} "
               f"| 校准差={sf['stop_calibration_abs_gap']:.4f} (J6.3③ 门禁 ≤0.05)")
         print(f"  [STOP NLL] stop_only={sf['nll_mean_stop_only']} all_frames={sf['nll_mean_all_frames']}")
+        w = sf["weighted"]
+        print(f"  [STOP 自然边际·反加权 w={sf['save_weight']}] 人类={w['human_stop_rate']:.4f} "
+              f"模型={w['model_stop_rate_argmax']:.4f} "
+              f"| 校准差={abs(w['model_stop_rate_argmax'] - w['human_stop_rate']):.4f}")
     if args.out:
         print(f"[eval] wrote {args.out}")
     return 0

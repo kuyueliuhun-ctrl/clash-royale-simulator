@@ -1,0 +1,70 @@
+{
+ "dir_a": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc",
+ "dir_b": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc_eq30",
+ "sub": "train",
+ "files_a": 1787,
+ "files_b": 20,
+ "files_common": 20,
+ "files_only_a": [
+  "bc_fl_0030.pkl",
+  "bc_fl_0031.pkl",
+  "bc_fl_0032.pkl",
+  "bc_fl_0033.pkl",
+  "bc_fl_0034.pkl",
+  "bc_fl_0035.pkl",
+  "bc_fl_0036.pkl",
+  "bc_fl_0037.pkl",
+  "bc_fl_0038.pkl",
+  "bc_fl_0039.pkl"
+ ],
+ "files_only_b": [],
+ "samples_compared": 379,
+ "samples_mismatch": 12,
+ "J6_2": {
+  "gate": "files_only_a==0 and files_only_b==0 and samples_mismatch==0",
+  "verdict": "FAIL"
+ },
+ "first_mismatches": [
+  {
+   "file": "bc_fl_0021.pkl",
+   "diff": [
+    "样本数不等 31 vs 30"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 2,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 3,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 4,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 5,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0027.pkl",
+   "diff": [
+    "样本数不等 7 vs 10"
+   ]
+  }
+ ],
+ "note": "逐样本逐字段**全等**对账（无容差）。PASS ⇒ 加 `--stop-mode` 没有动旧口径 ⇒ 单变量成立。"
+}

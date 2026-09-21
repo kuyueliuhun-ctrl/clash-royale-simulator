@@ -29,6 +29,20 @@ ORIG_CWD = os.getcwd()
 
 import numpy as np  # noqa: E402
 
+#: ⚠️ **必须**把 `src/clasher_new` 放进 `sys.path`：pkl 里存的是 `rl.action_bundle.ActionBundle`
+#: ⇒ 反序列化时 unpickler 要能 import `rl.action_bundle`，否则 `ModuleNotFoundError`
+#: （第一版漏了，实测踩过——J6.2 因此没跑成，而 `echo $?` 接在管道后还报了假绿的 0）。
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "src", "clasher_new"))
+
+#: ⚠️ **GBK 陷阱**：Windows 控制台默认 cp936 ⇒ 打印里的 `⇒` 等字符会 `UnicodeEncodeError`
+#: （实测踩过：对账本身已跑完，倒在最后一行 print 上）。与 `rl/io_bootstrap.force_utf8_stdout` 同效，
+#: 但**不 import 引擎**（保持本脚本无 torch 依赖、可单跑）。
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
+
 
 def _abs(p):
     m = p.replace("\\", "/")

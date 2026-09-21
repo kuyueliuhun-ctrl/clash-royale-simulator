@@ -1,0 +1,49 @@
+{
+ "jsonl": "replays_part000000.jsonl",
+ "games": 3,
+ "tag": "p2",
+ "in_process": {
+  "samples": 42,
+  "mismatch": 0,
+  "per_game": [
+   {
+    "game": 0,
+    "tag": "84a066ec0b0a4bef801ae287e4d45960",
+    "n_a": 13,
+    "n_b": 13,
+    "frames": [
+     298,
+     298
+    ],
+    "mismatch": 0,
+    "first": []
+   },
+   {
+    "game": 1,
+    "tag": "21daddc4311842699aa782d4059d4454",
+    "n_a": 12,
+    "n_b": 12,
+    "frames": [
+     293,
+     293
+    ],
+    "mismatch": 0,
+    "first": []
+   },
+   {
+    "game": 2,
+    "tag": "09589b9d2315437ebb84872f9b993137",
+    "n_a": 17,
+    "n_b": 17,
+    "frames": [
+     361,
+     361
+    ],
+    "mismatch": 0,
+    "first": []
+   }
+  ]
+ },
+ "verdict": "IN_PROCESS_DETERMINISTIC",
+ "note": "同进程内把同一局转换两次。不等 ⇒ 成因在**进程内状态**（模块级计数器/全局 RNG 流/缓存）；全等 ⇒ 需再跑一个新进程比 ⇒ 跨进程成因（id() 哈希/ASLR/未播种全局 RNG）。"
+}

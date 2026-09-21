@@ -1,0 +1,53 @@
+{
+ "dir_a": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc_eq30_w1",
+ "dir_b": "E:\\clash-royale-simulator-main\\runs\\_fl_il_bc_eq30",
+ "sub": "train",
+ "files_a": 20,
+ "files_b": 20,
+ "files_common": 20,
+ "files_only_a": [],
+ "files_only_b": [],
+ "samples_compared": 405,
+ "samples_mismatch": 11,
+ "J6_2": {
+  "gate": "files_only_a==0 and files_only_b==0 and samples_mismatch==0",
+  "verdict": "FAIL"
+ },
+ "first_mismatches": [
+  {
+   "file": "bc_fl_0004.pkl",
+   "diff": [
+    "样本数不等 16 vs 14"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 2,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 3,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 4,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  },
+  {
+   "file": "bc_fl_0025.pkl",
+   "i": 5,
+   "diff": [
+    "obs[grid] 不等"
+   ]
+  }
+ ],
+ "note": "逐样本逐字段**全等**对账（无容差）。PASS ⇒ 加 `--stop-mode` 没有动旧口径 ⇒ 单变量成立。"
+}
